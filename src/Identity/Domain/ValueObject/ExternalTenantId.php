@@ -8,7 +8,7 @@ use TriCab\Core\Identity\Domain\Exception\InvalidIdentityValue;
 
 final class ExternalTenantId
 {
-    private const UUID_PATTERN = '/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/';
+    private const PATTERN = '/^[a-z0-9][a-z0-9._-]{0,127}$/';
 
     private function __construct(private readonly string $value)
     {
@@ -18,7 +18,7 @@ final class ExternalTenantId
     {
         $normalized = strtolower(trim($value));
 
-        if ($normalized === '' || preg_match(self::UUID_PATTERN, $normalized) !== 1) {
+        if ($normalized === '' || preg_match(self::PATTERN, $normalized) !== 1) {
             throw InvalidIdentityValue::for('ExternalTenantId', $value);
         }
 

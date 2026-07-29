@@ -21,6 +21,7 @@ final class ExternalProvider
     public static function fromString(string $value): self
     {
         $normalized = strtolower(trim($value));
+        $normalized = str_replace('-', '_', $normalized);
 
         if (!in_array($normalized, self::ALLOWED, true)) {
             throw InvalidIdentityValue::for('ExternalProvider', $value);

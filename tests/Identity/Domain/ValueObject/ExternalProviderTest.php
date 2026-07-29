@@ -19,6 +19,14 @@ final class ExternalProviderTest extends TestCase
         self::assertTrue($provider->isMicrosoftEntra());
     }
 
+    public function test_accepts_hyphenated_microsoft_entra_alias(): void
+    {
+        $provider = ExternalProvider::fromString('microsoft-entra');
+
+        self::assertSame(ExternalProvider::MICROSOFT_ENTRA, $provider->toString());
+        self::assertTrue($provider->isMicrosoftEntra());
+    }
+
     public function test_named_constructor(): void
     {
         $provider = ExternalProvider::microsoftEntra();
