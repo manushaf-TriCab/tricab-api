@@ -16,7 +16,8 @@ use TriCab\Core\Identity\Domain\ValueObject\ExternalSubjectId;
 use TriCab\Core\Identity\Domain\ValueObject\ExternalTenantId;
 
 /**
- * Live Azure SQL checks. Skipped unless RUN_AZURE_SQL_INTEGRATION_TESTS=true.
+ * Live Azure SQL checks. Skipped unless RUN_AZURE_INTEGRATION_TESTS=true
+ * (or legacy RUN_AZURE_SQL_INTEGRATION_TESTS=true).
  *
  * @group azure-sql
  */
@@ -27,8 +28,11 @@ final class AzureSqlUserRepositoryIntegrationTest extends TestCase
     {
         parent::setUp();
 
-        if (getenv('RUN_AZURE_SQL_INTEGRATION_TESTS') !== 'true') {
-            self::markTestSkipped('Set RUN_AZURE_SQL_INTEGRATION_TESTS=true to run Azure SQL integration tests.');
+        $enabled = getenv('RUN_AZURE_INTEGRATION_TESTS') === 'true'
+            || getenv('RUN_AZURE_SQL_INTEGRATION_TESTS') === 'true';
+
+        if (!$enabled) {
+            self::markTestSkipped('Set RUN_AZURE_INTEGRATION_TESTS=true to run Azure SQL integration tests.');
         }
 
         if (!extension_loaded('pdo_sqlsrv')) {

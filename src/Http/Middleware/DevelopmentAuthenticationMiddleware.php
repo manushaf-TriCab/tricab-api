@@ -16,6 +16,7 @@ use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
 /**
  * Development-only identity injection from X-Dev-Entra-* headers.
  * Never activates outside APP_ENV=development with DEV_AUTH_ENABLED=true.
+ * Skips when an Authorization Bearer header is present so real tokens take priority.
  */
 final class DevelopmentAuthenticationMiddleware implements MiddlewareInterface
 {
@@ -31,6 +32,10 @@ final class DevelopmentAuthenticationMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if (!$this->settings->isDevelopmentAuthActive()) {
+            return $handler->handle($request);
+        }
+
+        if ($this->hasBearerAuthorization($request)) {
             return $handler->handle($request);
         }
 
@@ -52,6 +57,13 @@ final class DevelopmentAuthenticationMiddleware implements MiddlewareInterface
         return $handler->handle(
             $request->withAttribute(VerifiedIdentityAttribute::KEY, $verifiedIdentity),
         );
+    }
+
+    private function hasBearerAuthorization(ServerRequestInterface $request): bool
+    {
+        $header = trim($request->getHeaderLine('Authorization'));
+
+        return $header !== '' && preg_match('/^Bearer\s+\S+/i', $header) === 1;
     }
 
     private function headerOrDefault(ServerRequestInterface $request, string $header, string $default): string

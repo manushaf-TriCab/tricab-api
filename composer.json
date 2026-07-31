@@ -5,6 +5,7 @@
     "license": "proprietary",
     "require": {
         "php": "^8.3",
+        "firebase/php-jwt": "^6.10",
         "php-di/php-di": "^7.0",
         "slim/psr7": "^1.7",
         "slim/slim": "^4.14",

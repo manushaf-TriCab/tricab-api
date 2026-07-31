@@ -12,6 +12,7 @@ use Slim\Exception\HttpException;
 use Slim\Exception\HttpNotFoundException;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Infrastructure\Database\DatabaseAuthFailed;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use Throwable;
 
@@ -34,6 +35,14 @@ final class JsonExceptionMiddleware implements MiddlewareInterface
                 'HTTP_ERROR',
                 $exception->getMessage() !== '' ? $exception->getMessage() : 'HTTP error.',
                 $exception->getCode() >= 400 ? $exception->getCode() : 400,
+            );
+        } catch (DatabaseAuthFailed $exception) {
+            error_log('Database authentication failed: ' . $exception->getMessage());
+
+            return $this->responder->error(
+                'DATABASE_AUTH_FAILED',
+                'Unable to authenticate with Azure SQL.',
+                503,
             );
         } catch (DatabaseUnavailable $exception) {
             error_log('Database unavailable: ' . $exception->getMessage());

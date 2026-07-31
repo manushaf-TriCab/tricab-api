@@ -30,20 +30,30 @@ php -S localhost:8080 -t public
 
 - Microsoft ODBC Driver 18 for SQL Server
 - PHP extensions: `pdo_sqlsrv` (and typically `sqlsrv`)
-- Approved database identity (SQL login, service principal, managed identity, or Entra access-token flow)
+- For `DB_AUTH_MODE=entra-cli`: Azure CLI installed and logged in (`az login`)
 - **Do not** use a Microsoft 365 user password as `DB_PASSWORD`
 
 ```env
 USER_REPOSITORY=azure-sql
+DB_AUTH_MODE=entra-cli
 DB_DRIVER=sqlsrv
 DB_HOST=tricab-mel.database.windows.net
 DB_PORT=1433
 DB_DATABASE=tc
-DB_USERNAME=<secure-user>
-DB_PASSWORD=<secure-secret>
 DB_ENCRYPT=yes
 DB_TRUST_SERVER_CERTIFICATE=false
+# Only when DB_AUTH_MODE=sql-login:
+# DB_USERNAME=
+# DB_PASSWORD=
 ```
+
+`entra-cli` acquires a short-lived Azure SQL access token via:
+
+```bash
+az account get-access-token --resource https://database.windows.net/ --query accessToken --output tsv
+```
+
+Tokens are never written to `.env`, never logged, and never stored on disk.
 
 External identity lookup key: `ProviderCode` + `TenantIdentifier` + `SubjectIdentifier`.
 
@@ -72,8 +82,8 @@ composer test
 composer analyse
 ```
 
-Azure SQL live integration tests (optional):
+Azure SQL live integration tests (optional; requires Azure CLI login when `DB_AUTH_MODE=entra-cli`):
 
 ```bash
-RUN_AZURE_SQL_INTEGRATION_TESTS=true vendor/bin/phpunit --group azure-sql
+RUN_AZURE_INTEGRATION_TESTS=true vendor/bin/phpunit --group azure-sql
 ```

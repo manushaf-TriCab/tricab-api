@@ -30,6 +30,7 @@ final class TestAppFactory
             'DEV_AUTH_DEFAULT_SUBJECT' => 'development-thilan',
             'DEV_AUTH_DEFAULT_EMAIL' => 'thilanh@tricab.com',
             'USER_REPOSITORY' => 'memory',
+            'DB_AUTH_MODE' => 'sql-login',
         ], $env));
 
         $container = ContainerFactory::create($settings);

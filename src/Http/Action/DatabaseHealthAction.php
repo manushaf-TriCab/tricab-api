@@ -8,7 +8,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Api\Infrastructure\Database\AzureSqlConnectionFactory;
+use TriCab\Api\Infrastructure\Database\AzureSqlPdoFactory;
+use TriCab\Api\Infrastructure\Database\DatabaseAuthFailed;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
 
@@ -16,7 +17,7 @@ final class DatabaseHealthAction
 {
     public function __construct(
         private readonly Settings $settings,
-        private readonly AzureSqlConnectionFactory $connectionFactory,
+        private readonly AzureSqlPdoFactory $pdoFactory,
         private readonly JsonResponder $responder,
     ) {
     }
@@ -39,9 +40,20 @@ final class DatabaseHealthAction
         }
 
         try {
-            $pdo = $this->connectionFactory->create();
+            $pdo = $this->pdoFactory->create();
             $connection = new PdoSqlConnection($pdo);
-            $connection->execute('SELECT 1');
+            $rows = $connection->fetchAll('SELECT DB_NAME() AS [DatabaseName]');
+            $databaseName = isset($rows[0]['DatabaseName']) && is_scalar($rows[0]['DatabaseName'])
+                ? (string) $rows[0]['DatabaseName']
+                : $this->settings->dbDatabase;
+        } catch (DatabaseAuthFailed $exception) {
+            error_log('Database authentication failed: ' . $exception->getMessage());
+
+            return $this->responder->error(
+                'DATABASE_AUTH_FAILED',
+                'Unable to authenticate with Azure SQL.',
+                503,
+            );
         } catch (DatabaseUnavailable $exception) {
             error_log('Database health check failed: ' . $exception->getMessage());
 
@@ -58,8 +70,9 @@ final class DatabaseHealthAction
             'database' => [
                 'configured' => true,
                 'driver' => $this->settings->dbDriver,
+                'authMode' => $this->settings->dbAuthMode,
                 'host' => $this->settings->dbHost,
-                'database' => $this->settings->dbDatabase,
+                'database' => $databaseName,
                 'status' => 'healthy',
             ],
         ]);

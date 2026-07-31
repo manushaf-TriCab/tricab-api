@@ -13,6 +13,7 @@ use TriCab\Api\Http\Action\DatabaseHealthAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
+use TriCab\Api\Http\Middleware\CorsMiddleware;
 use TriCab\Api\Http\Middleware\DevelopmentAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\JsonExceptionMiddleware;
 
@@ -41,6 +42,10 @@ final class AppBuilder
         /** @var DevelopmentAuthenticationMiddleware $devAuthMiddleware */
         $devAuthMiddleware = $container->get(DevelopmentAuthenticationMiddleware::class);
         $app->add($devAuthMiddleware);
+
+        /** @var CorsMiddleware $corsMiddleware */
+        $corsMiddleware = $container->get(CorsMiddleware::class);
+        $app->add($corsMiddleware);
 
         /** @var Settings $settings */
         $settings = $container->get(Settings::class);

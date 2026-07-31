@@ -7,6 +7,7 @@ namespace TriCab\Api\Http\Action;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
@@ -20,6 +21,7 @@ final class GetAuthenticatedUserAction
     public function __construct(
         private readonly ResolveAuthenticatedUserHandler $handler,
         private readonly JsonResponder $responder,
+        private readonly EntraJwtValidationDebugLogger $debugLogger,
     ) {
     }
 
@@ -30,6 +32,16 @@ final class GetAuthenticatedUserAction
         $verifiedIdentity = $request->getAttribute(VerifiedIdentityAttribute::KEY);
 
         if (!$verifiedIdentity instanceof VerifiedIdentity) {
+            $this->debugLogger->log([
+                'path' => $request->getUri()->getPath(),
+                'authorization_header_present' => trim($request->getHeaderLine('Authorization')) !== '',
+                'bearer_token_detected' => preg_match('/^Bearer\s+\S+/i', trim($request->getHeaderLine('Authorization'))) === 1,
+                'token_parsed' => false,
+                'jwt_validation_stage_reached' => false,
+                'validation_failure_reason' => 'no VerifiedIdentity attached before /api/v1/me',
+                'http_response_code' => 401,
+            ]);
+
             return $this->responder->error(
                 'UNAUTHENTICATED',
                 'Authentication is required.',

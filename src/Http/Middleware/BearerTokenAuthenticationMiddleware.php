@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
 use TriCab\Api\Identity\Authentication\EntraTokenValidationFailed;
 use TriCab\Api\Identity\Authentication\EntraTokenValidationNotConfigured;
 use TriCab\Api\Identity\Authentication\EntraTokenValidator;
@@ -24,6 +25,7 @@ final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
     public function __construct(
         private readonly EntraTokenValidator $entraTokenValidator,
         private readonly JsonResponder $responder,
+        private readonly EntraJwtValidationDebugLogger $debugLogger,
     ) {
     }
 
@@ -34,12 +36,34 @@ final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
         }
 
         $header = trim($request->getHeaderLine('Authorization'));
+        $authorizationPresent = $header !== '';
+        $bearerDetected = $authorizationPresent && preg_match('/^Bearer\s+(\S+)$/i', $header, $matches) === 1;
 
-        if ($header === '') {
+        if (!$authorizationPresent) {
+            $this->debugLogger->log([
+                'path' => $request->getUri()->getPath(),
+                'authorization_header_present' => false,
+                'bearer_token_detected' => false,
+                'token_parsed' => false,
+                'jwt_validation_stage_reached' => false,
+                'validation_failure_reason' => 'no authorization header; request continues without VerifiedIdentity',
+                'http_response_code' => 'deferred',
+            ]);
+
             return $handler->handle($request);
         }
 
-        if (!preg_match('/^Bearer\s+(\S+)$/i', $header, $matches)) {
+        if (!$bearerDetected) {
+            $this->debugLogger->log([
+                'path' => $request->getUri()->getPath(),
+                'authorization_header_present' => true,
+                'bearer_token_detected' => false,
+                'token_parsed' => false,
+                'jwt_validation_stage_reached' => false,
+                'validation_failure_reason' => 'authorization header is not a Bearer token',
+                'http_response_code' => 401,
+            ]);
+
             return $this->responder->error(
                 'UNAUTHENTICATED',
                 'Authentication is required.',
@@ -50,21 +74,62 @@ final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
         try {
             $verifiedIdentity = $this->entraTokenValidator->validate($matches[1]);
         } catch (EntraTokenValidationNotConfigured $exception) {
+            $this->debugLogger->log([
+                'path' => $request->getUri()->getPath(),
+                'authorization_header_present' => true,
+                'bearer_token_detected' => true,
+                'token_parsed' => false,
+                'jwt_validation_stage_reached' => false,
+                'validation_failure_reason' => $this->debugLogger->classifyFailure($exception->getMessage()),
+                'http_response_code' => 501,
+            ]);
+
             return $this->responder->error(
                 'ENTRA_NOT_CONFIGURED',
                 $exception->getMessage(),
                 501,
             );
         } catch (EntraTokenValidationFailed $exception) {
+            $this->debugLogger->log([
+                'path' => $request->getUri()->getPath(),
+                'authorization_header_present' => true,
+                'bearer_token_detected' => true,
+                'token_parsed' => !str_contains(strtolower($exception->getMessage()), 'malformed'),
+                'jwt_validation_stage_reached' => true,
+                'validation_failure_reason' => $this->debugLogger->classifyFailure($exception->getMessage()),
+                'validator_message' => $this->safeValidatorMessage($exception->getMessage()),
+                'http_response_code' => $exception->httpStatus,
+            ]);
+
             return $this->responder->error(
-                'UNAUTHENTICATED',
+                $exception->errorCode,
                 $exception->getMessage(),
-                401,
+                $exception->httpStatus,
             );
         }
+
+        $this->debugLogger->log([
+            'path' => $request->getUri()->getPath(),
+            'authorization_header_present' => true,
+            'bearer_token_detected' => true,
+            'token_parsed' => true,
+            'jwt_validation_stage_reached' => true,
+            'validation_failure_reason' => 'none',
+            'http_response_code' => 'continue',
+        ]);
 
         return $handler->handle(
             $request->withAttribute(VerifiedIdentityAttribute::KEY, $verifiedIdentity),
         );
+    }
+
+    private function safeValidatorMessage(string $message): string
+    {
+        // Keep the human-readable validator reason; never include raw tokens.
+        if (preg_match('/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/', $message) === 1) {
+            return 'Microsoft Entra token validation failed.';
+        }
+
+        return substr($message, 0, 240);
     }
 }
