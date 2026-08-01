@@ -53,7 +53,8 @@ final class ContainerFactory
             BearerTokenAuthenticationMiddleware::class => \DI\autowire(BearerTokenAuthenticationMiddleware::class),
             CorsMiddleware::class => \DI\autowire(CorsMiddleware::class),
             JsonExceptionMiddleware::class => \DI\autowire(JsonExceptionMiddleware::class),
-            AzureCliAccessTokenProvider::class => \DI\autowire(AzureCliAccessTokenProvider::class),
+            AzureCliAccessTokenProvider::class => \DI\create(AzureCliAccessTokenProvider::class)
+                ->constructor($settings->azureCliBinary),
             AzureSqlPdoFactory::class => \DI\autowire(AzureSqlPdoFactory::class),
             AzureSqlConnectionFactory::class => \DI\autowire(AzureSqlConnectionFactory::class),
         ];

@@ -59,7 +59,7 @@ final class AzureCliAccessTokenProvider
     private function isAzureCliAvailable(): bool
     {
         if ($this->looksLikePath($this->azBinary)) {
-            return is_executable($this->azBinary);
+            return is_file($this->azBinary);
         }
 
         [$exitCode] = $this->run([$this->azBinary, '--version']);
@@ -76,7 +76,7 @@ final class AzureCliAccessTokenProvider
 
     private function looksLikePath(string $binary): bool
     {
-        return str_contains($binary, '/') || str_starts_with($binary, '\\');
+        return str_contains($binary, '/') || str_contains($binary, '\\');
     }
 
     /**
@@ -86,7 +86,7 @@ final class AzureCliAccessTokenProvider
     private function run(array $command): array
     {
         $binary = $command[0] ?? '';
-        if ($binary === '' || ($this->looksLikePath($binary) && !is_executable($binary))) {
+        if ($binary === '' || ($this->looksLikePath($binary) && !is_file($binary))) {
             return [1, '', 'Azure CLI binary not found.'];
         }
 

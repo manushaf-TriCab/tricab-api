@@ -26,10 +26,15 @@ final class AzureCliAccessTokenProviderTest extends TestCase
         $settings = Settings::fromEnvironment([
             'DB_AUTH_MODE' => 'entra-cli',
             'USER_REPOSITORY' => 'azure-sql',
+            'AZURE_CLI_BINARY' => 'C:/Program Files/Microsoft SDKs/Azure/CLI2/wbin/az.cmd',
         ]);
 
         self::assertTrue($settings->usesEntraCliAuth());
         self::assertFalse($settings->usesSqlLoginAuth());
         self::assertSame(Settings::DB_AUTH_MODE_ENTRA_CLI, $settings->dbAuthMode);
+        self::assertSame(
+            'C:/Program Files/Microsoft SDKs/Azure/CLI2/wbin/az.cmd',
+            $settings->azureCliBinary,
+        );
     }
 }
