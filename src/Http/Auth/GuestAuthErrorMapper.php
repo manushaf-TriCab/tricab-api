@@ -61,9 +61,15 @@ final class GuestAuthErrorMapper
         }
 
         if ($exception instanceof GuestOtpEmailDeliveryFailed) {
+            $previous = $exception->getPrevious();
             $this->logger->log('guest_otp_request_failed', [
                 'route' => $route,
                 'reason' => 'AUTH_OTP_DELIVERY_FAILED',
+                // Safe diagnostics only — never OTP, tokens, or provider secrets.
+                'underlying_exception' => $previous instanceof Throwable ? $previous::class : null,
+                'underlying_message' => $previous instanceof Throwable
+                    ? substr($previous->getMessage(), 0, 240)
+                    : null,
             ]);
 
             return $this->responder->error(

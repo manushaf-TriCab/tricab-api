@@ -46,15 +46,23 @@ final class DevelopmentGuestOtpEmailSender implements GuestOtpEmailSender
             return;
         }
 
-        fwrite(
-            STDERR,
-            sprintf(
-                "[GUEST_OTP_DEV_REVEAL] development-only OTP for %s expires %s: %s\n",
-                EmailMasker::mask($emailAddress),
-                $expiresAtUtc->format(DATE_ATOM),
-                $otpCode->toString(),
-            ),
+        // Reveal is diagnostics-only. Never let logging failure fail OTP delivery
+        // (php -S / redirected STDERR has been observed to break fwrite).
+        $line = sprintf(
+            '[GUEST_OTP_DEV_REVEAL] development-only OTP for %s expires %s: %s',
+            EmailMasker::mask($emailAddress),
+            $expiresAtUtc->format(DATE_ATOM),
+            $otpCode->toString(),
         );
+
+        try {
+            error_log($line);
+            if (defined('STDERR') && is_resource(STDERR)) {
+                @fwrite(STDERR, $line . "\n");
+            }
+        } catch (\Throwable) {
+            // Ignore reveal/logging failures.
+        }
     }
 
     /**

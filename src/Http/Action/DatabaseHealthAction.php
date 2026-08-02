@@ -46,7 +46,20 @@ final class DatabaseHealthAction
             $databaseName = isset($rows[0]['DatabaseName']) && is_scalar($rows[0]['DatabaseName'])
                 ? (string) $rows[0]['DatabaseName']
                 : $this->settings->dbDatabase;
+            \TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics::log('database_health.first_query.success', [
+                'firstSqlQuerySuccess' => true,
+                'authMode' => $this->settings->dbAuthMode,
+                'userRepository' => $this->settings->userRepository,
+            ]);
         } catch (DatabaseAuthFailed $exception) {
+            \TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics::logThrowable(
+                'database_health.auth_failed',
+                $exception,
+                [
+                    'failureLocation' => 'database_health',
+                    'firstSqlQuerySuccess' => false,
+                ],
+            );
             error_log('Database authentication failed: ' . $exception->getMessage());
 
             return $this->responder->error(
@@ -55,6 +68,14 @@ final class DatabaseHealthAction
                 503,
             );
         } catch (DatabaseUnavailable $exception) {
+            \TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics::logThrowable(
+                'database_health.unavailable',
+                $exception,
+                [
+                    'failureLocation' => 'database_health',
+                    'firstSqlQuerySuccess' => false,
+                ],
+            );
             error_log('Database health check failed: ' . $exception->getMessage());
 
             return $this->responder->error(
@@ -62,6 +83,16 @@ final class DatabaseHealthAction
                 'The database is currently unavailable.',
                 503,
             );
+        } catch (\Throwable $exception) {
+            \TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics::logThrowable(
+                'database_health.first_query.failed',
+                $exception,
+                [
+                    'failureLocation' => 'during_first_select',
+                    'firstSqlQuerySuccess' => false,
+                ],
+            );
+            throw $exception;
         }
 
         return $this->responder->payload([

@@ -28,6 +28,28 @@ final class StreamJsonHttpClient implements JsonHttpClient
             $headerLines[] = $name . ': ' . $value;
         }
 
+        $ssl = [
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+            'allow_self_signed' => false,
+        ];
+        $cafile = trim((string) ini_get('openssl.cafile'));
+        if ($cafile === '' || !is_readable($cafile)) {
+            foreach ([
+                '/opt/homebrew/etc/openssl@3/cert.pem',
+                '/opt/homebrew/etc/ca-certificates/cert.pem',
+                '/etc/ssl/cert.pem',
+            ] as $candidate) {
+                if (is_readable($candidate)) {
+                    $cafile = $candidate;
+                    break;
+                }
+            }
+        }
+        if ($cafile !== '' && is_readable($cafile)) {
+            $ssl['cafile'] = $cafile;
+        }
+
         $context = stream_context_create([
             'http' => [
                 'method' => 'POST',
@@ -36,10 +58,7 @@ final class StreamJsonHttpClient implements JsonHttpClient
                 'timeout' => $this->timeoutSeconds,
                 'ignore_errors' => true,
             ],
-            'ssl' => [
-                'verify_peer' => true,
-                'verify_peer_name' => true,
-            ],
+            'ssl' => $ssl,
         ]);
 
         $body = @file_get_contents($url, false, $context);

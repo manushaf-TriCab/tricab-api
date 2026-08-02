@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Infrastructure\Authentication;
 
+use TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics;
+
 /**
  * Obtains a short-lived Azure SQL access token via Azure CLI.
  * Tokens are never logged or written to disk.
@@ -19,17 +21,39 @@ final class AzureCliAccessTokenProvider
 
     public function getAccessToken(): string
     {
+        DatabaseAuthDiagnostics::log('azure_cli.token.start', [
+            'azBinary' => $this->azBinary,
+            'resource' => self::RESOURCE,
+            'pathEnvPresent' => getenv('PATH') !== false,
+        ]);
+
         if (!$this->isAzureCliAvailable()) {
+            DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
+                'step' => 'az_available',
+                'success' => false,
+            ]);
             throw new AzureCliAccessTokenException(
                 'Azure CLI is unavailable. Install Azure CLI and ensure "az" is on PATH.',
             );
         }
+        DatabaseAuthDiagnostics::log('azure_cli.command.success', [
+            'step' => 'az_available',
+            'success' => true,
+        ]);
 
         if (!$this->isLoggedIn()) {
+            DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
+                'step' => 'az_account_show',
+                'success' => false,
+            ]);
             throw new AzureCliAccessTokenException(
                 'Azure CLI is not logged in. Run "az login" and retry.',
             );
         }
+        DatabaseAuthDiagnostics::log('azure_cli.command.success', [
+            'step' => 'az_account_show',
+            'success' => true,
+        ]);
 
         [$exitCode, $stdout, $stderr] = $this->run([
             $this->azBinary,
@@ -48,10 +72,24 @@ final class AzureCliAccessTokenProvider
         if ($exitCode !== 0 || $token === '') {
             // Do not include stdout/stderr (may contain sensitive material).
             unset($stderr);
+            DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
+                'step' => 'az_get_access_token',
+                'success' => false,
+                'exitCode' => $exitCode,
+                'tokenAcquired' => false,
+                'stdoutEmpty' => $token === '',
+            ]);
             throw new AzureCliAccessTokenException(
                 'Failed to acquire an Azure SQL access token via Azure CLI.',
             );
         }
+
+        DatabaseAuthDiagnostics::log('azure_cli.command.success', [
+            'step' => 'az_get_access_token',
+            'success' => true,
+            'tokenAcquired' => true,
+            'tokenLength' => strlen($token),
+        ]);
 
         return $token;
     }
