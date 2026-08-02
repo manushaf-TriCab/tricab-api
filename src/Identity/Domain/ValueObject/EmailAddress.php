@@ -8,6 +8,8 @@ use TriCab\Core\Identity\Domain\Exception\InvalidIdentityValue;
 
 final class EmailAddress
 {
+    private const MAX_LENGTH = 320;
+
     private function __construct(private readonly string $value)
     {
     }
@@ -16,7 +18,11 @@ final class EmailAddress
     {
         $normalized = strtolower(trim($value));
 
-        if ($normalized === '' || filter_var($normalized, FILTER_VALIDATE_EMAIL) === false) {
+        if (
+            $normalized === ''
+            || strlen($normalized) > self::MAX_LENGTH
+            || filter_var($normalized, FILTER_VALIDATE_EMAIL) === false
+        ) {
             throw InvalidIdentityValue::for('EmailAddress', $value);
         }
 
