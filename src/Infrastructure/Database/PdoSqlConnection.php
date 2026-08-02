@@ -48,4 +48,54 @@ final class PdoSqlConnection implements SqlConnection
             throw DatabaseUnavailable::fromThrowable($exception);
         }
     }
+
+    public function beginTransaction(): void
+    {
+        try {
+            if ($this->pdo->inTransaction()) {
+                return;
+            }
+
+            $this->pdo->beginTransaction();
+        } catch (PDOException $exception) {
+            throw DatabaseUnavailable::fromThrowable($exception);
+        } catch (Throwable $exception) {
+            throw DatabaseUnavailable::fromThrowable($exception);
+        }
+    }
+
+    public function commit(): void
+    {
+        try {
+            if (!$this->pdo->inTransaction()) {
+                return;
+            }
+
+            $this->pdo->commit();
+        } catch (PDOException $exception) {
+            throw DatabaseUnavailable::fromThrowable($exception);
+        } catch (Throwable $exception) {
+            throw DatabaseUnavailable::fromThrowable($exception);
+        }
+    }
+
+    public function rollBack(): void
+    {
+        try {
+            if (!$this->pdo->inTransaction()) {
+                return;
+            }
+
+            $this->pdo->rollBack();
+        } catch (PDOException $exception) {
+            throw DatabaseUnavailable::fromThrowable($exception);
+        } catch (Throwable $exception) {
+            throw DatabaseUnavailable::fromThrowable($exception);
+        }
+    }
+
+    public function inTransaction(): bool
+    {
+        return $this->pdo->inTransaction();
+    }
 }

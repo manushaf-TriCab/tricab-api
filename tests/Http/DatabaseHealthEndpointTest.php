@@ -37,6 +37,7 @@ final class DatabaseHealthEndpointTest extends TestCase
             'DB_AUTH_MODE' => 'entra-cli',
             'DB_HOST' => 'tricab-mel.database.windows.net',
             'DB_DATABASE' => 'tc',
+            'GUEST_JWT_SECRET' => str_repeat('t', 64),
         ]);
 
         // Force provider binary to a missing executable via container replacement is hard;
@@ -46,6 +47,7 @@ final class DatabaseHealthEndpointTest extends TestCase
             'DB_AUTH_MODE' => 'entra-cli',
             'DB_HOST' => 'tricab-mel.database.windows.net',
             'DB_DATABASE' => 'tc',
+            'GUEST_JWT_SECRET' => str_repeat('t', 64),
         ]);
         $factory = new AzureSqlPdoFactory(
             $settings,

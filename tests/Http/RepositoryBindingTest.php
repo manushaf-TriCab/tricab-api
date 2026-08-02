@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Http;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Api\Identity\Persistence\AzureSqlEmailOtpChallengeRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlGuestSessionRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlUserProvisioningRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlUserRepository;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Tests\TestAppFactory;
@@ -51,6 +54,9 @@ final class RepositoryBindingTest extends TestCase
 
         self::assertTrue(interface_exists(UserRepository::class));
         self::assertTrue(class_exists(AzureSqlUserRepository::class));
+        self::assertTrue(class_exists(AzureSqlEmailOtpChallengeRepository::class));
+        self::assertTrue(class_exists(AzureSqlGuestSessionRepository::class));
+        self::assertTrue(class_exists(AzureSqlUserProvisioningRepository::class));
         self::assertInstanceOf(
             InMemoryApiUserRepository::class,
             $app->getContainer()->get(UserRepository::class),

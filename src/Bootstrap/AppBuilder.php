@@ -12,6 +12,9 @@ use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\HealthAction;
+use TriCab\Api\Http\Action\LogoutGuestAction;
+use TriCab\Api\Http\Action\RequestGuestOtpAction;
+use TriCab\Api\Http\Action\VerifyGuestOtpAction;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
 use TriCab\Api\Http\Middleware\DevelopmentAuthenticationMiddleware;
@@ -51,7 +54,7 @@ final class AppBuilder
         $settings = $container->get(Settings::class);
         $app->addErrorMiddleware($settings->appDebug, true, true);
 
-        self::registerRoutes($app);
+        self::registerRoutes($app, $settings);
 
         return $app;
     }
@@ -59,10 +62,16 @@ final class AppBuilder
     /**
      * @param App<ContainerInterface> $app
      */
-    private static function registerRoutes(App $app): void
+    private static function registerRoutes(App $app, Settings $settings): void
     {
         $app->get('/health', HealthAction::class);
         $app->get('/health/database', DatabaseHealthAction::class);
         $app->get('/api/v1/me', GetAuthenticatedUserAction::class);
+
+        if ($settings->isGuestJwtConfigured()) {
+            $app->post('/api/v1/auth/guest/request-otp', RequestGuestOtpAction::class);
+            $app->post('/api/v1/auth/guest/verify-otp', VerifyGuestOtpAction::class);
+            $app->post('/api/v1/auth/guest/logout', LogoutGuestAction::class);
+        }
     }
 }

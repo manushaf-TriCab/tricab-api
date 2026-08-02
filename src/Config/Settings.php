@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Config;
 
+use InvalidArgumentException;
+
 final readonly class Settings
 {
     public const USER_REPOSITORY_MEMORY = 'memory';
@@ -11,6 +13,13 @@ final readonly class Settings
 
     public const DB_AUTH_MODE_SQL_LOGIN = 'sql-login';
     public const DB_AUTH_MODE_ENTRA_CLI = 'entra-cli';
+
+    public const GUEST_EMAIL_PROVIDER_POSTMARK = 'postmark';
+    public const GUEST_EMAIL_PROVIDER_DEVELOPMENT = 'development';
+
+    public const DEFAULT_GUEST_JWT_TTL_SECONDS = 86400;
+    public const MAX_GUEST_JWT_TTL_SECONDS = 86400;
+    public const MIN_GUEST_JWT_SECRET_BYTES = 32;
 
     /**
      * @param list<string> $corsAllowedOrigins
@@ -39,6 +48,17 @@ final readonly class Settings
         public string $dbPassword,
         public bool $dbEncrypt,
         public bool $dbTrustServerCertificate,
+        public string $guestEmailProvider,
+        public bool $guestOtpDevReveal,
+        public string $postmarkServerToken,
+        public string $postmarkFromEmail,
+        public string $postmarkFromName,
+        public string $postmarkMessageStream,
+        public string $guestJwtIssuer,
+        public string $guestJwtAudience,
+        public string $guestJwtSecret,
+        public int $guestJwtTtlSeconds,
+        public int $guestJwtClockSkewSeconds,
     ) {
     }
 
@@ -77,11 +97,30 @@ final readonly class Settings
         return $this->entraTenantId !== '' && $this->entraAudience !== '';
     }
 
+    public function usesPostmarkGuestEmail(): bool
+    {
+        return $this->guestEmailProvider === self::GUEST_EMAIL_PROVIDER_POSTMARK;
+    }
+
+    public function usesDevelopmentGuestEmail(): bool
+    {
+        return $this->guestEmailProvider === self::GUEST_EMAIL_PROVIDER_DEVELOPMENT;
+    }
+
+    public function isGuestJwtConfigured(): bool
+    {
+        return $this->guestJwtIssuer !== ''
+            && $this->guestJwtAudience !== ''
+            && strlen($this->guestJwtSecret) >= self::MIN_GUEST_JWT_SECRET_BYTES;
+    }
+
     /**
      * @param array<string, string|null> $env
      */
     public static function fromEnvironment(array $env): self
     {
+        $appEnv = self::string($env, 'APP_ENV', 'production');
+
         $userRepository = strtolower(self::string($env, 'USER_REPOSITORY', self::USER_REPOSITORY_MEMORY));
         if (
             $userRepository !== self::USER_REPOSITORY_MEMORY
@@ -103,8 +142,66 @@ final readonly class Settings
             $subjectClaim = 'oid';
         }
 
+        $guestEmailProvider = strtolower(
+            self::string(
+                $env,
+                'GUEST_EMAIL_PROVIDER',
+                $appEnv === 'production'
+                    ? self::GUEST_EMAIL_PROVIDER_POSTMARK
+                    : self::GUEST_EMAIL_PROVIDER_DEVELOPMENT,
+            ),
+        );
+        if (
+            $guestEmailProvider !== self::GUEST_EMAIL_PROVIDER_POSTMARK
+            && $guestEmailProvider !== self::GUEST_EMAIL_PROVIDER_DEVELOPMENT
+        ) {
+            $guestEmailProvider = $appEnv === 'production'
+                ? self::GUEST_EMAIL_PROVIDER_POSTMARK
+                : self::GUEST_EMAIL_PROVIDER_DEVELOPMENT;
+        }
+
+        $guestOtpDevReveal = self::bool($env, 'GUEST_OTP_DEV_REVEAL', false);
+        $postmarkServerToken = self::string($env, 'POSTMARK_SERVER_TOKEN', '');
+        $postmarkFromEmail = self::string($env, 'POSTMARK_FROM_EMAIL', '');
+        $postmarkFromName = self::string($env, 'POSTMARK_FROM_NAME', 'TriCab');
+        $postmarkMessageStream = self::string($env, 'POSTMARK_MESSAGE_STREAM', 'outbound');
+
+        $guestJwtIssuer = self::string($env, 'GUEST_JWT_ISSUER', 'https://api.tricab.local');
+        $guestJwtAudience = self::string($env, 'GUEST_JWT_AUDIENCE', 'tricab-api');
+        $guestJwtSecret = self::string($env, 'GUEST_JWT_SECRET', '');
+        $guestJwtTtlSeconds = self::int($env, 'GUEST_JWT_TTL_SECONDS', self::DEFAULT_GUEST_JWT_TTL_SECONDS);
+        $guestJwtClockSkewSeconds = self::int($env, 'GUEST_JWT_CLOCK_SKEW_SECONDS', 30);
+
+        if ($guestJwtTtlSeconds < 1 || $guestJwtTtlSeconds > self::MAX_GUEST_JWT_TTL_SECONDS) {
+            throw new InvalidArgumentException(
+                'GUEST_JWT_TTL_SECONDS must be between 1 and ' . self::MAX_GUEST_JWT_TTL_SECONDS . '.',
+            );
+        }
+
+        if ($guestJwtClockSkewSeconds < 0 || $guestJwtClockSkewSeconds > 300) {
+            throw new InvalidArgumentException('GUEST_JWT_CLOCK_SKEW_SECONDS must be between 0 and 300.');
+        }
+
+        if ($appEnv === 'production' && $guestEmailProvider === self::GUEST_EMAIL_PROVIDER_DEVELOPMENT) {
+            throw new InvalidArgumentException(
+                'GUEST_EMAIL_PROVIDER=development is not allowed when APP_ENV=production.',
+            );
+        }
+
+        if ($appEnv === 'production' && $guestOtpDevReveal) {
+            throw new InvalidArgumentException(
+                'GUEST_OTP_DEV_REVEAL cannot be enabled when APP_ENV=production.',
+            );
+        }
+
+        if ($guestJwtSecret !== '' && strlen($guestJwtSecret) < self::MIN_GUEST_JWT_SECRET_BYTES) {
+            throw new InvalidArgumentException(
+                'GUEST_JWT_SECRET must be at least 32 bytes when provided.',
+            );
+        }
+
         return new self(
-            appEnv: self::string($env, 'APP_ENV', 'production'),
+            appEnv: $appEnv,
             appName: self::string($env, 'APP_NAME', 'tricab-api'),
             appDebug: self::bool($env, 'APP_DEBUG', false),
             devAuthEnabled: self::bool($env, 'DEV_AUTH_ENABLED', false),
@@ -127,6 +224,17 @@ final readonly class Settings
             dbPassword: self::string($env, 'DB_PASSWORD', ''),
             dbEncrypt: self::bool($env, 'DB_ENCRYPT', true),
             dbTrustServerCertificate: self::bool($env, 'DB_TRUST_SERVER_CERTIFICATE', false),
+            guestEmailProvider: $guestEmailProvider,
+            guestOtpDevReveal: $guestOtpDevReveal,
+            postmarkServerToken: $postmarkServerToken,
+            postmarkFromEmail: $postmarkFromEmail,
+            postmarkFromName: $postmarkFromName,
+            postmarkMessageStream: $postmarkMessageStream,
+            guestJwtIssuer: $guestJwtIssuer,
+            guestJwtAudience: $guestJwtAudience,
+            guestJwtSecret: $guestJwtSecret,
+            guestJwtTtlSeconds: $guestJwtTtlSeconds,
+            guestJwtClockSkewSeconds: $guestJwtClockSkewSeconds,
         );
     }
 
