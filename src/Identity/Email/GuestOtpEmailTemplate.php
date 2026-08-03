@@ -17,13 +17,19 @@ final class GuestOtpEmailTemplate
 
     public const SESSION_DURATION_HOURS = 24;
 
+    /** Inline SVG wordmark used when no hosted logo URL is configured. */
+    private const DEFAULT_LOGO_DATA_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCAxNjAgNDAiIHJvbGU9ImltZyI+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiByeD0iOCIgZmlsbD0iIzBiM2QyZSIvPjx0ZXh0IHg9IjIwIiB5PSIyNiIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UPC90ZXh0Pjx0ZXh0IHg9IjUyIiB5PSIyNiIgZm9udC1mYW1pbHk9IkhlbHZldGljYSxBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjIyIiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjMGIzZDJlIj5UcmlDYWI8L3RleHQ+PC9zdmc+';
+
     public static function subject(): string
     {
         return self::SUBJECT;
     }
 
-    public static function html(OtpCode $otpCode, DateTimeImmutable $expiresAtUtc): string
-    {
+    public static function html(
+        OtpCode $otpCode,
+        DateTimeImmutable $expiresAtUtc,
+        ?string $logoUrl = null,
+    ): string {
         $code = htmlspecialchars($otpCode->toString(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $minutes = self::expiryMinutes($expiresAtUtc);
         $expiresLabel = htmlspecialchars(
@@ -32,6 +38,7 @@ final class GuestOtpEmailTemplate
             'UTF-8',
         );
         $hours = (string) self::SESSION_DURATION_HOURS;
+        $logoSrc = htmlspecialchars(self::resolveLogoUrl($logoUrl), ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
         return <<<HTML
 <!DOCTYPE html>
@@ -41,38 +48,56 @@ final class GuestOtpEmailTemplate
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TriCab guest login code</title>
 </head>
-<body style="margin:0;padding:0;background:#f4f6f8;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f6f8;padding:24px 12px;">
+<body style="margin:0;padding:0;background:#eef2f0;font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#eef2f0;padding:28px 12px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;background:#ffffff;border-radius:8px;padding:32px 28px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #d9e2dc;">
           <tr>
-            <td style="font-size:22px;font-weight:700;letter-spacing:0.02em;color:#0b3d2e;">
-              TriCab
+            <td style="background:#0b3d2e;padding:22px 28px;">
+              <img src="{$logoSrc}" alt="TriCab" width="160" height="40" style="display:block;border:0;outline:none;text-decoration:none;height:40px;width:auto;max-width:180px;">
             </td>
           </tr>
           <tr>
-            <td style="padding-top:20px;font-size:16px;line-height:1.5;">
-              Use this one-time code to continue as a guest:
+            <td style="padding:32px 28px 8px;font-size:16px;line-height:1.55;color:#1a1a1a;">
+              Hello,
             </td>
           </tr>
           <tr>
-            <td align="center" style="padding:28px 0;">
-              <div style="display:inline-block;font-size:32px;font-weight:700;letter-spacing:0.35em;font-family:Consolas,Monaco,monospace;color:#0b3d2e;">
+            <td style="padding:0 28px;font-size:16px;line-height:1.55;color:#1a1a1a;">
+              Use this one-time code to sign in to TriCab as a guest:
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:28px;">
+              <div style="display:inline-block;background:#f3f7f5;border:1px solid #c9d9d1;border-radius:8px;padding:16px 28px;font-size:34px;font-weight:700;letter-spacing:0.4em;font-family:Consolas,Monaco,monospace;color:#0b3d2e;">
                 {$code}
               </div>
             </td>
           </tr>
           <tr>
-            <td style="font-size:14px;line-height:1.6;color:#333333;">
-              This code expires in about {$minutes} minutes (by {$expiresLabel}).
+            <td style="padding:0 28px 8px;font-size:14px;line-height:1.6;color:#333333;">
+              This code expires in <strong>{$minutes} minutes</strong> (by {$expiresLabel}).
               It can be used only once.
               After you sign in, your guest session lasts up to {$hours} hours.
             </td>
           </tr>
           <tr>
-            <td style="padding-top:20px;font-size:13px;line-height:1.5;color:#666666;">
-              If you did not request this code, you can ignore this email.
+            <td style="padding:16px 28px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fff8e8;border:1px solid #f0d9a0;border-radius:6px;">
+                <tr>
+                  <td style="padding:14px 16px;font-size:13px;line-height:1.55;color:#5c4a12;">
+                    <strong>Security tip:</strong> TriCab will never ask you to share this code by phone, chat, or email.
+                    Enter it only in the official TriCab sign-in screen.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 28px 28px;font-size:13px;line-height:1.5;color:#666666;">
+              If you did not request this code, you can safely ignore this email.
+              No changes will be made to your account.
             </td>
           </tr>
         </table>
@@ -93,15 +118,19 @@ HTML;
         return implode("\n", [
             'TriCab',
             '',
+            'Hello,',
+            '',
             'Your guest login code is:',
             '',
             $otpCode->toString(),
             '',
-            sprintf('This code expires in about %d minutes (by %s).', $minutes, $expiresLabel),
+            sprintf('This code expires in %d minutes (by %s).', $minutes, $expiresLabel),
             'It can be used only once.',
             sprintf('After you sign in, your guest session lasts up to %s hours.', $hours),
             '',
-            'If you did not request this code, you can ignore this email.',
+            'Security tip: TriCab will never ask you to share this code by phone, chat, or email.',
+            '',
+            'If you did not request this code, you can safely ignore this email.',
         ]);
     }
 
@@ -111,5 +140,15 @@ HTML;
         $seconds = $expiresAtUtc->getTimestamp() - $now->getTimestamp();
 
         return max(1, (int) ceil($seconds / 60));
+    }
+
+    private static function resolveLogoUrl(?string $logoUrl): string
+    {
+        $trimmed = $logoUrl === null ? '' : trim($logoUrl);
+        if ($trimmed !== '' && preg_match('#^https?://#i', $trimmed) === 1) {
+            return $trimmed;
+        }
+
+        return self::DEFAULT_LOGO_DATA_URI;
     }
 }

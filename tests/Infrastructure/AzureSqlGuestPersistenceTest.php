@@ -128,7 +128,10 @@ final class AzureSqlGuestPersistenceTest extends TestCase
 
         self::assertSame(7, $session->id()?->toInt());
         self::assertSame(42, $connection->calls[0]['params'][':userId']);
-        self::assertSame(str_repeat('ab', 32), bin2hex((string) $connection->calls[0]['params'][':sessionTokenHash']));
+        $hashParam = $connection->calls[0]['params'][':sessionTokenHash'];
+        self::assertInstanceOf(\TriCab\Api\Infrastructure\Database\SqlBinary::class, $hashParam);
+        self::assertSame(32, $hashParam->length());
+        self::assertSame(str_repeat('ab', 32), bin2hex($hashParam->bytes));
         self::assertSame('550e8400-e29b-41d4-a716-446655440003', $connection->calls[0]['params'][':jwtId']);
         self::assertStringNotContainsString("N'", $connection->calls[0]['sql']);
 

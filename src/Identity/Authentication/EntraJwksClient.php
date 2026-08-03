@@ -55,13 +55,15 @@ final class EntraJwksClient implements EntraJwksProvider
         ]);
 
         $body = @file_get_contents($url, false, $context);
-        $status = self::statusFromHeaders($http_response_header ?? []);
+        /** @var list<string> $responseHeaders */
+        $responseHeaders = $http_response_header;
+        $status = self::statusFromHeaders($responseHeaders);
         $bytes = is_string($body) ? strlen($body) : 0;
 
         if ($body === false) {
             $last = error_get_last();
-            $detail = is_array($last) && isset($last['message'])
-                ? self::sanitizeTlsMessage((string) $last['message'])
+            $detail = is_array($last)
+                ? self::sanitizeTlsMessage($last['message'])
                 : 'stream request failed';
             self::logFailure('tls_or_transport', $status, $bytes, $detail, $ssl);
 

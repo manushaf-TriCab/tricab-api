@@ -80,9 +80,48 @@ final class GuestAuthErrorMapper
         }
 
         if ($exception instanceof GuestSessionIssuanceFailed) {
+            $previous = $exception->getPrevious();
+            $pdo = null;
+            $cursor = $previous;
+            while ($cursor instanceof Throwable) {
+                if ($cursor instanceof \PDOException) {
+                    $pdo = $cursor;
+                    break;
+                }
+                $cursor = $cursor->getPrevious();
+            }
+
+            $sqlState = null;
+            $driverCode = null;
+            $driverMessage = null;
+            if ($pdo instanceof \PDOException) {
+                $rawState = $pdo->errorInfo[0] ?? $pdo->getCode();
+                if (is_string($rawState) || is_int($rawState)) {
+                    $sqlState = (string) $rawState;
+                }
+
+                $rawDriverCode = $pdo->errorInfo[1] ?? null;
+                if (is_int($rawDriverCode) || (is_string($rawDriverCode) && is_numeric($rawDriverCode))) {
+                    $driverCode = (int) $rawDriverCode;
+                }
+
+                $rawDriverMessage = $pdo->errorInfo[2] ?? null;
+                if (is_string($rawDriverMessage)) {
+                    $driverMessage = substr($rawDriverMessage, 0, 240);
+                }
+            }
+
             $this->logger->log('guest_otp_verification_failed', [
                 'route' => $route,
                 'reason' => 'AUTH_SESSION_CREATION_FAILED',
+                'internal_reason' => $exception::class,
+                'underlying_exception' => $previous instanceof Throwable ? $previous::class : null,
+                'underlying_message' => $previous instanceof Throwable
+                    ? substr($previous->getMessage(), 0, 240)
+                    : null,
+                'sql_state' => $sqlState,
+                'driver_code' => $driverCode,
+                'driver_message' => $driverMessage,
             ]);
 
             return $this->responder->error(

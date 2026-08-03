@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Infrastructure\Database;
 
+use PDOException;
 use Throwable;
 
 /**
- * Temporary diagnostics-only logger for Azure SQL auth failures.
+ * Diagnostics-only logger for Azure SQL auth/persistence failures.
  * Writes to var/log/database-auth.log and error_log. Never logs tokens/secrets.
  */
 final class DatabaseAuthDiagnostics
 {
-    private const RELATIVE_LOG_PATH = '/var/log/database-auth.log';
-
+    /**
+     * @param array<string, mixed> $context
+     */
     public static function log(string $event, array $context = []): void
     {
         $safeContext = self::sanitize($context);
@@ -32,28 +34,68 @@ final class DatabaseAuthDiagnostics
         error_log(rtrim($line));
     }
 
+    /**
+     * @param array<string, mixed> $context
+     */
     public static function logThrowable(string $event, Throwable $throwable, array $context = []): void
     {
         $context['exceptionClass'] = $throwable::class;
         $context['exceptionMessage'] = self::redactSensitive($throwable->getMessage());
-        if ($throwable instanceof \PDOException) {
-            $context['sqlState'] = (string) ($throwable->errorInfo[0] ?? $throwable->getCode());
-            $context['driverCode'] = $throwable->errorInfo[1] ?? null;
-            $context['driverMessage'] = isset($throwable->errorInfo[2])
-                ? self::redactSensitive((string) $throwable->errorInfo[2])
-                : null;
-        }
+        self::appendPdoDetails($context, $throwable, '');
 
         $previous = $throwable->getPrevious();
-        if ($previous instanceof Throwable) {
-            $context['previousClass'] = $previous::class;
-            $context['previousMessage'] = self::redactSensitive($previous->getMessage());
-            if ($previous instanceof \PDOException) {
-                $context['previousSqlState'] = (string) ($previous->errorInfo[0] ?? $previous->getCode());
-            }
+        $depth = 0;
+        while ($previous instanceof Throwable && $depth < 5) {
+            $prefix = $depth === 0 ? 'previous' : 'previous' . ($depth + 1);
+            $context[$prefix . 'Class'] = $previous::class;
+            $context[$prefix . 'Message'] = self::redactSensitive($previous->getMessage());
+            self::appendPdoDetails($context, $previous, $prefix);
+            $previous = $previous->getPrevious();
+            ++$depth;
         }
 
         self::log($event, $context);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private static function appendPdoDetails(array &$context, Throwable $throwable, string $prefix): void
+    {
+        if (!$throwable instanceof PDOException) {
+            return;
+        }
+
+        $stateKey = $prefix === '' ? 'sqlState' : $prefix . 'SqlState';
+        $codeKey = $prefix === '' ? 'driverCode' : $prefix . 'DriverCode';
+        $messageKey = $prefix === '' ? 'driverMessage' : $prefix . 'DriverMessage';
+
+        $sqlState = $throwable->errorInfo[0] ?? $throwable->getCode();
+        $context[$stateKey] = self::stringifyScalar($sqlState);
+
+        $driverCode = $throwable->errorInfo[1] ?? null;
+        if (is_int($driverCode) || is_string($driverCode)) {
+            $context[$codeKey] = $driverCode;
+        }
+
+        $driverMessage = $throwable->errorInfo[2] ?? null;
+        $context[$messageKey] = self::stringifyScalar($driverMessage);
+        if (is_string($context[$messageKey])) {
+            $context[$messageKey] = self::redactSensitive($context[$messageKey]);
+        }
+    }
+
+    private static function stringifyScalar(mixed $value): ?string
+    {
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return (string) $value;
+        }
+
+        return null;
     }
 
     private static function resolveLogFile(): ?string
@@ -80,6 +122,8 @@ final class DatabaseAuthDiagnostics
                 str_contains($lower, 'token')
                 || str_contains($lower, 'password')
                 || str_contains($lower, 'secret')
+                || str_contains($lower, 'otp')
+                || str_contains($lower, 'authorization')
             ) {
                 $safe[$key] = is_string($value) && $value !== '' ? '[REDACTED]' : $value;
                 continue;

@@ -122,7 +122,10 @@ final class GuestJwtValidator implements GuestAccessTokenValidator
     private function decodeAndVerifyClaims(string $accessToken): array
     {
         $previousLeeway = JWT::$leeway;
+        $previousTimestamp = JWT::$timestamp;
         JWT::$leeway = $this->clockSkewSeconds;
+        // Align JWT exp/nbf checks with the injected clock (tests + deterministic validation).
+        JWT::$timestamp = $this->clock->now()->getTimestamp();
 
         try {
             $decoded = JWT::decode($accessToken, new Key($this->secret, GuestJwtIssuer::ALGORITHM));
@@ -138,6 +141,7 @@ final class GuestJwtValidator implements GuestAccessTokenValidator
             throw AuthTokenValidationFailed::invalid();
         } finally {
             JWT::$leeway = $previousLeeway;
+            JWT::$timestamp = $previousTimestamp;
         }
 
         /** @var array<string, mixed> $claims */

@@ -64,7 +64,8 @@ Provider selection (`GUEST_EMAIL_PROVIDER`):
 | Value | Behaviour |
 |-------|-----------|
 | `development` (default in non-production) | No external send. OTP held in memory for tests. |
-| `postmark` (required in production) | Sends transactional email via Postmark HTTPS API |
+| `microsoft-graph` | Sends mail via Microsoft Graph (`/{RFQ_MAILBOX}/sendMail`) using client credentials |
+| `postmark` | Sends transactional email via Postmark HTTPS API |
 
 ```env
 GUEST_EMAIL_PROVIDER=development
@@ -74,7 +75,22 @@ POSTMARK_SERVER_TOKEN=
 POSTMARK_FROM_EMAIL=
 POSTMARK_FROM_NAME=TriCab
 POSTMARK_MESSAGE_STREAM=outbound
+
+GRAPH_TENANT_ID=
+GRAPH_CLIENT_ID=
+GRAPH_CLIENT_SECRET=
+RFQ_MAILBOX=
+GUEST_OTP_EMAIL_LOGO_URL=
 ```
+
+### Microsoft Graph
+
+1. Register an app with application permission `Mail.Send` (admin consent).
+2. Set `GUEST_EMAIL_PROVIDER=microsoft-graph`.
+3. Provide `GRAPH_TENANT_ID`, `GRAPH_CLIENT_ID`, `GRAPH_CLIENT_SECRET`, and `RFQ_MAILBOX` (sender UPN).
+4. Token endpoint: `https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token` with scope `https://graph.microsoft.com/.default`.
+5. Container creation fails fast if Graph is selected without credentials.
+6. OTP, access tokens, client secrets, and Authorization headers are never logged.
 
 ### Postmark
 
@@ -85,7 +101,7 @@ POSTMARK_MESSAGE_STREAM=outbound
 
 ### Development mode
 
-- Does **not** call Postmark or any external provider.
+- Does **not** call Graph, Postmark, or any external provider.
 - Does **not** write OTPs to application logs by default.
 - Set `GUEST_OTP_DEV_REVEAL=true` only for local manual debugging (prints a clearly marked OTP line to STDERR).
 - **Never** enable `GUEST_OTP_DEV_REVEAL` in production — Settings rejects it when `APP_ENV=production`.

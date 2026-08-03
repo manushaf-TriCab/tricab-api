@@ -16,6 +16,7 @@ final readonly class Settings
 
     public const GUEST_EMAIL_PROVIDER_POSTMARK = 'postmark';
     public const GUEST_EMAIL_PROVIDER_DEVELOPMENT = 'development';
+    public const GUEST_EMAIL_PROVIDER_MICROSOFT_GRAPH = 'microsoft-graph';
 
     public const DEFAULT_GUEST_JWT_TTL_SECONDS = 86400;
     public const MAX_GUEST_JWT_TTL_SECONDS = 86400;
@@ -54,6 +55,11 @@ final readonly class Settings
         public string $postmarkFromEmail,
         public string $postmarkFromName,
         public string $postmarkMessageStream,
+        public string $graphTenantId,
+        public string $graphClientId,
+        public string $graphClientSecret,
+        public string $rfqMailbox,
+        public string $guestOtpEmailLogoUrl,
         public string $guestJwtIssuer,
         public string $guestJwtAudience,
         public string $guestJwtSecret,
@@ -107,6 +113,11 @@ final readonly class Settings
         return $this->guestEmailProvider === self::GUEST_EMAIL_PROVIDER_DEVELOPMENT;
     }
 
+    public function usesMicrosoftGraphGuestEmail(): bool
+    {
+        return $this->guestEmailProvider === self::GUEST_EMAIL_PROVIDER_MICROSOFT_GRAPH;
+    }
+
     public function isGuestJwtConfigured(): bool
     {
         return $this->guestJwtIssuer !== ''
@@ -154,6 +165,7 @@ final readonly class Settings
         if (
             $guestEmailProvider !== self::GUEST_EMAIL_PROVIDER_POSTMARK
             && $guestEmailProvider !== self::GUEST_EMAIL_PROVIDER_DEVELOPMENT
+            && $guestEmailProvider !== self::GUEST_EMAIL_PROVIDER_MICROSOFT_GRAPH
         ) {
             $guestEmailProvider = $appEnv === 'production'
                 ? self::GUEST_EMAIL_PROVIDER_POSTMARK
@@ -165,6 +177,12 @@ final readonly class Settings
         $postmarkFromEmail = self::string($env, 'POSTMARK_FROM_EMAIL', '');
         $postmarkFromName = self::string($env, 'POSTMARK_FROM_NAME', 'TriCab');
         $postmarkMessageStream = self::string($env, 'POSTMARK_MESSAGE_STREAM', 'outbound');
+
+        $graphTenantId = self::string($env, 'GRAPH_TENANT_ID', '');
+        $graphClientId = self::string($env, 'GRAPH_CLIENT_ID', '');
+        $graphClientSecret = self::string($env, 'GRAPH_CLIENT_SECRET', '');
+        $rfqMailbox = self::string($env, 'RFQ_MAILBOX', '');
+        $guestOtpEmailLogoUrl = self::string($env, 'GUEST_OTP_EMAIL_LOGO_URL', '');
 
         $guestJwtIssuer = self::string($env, 'GUEST_JWT_ISSUER', 'https://api.tricab.local');
         $guestJwtAudience = self::string($env, 'GUEST_JWT_AUDIENCE', 'tricab-api');
@@ -230,6 +248,11 @@ final readonly class Settings
             postmarkFromEmail: $postmarkFromEmail,
             postmarkFromName: $postmarkFromName,
             postmarkMessageStream: $postmarkMessageStream,
+            graphTenantId: $graphTenantId,
+            graphClientId: $graphClientId,
+            graphClientSecret: $graphClientSecret,
+            rfqMailbox: $rfqMailbox,
+            guestOtpEmailLogoUrl: $guestOtpEmailLogoUrl,
             guestJwtIssuer: $guestJwtIssuer,
             guestJwtAudience: $guestJwtAudience,
             guestJwtSecret: $guestJwtSecret,

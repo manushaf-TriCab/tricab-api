@@ -42,17 +42,21 @@ final class GuestOtpEmailInfrastructureTest extends TestCase
         self::assertCount(1, $http->calls);
         self::assertSame('https://api.postmarkapp.com/email', $http->calls[0]['url']);
         self::assertSame('test-token', $http->calls[0]['headers']['X-Postmark-Server-Token']);
-        self::assertSame('guest@example.com', $http->calls[0]['payload']['To']);
-        self::assertSame(GuestOtpEmailTemplate::SUBJECT, $http->calls[0]['payload']['Subject']);
+        $payload = $http->calls[0]['payload'];
+        self::assertNotNull($payload);
+        self::assertSame('guest@example.com', $payload['To']);
+        self::assertSame(GuestOtpEmailTemplate::SUBJECT, $payload['Subject']);
         self::assertStringNotContainsString('654321', GuestOtpEmailTemplate::SUBJECT);
-        $htmlBody = $http->calls[0]['payload']['HtmlBody'];
-        $textBody = $http->calls[0]['payload']['TextBody'];
+        $htmlBody = $payload['HtmlBody'];
+        $textBody = $payload['TextBody'];
         self::assertIsString($htmlBody);
         self::assertIsString($textBody);
         self::assertStringContainsString('654321', $htmlBody);
         self::assertStringContainsString('654321', $textBody);
-        self::assertStringContainsString('expires in about', $textBody);
+        self::assertStringContainsString('expires in', $textBody);
         self::assertStringContainsString('24 hours', $htmlBody);
+        self::assertStringContainsString('Hello,', $htmlBody);
+        self::assertStringContainsString('Security tip', $htmlBody);
     }
 
     public function test_postmark_non_2xx_does_not_expose_otp(): void
@@ -180,11 +184,15 @@ final class GuestOtpEmailInfrastructureTest extends TestCase
 
         self::assertSame('Your TriCab guest login code', GuestOtpEmailTemplate::subject());
         self::assertStringNotContainsString('737373', GuestOtpEmailTemplate::subject());
-        self::assertStringContainsString('expires in about', GuestOtpEmailTemplate::text($otp, $expires));
-        self::assertStringContainsString('expires in about', GuestOtpEmailTemplate::html($otp, $expires));
+        self::assertStringContainsString('expires in', GuestOtpEmailTemplate::text($otp, $expires));
+        self::assertStringContainsString('expires in', GuestOtpEmailTemplate::html($otp, $expires));
         self::assertStringContainsString('only once', GuestOtpEmailTemplate::text($otp, $expires));
         self::assertStringContainsString('24 hours', GuestOtpEmailTemplate::html($otp, $expires));
         self::assertStringContainsString('ignore this email', GuestOtpEmailTemplate::text($otp, $expires));
+        self::assertStringContainsString('Hello,', GuestOtpEmailTemplate::html($otp, $expires));
+        self::assertStringContainsString('Security tip', GuestOtpEmailTemplate::html($otp, $expires));
+        self::assertStringContainsString('alt="TriCab"', GuestOtpEmailTemplate::html($otp, $expires));
+        self::assertStringContainsString('5 minutes', GuestOtpEmailTemplate::html($otp, $expires));
     }
 
     public function test_container_binds_development_sender_by_default_in_development(): void

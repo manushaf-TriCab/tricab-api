@@ -10,13 +10,13 @@ namespace TriCab\Api\Infrastructure\Database;
 interface SqlConnection
 {
     /**
-     * @param array<string, scalar|null> $params
+     * @param array<string, scalar|SqlBinary|null> $params
      * @return list<array<string, mixed>>
      */
     public function fetchAll(string $sql, array $params = []): array;
 
     /**
-     * @param array<string, scalar|null> $params
+     * @param array<string, scalar|SqlBinary|null> $params
      */
     public function execute(string $sql, array $params = []): void;
 

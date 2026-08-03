@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Identity\Persistence;
 
+use Throwable;
+use TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics;
+use TriCab\Api\Infrastructure\Database\SqlBinary;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Contract\GuestSessionRepository;
 use TriCab\Core\Identity\Domain\Entity\GuestSession;
@@ -71,10 +74,11 @@ SQL;
     public function findBySessionTokenHash(SessionTokenHash $sessionTokenHash): ?GuestSession
     {
         $sql = self::SELECT_COLUMNS . ' WHERE s.[SessionTokenHash] = :sessionTokenHash';
+        $binary = new SqlBinary($sessionTokenHash->toBinary());
 
         return $this->hydrateOne(
             $this->connection->fetchAll($sql, [
-                ':sessionTokenHash' => $sessionTokenHash->toBinary(),
+                ':sessionTokenHash' => $binary,
             ]),
         );
     }
@@ -124,10 +128,11 @@ VALUES (
 )
 SQL;
 
-        $rows = $this->connection->fetchAll($sql, [
+        $tokenHashBinary = new SqlBinary($session->sessionTokenHash()->toBinary());
+        $params = [
             ':publicId' => $session->publicId()->toString(),
             ':userId' => $session->userId()->toInt(),
-            ':sessionTokenHash' => $session->sessionTokenHash()->toBinary(),
+            ':sessionTokenHash' => $tokenHashBinary,
             ':jwtId' => $session->jwtId()?->toString(),
             ':issuedAtUtc' => AzureSqlValueMapper::formatDateTime($session->issuedAtUtc()),
             ':expiresAtUtc' => AzureSqlValueMapper::formatDateTime($session->expiresAtUtc()),
@@ -140,7 +145,34 @@ SQL;
             ':createdIpAddress' => $session->createdIpAddress(),
             ':createdUserAgent' => $session->createdUserAgent(),
             ':createdAtUtc' => AzureSqlValueMapper::formatDateTime($session->createdAtUtc()),
-        ]);
+        ];
+
+        try {
+            $rows = $this->connection->fetchAll($sql, $params);
+        } catch (Throwable $exception) {
+            DatabaseAuthDiagnostics::logThrowable('guest_session_insert_failed', $exception, [
+                'insertStage' => 'GuestSessions.insert',
+                'parameterNames' => array_keys($params),
+                'parameterTypes' => $this->describeParamTypes($params),
+                'parameterLengths' => $this->describeParamLengths($params),
+                'sessionTokenHashType' => 'binary',
+                'sessionTokenHashByteLength' => $tokenHashBinary->length(),
+                'sessionTokenHashIsBinary' => true,
+                'userId' => $session->userId()->toInt(),
+                'publicIdLength' => strlen($session->publicId()->toString()),
+                'jwtIdPresent' => $session->jwtId() !== null,
+                'issuedAtUtc' => $params[':issuedAtUtc'],
+                'expiresAtUtc' => $params[':expiresAtUtc'],
+                'createdIpAddressLength' => is_string($params[':createdIpAddress'])
+                    ? strlen($params[':createdIpAddress'])
+                    : null,
+                'createdUserAgentLength' => is_string($params[':createdUserAgent'])
+                    ? strlen($params[':createdUserAgent'])
+                    : null,
+            ]);
+
+            throw $exception;
+        }
 
         if ($rows === []) {
             throw IdentityPersistenceException::insertFailed('GuestSession');
@@ -149,6 +181,49 @@ SQL;
         $session->assignId(
             GuestSessionId::fromInt(AzureSqlValueMapper::intValue($rows[0]['GuestSessionId'] ?? null)),
         );
+    }
+
+    /**
+     * @param array<string, scalar|SqlBinary|null> $params
+     * @return array<string, string>
+     */
+    private function describeParamTypes(array $params): array
+    {
+        $types = [];
+        foreach ($params as $name => $value) {
+            if ($value instanceof SqlBinary) {
+                $types[$name] = 'SqlBinary';
+                continue;
+            }
+
+            $types[$name] = $value === null ? 'null' : get_debug_type($value);
+        }
+
+        return $types;
+    }
+
+    /**
+     * @param array<string, scalar|SqlBinary|null> $params
+     * @return array<string, int|null>
+     */
+    private function describeParamLengths(array $params): array
+    {
+        $lengths = [];
+        foreach ($params as $name => $value) {
+            if ($value instanceof SqlBinary) {
+                $lengths[$name] = $value->length();
+                continue;
+            }
+
+            if (is_string($value)) {
+                $lengths[$name] = strlen($value);
+                continue;
+            }
+
+            $lengths[$name] = null;
+        }
+
+        return $lengths;
     }
 
     private function update(GuestSession $session): void

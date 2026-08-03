@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Infrastructure\Http;
 
+use JsonException;
 use RuntimeException;
 
 /**
- * Lightweight HTTPS JSON client using PHP streams (no third-party HTTP SDK).
+ * Lightweight HTTPS client using PHP streams (no third-party HTTP SDK).
  */
 final class StreamJsonHttpClient implements JsonHttpClient
 {
@@ -18,16 +19,82 @@ final class StreamJsonHttpClient implements JsonHttpClient
 
     public function postJson(string $url, array $headers, array $payload): array
     {
-        $encoded = json_encode($payload, JSON_THROW_ON_ERROR);
+        try {
+            $encoded = json_encode($payload, JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw $exception;
+        }
+
+        return $this->post(
+            $url,
+            array_merge(
+                [
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ],
+                $headers,
+            ),
+            $encoded,
+        );
+    }
+
+    public function postForm(string $url, array $headers, array $fields): array
+    {
+        $encoded = http_build_query($fields, '', '&', PHP_QUERY_RFC3986);
+
+        return $this->post(
+            $url,
+            array_merge(
+                [
+                    'Content-Type' => 'application/x-www-form-urlencoded',
+                    'Accept' => 'application/json',
+                ],
+                $headers,
+            ),
+            $encoded,
+        );
+    }
+
+    /**
+     * @param array<string, string> $headers
+     * @return array{status: int, body: string}
+     */
+    private function post(string $url, array $headers, string $body): array
+    {
         $headerLines = [
-            'Content-Type: application/json',
-            'Accept: application/json',
-            'Content-Length: ' . (string) strlen($encoded),
+            'Content-Length: ' . (string) strlen($body),
         ];
         foreach ($headers as $name => $value) {
             $headerLines[] = $name . ': ' . $value;
         }
 
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => implode("\r\n", $headerLines),
+                'content' => $body,
+                'timeout' => $this->timeoutSeconds,
+                'ignore_errors' => true,
+            ],
+            'ssl' => $this->sslOptions(),
+        ]);
+
+        $responseBody = @file_get_contents($url, false, $context);
+        if ($responseBody === false) {
+            throw new RuntimeException('HTTP request failed.');
+        }
+
+        return [
+            'status' => self::statusFromResponseHeaders($http_response_header),
+            'body' => $responseBody,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function sslOptions(): array
+    {
         $ssl = [
             'verify_peer' => true,
             'verify_peer_name' => true,
@@ -50,26 +117,7 @@ final class StreamJsonHttpClient implements JsonHttpClient
             $ssl['cafile'] = $cafile;
         }
 
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => implode("\r\n", $headerLines),
-                'content' => $encoded,
-                'timeout' => $this->timeoutSeconds,
-                'ignore_errors' => true,
-            ],
-            'ssl' => $ssl,
-        ]);
-
-        $body = @file_get_contents($url, false, $context);
-        if ($body === false) {
-            throw new RuntimeException('HTTP request failed.');
-        }
-
-        return [
-            'status' => self::statusFromResponseHeaders($http_response_header),
-            'body' => $body,
-        ];
+        return $ssl;
     }
 
     /**

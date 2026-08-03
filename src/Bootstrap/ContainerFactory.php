@@ -33,6 +33,7 @@ use TriCab\Api\Identity\Authentication\GuestJwtIssuer;
 use TriCab\Api\Identity\Authentication\GuestJwtValidator;
 use TriCab\Api\Identity\Authentication\MicrosoftEntraJwtValidator;
 use TriCab\Api\Identity\Email\DevelopmentGuestOtpEmailSender;
+use TriCab\Api\Identity\Email\MicrosoftGraphGuestOtpEmailSender;
 use TriCab\Api\Identity\Email\PostmarkGuestOtpEmailSender;
 use TriCab\Api\Identity\Persistence\AzureSqlEmailOtpChallengeRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlGuestSessionRepository;
@@ -240,13 +241,36 @@ final class ContainerFactory
             );
         }
 
+        $http = self::get($container, JsonHttpClient::class);
+
+        if ($settings->usesMicrosoftGraphGuestEmail()) {
+            if (
+                $settings->graphTenantId === ''
+                || $settings->graphClientId === ''
+                || $settings->graphClientSecret === ''
+                || $settings->rfqMailbox === ''
+            ) {
+                throw new InvalidArgumentException(
+                    'GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET, and RFQ_MAILBOX are required when GUEST_EMAIL_PROVIDER=microsoft-graph.',
+                );
+            }
+
+            return new MicrosoftGraphGuestOtpEmailSender(
+                http: $http,
+                tenantId: $settings->graphTenantId,
+                clientId: $settings->graphClientId,
+                clientSecret: $settings->graphClientSecret,
+                mailbox: $settings->rfqMailbox,
+                fromDisplayName: 'TriCab',
+                logoUrl: $settings->guestOtpEmailLogoUrl !== '' ? $settings->guestOtpEmailLogoUrl : null,
+            );
+        }
+
         if ($settings->postmarkServerToken === '' || $settings->postmarkFromEmail === '') {
             throw new InvalidArgumentException(
                 'POSTMARK_SERVER_TOKEN and POSTMARK_FROM_EMAIL are required when GUEST_EMAIL_PROVIDER=postmark.',
             );
         }
-
-        $http = self::get($container, JsonHttpClient::class);
 
         return new PostmarkGuestOtpEmailSender(
             http: $http,

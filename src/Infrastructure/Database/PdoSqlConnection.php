@@ -6,6 +6,7 @@ namespace TriCab\Api\Infrastructure\Database;
 
 use PDO;
 use PDOException;
+use PDOStatement;
 use Throwable;
 
 final class PdoSqlConnection implements SqlConnection
@@ -19,9 +20,7 @@ final class PdoSqlConnection implements SqlConnection
     {
         try {
             $statement = $this->pdo->prepare($sql);
-            foreach ($params as $name => $value) {
-                $statement->bindValue($name, $value);
-            }
+            $this->bindParams($statement, $params);
             $statement->execute();
             /** @var list<array<string, mixed>> $rows */
             $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -38,9 +37,7 @@ final class PdoSqlConnection implements SqlConnection
     {
         try {
             $statement = $this->pdo->prepare($sql);
-            foreach ($params as $name => $value) {
-                $statement->bindValue($name, $value);
-            }
+            $this->bindParams($statement, $params);
             $statement->execute();
         } catch (PDOException $exception) {
             throw DatabaseUnavailable::fromThrowable($exception);
@@ -97,5 +94,41 @@ final class PdoSqlConnection implements SqlConnection
     public function inTransaction(): bool
     {
         return $this->pdo->inTransaction();
+    }
+
+    /**
+     * @param array<string, scalar|SqlBinary|null> $params
+     */
+    private function bindParams(PDOStatement $statement, array $params): void
+    {
+        // bindParam requires variables that remain in scope until execute().
+        $binaryBuffers = [];
+
+        foreach ($params as $name => $value) {
+            if ($value instanceof SqlBinary) {
+                $binaryBuffers[$name] = $value->bytes;
+                if (defined('PDO::SQLSRV_ENCODING_BINARY')) {
+                    $statement->bindParam(
+                        $name,
+                        $binaryBuffers[$name],
+                        PDO::PARAM_LOB,
+                        0,
+                        PDO::SQLSRV_ENCODING_BINARY,
+                    );
+                } else {
+                    $statement->bindValue($name, $binaryBuffers[$name], PDO::PARAM_LOB);
+                }
+
+                continue;
+            }
+
+            if ($value === null) {
+                $statement->bindValue($name, null, PDO::PARAM_NULL);
+
+                continue;
+            }
+
+            $statement->bindValue($name, $value);
+        }
     }
 }

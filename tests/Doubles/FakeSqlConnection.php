@@ -15,7 +15,7 @@ final class FakeSqlConnection implements SqlConnection
     /** @var list<list<array<string, mixed>>> */
     private array $fetchQueue = [];
 
-    /** @var list<array{sql: string, params: array<string, scalar|null>}> */
+    /** @var list<array{sql: string, params: array<string, scalar|\TriCab\Api\Infrastructure\Database\SqlBinary|null>}> */
     public array $calls = [];
 
     public bool $beganTransaction = false;
