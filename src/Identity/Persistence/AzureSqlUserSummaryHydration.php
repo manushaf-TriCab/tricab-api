@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Identity\Persistence;
 
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserSummary;
+use TriCab\Core\Identity\Application\DTO\UserManagement\UserTypeClassifier;
 
 /**
  * Shared SELECT fragment and row hydration for UserSummary projections,
@@ -34,9 +35,28 @@ SELECT
         FROM [identity].[ExternalIdentities] eip
         WHERE eip.[UserId] = u.[UserId]
           AND eip.[IsActive] = 1
-    ) AS [ProviderCodes]
+    ) AS [ProviderCodes],
+    cust.[CustomerPublicId],
+    cust.[CustomerName],
+    cust.[ContactPublicId],
+    cust.[ContactDisplayName],
+    cust.[PortalAccessStatus]
 FROM [identity].[Users] u
 INNER JOIN [identity].[UserStatuses] s ON s.[UserStatusId] = u.[UserStatusId]
+OUTER APPLY (
+    SELECT TOP (1)
+        CONVERT(NVARCHAR(36), c.[PublicId]) AS [CustomerPublicId],
+        c.[CustomerName] AS [CustomerName],
+        CONVERT(NVARCHAR(36), cc.[PublicId]) AS [ContactPublicId],
+        cc.[DisplayName] AS [ContactDisplayName],
+        cc.[PortalAccessStatusCode] AS [PortalAccessStatus]
+    FROM [customer].[CustomerContactUsers] ccu
+    INNER JOIN [customer].[CustomerContacts] cc ON cc.[CustomerContactId] = ccu.[CustomerContactId]
+    INNER JOIN [customer].[Customers] c ON c.[CustomerId] = cc.[CustomerId]
+    WHERE ccu.[UserId] = u.[UserId]
+      AND ccu.[IsActive] = 1
+    ORDER BY ccu.[IsPrimary] DESC, ccu.[LinkedAtUtc] DESC
+) cust
 SQL;
 
     /**
@@ -48,16 +68,25 @@ SQL;
         $updated = AzureSqlValueMapper::requireDateTime($row['UpdatedAt'] ?? null, 'UpdatedAt');
         $lastLogin = AzureSqlValueMapper::nullableDateTime($row['LastSuccessfulLoginAt'] ?? null);
 
+        $roles = $this->splitCsv($row['RoleCodes'] ?? null);
+        $providers = $this->splitCsv($row['ProviderCodes'] ?? null);
+
         return new UserSummary(
             publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? null),
             emailAddress: AzureSqlValueMapper::stringValue($row['EmailAddress'] ?? null),
             displayName: $this->resolveDisplayName($row),
             status: AzureSqlValueMapper::stringValue($row['StatusCode'] ?? null),
-            roles: $this->splitCsv($row['RoleCodes'] ?? null),
-            providers: $this->splitCsv($row['ProviderCodes'] ?? null),
+            roles: $roles,
+            providers: $providers,
             createdAtUtc: AzureSqlValueMapper::formatIso8601($created),
             updatedAtUtc: AzureSqlValueMapper::formatIso8601($updated),
             lastLoginAtUtc: $lastLogin !== null ? AzureSqlValueMapper::formatIso8601($lastLogin) : null,
+            userType: UserTypeClassifier::fromRoleCodes($roles),
+            customerPublicId: AzureSqlValueMapper::nullableString($row['CustomerPublicId'] ?? null),
+            customerName: AzureSqlValueMapper::nullableString($row['CustomerName'] ?? null),
+            contactPublicId: AzureSqlValueMapper::nullableString($row['ContactPublicId'] ?? null),
+            contactDisplayName: AzureSqlValueMapper::nullableString($row['ContactDisplayName'] ?? null),
+            portalAccessStatus: AzureSqlValueMapper::nullableString($row['PortalAccessStatus'] ?? null),
         );
     }
 

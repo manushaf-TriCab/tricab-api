@@ -11,19 +11,34 @@ use Slim\Factory\AppFactory;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Action\Admin\AssignRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\AssignUserRoleAction;
+use TriCab\Api\Http\Action\Admin\ChangeCustomerContactStatusAction;
+use TriCab\Api\Http\Action\Admin\ChangeCustomerPortalAccessAction;
+use TriCab\Api\Http\Action\Admin\ChangeCustomerStatusAction;
 use TriCab\Api\Http\Action\Admin\ChangeRoleStatusAction;
 use TriCab\Api\Http\Action\Admin\ChangeUserStatusAction;
+use TriCab\Api\Http\Action\Admin\CreateCustomerAction;
+use TriCab\Api\Http\Action\Admin\CreateCustomerContactAction;
+use TriCab\Api\Http\Action\Admin\CreateCustomerPortalUserAction;
 use TriCab\Api\Http\Action\Admin\CreatePermissionAction;
 use TriCab\Api\Http\Action\Admin\CreateRoleAction;
 use TriCab\Api\Http\Action\Admin\CreateUserAction;
+use TriCab\Api\Http\Action\Admin\GetCustomerAction;
+use TriCab\Api\Http\Action\Admin\GetCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\GetRoleAction;
 use TriCab\Api\Http\Action\Admin\GetUserAction;
+use TriCab\Api\Http\Action\Admin\LinkCustomerContactUserAction;
 use TriCab\Api\Http\Action\Admin\ListAuditAction;
+use TriCab\Api\Http\Action\Admin\ListCustomerContactsAction;
+use TriCab\Api\Http\Action\Admin\ListCustomerPortalUsersAction;
+use TriCab\Api\Http\Action\Admin\ListCustomersAction;
 use TriCab\Api\Http\Action\Admin\ListPermissionsAction;
 use TriCab\Api\Http\Action\Admin\ListRolesAction;
 use TriCab\Api\Http\Action\Admin\ListUsersAction;
 use TriCab\Api\Http\Action\Admin\RemoveRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\RemoveUserRoleAction;
+use TriCab\Api\Http\Action\Admin\UnlinkCustomerContactUserAction;
+use TriCab\Api\Http\Action\Admin\UpdateCustomerAction;
+use TriCab\Api\Http\Action\Admin\UpdateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\UpdatePermissionAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
@@ -132,5 +147,47 @@ final class AppBuilder
 
         $app->get('/api/v1/admin/user-management/audit', ListAuditAction::class)
             ->add(($require)('AUDIT.USER_MANAGEMENT.READ'));
+
+        self::registerAdminCustomerRoutes($app, $require);
+    }
+
+    /**
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerAdminCustomerRoutes(App $app, RequirePermission $require): void
+    {
+        $app->get('/api/v1/admin/customers', ListCustomersAction::class)->add(($require)('CUSTOMER.READ'));
+        $app->get('/api/v1/admin/customers/{customerPublicId}', GetCustomerAction::class)
+            ->add(($require)('CUSTOMER.READ'));
+        $app->post('/api/v1/admin/customers', CreateCustomerAction::class)->add(($require)('CUSTOMER.UPDATE'));
+        $app->patch('/api/v1/admin/customers/{customerPublicId}', UpdateCustomerAction::class)
+            ->add(($require)('CUSTOMER.UPDATE'));
+        $app->patch('/api/v1/admin/customers/{customerPublicId}/status', ChangeCustomerStatusAction::class)
+            ->add(($require)('CUSTOMER.UPDATE'));
+
+        $app->get('/api/v1/admin/customers/{customerPublicId}/contacts', ListCustomerContactsAction::class)
+            ->add(($require)('CUSTOMER.CONTACT.READ'));
+        $app->get('/api/v1/admin/customer-contacts/{contactPublicId}', GetCustomerContactAction::class)
+            ->add(($require)('CUSTOMER.CONTACT.READ'));
+        $app->post('/api/v1/admin/customers/{customerPublicId}/contacts', CreateCustomerContactAction::class)
+            ->add(($require)('CUSTOMER.CONTACT.CREATE'));
+        $app->patch('/api/v1/admin/customer-contacts/{contactPublicId}', UpdateCustomerContactAction::class)
+            ->add(($require)('CUSTOMER.CONTACT.UPDATE'));
+        $app->patch('/api/v1/admin/customer-contacts/{contactPublicId}/status', ChangeCustomerContactStatusAction::class)
+            ->add(($require)('CUSTOMER.CONTACT.STATUS.UPDATE'));
+
+        $app->post('/api/v1/admin/customer-contacts/{contactPublicId}/portal-user', CreateCustomerPortalUserAction::class)
+            ->add(($require)('CUSTOMER.USER.INVITE'));
+        $app->post('/api/v1/admin/customer-contacts/{contactPublicId}/link-user', LinkCustomerContactUserAction::class)
+            ->add(($require)('CUSTOMER.USER.LINK'));
+        $app->delete(
+            '/api/v1/admin/customer-contacts/{contactPublicId}/link-user/{userPublicId}',
+            UnlinkCustomerContactUserAction::class,
+        )->add(($require)('CUSTOMER.USER.UNLINK'));
+        $app->patch('/api/v1/admin/customer-contacts/{contactPublicId}/portal-access', ChangeCustomerPortalAccessAction::class)
+            ->add(($require)('CUSTOMER.PORTAL_ACCESS.MANAGE'));
+
+        $app->get('/api/v1/admin/customers/{customerPublicId}/users', ListCustomerPortalUsersAction::class)
+            ->add(($require)('CUSTOMER.USER.READ'));
     }
 }

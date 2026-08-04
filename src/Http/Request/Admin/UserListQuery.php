@@ -25,6 +25,9 @@ final class UserListQuery
             status: QueryParams::stringOrNull($query, 'status'),
             roleCode: QueryParams::stringOrNull($query, 'role'),
             providerCode: QueryParams::stringOrNull($query, 'provider'),
+            userType: QueryParams::stringOrNull($query, 'userType'),
+            customerPublicId: QueryParams::stringOrNull($query, 'customerPublicId'),
+            portalAccessStatus: QueryParams::stringOrNull($query, 'portalAccessStatus'),
             sortBy: QueryParams::string($query, 'sortBy', UserListCriteria::SORT_CREATED_AT),
             sortDirection: QueryParams::string($query, 'sortDirection', UserListCriteria::SORT_DESC),
         );

@@ -39,6 +39,22 @@ final class DevelopmentUserManagementCatalog
             'PERMISSION.CREATE' => ['name' => 'Create Permissions', 'module' => 'PERMISSION'],
             'PERMISSION.UPDATE' => ['name' => 'Update Permissions', 'module' => 'PERMISSION'],
             'AUDIT.USER_MANAGEMENT.READ' => ['name' => 'View User Management Audit Log', 'module' => 'AUDIT'],
+            'CUSTOMER.READ' => ['name' => 'View Customers', 'module' => 'CUSTOMER'],
+            'CUSTOMER.UPDATE' => ['name' => 'Create/Update Customers', 'module' => 'CUSTOMER'],
+            'CUSTOMER.CONTACT.READ' => ['name' => 'View Customer Contacts', 'module' => 'CUSTOMER'],
+            'CUSTOMER.CONTACT.CREATE' => ['name' => 'Create Customer Contacts', 'module' => 'CUSTOMER'],
+            'CUSTOMER.CONTACT.UPDATE' => ['name' => 'Update Customer Contacts', 'module' => 'CUSTOMER'],
+            'CUSTOMER.CONTACT.STATUS.UPDATE' => ['name' => 'Change Customer Contact Status', 'module' => 'CUSTOMER'],
+            'CUSTOMER.USER.INVITE' => ['name' => 'Invite Customer Portal Users', 'module' => 'CUSTOMER'],
+            'CUSTOMER.USER.LINK' => ['name' => 'Link Customer Contact Users', 'module' => 'CUSTOMER'],
+            'CUSTOMER.USER.UNLINK' => ['name' => 'Unlink Customer Contact Users', 'module' => 'CUSTOMER'],
+            'CUSTOMER.USER.READ' => ['name' => 'View Customer Portal Users', 'module' => 'CUSTOMER'],
+            'CUSTOMER.PORTAL_ACCESS.MANAGE' => ['name' => 'Manage Customer Portal Access', 'module' => 'CUSTOMER'],
+            'PRODUCT.READ' => ['name' => 'View Products', 'module' => 'PRODUCT'],
+            'QUOTE.READ' => ['name' => 'View Quotes', 'module' => 'QUOTE'],
+            'QUOTE.CREATE' => ['name' => 'Create Quotes', 'module' => 'QUOTE'],
+            'ORDER.READ' => ['name' => 'View Orders', 'module' => 'ORDER'],
+            'DOCUMENT.READ' => ['name' => 'View Documents', 'module' => 'DOCUMENT'],
         ];
     }
 

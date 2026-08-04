@@ -16,6 +16,7 @@ use TriCab\Core\Identity\Application\DTO\UserManagement\UserManagementAuditEntry
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserManagementSummaryCounts;
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserRoleAssignment;
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserSummary;
+use TriCab\Core\Identity\Application\DTO\UserManagement\UserCustomerAssociation;
 
 /**
  * Serializes Core user-management DTOs to admin API response arrays.
@@ -38,6 +39,12 @@ final class UserManagementDtoSerializer
             'createdAtUtc' => $summary->createdAtUtc,
             'updatedAtUtc' => $summary->updatedAtUtc,
             'lastLoginAtUtc' => $summary->lastLoginAtUtc,
+            'userType' => $summary->userType,
+            'customerPublicId' => $summary->customerPublicId,
+            'customerName' => $summary->customerName,
+            'contactPublicId' => $summary->contactPublicId,
+            'contactDisplayName' => $summary->contactDisplayName,
+            'portalAccessStatus' => $summary->portalAccessStatus,
         ];
     }
 
@@ -58,6 +65,25 @@ final class UserManagementDtoSerializer
             'updatedAtUtc' => $details->updatedAtUtc,
             'lastLoginAtUtc' => $details->lastLoginAtUtc,
             'recentAuditEvents' => array_map(self::auditEntry(...), $details->recentAuditEvents),
+            'userType' => $details->userType,
+            'customerAssociations' => array_map(self::customerAssociation(...), $details->customerAssociations),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function customerAssociation(UserCustomerAssociation $association): array
+    {
+        return [
+            'customerPublicId' => $association->customerPublicId,
+            'customerName' => $association->customerName,
+            'contactPublicId' => $association->contactPublicId,
+            'contactDisplayName' => $association->contactDisplayName,
+            'portalAccessStatus' => $association->portalAccessStatus,
+            'isPrimary' => $association->isPrimary,
+            'isActive' => $association->isActive,
+            'linkedAtUtc' => $association->linkedAtUtc,
         ];
     }
 

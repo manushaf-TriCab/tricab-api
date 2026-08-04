@@ -17,6 +17,7 @@ use TriCab\Core\Identity\Application\DTO\UserManagement\UserListResult;
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserManagementSummaryCounts;
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserRoleAssignment;
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserSummary;
+use TriCab\Core\Identity\Application\DTO\UserManagement\UserTypeClassifier;
 use TriCab\Core\Identity\Application\Service\UserManagement\EffectivePermissionCalculator;
 use TriCab\Core\Identity\Contract\UserManagementRepository;
 use TriCab\Core\Identity\Domain\Service\ProtectedIdentityCatalog;
@@ -117,18 +118,28 @@ SQL,
         $updated = AzureSqlValueMapper::requireDateTime($row['UpdatedAt'] ?? null, 'UpdatedAt');
         $lastLogin = AzureSqlValueMapper::nullableDateTime($row['LastSuccessfulLoginAt'] ?? null);
 
+        $roles = $this->fetchUserRoleAssignments($userId);
+        $roleCodes = array_map(
+            static fn (UserRoleAssignment $assignment): string => $assignment->roleCode,
+            array_values(array_filter(
+                $roles,
+                static fn (UserRoleAssignment $assignment): bool => $assignment->isActive && !$assignment->isExpired,
+            )),
+        );
+
         return new UserDetails(
             publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? null),
             emailAddress: AzureSqlValueMapper::stringValue($row['EmailAddress'] ?? null),
             displayName: $this->resolveDisplayName($row),
             status: AzureSqlValueMapper::stringValue($row['StatusCode'] ?? null),
-            roles: $this->fetchUserRoleAssignments($userId),
+            roles: $roles,
             effectivePermissions: $this->fetchEffectivePermissions($userId),
             identityProviders: $this->fetchIdentityProviderSummaries($userId),
             createdAtUtc: AzureSqlValueMapper::formatIso8601($created),
             updatedAtUtc: AzureSqlValueMapper::formatIso8601($updated),
             lastLoginAtUtc: $lastLogin !== null ? AzureSqlValueMapper::formatIso8601($lastLogin) : null,
             recentAuditEvents: [],
+            userType: UserTypeClassifier::fromRoleCodes($roleCodes),
         );
     }
 
@@ -576,6 +587,76 @@ EXISTS (
 SQL;
             $params[':provider'] = $normalized;
             $params[':providerAlt'] = $alt;
+        }
+
+        if ($criteria->userType !== null) {
+            $customerRoleExists = <<<'SQL'
+EXISTS (
+    SELECT 1
+    FROM [identity].[UserRoles] urt
+    INNER JOIN [identity].[Roles] rt ON rt.[RoleId] = urt.[RoleId]
+    WHERE urt.[UserId] = u.[UserId]
+      AND urt.[IsActive] = 1
+      AND (urt.[ExpiresAt] IS NULL OR urt.[ExpiresAt] > SYSDATETIMEOFFSET())
+      AND UPPER(rt.[RoleCode]) IN (:customerUserRole, :customerAdminRole)
+)
+SQL;
+            $guestRoleExists = <<<'SQL'
+EXISTS (
+    SELECT 1
+    FROM [identity].[UserRoles] urg
+    INNER JOIN [identity].[Roles] rg ON rg.[RoleId] = urg.[RoleId]
+    WHERE urg.[UserId] = u.[UserId]
+      AND urg.[IsActive] = 1
+      AND (urg.[ExpiresAt] IS NULL OR urg.[ExpiresAt] > SYSDATETIMEOFFSET())
+      AND UPPER(rg.[RoleCode]) = :guestRole
+)
+SQL;
+
+            if ($criteria->userType === UserTypeClassifier::CUSTOMER) {
+                $conditions[] = $customerRoleExists;
+                $params[':customerUserRole'] = ProtectedIdentityCatalog::ROLE_CUSTOMER_USER;
+                $params[':customerAdminRole'] = ProtectedIdentityCatalog::ROLE_CUSTOMER_ADMIN;
+            } elseif ($criteria->userType === UserTypeClassifier::GUEST) {
+                $conditions[] = $guestRoleExists . ' AND NOT (' . $customerRoleExists . ')';
+                $params[':guestRole'] = ProtectedIdentityCatalog::ROLE_GUEST;
+                $params[':customerUserRole'] = ProtectedIdentityCatalog::ROLE_CUSTOMER_USER;
+                $params[':customerAdminRole'] = ProtectedIdentityCatalog::ROLE_CUSTOMER_ADMIN;
+            } else {
+                $conditions[] = 'NOT (' . $customerRoleExists . ') AND NOT (' . $guestRoleExists . ')';
+                $params[':customerUserRole'] = ProtectedIdentityCatalog::ROLE_CUSTOMER_USER;
+                $params[':customerAdminRole'] = ProtectedIdentityCatalog::ROLE_CUSTOMER_ADMIN;
+                $params[':guestRole'] = ProtectedIdentityCatalog::ROLE_GUEST;
+            }
+        }
+
+        if ($criteria->customerPublicId !== null) {
+            $conditions[] = <<<'SQL'
+EXISTS (
+    SELECT 1
+    FROM [customer].[CustomerContactUsers] ccuf
+    INNER JOIN [customer].[CustomerContacts] ccf ON ccf.[CustomerContactId] = ccuf.[CustomerContactId]
+    INNER JOIN [customer].[Customers] cf ON cf.[CustomerId] = ccf.[CustomerId]
+    WHERE ccuf.[UserId] = u.[UserId]
+      AND ccuf.[IsActive] = 1
+      AND cf.[PublicId] = :customerPublicId
+)
+SQL;
+            $params[':customerPublicId'] = $criteria->customerPublicId;
+        }
+
+        if ($criteria->portalAccessStatus !== null) {
+            $conditions[] = <<<'SQL'
+EXISTS (
+    SELECT 1
+    FROM [customer].[CustomerContactUsers] ccup
+    INNER JOIN [customer].[CustomerContacts] ccp ON ccp.[CustomerContactId] = ccup.[CustomerContactId]
+    WHERE ccup.[UserId] = u.[UserId]
+      AND ccup.[IsActive] = 1
+      AND ccp.[PortalAccessStatusCode] = :portalAccessStatus
+)
+SQL;
+            $params[':portalAccessStatus'] = strtolower($criteria->portalAccessStatus);
         }
 
         $where = $conditions === [] ? '' : (' AND ' . implode(' AND ', $conditions));

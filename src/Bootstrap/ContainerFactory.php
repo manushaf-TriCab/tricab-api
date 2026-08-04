@@ -11,19 +11,34 @@ use PDO;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Action\Admin\AssignRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\AssignUserRoleAction;
+use TriCab\Api\Http\Action\Admin\ChangeCustomerContactStatusAction;
+use TriCab\Api\Http\Action\Admin\ChangeCustomerPortalAccessAction;
+use TriCab\Api\Http\Action\Admin\ChangeCustomerStatusAction;
 use TriCab\Api\Http\Action\Admin\ChangeRoleStatusAction;
 use TriCab\Api\Http\Action\Admin\ChangeUserStatusAction;
+use TriCab\Api\Http\Action\Admin\CreateCustomerAction;
+use TriCab\Api\Http\Action\Admin\CreateCustomerContactAction;
+use TriCab\Api\Http\Action\Admin\CreateCustomerPortalUserAction;
 use TriCab\Api\Http\Action\Admin\CreatePermissionAction;
 use TriCab\Api\Http\Action\Admin\CreateRoleAction;
 use TriCab\Api\Http\Action\Admin\CreateUserAction;
+use TriCab\Api\Http\Action\Admin\GetCustomerAction;
+use TriCab\Api\Http\Action\Admin\GetCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\GetRoleAction;
 use TriCab\Api\Http\Action\Admin\GetUserAction;
+use TriCab\Api\Http\Action\Admin\LinkCustomerContactUserAction;
 use TriCab\Api\Http\Action\Admin\ListAuditAction;
+use TriCab\Api\Http\Action\Admin\ListCustomerContactsAction;
+use TriCab\Api\Http\Action\Admin\ListCustomerPortalUsersAction;
+use TriCab\Api\Http\Action\Admin\ListCustomersAction;
 use TriCab\Api\Http\Action\Admin\ListPermissionsAction;
 use TriCab\Api\Http\Action\Admin\ListRolesAction;
 use TriCab\Api\Http\Action\Admin\ListUsersAction;
 use TriCab\Api\Http\Action\Admin\RemoveRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\RemoveUserRoleAction;
+use TriCab\Api\Http\Action\Admin\UnlinkCustomerContactUserAction;
+use TriCab\Api\Http\Action\Admin\UpdateCustomerAction;
+use TriCab\Api\Http\Action\Admin\UpdateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\UpdatePermissionAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
@@ -34,6 +49,7 @@ use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\RequestGuestOtpAction;
 use TriCab\Api\Http\Action\VerifyGuestOtpAction;
 use TriCab\Api\Http\Auth\AdminMutationTransaction;
+use TriCab\Api\Http\Auth\CustomerManagementErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthEventLogger;
 use TriCab\Api\Http\Auth\GuestAuthRateLimiter;
@@ -43,6 +59,11 @@ use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
 use TriCab\Api\Http\Middleware\DevelopmentAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\JsonExceptionMiddleware;
+use TriCab\Api\Customer\Persistence\AzureSqlCustomerContactRepository;
+use TriCab\Api\Customer\Persistence\AzureSqlCustomerContactUserRepository;
+use TriCab\Api\Customer\Persistence\AzureSqlCustomerRepository;
+use TriCab\Api\Customer\Persistence\InMemory\InMemoryCustomerStore;
+use TriCab\Api\Customer\Persistence\UserManagementCustomerPortalUserProvisioner;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Authentication\CompositeBearerTokenValidator;
 use TriCab\Api\Identity\Authentication\EntraJwksClient;
@@ -74,6 +95,26 @@ use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
 use TriCab\Api\Infrastructure\Http\StreamJsonHttpClient;
+use TriCab\Core\Customer\Application\Service\ChangeCustomerContactStatusService;
+use TriCab\Core\Customer\Application\Service\ChangeCustomerStatusService;
+use TriCab\Core\Customer\Application\Service\CreateCustomerContactService;
+use TriCab\Core\Customer\Application\Service\CreateCustomerPortalUserService;
+use TriCab\Core\Customer\Application\Service\CreateCustomerService;
+use TriCab\Core\Customer\Application\Service\DisableCustomerPortalAccessService;
+use TriCab\Core\Customer\Application\Service\EnableCustomerPortalAccessService;
+use TriCab\Core\Customer\Application\Service\GetCustomerContactService;
+use TriCab\Core\Customer\Application\Service\GetCustomerService;
+use TriCab\Core\Customer\Application\Service\LinkCustomerContactToUserService;
+use TriCab\Core\Customer\Application\Service\ListCustomerContactsService;
+use TriCab\Core\Customer\Application\Service\ListCustomersService;
+use TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerContextService;
+use TriCab\Core\Customer\Application\Service\UnlinkCustomerContactFromUserService;
+use TriCab\Core\Customer\Application\Service\UpdateCustomerContactService;
+use TriCab\Core\Customer\Application\Service\UpdateCustomerService;
+use TriCab\Core\Customer\Contract\CustomerContactRepository;
+use TriCab\Core\Customer\Contract\CustomerContactUserRepository;
+use TriCab\Core\Customer\Contract\CustomerPortalUserProvisioner;
+use TriCab\Core\Customer\Contract\CustomerRepository;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Application\Service\CreateGuestSessionService;
 use TriCab\Core\Identity\Application\Service\GuestUserProvisioningService;
@@ -207,6 +248,38 @@ final class ContainerFactory
             CreatePermissionAction::class => \DI\autowire(CreatePermissionAction::class),
             UpdatePermissionAction::class => \DI\autowire(UpdatePermissionAction::class),
             ListAuditAction::class => \DI\autowire(ListAuditAction::class),
+            ListCustomersService::class => \DI\autowire(ListCustomersService::class),
+            GetCustomerService::class => \DI\autowire(GetCustomerService::class),
+            CreateCustomerService::class => \DI\autowire(CreateCustomerService::class),
+            UpdateCustomerService::class => \DI\autowire(UpdateCustomerService::class),
+            ChangeCustomerStatusService::class => \DI\autowire(ChangeCustomerStatusService::class),
+            ListCustomerContactsService::class => \DI\autowire(ListCustomerContactsService::class),
+            GetCustomerContactService::class => \DI\autowire(GetCustomerContactService::class),
+            CreateCustomerContactService::class => \DI\autowire(CreateCustomerContactService::class),
+            UpdateCustomerContactService::class => \DI\autowire(UpdateCustomerContactService::class),
+            ChangeCustomerContactStatusService::class => \DI\autowire(ChangeCustomerContactStatusService::class),
+            LinkCustomerContactToUserService::class => \DI\autowire(LinkCustomerContactToUserService::class),
+            UnlinkCustomerContactFromUserService::class => \DI\autowire(UnlinkCustomerContactFromUserService::class),
+            CreateCustomerPortalUserService::class => \DI\autowire(CreateCustomerPortalUserService::class),
+            ResolveAuthenticatedCustomerContextService::class => \DI\autowire(ResolveAuthenticatedCustomerContextService::class),
+            EnableCustomerPortalAccessService::class => \DI\autowire(EnableCustomerPortalAccessService::class),
+            DisableCustomerPortalAccessService::class => \DI\autowire(DisableCustomerPortalAccessService::class),
+            CustomerManagementErrorMapper::class => \DI\autowire(CustomerManagementErrorMapper::class),
+            ListCustomersAction::class => \DI\autowire(ListCustomersAction::class),
+            GetCustomerAction::class => \DI\autowire(GetCustomerAction::class),
+            CreateCustomerAction::class => \DI\autowire(CreateCustomerAction::class),
+            UpdateCustomerAction::class => \DI\autowire(UpdateCustomerAction::class),
+            ChangeCustomerStatusAction::class => \DI\autowire(ChangeCustomerStatusAction::class),
+            ListCustomerContactsAction::class => \DI\autowire(ListCustomerContactsAction::class),
+            GetCustomerContactAction::class => \DI\autowire(GetCustomerContactAction::class),
+            CreateCustomerContactAction::class => \DI\autowire(CreateCustomerContactAction::class),
+            UpdateCustomerContactAction::class => \DI\autowire(UpdateCustomerContactAction::class),
+            ChangeCustomerContactStatusAction::class => \DI\autowire(ChangeCustomerContactStatusAction::class),
+            CreateCustomerPortalUserAction::class => \DI\autowire(CreateCustomerPortalUserAction::class),
+            LinkCustomerContactUserAction::class => \DI\autowire(LinkCustomerContactUserAction::class),
+            UnlinkCustomerContactUserAction::class => \DI\autowire(UnlinkCustomerContactUserAction::class),
+            ChangeCustomerPortalAccessAction::class => \DI\autowire(ChangeCustomerPortalAccessAction::class),
+            ListCustomerPortalUsersAction::class => \DI\autowire(ListCustomerPortalUsersAction::class),
         ];
 
         if ($settings->usesAzureSqlUserRepository()) {
@@ -231,6 +304,10 @@ final class ContainerFactory
             $definitions[PermissionManagementRepository::class] = \DI\autowire(AzureSqlPermissionManagementRepository::class);
             $definitions[UserManagementAuditRepository::class] = \DI\autowire(AzureSqlUserManagementAuditRepository::class);
             $definitions[AdminMutationTransaction::class] = \DI\autowire(AdminMutationTransaction::class);
+            $definitions[CustomerRepository::class] = \DI\autowire(AzureSqlCustomerRepository::class);
+            $definitions[CustomerContactRepository::class] = \DI\autowire(AzureSqlCustomerContactRepository::class);
+            $definitions[CustomerContactUserRepository::class] = \DI\autowire(AzureSqlCustomerContactUserRepository::class);
+            $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
             self::addGuestAuthDefinitions($definitions, $settings);
         } else {
             $definitions[UserRepository::class] = \DI\autowire(InMemoryApiUserRepository::class);
@@ -265,6 +342,18 @@ final class ContainerFactory
             $definitions[UserManagementAuditRepository::class] = static function (Container $container): UserManagementAuditRepository {
                 return self::get($container, InMemoryUserManagementStore::class)->audit();
             };
+
+            $definitions[InMemoryCustomerStore::class] = \DI\autowire(InMemoryCustomerStore::class);
+            $definitions[CustomerRepository::class] = static function (Container $container): CustomerRepository {
+                return self::get($container, InMemoryCustomerStore::class)->customers();
+            };
+            $definitions[CustomerContactRepository::class] = static function (Container $container): CustomerContactRepository {
+                return self::get($container, InMemoryCustomerStore::class)->contacts();
+            };
+            $definitions[CustomerContactUserRepository::class] = static function (Container $container): CustomerContactUserRepository {
+                return self::get($container, InMemoryCustomerStore::class)->links();
+            };
+            $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
         }
 
         $builder->addDefinitions($definitions);

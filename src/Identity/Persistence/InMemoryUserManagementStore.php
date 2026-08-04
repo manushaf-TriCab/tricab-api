@@ -24,6 +24,7 @@ use TriCab\Core\Identity\Application\DTO\UserManagement\UserManagementAuditWrite
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserManagementSummaryCounts;
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserRoleAssignment;
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserSummary;
+use TriCab\Core\Identity\Application\DTO\UserManagement\UserTypeClassifier;
 use TriCab\Core\Identity\Application\Service\UserManagement\EffectivePermissionCalculator;
 use TriCab\Core\Identity\Contract\PermissionManagementRepository;
 use TriCab\Core\Identity\Contract\RoleManagementRepository;
@@ -215,6 +216,20 @@ final class InMemoryUserManagementStore
             true,
             $actorUserId,
         );
+        $this->seedRole(
+            ProtectedIdentityCatalog::ROLE_CUSTOMER_USER,
+            'Customer User',
+            'Customer-portal user role',
+            true,
+            $actorUserId,
+        );
+        $this->seedRole(
+            ProtectedIdentityCatalog::ROLE_CUSTOMER_ADMIN,
+            'Customer Admin',
+            'Customer-portal administrator role',
+            true,
+            $actorUserId,
+        );
         $this->seedPermission(
             ProtectedIdentityCatalog::PERMISSION_ACCOUNT_LOGIN,
             'Account Login',
@@ -236,6 +251,16 @@ final class InMemoryUserManagementStore
         );
         $this->assignPermission(
             RoleCode::fromString(ProtectedIdentityCatalog::ROLE_ADMINISTRATOR),
+            PermissionCode::fromString(ProtectedIdentityCatalog::PERMISSION_ACCOUNT_LOGIN),
+            UserId::fromInt($actorUserId),
+        );
+        $this->assignPermission(
+            RoleCode::fromString(ProtectedIdentityCatalog::ROLE_CUSTOMER_USER),
+            PermissionCode::fromString(ProtectedIdentityCatalog::PERMISSION_ACCOUNT_LOGIN),
+            UserId::fromInt($actorUserId),
+        );
+        $this->assignPermission(
+            RoleCode::fromString(ProtectedIdentityCatalog::ROLE_CUSTOMER_ADMIN),
             PermissionCode::fromString(ProtectedIdentityCatalog::PERMISSION_ACCOUNT_LOGIN),
             UserId::fromInt($actorUserId),
         );
@@ -261,6 +286,15 @@ final class InMemoryUserManagementStore
                 PermissionCode::fromString($code),
                 UserId::fromInt($actorUserId),
             );
+        }
+
+        // Minimal permission set so customer-facing role validation
+        // (ProtectedIdentityCatalog::isCustomerFacingRole) and any
+        // downstream customer-portal authorization checks have a role to
+        // resolve against in memory mode.
+        foreach ([ProtectedIdentityCatalog::ROLE_CUSTOMER_USER, ProtectedIdentityCatalog::ROLE_CUSTOMER_ADMIN] as $customerRoleCode) {
+            $customerRole = RoleCode::fromString($customerRoleCode);
+            $this->assignPermission($customerRole, PermissionCode::fromString('CUSTOMER.READ'), UserId::fromInt($actorUserId));
         }
 
         if ($this->emailExists(EmailAddress::fromString(DevelopmentUserManagementCatalog::USER_EMAIL))) {
@@ -482,6 +516,16 @@ final class InMemoryUserManagementStore
         $userId = $this->userIdsByPublicId($publicId);
 
         return $userId !== null ? UserId::fromInt($userId) : null;
+    }
+
+    /**
+     * Reverse lookup used by other in-memory persistence adapters (e.g.
+     * InMemoryCustomerStore) that only hold the internal integer UserId and
+     * need to resolve the stable public-facing UserPublicId for responses.
+     */
+    public function findPublicIdByUserId(int $userId): ?string
+    {
+        return $this->publicIdForUserId($userId);
     }
 
     public function emailExists(EmailAddress $emailAddress, ?UserPublicId $exceptPublicId = null): bool
@@ -1150,18 +1194,27 @@ final class InMemoryUserManagementStore
     private function buildUserDetails(int $userId): UserDetails
     {
         $user = $this->users[$userId];
+        $roles = $this->buildUserRoleAssignments($userId);
+        $roleCodes = array_map(
+            static fn (UserRoleAssignment $assignment): string => $assignment->roleCode,
+            array_values(array_filter(
+                $roles,
+                static fn (UserRoleAssignment $assignment): bool => $assignment->isActive && !$assignment->isExpired,
+            )),
+        );
 
         return new UserDetails(
             publicId: $user['publicId'],
             emailAddress: $user['emailAddress'],
             displayName: $user['displayName'],
             status: $user['status'],
-            roles: $this->buildUserRoleAssignments($userId),
+            roles: $roles,
             effectivePermissions: $this->calculateEffectivePermissions($userId),
             identityProviders: $this->buildIdentityProviderSummaries($userId),
             createdAtUtc: $user['createdAtUtc'],
             updatedAtUtc: $user['updatedAtUtc'],
             lastLoginAtUtc: $user['lastLoginAtUtc'],
+            userType: UserTypeClassifier::fromRoleCodes($roleCodes),
         );
     }
 
@@ -1200,6 +1253,7 @@ final class InMemoryUserManagementStore
             createdAtUtc: $user['createdAtUtc'],
             updatedAtUtc: $user['updatedAtUtc'],
             lastLoginAtUtc: $user['lastLoginAtUtc'],
+            userType: UserTypeClassifier::fromRoleCodes($roleCodes),
         );
     }
 
@@ -1475,6 +1529,26 @@ final class InMemoryUserManagementStore
         if ($criteria->providerCode !== null) {
             $normalized = str_replace('-', '_', strtolower($criteria->providerCode));
             if (!in_array($normalized, $summary->providers, true)) {
+                return false;
+            }
+        }
+
+        if ($criteria->userType !== null && !UserTypeClassifier::matches($summary->roles, $criteria->userType)) {
+            return false;
+        }
+
+        if ($criteria->customerPublicId !== null) {
+            if ($summary->customerPublicId === null
+                || strcasecmp($summary->customerPublicId, $criteria->customerPublicId) !== 0
+            ) {
+                return false;
+            }
+        }
+
+        if ($criteria->portalAccessStatus !== null) {
+            if ($summary->portalAccessStatus === null
+                || strcasecmp($summary->portalAccessStatus, $criteria->portalAccessStatus) !== 0
+            ) {
                 return false;
             }
         }
