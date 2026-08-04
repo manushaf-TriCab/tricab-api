@@ -12,4 +12,9 @@ final class UserNotFound extends RuntimeException
     {
         return new self(sprintf('No user found for email "%s".', $email));
     }
+
+    public static function forPublicId(string $publicId): self
+    {
+        return new self(sprintf('No user found for public id "%s".', $publicId));
+    }
 }
