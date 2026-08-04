@@ -32,6 +32,9 @@ final readonly class UserListCriteria
         public ?string $status = null,
         public ?string $roleCode = null,
         public ?string $providerCode = null,
+        public ?string $userType = null,
+        public ?string $customerPublicId = null,
+        public ?string $portalAccessStatus = null,
         public string $sortBy = self::SORT_CREATED_AT,
         public string $sortDirection = self::SORT_DESC,
     ) {
@@ -52,7 +55,9 @@ final readonly class UserListCriteria
             throw new \InvalidArgumentException(sprintf('Unsupported sortDirection "%s".', $this->sortDirection));
         }
 
-        // normalize via reconstruction is awkward on readonly; expose normalized getters instead
+        if ($this->userType !== null && !UserTypeClassifier::isValid($this->userType)) {
+            throw new \InvalidArgumentException(sprintf('Unsupported userType "%s".', $this->userType));
+        }
     }
 
     public function normalizedSortDirection(): string

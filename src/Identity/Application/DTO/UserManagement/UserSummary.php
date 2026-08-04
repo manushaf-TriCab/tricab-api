@@ -20,6 +20,12 @@ final readonly class UserSummary
         public string $createdAtUtc,
         public string $updatedAtUtc,
         public ?string $lastLoginAtUtc = null,
+        public ?string $userType = null,
+        public ?string $customerPublicId = null,
+        public ?string $customerName = null,
+        public ?string $contactPublicId = null,
+        public ?string $contactDisplayName = null,
+        public ?string $portalAccessStatus = null,
     ) {
     }
 }

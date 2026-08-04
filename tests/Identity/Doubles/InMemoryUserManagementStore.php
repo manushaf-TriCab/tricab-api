@@ -24,6 +24,7 @@ use TriCab\Core\Identity\Application\DTO\UserManagement\UserManagementAuditWrite
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserManagementSummaryCounts;
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserRoleAssignment;
 use TriCab\Core\Identity\Application\DTO\UserManagement\UserSummary;
+use TriCab\Core\Identity\Application\DTO\UserManagement\UserTypeClassifier;
 use TriCab\Core\Identity\Application\Service\UserManagement\EffectivePermissionCalculator;
 use TriCab\Core\Identity\Contract\PermissionManagementRepository;
 use TriCab\Core\Identity\Contract\RoleManagementRepository;
@@ -1079,18 +1080,27 @@ final class InMemoryUserManagementStore
     private function buildUserDetails(int $userId): UserDetails
     {
         $user = $this->users[$userId];
+        $roles = $this->buildUserRoleAssignments($userId);
+        $roleCodes = array_map(
+            static fn (UserRoleAssignment $assignment): string => $assignment->roleCode,
+            array_values(array_filter(
+                $roles,
+                static fn (UserRoleAssignment $assignment): bool => $assignment->isActive && !$assignment->isExpired,
+            )),
+        );
 
         return new UserDetails(
             publicId: $user['publicId'],
             emailAddress: $user['emailAddress'],
             displayName: $user['displayName'],
             status: $user['status'],
-            roles: $this->buildUserRoleAssignments($userId),
+            roles: $roles,
             effectivePermissions: $this->calculateEffectivePermissions($userId),
             identityProviders: $this->buildIdentityProviderSummaries($userId),
             createdAtUtc: $user['createdAtUtc'],
             updatedAtUtc: $user['updatedAtUtc'],
             lastLoginAtUtc: $user['lastLoginAtUtc'],
+            userType: UserTypeClassifier::fromRoleCodes($roleCodes),
         );
     }
 
@@ -1129,6 +1139,7 @@ final class InMemoryUserManagementStore
             createdAtUtc: $user['createdAtUtc'],
             updatedAtUtc: $user['updatedAtUtc'],
             lastLoginAtUtc: $user['lastLoginAtUtc'],
+            userType: UserTypeClassifier::fromRoleCodes($roleCodes),
         );
     }
 
@@ -1404,6 +1415,26 @@ final class InMemoryUserManagementStore
         if ($criteria->providerCode !== null) {
             $normalized = str_replace('-', '_', strtolower($criteria->providerCode));
             if (!in_array($normalized, $summary->providers, true)) {
+                return false;
+            }
+        }
+
+        if ($criteria->userType !== null && !UserTypeClassifier::matches($summary->roles, $criteria->userType)) {
+            return false;
+        }
+
+        if ($criteria->customerPublicId !== null) {
+            if ($summary->customerPublicId === null
+                || strcasecmp($summary->customerPublicId, $criteria->customerPublicId) !== 0
+            ) {
+                return false;
+            }
+        }
+
+        if ($criteria->portalAccessStatus !== null) {
+            if ($summary->portalAccessStatus === null
+                || strcasecmp($summary->portalAccessStatus, $criteria->portalAccessStatus) !== 0
+            ) {
                 return false;
             }
         }

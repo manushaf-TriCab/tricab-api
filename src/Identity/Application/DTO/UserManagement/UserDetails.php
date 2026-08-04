@@ -11,6 +11,7 @@ final readonly class UserDetails
      * @param list<EffectivePermissionGrant> $effectivePermissions
      * @param list<IdentityProviderSummary> $identityProviders
      * @param list<UserManagementAuditEntry> $recentAuditEvents
+     * @param list<UserCustomerAssociation> $customerAssociations
      */
     public function __construct(
         public string $publicId,
@@ -24,6 +25,8 @@ final readonly class UserDetails
         public string $updatedAtUtc,
         public ?string $lastLoginAtUtc = null,
         public array $recentAuditEvents = [],
+        public array $customerAssociations = [],
+        public ?string $userType = null,
     ) {
     }
 }
