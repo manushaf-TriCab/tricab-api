@@ -35,6 +35,15 @@ final class AzureSqlValueMapper
         return trim((string) $value);
     }
 
+    public static function boolValue(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return self::intValue($value) === 1;
+    }
+
     public static function nullableString(mixed $value): ?string
     {
         if ($value === null) {
@@ -95,6 +104,22 @@ final class AzureSqlValueMapper
     public static function formatDateTime(DateTimeImmutable $value): string
     {
         return $value->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s.u');
+    }
+
+    /**
+     * Formats a value for writing into a DATETIMEOFFSET column.
+     */
+    public static function formatDateTimeOffset(DateTimeImmutable $value): string
+    {
+        return $value->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s.uP');
+    }
+
+    /**
+     * Formats a value for ISO-8601 (DATE_ATOM) DTO output.
+     */
+    public static function formatIso8601(DateTimeImmutable $value): string
+    {
+        return $value->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM);
     }
 
     public static function binaryValue(mixed $value): string

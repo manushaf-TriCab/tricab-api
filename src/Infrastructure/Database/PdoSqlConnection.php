@@ -128,6 +128,19 @@ final class PdoSqlConnection implements SqlConnection
                 continue;
             }
 
+            // sqlsrv rejects string-bound values for OFFSET/FETCH/TOP — bind ints explicitly.
+            if (is_int($value)) {
+                $statement->bindValue($name, $value, PDO::PARAM_INT);
+
+                continue;
+            }
+
+            if (is_bool($value)) {
+                $statement->bindValue($name, $value, PDO::PARAM_BOOL);
+
+                continue;
+            }
+
             $statement->bindValue($name, $value);
         }
     }

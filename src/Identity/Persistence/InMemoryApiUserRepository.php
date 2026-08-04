@@ -42,23 +42,56 @@ final class InMemoryApiUserRepository implements UserRepository, UserProvisionin
     {
         $this->uuids = new UuidV4Generator();
 
+        $permissionCodes = ['account.login', ...DevelopmentUserManagementCatalog::managementPermissionCodes()];
+
         $employee = new User(
             UserId::fromInt(1),
-            UserPublicId::fromString('550e8400-e29b-41d4-a716-446655440000'),
-            EmailAddress::fromString('thilanh@tricab.com'),
-            'Thilan Lakshitha',
+            UserPublicId::fromString(DevelopmentUserManagementCatalog::USER_PUBLIC_ID),
+            EmailAddress::fromString(DevelopmentUserManagementCatalog::USER_EMAIL),
+            DevelopmentUserManagementCatalog::USER_DISPLAY_NAME,
             UserStatus::active(),
-            [RoleCode::fromString('EMPLOYEE')],
-            [PermissionCode::fromString('account.login')],
+            [RoleCode::fromString('EMPLOYEE'), RoleCode::fromString('ADMINISTRATOR')],
+            array_map(
+                static fn (string $code): PermissionCode => PermissionCode::fromString($code),
+                $permissionCodes,
+            ),
         );
 
         $identity = new ExternalIdentity(
-            ExternalProvider::fromString('microsoft-entra'),
-            ExternalSubjectId::fromString('development-thilan'),
+            ExternalProvider::fromString(ExternalProvider::MICROSOFT_ENTRA),
+            ExternalSubjectId::fromString(DevelopmentUserManagementCatalog::USER_SUBJECT),
             ExternalTenantId::fromString('development-tenant'),
         );
 
         $this->persist($employee, $identity);
+    }
+
+    /**
+     * Replaces the active user's roles/permissions in place, for tests that
+     * need to exercise the 403 INSUFFICIENT_PERMISSION path without disabling
+     * the whole account.
+     *
+     * @param list<string> $permissionCodes
+     * @param list<string> $roleCodes
+     */
+    public function replacePermissions(int $userId, array $permissionCodes, array $roleCodes = ['EMPLOYEE']): void
+    {
+        $existing = $this->usersById[$userId] ?? null;
+        if ($existing === null) {
+            return;
+        }
+
+        $updated = new User(
+            $existing->id(),
+            $existing->publicId(),
+            $existing->emailAddress(),
+            $existing->displayName(),
+            $existing->status(),
+            array_map(static fn (string $code): RoleCode => RoleCode::fromString($code), $roleCodes),
+            array_map(static fn (string $code): PermissionCode => PermissionCode::fromString($code), $permissionCodes),
+        );
+
+        $this->usersById[$userId] = $updated;
     }
 
     public function findById(UserId $userId): ?User

@@ -37,8 +37,13 @@ final class MeEndpointTest extends TestCase
         self::assertSame('thilanh@tricab.com', $data['emailAddress']);
         self::assertSame('Thilan Lakshitha', $data['displayName']);
         self::assertSame('active', $data['status']);
-        self::assertSame(['EMPLOYEE'], $data['roles']);
-        self::assertSame(['ACCOUNT.LOGIN'], $data['permissions']);
+        self::assertIsArray($data['roles']);
+        self::assertContains('EMPLOYEE', $data['roles']);
+        self::assertContains('ADMINISTRATOR', $data['roles']);
+        self::assertIsArray($data['permissions']);
+        self::assertContains('ACCOUNT.LOGIN', $data['permissions']);
+        self::assertContains('USER.READ', $data['permissions']);
+        self::assertContains('AUDIT.USER_MANAGEMENT.READ', $data['permissions']);
     }
 
     public function test_me_without_identity_when_dev_auth_disabled(): void

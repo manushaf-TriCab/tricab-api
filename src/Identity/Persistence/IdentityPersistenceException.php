@@ -25,4 +25,19 @@ final class IdentityPersistenceException extends RuntimeException
     {
         return new self(sprintf('Failed to insert %s.', $entity));
     }
+
+    public static function updateFailed(string $entity): self
+    {
+        return new self(sprintf('Failed to update %s.', $entity));
+    }
+
+    public static function userNotFound(string $identifier): self
+    {
+        return new self(sprintf('User "%s" was not found.', $identifier));
+    }
+
+    public static function permissionNotFound(string $permissionCode): self
+    {
+        return new self(sprintf('Active permission "%s" was not found.', $permissionCode));
+    }
 }

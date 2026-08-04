@@ -9,16 +9,36 @@ use DI\ContainerBuilder;
 use InvalidArgumentException;
 use PDO;
 use TriCab\Api\Config\Settings;
+use TriCab\Api\Http\Action\Admin\AssignRolePermissionAction;
+use TriCab\Api\Http\Action\Admin\AssignUserRoleAction;
+use TriCab\Api\Http\Action\Admin\ChangeRoleStatusAction;
+use TriCab\Api\Http\Action\Admin\ChangeUserStatusAction;
+use TriCab\Api\Http\Action\Admin\CreatePermissionAction;
+use TriCab\Api\Http\Action\Admin\CreateRoleAction;
+use TriCab\Api\Http\Action\Admin\CreateUserAction;
+use TriCab\Api\Http\Action\Admin\GetRoleAction;
+use TriCab\Api\Http\Action\Admin\GetUserAction;
+use TriCab\Api\Http\Action\Admin\ListAuditAction;
+use TriCab\Api\Http\Action\Admin\ListPermissionsAction;
+use TriCab\Api\Http\Action\Admin\ListRolesAction;
+use TriCab\Api\Http\Action\Admin\ListUsersAction;
+use TriCab\Api\Http\Action\Admin\RemoveRolePermissionAction;
+use TriCab\Api\Http\Action\Admin\RemoveUserRoleAction;
+use TriCab\Api\Http\Action\Admin\UpdatePermissionAction;
+use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
+use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\RequestGuestOtpAction;
 use TriCab\Api\Http\Action\VerifyGuestOtpAction;
+use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\GuestAuthErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthEventLogger;
 use TriCab\Api\Http\Auth\GuestAuthRateLimiter;
 use TriCab\Api\Http\Auth\NoOpGuestAuthRateLimiter;
+use TriCab\Api\Http\Auth\UserManagementErrorMapper;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
 use TriCab\Api\Http\Middleware\DevelopmentAuthenticationMiddleware;
@@ -37,11 +57,16 @@ use TriCab\Api\Identity\Email\MicrosoftGraphGuestOtpEmailSender;
 use TriCab\Api\Identity\Email\PostmarkGuestOtpEmailSender;
 use TriCab\Api\Identity\Persistence\AzureSqlEmailOtpChallengeRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlGuestSessionRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlPermissionManagementRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlRoleManagementRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlUserManagementAuditRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlUserManagementRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlUserProvisioningRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlUserRepository;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Identity\Persistence\InMemoryEmailOtpChallengeRepository;
 use TriCab\Api\Identity\Persistence\InMemoryGuestSessionRepository;
+use TriCab\Api\Identity\Persistence\InMemoryUserManagementStore;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
 use TriCab\Api\Infrastructure\Database\AzureSqlConnectionFactory;
 use TriCab\Api\Infrastructure\Database\AzureSqlPdoFactory;
@@ -56,6 +81,25 @@ use TriCab\Core\Identity\Application\Service\IssueGuestSessionService;
 use TriCab\Core\Identity\Application\Service\RequestAndSendGuestOtpService;
 use TriCab\Core\Identity\Application\Service\RequestGuestOtpService;
 use TriCab\Core\Identity\Application\Service\RevokeGuestSessionService;
+use TriCab\Core\Identity\Application\Service\UserManagement\AssignPermissionToRoleService;
+use TriCab\Core\Identity\Application\Service\UserManagement\AssignRoleToUserService;
+use TriCab\Core\Identity\Application\Service\UserManagement\ChangeRoleStatusService;
+use TriCab\Core\Identity\Application\Service\UserManagement\ChangeUserStatusService;
+use TriCab\Core\Identity\Application\Service\UserManagement\CreatePermissionService;
+use TriCab\Core\Identity\Application\Service\UserManagement\CreateRoleService;
+use TriCab\Core\Identity\Application\Service\UserManagement\CreateUserService;
+use TriCab\Core\Identity\Application\Service\UserManagement\GetRoleDetailsService;
+use TriCab\Core\Identity\Application\Service\UserManagement\GetUserDetailsService;
+use TriCab\Core\Identity\Application\Service\UserManagement\GetUserManagementAuditHistoryService;
+use TriCab\Core\Identity\Application\Service\UserManagement\ListPermissionsService;
+use TriCab\Core\Identity\Application\Service\UserManagement\ListRolesService;
+use TriCab\Core\Identity\Application\Service\UserManagement\ListUsersService;
+use TriCab\Core\Identity\Application\Service\UserManagement\RemovePermissionFromRoleService;
+use TriCab\Core\Identity\Application\Service\UserManagement\RemoveRoleFromUserService;
+use TriCab\Core\Identity\Application\Service\UserManagement\UpdatePermissionService;
+use TriCab\Core\Identity\Application\Service\UserManagement\UpdateRoleService;
+use TriCab\Core\Identity\Application\Service\UserManagement\UpdateUserService;
+use TriCab\Core\Identity\Application\Service\UserManagement\UserManagementAuditRecorder;
 use TriCab\Core\Identity\Application\Service\VerifyGuestOtpService;
 use TriCab\Core\Identity\Contract\EmailOtpChallengeRepository;
 use TriCab\Core\Identity\Contract\GuestAccessTokenIssuer;
@@ -64,7 +108,11 @@ use TriCab\Core\Identity\Contract\GuestOtpEmailSender;
 use TriCab\Core\Identity\Contract\GuestSessionRepository;
 use TriCab\Core\Identity\Contract\OtpGenerator;
 use TriCab\Core\Identity\Contract\OtpHasher;
+use TriCab\Core\Identity\Contract\PermissionManagementRepository;
+use TriCab\Core\Identity\Contract\RoleManagementRepository;
 use TriCab\Core\Identity\Contract\SessionTokenHasher;
+use TriCab\Core\Identity\Contract\UserManagementAuditRepository;
+use TriCab\Core\Identity\Contract\UserManagementRepository;
 use TriCab\Core\Identity\Contract\UserProvisioningRepository;
 use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Identity\Domain\Service\PasswordOtpHasher;
@@ -121,6 +169,44 @@ final class ContainerFactory
                     settings: $settings,
                 );
             },
+            UserManagementAuditRecorder::class => \DI\autowire(UserManagementAuditRecorder::class),
+            ListUsersService::class => \DI\autowire(ListUsersService::class),
+            GetUserDetailsService::class => \DI\autowire(GetUserDetailsService::class),
+            CreateUserService::class => \DI\autowire(CreateUserService::class),
+            UpdateUserService::class => \DI\autowire(UpdateUserService::class),
+            ChangeUserStatusService::class => \DI\autowire(ChangeUserStatusService::class),
+            AssignRoleToUserService::class => \DI\autowire(AssignRoleToUserService::class),
+            RemoveRoleFromUserService::class => \DI\autowire(RemoveRoleFromUserService::class),
+            ListRolesService::class => \DI\autowire(ListRolesService::class),
+            GetRoleDetailsService::class => \DI\autowire(GetRoleDetailsService::class),
+            CreateRoleService::class => \DI\autowire(CreateRoleService::class),
+            UpdateRoleService::class => \DI\autowire(UpdateRoleService::class),
+            ChangeRoleStatusService::class => \DI\autowire(ChangeRoleStatusService::class),
+            AssignPermissionToRoleService::class => \DI\autowire(AssignPermissionToRoleService::class),
+            RemovePermissionFromRoleService::class => \DI\autowire(RemovePermissionFromRoleService::class),
+            ListPermissionsService::class => \DI\autowire(ListPermissionsService::class),
+            CreatePermissionService::class => \DI\autowire(CreatePermissionService::class),
+            UpdatePermissionService::class => \DI\autowire(UpdatePermissionService::class),
+            GetUserManagementAuditHistoryService::class => \DI\autowire(GetUserManagementAuditHistoryService::class),
+            UserManagementErrorMapper::class => \DI\autowire(UserManagementErrorMapper::class),
+            ListUsersAction::class => \DI\autowire(ListUsersAction::class),
+            GetUserAction::class => \DI\autowire(GetUserAction::class),
+            CreateUserAction::class => \DI\autowire(CreateUserAction::class),
+            UpdateUserAction::class => \DI\autowire(UpdateUserAction::class),
+            ChangeUserStatusAction::class => \DI\autowire(ChangeUserStatusAction::class),
+            AssignUserRoleAction::class => \DI\autowire(AssignUserRoleAction::class),
+            RemoveUserRoleAction::class => \DI\autowire(RemoveUserRoleAction::class),
+            ListRolesAction::class => \DI\autowire(ListRolesAction::class),
+            GetRoleAction::class => \DI\autowire(GetRoleAction::class),
+            CreateRoleAction::class => \DI\autowire(CreateRoleAction::class),
+            UpdateRoleAction::class => \DI\autowire(UpdateRoleAction::class),
+            ChangeRoleStatusAction::class => \DI\autowire(ChangeRoleStatusAction::class),
+            AssignRolePermissionAction::class => \DI\autowire(AssignRolePermissionAction::class),
+            RemoveRolePermissionAction::class => \DI\autowire(RemoveRolePermissionAction::class),
+            ListPermissionsAction::class => \DI\autowire(ListPermissionsAction::class),
+            CreatePermissionAction::class => \DI\autowire(CreatePermissionAction::class),
+            UpdatePermissionAction::class => \DI\autowire(UpdatePermissionAction::class),
+            ListAuditAction::class => \DI\autowire(ListAuditAction::class),
         ];
 
         if ($settings->usesAzureSqlUserRepository()) {
@@ -140,6 +226,11 @@ final class ContainerFactory
             $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(AzureSqlEmailOtpChallengeRepository::class);
             $definitions[GuestSessionRepository::class] = \DI\autowire(AzureSqlGuestSessionRepository::class);
             $definitions[UserProvisioningRepository::class] = \DI\autowire(AzureSqlUserProvisioningRepository::class);
+            $definitions[UserManagementRepository::class] = \DI\autowire(AzureSqlUserManagementRepository::class);
+            $definitions[RoleManagementRepository::class] = \DI\autowire(AzureSqlRoleManagementRepository::class);
+            $definitions[PermissionManagementRepository::class] = \DI\autowire(AzureSqlPermissionManagementRepository::class);
+            $definitions[UserManagementAuditRepository::class] = \DI\autowire(AzureSqlUserManagementAuditRepository::class);
+            $definitions[AdminMutationTransaction::class] = \DI\autowire(AdminMutationTransaction::class);
             self::addGuestAuthDefinitions($definitions, $settings);
         } else {
             $definitions[UserRepository::class] = \DI\autowire(InMemoryApiUserRepository::class);
@@ -157,6 +248,23 @@ final class ContainerFactory
                 $definitions[GuestSessionRepository::class] = \DI\autowire(InMemoryGuestSessionRepository::class);
                 self::addGuestAuthDefinitions($definitions, $settings);
             }
+
+            $definitions[InMemoryUserManagementStore::class] = \DI\autowire(InMemoryUserManagementStore::class);
+            $definitions[AdminMutationTransaction::class] = static function (): AdminMutationTransaction {
+                return new AdminMutationTransaction(null);
+            };
+            $definitions[UserManagementRepository::class] = static function (Container $container): UserManagementRepository {
+                return self::get($container, InMemoryUserManagementStore::class)->users();
+            };
+            $definitions[RoleManagementRepository::class] = static function (Container $container): RoleManagementRepository {
+                return self::get($container, InMemoryUserManagementStore::class)->roles();
+            };
+            $definitions[PermissionManagementRepository::class] = static function (Container $container): PermissionManagementRepository {
+                return self::get($container, InMemoryUserManagementStore::class)->permissions();
+            };
+            $definitions[UserManagementAuditRepository::class] = static function (Container $container): UserManagementAuditRepository {
+                return self::get($container, InMemoryUserManagementStore::class)->audit();
+            };
         }
 
         $builder->addDefinitions($definitions);
