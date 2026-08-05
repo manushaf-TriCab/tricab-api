@@ -15,7 +15,9 @@ use TriCab\Api\Http\Request\GuestAuthRequestMetadata;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Request\RequestGuestOtpRequest;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Core\Identity\Application\Exception\GuestLoginNotEligible;
 use TriCab\Core\Identity\Application\Service\RequestAndSendGuestOtpService;
+use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Shared\Time\Clock;
 use TriCab\Core\Shared\Time\SystemClock;
 
@@ -37,11 +39,14 @@ final class RequestGuestOtpAction
     {
         unset($response);
 
+        $clientIp = GuestAuthRequestMetadata::clientIp($request);
+        $emailFingerprint = null;
+
         try {
             $body = JsonRequestBody::requireObject($request);
             $input = RequestGuestOtpRequest::fromArray($body);
-            $clientIp = GuestAuthRequestMetadata::clientIp($request);
             $userAgent = GuestAuthRequestMetadata::userAgent($request);
+            $emailFingerprint = $this->emailFingerprint($input->email);
 
             $this->rateLimiter->assertRequestOtpAllowed($input->email, $clientIp);
 
@@ -58,6 +63,8 @@ final class RequestGuestOtpAction
                 'route' => self::ROUTE,
                 'challenge_public_id' => $sent->challengePublicId,
                 'masked_email' => $sent->maskedEmailAddress,
+                'email_fingerprint' => $emailFingerprint,
+                'request_ip' => $clientIp,
             ]);
 
             return $this->responder->success([
@@ -66,8 +73,28 @@ final class RequestGuestOtpAction
                 'expiresAtUtc' => $sent->expiresAtUtc,
                 'expiresInSeconds' => $expiresInSeconds,
             ], 202);
+        } catch (GuestLoginNotEligible $exception) {
+            $this->logger->log('guest_otp_eligibility_rejected', [
+                'route' => self::ROUTE,
+                'safe_reason_code' => $exception->reasonCode,
+                'email_fingerprint' => $emailFingerprint,
+                'request_ip' => $clientIp,
+            ]);
+
+            return $this->errors->map($exception, self::ROUTE, 'guest_otp_eligibility_rejected');
         } catch (Throwable $exception) {
             return $this->errors->map($exception, self::ROUTE, 'guest_otp_request_failed');
         }
+    }
+
+    private function emailFingerprint(string $email): ?string
+    {
+        try {
+            $normalized = EmailAddress::fromString($email)->toString();
+        } catch (Throwable) {
+            return null;
+        }
+
+        return hash('sha256', $normalized);
     }
 }

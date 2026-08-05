@@ -90,8 +90,13 @@ final class MeEndpointTest extends TestCase
     {
         $app = TestAppFactory::create([
             'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'memory',
+            'ALLOW_IN_MEMORY_REPOSITORY_IN_PRODUCTION' => 'true',
             'DEV_AUTH_ENABLED' => 'true',
             'APP_DEBUG' => 'false',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'test-token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
         ]);
 
         $request = TestAppFactory::request('GET', '/api/v1/me')
@@ -113,8 +118,13 @@ final class MeEndpointTest extends TestCase
     {
         $app = TestAppFactory::create([
             'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'memory',
+            'ALLOW_IN_MEMORY_REPOSITORY_IN_PRODUCTION' => 'true',
             'DEV_AUTH_ENABLED' => 'false',
             'APP_DEBUG' => 'false',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'test-token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
         ]);
 
         $request = TestAppFactory::request('GET', '/api/v1/me')

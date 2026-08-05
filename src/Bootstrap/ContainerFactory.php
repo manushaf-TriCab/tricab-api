@@ -9,21 +9,41 @@ use DI\ContainerBuilder;
 use InvalidArgumentException;
 use PDO;
 use TriCab\Api\Config\Settings;
+use TriCab\Api\Http\Action\Admin\AddProductDocumentAction;
+use TriCab\Api\Http\Action\Admin\AddProductMediaAction;
+use TriCab\Api\Http\Action\Admin\ArchiveProductAction;
+use TriCab\Api\Http\Action\Admin\ArchiveProductVariantAction;
+use TriCab\Api\Http\Action\Admin\AssignProductApplicationsAction;
+use TriCab\Api\Http\Action\Admin\AssignProductCodeAction;
+use TriCab\Api\Http\Action\Admin\AssignProductIndustriesAction;
+use TriCab\Api\Http\Action\Admin\AssignProductMarketsAction;
+use TriCab\Api\Http\Action\Admin\AssignProductSpecificationsAction;
 use TriCab\Api\Http\Action\Admin\AssignRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\AssignUserRoleAction;
+use TriCab\Api\Http\Action\Admin\AssignVariantSpecificationsAction;
 use TriCab\Api\Http\Action\Admin\ChangeCustomerContactStatusAction;
 use TriCab\Api\Http\Action\Admin\ChangeCustomerPortalAccessAction;
 use TriCab\Api\Http\Action\Admin\ChangeCustomerStatusAction;
+use TriCab\Api\Http\Action\Admin\ChangeProductLifecycleAction;
+use TriCab\Api\Http\Action\Admin\ChangeProductSlugAction;
 use TriCab\Api\Http\Action\Admin\ChangeRoleStatusAction;
 use TriCab\Api\Http\Action\Admin\ChangeUserStatusAction;
 use TriCab\Api\Http\Action\Admin\CreateCustomerAction;
 use TriCab\Api\Http\Action\Admin\CreateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\CreateCustomerPortalUserAction;
 use TriCab\Api\Http\Action\Admin\CreatePermissionAction;
+use TriCab\Api\Http\Action\Admin\CreateProductAction;
+use TriCab\Api\Http\Action\Admin\CreateProductVariantAction;
 use TriCab\Api\Http\Action\Admin\CreateRoleAction;
 use TriCab\Api\Http\Action\Admin\CreateUserAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerContactAction;
+use TriCab\Api\Http\Action\Admin\GetProductAction;
+use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
+use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
+use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
+use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
+use TriCab\Api\Http\Action\Admin\GetProductSeoAction;
 use TriCab\Api\Http\Action\Admin\GetRoleAction;
 use TriCab\Api\Http\Action\Admin\GetUserAction;
 use TriCab\Api\Http\Action\Admin\LinkCustomerContactUserAction;
@@ -31,15 +51,44 @@ use TriCab\Api\Http\Action\Admin\ListAuditAction;
 use TriCab\Api\Http\Action\Admin\ListCustomerContactsAction;
 use TriCab\Api\Http\Action\Admin\ListCustomerPortalUsersAction;
 use TriCab\Api\Http\Action\Admin\ListCustomersAction;
+use TriCab\Api\Http\Action\Admin\ListProductDocumentsAction;
+use TriCab\Api\Http\Action\Admin\ListProductMediaAction;
+use TriCab\Api\Http\Action\Admin\ListProductsAction;
+use TriCab\Api\Http\Action\Admin\ListProductVariantsAction;
 use TriCab\Api\Http\Action\Admin\ListPermissionsAction;
 use TriCab\Api\Http\Action\Admin\ListRolesAction;
 use TriCab\Api\Http\Action\Admin\ListUsersAction;
+use TriCab\Api\Http\Action\Admin\PreviewProductCodeAction;
+use TriCab\Api\Http\Action\Admin\PublishProductAction;
 use TriCab\Api\Http\Action\Admin\RemoveRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\RemoveUserRoleAction;
+use TriCab\Api\Http\Action\Admin\ReorderProductMediaAction;
+use TriCab\Api\Http\Action\Admin\ReplaceProductRelationshipsAction;
+use TriCab\Api\Http\Action\Admin\RestoreArchivedProductAction;
+use TriCab\Api\Http\Action\Admin\RestoreDeletedProductAction;
+use TriCab\Api\Http\Action\Admin\RestoreProductVariantAction;
+use TriCab\Api\Http\Action\Admin\SetPrimaryProductImageAction;
+use TriCab\Api\Http\Action\Admin\SoftDeleteProductAction;
+use TriCab\Api\Http\Action\Admin\SoftDeleteProductDocumentAction;
+use TriCab\Api\Http\Action\Admin\SoftDeleteProductMediaAction;
+use TriCab\Api\Http\Action\Admin\SoftDeleteProductVariantAction;
 use TriCab\Api\Http\Action\Admin\UnlinkCustomerContactUserAction;
+use TriCab\Api\Http\Action\Admin\UnpublishProductAction;
 use TriCab\Api\Http\Action\Admin\UpdateCustomerAction;
 use TriCab\Api\Http\Action\Admin\UpdateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\UpdatePermissionAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductSeoAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
+use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
+use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductBySlugAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductDocumentsAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductMediaAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductRelationshipsAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductSpecificationsAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductVariantsAction;
+use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
@@ -50,6 +99,7 @@ use TriCab\Api\Http\Action\RequestGuestOtpAction;
 use TriCab\Api\Http\Action\VerifyGuestOtpAction;
 use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\CustomerManagementErrorMapper;
+use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthEventLogger;
 use TriCab\Api\Http\Auth\GuestAuthRateLimiter;
@@ -64,6 +114,44 @@ use TriCab\Api\Customer\Persistence\AzureSqlCustomerContactUserRepository;
 use TriCab\Api\Customer\Persistence\AzureSqlCustomerRepository;
 use TriCab\Api\Customer\Persistence\InMemory\InMemoryCustomerStore;
 use TriCab\Api\Customer\Persistence\UserManagementCustomerPortalUserProvisioner;
+use TriCab\Api\Product\Http\ProductSubResourceResolver;
+use TriCab\Api\Product\Persistence\AzureSqlLegacyProductMappingRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductAdminQueryRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductAuditRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductClassificationRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductCodeRuleRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductDocumentRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductIntegrationRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductLookupRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductMarketRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductMediaRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductPricingRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductPublicQueryRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductRelationshipRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductSearchRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductSeoRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductSpecificationRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductVariantRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryLegacyProductMappingRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductAdminQueryRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductAuditRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductClassificationRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCodeRuleRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductDocumentRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductIntegrationRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductLookupRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductMarketRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductMediaRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPricingRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPublicQueryRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductRelationshipRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSearchRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSeoRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSpecificationRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductStore;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductVariantRepository;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Authentication\CompositeBearerTokenValidator;
 use TriCab\Api\Identity\Authentication\EntraJwksClient;
@@ -77,6 +165,7 @@ use TriCab\Api\Identity\Email\DevelopmentGuestOtpEmailSender;
 use TriCab\Api\Identity\Email\MicrosoftGraphGuestOtpEmailSender;
 use TriCab\Api\Identity\Email\PostmarkGuestOtpEmailSender;
 use TriCab\Api\Identity\Persistence\AzureSqlEmailOtpChallengeRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlGuestLoginEligibilityLookup;
 use TriCab\Api\Identity\Persistence\AzureSqlGuestSessionRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlPermissionManagementRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlRoleManagementRepository;
@@ -95,6 +184,8 @@ use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
 use TriCab\Api\Infrastructure\Http\StreamJsonHttpClient;
+use TriCab\Api\Shared\Persistence\NoOpApplicationTransaction;
+use TriCab\Api\Shared\Persistence\SqlApplicationTransaction;
 use TriCab\Core\Customer\Application\Service\ChangeCustomerContactStatusService;
 use TriCab\Core\Customer\Application\Service\ChangeCustomerStatusService;
 use TriCab\Core\Customer\Application\Service\CreateCustomerContactService;
@@ -116,7 +207,9 @@ use TriCab\Core\Customer\Contract\CustomerContactUserRepository;
 use TriCab\Core\Customer\Contract\CustomerPortalUserProvisioner;
 use TriCab\Core\Customer\Contract\CustomerRepository;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
+use TriCab\Core\Identity\Application\Service\CompositeGuestLoginEligibilityLookup;
 use TriCab\Core\Identity\Application\Service\CreateGuestSessionService;
+use TriCab\Core\Identity\Application\Service\GuestLoginEligibilityService;
 use TriCab\Core\Identity\Application\Service\GuestUserProvisioningService;
 use TriCab\Core\Identity\Application\Service\IssueGuestSessionService;
 use TriCab\Core\Identity\Application\Service\RequestAndSendGuestOtpService;
@@ -145,6 +238,7 @@ use TriCab\Core\Identity\Application\Service\VerifyGuestOtpService;
 use TriCab\Core\Identity\Contract\EmailOtpChallengeRepository;
 use TriCab\Core\Identity\Contract\GuestAccessTokenIssuer;
 use TriCab\Core\Identity\Contract\GuestAccessTokenValidator;
+use TriCab\Core\Identity\Contract\GuestLoginEligibilityLookup;
 use TriCab\Core\Identity\Contract\GuestOtpEmailSender;
 use TriCab\Core\Identity\Contract\GuestSessionRepository;
 use TriCab\Core\Identity\Contract\OtpGenerator;
@@ -159,6 +253,69 @@ use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Identity\Domain\Service\PasswordOtpHasher;
 use TriCab\Core\Identity\Domain\Service\SecureOtpGenerator;
 use TriCab\Core\Identity\Domain\Service\Sha256SessionTokenHasher;
+use TriCab\Core\Product\Application\Service\AddProductDocumentService;
+use TriCab\Core\Product\Application\Service\AddProductMediaService;
+use TriCab\Core\Product\Application\Service\ArchiveProductService;
+use TriCab\Core\Product\Application\Service\ArchiveProductVariantService;
+use TriCab\Core\Product\Application\Service\AssignProductApplicationsService;
+use TriCab\Core\Product\Application\Service\AssignProductCodeService;
+use TriCab\Core\Product\Application\Service\AssignProductIndustriesService;
+use TriCab\Core\Product\Application\Service\AssignProductMarketsService;
+use TriCab\Core\Product\Application\Service\AssignProductSpecificationsService;
+use TriCab\Core\Product\Application\Service\AssignVariantSpecificationsService;
+use TriCab\Core\Product\Application\Service\ChangeProductLifecycleService;
+use TriCab\Core\Product\Application\Service\ChangeProductSlugService;
+use TriCab\Core\Product\Application\Service\CreateProductService;
+use TriCab\Core\Product\Application\Service\CreateProductVariantService;
+use TriCab\Core\Product\Application\Service\CrossAggregateProductPublishReadinessEvaluator;
+use TriCab\Core\Product\Application\Service\GetAdminProductService;
+use TriCab\Core\Product\Application\Service\GetProductAuditHistoryService;
+use TriCab\Core\Product\Application\Service\GetProductLookupsService;
+use TriCab\Core\Product\Application\Service\GetProductPricingService;
+use TriCab\Core\Product\Application\Service\GetProductPublishReadinessService;
+use TriCab\Core\Product\Application\Service\GetProductVariantsService;
+use TriCab\Core\Product\Application\Service\GetPublicProductService;
+use TriCab\Core\Product\Application\Service\ListAdminProductsService;
+use TriCab\Core\Product\Application\Service\PreviewProductCodeService;
+use TriCab\Core\Product\Application\Service\ProductAuditRecorder;
+use TriCab\Core\Product\Application\Service\PublishProductService;
+use TriCab\Core\Product\Application\Service\ReorderProductMediaService;
+use TriCab\Core\Product\Application\Service\ReplaceProductRelationshipsService;
+use TriCab\Core\Product\Application\Service\RestoreArchivedProductService;
+use TriCab\Core\Product\Application\Service\RestoreDeletedProductService;
+use TriCab\Core\Product\Application\Service\RestoreProductVariantService;
+use TriCab\Core\Product\Application\Service\SearchProductsService;
+use TriCab\Core\Product\Application\Service\SetPrimaryProductImageService;
+use TriCab\Core\Product\Application\Service\SoftDeleteProductDocumentService;
+use TriCab\Core\Product\Application\Service\SoftDeleteProductMediaService;
+use TriCab\Core\Product\Application\Service\SoftDeleteProductService;
+use TriCab\Core\Product\Application\Service\SoftDeleteProductVariantService;
+use TriCab\Core\Product\Application\Service\UnpublishProductService;
+use TriCab\Core\Product\Application\Service\UpdateProductSeoService;
+use TriCab\Core\Product\Application\Service\UpdateProductService;
+use TriCab\Core\Product\Application\Service\UpdateProductVariantService;
+use TriCab\Core\Product\Application\Service\UpsertProductPricingService;
+use TriCab\Core\Product\Application\Service\WithdrawProductDocumentService;
+use TriCab\Core\Product\Contract\LegacyProductMappingRepository;
+use TriCab\Core\Product\Contract\ProductAdminQueryRepository;
+use TriCab\Core\Product\Contract\ProductAuditRepository;
+use TriCab\Core\Product\Contract\ProductClassificationRepository;
+use TriCab\Core\Product\Contract\ProductCodeRuleRepository;
+use TriCab\Core\Product\Contract\ProductDocumentRepository;
+use TriCab\Core\Product\Contract\ProductIntegrationRepository;
+use TriCab\Core\Product\Contract\ProductLookupRepository;
+use TriCab\Core\Product\Contract\ProductMarketRepository;
+use TriCab\Core\Product\Contract\ProductMediaRepository;
+use TriCab\Core\Product\Contract\ProductPricingRepository;
+use TriCab\Core\Product\Contract\ProductPublicQueryRepository;
+use TriCab\Core\Product\Contract\ProductPublishReadinessEvaluator;
+use TriCab\Core\Product\Contract\ProductRelationshipRepository;
+use TriCab\Core\Product\Contract\ProductRepository;
+use TriCab\Core\Product\Contract\ProductSearchRepository;
+use TriCab\Core\Product\Contract\ProductSeoRepository;
+use TriCab\Core\Product\Contract\ProductSpecificationRepository;
+use TriCab\Core\Product\Contract\ProductVariantRepository;
+use TriCab\Core\Shared\Persistence\ApplicationTransaction;
 use TriCab\Core\Shared\Time\Clock;
 use TriCab\Core\Shared\Time\SystemClock;
 
@@ -280,6 +437,99 @@ final class ContainerFactory
             UnlinkCustomerContactUserAction::class => \DI\autowire(UnlinkCustomerContactUserAction::class),
             ChangeCustomerPortalAccessAction::class => \DI\autowire(ChangeCustomerPortalAccessAction::class),
             ListCustomerPortalUsersAction::class => \DI\autowire(ListCustomerPortalUsersAction::class),
+            ProductManagementErrorMapper::class => \DI\autowire(ProductManagementErrorMapper::class),
+            ListProductsAction::class => \DI\autowire(ListProductsAction::class),
+            GetProductAction::class => \DI\autowire(GetProductAction::class),
+            CreateProductAction::class => \DI\autowire(CreateProductAction::class),
+            UpdateProductAction::class => \DI\autowire(UpdateProductAction::class),
+            PublishProductAction::class => \DI\autowire(PublishProductAction::class),
+            UnpublishProductAction::class => \DI\autowire(UnpublishProductAction::class),
+            ArchiveProductAction::class => \DI\autowire(ArchiveProductAction::class),
+            RestoreArchivedProductAction::class => \DI\autowire(RestoreArchivedProductAction::class),
+            SoftDeleteProductAction::class => \DI\autowire(SoftDeleteProductAction::class),
+            RestoreDeletedProductAction::class => \DI\autowire(RestoreDeletedProductAction::class),
+            ChangeProductLifecycleAction::class => \DI\autowire(ChangeProductLifecycleAction::class),
+            GetProductPublicationReadinessAction::class => \DI\autowire(GetProductPublicationReadinessAction::class),
+            GetProductLookupsAction::class => \DI\autowire(GetProductLookupsAction::class),
+            GetProductAuditAction::class => \DI\autowire(GetProductAuditAction::class),
+            ListProductVariantsAction::class => \DI\autowire(ListProductVariantsAction::class),
+            CreateProductVariantAction::class => \DI\autowire(CreateProductVariantAction::class),
+            UpdateProductVariantAction::class => \DI\autowire(UpdateProductVariantAction::class),
+            ArchiveProductVariantAction::class => \DI\autowire(ArchiveProductVariantAction::class),
+            SoftDeleteProductVariantAction::class => \DI\autowire(SoftDeleteProductVariantAction::class),
+            RestoreProductVariantAction::class => \DI\autowire(RestoreProductVariantAction::class),
+            PreviewProductCodeAction::class => \DI\autowire(PreviewProductCodeAction::class),
+            AssignProductCodeAction::class => \DI\autowire(AssignProductCodeAction::class),
+            AssignProductSpecificationsAction::class => \DI\autowire(AssignProductSpecificationsAction::class),
+            AssignVariantSpecificationsAction::class => \DI\autowire(AssignVariantSpecificationsAction::class),
+            ListProductMediaAction::class => \DI\autowire(ListProductMediaAction::class),
+            AddProductMediaAction::class => \DI\autowire(AddProductMediaAction::class),
+            ReorderProductMediaAction::class => \DI\autowire(ReorderProductMediaAction::class),
+            SetPrimaryProductImageAction::class => \DI\autowire(SetPrimaryProductImageAction::class),
+            SoftDeleteProductMediaAction::class => \DI\autowire(SoftDeleteProductMediaAction::class),
+            ListProductDocumentsAction::class => \DI\autowire(ListProductDocumentsAction::class),
+            AddProductDocumentAction::class => \DI\autowire(AddProductDocumentAction::class),
+            WithdrawProductDocumentAction::class => \DI\autowire(WithdrawProductDocumentAction::class),
+            SoftDeleteProductDocumentAction::class => \DI\autowire(SoftDeleteProductDocumentAction::class),
+            AssignProductMarketsAction::class => \DI\autowire(AssignProductMarketsAction::class),
+            AssignProductIndustriesAction::class => \DI\autowire(AssignProductIndustriesAction::class),
+            AssignProductApplicationsAction::class => \DI\autowire(AssignProductApplicationsAction::class),
+            ReplaceProductRelationshipsAction::class => \DI\autowire(ReplaceProductRelationshipsAction::class),
+            GetProductSeoAction::class => \DI\autowire(GetProductSeoAction::class),
+            UpdateProductSeoAction::class => \DI\autowire(UpdateProductSeoAction::class),
+            ChangeProductSlugAction::class => \DI\autowire(ChangeProductSlugAction::class),
+            GetProductPricingAction::class => \DI\autowire(GetProductPricingAction::class),
+            UpsertProductPricingAction::class => \DI\autowire(UpsertProductPricingAction::class),
+            GetPublicProductBySlugAction::class => \DI\autowire(GetPublicProductBySlugAction::class),
+            GetPublicProductVariantsAction::class => \DI\autowire(GetPublicProductVariantsAction::class),
+            GetPublicProductMediaAction::class => \DI\autowire(GetPublicProductMediaAction::class),
+            GetPublicProductDocumentsAction::class => \DI\autowire(GetPublicProductDocumentsAction::class),
+            GetPublicProductRelationshipsAction::class => \DI\autowire(GetPublicProductRelationshipsAction::class),
+            GetPublicProductSpecificationsAction::class => \DI\autowire(GetPublicProductSpecificationsAction::class),
+            SearchPublicProductsAction::class => \DI\autowire(SearchPublicProductsAction::class),
+            ProductPublishReadinessEvaluator::class => \DI\autowire(CrossAggregateProductPublishReadinessEvaluator::class),
+            ProductAuditRecorder::class => \DI\autowire(ProductAuditRecorder::class),
+            CreateProductService::class => \DI\autowire(CreateProductService::class),
+            UpdateProductService::class => \DI\autowire(UpdateProductService::class),
+            PublishProductService::class => \DI\autowire(PublishProductService::class),
+            UnpublishProductService::class => \DI\autowire(UnpublishProductService::class),
+            ArchiveProductService::class => \DI\autowire(ArchiveProductService::class),
+            RestoreArchivedProductService::class => \DI\autowire(RestoreArchivedProductService::class),
+            SoftDeleteProductService::class => \DI\autowire(SoftDeleteProductService::class),
+            RestoreDeletedProductService::class => \DI\autowire(RestoreDeletedProductService::class),
+            ChangeProductLifecycleService::class => \DI\autowire(ChangeProductLifecycleService::class),
+            CreateProductVariantService::class => \DI\autowire(CreateProductVariantService::class),
+            UpdateProductVariantService::class => \DI\autowire(UpdateProductVariantService::class),
+            ArchiveProductVariantService::class => \DI\autowire(ArchiveProductVariantService::class),
+            SoftDeleteProductVariantService::class => \DI\autowire(SoftDeleteProductVariantService::class),
+            RestoreProductVariantService::class => \DI\autowire(RestoreProductVariantService::class),
+            PreviewProductCodeService::class => \DI\autowire(PreviewProductCodeService::class),
+            AssignProductCodeService::class => \DI\autowire(AssignProductCodeService::class),
+            AssignProductSpecificationsService::class => \DI\autowire(AssignProductSpecificationsService::class),
+            AssignVariantSpecificationsService::class => \DI\autowire(AssignVariantSpecificationsService::class),
+            AddProductMediaService::class => \DI\autowire(AddProductMediaService::class),
+            ReorderProductMediaService::class => \DI\autowire(ReorderProductMediaService::class),
+            SetPrimaryProductImageService::class => \DI\autowire(SetPrimaryProductImageService::class),
+            SoftDeleteProductMediaService::class => \DI\autowire(SoftDeleteProductMediaService::class),
+            AddProductDocumentService::class => \DI\autowire(AddProductDocumentService::class),
+            WithdrawProductDocumentService::class => \DI\autowire(WithdrawProductDocumentService::class),
+            SoftDeleteProductDocumentService::class => \DI\autowire(SoftDeleteProductDocumentService::class),
+            AssignProductMarketsService::class => \DI\autowire(AssignProductMarketsService::class),
+            AssignProductIndustriesService::class => \DI\autowire(AssignProductIndustriesService::class),
+            AssignProductApplicationsService::class => \DI\autowire(AssignProductApplicationsService::class),
+            ReplaceProductRelationshipsService::class => \DI\autowire(ReplaceProductRelationshipsService::class),
+            UpdateProductSeoService::class => \DI\autowire(UpdateProductSeoService::class),
+            ChangeProductSlugService::class => \DI\autowire(ChangeProductSlugService::class),
+            UpsertProductPricingService::class => \DI\autowire(UpsertProductPricingService::class),
+            ListAdminProductsService::class => \DI\autowire(ListAdminProductsService::class),
+            GetAdminProductService::class => \DI\autowire(GetAdminProductService::class),
+            GetPublicProductService::class => \DI\autowire(GetPublicProductService::class),
+            SearchProductsService::class => \DI\autowire(SearchProductsService::class),
+            GetProductLookupsService::class => \DI\autowire(GetProductLookupsService::class),
+            GetProductPublishReadinessService::class => \DI\autowire(GetProductPublishReadinessService::class),
+            GetProductAuditHistoryService::class => \DI\autowire(GetProductAuditHistoryService::class),
+            GetProductPricingService::class => \DI\autowire(GetProductPricingService::class),
+            GetProductVariantsService::class => \DI\autowire(GetProductVariantsService::class),
         ];
 
         if ($settings->usesAzureSqlUserRepository()) {
@@ -295,6 +545,7 @@ final class ContainerFactory
                 return $factory->create();
             };
             $definitions[SqlConnection::class] = \DI\autowire(PdoSqlConnection::class);
+            $definitions[ApplicationTransaction::class] = \DI\autowire(SqlApplicationTransaction::class);
             $definitions[UserRepository::class] = \DI\autowire(AzureSqlUserRepository::class);
             $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(AzureSqlEmailOtpChallengeRepository::class);
             $definitions[GuestSessionRepository::class] = \DI\autowire(AzureSqlGuestSessionRepository::class);
@@ -308,6 +559,28 @@ final class ContainerFactory
             $definitions[CustomerContactRepository::class] = \DI\autowire(AzureSqlCustomerContactRepository::class);
             $definitions[CustomerContactUserRepository::class] = \DI\autowire(AzureSqlCustomerContactUserRepository::class);
             $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
+            $definitions[GuestLoginEligibilityLookup::class] = \DI\autowire(AzureSqlGuestLoginEligibilityLookup::class);
+            $definitions[ProductRepository::class] = \DI\autowire(AzureSqlProductRepository::class);
+            $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
+            $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
+            $definitions[ProductPublicQueryRepository::class] = \DI\autowire(AzureSqlProductPublicQueryRepository::class);
+            $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
+            $definitions[ProductLookupRepository::class] = \DI\autowire(AzureSqlProductLookupRepository::class);
+            $definitions[ProductClassificationRepository::class] = \DI\autowire(AzureSqlProductClassificationRepository::class);
+            $definitions[ProductSpecificationRepository::class] = \DI\autowire(AzureSqlProductSpecificationRepository::class);
+            $definitions[ProductMediaRepository::class] = \DI\autowire(AzureSqlProductMediaRepository::class);
+            $definitions[ProductDocumentRepository::class] = \DI\autowire(AzureSqlProductDocumentRepository::class);
+            $definitions[ProductMarketRepository::class] = \DI\autowire(AzureSqlProductMarketRepository::class);
+            $definitions[ProductRelationshipRepository::class] = \DI\autowire(AzureSqlProductRelationshipRepository::class);
+            $definitions[ProductSeoRepository::class] = \DI\autowire(AzureSqlProductSeoRepository::class);
+            $definitions[ProductCodeRuleRepository::class] = \DI\autowire(AzureSqlProductCodeRuleRepository::class);
+            $definitions[ProductPricingRepository::class] = \DI\autowire(AzureSqlProductPricingRepository::class);
+            $definitions[ProductAuditRepository::class] = \DI\autowire(AzureSqlProductAuditRepository::class);
+            $definitions[ProductIntegrationRepository::class] = \DI\autowire(AzureSqlProductIntegrationRepository::class);
+            $definitions[LegacyProductMappingRepository::class] = \DI\autowire(AzureSqlLegacyProductMappingRepository::class);
+            $definitions[ProductSubResourceResolver::class] = static function (Container $container): ProductSubResourceResolver {
+                return new ProductSubResourceResolver(null, self::get($container, SqlConnection::class));
+            };
             self::addGuestAuthDefinitions($definitions, $settings);
         } else {
             $definitions[UserRepository::class] = \DI\autowire(InMemoryApiUserRepository::class);
@@ -326,6 +599,7 @@ final class ContainerFactory
                 self::addGuestAuthDefinitions($definitions, $settings);
             }
 
+            $definitions[ApplicationTransaction::class] = \DI\autowire(NoOpApplicationTransaction::class);
             $definitions[InMemoryUserManagementStore::class] = \DI\autowire(InMemoryUserManagementStore::class);
             $definitions[AdminMutationTransaction::class] = static function (): AdminMutationTransaction {
                 return new AdminMutationTransaction(null);
@@ -354,6 +628,29 @@ final class ContainerFactory
                 return self::get($container, InMemoryCustomerStore::class)->links();
             };
             $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
+            $definitions[GuestLoginEligibilityLookup::class] = \DI\autowire(CompositeGuestLoginEligibilityLookup::class);
+            $definitions[InMemoryProductStore::class] = \DI\autowire(InMemoryProductStore::class);
+            $definitions[ProductRepository::class] = \DI\autowire(InMemoryProductRepository::class);
+            $definitions[ProductVariantRepository::class] = \DI\autowire(InMemoryProductVariantRepository::class);
+            $definitions[ProductAdminQueryRepository::class] = \DI\autowire(InMemoryProductAdminQueryRepository::class);
+            $definitions[ProductPublicQueryRepository::class] = \DI\autowire(InMemoryProductPublicQueryRepository::class);
+            $definitions[ProductSearchRepository::class] = \DI\autowire(InMemoryProductSearchRepository::class);
+            $definitions[ProductLookupRepository::class] = \DI\autowire(InMemoryProductLookupRepository::class);
+            $definitions[ProductClassificationRepository::class] = \DI\autowire(InMemoryProductClassificationRepository::class);
+            $definitions[ProductSpecificationRepository::class] = \DI\autowire(InMemoryProductSpecificationRepository::class);
+            $definitions[ProductMediaRepository::class] = \DI\autowire(InMemoryProductMediaRepository::class);
+            $definitions[ProductDocumentRepository::class] = \DI\autowire(InMemoryProductDocumentRepository::class);
+            $definitions[ProductMarketRepository::class] = \DI\autowire(InMemoryProductMarketRepository::class);
+            $definitions[ProductRelationshipRepository::class] = \DI\autowire(InMemoryProductRelationshipRepository::class);
+            $definitions[ProductSeoRepository::class] = \DI\autowire(InMemoryProductSeoRepository::class);
+            $definitions[ProductCodeRuleRepository::class] = \DI\autowire(InMemoryProductCodeRuleRepository::class);
+            $definitions[ProductPricingRepository::class] = \DI\autowire(InMemoryProductPricingRepository::class);
+            $definitions[ProductAuditRepository::class] = \DI\autowire(InMemoryProductAuditRepository::class);
+            $definitions[ProductIntegrationRepository::class] = \DI\autowire(InMemoryProductIntegrationRepository::class);
+            $definitions[LegacyProductMappingRepository::class] = \DI\autowire(InMemoryLegacyProductMappingRepository::class);
+            $definitions[ProductSubResourceResolver::class] = static function (Container $container): ProductSubResourceResolver {
+                return new ProductSubResourceResolver(self::get($container, InMemoryProductStore::class), null);
+            };
         }
 
         $builder->addDefinitions($definitions);
@@ -389,6 +686,7 @@ final class ContainerFactory
             );
         };
         $definitions[GuestUserProvisioningService::class] = \DI\autowire(GuestUserProvisioningService::class);
+        $definitions[GuestLoginEligibilityService::class] = \DI\autowire(GuestLoginEligibilityService::class);
         $definitions[RequestGuestOtpService::class] = \DI\autowire(RequestGuestOtpService::class);
         $definitions[VerifyGuestOtpService::class] = \DI\autowire(VerifyGuestOtpService::class);
         $definitions[CreateGuestSessionService::class] = static function (Container $container) use ($settings): CreateGuestSessionService {

@@ -7,6 +7,7 @@ namespace TriCab\Api\Http\Auth;
 use TriCab\Api\Http\Exception\HttpRequestValidationFailed;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Identity\Application\Exception\ActiveOtpChallengeNotFound;
+use TriCab\Core\Identity\Application\Exception\GuestLoginNotEligible;
 use TriCab\Core\Identity\Application\Exception\GuestOtpEmailDeliveryFailed;
 use TriCab\Core\Identity\Application\Exception\GuestSessionIssuanceFailed;
 use TriCab\Core\Identity\Domain\Exception\InvalidIdentityValue;
@@ -57,6 +58,16 @@ final class GuestAuthErrorMapper
                 'AUTH_EMAIL_INVALID',
                 'Enter a valid email address.',
                 422,
+            );
+        }
+
+        if ($exception instanceof GuestLoginNotEligible) {
+            // Business-approved enumeration response: one public message for all rejection reasons.
+            // Caller (RequestGuestOtpAction) logs guest_otp_eligibility_rejected with email fingerprint.
+            return $this->responder->error(
+                'AUTH_CUSTOMER_LOGIN_NOT_REGISTERED',
+                'This email is not registered for TriCab access. Please contact your nearest TriCab branch to request an account.',
+                403,
             );
         }
 

@@ -132,12 +132,33 @@ final readonly class Settings
     {
         $appEnv = self::string($env, 'APP_ENV', 'production');
 
-        $userRepository = strtolower(self::string($env, 'USER_REPOSITORY', self::USER_REPOSITORY_MEMORY));
+        // Default differs by environment: production must not silently use in-memory.
+        $defaultUserRepository = $appEnv === 'production'
+            ? self::USER_REPOSITORY_AZURE_SQL
+            : self::USER_REPOSITORY_MEMORY;
+        $userRepositoryRaw = self::string($env, 'USER_REPOSITORY', $defaultUserRepository);
+        $userRepository = strtolower($userRepositoryRaw);
         if (
             $userRepository !== self::USER_REPOSITORY_MEMORY
             && $userRepository !== self::USER_REPOSITORY_AZURE_SQL
         ) {
-            $userRepository = self::USER_REPOSITORY_MEMORY;
+            throw new InvalidArgumentException(sprintf(
+                'Unsupported USER_REPOSITORY "%s". Supported values: %s, %s.',
+                $userRepositoryRaw,
+                self::USER_REPOSITORY_MEMORY,
+                self::USER_REPOSITORY_AZURE_SQL,
+            ));
+        }
+
+        if ($appEnv === 'production' && $userRepository === self::USER_REPOSITORY_MEMORY) {
+            $allowMemoryInProduction = strtolower(
+                self::string($env, 'ALLOW_IN_MEMORY_REPOSITORY_IN_PRODUCTION', 'false'),
+            ) === 'true';
+            if (!$allowMemoryInProduction) {
+                throw new InvalidArgumentException(
+                    'USER_REPOSITORY=memory is not allowed when APP_ENV=production.',
+                );
+            }
         }
 
         $dbAuthMode = strtolower(self::string($env, 'DB_AUTH_MODE', self::DB_AUTH_MODE_SQL_LOGIN));

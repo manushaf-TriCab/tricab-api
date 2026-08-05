@@ -13,9 +13,18 @@ use TriCab\Api\Http\Auth\GuestAuthEventLogger;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Email\DevelopmentGuestOtpEmailSender;
 use TriCab\Api\Tests\TestAppFactory;
+use TriCab\Core\Identity\Application\Exception\GuestLoginNotEligible;
 use TriCab\Core\Identity\Application\Exception\GuestOtpEmailDeliveryFailed;
 use TriCab\Core\Identity\Application\Exception\GuestSessionIssuanceFailed;
+use TriCab\Core\Identity\Contract\EmailOtpChallengeRepository;
 use TriCab\Core\Identity\Contract\GuestOtpEmailSender;
+use TriCab\Core\Identity\Contract\UserProvisioningRepository;
+use TriCab\Core\Identity\Domain\Service\EmailOtpExternalIdentityFactory;
+use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
+use TriCab\Core\Identity\Domain\ValueObject\OtpPurpose;
+use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
+use TriCab\Core\Identity\Domain\ValueObject\RoleCode;
+use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 use RuntimeException;
 
 final class GuestAuthEndpointsTest extends TestCase
@@ -23,6 +32,7 @@ final class GuestAuthEndpointsTest extends TestCase
     public function test_request_otp_returns_202_with_masked_email_and_no_otp(): void
     {
         $app = TestAppFactory::create();
+        $this->seedEligiblePortalUser($app, 'guest@example.com');
         $response = $app->handle($this->jsonRequest('POST', '/api/v1/auth/guest/request-otp', [
             'email' => 'guest@example.com',
         ]));
@@ -43,6 +53,64 @@ final class GuestAuthEndpointsTest extends TestCase
         $encoded = (string) $response->getBody();
         self::assertStringNotContainsString('"otp"', $encoded);
         self::assertDoesNotMatchRegularExpression('/"otp"\s*:\s*"\d{6}"/', $encoded);
+    }
+
+    public function test_request_otp_rejects_unknown_email_without_challenge_or_email(): void
+    {
+        $app = TestAppFactory::create();
+        $container = $app->getContainer();
+        self::assertInstanceOf(ContainerInterface::class, $container);
+
+        $sender = $container->get(GuestOtpEmailSender::class);
+        self::assertInstanceOf(DevelopmentGuestOtpEmailSender::class, $sender);
+        $challenges = $container->get(EmailOtpChallengeRepository::class);
+        self::assertInstanceOf(EmailOtpChallengeRepository::class, $challenges);
+        $users = $container->get(UserProvisioningRepository::class);
+        self::assertInstanceOf(UserProvisioningRepository::class, $users);
+
+        $response = $app->handle($this->jsonRequest('POST', '/api/v1/auth/guest/request-otp', [
+            'email' => 'unknown@example.com',
+        ]));
+        $payload = TestAppFactory::json($response);
+
+        self::assertSame(403, $response->getStatusCode());
+        self::assertIsArray($payload['error']);
+        /** @var array<string, mixed> $error */
+        $error = $payload['error'];
+        self::assertSame('AUTH_CUSTOMER_LOGIN_NOT_REGISTERED', $error['code']);
+        self::assertSame(
+            'This email is not registered for TriCab access. Please contact your nearest TriCab branch to request an account.',
+            $error['message'],
+        );
+        self::assertStringNotContainsString('user_not_found', (string) $response->getBody());
+        self::assertNull($sender->lastMessage());
+        self::assertNull(
+            $challenges->findLatestActiveByEmailAndPurpose(
+                EmailAddress::fromString('unknown@example.com'),
+                OtpPurpose::guestLogin(),
+            ),
+        );
+        self::assertNull($users->findByEmail(EmailAddress::fromString('unknown@example.com')));
+    }
+
+    public function test_request_otp_eligibility_mapper_hides_internal_reason(): void
+    {
+        $mapper = new GuestAuthErrorMapper(new JsonResponder(), new GuestAuthEventLogger());
+        $response = $mapper->map(
+            new GuestLoginNotEligible('user_inactive'),
+            '/api/v1/auth/guest/request-otp',
+            'guest_otp_eligibility_rejected',
+        );
+        $payload = TestAppFactory::json($response);
+        $raw = (string) $response->getBody();
+
+        self::assertSame(403, $response->getStatusCode());
+        self::assertIsArray($payload['error']);
+        /** @var array<string, mixed> $error */
+        $error = $payload['error'];
+        self::assertSame('AUTH_CUSTOMER_LOGIN_NOT_REGISTERED', $error['code']);
+        self::assertStringNotContainsString('user_inactive', $raw);
+        self::assertStringNotContainsString('inactive', $raw);
     }
 
     public function test_request_otp_rejects_invalid_and_missing_email(): void
@@ -348,6 +416,8 @@ final class GuestAuthEndpointsTest extends TestCase
      */
     private function requestOtp(App $app, string $email): array
     {
+        $this->seedEligiblePortalUser($app, $email);
+
         $response = $app->handle($this->jsonRequest('POST', '/api/v1/auth/guest/request-otp', [
             'email' => $email,
         ]));
@@ -368,6 +438,34 @@ final class GuestAuthEndpointsTest extends TestCase
         self::assertSame(strtolower($email), $last['to']);
 
         return [$challengeId, $last['otpCode']];
+    }
+
+    /**
+     * @param App<ContainerInterface> $app
+     */
+    private function seedEligiblePortalUser(App $app, string $email): void
+    {
+        $container = $app->getContainer();
+        self::assertInstanceOf(ContainerInterface::class, $container);
+
+        $users = $container->get(UserProvisioningRepository::class);
+        self::assertInstanceOf(UserProvisioningRepository::class, $users);
+
+        $emailAddress = EmailAddress::fromString($email);
+        if ($users->findByEmail($emailAddress) !== null) {
+            return;
+        }
+
+        $users->register(
+            emailAddress: $emailAddress,
+            displayName: 'Portal ' . $emailAddress->toString(),
+            status: UserStatus::active(),
+            roles: [RoleCode::fromString('GUEST')],
+            permissions: [PermissionCode::fromString('ACCOUNT.LOGIN')],
+            identity: EmailOtpExternalIdentityFactory::forEmail(
+                EmailAddress::fromString('seed-' . $emailAddress->toString()),
+            ),
+        );
     }
 
     /**

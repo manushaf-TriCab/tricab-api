@@ -9,8 +9,20 @@ use Psr\Container\ContainerInterface;
 use Slim\App;
 use Slim\Factory\AppFactory;
 use TriCab\Api\Config\Settings;
+use TriCab\Api\Http\Action\Admin\AddProductDocumentAction;
+use TriCab\Api\Http\Action\Admin\AddProductMediaAction;
+use TriCab\Api\Http\Action\Admin\ArchiveProductAction;
+use TriCab\Api\Http\Action\Admin\ArchiveProductVariantAction;
+use TriCab\Api\Http\Action\Admin\AssignProductApplicationsAction;
+use TriCab\Api\Http\Action\Admin\AssignProductCodeAction;
+use TriCab\Api\Http\Action\Admin\AssignProductIndustriesAction;
+use TriCab\Api\Http\Action\Admin\AssignProductMarketsAction;
+use TriCab\Api\Http\Action\Admin\AssignProductSpecificationsAction;
 use TriCab\Api\Http\Action\Admin\AssignRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\AssignUserRoleAction;
+use TriCab\Api\Http\Action\Admin\AssignVariantSpecificationsAction;
+use TriCab\Api\Http\Action\Admin\ChangeProductLifecycleAction;
+use TriCab\Api\Http\Action\Admin\ChangeProductSlugAction;
 use TriCab\Api\Http\Action\Admin\ChangeCustomerContactStatusAction;
 use TriCab\Api\Http\Action\Admin\ChangeCustomerPortalAccessAction;
 use TriCab\Api\Http\Action\Admin\ChangeCustomerStatusAction;
@@ -20,10 +32,18 @@ use TriCab\Api\Http\Action\Admin\CreateCustomerAction;
 use TriCab\Api\Http\Action\Admin\CreateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\CreateCustomerPortalUserAction;
 use TriCab\Api\Http\Action\Admin\CreatePermissionAction;
+use TriCab\Api\Http\Action\Admin\CreateProductAction;
+use TriCab\Api\Http\Action\Admin\CreateProductVariantAction;
 use TriCab\Api\Http\Action\Admin\CreateRoleAction;
 use TriCab\Api\Http\Action\Admin\CreateUserAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerContactAction;
+use TriCab\Api\Http\Action\Admin\GetProductAction;
+use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
+use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
+use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
+use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
+use TriCab\Api\Http\Action\Admin\GetProductSeoAction;
 use TriCab\Api\Http\Action\Admin\GetRoleAction;
 use TriCab\Api\Http\Action\Admin\GetUserAction;
 use TriCab\Api\Http\Action\Admin\LinkCustomerContactUserAction;
@@ -31,15 +51,44 @@ use TriCab\Api\Http\Action\Admin\ListAuditAction;
 use TriCab\Api\Http\Action\Admin\ListCustomerContactsAction;
 use TriCab\Api\Http\Action\Admin\ListCustomerPortalUsersAction;
 use TriCab\Api\Http\Action\Admin\ListCustomersAction;
+use TriCab\Api\Http\Action\Admin\ListProductDocumentsAction;
+use TriCab\Api\Http\Action\Admin\ListProductMediaAction;
+use TriCab\Api\Http\Action\Admin\ListProductsAction;
+use TriCab\Api\Http\Action\Admin\ListProductVariantsAction;
 use TriCab\Api\Http\Action\Admin\ListPermissionsAction;
 use TriCab\Api\Http\Action\Admin\ListRolesAction;
 use TriCab\Api\Http\Action\Admin\ListUsersAction;
+use TriCab\Api\Http\Action\Admin\PreviewProductCodeAction;
+use TriCab\Api\Http\Action\Admin\PublishProductAction;
 use TriCab\Api\Http\Action\Admin\RemoveRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\RemoveUserRoleAction;
+use TriCab\Api\Http\Action\Admin\ReorderProductMediaAction;
+use TriCab\Api\Http\Action\Admin\ReplaceProductRelationshipsAction;
+use TriCab\Api\Http\Action\Admin\RestoreArchivedProductAction;
+use TriCab\Api\Http\Action\Admin\RestoreDeletedProductAction;
+use TriCab\Api\Http\Action\Admin\RestoreProductVariantAction;
+use TriCab\Api\Http\Action\Admin\SetPrimaryProductImageAction;
+use TriCab\Api\Http\Action\Admin\SoftDeleteProductAction;
+use TriCab\Api\Http\Action\Admin\SoftDeleteProductDocumentAction;
+use TriCab\Api\Http\Action\Admin\SoftDeleteProductMediaAction;
+use TriCab\Api\Http\Action\Admin\SoftDeleteProductVariantAction;
 use TriCab\Api\Http\Action\Admin\UnlinkCustomerContactUserAction;
+use TriCab\Api\Http\Action\Admin\UnpublishProductAction;
 use TriCab\Api\Http\Action\Admin\UpdateCustomerAction;
 use TriCab\Api\Http\Action\Admin\UpdateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\UpdatePermissionAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductSeoAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
+use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
+use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductBySlugAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductDocumentsAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductMediaAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductRelationshipsAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductSpecificationsAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductVariantsAction;
+use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
@@ -108,6 +157,7 @@ final class AppBuilder
             $app->post('/api/v1/auth/guest/logout', LogoutGuestAction::class);
         }
 
+        self::registerPublicProductRoutes($app);
         self::registerAdminRoutes($app, $container);
     }
 
@@ -149,6 +199,117 @@ final class AppBuilder
             ->add(($require)('AUDIT.USER_MANAGEMENT.READ'));
 
         self::registerAdminCustomerRoutes($app, $require);
+        self::registerAdminProductRoutes($app, $require);
+    }
+
+    /**
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerPublicProductRoutes(App $app): void
+    {
+        $app->get('/api/v1/products/{slug}', GetPublicProductBySlugAction::class);
+        $app->get('/api/v1/products/{slug}/variants', GetPublicProductVariantsAction::class);
+        $app->get('/api/v1/products/{slug}/media', GetPublicProductMediaAction::class);
+        $app->get('/api/v1/products/{slug}/documents', GetPublicProductDocumentsAction::class);
+        $app->get('/api/v1/products/{slug}/relationships', GetPublicProductRelationshipsAction::class);
+        $app->get('/api/v1/products/{slug}/specifications', GetPublicProductSpecificationsAction::class);
+        $app->get('/api/v1/product-search', SearchPublicProductsAction::class);
+    }
+
+    /**
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerAdminProductRoutes(App $app, RequirePermission $require): void
+    {
+        $app->get('/api/v1/admin/products', ListProductsAction::class)->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/products', CreateProductAction::class)->add(($require)('PRODUCT.CREATE'));
+        $app->get('/api/v1/admin/products/{productPublicId}', GetProductAction::class)->add(($require)('PRODUCT.READ'));
+        $app->patch('/api/v1/admin/products/{productPublicId}', UpdateProductAction::class)->add(($require)('PRODUCT.UPDATE'));
+
+        $app->post('/api/v1/admin/products/{productPublicId}/publish', PublishProductAction::class)
+            ->add(($require)('PRODUCT.PUBLISH'));
+        $app->post('/api/v1/admin/products/{productPublicId}/unpublish', UnpublishProductAction::class)
+            ->add(($require)('PRODUCT.PUBLISH'));
+        $app->post('/api/v1/admin/products/{productPublicId}/archive', ArchiveProductAction::class)
+            ->add(($require)('PRODUCT.ARCHIVE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/restore-archive', RestoreArchivedProductAction::class)
+            ->add(($require)('PRODUCT.RESTORE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/soft-delete', SoftDeleteProductAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/restore-deletion', RestoreDeletedProductAction::class)
+            ->add(($require)('PRODUCT.RESTORE'));
+        $app->patch('/api/v1/admin/products/{productPublicId}/lifecycle', ChangeProductLifecycleAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
+        $app->get('/api/v1/admin/products/{productPublicId}/publication-readiness', GetProductPublicationReadinessAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->get('/api/v1/admin/products/{productPublicId}/audit', GetProductAuditAction::class)
+            ->add(($require)('PRODUCT.AUDIT.VIEW'));
+
+        $app->get('/api/v1/admin/products/{productPublicId}/variants', ListProductVariantsAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/products/{productPublicId}/variants', CreateProductVariantAction::class)
+            ->add(($require)('PRODUCT.VARIANTS.MANAGE'));
+
+        $app->get('/api/v1/admin/products/{productPublicId}/media', ListProductMediaAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/products/{productPublicId}/media', AddProductMediaAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/media/reorder', ReorderProductMediaAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+
+        $app->get('/api/v1/admin/products/{productPublicId}/documents', ListProductDocumentsAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/products/{productPublicId}/documents', AddProductDocumentAction::class)
+            ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
+
+        $app->put('/api/v1/admin/products/{productPublicId}/markets', AssignProductMarketsAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
+        $app->put('/api/v1/admin/products/{productPublicId}/industries', AssignProductIndustriesAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
+        $app->put('/api/v1/admin/products/{productPublicId}/applications', AssignProductApplicationsAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
+        $app->put('/api/v1/admin/products/{productPublicId}/relationships', ReplaceProductRelationshipsAction::class)
+            ->add(($require)('PRODUCT.RELATIONSHIPS.MANAGE'));
+        $app->put('/api/v1/admin/products/{productPublicId}/specifications', AssignProductSpecificationsAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->put('/api/v1/admin/products/{productPublicId}/seo', UpdateProductSeoAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
+        $app->put('/api/v1/admin/products/{productPublicId}/pricing', UpsertProductPricingAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/slugs', ChangeProductSlugAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
+        $app->get('/api/v1/admin/products/{productPublicId}/seo', GetProductSeoAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->get('/api/v1/admin/products/{productPublicId}/pricing', GetProductPricingAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+
+        $app->get('/api/v1/admin/product-lookups', GetProductLookupsAction::class)->add(($require)('PRODUCT.READ'));
+
+        $app->patch('/api/v1/admin/product-variants/{variantPublicId}', UpdateProductVariantAction::class)
+            ->add(($require)('PRODUCT.VARIANTS.MANAGE'));
+        $app->post('/api/v1/admin/product-variants/{variantPublicId}/archive', ArchiveProductVariantAction::class)
+            ->add(($require)('PRODUCT.VARIANTS.MANAGE'));
+        $app->post('/api/v1/admin/product-variants/{variantPublicId}/soft-delete', SoftDeleteProductVariantAction::class)
+            ->add(($require)('PRODUCT.VARIANTS.MANAGE'));
+        $app->post('/api/v1/admin/product-variants/{variantPublicId}/restore', RestoreProductVariantAction::class)
+            ->add(($require)('PRODUCT.VARIANTS.MANAGE'));
+        $app->put('/api/v1/admin/product-variants/{variantPublicId}/specifications', AssignVariantSpecificationsAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+
+        $app->post('/api/v1/admin/product-media/{mediaPublicId}/set-primary', SetPrimaryProductImageAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/product-media/{mediaPublicId}/soft-delete', SoftDeleteProductMediaAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+
+        $app->post('/api/v1/admin/product-documents/{documentPublicId}/withdraw', WithdrawProductDocumentAction::class)
+            ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
+        $app->post('/api/v1/admin/product-documents/{documentPublicId}/soft-delete', SoftDeleteProductDocumentAction::class)
+            ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
+
+        $app->post('/api/v1/admin/product-codes/preview', PreviewProductCodeAction::class)
+            ->add(($require)('PRODUCT.CODES.MANAGE'));
+        $app->post('/api/v1/admin/product-codes/assign', AssignProductCodeAction::class)
+            ->add(($require)('PRODUCT.CODES.MANAGE'));
     }
 
     /**

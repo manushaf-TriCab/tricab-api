@@ -55,6 +55,23 @@ final class AzureSqlValueMapper
         return $normalized === '' ? null : $normalized;
     }
 
+    public static function nullableInt(mixed $value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return null;
+    }
+
     public static function requireDateTime(mixed $value, string $field): DateTimeImmutable
     {
         $parsed = self::nullableDateTime($value);
