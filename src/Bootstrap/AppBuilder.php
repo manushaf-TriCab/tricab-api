@@ -11,6 +11,7 @@ use Slim\Factory\AppFactory;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
+use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
@@ -64,5 +65,6 @@ final class AppBuilder
         $app->get('/health', HealthAction::class);
         $app->get('/health/database', DatabaseHealthAction::class);
         $app->get('/api/v1/me', GetAuthenticatedUserAction::class);
+        $app->post('/api/v1/documents/pdf', GenerateDocumentPdfAction::class);
     }
 }

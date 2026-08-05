@@ -1,11 +1,11 @@
 # TriCab API
 
-Slim 4 authentication slice for the TriCab Platform Rebuild. Consumes `tricab/tricab-core` via a local Composer path repository (symlink).
+Slim 4 API for the TriCab Platform Rebuild. Consumes `tricab/tricab-core` via a local Composer path repository (symlink).
 
 ## Boundaries
 
-- **API owns:** Slim, PSR-7, DI, dotenv, Entra token validation adapters, persistence adapters (memory / Azure SQL), JSON responses
-- **Core owns:** domain entities, value objects, `ResolveAuthenticatedUserHandler`, `UserRepository` contract
+- **API owns:** Slim, PSR-7, DI, dotenv, Entra token validation adapters, persistence adapters (memory / Azure SQL), Dompdf rendering, templates/assets, and HTTP responses
+- **Core owns:** domain entities, value objects, document parsing/use cases, renderer and repository contracts
 
 ## Modes
 
@@ -19,7 +19,7 @@ Slim 4 authentication slice for the TriCab Platform Rebuild. Consumes `tricab/tr
 ## Setup
 
 ```bash
-cd /Users/thilanh/Documents/Projects/tricab-core/tricab-api
+cd D:\TriCab\Projects\tricab-api
 cp .env.example .env
 composer install
 composer dump-autoload
@@ -73,6 +73,22 @@ curl \
   -H "X-Dev-Entra-Email: thilanh@tricab.com" \
   http://localhost:8080/api/v1/me
 ```
+
+## Generate a PDF from an OCR stream
+
+`POST /api/v1/documents/pdf` accepts the legacy `.RET.`/`.RER.` stream as the raw request body and returns `application/pdf`. The route supports order confirmations (`tcord.ocr`), pick lists (`tcpick.ocr`), and quotations (`tcqu.ocr`).
+
+When `APP_ENV=development`, `DEV_AUTH_ENABLED=true`, and `USER_REPOSITORY=memory`, the existing development-auth middleware supplies the configured seeded identity for a short internal test. Otherwise, send a normal Microsoft Entra bearer token and use the configured user repository.
+
+```powershell
+curl.exe "http://localhost:8080/api/v1/documents/pdf" `
+  -H "Content-Type: text/plain; charset=utf-8" `
+  -H "Accept: application/pdf" `
+  --data-binary "@tests/Fixtures/DocumentGeneration/tcord.ocr.txt" `
+  --output order-confirmation.pdf
+```
+
+Successful responses include `X-OCR-Template` and `X-OCR-Warning-Count`. Invalid streams return a JSON error; payloads are limited to 5 MB. See [docs/document-generation.md](docs/document-generation.md) for the complete contract and architecture.
 
 ## Quality
 

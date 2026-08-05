@@ -4,6 +4,7 @@
     "type": "project",
     "license": "proprietary",
     "require": {
+        "dompdf/dompdf": "^3.1",
         "php": "^8.3",
         "firebase/php-jwt": "^6.10",
         "php-di/php-di": "^7.0",

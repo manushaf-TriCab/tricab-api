@@ -8,7 +8,9 @@ use DI\Container;
 use DI\ContainerBuilder;
 use PDO;
 use TriCab\Api\Config\Settings;
+use TriCab\Api\DocumentGeneration\Rendering\DompdfPdfRenderer;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
+use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
@@ -30,6 +32,9 @@ use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Contract\UserRepository;
+use TriCab\Core\DocumentGeneration\Application\Handler\GenerateOcrPdfHandler;
+use TriCab\Core\DocumentGeneration\Contract\PdfRenderer;
+use TriCab\Core\DocumentGeneration\Legacy\LegacyStreamParser;
 
 final class ContainerFactory
 {
@@ -37,6 +42,7 @@ final class ContainerFactory
     {
         $builder = new ContainerBuilder();
         $builder->useAutowiring(true);
+        $documentResources = dirname(__DIR__, 2) . '/resources/document-generation';
 
         $definitions = [
             Settings::class => $settings,
@@ -46,9 +52,15 @@ final class ContainerFactory
             EntraJwtValidationDebugLogger::class => \DI\autowire(EntraJwtValidationDebugLogger::class),
             EntraTokenValidator::class => \DI\autowire(MicrosoftEntraJwtValidator::class),
             ResolveAuthenticatedUserHandler::class => \DI\autowire(ResolveAuthenticatedUserHandler::class),
+            LegacyStreamParser::class => \DI\autowire(LegacyStreamParser::class),
+            DompdfPdfRenderer::class => \DI\create(DompdfPdfRenderer::class)
+                ->constructor($documentResources . '/templates', $documentResources . '/assets'),
+            PdfRenderer::class => \DI\get(DompdfPdfRenderer::class),
+            GenerateOcrPdfHandler::class => \DI\autowire(GenerateOcrPdfHandler::class),
             HealthAction::class => \DI\autowire(HealthAction::class),
             DatabaseHealthAction::class => \DI\autowire(DatabaseHealthAction::class),
             GetAuthenticatedUserAction::class => \DI\autowire(GetAuthenticatedUserAction::class),
+            GenerateDocumentPdfAction::class => \DI\autowire(GenerateDocumentPdfAction::class),
             DevelopmentAuthenticationMiddleware::class => \DI\autowire(DevelopmentAuthenticationMiddleware::class),
             BearerTokenAuthenticationMiddleware::class => \DI\autowire(BearerTokenAuthenticationMiddleware::class),
             CorsMiddleware::class => \DI\autowire(CorsMiddleware::class),
