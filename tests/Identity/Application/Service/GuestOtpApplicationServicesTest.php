@@ -7,14 +7,21 @@ namespace TriCab\Core\Tests\Identity\Application\Service;
 use PHPUnit\Framework\TestCase;
 use TriCab\Core\Identity\Application\Exception\ActiveOtpChallengeNotFound;
 use TriCab\Core\Identity\Application\Service\CreateGuestSessionService;
+use TriCab\Core\Identity\Application\Service\GuestLoginEligibilityService;
 use TriCab\Core\Identity\Application\Service\GuestUserProvisioningService;
 use TriCab\Core\Identity\Application\Service\RequestGuestOtpService;
 use TriCab\Core\Identity\Application\Service\VerifyGuestOtpService;
 use TriCab\Core\Identity\Domain\Exception\OtpInvalid;
+use TriCab\Core\Identity\Domain\Service\EmailOtpExternalIdentityFactory;
 use TriCab\Core\Identity\Domain\Service\PasswordOtpHasher;
 use TriCab\Core\Identity\Domain\Service\SecureOtpGenerator;
+use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
+use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
+use TriCab\Core\Identity\Domain\ValueObject\RoleCode;
 use TriCab\Core\Identity\Domain\ValueObject\SessionTokenHash;
+use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
+use TriCab\Core\Tests\Identity\Doubles\FakeGuestLoginEligibilityLookup;
 use TriCab\Core\Tests\Identity\Doubles\FixedClock;
 use TriCab\Core\Tests\Identity\Doubles\InMemoryEmailOtpChallengeRepository;
 use TriCab\Core\Tests\Identity\Doubles\InMemoryGuestSessionRepository;
@@ -26,12 +33,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
     {
         $clock = FixedClock::utc('2026-07-31T00:00:00+00:00');
         $challenges = new InMemoryEmailOtpChallengeRepository($clock);
-        $service = new RequestGuestOtpService(
-            challenges: $challenges,
-            otpGenerator: new SecureOtpGenerator(),
-            otpHasher: new PasswordOtpHasher(),
-            clock: $clock,
-        );
+        $service = $this->requestService($challenges, $clock);
 
         $first = $service->execute(' Guest@Example.COM ');
         $second = $service->execute('guest@example.com');
@@ -44,15 +46,25 @@ final class GuestOtpApplicationServicesTest extends TestCase
         self::assertNotSame($first->challengePublicId, $second->challengePublicId);
     }
 
-    public function test_verify_provisions_guest_user_with_email_otp_identity(): void
+    public function test_verify_links_existing_user_with_email_otp_identity(): void
     {
         $clock = FixedClock::utc('2026-07-31T00:00:00+00:00');
         $challenges = new InMemoryEmailOtpChallengeRepository($clock);
         $users = new InMemoryUserProvisioningRepository();
         $hasher = new PasswordOtpHasher();
+        $email = EmailAddress::fromString('guest@example.com');
+        $users->register(
+            emailAddress: $email,
+            displayName: 'Guest User',
+            status: UserStatus::active(),
+            roles: [RoleCode::fromString('CUSTOMER_USER')],
+            permissions: [PermissionCode::fromString('ACCOUNT.LOGIN')],
+            identity: EmailOtpExternalIdentityFactory::forEmail(
+                EmailAddress::fromString('seed-' . $email->toString()),
+            ),
+        );
 
-        $requested = (new RequestGuestOtpService($challenges, new SecureOtpGenerator(), $hasher, clock: $clock))
-            ->execute('guest@example.com');
+        $requested = $this->requestService($challenges, $clock, $hasher)->execute('guest@example.com');
 
         $authenticated = (new VerifyGuestOtpService(
             $challenges,
@@ -63,7 +75,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
 
         self::assertSame('guest@example.com', $authenticated->emailAddress()->toString());
         self::assertSame('active', $authenticated->status()->toString());
-        self::assertContains('GUEST', array_map(
+        self::assertContains('CUSTOMER_USER', array_map(
             static fn ($role) => $role->toString(),
             $authenticated->roles(),
         ));
@@ -72,16 +84,10 @@ final class GuestOtpApplicationServicesTest extends TestCase
             $authenticated->permissions(),
         ));
 
-        $linked = $users->findByExternalIdentity(
-            \TriCab\Core\Identity\Domain\Service\EmailOtpExternalIdentityFactory::forEmail(
-                \TriCab\Core\Identity\Domain\ValueObject\EmailAddress::fromString('guest@example.com'),
-            ),
-        );
+        $linked = $users->findByExternalIdentity(EmailOtpExternalIdentityFactory::forEmail($email));
         self::assertNotNull($linked);
         self::assertTrue(ExternalProvider::emailOtp()->equals(
-            \TriCab\Core\Identity\Domain\Service\EmailOtpExternalIdentityFactory::forEmail(
-                \TriCab\Core\Identity\Domain\ValueObject\EmailAddress::fromString('guest@example.com'),
-            )->provider(),
+            EmailOtpExternalIdentityFactory::forEmail($email)->provider(),
         ));
     }
 
@@ -91,8 +97,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
         $challenges = new InMemoryEmailOtpChallengeRepository($clock);
         $hasher = new PasswordOtpHasher();
 
-        (new RequestGuestOtpService($challenges, new SecureOtpGenerator(), $hasher, clock: $clock))
-            ->execute('guest@example.com');
+        $this->requestService($challenges, $clock, $hasher)->execute('guest@example.com');
 
         $verify = new VerifyGuestOtpService(
             $challenges,
@@ -130,9 +135,19 @@ final class GuestOtpApplicationServicesTest extends TestCase
         $users = new InMemoryUserProvisioningRepository();
         $sessions = new InMemoryGuestSessionRepository($clock);
         $hasher = new PasswordOtpHasher();
+        $email = EmailAddress::fromString('guest@example.com');
+        $users->register(
+            emailAddress: $email,
+            displayName: 'Guest User',
+            status: UserStatus::active(),
+            roles: [RoleCode::fromString('CUSTOMER_USER')],
+            permissions: [PermissionCode::fromString('ACCOUNT.LOGIN')],
+            identity: EmailOtpExternalIdentityFactory::forEmail(
+                EmailAddress::fromString('seed-' . $email->toString()),
+            ),
+        );
 
-        $requested = (new RequestGuestOtpService($challenges, new SecureOtpGenerator(), $hasher, clock: $clock))
-            ->execute('guest@example.com');
+        $requested = $this->requestService($challenges, $clock, $hasher)->execute('guest@example.com');
         $user = (new VerifyGuestOtpService(
             $challenges,
             $hasher,
@@ -159,8 +174,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
         $challenges = new InMemoryEmailOtpChallengeRepository($clock);
         $hasher = new PasswordOtpHasher();
 
-        $requested = (new RequestGuestOtpService($challenges, new SecureOtpGenerator(), $hasher, clock: $clock))
-            ->execute('guest@example.com');
+        $requested = $this->requestService($challenges, $clock, $hasher)->execute('guest@example.com');
 
         $verify = new VerifyGuestOtpService(
             $challenges,
@@ -178,14 +192,25 @@ final class GuestOtpApplicationServicesTest extends TestCase
         $clock = FixedClock::utc('2026-07-31T00:00:00+00:00');
         $challenges = new InMemoryEmailOtpChallengeRepository($clock);
         $hasher = new PasswordOtpHasher();
+        $users = new InMemoryUserProvisioningRepository();
+        $email = EmailAddress::fromString('guest@example.com');
+        $users->register(
+            emailAddress: $email,
+            displayName: 'Guest User',
+            status: UserStatus::active(),
+            roles: [RoleCode::fromString('CUSTOMER_USER')],
+            permissions: [PermissionCode::fromString('ACCOUNT.LOGIN')],
+            identity: EmailOtpExternalIdentityFactory::forEmail(
+                EmailAddress::fromString('seed-' . $email->toString()),
+            ),
+        );
 
-        $requested = (new RequestGuestOtpService($challenges, new SecureOtpGenerator(), $hasher, clock: $clock))
-            ->execute('guest@example.com');
+        $requested = $this->requestService($challenges, $clock, $hasher)->execute('guest@example.com');
 
         $user = (new VerifyGuestOtpService(
             $challenges,
             $hasher,
-            new GuestUserProvisioningService(new InMemoryUserProvisioningRepository()),
+            new GuestUserProvisioningService($users),
             $clock,
         ))->execute('guest@example.com', $requested->plaintextOtp, $requested->challengePublicId);
 
@@ -195,6 +220,20 @@ final class GuestOtpApplicationServicesTest extends TestCase
     public function test_email_normalization_rejects_empty_and_oversized_values(): void
     {
         $this->expectException(\TriCab\Core\Identity\Domain\Exception\InvalidIdentityValue::class);
-        \TriCab\Core\Identity\Domain\ValueObject\EmailAddress::fromString('   ');
+        EmailAddress::fromString('   ');
+    }
+
+    private function requestService(
+        InMemoryEmailOtpChallengeRepository $challenges,
+        FixedClock $clock,
+        ?PasswordOtpHasher $hasher = null,
+    ): RequestGuestOtpService {
+        return new RequestGuestOtpService(
+            challenges: $challenges,
+            otpGenerator: new SecureOtpGenerator(),
+            otpHasher: $hasher ?? new PasswordOtpHasher(),
+            eligibility: new GuestLoginEligibilityService(new FakeGuestLoginEligibilityLookup()),
+            clock: $clock,
+        );
     }
 }

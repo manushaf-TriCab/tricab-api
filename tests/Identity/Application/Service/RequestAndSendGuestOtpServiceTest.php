@@ -6,10 +6,12 @@ namespace TriCab\Core\Tests\Identity\Application\Service;
 
 use PHPUnit\Framework\TestCase;
 use TriCab\Core\Identity\Application\Exception\GuestOtpEmailDeliveryFailed;
+use TriCab\Core\Identity\Application\Service\GuestLoginEligibilityService;
 use TriCab\Core\Identity\Application\Service\RequestAndSendGuestOtpService;
 use TriCab\Core\Identity\Application\Service\RequestGuestOtpService;
 use TriCab\Core\Identity\Domain\Service\PasswordOtpHasher;
 use TriCab\Core\Identity\Domain\Service\SecureOtpGenerator;
+use TriCab\Core\Tests\Identity\Doubles\FakeGuestLoginEligibilityLookup;
 use TriCab\Core\Tests\Identity\Doubles\FakeGuestOtpEmailSender;
 use TriCab\Core\Tests\Identity\Doubles\FixedClock;
 use TriCab\Core\Tests\Identity\Doubles\InMemoryEmailOtpChallengeRepository;
@@ -27,6 +29,7 @@ final class RequestAndSendGuestOtpServiceTest extends TestCase
                 challenges: $challenges,
                 otpGenerator: new SecureOtpGenerator(),
                 otpHasher: new PasswordOtpHasher(),
+                eligibility: new GuestLoginEligibilityService(new FakeGuestLoginEligibilityLookup()),
                 clock: $clock,
             ),
             emailSender: $sender,
@@ -58,6 +61,7 @@ final class RequestAndSendGuestOtpServiceTest extends TestCase
                 challenges: $challenges,
                 otpGenerator: new SecureOtpGenerator(),
                 otpHasher: new PasswordOtpHasher(),
+                eligibility: new GuestLoginEligibilityService(new FakeGuestLoginEligibilityLookup()),
                 clock: $clock,
             ),
             emailSender: $sender,

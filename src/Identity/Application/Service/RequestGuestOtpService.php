@@ -18,7 +18,7 @@ use TriCab\Core\Shared\Time\SystemClock;
 
 /**
  * Creates a hashed email OTP challenge and returns the plaintext OTP to the caller.
- * Does not send email.
+ * Does not send email. Eligibility is checked before any challenge is created.
  */
 final class RequestGuestOtpService
 {
@@ -28,6 +28,7 @@ final class RequestGuestOtpService
         private readonly EmailOtpChallengeRepository $challenges,
         private readonly OtpGenerator $otpGenerator,
         private readonly OtpHasher $otpHasher,
+        private readonly GuestLoginEligibilityService $eligibility,
         private readonly UuidV4Generator $uuidGenerator = new UuidV4Generator(),
         private readonly Clock $clock = new SystemClock(),
         private readonly string $ttl = self::DEFAULT_TTL,
@@ -44,6 +45,9 @@ final class RequestGuestOtpService
         $emailAddress = EmailAddress::fromString($email);
         $purpose ??= OtpPurpose::guestLogin();
         $now = $this->clock->now();
+
+        // Gate before invalidate/generate/hash/save — ineligible emails must not touch OTP storage.
+        $this->eligibility->assertEligible($emailAddress);
 
         $this->challenges->invalidateActiveChallenges($emailAddress, $purpose);
 
