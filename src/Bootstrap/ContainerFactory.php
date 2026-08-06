@@ -261,6 +261,7 @@ use TriCab\Core\Identity\Contract\SessionTokenHasher;
 use TriCab\Core\Identity\Contract\UserManagementAuditRepository;
 use TriCab\Core\Identity\Contract\UserManagementRepository;
 use TriCab\Core\Identity\Contract\UserProvisioningRepository;
+use TriCab\Core\Identity\Contract\UserRepository;
 
 use TriCab\Core\Identity\Domain\Service\PasswordOtpHasher;
 use TriCab\Core\Identity\Domain\Service\SecureOtpGenerator;
@@ -714,13 +715,16 @@ final class ContainerFactory
                 /** @var array<string, string|null> $env */
                 $env = [];
                 foreach ([
-                    'LEGACY_WP_DSN', 'LEGACY_WP_USER', 'LEGACY_WP_PASSWORD', 'LEGACY_WP_TABLE_PREFIX',
-                    'LEGACY_SOURCE_WAIVE_WP', 'LEGACY_TC_DSN', 'LEGACY_TC_USER', 'LEGACY_TC_PASSWORD',
+                    'LEGACY_WP_DSN', 'LEGACY_WP_HOST', 'LEGACY_WP_PORT', 'LEGACY_WP_DATABASE',
+                    'LEGACY_WP_USER', 'LEGACY_WP_PASSWORD', 'LEGACY_WP_TABLE_PREFIX', 'LEGACY_WP_SSL_MODE',
+                    'LEGACY_SOURCE_WAIVE_WP',
+                    'LEGACY_TC_DSN', 'LEGACY_TC_HOST', 'LEGACY_TC_PORT', 'LEGACY_TC_DATABASE',
+                    'LEGACY_TC_USER', 'LEGACY_TC_PASSWORD', 'LEGACY_TC_SSL_MODE',
                     'LEGACY_SOURCE_WAIVE_TC', 'LEGACY_FILES_ROOT', 'LEGACY_SOURCE_WAIVE_FILES',
                     'PHASE12_PILOT_APPROVED',
                 ] as $key) {
-                    $value = getenv($key);
-                    $env[$key] = $value === false ? null : $value;
+                    $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+                    $env[$key] = ($value === false || $value === null) ? null : (string) $value;
                 }
                 return LiveLegacySourceConfig::fromEnvironment($env);
             },
@@ -738,6 +742,7 @@ final class ContainerFactory
                     (string) $config->wordpressUser,
                     (string) $config->wordpressPassword,
                     'wordpress',
+                    $config->wordpressSslMode,
                 );
                 return new MysqlLegacyWordPressRepository($conn, $config->wordpressTablePrefix);
             },
@@ -752,6 +757,7 @@ final class ContainerFactory
                     (string) $config->tcUser,
                     (string) $config->tcPassword,
                     'tc',
+                    $config->tcSslMode,
                 );
                 return new MysqlLegacyTcRepository($conn);
             },

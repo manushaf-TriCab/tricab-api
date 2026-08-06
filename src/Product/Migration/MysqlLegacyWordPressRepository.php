@@ -203,15 +203,16 @@ SQL;
             $prefix . 'options',
         ];
         $like = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $prefix) . '%';
+        // Prefer INFORMATION_SCHEMA: MySQL native prepares reject placeholders in SHOW … LIKE.
         $tableRows = $this->connection->query(
-            'SHOW TABLES LIKE :likePattern',
+            'SELECT TABLE_NAME AS name FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE :likePattern',
             ['likePattern' => $like],
             self::REPO,
             'inspectSchema.tables',
         );
         $tables = [];
         foreach ($tableRows as $row) {
-            $name = MigrationPayload::string(array_values($row)[0] ?? '');
+            $name = MigrationPayload::string($row['name'] ?? '');
             if ($name !== '' && in_array($name, $tablesWanted, true)) {
                 $tables[] = $name;
             }

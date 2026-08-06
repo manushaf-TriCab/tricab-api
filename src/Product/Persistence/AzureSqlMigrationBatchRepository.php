@@ -156,15 +156,29 @@ SQL,
         $table = self::RAW_TABLES[$recordType] ?? self::RAW_TABLES['product'];
         $payloadJson = json_encode($row, JSON_THROW_ON_ERROR);
 
-        $this->connection->execute(
+        // sqlsrv PDO rejects reused named parameters in a single statement (MERGE USING+INSERT).
+        $existing = $this->connection->fetchAll(
             <<<SQL
-MERGE {$table} AS t
-USING (SELECT :batchId AS MigrationBatchId, :sourceSystem AS SourceSystem, :sourceTable AS SourceTable, :sourceIdentifier AS SourceIdentifier) AS s
-ON t.[MigrationBatchId] = s.MigrationBatchId
- AND t.[SourceSystem] = s.SourceSystem
- AND t.[SourceTable] = s.SourceTable
- AND t.[SourceIdentifier] = s.SourceIdentifier
-WHEN MATCHED THEN UPDATE SET
+SELECT TOP 1 1 AS [ExistsFlag]
+FROM {$table}
+WHERE [MigrationBatchId] = :batchId
+  AND [SourceSystem] = :sourceSystem
+  AND [SourceTable] = :sourceTable
+  AND [SourceIdentifier] = :sourceIdentifier
+SQL,
+            [
+                ':batchId' => $batchId,
+                ':sourceSystem' => MigrationPayload::string($row['sourceSystem'] ?? ''),
+                ':sourceTable' => MigrationPayload::string($row['sourceTable'] ?? ''),
+                ':sourceIdentifier' => MigrationPayload::string($row['sourceIdentifier'] ?? ''),
+            ],
+        );
+
+        if ($existing !== []) {
+            $this->connection->execute(
+                <<<SQL
+UPDATE {$table}
+SET
     [ParentSourceIdentifier] = :parentSourceIdentifier,
     [SourceHash] = :sourceHash,
     [RawPayloadJson] = :rawPayloadJson,
@@ -172,13 +186,37 @@ WHEN MATCHED THEN UPDATE SET
     [ErrorMessage] = :errorMessage,
     [WarningMessage] = :warningMessage,
     [ExtractedAtUtc] = SYSUTCDATETIME()
-WHEN NOT MATCHED THEN INSERT (
+WHERE [MigrationBatchId] = :batchId
+  AND [SourceSystem] = :sourceSystem
+  AND [SourceTable] = :sourceTable
+  AND [SourceIdentifier] = :sourceIdentifier
+SQL,
+                [
+                    ':batchId' => $batchId,
+                    ':sourceSystem' => MigrationPayload::string($row['sourceSystem'] ?? ''),
+                    ':sourceTable' => MigrationPayload::string($row['sourceTable'] ?? ''),
+                    ':sourceIdentifier' => MigrationPayload::string($row['sourceIdentifier'] ?? ''),
+                    ':parentSourceIdentifier' => MigrationPayload::stringOrNull($row['parentSourceIdentifier'] ?? null),
+                    ':sourceHash' => MigrationPayload::string($row['sourceHash'] ?? ''),
+                    ':rawPayloadJson' => $payloadJson,
+                    ':statusCode' => MigrationPayload::string($row['statusCode'] ?? 'extracted'),
+                    ':errorMessage' => MigrationPayload::stringOrNull($row['errorMessage'] ?? null),
+                    ':warningMessage' => MigrationPayload::stringOrNull($row['warningMessage'] ?? null),
+                ],
+            );
+
+            return;
+        }
+
+        $this->connection->execute(
+            <<<SQL
+INSERT INTO {$table} (
     [MigrationBatchId], [SourceSystem], [SourceTable], [SourceIdentifier], [ParentSourceIdentifier],
     [SourceHash], [RawPayloadJson], [StatusCode], [ErrorMessage], [WarningMessage]
 ) VALUES (
     :batchId, :sourceSystem, :sourceTable, :sourceIdentifier, :parentSourceIdentifier,
     :sourceHash, :rawPayloadJson, :statusCode, :errorMessage, :warningMessage
-);
+)
 SQL,
             [
                 ':batchId' => $batchId,
@@ -225,13 +263,36 @@ SQL,
     {
         $batchId = $this->requireBatchId($batchPublicId);
         $json = json_encode(['product' => $product->toArray(), 'meta' => $meta], JSON_THROW_ON_ERROR);
+        $sourceKey = $product->sourceKey;
+        $params = [
+            ':batchId' => $batchId,
+            ':sourceKey' => $sourceKey,
+            ':canonicalJson' => $json,
+            ':statusCode' => MigrationPayload::string($meta['statusCode'] ?? 'normalized'),
+            ':productDecisionCode' => MigrationPayload::stringOrNull($product->productDecisionCode ?? ($meta['productDecisionCode'] ?? null)),
+            ':productDecisionReason' => MigrationPayload::stringOrNull($product->productDecisionReason ?? ($meta['productDecisionReason'] ?? null)),
+            ':matchMethod' => MigrationPayload::stringOrNull($meta['matchMethod'] ?? null),
+            ':matchConfidence' => MigrationPayload::stringOrNull($meta['matchConfidence'] ?? null),
+            ':targetProductPublicId' => MigrationPayload::stringOrNull($meta['targetProductPublicId'] ?? null),
+        ];
 
-        $this->connection->execute(
+        $existing = $this->connection->fetchAll(
             <<<'SQL'
-MERGE [migration].[CanonicalProducts] AS t
-USING (SELECT :batchId AS MigrationBatchId, :sourceKey AS SourceKey) AS s
-ON t.[MigrationBatchId] = s.MigrationBatchId AND t.[SourceKey] = s.SourceKey
-WHEN MATCHED THEN UPDATE SET
+SELECT TOP 1 1 AS [ExistsFlag]
+FROM [migration].[CanonicalProducts]
+WHERE [MigrationBatchId] = :batchId AND [SourceKey] = :sourceKey
+SQL,
+            [
+                ':batchId' => $batchId,
+                ':sourceKey' => $sourceKey,
+            ],
+        );
+
+        if ($existing !== []) {
+            $this->connection->execute(
+                <<<'SQL'
+UPDATE [migration].[CanonicalProducts]
+SET
     [CanonicalJson] = :canonicalJson,
     [StatusCode] = :statusCode,
     [ProductDecisionCode] = :productDecisionCode,
@@ -240,25 +301,25 @@ WHEN MATCHED THEN UPDATE SET
     [MatchConfidence] = :matchConfidence,
     [TargetProductPublicId] = :targetProductPublicId,
     [NormalizedAtUtc] = SYSUTCDATETIME()
-WHEN NOT MATCHED THEN INSERT (
+WHERE [MigrationBatchId] = :batchId AND [SourceKey] = :sourceKey
+SQL,
+                $params,
+            );
+
+            return;
+        }
+
+        $this->connection->execute(
+            <<<'SQL'
+INSERT INTO [migration].[CanonicalProducts] (
     [MigrationBatchId], [SourceKey], [CanonicalJson], [StatusCode], [ProductDecisionCode],
     [ProductDecisionReason], [MatchMethod], [MatchConfidence], [TargetProductPublicId]
 ) VALUES (
     :batchId, :sourceKey, :canonicalJson, :statusCode, :productDecisionCode,
     :productDecisionReason, :matchMethod, :matchConfidence, :targetProductPublicId
-);
+)
 SQL,
-            [
-                ':batchId' => $batchId,
-                ':sourceKey' => $product->sourceKey,
-                ':canonicalJson' => $json,
-                ':statusCode' => MigrationPayload::string($meta['statusCode'] ?? 'normalized'),
-                ':productDecisionCode' => MigrationPayload::stringOrNull($product->productDecisionCode ?? ($meta['productDecisionCode'] ?? null)),
-                ':productDecisionReason' => MigrationPayload::stringOrNull($product->productDecisionReason ?? ($meta['productDecisionReason'] ?? null)),
-                ':matchMethod' => MigrationPayload::stringOrNull($meta['matchMethod'] ?? null),
-                ':matchConfidence' => MigrationPayload::stringOrNull($meta['matchConfidence'] ?? null),
-                ':targetProductPublicId' => MigrationPayload::stringOrNull($meta['targetProductPublicId'] ?? null),
-            ],
+            $params,
         );
     }
 
@@ -584,7 +645,7 @@ SET [SourceTable] = :sourceTable,
     [MigrationStatusCode] = :status,
     [MigrationNotes] = :notes,
     [UpdatedAtUtc] = SYSUTCDATETIME(),
-    [MigratedAtUtc] = CASE WHEN :status IN (N'imported', N'updated') THEN SYSUTCDATETIME() ELSE [MigratedAtUtc] END
+    [MigratedAtUtc] = CASE WHEN :statusForMigratedAt IN (N'imported', N'updated') THEN SYSUTCDATETIME() ELSE [MigratedAtUtc] END
 WHERE [SourceSystemCode] = :sourceSystem AND [SourceProductKey] = :sourceKey
 SQL,
                 [
@@ -595,6 +656,7 @@ SQL,
                     ':targetEntityType' => MigrationPayload::string($mapping['targetEntityType'] ?? 'product'),
                     ':targetPublicId' => MigrationPayload::stringOrNull($mapping['targetPublicId'] ?? null),
                     ':status' => $status,
+                    ':statusForMigratedAt' => $status,
                     ':notes' => $notes,
                 ],
             );
@@ -611,12 +673,13 @@ SELECT TOP 1
     [MigrationStatusCode], [MigrationNotes], [MigrationBatchId]
 FROM [migration].[LegacyProductMappings]
 WHERE [SourceSystemCode] = :sourceSystem AND [SourceProductKey] = :sourceKey
-  AND ( [SourceTable] = :sourceTable OR ([SourceTable] IS NULL AND :sourceTable = N'product') )
+  AND ( [SourceTable] = :sourceTable OR ([SourceTable] IS NULL AND :sourceTableDefault = N'product') )
 SQL,
             [
                 ':sourceSystem' => $sourceSystem,
                 ':sourceKey' => $sourceIdentifier,
                 ':sourceTable' => $sourceTable,
+                ':sourceTableDefault' => $sourceTable,
             ],
         );
         if ($rows === []) {
