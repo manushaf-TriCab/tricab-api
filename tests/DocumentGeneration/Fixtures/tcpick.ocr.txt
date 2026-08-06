@@ -1,0 +1,132 @@
+.RET./l/ocr/ps//tcpick.ocr
+.RER.S006
+26
+70000001
+70000001
+05/08/26
+
+7
+ACN 006 373 824
+ABN 40 006 373 824
+jamies
+18001
+MERIDVIC
+00010001
+AUD
+1,000.00
+EOM030ND
+30 Days from End of Month-No discount
+EOM030ND
+17/07/26
+N
+21/07/26
+N
+6
+Y
+      
+Y
+Y
+7
+.RER.S016
+5
+70000001
+0
+6308
+
+13:19
+.RER.S018
+11
+70000001
+0
+6308
+05/08/26
+13:19
+devonm
+Devon Marsh
+
+
+
+devonm@tricab.com
+.RER.S007
+8
+70000001
+TriCab (Australia) Pty. Ltd
+57 Freight Drive
+SOMERTON VIC AU 3062
+T  +61 3 9081 5202
+    melbourne@tricab.com
+
+24001
+.RER.S012
+5
+70000001
+Alex Trent 03-9000 1234
+
+
+
+.RER.S008
+7
+70000001
+Meridian Electronics Pty Ltd
+Unit 3/14 Harlow Rd
+Glenhaven VIC AU 3149
+
+
+
+.RER.S020
+2
+70000001
+Alex Trent 03-9000 1234
+.RER.S013
+8
+70000001
+Meridian Electronics Pty Ltd
+Unit 3/14 Harlow Rd
+Glenhaven VIC AU 3149
+
+
+
+
+.RER.S015
+9
+70000001
+CAPITAL
+
+
+40
+Kg
+
+
+
+.RER.S009
+18
+70000001
+1
+LS-XXXN/1C95BK
+Black
+50
+M
+     20.00
+1000.00
+Plain CU 95mm² LSZH LSFLEX125 Switchboard X-HF-110 0.6/1KV AS/NZS5000.1
+
+1
+50
+MWH
+04/08/26
+LS1X-XXXN/1C95BK
+ 
+1,000.00
+         36
+.RER.V4203
+4
+70000001
+1
+Print_prms
+Code=M8958-3  ht=YY mm=Y pro=Y1 cus=N2
+.RER.V4203
+4
+70000001
+1
+
+1x50m --arrange cable from DC
