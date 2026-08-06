@@ -116,6 +116,7 @@ use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
+use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\RequestGuestOtpAction;
@@ -173,6 +174,7 @@ final class AppBuilder
         $app->get('/health', HealthAction::class);
         $app->get('/health/database', DatabaseHealthAction::class);
         $app->get('/api/v1/me', GetAuthenticatedUserAction::class);
+
 
         if ($settings->isGuestJwtConfigured()) {
             $app->post('/api/v1/auth/guest/request-otp', RequestGuestOtpAction::class);
@@ -605,5 +607,8 @@ final class AppBuilder
 
         $app->get('/api/v1/admin/customers/{customerPublicId}/users', ListCustomerPortalUsersAction::class)
             ->add(($require)('CUSTOMER.USER.READ'));
+
+        $app->post('/api/v1/documents/pdf', GenerateDocumentPdfAction::class);
+
     }
 }

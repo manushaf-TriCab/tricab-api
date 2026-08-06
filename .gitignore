@@ -4,4 +4,9 @@
 .env
 .DS_Store
 /var/log/
+<<<<<<< HEAD
 /var/cache/
+=======
+/tmp/
+/output/
+>>>>>>> origin/main
