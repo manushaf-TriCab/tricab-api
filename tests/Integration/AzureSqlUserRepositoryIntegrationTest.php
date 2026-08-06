@@ -46,6 +46,7 @@ final class AzureSqlUserRepositoryIntegrationTest extends TestCase
         $env = $_ENV;
         $settings = Settings::fromEnvironment(array_merge($env, [
             'USER_REPOSITORY' => Settings::USER_REPOSITORY_AZURE_SQL,
+            'GUEST_JWT_SECRET' => $env['GUEST_JWT_SECRET'] ?? str_repeat('t', 64),
         ]));
 
         $container = ContainerFactory::create($settings);

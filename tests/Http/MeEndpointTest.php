@@ -37,8 +37,13 @@ final class MeEndpointTest extends TestCase
         self::assertSame('thilanh@tricab.com', $data['emailAddress']);
         self::assertSame('Thilan Lakshitha', $data['displayName']);
         self::assertSame('active', $data['status']);
-        self::assertSame(['EMPLOYEE'], $data['roles']);
-        self::assertSame(['ACCOUNT.LOGIN'], $data['permissions']);
+        self::assertIsArray($data['roles']);
+        self::assertContains('EMPLOYEE', $data['roles']);
+        self::assertContains('ADMINISTRATOR', $data['roles']);
+        self::assertIsArray($data['permissions']);
+        self::assertContains('ACCOUNT.LOGIN', $data['permissions']);
+        self::assertContains('USER.READ', $data['permissions']);
+        self::assertContains('AUDIT.USER_MANAGEMENT.READ', $data['permissions']);
     }
 
     public function test_me_without_identity_when_dev_auth_disabled(): void
@@ -85,8 +90,13 @@ final class MeEndpointTest extends TestCase
     {
         $app = TestAppFactory::create([
             'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'memory',
+            'ALLOW_IN_MEMORY_REPOSITORY_IN_PRODUCTION' => 'true',
             'DEV_AUTH_ENABLED' => 'true',
             'APP_DEBUG' => 'false',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'test-token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
         ]);
 
         $request = TestAppFactory::request('GET', '/api/v1/me')
@@ -108,8 +118,13 @@ final class MeEndpointTest extends TestCase
     {
         $app = TestAppFactory::create([
             'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'memory',
+            'ALLOW_IN_MEMORY_REPOSITORY_IN_PRODUCTION' => 'true',
             'DEV_AUTH_ENABLED' => 'false',
             'APP_DEBUG' => 'false',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'test-token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
         ]);
 
         $request = TestAppFactory::request('GET', '/api/v1/me')

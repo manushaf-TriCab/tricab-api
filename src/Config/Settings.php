@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Config;
 
+use InvalidArgumentException;
+
 final readonly class Settings
 {
     public const USER_REPOSITORY_MEMORY = 'memory';
@@ -11,6 +13,22 @@ final readonly class Settings
 
     public const DB_AUTH_MODE_SQL_LOGIN = 'sql-login';
     public const DB_AUTH_MODE_ENTRA_CLI = 'entra-cli';
+
+    public const GUEST_EMAIL_PROVIDER_POSTMARK = 'postmark';
+    public const GUEST_EMAIL_PROVIDER_DEVELOPMENT = 'development';
+    public const GUEST_EMAIL_PROVIDER_MICROSOFT_GRAPH = 'microsoft-graph';
+
+    public const DEFAULT_GUEST_JWT_TTL_SECONDS = 86400;
+    public const MAX_GUEST_JWT_TTL_SECONDS = 86400;
+    public const MIN_GUEST_JWT_SECRET_BYTES = 32;
+
+    public const BLOB_AUTH_MODE_DISABLED = 'disabled';
+    public const BLOB_AUTH_MODE_CONNECTION_STRING = 'connection-string';
+    public const BLOB_AUTH_MODE_MEMORY = 'memory';
+
+    public const BLOB_SCAN_MODE_AUTO_CLEAN = 'auto-clean';
+    public const BLOB_SCAN_MODE_PENDING = 'pending-scan';
+    public const BLOB_SCAN_MODE_DEFENDER = 'defender';
 
     /**
      * @param list<string> $corsAllowedOrigins
@@ -40,6 +58,32 @@ final readonly class Settings
         public string $dbPassword,
         public bool $dbEncrypt,
         public bool $dbTrustServerCertificate,
+        public string $guestEmailProvider,
+        public bool $guestOtpDevReveal,
+        public string $postmarkServerToken,
+        public string $postmarkFromEmail,
+        public string $postmarkFromName,
+        public string $postmarkMessageStream,
+        public string $graphTenantId,
+        public string $graphClientId,
+        public string $graphClientSecret,
+        public string $rfqMailbox,
+        public string $guestOtpEmailLogoUrl,
+        public string $guestJwtIssuer,
+        public string $guestJwtAudience,
+        public string $guestJwtSecret,
+        public int $guestJwtTtlSeconds,
+        public int $guestJwtClockSkewSeconds,
+        public string $blobAuthMode,
+        public string $blobConnectionString,
+        public string $blobAccountName,
+        public string $blobAccountKey,
+        public string $blobEndpoint,
+        public string $blobContainerProducts,
+        public string $blobCdnBaseUrl,
+        public string $blobScanMode,
+        public int $blobUploadSasTtlSeconds,
+        public int $blobDownloadSasTtlSeconds,
     ) {
     }
 
@@ -78,17 +122,79 @@ final readonly class Settings
         return $this->entraTenantId !== '' && $this->entraAudience !== '';
     }
 
+    public function usesPostmarkGuestEmail(): bool
+    {
+        return $this->guestEmailProvider === self::GUEST_EMAIL_PROVIDER_POSTMARK;
+    }
+
+    public function usesDevelopmentGuestEmail(): bool
+    {
+        return $this->guestEmailProvider === self::GUEST_EMAIL_PROVIDER_DEVELOPMENT;
+    }
+
+    public function usesMicrosoftGraphGuestEmail(): bool
+    {
+        return $this->guestEmailProvider === self::GUEST_EMAIL_PROVIDER_MICROSOFT_GRAPH;
+    }
+
+    public function isGuestJwtConfigured(): bool
+    {
+        return $this->guestJwtIssuer !== ''
+            && $this->guestJwtAudience !== ''
+            && strlen($this->guestJwtSecret) >= self::MIN_GUEST_JWT_SECRET_BYTES;
+    }
+
+    public function isProductBlobEnabled(): bool
+    {
+        return $this->blobAuthMode === self::BLOB_AUTH_MODE_CONNECTION_STRING
+            || $this->blobAuthMode === self::BLOB_AUTH_MODE_MEMORY;
+    }
+
+    public function usesMemoryProductBlobStore(): bool
+    {
+        return $this->blobAuthMode === self::BLOB_AUTH_MODE_MEMORY
+            || ($this->blobAuthMode === self::BLOB_AUTH_MODE_DISABLED && !$this->isProduction());
+    }
+
+    public function productFileScanAutoCleans(): bool
+    {
+        return $this->blobScanMode === self::BLOB_SCAN_MODE_AUTO_CLEAN;
+    }
+
     /**
      * @param array<string, string|null> $env
      */
     public static function fromEnvironment(array $env): self
     {
-        $userRepository = strtolower(self::string($env, 'USER_REPOSITORY', self::USER_REPOSITORY_MEMORY));
+        $appEnv = self::string($env, 'APP_ENV', 'production');
+
+        // Default differs by environment: production must not silently use in-memory.
+        $defaultUserRepository = $appEnv === 'production'
+            ? self::USER_REPOSITORY_AZURE_SQL
+            : self::USER_REPOSITORY_MEMORY;
+        $userRepositoryRaw = self::string($env, 'USER_REPOSITORY', $defaultUserRepository);
+        $userRepository = strtolower($userRepositoryRaw);
         if (
             $userRepository !== self::USER_REPOSITORY_MEMORY
             && $userRepository !== self::USER_REPOSITORY_AZURE_SQL
         ) {
-            $userRepository = self::USER_REPOSITORY_MEMORY;
+            throw new InvalidArgumentException(sprintf(
+                'Unsupported USER_REPOSITORY "%s". Supported values: %s, %s.',
+                $userRepositoryRaw,
+                self::USER_REPOSITORY_MEMORY,
+                self::USER_REPOSITORY_AZURE_SQL,
+            ));
+        }
+
+        if ($appEnv === 'production' && $userRepository === self::USER_REPOSITORY_MEMORY) {
+            $allowMemoryInProduction = strtolower(
+                self::string($env, 'ALLOW_IN_MEMORY_REPOSITORY_IN_PRODUCTION', 'false'),
+            ) === 'true';
+            if (!$allowMemoryInProduction) {
+                throw new InvalidArgumentException(
+                    'USER_REPOSITORY=memory is not allowed when APP_ENV=production.',
+                );
+            }
         }
 
         $dbAuthMode = strtolower(self::string($env, 'DB_AUTH_MODE', self::DB_AUTH_MODE_SQL_LOGIN));
@@ -104,8 +210,132 @@ final readonly class Settings
             $subjectClaim = 'oid';
         }
 
+        $guestEmailProvider = strtolower(
+            self::string(
+                $env,
+                'GUEST_EMAIL_PROVIDER',
+                $appEnv === 'production'
+                    ? self::GUEST_EMAIL_PROVIDER_POSTMARK
+                    : self::GUEST_EMAIL_PROVIDER_DEVELOPMENT,
+            ),
+        );
+        if (
+            $guestEmailProvider !== self::GUEST_EMAIL_PROVIDER_POSTMARK
+            && $guestEmailProvider !== self::GUEST_EMAIL_PROVIDER_DEVELOPMENT
+            && $guestEmailProvider !== self::GUEST_EMAIL_PROVIDER_MICROSOFT_GRAPH
+        ) {
+            $guestEmailProvider = $appEnv === 'production'
+                ? self::GUEST_EMAIL_PROVIDER_POSTMARK
+                : self::GUEST_EMAIL_PROVIDER_DEVELOPMENT;
+        }
+
+        $guestOtpDevReveal = self::bool($env, 'GUEST_OTP_DEV_REVEAL', false);
+        $postmarkServerToken = self::string($env, 'POSTMARK_SERVER_TOKEN', '');
+        $postmarkFromEmail = self::string($env, 'POSTMARK_FROM_EMAIL', '');
+        $postmarkFromName = self::string($env, 'POSTMARK_FROM_NAME', 'TriCab');
+        $postmarkMessageStream = self::string($env, 'POSTMARK_MESSAGE_STREAM', 'outbound');
+
+        $graphTenantId = self::string($env, 'GRAPH_TENANT_ID', '');
+        $graphClientId = self::string($env, 'GRAPH_CLIENT_ID', '');
+        $graphClientSecret = self::string($env, 'GRAPH_CLIENT_SECRET', '');
+        $rfqMailbox = self::string($env, 'RFQ_MAILBOX', '');
+        $guestOtpEmailLogoUrl = self::string($env, 'GUEST_OTP_EMAIL_LOGO_URL', '');
+
+        $guestJwtIssuer = self::string($env, 'GUEST_JWT_ISSUER', 'https://api.tricab.local');
+        $guestJwtAudience = self::string($env, 'GUEST_JWT_AUDIENCE', 'tricab-api');
+        $guestJwtSecret = self::string($env, 'GUEST_JWT_SECRET', '');
+        $guestJwtTtlSeconds = self::int($env, 'GUEST_JWT_TTL_SECONDS', self::DEFAULT_GUEST_JWT_TTL_SECONDS);
+        $guestJwtClockSkewSeconds = self::int($env, 'GUEST_JWT_CLOCK_SKEW_SECONDS', 30);
+
+        if ($guestJwtTtlSeconds < 1 || $guestJwtTtlSeconds > self::MAX_GUEST_JWT_TTL_SECONDS) {
+            throw new InvalidArgumentException(
+                'GUEST_JWT_TTL_SECONDS must be between 1 and ' . self::MAX_GUEST_JWT_TTL_SECONDS . '.',
+            );
+        }
+
+        if ($guestJwtClockSkewSeconds < 0 || $guestJwtClockSkewSeconds > 300) {
+            throw new InvalidArgumentException('GUEST_JWT_CLOCK_SKEW_SECONDS must be between 0 and 300.');
+        }
+
+        if ($appEnv === 'production' && $guestEmailProvider === self::GUEST_EMAIL_PROVIDER_DEVELOPMENT) {
+            throw new InvalidArgumentException(
+                'GUEST_EMAIL_PROVIDER=development is not allowed when APP_ENV=production.',
+            );
+        }
+
+        if ($appEnv === 'production' && $guestOtpDevReveal) {
+            throw new InvalidArgumentException(
+                'GUEST_OTP_DEV_REVEAL cannot be enabled when APP_ENV=production.',
+            );
+        }
+
+        if ($guestJwtSecret !== '' && strlen($guestJwtSecret) < self::MIN_GUEST_JWT_SECRET_BYTES) {
+            throw new InvalidArgumentException(
+                'GUEST_JWT_SECRET must be at least 32 bytes when provided.',
+            );
+        }
+
+        $blobAuthMode = strtolower(self::string($env, 'BLOB_AUTH_MODE', self::BLOB_AUTH_MODE_DISABLED));
+        if (
+            $blobAuthMode !== self::BLOB_AUTH_MODE_DISABLED
+            && $blobAuthMode !== self::BLOB_AUTH_MODE_CONNECTION_STRING
+            && $blobAuthMode !== self::BLOB_AUTH_MODE_MEMORY
+        ) {
+            throw new InvalidArgumentException(
+                'Unsupported BLOB_AUTH_MODE. Supported values: disabled, connection-string, memory.',
+            );
+        }
+
+        if ($appEnv === 'production' && $blobAuthMode === self::BLOB_AUTH_MODE_MEMORY) {
+            throw new InvalidArgumentException(
+                'BLOB_AUTH_MODE=memory is not allowed when APP_ENV=production.',
+            );
+        }
+
+        $blobConnectionString = self::string($env, 'BLOB_CONNECTION_STRING', '');
+        $blobAccountName = self::string($env, 'BLOB_ACCOUNT_NAME', '');
+        $blobAccountKey = self::string($env, 'BLOB_ACCOUNT_KEY', '');
+        $blobEndpoint = self::string($env, 'BLOB_ENDPOINT', '');
+
+        if ($blobConnectionString !== '') {
+            $parsed = self::parseBlobConnectionString($blobConnectionString);
+            $blobAccountName = $blobAccountName !== '' ? $blobAccountName : $parsed['accountName'];
+            $blobAccountKey = $blobAccountKey !== '' ? $blobAccountKey : $parsed['accountKey'];
+            $blobEndpoint = $blobEndpoint !== '' ? $blobEndpoint : $parsed['blobEndpoint'];
+        }
+
+        if ($blobAuthMode === self::BLOB_AUTH_MODE_CONNECTION_STRING) {
+            if ($blobAccountName === '' || $blobAccountKey === '' || $blobEndpoint === '') {
+                throw new InvalidArgumentException(
+                    'BLOB_CONNECTION_STRING or BLOB_ACCOUNT_NAME/BLOB_ACCOUNT_KEY/BLOB_ENDPOINT are required when BLOB_AUTH_MODE=connection-string.',
+                );
+            }
+        }
+
+        $blobScanMode = strtolower(self::string(
+            $env,
+            'BLOB_SCAN_MODE',
+            $appEnv === 'production' ? self::BLOB_SCAN_MODE_DEFENDER : self::BLOB_SCAN_MODE_AUTO_CLEAN,
+        ));
+        if (
+            $blobScanMode !== self::BLOB_SCAN_MODE_AUTO_CLEAN
+            && $blobScanMode !== self::BLOB_SCAN_MODE_PENDING
+            && $blobScanMode !== self::BLOB_SCAN_MODE_DEFENDER
+        ) {
+            $blobScanMode = self::BLOB_SCAN_MODE_AUTO_CLEAN;
+        }
+
+        $blobUploadSasTtlSeconds = self::int($env, 'BLOB_UPLOAD_SAS_TTL_SECONDS', 900);
+        if ($blobUploadSasTtlSeconds < 60 || $blobUploadSasTtlSeconds > 3600) {
+            throw new InvalidArgumentException('BLOB_UPLOAD_SAS_TTL_SECONDS must be between 60 and 3600.');
+        }
+        $blobDownloadSasTtlSeconds = self::int($env, 'BLOB_DOWNLOAD_SAS_TTL_SECONDS', 300);
+        if ($blobDownloadSasTtlSeconds < 60 || $blobDownloadSasTtlSeconds > 3600) {
+            throw new InvalidArgumentException('BLOB_DOWNLOAD_SAS_TTL_SECONDS must be between 60 and 3600.');
+        }
+
         return new self(
-            appEnv: self::string($env, 'APP_ENV', 'production'),
+            appEnv: $appEnv,
             appName: self::string($env, 'APP_NAME', 'tricab-api'),
             appDebug: self::bool($env, 'APP_DEBUG', false),
             devAuthEnabled: self::bool($env, 'DEV_AUTH_ENABLED', false),
@@ -129,7 +359,62 @@ final readonly class Settings
             dbPassword: self::string($env, 'DB_PASSWORD', ''),
             dbEncrypt: self::bool($env, 'DB_ENCRYPT', true),
             dbTrustServerCertificate: self::bool($env, 'DB_TRUST_SERVER_CERTIFICATE', false),
+            guestEmailProvider: $guestEmailProvider,
+            guestOtpDevReveal: $guestOtpDevReveal,
+            postmarkServerToken: $postmarkServerToken,
+            postmarkFromEmail: $postmarkFromEmail,
+            postmarkFromName: $postmarkFromName,
+            postmarkMessageStream: $postmarkMessageStream,
+            graphTenantId: $graphTenantId,
+            graphClientId: $graphClientId,
+            graphClientSecret: $graphClientSecret,
+            rfqMailbox: $rfqMailbox,
+            guestOtpEmailLogoUrl: $guestOtpEmailLogoUrl,
+            guestJwtIssuer: $guestJwtIssuer,
+            guestJwtAudience: $guestJwtAudience,
+            guestJwtSecret: $guestJwtSecret,
+            guestJwtTtlSeconds: $guestJwtTtlSeconds,
+            guestJwtClockSkewSeconds: $guestJwtClockSkewSeconds,
+            blobAuthMode: $blobAuthMode,
+            blobConnectionString: $blobConnectionString,
+            blobAccountName: $blobAccountName,
+            blobAccountKey: $blobAccountKey,
+            blobEndpoint: $blobEndpoint,
+            blobContainerProducts: self::string($env, 'BLOB_CONTAINER_PRODUCTS', 'products'),
+            blobCdnBaseUrl: rtrim(self::string($env, 'BLOB_CDN_BASE_URL', ''), '/'),
+            blobScanMode: $blobScanMode,
+            blobUploadSasTtlSeconds: $blobUploadSasTtlSeconds,
+            blobDownloadSasTtlSeconds: $blobDownloadSasTtlSeconds,
         );
+    }
+
+    /**
+     * @return array{accountName: string, accountKey: string, blobEndpoint: string}
+     */
+    private static function parseBlobConnectionString(string $connectionString): array
+    {
+        $parts = [];
+        foreach (explode(';', $connectionString) as $segment) {
+            if ($segment === '' || !str_contains($segment, '=')) {
+                continue;
+            }
+            [$key, $value] = explode('=', $segment, 2);
+            $parts[strtolower(trim($key))] = trim($value);
+        }
+
+        $accountName = $parts['accountname'] ?? '';
+        $accountKey = $parts['accountkey'] ?? '';
+        $blobEndpoint = $parts['blobendpoint'] ?? '';
+        if ($blobEndpoint === '' && $accountName !== '') {
+            $protocol = $parts['defaultendpointsprotocol'] ?? 'https';
+            $blobEndpoint = $protocol . '://' . $accountName . '.blob.core.windows.net';
+        }
+
+        return [
+            'accountName' => $accountName,
+            'accountKey' => $accountKey,
+            'blobEndpoint' => rtrim($blobEndpoint, '/'),
+        ];
     }
 
     /**

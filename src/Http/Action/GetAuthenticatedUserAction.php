@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
+use TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerContextService;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
 use TriCab\Core\Identity\Application\Exception\IdentityNotLinked;
@@ -20,6 +21,7 @@ final class GetAuthenticatedUserAction
 {
     public function __construct(
         private readonly ResolveAuthenticatedUserHandler $handler,
+        private readonly ResolveAuthenticatedCustomerContextService $resolveCustomerContext,
         private readonly JsonResponder $responder,
         private readonly EntraJwtValidationDebugLogger $debugLogger,
     ) {
@@ -65,18 +67,16 @@ final class GetAuthenticatedUserAction
     }
 
     /**
-     * @return array{
-     *     userId: int,
-     *     publicId: string,
-     *     emailAddress: string,
-     *     displayName: string,
-     *     status: string,
-     *     roles: list<string>,
-     *     permissions: list<string>
-     * }
+     * @return array<string, mixed>
      */
     private function serialize(AuthenticatedUser $user): array
     {
+        $customerContext = $this->resolveCustomerContext->execute(
+            $user->publicId,
+            $user->userId,
+            $user->roles,
+        );
+
         return [
             'userId' => $user->userId,
             'publicId' => $user->publicId,
@@ -85,6 +85,12 @@ final class GetAuthenticatedUserAction
             'status' => $user->status,
             'roles' => $user->roles,
             'permissions' => $user->permissions,
+            'customerContext' => $customerContext === null ? null : [
+                'userPublicId' => $customerContext->userPublicId,
+                'customerPublicIds' => $customerContext->customerPublicIds,
+                'contactPublicIds' => $customerContext->contactPublicIds,
+                'isCustomerAdmin' => $customerContext->isCustomerAdmin,
+            ],
         ];
     }
 

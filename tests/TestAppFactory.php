@@ -21,7 +21,7 @@ final class TestAppFactory
      */
     public static function create(array $env = []): App
     {
-        $settings = Settings::fromEnvironment(array_merge([
+        $defaults = [
             'APP_ENV' => 'development',
             'APP_NAME' => 'tricab-api',
             'APP_DEBUG' => 'true',
@@ -31,8 +31,19 @@ final class TestAppFactory
             'DEV_AUTH_DEFAULT_EMAIL' => 'thilanh@tricab.com',
             'USER_REPOSITORY' => 'memory',
             'DB_AUTH_MODE' => 'sql-login',
-        ], $env));
+            'GUEST_JWT_ISSUER' => 'https://api.tricab.local',
+            'GUEST_JWT_AUDIENCE' => 'tricab-api',
+            'GUEST_JWT_SECRET' => 'local-development-guest-jwt-secret-32b',
+            'GUEST_JWT_TTL_SECONDS' => '86400',
+        ];
 
+        $merged = array_merge($defaults, $env);
+        $appEnv = $merged['APP_ENV'] ?? 'development';
+        if (($merged['GUEST_EMAIL_PROVIDER'] ?? null) === null && $appEnv !== 'production') {
+            $merged['GUEST_EMAIL_PROVIDER'] = 'development';
+        }
+
+        $settings = Settings::fromEnvironment($merged);
         $container = ContainerFactory::create($settings);
 
         return AppBuilder::build($container);

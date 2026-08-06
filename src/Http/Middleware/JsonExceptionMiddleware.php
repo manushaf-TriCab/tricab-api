@@ -11,6 +11,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use Slim\Exception\HttpException;
 use Slim\Exception\HttpNotFoundException;
 use TriCab\Api\Config\Settings;
+use TriCab\Api\Http\Exception\HttpRequestValidationFailed;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Database\DatabaseAuthFailed;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
@@ -30,6 +31,8 @@ final class JsonExceptionMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         } catch (HttpNotFoundException) {
             return $this->responder->error('NOT_FOUND', 'The requested resource was not found.', 404);
+        } catch (HttpRequestValidationFailed $exception) {
+            return $this->responder->error($exception->errorCode, $exception->getMessage(), $exception->httpStatus);
         } catch (HttpException $exception) {
             return $this->responder->error(
                 'HTTP_ERROR',

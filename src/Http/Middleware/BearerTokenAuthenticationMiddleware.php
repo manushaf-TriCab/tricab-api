@@ -9,21 +9,25 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Identity\Authentication\AuthTokenValidationFailed;
+use TriCab\Api\Identity\Authentication\CompositeBearerTokenValidator;
 use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
 use TriCab\Api\Identity\Authentication\EntraTokenValidationFailed;
 use TriCab\Api\Identity\Authentication\EntraTokenValidationNotConfigured;
-use TriCab\Api\Identity\Authentication\EntraTokenValidator;
+use TriCab\Api\Identity\Authentication\ValidatedGuestTokenAttribute;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
 
 /**
- * Resolves Bearer tokens via EntraTokenValidator when development auth did not attach an identity.
+ * Resolves Bearer tokens via CompositeBearerTokenValidator (Entra + guest).
  * Does not contain business rules; only authentication adapter orchestration.
  */
 final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
 {
+    private const GUEST_LOGOUT_PATH = '/api/v1/auth/guest/logout';
+
     public function __construct(
-        private readonly EntraTokenValidator $entraTokenValidator,
+        private readonly CompositeBearerTokenValidator $tokenValidator,
         private readonly JsonResponder $responder,
         private readonly EntraJwtValidationDebugLogger $debugLogger,
     ) {
@@ -72,7 +76,7 @@ final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
         }
 
         try {
-            $verifiedIdentity = $this->entraTokenValidator->validate($matches[1]);
+            $authResult = $this->tokenValidator->validate($matches[1]);
         } catch (EntraTokenValidationNotConfigured $exception) {
             $this->debugLogger->log([
                 'path' => $request->getUri()->getPath(),
@@ -80,6 +84,7 @@ final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
                 'bearer_token_detected' => true,
                 'token_parsed' => false,
                 'jwt_validation_stage_reached' => false,
+                'provider' => 'microsoft_entra',
                 'validation_failure_reason' => $this->debugLogger->classifyFailure($exception->getMessage()),
                 'http_response_code' => 501,
             ]);
@@ -89,6 +94,42 @@ final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
                 $exception->getMessage(),
                 501,
             );
+        } catch (AuthTokenValidationFailed $exception) {
+            if ($this->allowsIdempotentGuestLogout($request, $exception)) {
+                $this->debugLogger->log([
+                    'path' => $request->getUri()->getPath(),
+                    'authorization_header_present' => true,
+                    'bearer_token_detected' => true,
+                    'token_parsed' => true,
+                    'jwt_validation_stage_reached' => true,
+                    'provider' => 'email_otp',
+                    'stage' => 'guest_token_validation',
+                    'validation_failure_reason' => $exception->errorCode,
+                    'http_response_code' => 'continue_idempotent_logout',
+                ]);
+
+                return $handler->handle(
+                    $request->withAttribute(ValidatedGuestTokenAttribute::IDEMPOTENT_LOGOUT_KEY, true),
+                );
+            }
+
+            $this->debugLogger->log([
+                'path' => $request->getUri()->getPath(),
+                'authorization_header_present' => true,
+                'bearer_token_detected' => true,
+                'token_parsed' => true,
+                'jwt_validation_stage_reached' => true,
+                'provider' => 'email_otp',
+                'stage' => 'guest_token_validation',
+                'validation_failure_reason' => $exception->errorCode,
+                'http_response_code' => $exception->httpStatus,
+            ]);
+
+            return $this->responder->error(
+                $exception->errorCode,
+                $exception->getMessage(),
+                $exception->httpStatus,
+            );
         } catch (EntraTokenValidationFailed $exception) {
             $this->debugLogger->log([
                 'path' => $request->getUri()->getPath(),
@@ -96,6 +137,7 @@ final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
                 'bearer_token_detected' => true,
                 'token_parsed' => !str_contains(strtolower($exception->getMessage()), 'malformed'),
                 'jwt_validation_stage_reached' => true,
+                'provider' => 'microsoft_entra',
                 'validation_failure_reason' => $this->debugLogger->classifyFailure($exception->getMessage()),
                 'validator_message' => $this->safeValidatorMessage($exception->getMessage()),
                 'http_response_code' => $exception->httpStatus,
@@ -114,18 +156,35 @@ final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
             'bearer_token_detected' => true,
             'token_parsed' => true,
             'jwt_validation_stage_reached' => true,
+            'provider' => $authResult->identity->provider,
             'validation_failure_reason' => 'none',
             'http_response_code' => 'continue',
         ]);
 
-        return $handler->handle(
-            $request->withAttribute(VerifiedIdentityAttribute::KEY, $verifiedIdentity),
-        );
+        $request = $request->withAttribute(VerifiedIdentityAttribute::KEY, $authResult->identity);
+        if ($authResult->guestToken !== null) {
+            $request = $request->withAttribute(ValidatedGuestTokenAttribute::KEY, $authResult->guestToken);
+        }
+
+        return $handler->handle($request);
+    }
+
+    private function allowsIdempotentGuestLogout(
+        ServerRequestInterface $request,
+        AuthTokenValidationFailed $exception,
+    ): bool {
+        if ($request->getMethod() !== 'POST' || $request->getUri()->getPath() !== self::GUEST_LOGOUT_PATH) {
+            return false;
+        }
+
+        return in_array($exception->errorCode, [
+            AuthTokenValidationFailed::AUTH_SESSION_REVOKED,
+            AuthTokenValidationFailed::AUTH_SESSION_NOT_FOUND,
+        ], true);
     }
 
     private function safeValidatorMessage(string $message): string
     {
-        // Keep the human-readable validator reason; never include raw tokens.
         if (preg_match('/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}/', $message) === 1) {
             return 'Microsoft Entra token validation failed.';
         }
