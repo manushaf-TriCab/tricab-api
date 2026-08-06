@@ -18,6 +18,14 @@ final class UserPublicIdTest extends TestCase
         self::assertSame('550e8400-e29b-41d4-a716-446655440000', $id->toString());
     }
 
+    public function test_accepts_sql_server_sequential_uuid(): void
+    {
+        // Azure SQL NEWSEQUENTIALID() values are not RFC 4122 version/variant compliant.
+        $id = UserPublicId::fromString('59A45BFB-AC8F-F111-B337-6045BD3F9734');
+
+        self::assertSame('59a45bfb-ac8f-f111-b337-6045bd3f9734', $id->toString());
+    }
+
     #[DataProvider('invalidValues')]
     public function test_rejects_invalid_values(string $value): void
     {

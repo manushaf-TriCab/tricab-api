@@ -35,6 +35,15 @@ final class ExternalProviderTest extends TestCase
         self::assertTrue($provider->equals(ExternalProvider::fromString('microsoft_entra')));
     }
 
+    public function test_accepts_email_otp_provider(): void
+    {
+        $provider = ExternalProvider::fromString('email-otp');
+
+        self::assertSame(ExternalProvider::EMAIL_OTP, $provider->toString());
+        self::assertTrue($provider->isEmailOtp());
+        self::assertTrue(ExternalProvider::emailOtp()->equals($provider));
+    }
+
     #[DataProvider('invalidValues')]
     public function test_rejects_unknown_providers(string $value): void
     {

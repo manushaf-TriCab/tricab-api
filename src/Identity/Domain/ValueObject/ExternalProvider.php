@@ -9,9 +9,11 @@ use TriCab\Core\Identity\Domain\Exception\InvalidIdentityValue;
 final class ExternalProvider
 {
     public const MICROSOFT_ENTRA = 'microsoft_entra';
+    public const EMAIL_OTP = 'email_otp';
 
     private const ALLOWED = [
         self::MICROSOFT_ENTRA,
+        self::EMAIL_OTP,
     ];
 
     private function __construct(private readonly string $value)
@@ -35,6 +37,11 @@ final class ExternalProvider
         return new self(self::MICROSOFT_ENTRA);
     }
 
+    public static function emailOtp(): self
+    {
+        return new self(self::EMAIL_OTP);
+    }
+
     public function toString(): string
     {
         return $this->value;
@@ -48,5 +55,10 @@ final class ExternalProvider
     public function isMicrosoftEntra(): bool
     {
         return $this->value === self::MICROSOFT_ENTRA;
+    }
+
+    public function isEmailOtp(): bool
+    {
+        return $this->value === self::EMAIL_OTP;
     }
 }
