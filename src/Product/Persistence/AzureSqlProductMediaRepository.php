@@ -8,9 +8,12 @@ use TriCab\Api\Identity\Persistence\AzureSqlTransaction;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
+use TriCab\Core\Product\Application\DTO\ProductMediaFileRecord;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
 use TriCab\Core\Product\Contract\ProductMediaRepository;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
+use TriCab\Core\Product\Domain\ValueObject\ScanStatusCode;
+use TriCab\Core\Product\Domain\ValueObject\UploadStatusCode;
 
 /**
  * Azure SQL repository for product image media metadata.
@@ -27,13 +30,26 @@ final class AzureSqlProductMediaRepository implements ProductMediaRepository
     private const LIST_SELECT_SQL = <<<'SQL'
 SELECT
     CONVERT(NVARCHAR(36), i.[PublicId]) AS [PublicId],
+    CONVERT(NVARCHAR(36), p.[PublicId]) AS [ProductPublicId],
     i.[ImageRoleCode] AS [MediaCategoryCode],
     mt.[MediaTypeCode],
     i.[Title],
     i.[PublicUrl],
     i.[AltText],
     i.[DisplayOrder],
-    i.[IsPrimary]
+    i.[IsPrimary],
+    i.[UploadStatusCode],
+    i.[ScanStatusCode],
+    i.[ByteSize],
+    i.[ContentType],
+    i.[OriginalFileName],
+    i.[FileExtension],
+    i.[WidthPx],
+    i.[HeightPx],
+    i.[ThumbnailPublicUrl] AS [ThumbnailUrl],
+    i.[StoragePath],
+    i.[StorageContainer],
+    i.[OptimizedStoragePath] AS [PendingStoragePath]
 FROM [product].[ProductImages] i
 INNER JOIN [product].[MediaTypes] mt ON mt.[MediaTypeId] = i.[MediaTypeId]
 INNER JOIN [product].[Products] p ON p.[ProductId] = i.[ProductId]
@@ -174,7 +190,7 @@ SQL,
                     $this->clearPrimaryExcept($productPublicId, $publicId, $actorUserId);
                 }
 
-                $loaded = $this->findByPublicId($publicId);
+                $loaded = $this->findSummaryByPublicId($publicId);
                 if ($loaded === null) {
                     throw ProductPersistenceException::insertFailed('ProductImage');
                 }
@@ -353,6 +369,277 @@ SQL,
         );
     }
 
+
+    public function findByPublicId(string $mediaPublicId): ?ProductMediaFileRecord
+    {
+        $rows = $this->connection->fetchAll(
+            self::LIST_SELECT_SQL . ' WHERE i.[PublicId] = :publicId AND i.[DeletedAtUtc] IS NULL',
+            [':publicId' => $mediaPublicId],
+        );
+
+        return $rows === [] ? null : $this->hydrateRecord($rows[0]);
+    }
+
+    public function createUploadSession(
+        ProductPublicId $productPublicId,
+        array $data,
+        UserId $actorUserId,
+    ): ProductMediaFileRecord {
+        return $this->runInTransaction(
+            $this->connection,
+            function () use ($productPublicId, $data, $actorUserId): ProductMediaFileRecord {
+                $productId = $this->requireProductId($productPublicId);
+                $mediaTypeId = $this->requireMediaTypeId($data['mediaTypeCode']);
+                $publicId = $data['publicId'] ?? null;
+
+                $imageRows = $this->connection->fetchAll(
+                    <<<'SQL'
+INSERT INTO [product].[ProductImages] (
+    [PublicId],
+    [ProductId],
+    [MediaTypeId],
+    [Title],
+    [AltText],
+    [Caption],
+    [StorageContainer],
+    [StoragePath],
+    [ContentType],
+    [FileExtension],
+    [ByteSize],
+    [OriginalFileName],
+    [DisplayOrder],
+    [IsPrimary],
+    [ImageRoleCode],
+    [UploadStatusCode],
+    [ScanStatusCode],
+    [CreatedByUserId],
+    [UpdatedByUserId]
+)
+OUTPUT
+    INSERTED.[ProductImagesId] AS [SourceRecordId],
+    CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
+VALUES (
+    COALESCE(TRY_CONVERT(UNIQUEIDENTIFIER, :publicId), NEWSEQUENTIALID()),
+    :productId,
+    :mediaTypeId,
+    :title,
+    :altText,
+    :caption,
+    :storageContainer,
+    :storagePath,
+    :contentType,
+    :fileExtension,
+    :byteSize,
+    :originalFileName,
+    :displayOrder,
+    :isPrimary,
+    :imageRoleCode,
+    :uploadStatusCode,
+    :scanStatusCode,
+    :createdByUserId,
+    :updatedByUserId
+)
+SQL,
+                    [
+                        ':publicId' => $publicId,
+                        ':productId' => $productId,
+                        ':mediaTypeId' => $mediaTypeId,
+                        ':title' => $data['title'],
+                        ':altText' => $data['altText'] ?? null,
+                        ':caption' => $data['caption'] ?? null,
+                        ':storageContainer' => $data['storageContainer'],
+                        ':storagePath' => $data['storagePath'],
+                        ':contentType' => $data['contentType'],
+                        ':fileExtension' => $data['fileExtension'],
+                        ':byteSize' => $data['byteSize'],
+                        ':originalFileName' => $data['originalFileName'],
+                        ':displayOrder' => $data['displayOrder'] ?? 0,
+                        ':isPrimary' => ($data['isPrimary'] ?? false) ? 1 : 0,
+                        ':imageRoleCode' => $data['mediaCategoryCode'],
+                        ':uploadStatusCode' => $data['uploadStatusCode'],
+                        ':scanStatusCode' => $data['scanStatusCode'],
+                        ':createdByUserId' => $actorUserId->toInt(),
+                        ':updatedByUserId' => $actorUserId->toInt(),
+                    ],
+                );
+
+                if ($imageRows === []) {
+                    throw ProductPersistenceException::insertFailed('ProductImage');
+                }
+
+                $sourceRecordId = AzureSqlValueMapper::intValue($imageRows[0]['SourceRecordId'] ?? 0);
+                $insertedPublicId = AzureSqlValueMapper::stringValue($imageRows[0]['PublicId'] ?? '');
+
+                $this->connection->execute(
+                    <<<'SQL'
+INSERT INTO [product].[ProductMedia] (
+    [ProductId],
+    [MediaCategoryCode],
+    [MediaTypeId],
+    [SourceTableCode],
+    [SourceRecordId],
+    [DisplayOrder],
+    [IsPrimary],
+    [CreatedByUserId],
+    [UpdatedByUserId]
+)
+VALUES (
+    :productId,
+    N'image',
+    :mediaTypeId,
+    N'ProductImages',
+    :sourceRecordId,
+    :displayOrder,
+    :isPrimary,
+    :createdByUserId,
+    :updatedByUserId
+)
+SQL,
+                    [
+                        ':productId' => $productId,
+                        ':mediaTypeId' => $mediaTypeId,
+                        ':sourceRecordId' => $sourceRecordId,
+                        ':displayOrder' => $data['displayOrder'] ?? 0,
+                        ':isPrimary' => ($data['isPrimary'] ?? false) ? 1 : 0,
+                        ':createdByUserId' => $actorUserId->toInt(),
+                        ':updatedByUserId' => $actorUserId->toInt(),
+                    ],
+                );
+
+                $loaded = $this->findByPublicId($insertedPublicId);
+                if ($loaded === null) {
+                    throw ProductPersistenceException::insertFailed('ProductImage');
+                }
+
+                return $loaded;
+            },
+        );
+    }
+
+    public function markUploadCompleted(
+        string $mediaPublicId,
+        array $blobMeta,
+        UserId $actorUserId,
+    ): ProductMediaFileRecord {
+        $this->connection->execute(
+            <<<'SQL'
+UPDATE [product].[ProductImages]
+SET
+    [UploadStatusCode] = :uploadStatusCode,
+    [ScanStatusCode] = :scanStatusCode,
+    [PublicUrl] = COALESCE(:publicUrl, [PublicUrl]),
+    [ContentType] = COALESCE(:contentType, [ContentType]),
+    [ByteSize] = COALESCE(:byteSize, [ByteSize]),
+    [ETag] = COALESCE(:etag, [ETag]),
+    [WidthPx] = COALESCE(:widthPx, [WidthPx]),
+    [HeightPx] = COALESCE(:heightPx, [HeightPx]),
+    [ThumbnailPublicUrl] = COALESCE(:thumbnailUrl, [ThumbnailPublicUrl]),
+    [StoragePath] = COALESCE(:storagePath, COALESCE([OptimizedStoragePath], [StoragePath])),
+    [StorageContainer] = COALESCE(:storageContainer, [StorageContainer]),
+    [OptimizedStoragePath] = NULL,
+    [UploadCompletedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [PublicId] = :mediaPublicId
+  AND [DeletedAtUtc] IS NULL
+SQL,
+            [
+                ':uploadStatusCode' => $blobMeta['uploadStatusCode'],
+                ':scanStatusCode' => $blobMeta['scanStatusCode'],
+                ':publicUrl' => $blobMeta['publicUrl'] ?? null,
+                ':contentType' => $blobMeta['contentType'] ?? null,
+                ':byteSize' => $blobMeta['byteSize'] ?? null,
+                ':etag' => $blobMeta['etag'] ?? null,
+                ':widthPx' => $blobMeta['widthPx'] ?? null,
+                ':heightPx' => $blobMeta['heightPx'] ?? null,
+                ':thumbnailUrl' => $blobMeta['thumbnailUrl'] ?? null,
+                ':storagePath' => $blobMeta['storagePath'] ?? null,
+                ':storageContainer' => $blobMeta['storageContainer'] ?? null,
+                ':updatedByUserId' => $actorUserId->toInt(),
+                ':mediaPublicId' => $mediaPublicId,
+            ],
+        );
+
+        $loaded = $this->findByPublicId($mediaPublicId);
+        if ($loaded === null) {
+            throw ProductPersistenceException::referenceNotFound('ProductImage', $mediaPublicId);
+        }
+
+        return $loaded;
+    }
+
+    public function beginReplaceUpload(
+        string $mediaPublicId,
+        array $data,
+        UserId $actorUserId,
+    ): ProductMediaFileRecord {
+        $this->connection->execute(
+            <<<'SQL'
+UPDATE [product].[ProductImages]
+SET
+    [OptimizedStoragePath] = :pendingStoragePath,
+    [OriginalFileName] = :originalFileName,
+    [ContentType] = :contentType,
+    [ByteSize] = :byteSize,
+    [FileExtension] = :fileExtension,
+    [UploadStatusCode] = :uploadStatusCode,
+    [ScanStatusCode] = :scanStatusCode,
+    [StorageContainer] = COALESCE(:storageContainer, [StorageContainer]),
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [PublicId] = :mediaPublicId
+  AND [DeletedAtUtc] IS NULL
+SQL,
+            [
+                ':pendingStoragePath' => $data['storagePath'],
+                ':originalFileName' => $data['originalFileName'],
+                ':contentType' => $data['contentType'],
+                ':byteSize' => $data['byteSize'],
+                ':fileExtension' => $data['fileExtension'],
+                ':uploadStatusCode' => $data['uploadStatusCode'],
+                ':scanStatusCode' => $data['scanStatusCode'],
+                ':storageContainer' => $data['storageContainer'],
+                ':updatedByUserId' => $actorUserId->toInt(),
+                ':mediaPublicId' => $mediaPublicId,
+            ],
+        );
+
+        $loaded = $this->findByPublicId($mediaPublicId);
+        if ($loaded === null) {
+            throw ProductPersistenceException::referenceNotFound('ProductImage', $mediaPublicId);
+        }
+
+        return $loaded;
+    }
+
+    public function clearFile(string $mediaPublicId, UserId $actorUserId): void
+    {
+        $this->connection->execute(
+            <<<'SQL'
+UPDATE [product].[ProductImages]
+SET
+    [PublicUrl] = NULL,
+    [StoragePath] = N'__deleted__',
+    [OptimizedStoragePath] = NULL,
+    [ByteSize] = NULL,
+    [ContentType] = NULL,
+    [OriginalFileName] = NULL,
+    [WidthPx] = NULL,
+    [HeightPx] = NULL,
+    [ThumbnailPublicUrl] = NULL,
+    [UploadStatusCode] = N'deleted',
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [PublicId] = :mediaPublicId
+  AND [DeletedAtUtc] IS NULL
+SQL,
+            [
+                ':updatedByUserId' => $actorUserId->toInt(),
+                ':mediaPublicId' => $mediaPublicId,
+            ],
+        );
+    }
+
     private function clearPrimaryExcept(
         ProductPublicId $productPublicId,
         string $exceptMediaPublicId,
@@ -379,14 +666,11 @@ SQL,
         );
     }
 
-    private function findByPublicId(string $publicId): ?ProductMediaSummary
+    private function findSummaryByPublicId(string $publicId): ?ProductMediaSummary
     {
-        $rows = $this->connection->fetchAll(
-            self::LIST_SELECT_SQL . ' WHERE i.[PublicId] = :publicId AND i.[DeletedAtUtc] IS NULL',
-            [':publicId' => $publicId],
-        );
+        $record = $this->findByPublicId($publicId);
 
-        return $rows === [] ? null : $this->hydrate($rows[0]);
+        return $record?->toSummary(true);
     }
 
     private function requireProductId(ProductPublicId $publicId): int
@@ -420,8 +704,20 @@ SQL,
      */
     private function hydrate(array $row): ProductMediaSummary
     {
-        return new ProductMediaSummary(
+        return $this->hydrateRecord($row)->toSummary(true);
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function hydrateRecord(array $row): ProductMediaFileRecord
+    {
+        $pendingPath = AzureSqlValueMapper::nullableString($row['PendingStoragePath'] ?? null);
+        $storagePath = AzureSqlValueMapper::nullableString($row['StoragePath'] ?? null);
+
+        return new ProductMediaFileRecord(
             publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
+            productPublicId: AzureSqlValueMapper::stringValue($row['ProductPublicId'] ?? ''),
             mediaCategoryCode: AzureSqlValueMapper::stringValue($row['MediaCategoryCode'] ?? ''),
             mediaTypeCode: AzureSqlValueMapper::stringValue($row['MediaTypeCode'] ?? ''),
             title: AzureSqlValueMapper::stringValue($row['Title'] ?? ''),
@@ -429,6 +725,22 @@ SQL,
             altText: AzureSqlValueMapper::nullableString($row['AltText'] ?? null),
             displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
             isPrimary: AzureSqlValueMapper::boolValue($row['IsPrimary'] ?? false),
+            uploadStatusCode: AzureSqlValueMapper::stringValue($row['UploadStatusCode'] ?? UploadStatusCode::ACTIVE),
+            scanStatusCode: AzureSqlValueMapper::stringValue($row['ScanStatusCode'] ?? ScanStatusCode::NOT_REQUIRED),
+            byteSize: isset($row['ByteSize']) && $row['ByteSize'] !== null ? AzureSqlValueMapper::intValue($row['ByteSize']) : null,
+            contentType: AzureSqlValueMapper::nullableString($row['ContentType'] ?? null),
+            originalFileName: AzureSqlValueMapper::nullableString($row['OriginalFileName'] ?? null),
+            fileExtension: AzureSqlValueMapper::nullableString($row['FileExtension'] ?? null),
+            widthPx: isset($row['WidthPx']) && $row['WidthPx'] !== null ? AzureSqlValueMapper::intValue($row['WidthPx']) : null,
+            heightPx: isset($row['HeightPx']) && $row['HeightPx'] !== null ? AzureSqlValueMapper::intValue($row['HeightPx']) : null,
+            thumbnailUrl: AzureSqlValueMapper::nullableString($row['ThumbnailUrl'] ?? null),
+            storagePath: $storagePath,
+            storageContainer: AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null),
+            pendingStoragePath: $pendingPath,
+            pendingStorageContainer: $pendingPath !== null
+                ? AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null)
+                : null,
+            previousStoragePath: $pendingPath !== null ? $storagePath : null,
         );
     }
 }

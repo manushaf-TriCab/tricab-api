@@ -34,7 +34,7 @@ final class GetPublicProductDocumentsAction
             $detail = $this->getPublicProduct->bySlug($slug, $regionCode);
 
             return $this->responder->success([
-                'items' => ProductManagementDtoSerializer::documentList($detail->documents),
+                'items' => array_map(ProductManagementDtoSerializer::publicDocumentSummary(...), $detail->documents),
             ]);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);

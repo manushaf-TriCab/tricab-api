@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Http\Action\Admin;
 
+use TriCab\Core\Product\Application\DTO\ProductClassificationRecord;
+use TriCab\Core\Product\Application\DTO\ProductClassificationUsage;
+
 use TriCab\Core\Product\Application\DTO\ProductAdminDetail;
 use TriCab\Core\Product\Application\DTO\ProductAdminListItem;
 use TriCab\Core\Product\Application\DTO\ProductAuditEntry;
@@ -11,7 +14,13 @@ use TriCab\Core\Product\Application\DTO\ProductCodePreviewResult;
 use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Application\DTO\ProductListResult;
 use TriCab\Core\Product\Application\DTO\ProductLookupItem;
+use TriCab\Core\Product\Application\DTO\ProductMediaFileRecord;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
+use TriCab\Core\Product\Application\DTO\ProductDocumentDownloadResult;
+use TriCab\Core\Product\Application\DTO\ProductUploadSessionResult;
+use TriCab\Core\Product\Application\DTO\Product360SetSummary;
+use TriCab\Core\Product\Application\DTO\Product360FrameSummary;
+use TriCab\Core\Product\Application\DTO\ProductArModelSummary;
 use TriCab\Core\Product\Application\DTO\ProductMutationResult;
 use TriCab\Core\Product\Application\DTO\ProductPricingSummary;
 use TriCab\Core\Product\Application\DTO\ProductPublicDetail;
@@ -22,6 +31,11 @@ use TriCab\Core\Product\Application\DTO\ProductSearchListResult;
 use TriCab\Core\Product\Application\DTO\ProductSearchResult;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Application\DTO\Pagination;
+use TriCab\Core\Product\Application\DTO\SpecificationDefinitionRecord;
+use TriCab\Core\Product\Application\DTO\SpecificationGroupRecord;
+use TriCab\Core\Product\Application\DTO\SpecificationOptionRecord;
+use TriCab\Core\Product\Application\DTO\SpecificationUnitRecord;
+use TriCab\Core\Product\Application\DTO\SpecificationUsage;
 
 /**
  * Serializes Core Product DTOs to admin/public API response arrays.
@@ -137,8 +151,8 @@ final class ProductManagementDtoSerializer
             'slug' => $detail->slug,
             'thumbnailUrl' => $detail->thumbnailUrl,
             'variants' => array_map(self::variantSummary(...), $detail->variants),
-            'media' => array_map(self::mediaSummary(...), $detail->media),
-            'documents' => array_map(self::documentSummary(...), $detail->documents),
+            'media' => array_map(self::publicMediaSummary(...), $detail->media),
+            'documents' => array_map(self::publicDocumentSummary(...), $detail->documents),
             'applicationNames' => $detail->applicationNames,
             'industryNames' => $detail->industryNames,
             'relationships' => array_map(self::publicRelationship(...), $detail->relationships),
@@ -249,9 +263,9 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function mediaSummary(ProductMediaSummary $summary): array
+    public static function mediaSummary(ProductMediaSummary $summary, bool $includeAdminFields = true): array
     {
-        return [
+        $payload = [
             'publicId' => $summary->publicId,
             'mediaCategoryCode' => $summary->mediaCategoryCode,
             'mediaTypeCode' => $summary->mediaTypeCode,
@@ -261,6 +275,36 @@ final class ProductManagementDtoSerializer
             'displayOrder' => $summary->displayOrder,
             'isPrimary' => $summary->isPrimary,
         ];
+
+        if ($includeAdminFields) {
+            $payload['uploadStatus'] = $summary->uploadStatusCode;
+            $payload['scanStatus'] = $summary->scanStatusCode;
+            $payload['byteSize'] = $summary->byteSize;
+            $payload['contentType'] = $summary->contentType;
+            $payload['originalFileName'] = $summary->originalFileName;
+            $payload['widthPx'] = $summary->widthPx;
+            $payload['heightPx'] = $summary->heightPx;
+            $payload['thumbnailUrl'] = $summary->thumbnailUrl;
+            $payload['storagePath'] = $summary->storagePath;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function publicMediaSummary(ProductMediaSummary $summary): array
+    {
+        return self::mediaSummary($summary, false);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function mediaFileRecord(ProductMediaFileRecord $record): array
+    {
+        return self::mediaSummary($record->toSummary(true));
     }
 
     /**
@@ -281,9 +325,9 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function documentSummary(ProductDocumentSummary $summary): array
+    public static function documentSummary(ProductDocumentSummary $summary, bool $includeAdminFields = true): array
     {
-        return [
+        $payload = [
             'publicId' => $summary->publicId,
             'documentTypeCode' => $summary->documentTypeCode,
             'title' => $summary->title,
@@ -293,6 +337,28 @@ final class ProductManagementDtoSerializer
             'accessCode' => $summary->accessCode,
             'displayOrder' => $summary->displayOrder,
         ];
+
+        if ($includeAdminFields) {
+            $payload['uploadStatus'] = $summary->uploadStatusCode;
+            $payload['scanStatus'] = $summary->scanStatusCode;
+            $payload['uploadStatusCode'] = $summary->uploadStatusCode;
+            $payload['scanStatusCode'] = $summary->scanStatusCode;
+            $payload['byteSize'] = $summary->byteSize;
+            $payload['contentType'] = $summary->contentType;
+            $payload['originalFileName'] = $summary->originalFileName;
+            $payload['fileExtension'] = $summary->fileExtension;
+            $payload['storagePath'] = $summary->storagePath;
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function publicDocumentSummary(ProductDocumentSummary $summary): array
+    {
+        return self::documentSummary($summary, false);
     }
 
     /**
@@ -537,4 +603,275 @@ final class ProductManagementDtoSerializer
             'passed' => $check->passed,
         ];
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function uploadSessionResult(ProductUploadSessionResult $result): array
+    {
+        return [
+            'entityPublicId' => $result->entityPublicId,
+            'uploadUrl' => $result->uploadUrl,
+            'httpMethod' => $result->httpMethod,
+            'requiredHeaders' => $result->requiredHeaders,
+            'expiresAtUtc' => $result->expiresAtUtc,
+            'storagePath' => $result->storagePath,
+            'storageContainer' => $result->storageContainer,
+            'fileKind' => $result->fileKind,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function documentDownloadResult(ProductDocumentDownloadResult $result): array
+    {
+        return [
+            'documentPublicId' => $result->documentPublicId,
+            'downloadUrl' => $result->downloadUrl,
+            'httpMethod' => $result->httpMethod,
+            'requiredHeaders' => $result->requiredHeaders,
+            'expiresAtUtc' => $result->expiresAtUtc,
+            'accessMode' => $result->accessMode,
+            'contentType' => $result->contentType,
+            'originalFileName' => $result->originalFileName,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function product360SetSummary(Product360SetSummary $summary): array
+    {
+        return [
+            'publicId' => $summary->publicId,
+            'productPublicId' => $summary->productPublicId,
+            'title' => $summary->title,
+            'expectedFrameCount' => $summary->expectedFrameCount,
+            'uploadedFrameCount' => $summary->uploadedFrameCount,
+            'statusCode' => $summary->statusCode,
+            'isActive' => $summary->isActive,
+            'frames' => array_map(self::product360FrameSummary(...), $summary->frames),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function product360FrameSummary(Product360FrameSummary $summary): array
+    {
+        return [
+            'publicId' => $summary->publicId,
+            'setPublicId' => $summary->setPublicId,
+            'frameNumber' => $summary->frameNumber,
+            'uploadStatus' => $summary->uploadStatusCode,
+            'scanStatus' => $summary->scanStatusCode,
+            'publicUrl' => $summary->publicUrl,
+            'contentType' => $summary->contentType,
+            'byteSize' => $summary->byteSize,
+            'originalFileName' => $summary->originalFileName,
+            'storagePath' => $summary->storagePath,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function productArModelSummary(ProductArModelSummary $summary): array
+    {
+        return [
+            'publicId' => $summary->publicId,
+            'productPublicId' => $summary->productPublicId,
+            'title' => $summary->title,
+            'uploadStatus' => $summary->uploadStatusCode,
+            'scanStatus' => $summary->scanStatusCode,
+            'publicUrl' => $summary->publicUrl,
+            'contentType' => $summary->contentType,
+            'fileExtension' => $summary->fileExtension,
+            'byteSize' => $summary->byteSize,
+            'originalFileName' => $summary->originalFileName,
+            'isPrimary' => $summary->isPrimary,
+            'storagePath' => $summary->storagePath,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function classificationRecord(ProductClassificationRecord $record): array
+    {
+        return [
+            'publicId' => $record->publicId,
+            'code' => $record->code,
+            'name' => $record->name,
+            'description' => $record->description,
+            'parentPublicId' => $record->parentPublicId,
+            'parentName' => $record->parentName,
+            'displayOrder' => $record->displayOrder,
+            'isActive' => $record->isActive,
+            'isDeleted' => $record->isDeleted,
+            'rowVersion' => $record->rowVersion,
+            'createdAtUtc' => $record->createdAtUtc,
+            'updatedAtUtc' => $record->updatedAtUtc,
+            'productCount' => $record->productCount,
+            'activeChildCount' => $record->activeChildCount,
+            'inactiveChildCount' => $record->inactiveChildCount,
+        ];
+    }
+
+    /**
+     * @param list<ProductClassificationRecord> $items
+     * @return list<array<string, mixed>>
+     */
+    public static function classificationList(array $items): array
+    {
+        return array_map(self::classificationRecord(...), $items);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function classificationUsage(ProductClassificationUsage $usage): array
+    {
+        return [
+            'publicId' => $usage->publicId,
+            'level' => $usage->level,
+            'productCount' => $usage->productCount,
+            'activeCategoryCount' => $usage->activeCategoryCount,
+            'inactiveCategoryCount' => $usage->inactiveCategoryCount,
+            'activeSeriesCount' => $usage->activeSeriesCount,
+            'inactiveSeriesCount' => $usage->inactiveSeriesCount,
+            'deletedChildCount' => $usage->deletedChildCount,
+            'summary' => $usage->summaryMessage(),
+        ];
+    }
+
+
+    public static function specificationGroup(SpecificationGroupRecord $record): array
+    {
+        return [
+            'publicId' => $record->publicId,
+            'code' => $record->code,
+            'name' => $record->name,
+            'description' => $record->description,
+            'displayOrder' => $record->displayOrder,
+            'isActive' => $record->isActive,
+            'isDeleted' => $record->isDeleted,
+            'rowVersion' => $record->rowVersion,
+            'createdAtUtc' => $record->createdAtUtc,
+            'updatedAtUtc' => $record->updatedAtUtc,
+            'definitionCount' => $record->definitionCount,
+            'activeDefinitionCount' => $record->activeDefinitionCount,
+        ];
+    }
+
+    /** @param list<SpecificationGroupRecord> $items @return list<array<string, mixed>> */
+    public static function specificationGroupList(array $items): array
+    {
+        return array_map(self::specificationGroup(...), $items);
+    }
+
+    public static function specificationUnit(SpecificationUnitRecord $record): array
+    {
+        return [
+            'publicId' => $record->publicId,
+            'code' => $record->code,
+            'name' => $record->name,
+            'symbol' => $record->symbol,
+            'description' => $record->description,
+            'displayOrder' => $record->displayOrder,
+            'isActive' => $record->isActive,
+            'isDeleted' => $record->isDeleted,
+            'rowVersion' => $record->rowVersion,
+            'createdAtUtc' => $record->createdAtUtc,
+            'updatedAtUtc' => $record->updatedAtUtc,
+            'definitionCount' => $record->definitionCount,
+        ];
+    }
+
+    /** @param list<SpecificationUnitRecord> $items @return list<array<string, mixed>> */
+    public static function specificationUnitList(array $items): array
+    {
+        return array_map(self::specificationUnit(...), $items);
+    }
+
+    public static function specificationOption(SpecificationOptionRecord $record): array
+    {
+        return [
+            'publicId' => $record->publicId,
+            'definitionPublicId' => $record->definitionPublicId,
+            'code' => $record->code,
+            'name' => $record->name,
+            'value' => $record->value,
+            'displayOrder' => $record->displayOrder,
+            'isActive' => $record->isActive,
+            'isDeleted' => $record->isDeleted,
+            'rowVersion' => $record->rowVersion,
+            'createdAtUtc' => $record->createdAtUtc,
+            'updatedAtUtc' => $record->updatedAtUtc,
+            'valueUsageCount' => $record->valueUsageCount,
+        ];
+    }
+
+    /** @param list<SpecificationOptionRecord> $items @return list<array<string, mixed>> */
+    public static function specificationOptionList(array $items): array
+    {
+        return array_map(self::specificationOption(...), $items);
+    }
+
+    public static function specificationDefinition(SpecificationDefinitionRecord $record): array
+    {
+        return [
+            'publicId' => $record->publicId,
+            'code' => $record->code,
+            'name' => $record->name,
+            'description' => $record->description,
+            'groupPublicId' => $record->groupPublicId,
+            'groupCode' => $record->groupCode,
+            'groupName' => $record->groupName,
+            'dataTypeCode' => $record->dataTypeCode,
+            'scopeCode' => $record->scopeCode,
+            'unit' => $record->unit,
+            'unitPublicId' => $record->unitPublicId,
+            'displayOrder' => $record->displayOrder,
+            'isRequired' => $record->isRequired,
+            'isFilterable' => $record->isFilterable,
+            'isSearchable' => $record->isSearchable,
+            'isComparable' => $record->isComparable,
+            'minimumValue' => $record->minimumValue,
+            'maximumValue' => $record->maximumValue,
+            'decimalPrecision' => $record->decimalPrecision,
+            'validationRules' => $record->validationRules->toArray(),
+            'isActive' => $record->isActive,
+            'isDeleted' => $record->isDeleted,
+            'rowVersion' => $record->rowVersion,
+            'options' => self::specificationOptionList($record->options),
+            'createdAtUtc' => $record->createdAtUtc,
+            'updatedAtUtc' => $record->updatedAtUtc,
+            'productValueCount' => $record->productValueCount,
+            'variantValueCount' => $record->variantValueCount,
+        ];
+    }
+
+    /** @param list<SpecificationDefinitionRecord> $items @return list<array<string, mixed>> */
+    public static function specificationDefinitionList(array $items): array
+    {
+        return array_map(self::specificationDefinition(...), $items);
+    }
+
+    public static function specificationUsage(SpecificationUsage $usage): array
+    {
+        return [
+            'publicId' => $usage->publicId,
+            'level' => $usage->level,
+            'productValueCount' => $usage->productValueCount,
+            'variantValueCount' => $usage->variantValueCount,
+            'definitionCount' => $usage->definitionCount,
+            'activeDefinitionCount' => $usage->activeDefinitionCount,
+            'optionCount' => $usage->optionCount,
+            'templateCount' => $usage->templateCount,
+            'summary' => $usage->summaryMessage(),
+        ];
+    }
+
 }

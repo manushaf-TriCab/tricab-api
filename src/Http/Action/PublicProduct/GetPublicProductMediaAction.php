@@ -34,7 +34,7 @@ final class GetPublicProductMediaAction
             $detail = $this->getPublicProduct->bySlug($slug, $regionCode);
 
             return $this->responder->success([
-                'items' => ProductManagementDtoSerializer::mediaList($detail->media),
+                'items' => array_map(ProductManagementDtoSerializer::publicMediaSummary(...), $detail->media),
             ]);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);

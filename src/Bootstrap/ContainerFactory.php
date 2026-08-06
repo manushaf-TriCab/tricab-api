@@ -125,6 +125,11 @@ use TriCab\Api\Product\Persistence\AzureSqlProductIntegrationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductLookupRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductMarketRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductMediaRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProduct360Repository;
+use TriCab\Api\Product\Persistence\AzureSqlProductArModelRepository;
+use TriCab\Api\Product\Storage\AzureProductBlobStore;
+use TriCab\Api\Product\Storage\DisabledProductBlobStore;
+use TriCab\Api\Product\Storage\InMemoryProductBlobStore;
 use TriCab\Api\Product\Persistence\AzureSqlProductPricingRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductPublicQueryRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductRelationshipRepository;
@@ -143,6 +148,8 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProductIntegrationRepository
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductLookupRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductMarketRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductMediaRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct360Repository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductArModelRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPricingRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPublicQueryRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductRelationshipRepository;
@@ -255,6 +262,52 @@ use TriCab\Core\Identity\Domain\Service\SecureOtpGenerator;
 use TriCab\Core\Identity\Domain\Service\Sha256SessionTokenHasher;
 use TriCab\Core\Product\Application\Service\AddProductDocumentService;
 use TriCab\Core\Product\Application\Service\AddProductMediaService;
+use TriCab\Api\Http\Action\Admin\ProductSeriesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductCategoriesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductFamiliesAdminAction;
+use TriCab\Core\Product\Application\Service\ManageProductClassificationService;
+use TriCab\Core\Product\Application\Service\SpecificationDefinitionService;
+use TriCab\Core\Product\Application\Service\SpecificationGroupService;
+use TriCab\Core\Product\Application\Service\SpecificationOptionService;
+use TriCab\Core\Product\Application\Service\SpecificationUnitService;
+use TriCab\Api\Http\Action\Admin\SpecificationDefinitionsAdminAction;
+use TriCab\Api\Http\Action\Admin\SpecificationGroupsAdminAction;
+use TriCab\Api\Http\Action\Admin\SpecificationOptionsAdminAction;
+use TriCab\Api\Http\Action\Admin\SpecificationUnitsAdminAction;
+use TriCab\Api\Http\Action\Admin\Migration\ProductMigrationAdminAction;
+use TriCab\Api\Product\Persistence\AzureSqlMigrationBatchRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryMigrationBatchRepository;
+use TriCab\Core\Product\Migration\Application\Service\GetCatalogueReadinessService;
+use TriCab\Core\Product\Migration\Application\Service\ProductMigrationService;
+use TriCab\Core\Product\Migration\Contract\MigrationBatchRepository;
+use TriCab\Core\Product\Migration\Contract\MigrationLookupIndex;
+use TriCab\Core\Product\Migration\Identity\EmptyMigrationLookupIndex;
+use TriCab\Core\Product\Migration\Identity\ProductIdentityMatcher;
+use TriCab\Core\Product\Migration\Identity\ProductVariantClassifier;
+use TriCab\Api\Product\Migration\MysqlLegacyTcRepository;
+use TriCab\Api\Product\Migration\MysqlLegacyWordPressRepository;
+use TriCab\Api\Product\Migration\MysqlLiveInventoryProbe;
+use TriCab\Api\Product\Migration\ReadOnlyMysqlConnectionFactory;
+use TriCab\Core\Product\Migration\Application\Service\InspectLegacyCatalogueService;
+use TriCab\Core\Product\Migration\Contract\LegacyTcRepository;
+use TriCab\Core\Product\Migration\Contract\LegacyWordPressRepository;
+use TriCab\Core\Product\Migration\Live\AzureSqlMigrationSchemaProbe;
+use TriCab\Core\Product\Migration\Live\InMemoryLegacySqlStatementLogger;
+use TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard;
+use TriCab\Core\Product\Migration\Live\LegacySqlStatementLogger;
+use TriCab\Core\Product\Migration\Live\LiveInventoryProbe;
+use TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig;
+use TriCab\Core\Product\Migration\Live\MemoryMigrationSchemaProbe;
+use TriCab\Core\Product\Migration\Live\MigrationSchemaProbe;
+use TriCab\Core\Product\Migration\Live\NullLiveInventoryProbe;
+use TriCab\Core\Product\Migration\Live\UnavailableLegacyTcRepository;
+use TriCab\Core\Product\Migration\Live\UnavailableLegacyWordPressRepository;
+use TriCab\Core\Product\Migration\Source\LiveCombinedLegacyProductSource;
+use TriCab\Core\Product\Migration\Mapping\OptionAliasResolver;
+use TriCab\Core\Product\Migration\Source\FixtureLegacyProductSource;
+use TriCab\Core\Product\Migration\Source\LegacyProductSourceInterface;
+use TriCab\Core\Product\Migration\Transform\SpecificationValueTransformer;
+
 use TriCab\Core\Product\Application\Service\ArchiveProductService;
 use TriCab\Core\Product\Application\Service\ArchiveProductVariantService;
 use TriCab\Core\Product\Application\Service\AssignProductApplicationsService;
@@ -305,6 +358,46 @@ use TriCab\Core\Product\Contract\ProductDocumentRepository;
 use TriCab\Core\Product\Contract\ProductIntegrationRepository;
 use TriCab\Core\Product\Contract\ProductLookupRepository;
 use TriCab\Core\Product\Contract\ProductMarketRepository;
+use TriCab\Core\Product\Contract\ProductBlobStore;
+use TriCab\Core\Product\Contract\ProductFilePathBuilder;
+use TriCab\Core\Product\Contract\ProductFileScanPolicy;
+use TriCab\Core\Product\Contract\ProductImageMetadataExtractor;
+use TriCab\Core\Product\Contract\Product360Repository;
+use TriCab\Core\Product\Contract\ProductArModelRepository;
+use TriCab\Core\Product\Domain\Service\ProductFileValidationPolicy;
+use TriCab\Core\Product\Application\Service\ConfigurableProductFileScanPolicy;
+use TriCab\Core\Product\Application\Service\GdProductImageMetadataExtractor;
+use TriCab\Core\Product\Application\Service\NullProductImageMetadataExtractor;
+use TriCab\Core\Product\Application\Service\InitiateProductMediaUploadService;
+use TriCab\Api\Http\Action\Admin\CompleteArModelUploadAction;
+use TriCab\Api\Http\Action\Admin\InitiateArModelUploadAction;
+use TriCab\Api\Http\Action\Admin\ActivateProduct360SetAction;
+use TriCab\Api\Http\Action\Admin\Complete360FrameUploadAction;
+use TriCab\Api\Http\Action\Admin\Initiate360FrameUploadAction;
+use TriCab\Api\Http\Action\Admin\CreateProduct360SetAction;
+use TriCab\Core\Product\Application\Service\CompleteArModelUploadService;
+use TriCab\Core\Product\Application\Service\InitiateArModelUploadService;
+use TriCab\Core\Product\Application\Service\ActivateProduct360SetService;
+use TriCab\Core\Product\Application\Service\Complete360FrameUploadService;
+use TriCab\Core\Product\Application\Service\Initiate360FrameUploadService;
+use TriCab\Core\Product\Application\Service\CreateProduct360SetService;
+use TriCab\Core\Product\Application\Service\CompleteProductMediaUploadService;
+use TriCab\Core\Product\Application\Service\ReplaceProductMediaUploadService;
+use TriCab\Core\Product\Application\Service\DeleteProductMediaFileService;
+use TriCab\Core\Product\Application\Service\InitiateProductDocumentUploadService;
+use TriCab\Core\Product\Application\Service\CompleteProductDocumentUploadService;
+use TriCab\Core\Product\Application\Service\ReplaceProductDocumentUploadService;
+use TriCab\Core\Product\Application\Service\DeleteProductDocumentFileService;
+use TriCab\Core\Product\Application\Service\GetRestrictedDocumentDownloadService;
+use TriCab\Api\Http\Action\Admin\InitiateProductMediaUploadAction;
+use TriCab\Api\Http\Action\Admin\CompleteProductMediaUploadAction;
+use TriCab\Api\Http\Action\Admin\ReplaceProductMediaUploadAction;
+use TriCab\Api\Http\Action\Admin\DeleteProductMediaFileAction;
+use TriCab\Api\Http\Action\Admin\InitiateProductDocumentUploadAction;
+use TriCab\Api\Http\Action\Admin\CompleteProductDocumentUploadAction;
+use TriCab\Api\Http\Action\Admin\ReplaceProductDocumentUploadAction;
+use TriCab\Api\Http\Action\Admin\DeleteProductDocumentFileAction;
+use TriCab\Api\Http\Action\PublicProduct\DownloadProductDocumentAction;
 use TriCab\Core\Product\Contract\ProductMediaRepository;
 use TriCab\Core\Product\Contract\ProductPricingRepository;
 use TriCab\Core\Product\Contract\ProductPublicQueryRepository;
@@ -511,6 +604,60 @@ final class ContainerFactory
             ReorderProductMediaService::class => \DI\autowire(ReorderProductMediaService::class),
             SetPrimaryProductImageService::class => \DI\autowire(SetPrimaryProductImageService::class),
             SoftDeleteProductMediaService::class => \DI\autowire(SoftDeleteProductMediaService::class),
+            ProductFilePathBuilder::class => \DI\autowire(ProductFilePathBuilder::class),
+            ProductFileValidationPolicy::class => \DI\autowire(ProductFileValidationPolicy::class),
+            ProductFileScanPolicy::class => static function () use ($settings): ProductFileScanPolicy {
+                return new ConfigurableProductFileScanPolicy($settings->productFileScanAutoCleans());
+            },
+            ProductImageMetadataExtractor::class => static function (): ProductImageMetadataExtractor {
+                return function_exists('getimagesizefromstring')
+                    ? new GdProductImageMetadataExtractor()
+                    : new NullProductImageMetadataExtractor();
+            },
+            ProductBlobStore::class => static function () use ($settings): ProductBlobStore {
+                if ($settings->usesMemoryProductBlobStore()) {
+                    return new InMemoryProductBlobStore(
+                        cdnBaseUrl: $settings->blobCdnBaseUrl,
+                        defaultContainer: $settings->blobContainerProducts,
+                    );
+                }
+                if ($settings->blobAuthMode === Settings::BLOB_AUTH_MODE_CONNECTION_STRING) {
+                    return new AzureProductBlobStore($settings);
+                }
+
+                return new DisabledProductBlobStore();
+            },
+            InitiateProductMediaUploadService::class => \DI\autowire(InitiateProductMediaUploadService::class),
+            CompleteProductMediaUploadService::class => \DI\autowire(CompleteProductMediaUploadService::class),
+            ReplaceProductMediaUploadService::class => \DI\autowire(ReplaceProductMediaUploadService::class),
+            DeleteProductMediaFileService::class => \DI\autowire(DeleteProductMediaFileService::class),
+            InitiateProductDocumentUploadService::class => \DI\autowire(InitiateProductDocumentUploadService::class),
+            CompleteProductDocumentUploadService::class => \DI\autowire(CompleteProductDocumentUploadService::class),
+            ReplaceProductDocumentUploadService::class => \DI\autowire(ReplaceProductDocumentUploadService::class),
+            DeleteProductDocumentFileService::class => \DI\autowire(DeleteProductDocumentFileService::class),
+            GetRestrictedDocumentDownloadService::class => \DI\autowire(GetRestrictedDocumentDownloadService::class),
+            InitiateProductMediaUploadAction::class => \DI\autowire(InitiateProductMediaUploadAction::class),
+            CompleteProductMediaUploadAction::class => \DI\autowire(CompleteProductMediaUploadAction::class),
+            ReplaceProductMediaUploadAction::class => \DI\autowire(ReplaceProductMediaUploadAction::class),
+            DeleteProductMediaFileAction::class => \DI\autowire(DeleteProductMediaFileAction::class),
+            InitiateProductDocumentUploadAction::class => \DI\autowire(InitiateProductDocumentUploadAction::class),
+            CompleteProductDocumentUploadAction::class => \DI\autowire(CompleteProductDocumentUploadAction::class),
+            ReplaceProductDocumentUploadAction::class => \DI\autowire(ReplaceProductDocumentUploadAction::class),
+            DeleteProductDocumentFileAction::class => \DI\autowire(DeleteProductDocumentFileAction::class),
+            DownloadProductDocumentAction::class => \DI\autowire(DownloadProductDocumentAction::class),
+
+            CreateProduct360SetService::class => \DI\autowire(CreateProduct360SetService::class),
+            Initiate360FrameUploadService::class => \DI\autowire(Initiate360FrameUploadService::class),
+            Complete360FrameUploadService::class => \DI\autowire(Complete360FrameUploadService::class),
+            ActivateProduct360SetService::class => \DI\autowire(ActivateProduct360SetService::class),
+            InitiateArModelUploadService::class => \DI\autowire(InitiateArModelUploadService::class),
+            CompleteArModelUploadService::class => \DI\autowire(CompleteArModelUploadService::class),
+            CreateProduct360SetAction::class => \DI\autowire(CreateProduct360SetAction::class),
+            Initiate360FrameUploadAction::class => \DI\autowire(Initiate360FrameUploadAction::class),
+            Complete360FrameUploadAction::class => \DI\autowire(Complete360FrameUploadAction::class),
+            ActivateProduct360SetAction::class => \DI\autowire(ActivateProduct360SetAction::class),
+            InitiateArModelUploadAction::class => \DI\autowire(InitiateArModelUploadAction::class),
+            CompleteArModelUploadAction::class => \DI\autowire(CompleteArModelUploadAction::class),
             AddProductDocumentService::class => \DI\autowire(AddProductDocumentService::class),
             WithdrawProductDocumentService::class => \DI\autowire(WithdrawProductDocumentService::class),
             SoftDeleteProductDocumentService::class => \DI\autowire(SoftDeleteProductDocumentService::class),
@@ -525,6 +672,107 @@ final class ContainerFactory
             GetAdminProductService::class => \DI\autowire(GetAdminProductService::class),
             GetPublicProductService::class => \DI\autowire(GetPublicProductService::class),
             SearchProductsService::class => \DI\autowire(SearchProductsService::class),
+
+            ManageProductClassificationService::class => \DI\autowire(ManageProductClassificationService::class),
+            SpecificationGroupService::class => \DI\autowire(SpecificationGroupService::class),
+            SpecificationDefinitionService::class => \DI\autowire(SpecificationDefinitionService::class),
+            SpecificationOptionService::class => \DI\autowire(SpecificationOptionService::class),
+            SpecificationUnitService::class => \DI\autowire(SpecificationUnitService::class),
+            ProductMigrationService::class => \DI\autowire(ProductMigrationService::class),
+            ProductMigrationAdminAction::class => \DI\autowire(ProductMigrationAdminAction::class),
+            GetCatalogueReadinessService::class => static function (Container $container) use ($settings): GetCatalogueReadinessService {
+                $azure = $settings->usesAzureSqlUserRepository();
+                return new GetCatalogueReadinessService(
+                    sourceConfig: self::get($container, LiveLegacySourceConfig::class),
+                    inventoryProbe: self::get($container, LiveInventoryProbe::class),
+                    schemaProbe: self::get($container, MigrationSchemaProbe::class),
+                    batches: self::get($container, MigrationBatchRepository::class),
+                    azureSqlMode: $azure,
+                    blobEnabled: $settings->isProductBlobEnabled(),
+                    persistenceMode: $azure ? 'azure-sql' : 'in-memory',
+                );
+            },
+            LiveLegacySourceConfig::class => static function (): LiveLegacySourceConfig {
+                /** @var array<string, string|null> $env */
+                $env = [];
+                foreach ([
+                    'LEGACY_WP_DSN', 'LEGACY_WP_USER', 'LEGACY_WP_PASSWORD', 'LEGACY_WP_TABLE_PREFIX',
+                    'LEGACY_SOURCE_WAIVE_WP', 'LEGACY_TC_DSN', 'LEGACY_TC_USER', 'LEGACY_TC_PASSWORD',
+                    'LEGACY_SOURCE_WAIVE_TC', 'LEGACY_FILES_ROOT', 'LEGACY_SOURCE_WAIVE_FILES',
+                    'PHASE12_PILOT_APPROVED',
+                ] as $key) {
+                    $value = getenv($key);
+                    $env[$key] = $value === false ? null : $value;
+                }
+                return LiveLegacySourceConfig::fromEnvironment($env);
+            },
+            LegacyReadOnlySqlGuard::class => \DI\autowire(LegacyReadOnlySqlGuard::class),
+            LegacySqlStatementLogger::class => \DI\autowire(InMemoryLegacySqlStatementLogger::class),
+            ReadOnlyMysqlConnectionFactory::class => \DI\autowire(ReadOnlyMysqlConnectionFactory::class),
+            LegacyWordPressRepository::class => static function (Container $container): LegacyWordPressRepository {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                if (!$config->wordpressConfigured()) {
+                    return new UnavailableLegacyWordPressRepository();
+                }
+                $factory = self::get($container, ReadOnlyMysqlConnectionFactory::class);
+                $conn = $factory->create(
+                    (string) $config->wordpressDsn,
+                    (string) $config->wordpressUser,
+                    (string) $config->wordpressPassword,
+                    'wordpress',
+                );
+                return new MysqlLegacyWordPressRepository($conn, $config->wordpressTablePrefix);
+            },
+            LegacyTcRepository::class => static function (Container $container): LegacyTcRepository {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                if (!$config->tcConfigured()) {
+                    return new UnavailableLegacyTcRepository();
+                }
+                $factory = self::get($container, ReadOnlyMysqlConnectionFactory::class);
+                $conn = $factory->create(
+                    (string) $config->tcDsn,
+                    (string) $config->tcUser,
+                    (string) $config->tcPassword,
+                    'tc',
+                );
+                return new MysqlLegacyTcRepository($conn);
+            },
+            LiveInventoryProbe::class => static function (Container $container): LiveInventoryProbe {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                if (!$config->wordpressConfigured() && !$config->tcConfigured()) {
+                    return new NullLiveInventoryProbe();
+                }
+                return new MysqlLiveInventoryProbe(
+                    self::get($container, LegacyWordPressRepository::class),
+                    self::get($container, LegacyTcRepository::class),
+                );
+            },
+            InspectLegacyCatalogueService::class => \DI\autowire(InspectLegacyCatalogueService::class),
+            MigrationSchemaProbe::class => \DI\autowire(MemoryMigrationSchemaProbe::class),
+            ProductIdentityMatcher::class => \DI\autowire(ProductIdentityMatcher::class),
+            ProductVariantClassifier::class => \DI\autowire(ProductVariantClassifier::class),
+            SpecificationValueTransformer::class => \DI\autowire(SpecificationValueTransformer::class),
+            OptionAliasResolver::class => \DI\autowire(OptionAliasResolver::class),
+            MigrationLookupIndex::class => \DI\autowire(EmptyMigrationLookupIndex::class),
+            MigrationBatchRepository::class => \DI\autowire(InMemoryMigrationBatchRepository::class),
+            LegacyProductSourceInterface::class => static function (Container $container): LegacyProductSourceInterface {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                if ($config->wordpressConfigured() || $config->tcConfigured()) {
+                    return new LiveCombinedLegacyProductSource(
+                        self::get($container, LegacyWordPressRepository::class),
+                        self::get($container, LegacyTcRepository::class),
+                    );
+                }
+                return FixtureLegacyProductSource::pilotSample();
+            },
+
+            ProductFamiliesAdminAction::class => \DI\autowire(ProductFamiliesAdminAction::class),
+            ProductCategoriesAdminAction::class => \DI\autowire(ProductCategoriesAdminAction::class),
+            ProductSeriesAdminAction::class => \DI\autowire(ProductSeriesAdminAction::class),
+            SpecificationGroupsAdminAction::class => \DI\autowire(SpecificationGroupsAdminAction::class),
+            SpecificationDefinitionsAdminAction::class => \DI\autowire(SpecificationDefinitionsAdminAction::class),
+            SpecificationOptionsAdminAction::class => \DI\autowire(SpecificationOptionsAdminAction::class),
+            SpecificationUnitsAdminAction::class => \DI\autowire(SpecificationUnitsAdminAction::class),
             GetProductLookupsService::class => \DI\autowire(GetProductLookupsService::class),
             GetProductPublishReadinessService::class => \DI\autowire(GetProductPublishReadinessService::class),
             GetProductAuditHistoryService::class => \DI\autowire(GetProductAuditHistoryService::class),
@@ -570,6 +818,8 @@ final class ContainerFactory
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(AzureSqlProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(AzureSqlProductMediaRepository::class);
             $definitions[ProductDocumentRepository::class] = \DI\autowire(AzureSqlProductDocumentRepository::class);
+            $definitions[Product360Repository::class] = \DI\autowire(AzureSqlProduct360Repository::class);
+            $definitions[ProductArModelRepository::class] = \DI\autowire(AzureSqlProductArModelRepository::class);
             $definitions[ProductMarketRepository::class] = \DI\autowire(AzureSqlProductMarketRepository::class);
             $definitions[ProductRelationshipRepository::class] = \DI\autowire(AzureSqlProductRelationshipRepository::class);
             $definitions[ProductSeoRepository::class] = \DI\autowire(AzureSqlProductSeoRepository::class);
@@ -578,6 +828,28 @@ final class ContainerFactory
             $definitions[ProductAuditRepository::class] = \DI\autowire(AzureSqlProductAuditRepository::class);
             $definitions[ProductIntegrationRepository::class] = \DI\autowire(AzureSqlProductIntegrationRepository::class);
             $definitions[LegacyProductMappingRepository::class] = \DI\autowire(AzureSqlLegacyProductMappingRepository::class);
+            $definitions[MigrationBatchRepository::class] = \DI\autowire(AzureSqlMigrationBatchRepository::class);
+            $definitions[MigrationSchemaProbe::class] = static function (Container $container): MigrationSchemaProbe {
+                $connection = self::get($container, SqlConnection::class);
+                return new AzureSqlMigrationSchemaProbe(static function (string $qualified) use ($connection): bool {
+                    $parts = explode('.', $qualified, 2);
+                    if (count($parts) !== 2) {
+                        return false;
+                    }
+                    $rows = $connection->fetchAll(
+                        <<<'SQL'
+SELECT 1 AS [ExistsFlag]
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_SCHEMA = :schemaName AND TABLE_NAME = :tableName
+SQL,
+                        [
+                            ':schemaName' => $parts[0],
+                            ':tableName' => $parts[1],
+                        ],
+                    );
+                    return $rows !== [];
+                });
+            };
             $definitions[ProductSubResourceResolver::class] = static function (Container $container): ProductSubResourceResolver {
                 return new ProductSubResourceResolver(null, self::get($container, SqlConnection::class));
             };
@@ -640,6 +912,8 @@ final class ContainerFactory
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(InMemoryProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(InMemoryProductMediaRepository::class);
             $definitions[ProductDocumentRepository::class] = \DI\autowire(InMemoryProductDocumentRepository::class);
+            $definitions[Product360Repository::class] = \DI\autowire(InMemoryProduct360Repository::class);
+            $definitions[ProductArModelRepository::class] = \DI\autowire(InMemoryProductArModelRepository::class);
             $definitions[ProductMarketRepository::class] = \DI\autowire(InMemoryProductMarketRepository::class);
             $definitions[ProductRelationshipRepository::class] = \DI\autowire(InMemoryProductRelationshipRepository::class);
             $definitions[ProductSeoRepository::class] = \DI\autowire(InMemoryProductSeoRepository::class);

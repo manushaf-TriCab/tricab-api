@@ -441,6 +441,11 @@ INNER JOIN [product].[MediaTypes] mt ON mt.[MediaTypeId] = img.[MediaTypeId]
 WHERE p.[PublicId] = :productPublicId
   AND img.[DeletedAtUtc] IS NULL
   AND img.[IsActive] = 1
+  AND (img.[UploadStatusCode] IS NULL OR img.[UploadStatusCode] = N'active')
+  AND (
+        img.[ScanStatusCode] IS NULL
+        OR img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+  )
 ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder] ASC, img.[ProductImagesId] ASC
 SQL,
             [':productPublicId' => $productPublicId->toString()],
@@ -496,6 +501,11 @@ INNER JOIN [product].[DocumentTypes] dt ON dt.[DocumentTypeId] = doc.[DocumentTy
 WHERE p.[PublicId] = :productPublicId
   AND doc.[DeletedAtUtc] IS NULL
   AND doc.[IsActive] = 1
+  AND (doc.[UploadStatusCode] IS NULL OR doc.[UploadStatusCode] = N'active')
+  AND (
+        doc.[ScanStatusCode] IS NULL
+        OR doc.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+  )
   AND doc.[AccessCode] = N'public'
   AND (doc.[EffectiveFromUtc] IS NULL OR doc.[EffectiveFromUtc] <= SYSUTCDATETIME())
   AND (doc.[EffectiveToUtc] IS NULL OR doc.[EffectiveToUtc] > SYSUTCDATETIME())

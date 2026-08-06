@@ -22,6 +22,14 @@ final readonly class Settings
     public const MAX_GUEST_JWT_TTL_SECONDS = 86400;
     public const MIN_GUEST_JWT_SECRET_BYTES = 32;
 
+    public const BLOB_AUTH_MODE_DISABLED = 'disabled';
+    public const BLOB_AUTH_MODE_CONNECTION_STRING = 'connection-string';
+    public const BLOB_AUTH_MODE_MEMORY = 'memory';
+
+    public const BLOB_SCAN_MODE_AUTO_CLEAN = 'auto-clean';
+    public const BLOB_SCAN_MODE_PENDING = 'pending-scan';
+    public const BLOB_SCAN_MODE_DEFENDER = 'defender';
+
     /**
      * @param list<string> $corsAllowedOrigins
      */
@@ -65,6 +73,16 @@ final readonly class Settings
         public string $guestJwtSecret,
         public int $guestJwtTtlSeconds,
         public int $guestJwtClockSkewSeconds,
+        public string $blobAuthMode,
+        public string $blobConnectionString,
+        public string $blobAccountName,
+        public string $blobAccountKey,
+        public string $blobEndpoint,
+        public string $blobContainerProducts,
+        public string $blobCdnBaseUrl,
+        public string $blobScanMode,
+        public int $blobUploadSasTtlSeconds,
+        public int $blobDownloadSasTtlSeconds,
     ) {
     }
 
@@ -123,6 +141,23 @@ final readonly class Settings
         return $this->guestJwtIssuer !== ''
             && $this->guestJwtAudience !== ''
             && strlen($this->guestJwtSecret) >= self::MIN_GUEST_JWT_SECRET_BYTES;
+    }
+
+    public function isProductBlobEnabled(): bool
+    {
+        return $this->blobAuthMode === self::BLOB_AUTH_MODE_CONNECTION_STRING
+            || $this->blobAuthMode === self::BLOB_AUTH_MODE_MEMORY;
+    }
+
+    public function usesMemoryProductBlobStore(): bool
+    {
+        return $this->blobAuthMode === self::BLOB_AUTH_MODE_MEMORY
+            || ($this->blobAuthMode === self::BLOB_AUTH_MODE_DISABLED && !$this->isProduction());
+    }
+
+    public function productFileScanAutoCleans(): bool
+    {
+        return $this->blobScanMode === self::BLOB_SCAN_MODE_AUTO_CLEAN;
     }
 
     /**
@@ -239,6 +274,65 @@ final readonly class Settings
             );
         }
 
+        $blobAuthMode = strtolower(self::string($env, 'BLOB_AUTH_MODE', self::BLOB_AUTH_MODE_DISABLED));
+        if (
+            $blobAuthMode !== self::BLOB_AUTH_MODE_DISABLED
+            && $blobAuthMode !== self::BLOB_AUTH_MODE_CONNECTION_STRING
+            && $blobAuthMode !== self::BLOB_AUTH_MODE_MEMORY
+        ) {
+            throw new InvalidArgumentException(
+                'Unsupported BLOB_AUTH_MODE. Supported values: disabled, connection-string, memory.',
+            );
+        }
+
+        if ($appEnv === 'production' && $blobAuthMode === self::BLOB_AUTH_MODE_MEMORY) {
+            throw new InvalidArgumentException(
+                'BLOB_AUTH_MODE=memory is not allowed when APP_ENV=production.',
+            );
+        }
+
+        $blobConnectionString = self::string($env, 'BLOB_CONNECTION_STRING', '');
+        $blobAccountName = self::string($env, 'BLOB_ACCOUNT_NAME', '');
+        $blobAccountKey = self::string($env, 'BLOB_ACCOUNT_KEY', '');
+        $blobEndpoint = self::string($env, 'BLOB_ENDPOINT', '');
+
+        if ($blobConnectionString !== '') {
+            $parsed = self::parseBlobConnectionString($blobConnectionString);
+            $blobAccountName = $blobAccountName !== '' ? $blobAccountName : $parsed['accountName'];
+            $blobAccountKey = $blobAccountKey !== '' ? $blobAccountKey : $parsed['accountKey'];
+            $blobEndpoint = $blobEndpoint !== '' ? $blobEndpoint : $parsed['blobEndpoint'];
+        }
+
+        if ($blobAuthMode === self::BLOB_AUTH_MODE_CONNECTION_STRING) {
+            if ($blobAccountName === '' || $blobAccountKey === '' || $blobEndpoint === '') {
+                throw new InvalidArgumentException(
+                    'BLOB_CONNECTION_STRING or BLOB_ACCOUNT_NAME/BLOB_ACCOUNT_KEY/BLOB_ENDPOINT are required when BLOB_AUTH_MODE=connection-string.',
+                );
+            }
+        }
+
+        $blobScanMode = strtolower(self::string(
+            $env,
+            'BLOB_SCAN_MODE',
+            $appEnv === 'production' ? self::BLOB_SCAN_MODE_DEFENDER : self::BLOB_SCAN_MODE_AUTO_CLEAN,
+        ));
+        if (
+            $blobScanMode !== self::BLOB_SCAN_MODE_AUTO_CLEAN
+            && $blobScanMode !== self::BLOB_SCAN_MODE_PENDING
+            && $blobScanMode !== self::BLOB_SCAN_MODE_DEFENDER
+        ) {
+            $blobScanMode = self::BLOB_SCAN_MODE_AUTO_CLEAN;
+        }
+
+        $blobUploadSasTtlSeconds = self::int($env, 'BLOB_UPLOAD_SAS_TTL_SECONDS', 900);
+        if ($blobUploadSasTtlSeconds < 60 || $blobUploadSasTtlSeconds > 3600) {
+            throw new InvalidArgumentException('BLOB_UPLOAD_SAS_TTL_SECONDS must be between 60 and 3600.');
+        }
+        $blobDownloadSasTtlSeconds = self::int($env, 'BLOB_DOWNLOAD_SAS_TTL_SECONDS', 300);
+        if ($blobDownloadSasTtlSeconds < 60 || $blobDownloadSasTtlSeconds > 3600) {
+            throw new InvalidArgumentException('BLOB_DOWNLOAD_SAS_TTL_SECONDS must be between 60 and 3600.');
+        }
+
         return new self(
             appEnv: $appEnv,
             appName: self::string($env, 'APP_NAME', 'tricab-api'),
@@ -279,7 +373,46 @@ final readonly class Settings
             guestJwtSecret: $guestJwtSecret,
             guestJwtTtlSeconds: $guestJwtTtlSeconds,
             guestJwtClockSkewSeconds: $guestJwtClockSkewSeconds,
+            blobAuthMode: $blobAuthMode,
+            blobConnectionString: $blobConnectionString,
+            blobAccountName: $blobAccountName,
+            blobAccountKey: $blobAccountKey,
+            blobEndpoint: $blobEndpoint,
+            blobContainerProducts: self::string($env, 'BLOB_CONTAINER_PRODUCTS', 'products'),
+            blobCdnBaseUrl: rtrim(self::string($env, 'BLOB_CDN_BASE_URL', ''), '/'),
+            blobScanMode: $blobScanMode,
+            blobUploadSasTtlSeconds: $blobUploadSasTtlSeconds,
+            blobDownloadSasTtlSeconds: $blobDownloadSasTtlSeconds,
         );
+    }
+
+    /**
+     * @return array{accountName: string, accountKey: string, blobEndpoint: string}
+     */
+    private static function parseBlobConnectionString(string $connectionString): array
+    {
+        $parts = [];
+        foreach (explode(';', $connectionString) as $segment) {
+            if ($segment === '' || !str_contains($segment, '=')) {
+                continue;
+            }
+            [$key, $value] = explode('=', $segment, 2);
+            $parts[strtolower(trim($key))] = trim($value);
+        }
+
+        $accountName = $parts['accountname'] ?? '';
+        $accountKey = $parts['accountkey'] ?? '';
+        $blobEndpoint = $parts['blobendpoint'] ?? '';
+        if ($blobEndpoint === '' && $accountName !== '') {
+            $protocol = $parts['defaultendpointsprotocol'] ?? 'https';
+            $blobEndpoint = $protocol . '://' . $accountName . '.blob.core.windows.net';
+        }
+
+        return [
+            'accountName' => $accountName,
+            'accountKey' => $accountKey,
+            'blobEndpoint' => rtrim($blobEndpoint, '/'),
+        ];
     }
 
     /**

@@ -9,6 +9,11 @@ use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlBinary;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
+use TriCab\Core\Product\Application\DTO\SpecificationDefinitionRecord;
+use TriCab\Core\Product\Application\DTO\SpecificationGroupRecord;
+use TriCab\Core\Product\Application\DTO\SpecificationOptionRecord;
+use TriCab\Core\Product\Application\DTO\SpecificationUnitRecord;
+use TriCab\Core\Product\Application\DTO\SpecificationUsage;
 use TriCab\Core\Product\Contract\ProductSpecificationRepository;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Product\Domain\ValueObject\ProductVariantPublicId;
@@ -26,9 +31,12 @@ final class AzureSqlProductSpecificationRepository implements ProductSpecificati
 {
     use AzureSqlTransaction;
 
+    private readonly AzureSqlSpecificationDefinitionAdmin $admin;
+
     public function __construct(
         private readonly SqlConnection $connection,
     ) {
+        $this->admin = new AzureSqlSpecificationDefinitionAdmin($connection);
     }
 
     public function listDefinitions(bool $activeOnly = true): array
@@ -758,4 +766,52 @@ SQL,
 
         return AzureSqlValueMapper::intValue($rows[0]['SpecificationOptionId'] ?? 0);
     }
+
+    public function listGroupsAdmin(array $filters = []): array { return $this->admin->listGroups($filters); }
+    public function findGroupByPublicId(string $publicId, bool $includeDeleted = false): ?SpecificationGroupRecord { return $this->admin->findGroup($publicId, $includeDeleted); }
+    public function findGroupByCode(string $code): ?SpecificationGroupRecord { return $this->admin->findGroupByCode($code); }
+    public function createGroup(array $data, UserId $actorUserId): SpecificationGroupRecord { return $this->admin->createGroup($data, $actorUserId); }
+    public function updateGroup(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): SpecificationGroupRecord { return $this->admin->updateGroup($publicId, $data, $expectedRowVersion, $actorUserId); }
+    public function setGroupActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): SpecificationGroupRecord { return $this->admin->setGroupActive($publicId, $isActive, $expectedRowVersion, $actorUserId); }
+    public function softDeleteGroup(string $publicId, string $expectedRowVersion, UserId $actorUserId): SpecificationGroupRecord { return $this->admin->softDeleteGroup($publicId, $expectedRowVersion, $actorUserId); }
+    public function restoreGroup(string $publicId, string $expectedRowVersion, UserId $actorUserId): SpecificationGroupRecord { return $this->admin->restoreGroup($publicId, $expectedRowVersion, $actorUserId); }
+    public function reorderGroups(array $orderedPublicIds, UserId $actorUserId): void { $this->admin->reorderGroups($orderedPublicIds, $actorUserId); }
+    public function getGroupUsage(string $publicId): SpecificationUsage { return $this->admin->groupUsage($publicId); }
+    public function groupCodeExists(string $code, ?string $excludePublicId = null): bool { return $this->admin->groupCodeExists($code, $excludePublicId); }
+
+    public function listUnitsAdmin(array $filters = []): array { return $this->admin->listUnits($filters); }
+    public function findUnitByPublicId(string $publicId, bool $includeDeleted = false): ?SpecificationUnitRecord { return $this->admin->findUnit($publicId, $includeDeleted); }
+    public function createUnit(array $data, UserId $actorUserId): SpecificationUnitRecord { return $this->admin->createUnit($data, $actorUserId); }
+    public function updateUnit(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): SpecificationUnitRecord { return $this->admin->updateUnit($publicId, $data, $expectedRowVersion, $actorUserId); }
+    public function setUnitActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): SpecificationUnitRecord { return $this->admin->setUnitActive($publicId, $isActive, $expectedRowVersion, $actorUserId); }
+    public function softDeleteUnit(string $publicId, string $expectedRowVersion, UserId $actorUserId): SpecificationUnitRecord { return $this->admin->softDeleteUnit($publicId, $expectedRowVersion, $actorUserId); }
+    public function restoreUnit(string $publicId, string $expectedRowVersion, UserId $actorUserId): SpecificationUnitRecord { return $this->admin->restoreUnit($publicId, $expectedRowVersion, $actorUserId); }
+    public function reorderUnits(array $orderedPublicIds, UserId $actorUserId): void { $this->admin->reorderUnits($orderedPublicIds, $actorUserId); }
+    public function getUnitUsage(string $publicId): SpecificationUsage { return $this->admin->unitUsage($publicId); }
+    public function unitCodeExists(string $code, ?string $excludePublicId = null): bool { return $this->admin->unitCodeExists($code, $excludePublicId); }
+
+    public function listDefinitionsAdmin(array $filters = []): array { return $this->admin->listDefinitions($filters); }
+    public function findDefinitionByPublicId(string $publicId, bool $includeDeleted = false): ?SpecificationDefinitionRecord { return $this->admin->findDefinition($publicId, $includeDeleted); }
+    public function findDefinitionByCode(string $code): ?SpecificationDefinitionRecord { return $this->admin->findDefinitionByCode($code); }
+    public function createDefinition(array $data, UserId $actorUserId): SpecificationDefinitionRecord { return $this->admin->createDefinition($data, $actorUserId); }
+    public function updateDefinition(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): SpecificationDefinitionRecord { return $this->admin->updateDefinition($publicId, $data, $expectedRowVersion, $actorUserId); }
+    public function setDefinitionActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): SpecificationDefinitionRecord { return $this->admin->setDefinitionActive($publicId, $isActive, $expectedRowVersion, $actorUserId); }
+    public function softDeleteDefinition(string $publicId, string $expectedRowVersion, UserId $actorUserId): SpecificationDefinitionRecord { return $this->admin->softDeleteDefinition($publicId, $expectedRowVersion, $actorUserId); }
+    public function restoreDefinition(string $publicId, string $expectedRowVersion, UserId $actorUserId): SpecificationDefinitionRecord { return $this->admin->restoreDefinition($publicId, $expectedRowVersion, $actorUserId); }
+    public function reorderDefinitions(?string $groupPublicId, array $orderedPublicIds, UserId $actorUserId): void { $this->admin->reorderDefinitions($groupPublicId, $orderedPublicIds, $actorUserId); }
+    public function getDefinitionUsage(string $publicId): SpecificationUsage { return $this->admin->definitionUsage($publicId); }
+    public function definitionCodeExists(string $code, ?string $excludePublicId = null): bool { return $this->admin->definitionCodeExists($code, $excludePublicId); }
+
+    public function listOptionsAdmin(array $filters = []): array { return $this->admin->listOptions($filters); }
+    public function findOptionByPublicId(string $publicId, bool $includeDeleted = false): ?SpecificationOptionRecord { return $this->admin->findOption($publicId, $includeDeleted); }
+    public function findOptionByDefinitionAndCode(string $definitionPublicId, string $code): ?SpecificationOptionRecord { return $this->admin->findOptionByDefinitionAndCode($definitionPublicId, $code); }
+    public function createOption(array $data, UserId $actorUserId): SpecificationOptionRecord { return $this->admin->createOption($data, $actorUserId); }
+    public function updateOption(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): SpecificationOptionRecord { return $this->admin->updateOption($publicId, $data, $expectedRowVersion, $actorUserId); }
+    public function setOptionActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): SpecificationOptionRecord { return $this->admin->setOptionActive($publicId, $isActive, $expectedRowVersion, $actorUserId); }
+    public function softDeleteOption(string $publicId, string $expectedRowVersion, UserId $actorUserId): SpecificationOptionRecord { return $this->admin->softDeleteOption($publicId, $expectedRowVersion, $actorUserId); }
+    public function restoreOption(string $publicId, string $expectedRowVersion, UserId $actorUserId): SpecificationOptionRecord { return $this->admin->restoreOption($publicId, $expectedRowVersion, $actorUserId); }
+    public function reorderOptions(string $definitionPublicId, array $orderedPublicIds, UserId $actorUserId): void { $this->admin->reorderOptions($definitionPublicId, $orderedPublicIds, $actorUserId); }
+    public function getOptionUsage(string $publicId): SpecificationUsage { return $this->admin->optionUsage($publicId); }
+    public function optionCodeExists(string $definitionPublicId, string $code, ?string $excludePublicId = null): bool { return $this->admin->optionCodeExists($definitionPublicId, $code, $excludePublicId); }
+
 }

@@ -21,7 +21,19 @@ use TriCab\Core\Product\Application\Exception\InvalidProductRelationshipAssignme
 use TriCab\Core\Product\Application\Exception\InvalidSpecificationSet;
 use TriCab\Core\Product\Application\Exception\ProductArchived;
 use TriCab\Core\Product\Application\Exception\ProductConcurrencyConflict;
+use TriCab\Core\Product\Application\Exception\ProductDocumentNotFound;
+use TriCab\Core\Product\Application\Exception\ProductFileUploadException;
+use TriCab\Core\Product\Application\Exception\ProductMediaNotFound;
 use TriCab\Core\Product\Application\Exception\ProductNotFound;
+use TriCab\Core\Product\Application\Exception\DuplicateProductClassificationCode;
+use TriCab\Core\Product\Application\Exception\ProductClassificationConcurrencyConflict;
+use TriCab\Core\Product\Application\Exception\ProductClassificationInUse;
+use TriCab\Core\Product\Application\Exception\ProductClassificationNotFound;
+use TriCab\Core\Product\Application\Exception\DuplicateSpecificationCode;
+use TriCab\Core\Product\Application\Exception\SpecificationMasterConcurrencyConflict;
+use TriCab\Core\Product\Application\Exception\SpecificationMasterInUse;
+use TriCab\Core\Product\Application\Exception\SpecificationMasterNotFound;
+use TriCab\Core\Product\Domain\Exception\InvalidProductFileException;
 use TriCab\Core\Product\Application\Exception\ProductNotReadyForPublication;
 use TriCab\Core\Product\Application\Exception\ProductSoftDeleted;
 use TriCab\Core\Product\Application\Exception\ProductVariantNotFound;
@@ -58,8 +70,58 @@ final class ProductManagementErrorMapper
             return $this->responder->error('PRODUCT_NOT_FOUND', $exception->getMessage(), 404);
         }
 
+        if ($exception instanceof ProductClassificationNotFound) {
+            return $this->responder->error('PRODUCT_CLASSIFICATION_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof ProductClassificationConcurrencyConflict) {
+            return $this->responder->error('PRODUCT_CLASSIFICATION_CONCURRENCY_CONFLICT', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof DuplicateProductClassificationCode) {
+            return $this->responder->error('DUPLICATE_PRODUCT_CLASSIFICATION_CODE', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof ProductClassificationInUse) {
+            return $this->responder->error('PRODUCT_CLASSIFICATION_IN_USE', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof SpecificationMasterNotFound) {
+            return $this->responder->error('PRODUCT_SPECIFICATION_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof SpecificationMasterConcurrencyConflict) {
+            return $this->responder->error('PRODUCT_SPECIFICATION_CONCURRENCY_CONFLICT', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof DuplicateSpecificationCode) {
+            return $this->responder->error('DUPLICATE_SPECIFICATION_CODE', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof SpecificationMasterInUse) {
+            return $this->responder->error('PRODUCT_SPECIFICATION_IN_USE', $exception->getMessage(), 422);
+        }
+
+
+
+        if ($exception instanceof ProductMediaNotFound) {
+            return $this->responder->error('PRODUCT_MEDIA_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof ProductDocumentNotFound) {
+            return $this->responder->error('PRODUCT_DOCUMENT_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
         if ($exception instanceof ProductVariantNotFound) {
             return $this->responder->error('PRODUCT_VARIANT_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof ProductFileUploadException) {
+            return $this->responder->error('PRODUCT_FILE_UPLOAD_FAILED', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof InvalidProductFileException) {
+            return $this->responder->error('INVALID_PRODUCT_FILE', $exception->getMessage(), 422);
         }
 
         if ($exception instanceof ProductConcurrencyConflict) {

@@ -11,6 +11,28 @@ use Slim\Factory\AppFactory;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Action\Admin\AddProductDocumentAction;
 use TriCab\Api\Http\Action\Admin\AddProductMediaAction;
+use TriCab\Api\Http\Action\Admin\ProductSeriesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductCategoriesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductFamiliesAdminAction;
+use TriCab\Api\Http\Action\Admin\SpecificationDefinitionsAdminAction;
+use TriCab\Api\Http\Action\Admin\SpecificationGroupsAdminAction;
+use TriCab\Api\Http\Action\Admin\SpecificationOptionsAdminAction;
+use TriCab\Api\Http\Action\Admin\SpecificationUnitsAdminAction;
+use TriCab\Api\Http\Action\Admin\Migration\ProductMigrationAdminAction;
+use TriCab\Api\Http\Action\Admin\DeleteProductDocumentFileAction;
+use TriCab\Api\Http\Action\Admin\ReplaceProductDocumentUploadAction;
+use TriCab\Api\Http\Action\Admin\CompleteProductDocumentUploadAction;
+use TriCab\Api\Http\Action\Admin\InitiateProductDocumentUploadAction;
+use TriCab\Api\Http\Action\Admin\DeleteProductMediaFileAction;
+use TriCab\Api\Http\Action\Admin\ReplaceProductMediaUploadAction;
+use TriCab\Api\Http\Action\Admin\CompleteProductMediaUploadAction;
+use TriCab\Api\Http\Action\Admin\InitiateProductMediaUploadAction;
+use TriCab\Api\Http\Action\Admin\CompleteArModelUploadAction;
+use TriCab\Api\Http\Action\Admin\InitiateArModelUploadAction;
+use TriCab\Api\Http\Action\Admin\ActivateProduct360SetAction;
+use TriCab\Api\Http\Action\Admin\Complete360FrameUploadAction;
+use TriCab\Api\Http\Action\Admin\Initiate360FrameUploadAction;
+use TriCab\Api\Http\Action\Admin\CreateProduct360SetAction;
 use TriCab\Api\Http\Action\Admin\ArchiveProductAction;
 use TriCab\Api\Http\Action\Admin\ArchiveProductVariantAction;
 use TriCab\Api\Http\Action\Admin\AssignProductApplicationsAction;
@@ -82,6 +104,7 @@ use TriCab\Api\Http\Action\Admin\UpdateProductSeoAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
 use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
 use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
+use TriCab\Api\Http\Action\PublicProduct\DownloadProductDocumentAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductBySlugAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductDocumentsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductMediaAction;
@@ -211,6 +234,7 @@ final class AppBuilder
         $app->get('/api/v1/products/{slug}/variants', GetPublicProductVariantsAction::class);
         $app->get('/api/v1/products/{slug}/media', GetPublicProductMediaAction::class);
         $app->get('/api/v1/products/{slug}/documents', GetPublicProductDocumentsAction::class);
+        $app->get('/api/v1/products/{slug}/documents/{documentPublicId}/download', DownloadProductDocumentAction::class);
         $app->get('/api/v1/products/{slug}/relationships', GetPublicProductRelationshipsAction::class);
         $app->get('/api/v1/products/{slug}/specifications', GetPublicProductSpecificationsAction::class);
         $app->get('/api/v1/product-search', SearchPublicProductsAction::class);
@@ -254,12 +278,16 @@ final class AppBuilder
             ->add(($require)('PRODUCT.READ'));
         $app->post('/api/v1/admin/products/{productPublicId}/media', AddProductMediaAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/media/upload-session', InitiateProductMediaUploadAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
         $app->post('/api/v1/admin/products/{productPublicId}/media/reorder', ReorderProductMediaAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
 
         $app->get('/api/v1/admin/products/{productPublicId}/documents', ListProductDocumentsAction::class)
             ->add(($require)('PRODUCT.READ'));
         $app->post('/api/v1/admin/products/{productPublicId}/documents', AddProductDocumentAction::class)
+            ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/documents/upload-session', InitiateProductDocumentUploadAction::class)
             ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
 
         $app->put('/api/v1/admin/products/{productPublicId}/markets', AssignProductMarketsAction::class)
@@ -283,6 +311,208 @@ final class AppBuilder
         $app->get('/api/v1/admin/products/{productPublicId}/pricing', GetProductPricingAction::class)
             ->add(($require)('PRODUCT.PRICING.VIEW'));
 
+
+        $app->get('/api/v1/admin/product-families', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/product-families', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-families/reorder', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/product-families/{familyPublicId}', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/product-families/{familyPublicId}', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-families/{familyPublicId}/activate', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-families/{familyPublicId}/deactivate', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-families/{familyPublicId}/archive', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-families/{familyPublicId}/restore', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/product-families/{familyPublicId}/usage', ProductFamiliesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+
+        $app->get('/api/v1/admin/product-categories', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/product-categories', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-categories/reorder', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/product-categories/{categoryPublicId}', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/product-categories/{categoryPublicId}', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-categories/{categoryPublicId}/activate', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-categories/{categoryPublicId}/deactivate', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-categories/{categoryPublicId}/archive', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-categories/{categoryPublicId}/restore', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/product-categories/{categoryPublicId}/usage', ProductCategoriesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+
+        $app->get('/api/v1/admin/product-series', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/product-series', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-series/reorder', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/product-series/{seriesPublicId}', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/product-series/{seriesPublicId}', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-series/{seriesPublicId}/activate', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-series/{seriesPublicId}/deactivate', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-series/{seriesPublicId}/archive', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/product-series/{seriesPublicId}/restore', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/product-series/{seriesPublicId}/usage', ProductSeriesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+
+        $app->get('/api/v1/admin/specification-groups', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/specification-groups', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-groups/reorder', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->get('/api/v1/admin/specification-groups/{groupPublicId}', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/specification-groups/{groupPublicId}', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-groups/{groupPublicId}/activate', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-groups/{groupPublicId}/deactivate', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-groups/{groupPublicId}/archive', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-groups/{groupPublicId}/restore', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->get('/api/v1/admin/specification-groups/{groupPublicId}/usage', SpecificationGroupsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+
+        $app->get('/api/v1/admin/specification-units', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/specification-units', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-units/reorder', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->get('/api/v1/admin/specification-units/{unitPublicId}', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/specification-units/{unitPublicId}', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-units/{unitPublicId}/activate', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-units/{unitPublicId}/deactivate', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-units/{unitPublicId}/archive', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-units/{unitPublicId}/restore', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->get('/api/v1/admin/specification-units/{unitPublicId}/usage', SpecificationUnitsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+
+        $app->get('/api/v1/admin/specification-definitions', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->get('/api/v1/admin/specification-definitions/export', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/specification-definitions/import', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-definitions', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-definitions/reorder', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->get('/api/v1/admin/specification-definitions/{definitionPublicId}', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/specification-definitions/{definitionPublicId}', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-definitions/{definitionPublicId}/activate', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-definitions/{definitionPublicId}/deactivate', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-definitions/{definitionPublicId}/archive', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-definitions/{definitionPublicId}/restore', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->get('/api/v1/admin/specification-definitions/{definitionPublicId}/usage', SpecificationDefinitionsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+
+        $app->get('/api/v1/admin/specification-options', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/specification-options', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-options/reorder', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->get('/api/v1/admin/specification-options/{optionPublicId}', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/specification-options/{optionPublicId}', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-options/{optionPublicId}/activate', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-options/{optionPublicId}/deactivate', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-options/{optionPublicId}/archive', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->post('/api/v1/admin/specification-options/{optionPublicId}/restore', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->get('/api/v1/admin/specification-options/{optionPublicId}/usage', SpecificationOptionsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+
+
+
+
+        $app->get('/api/v1/admin/product-migration/readiness', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/inspect', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/batches', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batches', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/batches/{batchPublicId}', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batches/{batchPublicId}/extract', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batches/{batchPublicId}/normalize', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batches/{batchPublicId}/validate', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batches/{batchPublicId}/dry-run', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batches/{batchPublicId}/execute', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batches/{batchPublicId}/cancel', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batches/{batchPublicId}/retry', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batches/{batchPublicId}/rollback', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/batches/{batchPublicId}/issues', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/batches/{batchPublicId}/reconciliation', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/review', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/review/{issuePublicId}/resolve', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/mappings/classifications', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->put('/api/v1/admin/product-migration/mappings/classifications/{mappingPublicId}', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/mappings/specifications', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->put('/api/v1/admin/product-migration/mappings/specifications/{mappingPublicId}', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/mappings/options', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->put('/api/v1/admin/product-migration/mappings/options/{mappingPublicId}', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+
         $app->get('/api/v1/admin/product-lookups', GetProductLookupsAction::class)->add(($require)('PRODUCT.READ'));
 
         $app->patch('/api/v1/admin/product-variants/{variantPublicId}', UpdateProductVariantAction::class)
@@ -298,10 +528,35 @@ final class AppBuilder
 
         $app->post('/api/v1/admin/product-media/{mediaPublicId}/set-primary', SetPrimaryProductImageAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+
+        $app->post('/api/v1/admin/products/{productPublicId}/360-sets', CreateProduct360SetAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/ar-models/upload-session', InitiateArModelUploadAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/product-360-sets/{setPublicId}/frames/upload-session', Initiate360FrameUploadAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/product-360-sets/{setPublicId}/activate', ActivateProduct360SetAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/product-360-frames/{framePublicId}/complete-upload', Complete360FrameUploadAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/product-ar-models/{arPublicId}/complete-upload', CompleteArModelUploadAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/product-media/{mediaPublicId}/complete-upload', CompleteProductMediaUploadAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/product-media/{mediaPublicId}/replace-upload', ReplaceProductMediaUploadAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->delete('/api/v1/admin/product-media/{mediaPublicId}/file', DeleteProductMediaFileAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
         $app->post('/api/v1/admin/product-media/{mediaPublicId}/soft-delete', SoftDeleteProductMediaAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
 
         $app->post('/api/v1/admin/product-documents/{documentPublicId}/withdraw', WithdrawProductDocumentAction::class)
+            ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
+        $app->post('/api/v1/admin/product-documents/{documentPublicId}/complete-upload', CompleteProductDocumentUploadAction::class)
+            ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
+        $app->post('/api/v1/admin/product-documents/{documentPublicId}/replace-upload', ReplaceProductDocumentUploadAction::class)
+            ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
+        $app->delete('/api/v1/admin/product-documents/{documentPublicId}/file', DeleteProductDocumentFileAction::class)
             ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
         $app->post('/api/v1/admin/product-documents/{documentPublicId}/soft-delete', SoftDeleteProductDocumentAction::class)
             ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));

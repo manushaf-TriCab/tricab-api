@@ -8,6 +8,10 @@ use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\ProductLookupItem;
+use TriCab\Core\Product\Application\Exception\ProductClassificationNotFound;
+use TriCab\Core\Product\Application\Exception\ProductClassificationConcurrencyConflict;
+use TriCab\Core\Product\Application\DTO\ProductClassificationUsage;
+use TriCab\Core\Product\Application\DTO\ProductClassificationRecord;
 use TriCab\Core\Product\Application\Exception\InvalidProductClassification;
 use TriCab\Core\Product\Contract\ProductClassificationRepository;
 use TriCab\Core\Product\Domain\ValueObject\ProductCategoryId;
@@ -20,9 +24,12 @@ use TriCab\Core\Product\Domain\ValueObject\ProductSeriesId;
  */
 final class AzureSqlProductClassificationRepository implements ProductClassificationRepository
 {
+    private readonly AzureSqlProductClassificationAdmin $admin;
+
     public function __construct(
         private readonly SqlConnection $connection,
     ) {
+        $this->admin = new AzureSqlProductClassificationAdmin($connection);
     }
 
     public function listFamilies(bool $activeOnly = true): array
@@ -397,4 +404,140 @@ SQL,
             isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
         );
     }
+
+    public function findFamilyByPublicId(string $publicId, bool $includeDeleted = false): ?ProductClassificationRecord
+    {
+        return $this->admin->find('family', $publicId, $includeDeleted);
+    }
+
+    public function findCategoryByPublicId(string $publicId, bool $includeDeleted = false): ?ProductClassificationRecord
+    {
+        return $this->admin->find('category', $publicId, $includeDeleted);
+    }
+
+    public function findSeriesByPublicId(string $publicId, bool $includeDeleted = false): ?ProductClassificationRecord
+    {
+        return $this->admin->find('series', $publicId, $includeDeleted);
+    }
+
+    public function listFamiliesAdmin(array $filters = []): array
+    {
+        return $this->admin->list('family', $filters);
+    }
+
+    public function listCategoriesAdmin(array $filters = []): array
+    {
+        return $this->admin->list('category', $filters);
+    }
+
+    public function listSeriesAdmin(array $filters = []): array
+    {
+        return $this->admin->list('series', $filters);
+    }
+
+    public function updateFamily(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->update('family', $publicId, $data, $expectedRowVersion, $actorUserId);
+    }
+
+    public function updateCategory(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->update('category', $publicId, $data, $expectedRowVersion, $actorUserId);
+    }
+
+    public function updateSeries(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->update('series', $publicId, $data, $expectedRowVersion, $actorUserId);
+    }
+
+    public function setFamilyActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->update('family', $publicId, ['isActive' => $isActive], $expectedRowVersion, $actorUserId);
+    }
+
+    public function setCategoryActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->update('category', $publicId, ['isActive' => $isActive], $expectedRowVersion, $actorUserId);
+    }
+
+    public function setSeriesActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->update('series', $publicId, ['isActive' => $isActive], $expectedRowVersion, $actorUserId);
+    }
+
+    public function softDeleteFamily(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->softDeleteFixed('family', $publicId, $expectedRowVersion, $actorUserId);
+    }
+
+    public function softDeleteCategory(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->softDeleteFixed('category', $publicId, $expectedRowVersion, $actorUserId);
+    }
+
+    public function softDeleteSeries(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->softDeleteFixed('series', $publicId, $expectedRowVersion, $actorUserId);
+    }
+
+    public function restoreFamily(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->restore('family', $publicId, $expectedRowVersion, $actorUserId);
+    }
+
+    public function restoreCategory(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->restore('category', $publicId, $expectedRowVersion, $actorUserId);
+    }
+
+    public function restoreSeries(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->admin->restore('series', $publicId, $expectedRowVersion, $actorUserId);
+    }
+
+    public function reorderFamilies(array $orderedPublicIds, UserId $actorUserId): void
+    {
+        $this->admin->reorder('family', null, $orderedPublicIds, $actorUserId);
+    }
+
+    public function reorderCategories(string $familyPublicId, array $orderedPublicIds, UserId $actorUserId): void
+    {
+        $this->admin->reorder('category', $familyPublicId, $orderedPublicIds, $actorUserId);
+    }
+
+    public function reorderSeries(string $categoryPublicId, array $orderedPublicIds, UserId $actorUserId): void
+    {
+        $this->admin->reorder('series', $categoryPublicId, $orderedPublicIds, $actorUserId);
+    }
+
+    public function getFamilyUsage(string $publicId): ProductClassificationUsage
+    {
+        return $this->admin->usage('family', $publicId);
+    }
+
+    public function getCategoryUsage(string $publicId): ProductClassificationUsage
+    {
+        return $this->admin->usage('category', $publicId);
+    }
+
+    public function getSeriesUsage(string $publicId): ProductClassificationUsage
+    {
+        return $this->admin->usage('series', $publicId);
+    }
+
+    public function familyCodeExists(string $code, ?string $excludePublicId = null): bool
+    {
+        return $this->admin->codeExists('family', $code, $excludePublicId);
+    }
+
+    public function categoryCodeExists(string $code, ?string $excludePublicId = null): bool
+    {
+        return $this->admin->codeExists('category', $code, $excludePublicId);
+    }
+
+    public function seriesCodeExists(string $code, ?string $excludePublicId = null): bool
+    {
+        return $this->admin->codeExists('series', $code, $excludePublicId);
+    }
+
 }

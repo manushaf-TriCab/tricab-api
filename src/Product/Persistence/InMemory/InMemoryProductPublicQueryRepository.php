@@ -335,6 +335,29 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
     /**
      * @return list<ProductMediaSummary>
      */
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function isPubliclyVisibleFile(array $row): bool
+    {
+        if (($row['isActive'] ?? true) === false) {
+            return false;
+        }
+
+        $upload = strtolower((string) ($row['uploadStatusCode'] ?? 'active'));
+        if ($upload !== '' && $upload !== 'active') {
+            return false;
+        }
+
+        $scan = strtolower((string) ($row['scanStatusCode'] ?? 'not_required'));
+        if ($scan !== '' && !in_array($scan, ['clean', 'not_required', 'skipped'], true)) {
+            return false;
+        }
+
+        return true;
+    }
+
     private function listPublicMedia(string $productPublicId): array
     {
         $items = [];
@@ -343,6 +366,9 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
                 continue;
             }
             if (($row['isActive'] ?? true) === false) {
+                continue;
+            }
+            if (!$this->isPubliclyVisibleFile($row)) {
                 continue;
             }
             $items[] = new ProductMediaSummary(
@@ -379,6 +405,9 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
                 continue;
             }
             if (($row['isActive'] ?? true) === false) {
+                continue;
+            }
+            if (!$this->isPubliclyVisibleFile($row)) {
                 continue;
             }
             if (($row['accessCode'] ?? '') !== 'public') {

@@ -46,4 +46,21 @@ final class JsonRequestBody
         /** @var array<string, mixed> $decoded */
         return $decoded;
     }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public static function optionalObject(ServerRequestInterface $request): ?array
+    {
+        $body = $request->getBody();
+        if ($body->isSeekable()) {
+            $body->rewind();
+        }
+        $raw = trim((string) $body);
+        if ($raw === '') {
+            return null;
+        }
+
+        return self::requireObject($request);
+    }
 }

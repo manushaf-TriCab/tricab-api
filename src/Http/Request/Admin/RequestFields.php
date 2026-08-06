@@ -72,6 +72,27 @@ final class RequestFields
     /**
      * @param array<string, mixed> $body
      */
+    public static function requireInt(array $body, string $key): int
+    {
+        $value = self::intOrNull($body, $key);
+        if ($value === null) {
+            throw HttpRequestValidationFailed::unprocessable('VALIDATION_FAILED', sprintf('%s is required.', $key));
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     */
+    public static function intOrDefault(array $body, string $key, int $default): int
+    {
+        return self::intOrNull($body, $key) ?? $default;
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     */
     public static function requireBool(array $body, string $key): bool
     {
         $value = $body[$key] ?? null;

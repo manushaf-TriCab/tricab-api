@@ -50,6 +50,15 @@ final class InMemoryProductStore
     /** @var list<array<string, mixed>> */
     private array $documents = [];
 
+    /** @var array<string, array<string, mixed>> */
+    private array $sets360 = [];
+
+    /** @var array<string, array<string, mixed>> */
+    private array $frames360 = [];
+
+    /** @var array<string, array<string, mixed>> */
+    private array $arModels = [];
+
     /** @var list<array<string, mixed>> */
     private array $regions = [];
 
@@ -201,6 +210,44 @@ final class InMemoryProductStore
         $this->series[] = $this->ensureClassificationId($row);
     }
 
+
+    /** @param array<string, mixed> $row */
+    public function replaceFamily(string $publicId, array $row): void
+    {
+        foreach ($this->families as $index => $existing) {
+            if (($existing['publicId'] ?? null) === $publicId) {
+                $this->families[$index] = $this->ensureClassificationId($row);
+                return;
+            }
+        }
+        $this->families[] = $this->ensureClassificationId($row);
+    }
+
+    /** @param array<string, mixed> $row */
+    public function replaceCategory(string $publicId, array $row): void
+    {
+        foreach ($this->categories as $index => $existing) {
+            if (($existing['publicId'] ?? null) === $publicId) {
+                $this->categories[$index] = $this->ensureClassificationId($row);
+                return;
+            }
+        }
+        $this->categories[] = $this->ensureClassificationId($row);
+    }
+
+    /** @param array<string, mixed> $row */
+    public function replaceSeries(string $publicId, array $row): void
+    {
+        foreach ($this->series as $index => $existing) {
+            if (($existing['publicId'] ?? null) === $publicId) {
+                $this->series[$index] = $this->ensureClassificationId($row);
+                return;
+            }
+        }
+        $this->series[] = $this->ensureClassificationId($row);
+    }
+
+
     /** @return list<array<string, mixed>> */
     public function specDefinitions(): array
     {
@@ -258,6 +305,16 @@ final class InMemoryProductStore
     /** @param array<string, mixed> $row */
     public function addMedia(array $row): void
     {
+        $publicId = (string) ($row['publicId'] ?? '');
+        if ($publicId !== '') {
+            foreach ($this->media as $index => $existing) {
+                if (($existing['publicId'] ?? '') === $publicId) {
+                    $this->media[$index] = $row;
+
+                    return;
+                }
+            }
+        }
         $this->media[] = $row;
     }
 
@@ -273,6 +330,22 @@ final class InMemoryProductStore
         }
     }
 
+    /**
+     * @param callable(array<string, mixed>): array<string, mixed> $mutator
+     */
+    public function updateMediaByPublicId(string $mediaPublicId, callable $mutator): bool
+    {
+        foreach ($this->media as $index => $row) {
+            if (($row['publicId'] ?? '') === $mediaPublicId) {
+                $this->media[$index] = $mutator($row);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** @return list<array<string, mixed>> */
     public function documents(): array
     {
@@ -282,7 +355,69 @@ final class InMemoryProductStore
     /** @param array<string, mixed> $row */
     public function addDocument(array $row): void
     {
+        $publicId = (string) ($row['publicId'] ?? '');
+        if ($publicId !== '') {
+            foreach ($this->documents as $index => $existing) {
+                if (($existing['publicId'] ?? '') === $publicId) {
+                    $this->documents[$index] = $row;
+
+                    return;
+                }
+            }
+        }
         $this->documents[] = $row;
+    }
+
+    /**
+     * @param callable(array<string, mixed>): array<string, mixed> $mutator
+     */
+    public function updateDocumentByPublicId(string $documentPublicId, callable $mutator): bool
+    {
+        foreach ($this->documents as $index => $row) {
+            if (($row['publicId'] ?? '') === $documentPublicId) {
+                $this->documents[$index] = $mutator($row);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function sets360Map(): array
+    {
+        return $this->sets360;
+    }
+
+    /** @param array<string, array<string, mixed>> $map */
+    public function setSets360Map(array $map): void
+    {
+        $this->sets360 = $map;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function frames360Map(): array
+    {
+        return $this->frames360;
+    }
+
+    /** @param array<string, array<string, mixed>> $map */
+    public function setFrames360Map(array $map): void
+    {
+        $this->frames360 = $map;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function arModelsMap(): array
+    {
+        return $this->arModels;
+    }
+
+    /** @param array<string, array<string, mixed>> $map */
+    public function setArModelsMap(array $map): void
+    {
+        $this->arModels = $map;
     }
 
     /** @return list<array<string, mixed>> */

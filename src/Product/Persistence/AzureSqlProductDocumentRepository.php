@@ -8,9 +8,12 @@ use TriCab\Api\Identity\Persistence\AzureSqlTransaction;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
+use TriCab\Core\Product\Application\DTO\ProductDocumentFileRecord;
 use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Contract\ProductDocumentRepository;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
+use TriCab\Core\Product\Domain\ValueObject\ScanStatusCode;
+use TriCab\Core\Product\Domain\ValueObject\UploadStatusCode;
 
 /**
  * Azure SQL repository for product document metadata.
@@ -25,13 +28,23 @@ final class AzureSqlProductDocumentRepository implements ProductDocumentReposito
     private const LIST_SELECT_SQL = <<<'SQL'
 SELECT
     CONVERT(NVARCHAR(36), d.[PublicId]) AS [PublicId],
+    CONVERT(NVARCHAR(36), p.[PublicId]) AS [ProductPublicId],
     dt.[DocumentTypeCode],
     d.[Title],
     d.[VersionLabel],
     d.[LanguageCode],
     d.[PublicUrl],
     d.[AccessCode],
-    d.[DisplayOrder]
+    d.[DisplayOrder],
+    d.[UploadStatusCode],
+    d.[ScanStatusCode],
+    d.[ByteSize],
+    d.[ContentType],
+    d.[OriginalFileName],
+    d.[FileExtension],
+    d.[StoragePath],
+    d.[StorageContainer],
+    d.[ChecksumSha256]
 FROM [product].[ProductDocuments] d
 INNER JOIN [product].[DocumentTypes] dt ON dt.[DocumentTypeId] = d.[DocumentTypeId]
 INNER JOIN [product].[Products] p ON p.[ProductId] = d.[ProductId]
@@ -136,13 +149,238 @@ SQL,
                 }
 
                 $publicId = AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? '');
-                $loaded = $this->findByPublicId($publicId);
+                $loaded = $this->findSummaryByPublicId($publicId);
                 if ($loaded === null) {
                     throw ProductPersistenceException::insertFailed('ProductDocument');
                 }
 
                 return $loaded;
             },
+        );
+    }
+
+
+    public function findByPublicId(string $documentPublicId): ?ProductDocumentFileRecord
+    {
+        $rows = $this->connection->fetchAll(
+            self::LIST_SELECT_SQL . ' WHERE d.[PublicId] = :publicId AND d.[DeletedAtUtc] IS NULL',
+            [':publicId' => $documentPublicId],
+        );
+
+        return $rows === [] ? null : $this->hydrateRecord($rows[0]);
+    }
+
+    public function createUploadSession(
+        ProductPublicId $productPublicId,
+        array $data,
+        UserId $actorUserId,
+    ): ProductDocumentFileRecord {
+        return $this->runInTransaction(
+            $this->connection,
+            function () use ($productPublicId, $data, $actorUserId): ProductDocumentFileRecord {
+                $productId = $this->requireProductId($productPublicId);
+                $documentTypeId = $this->requireDocumentTypeId($data['documentTypeCode']);
+                $publicId = $data['publicId'] ?? null;
+
+                $rows = $this->connection->fetchAll(
+                    <<<'SQL'
+INSERT INTO [product].[ProductDocuments] (
+    [PublicId],
+    [ProductId],
+    [DocumentTypeId],
+    [Title],
+    [VersionLabel],
+    [LanguageCode],
+    [StorageContainer],
+    [StoragePath],
+    [AccessCode],
+    [ContentType],
+    [FileExtension],
+    [ByteSize],
+    [OriginalFileName],
+    [DisplayOrder],
+    [UploadStatusCode],
+    [ScanStatusCode],
+    [CreatedByUserId],
+    [UpdatedByUserId]
+)
+OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
+VALUES (
+    COALESCE(TRY_CONVERT(UNIQUEIDENTIFIER, :publicId), NEWSEQUENTIALID()),
+    :productId,
+    :documentTypeId,
+    :title,
+    :versionLabel,
+    :languageCode,
+    :storageContainer,
+    :storagePath,
+    :accessCode,
+    :contentType,
+    :fileExtension,
+    :byteSize,
+    :originalFileName,
+    :displayOrder,
+    :uploadStatusCode,
+    :scanStatusCode,
+    :createdByUserId,
+    :updatedByUserId
+)
+SQL,
+                    [
+                        ':publicId' => $publicId,
+                        ':productId' => $productId,
+                        ':documentTypeId' => $documentTypeId,
+                        ':title' => $data['title'],
+                        ':versionLabel' => $data['versionLabel'] ?? null,
+                        ':languageCode' => $data['languageCode'] ?? null,
+                        ':storageContainer' => $data['storageContainer'],
+                        ':storagePath' => $data['storagePath'],
+                        ':accessCode' => $data['accessCode'],
+                        ':contentType' => $data['contentType'],
+                        ':fileExtension' => $data['fileExtension'],
+                        ':byteSize' => $data['byteSize'],
+                        ':originalFileName' => $data['originalFileName'],
+                        ':displayOrder' => $data['displayOrder'] ?? 0,
+                        ':uploadStatusCode' => $data['uploadStatusCode'],
+                        ':scanStatusCode' => $data['scanStatusCode'],
+                        ':createdByUserId' => $actorUserId->toInt(),
+                        ':updatedByUserId' => $actorUserId->toInt(),
+                    ],
+                );
+
+                if ($rows === []) {
+                    throw ProductPersistenceException::insertFailed('ProductDocument');
+                }
+
+                $insertedPublicId = AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? '');
+                $loaded = $this->findByPublicId($insertedPublicId);
+                if ($loaded === null) {
+                    throw ProductPersistenceException::insertFailed('ProductDocument');
+                }
+
+                return $loaded;
+            },
+        );
+    }
+
+    public function markUploadCompleted(
+        string $documentPublicId,
+        array $blobMeta,
+        UserId $actorUserId,
+    ): ProductDocumentFileRecord {
+        $this->connection->execute(
+            <<<'SQL'
+UPDATE [product].[ProductDocuments]
+SET
+    [UploadStatusCode] = :uploadStatusCode,
+    [ScanStatusCode] = :scanStatusCode,
+    [PublicUrl] = COALESCE(:publicUrl, [PublicUrl]),
+    [ContentType] = COALESCE(:contentType, [ContentType]),
+    [ByteSize] = COALESCE(:byteSize, [ByteSize]),
+    [ETag] = COALESCE(:etag, [ETag]),
+    [StoragePath] = CASE
+        WHEN :storagePath IS NOT NULL THEN :storagePath
+        WHEN LEFT(ISNULL([ChecksumSha256], N''), 8) = N'pending:' THEN SUBSTRING([ChecksumSha256], 9, 1000)
+        ELSE [StoragePath]
+    END,
+    [StorageContainer] = COALESCE(:storageContainer, [StorageContainer]),
+    [ChecksumSha256] = NULL,
+    [UploadCompletedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [PublicId] = :documentPublicId
+  AND [DeletedAtUtc] IS NULL
+SQL,
+            [
+                ':uploadStatusCode' => $blobMeta['uploadStatusCode'],
+                ':scanStatusCode' => $blobMeta['scanStatusCode'],
+                ':publicUrl' => $blobMeta['publicUrl'] ?? null,
+                ':contentType' => $blobMeta['contentType'] ?? null,
+                ':byteSize' => $blobMeta['byteSize'] ?? null,
+                ':etag' => $blobMeta['etag'] ?? null,
+                ':storagePath' => $blobMeta['storagePath'] ?? null,
+                ':storageContainer' => $blobMeta['storageContainer'] ?? null,
+                ':updatedByUserId' => $actorUserId->toInt(),
+                ':documentPublicId' => $documentPublicId,
+            ],
+        );
+
+        $loaded = $this->findByPublicId($documentPublicId);
+        if ($loaded === null) {
+            throw ProductPersistenceException::referenceNotFound('ProductDocument', $documentPublicId);
+        }
+
+        return $loaded;
+    }
+
+    public function beginReplaceUpload(
+        string $documentPublicId,
+        array $data,
+        UserId $actorUserId,
+    ): ProductDocumentFileRecord {
+            // Pending path encoded in ChecksumSha256 as pending:{path}; StoragePath stays previous.
+        $this->connection->execute(
+            <<<'SQL'
+UPDATE [product].[ProductDocuments]
+SET
+    [ChecksumSha256] = CONCAT(N'pending:', :pendingStoragePath),
+    [OriginalFileName] = :originalFileName,
+    [ContentType] = :contentType,
+    [ByteSize] = :byteSize,
+    [FileExtension] = :fileExtension,
+    [UploadStatusCode] = :uploadStatusCode,
+    [ScanStatusCode] = :scanStatusCode,
+    [StorageContainer] = COALESCE(:storageContainer, [StorageContainer]),
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [PublicId] = :documentPublicId
+  AND [DeletedAtUtc] IS NULL
+SQL,
+            [
+                ':pendingStoragePath' => $data['storagePath'],
+                ':originalFileName' => $data['originalFileName'],
+                ':contentType' => $data['contentType'],
+                ':byteSize' => $data['byteSize'],
+                ':fileExtension' => $data['fileExtension'],
+                ':uploadStatusCode' => $data['uploadStatusCode'],
+                ':scanStatusCode' => $data['scanStatusCode'],
+                ':storageContainer' => $data['storageContainer'],
+                ':updatedByUserId' => $actorUserId->toInt(),
+                ':documentPublicId' => $documentPublicId,
+            ],
+        );
+
+        $loaded = $this->findByPublicId($documentPublicId);
+        if ($loaded === null) {
+            throw ProductPersistenceException::referenceNotFound('ProductDocument', $documentPublicId);
+        }
+
+        return $loaded;
+    }
+
+    public function clearFile(string $documentPublicId, UserId $actorUserId): void
+    {
+        $this->connection->execute(
+            <<<'SQL'
+UPDATE [product].[ProductDocuments]
+SET
+    [PublicUrl] = NULL,
+    [StoragePath] = N'__deleted__',
+    [ChecksumSha256] = NULL,
+    [ByteSize] = NULL,
+    [ContentType] = NULL,
+    [OriginalFileName] = NULL,
+    [FileExtension] = NULL,
+    [UploadStatusCode] = N'deleted',
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [PublicId] = :documentPublicId
+  AND [DeletedAtUtc] IS NULL
+SQL,
+            [
+                ':updatedByUserId' => $actorUserId->toInt(),
+                ':documentPublicId' => $documentPublicId,
+            ],
         );
     }
 
@@ -174,14 +412,11 @@ SQL,
         );
     }
 
-    private function findByPublicId(string $publicId): ?ProductDocumentSummary
+    private function findSummaryByPublicId(string $publicId): ?ProductDocumentSummary
     {
-        $rows = $this->connection->fetchAll(
-            self::LIST_SELECT_SQL . ' WHERE d.[PublicId] = :publicId AND d.[DeletedAtUtc] IS NULL',
-            [':publicId' => $publicId],
-        );
+        $record = $this->findByPublicId($publicId);
 
-        return $rows === [] ? null : $this->hydrate($rows[0]);
+        return $record?->toSummary(true);
     }
 
     private function requireProductId(ProductPublicId $publicId): int
@@ -241,8 +476,24 @@ SQL,
      */
     private function hydrate(array $row): ProductDocumentSummary
     {
-        return new ProductDocumentSummary(
+        return $this->hydrateRecord($row)->toSummary(true);
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function hydrateRecord(array $row): ProductDocumentFileRecord
+    {
+        $checksum = AzureSqlValueMapper::nullableString($row['ChecksumSha256'] ?? null);
+        $pendingPath = null;
+        if (is_string($checksum) && str_starts_with($checksum, 'pending:')) {
+            $pendingPath = substr($checksum, strlen('pending:'));
+        }
+        $storagePath = AzureSqlValueMapper::nullableString($row['StoragePath'] ?? null);
+
+        return new ProductDocumentFileRecord(
             publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
+            productPublicId: AzureSqlValueMapper::stringValue($row['ProductPublicId'] ?? ''),
             documentTypeCode: AzureSqlValueMapper::stringValue($row['DocumentTypeCode'] ?? ''),
             title: AzureSqlValueMapper::stringValue($row['Title'] ?? ''),
             versionLabel: AzureSqlValueMapper::nullableString($row['VersionLabel'] ?? null),
@@ -250,6 +501,19 @@ SQL,
             publicUrl: AzureSqlValueMapper::nullableString($row['PublicUrl'] ?? null),
             accessCode: AzureSqlValueMapper::stringValue($row['AccessCode'] ?? ''),
             displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+            uploadStatusCode: AzureSqlValueMapper::stringValue($row['UploadStatusCode'] ?? UploadStatusCode::ACTIVE),
+            scanStatusCode: AzureSqlValueMapper::stringValue($row['ScanStatusCode'] ?? ScanStatusCode::NOT_REQUIRED),
+            byteSize: isset($row['ByteSize']) && $row['ByteSize'] !== null ? AzureSqlValueMapper::intValue($row['ByteSize']) : null,
+            contentType: AzureSqlValueMapper::nullableString($row['ContentType'] ?? null),
+            originalFileName: AzureSqlValueMapper::nullableString($row['OriginalFileName'] ?? null),
+            fileExtension: AzureSqlValueMapper::nullableString($row['FileExtension'] ?? null),
+            storagePath: $storagePath,
+            storageContainer: AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null),
+            pendingStoragePath: $pendingPath,
+            pendingStorageContainer: $pendingPath !== null
+                ? AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null)
+                : null,
+            previousStoragePath: $pendingPath !== null ? $storagePath : null,
         );
     }
 }

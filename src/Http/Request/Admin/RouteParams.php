@@ -22,4 +22,14 @@ final class RouteParams
 
         return $value;
     }
+
+    public static function optional(ServerRequestInterface $request, string $name): ?string
+    {
+        $value = $request->getAttribute($name);
+        if (!is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        return $value;
+    }
 }
