@@ -94,3 +94,15 @@ Phase 12.5 is complete when readiness API/UI work, Azure SQL migration persisten
 3. Capture live inventory once credentials exist (clears `PENDING_LIVE_INVENTORY`).
 4. Seed mapped classification + specification field mappings.
 5. Separate operator approval before any non-fixture live execute.
+
+## Live dry-run kickoff (2026-08-06)
+
+- Applied migration schema to Azure SQL `tc`.
+- Wired `LEGACY_*_HOST`/`PORT`/`DATABASE` → PDO DSN (env previously used host parts, not DSN).
+- Fixed Dotenv `$_ENV` loading for live source config; waived files locally.
+- Fixed MySQL `SHOW TABLES LIKE :param` + sqlsrv duplicate named-parameter upserts.
+- **First live dry-run (FT, max 5):** batch `FD407D7C-7CC9-43FF-AC42-C39EFD411185`
+  - extracted 5 → normalized → validated → dry-run
+  - `wouldWriteProducts=false`, `wouldWriteBlobs=false`, `dryRunNoWriteGuarantee=true`
+  - counts: 1 product, 2 variants, 0 blocking, 0 unresolved
+- Still deferred: classification/spec mapping seeds (needed for small-batch execute only), full catalogue, execute against live.

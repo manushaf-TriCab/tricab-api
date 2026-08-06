@@ -27,11 +27,19 @@ final class GetCatalogueReadinessService
     {
         $schema = $this->schemaProbe->probe();
         $inventory = $this->inventoryProbe->probe($this->sourceConfig);
-        $classMappings = $this->batches->listClassificationMappings();
-        $specMappings = $this->batches->listSpecificationMappings();
+
+        // Avoid hard 503 when Azure SQL migration tables are not applied yet.
+        $classMappings = [];
+        $specMappings = [];
+        $openIssues = 0;
+        if ($schema['applied']) {
+            $classMappings = $this->batches->listClassificationMappings();
+            $specMappings = $this->batches->listSpecificationMappings();
+            $openIssues = count($this->batches->listIssues(null, 'open', 1000, 0));
+        }
+
         $mappedClass = count(array_filter($classMappings, static fn (array $m): bool => ($m['statusCode'] ?? '') === 'mapped'));
         $mappedSpec = count(array_filter($specMappings, static fn (array $m): bool => ($m['statusCode'] ?? '') === 'mapped'));
-        $openIssues = count($this->batches->listIssues(null, 'open', 1000, 0));
 
         $gates = [];
         $gates[] = $this->gate(
