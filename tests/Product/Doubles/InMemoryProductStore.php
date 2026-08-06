@@ -12,7 +12,13 @@ use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Application\DTO\ProductListCriteria;
 use TriCab\Core\Product\Application\DTO\ProductListResult;
 use TriCab\Core\Product\Application\DTO\ProductLookupItem;
+use TriCab\Core\Product\Application\Exception\ProductClassificationNotFound;
+use TriCab\Core\Product\Application\Exception\ProductClassificationConcurrencyConflict;
+use TriCab\Core\Product\Application\DTO\ProductClassificationUsage;
+use TriCab\Core\Product\Application\DTO\ProductClassificationRecord;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
+use TriCab\Core\Product\Contract\ProductArModelRepository;
+use TriCab\Core\Product\Contract\Product360Repository;
 use TriCab\Core\Product\Application\DTO\ProductPricingSummary;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Application\Exception\DuplicateVariantSku;
@@ -104,6 +110,21 @@ final class InMemoryProductStore
     /** @var array<string, list<array<string, mixed>>> productPublicId => document rows */
     private array $documents = [];
 
+    /** @var array<string, array<string, mixed>> mediaPublicId => row */
+    private array $mediaByPublicId = [];
+
+    /** @var array<string, array<string, mixed>> documentPublicId => row */
+    private array $documentsByPublicId = [];
+
+    /** @var array<string, array<string, mixed>> setPublicId => 360 set row */
+    private array $sets360 = [];
+
+    /** @var array<string, array<string, mixed>> framePublicId => frame row */
+    private array $frames360 = [];
+
+    /** @var array<string, array<string, mixed>> arPublicId => ar row */
+    private array $arModels = [];
+
     /** @var list<ProductLookupItem> */
     private array $regions = [];
 
@@ -145,6 +166,7 @@ final class InMemoryProductStore
 
     /** @var list<array<string, mixed>> */
     private array $specDefinitions = [];
+    private ?InMemorySpecificationRepository $specificationRepository = null;
 
     /** @var array<string, list<array<string, mixed>>> */
     private array $productSpecValues = [];
@@ -187,6 +209,16 @@ final class InMemoryProductStore
         return new InMemoryFakeProductDocumentRepository($this);
     }
 
+    public function sets360(): Product360Repository
+    {
+        return new InMemoryFakeProduct360Repository($this);
+    }
+
+    public function arModels(): ProductArModelRepository
+    {
+        return new InMemoryFakeProductArModelRepository($this);
+    }
+
     public function markets(): ProductMarketRepository
     {
         return new InMemoryFakeProductMarketRepository($this);
@@ -214,7 +246,7 @@ final class InMemoryProductStore
 
     public function specifications(): ProductSpecificationRepository
     {
-        return new InMemoryFakeProductSpecificationRepository($this);
+        return $this->specificationRepository ??= new InMemorySpecificationRepository();
     }
 
     // --- Test setup helpers -------------------------------------------------
@@ -248,8 +280,22 @@ final class InMemoryProductStore
         ?string $unit = null,
         int $displayOrder = 0,
     ): void {
-        $this->specDefinitions[] = [
+        $repo = $this->specifications();
+        assert($repo instanceof InMemorySpecificationRepository);
+        $created = $repo->createDefinition([
             'publicId' => $publicId,
+            'code' => $definitionCode,
+            'name' => $definitionName,
+            'dataTypeCode' => $dataTypeCode,
+            'scopeCode' => $scopeCode,
+            'unit' => $unit,
+            'isRequired' => $isRequired,
+            'displayOrder' => $displayOrder,
+            'isActive' => true,
+            'validationRulesJson' => null,
+        ], \TriCab\Core\Identity\Domain\ValueObject\UserId::fromInt(1));
+        $this->specDefinitions[] = [
+            'publicId' => $created->publicId,
             'groupCode' => null,
             'definitionCode' => $definitionCode,
             'definitionName' => $definitionName,
@@ -409,10 +455,90 @@ final class InMemoryProductStore
         $this->series[] = $row;
     }
 
+
+    /** @internal @param list<array<string, mixed>> $rows */
+    public function setFamilies(array $rows): void
+    {
+        $this->families = array_values($rows);
+    }
+
+    /** @internal @param list<array<string, mixed>> $rows */
+    public function setCategories(array $rows): void
+    {
+        $this->categories = array_values($rows);
+    }
+
+    /** @internal @param list<array<string, mixed>> $rows */
+    public function setSeries(array $rows): void
+    {
+        $this->series = array_values($rows);
+    }
+
+
     /** @internal */
     public function nextClassificationId(): int
     {
         return $this->nextClassificationId++;
+    }
+
+    /** @internal @return array<string, array<string, mixed>> */
+    public function mediaByPublicIdMap(): array
+    {
+        return $this->mediaByPublicId;
+    }
+
+    /** @internal */
+    public function setMediaByPublicIdMap(array $map): void
+    {
+        $this->mediaByPublicId = $map;
+    }
+
+    /** @internal @return array<string, array<string, mixed>> */
+    public function documentsByPublicIdMap(): array
+    {
+        return $this->documentsByPublicId;
+    }
+
+    /** @internal */
+    public function setDocumentsByPublicIdMap(array $map): void
+    {
+        $this->documentsByPublicId = $map;
+    }
+
+    /** @internal @return array<string, array<string, mixed>> */
+    public function sets360Map(): array
+    {
+        return $this->sets360;
+    }
+
+    /** @internal */
+    public function setSets360Map(array $map): void
+    {
+        $this->sets360 = $map;
+    }
+
+    /** @internal @return array<string, array<string, mixed>> */
+    public function frames360Map(): array
+    {
+        return $this->frames360;
+    }
+
+    /** @internal */
+    public function setFrames360Map(array $map): void
+    {
+        $this->frames360 = $map;
+    }
+
+    /** @internal @return array<string, array<string, mixed>> */
+    public function arModelsMap(): array
+    {
+        return $this->arModels;
+    }
+
+    /** @internal */
+    public function setArModelsMap(array $map): void
+    {
+        $this->arModels = $map;
     }
 
     /** @internal @return list<array<string, mixed>> */
@@ -574,6 +700,9 @@ final class InMemoryProductStore
     /** @internal @return list<array<string, mixed>> */
     public function productSpecValues(string $productPublicId): array
     {
+        if ($this->specificationRepository !== null) {
+            return $this->specificationRepository->listProductValues(\TriCab\Core\Product\Domain\ValueObject\ProductPublicId::fromString($productPublicId));
+        }
         return $this->productSpecValues[$productPublicId] ?? [];
     }
 
@@ -581,11 +710,19 @@ final class InMemoryProductStore
     public function setProductSpecValues(string $productPublicId, array $values): void
     {
         $this->productSpecValues[$productPublicId] = $values;
+        $this->specifications()->replaceProductValues(
+            \TriCab\Core\Product\Domain\ValueObject\ProductPublicId::fromString($productPublicId),
+            $values,
+            \TriCab\Core\Identity\Domain\ValueObject\UserId::fromInt(1),
+        );
     }
 
     /** @internal @return list<array<string, mixed>> */
     public function variantSpecValues(string $variantPublicId): array
     {
+        if ($this->specificationRepository !== null) {
+            return $this->specificationRepository->listVariantValues(\TriCab\Core\Product\Domain\ValueObject\ProductVariantPublicId::fromString($variantPublicId));
+        }
         return $this->variantSpecValues[$variantPublicId] ?? [];
     }
 
@@ -593,6 +730,11 @@ final class InMemoryProductStore
     public function setVariantSpecValues(string $variantPublicId, array $values): void
     {
         $this->variantSpecValues[$variantPublicId] = $values;
+        $this->specifications()->replaceVariantValues(
+            \TriCab\Core\Product\Domain\ValueObject\ProductVariantPublicId::fromString($variantPublicId),
+            $values,
+            \TriCab\Core\Identity\Domain\ValueObject\UserId::fromInt(1),
+        );
     }
 }
 
@@ -924,7 +1066,11 @@ final class InMemoryFakeProductClassificationRepository implements ProductClassi
             'publicId' => $publicId,
             'code' => $data['code'],
             'name' => $data['name'],
-            'isActive' => true,
+            'description' => $data['description'] ?? null,
+            'displayOrder' => $data['displayOrder'] ?? 0,
+            'isActive' => $data['isActive'] ?? true,
+            'rowVersion' => 'AAAAAAAAAAA=',
+            'deletedAtUtc' => null,
         ]);
 
         return new ProductLookupItem($publicId, $data['code'], $data['name'], null, $data['displayOrder'] ?? 0, true);
@@ -939,7 +1085,11 @@ final class InMemoryFakeProductClassificationRepository implements ProductClassi
             'code' => $data['code'],
             'name' => $data['name'],
             'familyPublicId' => $data['familyPublicId'] ?? null,
-            'isActive' => true,
+            'description' => $data['description'] ?? null,
+            'displayOrder' => $data['displayOrder'] ?? 0,
+            'isActive' => $data['isActive'] ?? true,
+            'rowVersion' => 'AAAAAAAAAAA=',
+            'deletedAtUtc' => null,
         ]);
 
         return new ProductLookupItem($publicId, $data['code'], $data['name'], $data['familyPublicId'] ?? null, $data['displayOrder'] ?? 0, true);
@@ -954,7 +1104,11 @@ final class InMemoryFakeProductClassificationRepository implements ProductClassi
             'code' => $data['code'],
             'name' => $data['name'],
             'categoryPublicId' => $data['categoryPublicId'] ?? null,
-            'isActive' => true,
+            'description' => $data['description'] ?? null,
+            'displayOrder' => $data['displayOrder'] ?? 0,
+            'isActive' => $data['isActive'] ?? true,
+            'rowVersion' => 'AAAAAAAAAAA=',
+            'deletedAtUtc' => null,
         ]);
 
         return new ProductLookupItem($publicId, $data['code'], $data['name'], $data['categoryPublicId'] ?? null, $data['displayOrder'] ?? 0, true);
@@ -1017,6 +1171,343 @@ final class InMemoryFakeProductClassificationRepository implements ProductClassi
         if ($seriesRow !== null && $categoryPublicId !== null && $seriesRow['categoryPublicId'] !== $categoryPublicId) {
             throw InvalidProductClassification::invalidHierarchy('Series does not belong to the given category.');
         }
+    }
+
+
+    public function findFamilyByPublicId(string $publicId, bool $includeDeleted = false): ?ProductClassificationRecord
+    {
+        $row = $this->findRow($this->store->families(), $publicId);
+        if ($row === null) {
+            return null;
+        }
+        if (!$includeDeleted && ($row['deletedAtUtc'] ?? null) !== null) {
+            return null;
+        }
+
+        return $this->toRecord($row, null);
+    }
+
+    public function findCategoryByPublicId(string $publicId, bool $includeDeleted = false): ?ProductClassificationRecord
+    {
+        $row = $this->findRow($this->store->categories(), $publicId);
+        if ($row === null || (!$includeDeleted && ($row['deletedAtUtc'] ?? null) !== null)) {
+            return null;
+        }
+
+        return $this->toRecord($row, $row['familyPublicId'] ?? null);
+    }
+
+    public function findSeriesByPublicId(string $publicId, bool $includeDeleted = false): ?ProductClassificationRecord
+    {
+        $row = $this->findRow($this->store->series(), $publicId);
+        if ($row === null || (!$includeDeleted && ($row['deletedAtUtc'] ?? null) !== null)) {
+            return null;
+        }
+
+        return $this->toRecord($row, $row['categoryPublicId'] ?? null);
+    }
+
+    public function listFamiliesAdmin(array $filters = []): array
+    {
+        $out = array_values(array_filter(array_map(
+            fn (array $row): ProductClassificationRecord => $this->toRecord($row, null),
+            $this->store->families(),
+        ), fn (ProductClassificationRecord $r): bool => ($filters['includeDeleted'] ?? false) || !$r->isDeleted));
+        usort(
+            $out,
+            static fn (ProductClassificationRecord $a, ProductClassificationRecord $b): int =>
+                [$a->displayOrder, $a->name] <=> [$b->displayOrder, $b->name],
+        );
+
+        return $out;
+    }
+
+    public function listCategoriesAdmin(array $filters = []): array
+    {
+        $parent = $filters['parentPublicId'] ?? null;
+        $out = [];
+        foreach ($this->store->categories() as $row) {
+            if ($parent !== null && ($row['familyPublicId'] ?? null) !== $parent) {
+                continue;
+            }
+            $record = $this->toRecord($row, $row['familyPublicId'] ?? null);
+            if (!($filters['includeDeleted'] ?? false) && $record->isDeleted) {
+                continue;
+            }
+            $out[] = $record;
+        }
+
+        return $out;
+    }
+
+    public function listSeriesAdmin(array $filters = []): array
+    {
+        $parent = $filters['parentPublicId'] ?? null;
+        $out = [];
+        foreach ($this->store->series() as $row) {
+            if ($parent !== null && ($row['categoryPublicId'] ?? null) !== $parent) {
+                continue;
+            }
+            $record = $this->toRecord($row, $row['categoryPublicId'] ?? null);
+            if (!($filters['includeDeleted'] ?? false) && $record->isDeleted) {
+                continue;
+            }
+            $out[] = $record;
+        }
+
+        return $out;
+    }
+
+    public function updateFamily(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateFamily($publicId, $data, $expectedRowVersion);
+    }
+
+    public function updateCategory(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateCategory($publicId, $data, $expectedRowVersion);
+    }
+
+    public function updateSeries(string $publicId, array $data, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateSeries($publicId, $data, $expectedRowVersion);
+    }
+
+    public function setFamilyActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateFamily($publicId, ['isActive' => $isActive], $expectedRowVersion);
+    }
+
+    public function setCategoryActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateCategory($publicId, ['isActive' => $isActive], $expectedRowVersion);
+    }
+
+    public function setSeriesActive(string $publicId, bool $isActive, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateSeries($publicId, ['isActive' => $isActive], $expectedRowVersion);
+    }
+
+    public function softDeleteFamily(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateFamily($publicId, ['deletedAtUtc' => '2026-01-01T00:00:00+00:00', 'isActive' => false], $expectedRowVersion);
+    }
+
+    public function softDeleteCategory(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateCategory($publicId, ['deletedAtUtc' => '2026-01-01T00:00:00+00:00', 'isActive' => false], $expectedRowVersion);
+    }
+
+    public function softDeleteSeries(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateSeries($publicId, ['deletedAtUtc' => '2026-01-01T00:00:00+00:00', 'isActive' => false], $expectedRowVersion);
+    }
+
+    public function restoreFamily(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateFamily($publicId, ['deletedAtUtc' => null, 'isActive' => true], $expectedRowVersion);
+    }
+
+    public function restoreCategory(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateCategory($publicId, ['deletedAtUtc' => null, 'isActive' => true], $expectedRowVersion);
+    }
+
+    public function restoreSeries(string $publicId, string $expectedRowVersion, UserId $actorUserId): ProductClassificationRecord
+    {
+        return $this->mutateSeries($publicId, ['deletedAtUtc' => null, 'isActive' => true], $expectedRowVersion);
+    }
+
+    public function reorderFamilies(array $orderedPublicIds, UserId $actorUserId): void
+    {
+        $order = 10;
+        foreach ($orderedPublicIds as $publicId) {
+            $this->mutateFamily($publicId, ['displayOrder' => $order], null);
+            $order += 10;
+        }
+    }
+
+    public function reorderCategories(string $familyPublicId, array $orderedPublicIds, UserId $actorUserId): void
+    {
+        $order = 10;
+        foreach ($orderedPublicIds as $publicId) {
+            $this->mutateCategory($publicId, ['displayOrder' => $order], null);
+            $order += 10;
+        }
+    }
+
+    public function reorderSeries(string $categoryPublicId, array $orderedPublicIds, UserId $actorUserId): void
+    {
+        $order = 10;
+        foreach ($orderedPublicIds as $publicId) {
+            $this->mutateSeries($publicId, ['displayOrder' => $order], null);
+            $order += 10;
+        }
+    }
+
+    public function getFamilyUsage(string $publicId): ProductClassificationUsage
+    {
+        $active = 0;
+        $inactive = 0;
+        foreach ($this->store->categories() as $row) {
+            if (($row['familyPublicId'] ?? null) !== $publicId || ($row['deletedAtUtc'] ?? null) !== null) {
+                continue;
+            }
+            if ($row['isActive'] ?? true) {
+                $active++;
+            } else {
+                $inactive++;
+            }
+        }
+
+        return new ProductClassificationUsage($publicId, 'family', 0, $active, $inactive);
+    }
+
+    public function getCategoryUsage(string $publicId): ProductClassificationUsage
+    {
+        $active = 0;
+        $inactive = 0;
+        foreach ($this->store->series() as $row) {
+            if (($row['categoryPublicId'] ?? null) !== $publicId || ($row['deletedAtUtc'] ?? null) !== null) {
+                continue;
+            }
+            if ($row['isActive'] ?? true) {
+                $active++;
+            } else {
+                $inactive++;
+            }
+        }
+
+        return new ProductClassificationUsage($publicId, 'category', 0, 0, 0, $active, $inactive);
+    }
+
+    public function getSeriesUsage(string $publicId): ProductClassificationUsage
+    {
+        return new ProductClassificationUsage($publicId, 'series', 0);
+    }
+
+    public function familyCodeExists(string $code, ?string $excludePublicId = null): bool
+    {
+        return $this->codeExists($this->store->families(), $code, $excludePublicId);
+    }
+
+    public function categoryCodeExists(string $code, ?string $excludePublicId = null): bool
+    {
+        return $this->codeExists($this->store->categories(), $code, $excludePublicId);
+    }
+
+    public function seriesCodeExists(string $code, ?string $excludePublicId = null): bool
+    {
+        return $this->codeExists($this->store->series(), $code, $excludePublicId);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function mutateFamily(string $publicId, array $data, ?string $expectedRowVersion): ProductClassificationRecord
+    {
+        $families = $this->store->families();
+        foreach ($families as $i => $row) {
+            if ($row['publicId'] !== $publicId) {
+                continue;
+            }
+            $current = (string) ($row['rowVersion'] ?? 'AAA=');
+            if ($expectedRowVersion !== null && $current !== $expectedRowVersion) {
+                throw ProductClassificationConcurrencyConflict::forPublicId($publicId);
+            }
+            $families[$i] = array_merge($row, $data, ['rowVersion' => 'RV' . bin2hex(random_bytes(3))]);
+            $this->store->setFamilies($families);
+
+            return $this->toRecord($families[$i], null);
+        }
+        throw ProductClassificationNotFound::forPublicId($publicId);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function mutateCategory(string $publicId, array $data, ?string $expectedRowVersion): ProductClassificationRecord
+    {
+        if (isset($data['familyPublicId'])) {
+            // keep
+        }
+        $categories = $this->store->categories();
+        foreach ($categories as $i => $row) {
+            if ($row['publicId'] !== $publicId) {
+                continue;
+            }
+            $current = (string) ($row['rowVersion'] ?? 'AAA=');
+            if ($expectedRowVersion !== null && $current !== $expectedRowVersion) {
+                throw ProductClassificationConcurrencyConflict::forPublicId($publicId);
+            }
+            $categories[$i] = array_merge($row, $data, ['rowVersion' => 'RV' . bin2hex(random_bytes(3))]);
+            $this->store->setCategories($categories);
+
+            return $this->toRecord($categories[$i], $categories[$i]['familyPublicId'] ?? null);
+        }
+        throw ProductClassificationNotFound::forPublicId($publicId);
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function mutateSeries(string $publicId, array $data, ?string $expectedRowVersion): ProductClassificationRecord
+    {
+        $series = $this->store->series();
+        foreach ($series as $i => $row) {
+            if ($row['publicId'] !== $publicId) {
+                continue;
+            }
+            $current = (string) ($row['rowVersion'] ?? 'AAA=');
+            if ($expectedRowVersion !== null && $current !== $expectedRowVersion) {
+                throw ProductClassificationConcurrencyConflict::forPublicId($publicId);
+            }
+            $series[$i] = array_merge($row, $data, ['rowVersion' => 'RV' . bin2hex(random_bytes(3))]);
+            $this->store->setSeries($series);
+
+            return $this->toRecord($series[$i], $series[$i]['categoryPublicId'] ?? null);
+        }
+        throw ProductClassificationNotFound::forPublicId($publicId);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     */
+    private function codeExists(array $rows, string $code, ?string $excludePublicId): bool
+    {
+        $needle = strtoupper(trim($code));
+        foreach ($rows as $row) {
+            if (($row['deletedAtUtc'] ?? null) !== null) {
+                continue;
+            }
+            if ($excludePublicId !== null && $row['publicId'] === $excludePublicId) {
+                continue;
+            }
+            if (strtoupper((string) $row['code']) === $needle) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private function toRecord(array $row, ?string $parentPublicId): ProductClassificationRecord
+    {
+        return new ProductClassificationRecord(
+            publicId: (string) $row['publicId'],
+            code: (string) $row['code'],
+            name: (string) $row['name'],
+            description: isset($row['description']) && is_string($row['description']) ? $row['description'] : null,
+            parentPublicId: $parentPublicId,
+            parentName: null,
+            displayOrder: (int) ($row['displayOrder'] ?? 0),
+            isActive: (bool) ($row['isActive'] ?? true),
+            isDeleted: ($row['deletedAtUtc'] ?? null) !== null,
+            rowVersion: (string) ($row['rowVersion'] ?? 'AAAAAAAAAAA='),
+        );
     }
 
     /**
@@ -1192,180 +1683,6 @@ final class InMemoryFakeProductAdminQueryRepository implements ProductAdminQuery
             displayOrder: $variant->displayOrder()->toInt(),
             isActive: $variant->isActive(),
         );
-    }
-}
-
-/**
- * @internal
- */
-final class InMemoryFakeProductMediaRepository implements ProductMediaRepository
-{
-    public function __construct(private readonly InMemoryProductStore $store)
-    {
-    }
-
-    public function listByProduct(ProductPublicId $productPublicId): array
-    {
-        return array_values(array_map(
-            static fn (array $row): ProductMediaSummary => new ProductMediaSummary(
-                $row['publicId'],
-                $row['mediaCategoryCode'],
-                $row['mediaTypeCode'],
-                $row['title'],
-                $row['publicUrl'] ?? null,
-                $row['altText'] ?? null,
-                $row['displayOrder'] ?? 0,
-                $row['isPrimary'] ?? false,
-            ),
-            array_filter($this->store->mediaFor($productPublicId->toString()), static fn (array $row): bool => empty($row['archived'])),
-        ));
-    }
-
-    public function create(ProductPublicId $productPublicId, array $data, UserId $actorUserId): ProductMediaSummary
-    {
-        $rows = $this->store->mediaFor($productPublicId->toString());
-        $publicId = bin2hex(random_bytes(16));
-        $row = [
-            'publicId' => $publicId,
-            'mediaCategoryCode' => $data['mediaCategoryCode'],
-            'mediaTypeCode' => $data['mediaTypeCode'],
-            'title' => $data['title'],
-            'publicUrl' => $data['publicUrl'] ?? null,
-            'altText' => $data['altText'] ?? null,
-            'displayOrder' => $data['displayOrder'] ?? 0,
-            'isPrimary' => $data['isPrimary'] ?? false,
-            'archived' => false,
-        ];
-        $rows[] = $row;
-        $this->store->setMediaFor($productPublicId->toString(), $rows);
-
-        return new ProductMediaSummary(
-            $publicId,
-            $row['mediaCategoryCode'],
-            $row['mediaTypeCode'],
-            $row['title'],
-            $row['publicUrl'],
-            $row['altText'],
-            $row['displayOrder'],
-            $row['isPrimary'],
-        );
-    }
-
-    public function setPrimary(ProductPublicId $productPublicId, string $mediaPublicId, UserId $actorUserId): void
-    {
-        $rows = $this->store->mediaFor($productPublicId->toString());
-        foreach ($rows as &$row) {
-            $row['isPrimary'] = $row['publicId'] === $mediaPublicId;
-        }
-        unset($row);
-        $this->store->setMediaFor($productPublicId->toString(), $rows);
-    }
-
-    public function reorder(ProductPublicId $productPublicId, array $orderedMediaPublicIds, UserId $actorUserId): void
-    {
-        $rows = $this->store->mediaFor($productPublicId->toString());
-        $byPublicId = [];
-        foreach ($rows as $row) {
-            $byPublicId[$row['publicId']] = $row;
-        }
-
-        $reordered = [];
-        foreach ($orderedMediaPublicIds as $index => $publicId) {
-            if (isset($byPublicId[$publicId])) {
-                $byPublicId[$publicId]['displayOrder'] = $index;
-                $reordered[] = $byPublicId[$publicId];
-                unset($byPublicId[$publicId]);
-            }
-        }
-        foreach ($byPublicId as $row) {
-            $reordered[] = $row;
-        }
-
-        $this->store->setMediaFor($productPublicId->toString(), $reordered);
-    }
-
-    public function archive(ProductPublicId $productPublicId, string $mediaPublicId, UserId $actorUserId): void
-    {
-        $rows = $this->store->mediaFor($productPublicId->toString());
-        foreach ($rows as &$row) {
-            if ($row['publicId'] === $mediaPublicId) {
-                $row['archived'] = true;
-            }
-        }
-        unset($row);
-        $this->store->setMediaFor($productPublicId->toString(), $rows);
-    }
-}
-
-/**
- * @internal
- */
-final class InMemoryFakeProductDocumentRepository implements ProductDocumentRepository
-{
-    public function __construct(private readonly InMemoryProductStore $store)
-    {
-    }
-
-    public function listByProduct(ProductPublicId $productPublicId, bool $publicOnly = false): array
-    {
-        return array_values(array_map(
-            static fn (array $row): ProductDocumentSummary => new ProductDocumentSummary(
-                $row['publicId'],
-                $row['documentTypeCode'],
-                $row['title'],
-                $row['versionLabel'] ?? null,
-                $row['languageCode'] ?? null,
-                $row['publicUrl'] ?? null,
-                $row['accessCode'],
-                $row['displayOrder'] ?? 0,
-            ),
-            array_filter(
-                $this->store->documentsFor($productPublicId->toString()),
-                static fn (array $row): bool => empty($row['archived']) && (!$publicOnly || $row['accessCode'] === 'public'),
-            ),
-        ));
-    }
-
-    public function create(ProductPublicId $productPublicId, array $data, UserId $actorUserId): ProductDocumentSummary
-    {
-        $rows = $this->store->documentsFor($productPublicId->toString());
-        $publicId = bin2hex(random_bytes(16));
-        $row = [
-            'publicId' => $publicId,
-            'documentTypeCode' => $data['documentTypeCode'],
-            'title' => $data['title'],
-            'versionLabel' => $data['versionLabel'] ?? null,
-            'languageCode' => $data['languageCode'] ?? null,
-            'publicUrl' => $data['publicUrl'] ?? null,
-            'accessCode' => $data['accessCode'],
-            'displayOrder' => $data['displayOrder'] ?? 0,
-            'archived' => false,
-        ];
-        $rows[] = $row;
-        $this->store->setDocumentsFor($productPublicId->toString(), $rows);
-
-        return new ProductDocumentSummary(
-            $publicId,
-            $row['documentTypeCode'],
-            $row['title'],
-            $row['versionLabel'],
-            $row['languageCode'],
-            $row['publicUrl'],
-            $row['accessCode'],
-            $row['displayOrder'],
-        );
-    }
-
-    public function archive(ProductPublicId $productPublicId, string $documentPublicId, UserId $actorUserId): void
-    {
-        $rows = $this->store->documentsFor($productPublicId->toString());
-        foreach ($rows as &$row) {
-            if ($row['publicId'] === $documentPublicId) {
-                $row['archived'] = true;
-            }
-        }
-        unset($row);
-        $this->store->setDocumentsFor($productPublicId->toString(), $rows);
     }
 }
 
@@ -1558,40 +1875,5 @@ final class InMemoryFakeProductCodeRuleRepository implements ProductCodeRuleRepo
         UserId $actorUserId,
     ): void {
         $this->store->setProductCode($productPublicId->toString(), $code->toString());
-    }
-}
-
-/**
- * @internal
- */
-final class InMemoryFakeProductSpecificationRepository implements ProductSpecificationRepository
-{
-    public function __construct(private readonly InMemoryProductStore $store)
-    {
-    }
-
-    public function listDefinitions(bool $activeOnly = true): array
-    {
-        return $this->store->specDefinitions();
-    }
-
-    public function listProductValues(ProductPublicId $productPublicId): array
-    {
-        return $this->store->productSpecValues($productPublicId->toString());
-    }
-
-    public function listVariantValues(ProductVariantPublicId $variantPublicId): array
-    {
-        return $this->store->variantSpecValues($variantPublicId->toString());
-    }
-
-    public function replaceProductValues(ProductPublicId $productPublicId, array $values, UserId $actorUserId): void
-    {
-        $this->store->setProductSpecValues($productPublicId->toString(), $values);
-    }
-
-    public function replaceVariantValues(ProductVariantPublicId $variantPublicId, array $values, UserId $actorUserId): void
-    {
-        $this->store->setVariantSpecValues($variantPublicId->toString(), $values);
     }
 }

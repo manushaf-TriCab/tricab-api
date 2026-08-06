@@ -15,6 +15,13 @@ final readonly class ProductDocumentSummary
         public ?string $publicUrl,
         public string $accessCode,
         public int $displayOrder,
+        public ?string $uploadStatusCode = 'active',
+        public ?string $scanStatusCode = 'not_required',
+        public ?int $byteSize = null,
+        public ?string $contentType = null,
+        public ?string $originalFileName = null,
+        public ?string $fileExtension = null,
+        public ?string $storagePath = null,
     ) {
     }
 }
