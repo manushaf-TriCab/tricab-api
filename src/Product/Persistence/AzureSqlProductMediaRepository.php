@@ -419,7 +419,7 @@ OUTPUT
     INSERTED.[ProductImagesId] AS [SourceRecordId],
     CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
 VALUES (
-    COALESCE(TRY_CONVERT(UNIQUEIDENTIFIER, :publicId), NEWSEQUENTIALID()),
+    CONVERT(UNIQUEIDENTIFIER, :publicId),
     :productId,
     :mediaTypeId,
     :title,

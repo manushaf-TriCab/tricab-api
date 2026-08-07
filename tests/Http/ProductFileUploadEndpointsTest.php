@@ -17,6 +17,12 @@ use TriCab\Core\Product\Contract\ProductBlobStore;
 
 final class ProductFileUploadEndpointsTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        InMemoryProductBlobStore::resetSharedForTests();
+    }
+
     public function test_initiate_media_upload_session_returns_201(): void
     {
         $app = $this->createApp();

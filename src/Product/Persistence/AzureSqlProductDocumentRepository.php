@@ -206,7 +206,7 @@ INSERT INTO [product].[ProductDocuments] (
 )
 OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
 VALUES (
-    COALESCE(TRY_CONVERT(UNIQUEIDENTIFIER, :publicId), NEWSEQUENTIALID()),
+    CONVERT(UNIQUEIDENTIFIER, :publicId),
     :productId,
     :documentTypeId,
     :title,

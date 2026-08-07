@@ -14,6 +14,7 @@ use TriCab\Api\Http\Request\Admin\Product\AddProductMediaRequest;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Command\AddProductMediaCommand;
 use TriCab\Core\Product\Application\Service\AddProductMediaService;
 
@@ -21,6 +22,7 @@ final class AddProductMediaAction
 {
     public function __construct(
         private readonly AddProductMediaService $addMedia,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly AdminMutationTransaction $transaction,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
@@ -56,7 +58,10 @@ final class AddProductMediaAction
                 ),
             ));
 
-            return $this->responder->success(ProductManagementDtoSerializer::mediaSummary($created), 201);
+            return $this->responder->success(
+                ProductManagementDtoSerializer::mediaSummary($created, true, $this->devUrls),
+                201,
+            );
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

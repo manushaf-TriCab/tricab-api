@@ -91,4 +91,30 @@ final class SettingsTest extends TestCase
 
         self::assertTrue($settings->usesAzureSqlUserRepository());
     }
+
+    public function test_dev_memory_product_file_delivery_only_in_development_memory_mode(): void
+    {
+        $enabled = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'BLOB_AUTH_MODE' => 'memory',
+        ]);
+        self::assertTrue($enabled->isDevMemoryProductFileDeliveryEnabled());
+
+        $disabledDev = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'BLOB_AUTH_MODE' => 'disabled',
+        ]);
+        self::assertTrue($disabledDev->isDevMemoryProductFileDeliveryEnabled());
+
+        $production = Settings::fromEnvironment([
+            'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'memory',
+            'ALLOW_IN_MEMORY_REPOSITORY_IN_PRODUCTION' => 'true',
+            'BLOB_AUTH_MODE' => 'disabled',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
+        ]);
+        self::assertFalse($production->isDevMemoryProductFileDeliveryEnabled());
+    }
 }

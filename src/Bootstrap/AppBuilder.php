@@ -62,6 +62,7 @@ use TriCab\Api\Http\Action\Admin\GetCustomerAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\GetProductAction;
 use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
+use TriCab\Api\Http\Action\Admin\GetProductCustomerViewAction;
 use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
 use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
 use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
@@ -115,6 +116,7 @@ use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
+use TriCab\Api\Http\Action\Dev\DevProductFileDeliveryAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
@@ -180,6 +182,10 @@ final class AppBuilder
             $app->post('/api/v1/auth/guest/request-otp', RequestGuestOtpAction::class);
             $app->post('/api/v1/auth/guest/verify-otp', VerifyGuestOtpAction::class);
             $app->post('/api/v1/auth/guest/logout', LogoutGuestAction::class);
+        }
+
+        if ($settings->isDevMemoryProductFileDeliveryEnabled()) {
+            $app->get('/api/v1/dev/product-files/{filePublicId}', DevProductFileDeliveryAction::class);
         }
 
         self::registerPublicProductRoutes($app);
@@ -250,6 +256,8 @@ final class AppBuilder
         $app->get('/api/v1/admin/products', ListProductsAction::class)->add(($require)('PRODUCT.READ'));
         $app->post('/api/v1/admin/products', CreateProductAction::class)->add(($require)('PRODUCT.CREATE'));
         $app->get('/api/v1/admin/products/{productPublicId}', GetProductAction::class)->add(($require)('PRODUCT.READ'));
+        $app->get('/api/v1/admin/products/{productPublicId}/customer-view', GetProductCustomerViewAction::class)
+            ->add(($require)('PRODUCT.READ'));
         $app->patch('/api/v1/admin/products/{productPublicId}', UpdateProductAction::class)->add(($require)('PRODUCT.UPDATE'));
 
         $app->post('/api/v1/admin/products/{productPublicId}/publish', PublishProductAction::class)

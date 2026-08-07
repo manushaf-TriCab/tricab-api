@@ -116,7 +116,7 @@ INSERT INTO [product].[ProductARModels] (
 )
 OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
 VALUES (
-    COALESCE(TRY_CONVERT(UNIQUEIDENTIFIER, :publicId), NEWSEQUENTIALID()),
+    CONVERT(UNIQUEIDENTIFIER, :publicId),
     :productId,
     :mediaTypeId,
     :title,

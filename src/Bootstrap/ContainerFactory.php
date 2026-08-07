@@ -41,6 +41,7 @@ use TriCab\Api\Http\Action\Admin\GetCustomerAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\GetProductAction;
 use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
+use TriCab\Api\Http\Action\Admin\GetProductCustomerViewAction;
 use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
 use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
 use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
@@ -135,7 +136,10 @@ use TriCab\Api\Product\Persistence\AzureSqlProductArModelRepository;
 use TriCab\Api\Product\Storage\AzureProductBlobStore;
 use TriCab\Api\Product\Storage\DisabledProductBlobStore;
 use TriCab\Api\Product\Storage\InMemoryProductBlobStore;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
+use TriCab\Api\Http\Action\Dev\DevProductFileDeliveryAction;
 use TriCab\Api\Product\Persistence\AzureSqlProductPricingRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductCustomerViewRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductPublicQueryRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductRelationshipRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductRepository;
@@ -156,6 +160,7 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProductMediaRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct360Repository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductArModelRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPricingRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCustomerViewRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPublicQueryRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductRelationshipRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductRepository;
@@ -327,6 +332,7 @@ use TriCab\Core\Product\Application\Service\ChangeProductSlugService;
 use TriCab\Core\Product\Application\Service\CreateProductService;
 use TriCab\Core\Product\Application\Service\CreateProductVariantService;
 use TriCab\Core\Product\Application\Service\CrossAggregateProductPublishReadinessEvaluator;
+use TriCab\Core\Product\Application\Service\GetAdminProductCustomerViewService;
 use TriCab\Core\Product\Application\Service\GetAdminProductService;
 use TriCab\Core\Product\Application\Service\GetProductAuditHistoryService;
 use TriCab\Core\Product\Application\Service\GetProductLookupsService;
@@ -404,6 +410,7 @@ use TriCab\Api\Http\Action\Admin\CompleteProductDocumentUploadAction;
 use TriCab\Api\Http\Action\Admin\ReplaceProductDocumentUploadAction;
 use TriCab\Api\Http\Action\Admin\DeleteProductDocumentFileAction;
 use TriCab\Api\Http\Action\PublicProduct\DownloadProductDocumentAction;
+use TriCab\Core\Product\Contract\ProductCustomerViewQueryRepository;
 use TriCab\Core\Product\Contract\ProductMediaRepository;
 use TriCab\Core\Product\Contract\ProductPricingRepository;
 use TriCab\Core\Product\Contract\ProductPublicQueryRepository;
@@ -552,6 +559,7 @@ final class ContainerFactory
             ProductManagementErrorMapper::class => \DI\autowire(ProductManagementErrorMapper::class),
             ListProductsAction::class => \DI\autowire(ListProductsAction::class),
             GetProductAction::class => \DI\autowire(GetProductAction::class),
+            GetProductCustomerViewAction::class => \DI\autowire(GetProductCustomerViewAction::class),
             CreateProductAction::class => \DI\autowire(CreateProductAction::class),
             UpdateProductAction::class => \DI\autowire(UpdateProductAction::class),
             PublishProductAction::class => \DI\autowire(PublishProductAction::class),
@@ -646,6 +654,8 @@ final class ContainerFactory
 
                 return new DisabledProductBlobStore();
             },
+            ProductDevMediaUrlResolver::class => \DI\autowire(ProductDevMediaUrlResolver::class),
+            DevProductFileDeliveryAction::class => \DI\autowire(DevProductFileDeliveryAction::class),
             InitiateProductMediaUploadService::class => \DI\autowire(InitiateProductMediaUploadService::class),
             CompleteProductMediaUploadService::class => \DI\autowire(CompleteProductMediaUploadService::class),
             ReplaceProductMediaUploadService::class => \DI\autowire(ReplaceProductMediaUploadService::class),
@@ -689,6 +699,7 @@ final class ContainerFactory
             UpsertProductPricingService::class => \DI\autowire(UpsertProductPricingService::class),
             ListAdminProductsService::class => \DI\autowire(ListAdminProductsService::class),
             GetAdminProductService::class => \DI\autowire(GetAdminProductService::class),
+            GetAdminProductCustomerViewService::class => \DI\autowire(GetAdminProductCustomerViewService::class),
             GetPublicProductService::class => \DI\autowire(GetPublicProductService::class),
             SearchProductsService::class => \DI\autowire(SearchProductsService::class),
 
@@ -836,6 +847,7 @@ final class ContainerFactory
             $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
             $definitions[ProductPublicQueryRepository::class] = \DI\autowire(AzureSqlProductPublicQueryRepository::class);
+            $definitions[ProductCustomerViewQueryRepository::class] = \DI\autowire(AzureSqlProductCustomerViewRepository::class);
             $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(AzureSqlProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(AzureSqlProductClassificationRepository::class);
@@ -930,6 +942,7 @@ SQL,
             $definitions[ProductVariantRepository::class] = \DI\autowire(InMemoryProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(InMemoryProductAdminQueryRepository::class);
             $definitions[ProductPublicQueryRepository::class] = \DI\autowire(InMemoryProductPublicQueryRepository::class);
+            $definitions[ProductCustomerViewQueryRepository::class] = \DI\autowire(InMemoryProductCustomerViewRepository::class);
             $definitions[ProductSearchRepository::class] = \DI\autowire(InMemoryProductSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(InMemoryProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(InMemoryProductClassificationRepository::class);

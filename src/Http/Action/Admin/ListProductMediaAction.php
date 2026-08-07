@@ -10,6 +10,7 @@ use Throwable;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Contract\ProductMediaRepository;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 
@@ -17,6 +18,7 @@ final class ListProductMediaAction
 {
     public function __construct(
         private readonly ProductMediaRepository $media,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
     ) {
@@ -30,7 +32,9 @@ final class ListProductMediaAction
             $publicId = RouteParams::require($request, 'productPublicId');
             $items = $this->media->listByProduct(ProductPublicId::fromString($publicId));
 
-            return $this->responder->success(['items' => ProductManagementDtoSerializer::mediaList($items)]);
+            return $this->responder->success([
+                'items' => ProductManagementDtoSerializer::mediaList($items, $this->devUrls),
+            ]);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

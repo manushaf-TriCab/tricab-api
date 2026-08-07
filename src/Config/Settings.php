@@ -156,6 +156,16 @@ final readonly class Settings
             || ($this->blobAuthMode === self::BLOB_AUTH_MODE_DISABLED && !$this->isProduction());
     }
 
+    /**
+     * Gated local delivery for in-memory product blobs (img tags cannot send Bearer tokens).
+     * Requires APP_ENV=development and the memory blob adapter (BLOB_AUTH_MODE=memory,
+     * or disabled→memory outside production). Never true in production.
+     */
+    public function isDevMemoryProductFileDeliveryEnabled(): bool
+    {
+        return $this->isDevelopment() && $this->usesMemoryProductBlobStore();
+    }
+
     public function productFileScanAutoCleans(): bool
     {
         return $this->blobScanMode === self::BLOB_SCAN_MODE_AUTO_CLEAN;

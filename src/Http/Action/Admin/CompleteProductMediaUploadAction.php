@@ -13,6 +13,7 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\Product\CompleteProductMediaUploadRequest;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Command\CompleteProductMediaUploadCommand;
 use TriCab\Core\Product\Application\Service\CompleteProductMediaUploadService;
 
@@ -20,6 +21,7 @@ final class CompleteProductMediaUploadAction
 {
     public function __construct(
         private readonly CompleteProductMediaUploadService $complete,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly AdminMutationTransaction $transaction,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
@@ -46,7 +48,9 @@ final class CompleteProductMediaUploadAction
                 ),
             ));
 
-            return $this->responder->success(ProductManagementDtoSerializer::mediaFileRecord($completed));
+            return $this->responder->success(
+                ProductManagementDtoSerializer::mediaFileRecord($completed, $this->devUrls),
+            );
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }
