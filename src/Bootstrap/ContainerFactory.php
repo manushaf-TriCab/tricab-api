@@ -19,6 +19,7 @@ use TriCab\Api\Http\Action\Admin\AssignProductCodeAction;
 use TriCab\Api\Http\Action\Admin\AssignProductIndustriesAction;
 use TriCab\Api\Http\Action\Admin\AssignProductMarketsAction;
 use TriCab\Api\Http\Action\Admin\AssignProductSpecificationsAction;
+use TriCab\Api\Http\Action\Admin\GetProductSpecificationsAction;
 use TriCab\Api\Http\Action\Admin\AssignRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\AssignUserRoleAction;
 use TriCab\Api\Http\Action\Admin\AssignVariantSpecificationsAction;
@@ -41,7 +42,14 @@ use TriCab\Api\Http\Action\Admin\GetCustomerAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\GetProductAction;
 use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
+use TriCab\Api\Http\Action\Admin\GetCustomerViewThemeAction;
 use TriCab\Api\Http\Action\Admin\GetProductCustomerViewAction;
+use TriCab\Api\Http\Action\Admin\UpdateCustomerViewThemeAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductMediaRoleAction;
+use TriCab\Api\Site\Persistence\AzureSqlSiteConfigurationRepository;
+use TriCab\Api\Site\Persistence\InMemory\InMemorySiteConfigurationRepository;
+use TriCab\Core\Site\Application\Service\CustomerViewThemeService;
+use TriCab\Core\Site\Contract\SiteConfigurationRepository;
 use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
 use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
 use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
@@ -351,6 +359,7 @@ use TriCab\Core\Product\Application\Service\RestoreDeletedProductService;
 use TriCab\Core\Product\Application\Service\RestoreProductVariantService;
 use TriCab\Core\Product\Application\Service\SearchProductsService;
 use TriCab\Core\Product\Application\Service\SetPrimaryProductImageService;
+use TriCab\Core\Product\Application\Service\UpdateProductMediaRoleService;
 use TriCab\Core\Product\Application\Service\SoftDeleteProductDocumentService;
 use TriCab\Core\Product\Application\Service\SoftDeleteProductMediaService;
 use TriCab\Core\Product\Application\Service\SoftDeleteProductService;
@@ -560,6 +569,9 @@ final class ContainerFactory
             ListProductsAction::class => \DI\autowire(ListProductsAction::class),
             GetProductAction::class => \DI\autowire(GetProductAction::class),
             GetProductCustomerViewAction::class => \DI\autowire(GetProductCustomerViewAction::class),
+            GetCustomerViewThemeAction::class => \DI\autowire(GetCustomerViewThemeAction::class),
+            UpdateCustomerViewThemeAction::class => \DI\autowire(UpdateCustomerViewThemeAction::class),
+            CustomerViewThemeService::class => \DI\autowire(CustomerViewThemeService::class),
             CreateProductAction::class => \DI\autowire(CreateProductAction::class),
             UpdateProductAction::class => \DI\autowire(UpdateProductAction::class),
             PublishProductAction::class => \DI\autowire(PublishProductAction::class),
@@ -581,11 +593,13 @@ final class ContainerFactory
             PreviewProductCodeAction::class => \DI\autowire(PreviewProductCodeAction::class),
             AssignProductCodeAction::class => \DI\autowire(AssignProductCodeAction::class),
             AssignProductSpecificationsAction::class => \DI\autowire(AssignProductSpecificationsAction::class),
+            GetProductSpecificationsAction::class => \DI\autowire(GetProductSpecificationsAction::class),
             AssignVariantSpecificationsAction::class => \DI\autowire(AssignVariantSpecificationsAction::class),
             ListProductMediaAction::class => \DI\autowire(ListProductMediaAction::class),
             AddProductMediaAction::class => \DI\autowire(AddProductMediaAction::class),
             ReorderProductMediaAction::class => \DI\autowire(ReorderProductMediaAction::class),
             SetPrimaryProductImageAction::class => \DI\autowire(SetPrimaryProductImageAction::class),
+            UpdateProductMediaRoleAction::class => \DI\autowire(UpdateProductMediaRoleAction::class),
             SoftDeleteProductMediaAction::class => \DI\autowire(SoftDeleteProductMediaAction::class),
             ListProductDocumentsAction::class => \DI\autowire(ListProductDocumentsAction::class),
             AddProductDocumentAction::class => \DI\autowire(AddProductDocumentAction::class),
@@ -630,6 +644,7 @@ final class ContainerFactory
             AddProductMediaService::class => \DI\autowire(AddProductMediaService::class),
             ReorderProductMediaService::class => \DI\autowire(ReorderProductMediaService::class),
             SetPrimaryProductImageService::class => \DI\autowire(SetPrimaryProductImageService::class),
+            UpdateProductMediaRoleService::class => \DI\autowire(UpdateProductMediaRoleService::class),
             SoftDeleteProductMediaService::class => \DI\autowire(SoftDeleteProductMediaService::class),
             ProductFilePathBuilder::class => \DI\autowire(ProductFilePathBuilder::class),
             ProductFileValidationPolicy::class => \DI\autowire(ProductFileValidationPolicy::class),
@@ -859,6 +874,7 @@ final class ContainerFactory
             $definitions[ProductMarketRepository::class] = \DI\autowire(AzureSqlProductMarketRepository::class);
             $definitions[ProductRelationshipRepository::class] = \DI\autowire(AzureSqlProductRelationshipRepository::class);
             $definitions[ProductSeoRepository::class] = \DI\autowire(AzureSqlProductSeoRepository::class);
+            $definitions[SiteConfigurationRepository::class] = \DI\autowire(AzureSqlSiteConfigurationRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(AzureSqlProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(AzureSqlProductPricingRepository::class);
             $definitions[ProductAuditRepository::class] = \DI\autowire(AzureSqlProductAuditRepository::class);
@@ -954,6 +970,7 @@ SQL,
             $definitions[ProductMarketRepository::class] = \DI\autowire(InMemoryProductMarketRepository::class);
             $definitions[ProductRelationshipRepository::class] = \DI\autowire(InMemoryProductRelationshipRepository::class);
             $definitions[ProductSeoRepository::class] = \DI\autowire(InMemoryProductSeoRepository::class);
+            $definitions[SiteConfigurationRepository::class] = \DI\autowire(InMemorySiteConfigurationRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(InMemoryProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(InMemoryProductPricingRepository::class);
             $definitions[ProductAuditRepository::class] = \DI\autowire(InMemoryProductAuditRepository::class);

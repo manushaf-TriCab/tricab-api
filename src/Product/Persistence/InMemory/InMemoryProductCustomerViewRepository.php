@@ -70,7 +70,7 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
         return new ProductCustomerViewDetail(
             publicId: $publicId,
             productName: $product->productName(),
-            productCode: $this->primaryProductCode($publicId) ?? $product->internalCode()?->toString(),
+            productCode: $product->internalCode()?->toString() ?? $this->primaryProductCode($publicId),
             shortDescription: $product->shortDescription(),
             fullDescription: $product->fullDescription(),
             familyName: $this->store->familyNameForId($product->familyId()),
@@ -207,16 +207,28 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
     }
 
     /**
+     * Catalogue Technical Dimensions column codes (Customer View order).
+     *
+     * @var list<string>
+     */
+    private const TECHNICAL_DIMENSION_CODES = [
+        'SIZE',
+        'MIN-BEND-RADIUS',
+        'NOM-COND-OD',
+        'NOM-INS-OD',
+        'NOM-CABLE-OD',
+        'CURRENT',
+        'APPROX-WEIGHT',
+    ];
+
+    /**
      * @param list<ProductVariantSummary> $variants
      */
     private function buildVariantMatrix(array $variants): ProductCustomerViewVariantMatrix
     {
-        $columnDefs = [];
+        $columnDefsByCode = [];
         foreach ($this->store->specDefinitions() as $definition) {
             if (($definition['isActive'] ?? true) === false) {
-                continue;
-            }
-            if (($definition['isComparable'] ?? false) !== true && ($definition['isComparable'] ?? 0) !== 1) {
                 continue;
             }
             $scope = strtolower((string) ($definition['scopeCode'] ?? ''));
@@ -226,39 +238,33 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
             if (!$this->isPublicVisibleDefinition($definition)) {
                 continue;
             }
+            $code = is_string($definition['code'] ?? null) ? $definition['code'] : '';
+            if ($code === '' || !in_array($code, self::TECHNICAL_DIMENSION_CODES, true)) {
+                continue;
+            }
             $publicId = $definition['publicId'] ?? null;
             if (!is_string($publicId) || $publicId === '') {
                 continue;
             }
-            $columnDefs[] = $definition;
+            $columnDefsByCode[$code] = $definition;
         }
-
-        usort(
-            $columnDefs,
-            static function (array $a, array $b): int {
-                $groupOrderA = is_int($a['groupDisplayOrder'] ?? null) ? $a['groupDisplayOrder'] : 0;
-                $groupOrderB = is_int($b['groupDisplayOrder'] ?? null) ? $b['groupDisplayOrder'] : 0;
-                $orderA = is_int($a['displayOrder'] ?? null) ? $a['displayOrder'] : 0;
-                $orderB = is_int($b['displayOrder'] ?? null) ? $b['displayOrder'] : 0;
-
-                return $groupOrderA <=> $groupOrderB
-                    ?: $orderA <=> $orderB
-                    ?: strcmp((string) ($a['publicId'] ?? ''), (string) ($b['publicId'] ?? ''));
-            },
-        );
 
         $columns = [];
         $columnIds = [];
-        foreach ($columnDefs as $definition) {
+        foreach (self::TECHNICAL_DIMENSION_CODES as $index => $code) {
+            $definition = $columnDefsByCode[$code] ?? null;
+            if ($definition === null) {
+                continue;
+            }
             $definitionPublicId = (string) $definition['publicId'];
             $columns[] = new ProductCustomerViewMatrixColumn(
                 definitionPublicId: $definitionPublicId,
-                code: is_string($definition['code'] ?? null) ? $definition['code'] : $definitionPublicId,
+                code: $code,
                 name: is_string($definition['name'] ?? null) ? $definition['name'] : 'Specification',
                 groupName: is_string($definition['groupName'] ?? null) ? $definition['groupName'] : null,
                 unit: is_string($definition['unit'] ?? null) ? $definition['unit'] : null,
                 dataTypeCode: is_string($definition['dataTypeCode'] ?? null) ? $definition['dataTypeCode'] : 'text',
-                displayOrder: is_int($definition['displayOrder'] ?? null) ? $definition['displayOrder'] : 0,
+                displayOrder: $index + 1,
             );
             $columnIds[] = $definitionPublicId;
         }

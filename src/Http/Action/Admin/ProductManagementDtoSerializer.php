@@ -672,6 +672,44 @@ final class ProductManagementDtoSerializer
     }
 
     /**
+     * Editable product/variant specification value (admin GET/PUT shape).
+     *
+     * @param array{
+     *   definitionPublicId: string,
+     *   valueText: ?string,
+     *   valueLongText: ?string,
+     *   valueInteger: ?int,
+     *   valueDecimal: ?string,
+     *   valueBoolean: ?bool,
+     *   valueDate: ?string,
+     *   valueUrl: ?string,
+     *   valueMinDecimal: ?string,
+     *   valueMaxDecimal: ?string,
+     *   optionPublicId: ?string,
+     *   optionPublicIds: list<string>
+     * } $value
+     *
+     * @return array<string, mixed>
+     */
+    public static function specificationValue(array $value): array
+    {
+        return [
+            'definitionPublicId' => $value['definitionPublicId'],
+            'valueText' => $value['valueText'],
+            'valueLongText' => $value['valueLongText'],
+            'valueInteger' => $value['valueInteger'],
+            'valueDecimal' => $value['valueDecimal'],
+            'valueBoolean' => $value['valueBoolean'],
+            'valueDate' => $value['valueDate'],
+            'valueUrl' => $value['valueUrl'],
+            'valueMinDecimal' => $value['valueMinDecimal'],
+            'valueMaxDecimal' => $value['valueMaxDecimal'],
+            'optionPublicId' => $value['optionPublicId'],
+            'optionPublicIds' => array_values($value['optionPublicIds']),
+        ];
+    }
+
+    /**
      * @param array{
      *   pageTitle?: ?string,
      *   metaDescription?: ?string,

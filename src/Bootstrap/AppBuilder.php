@@ -40,6 +40,7 @@ use TriCab\Api\Http\Action\Admin\AssignProductCodeAction;
 use TriCab\Api\Http\Action\Admin\AssignProductIndustriesAction;
 use TriCab\Api\Http\Action\Admin\AssignProductMarketsAction;
 use TriCab\Api\Http\Action\Admin\AssignProductSpecificationsAction;
+use TriCab\Api\Http\Action\Admin\GetProductSpecificationsAction;
 use TriCab\Api\Http\Action\Admin\AssignRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\AssignUserRoleAction;
 use TriCab\Api\Http\Action\Admin\AssignVariantSpecificationsAction;
@@ -62,7 +63,10 @@ use TriCab\Api\Http\Action\Admin\GetCustomerAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\GetProductAction;
 use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
+use TriCab\Api\Http\Action\Admin\GetCustomerViewThemeAction;
 use TriCab\Api\Http\Action\Admin\GetProductCustomerViewAction;
+use TriCab\Api\Http\Action\Admin\UpdateCustomerViewThemeAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductMediaRoleAction;
 use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
 use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
 use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
@@ -258,6 +262,10 @@ final class AppBuilder
         $app->get('/api/v1/admin/products/{productPublicId}', GetProductAction::class)->add(($require)('PRODUCT.READ'));
         $app->get('/api/v1/admin/products/{productPublicId}/customer-view', GetProductCustomerViewAction::class)
             ->add(($require)('PRODUCT.READ'));
+        $app->get('/api/v1/admin/settings/customer-view-theme', GetCustomerViewThemeAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/settings/customer-view-theme', UpdateCustomerViewThemeAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
         $app->patch('/api/v1/admin/products/{productPublicId}', UpdateProductAction::class)->add(($require)('PRODUCT.UPDATE'));
 
         $app->post('/api/v1/admin/products/{productPublicId}/publish', PublishProductAction::class)
@@ -308,6 +316,8 @@ final class AppBuilder
             ->add(($require)('PRODUCT.UPDATE'));
         $app->put('/api/v1/admin/products/{productPublicId}/relationships', ReplaceProductRelationshipsAction::class)
             ->add(($require)('PRODUCT.RELATIONSHIPS.MANAGE'));
+        $app->get('/api/v1/admin/products/{productPublicId}/specifications', GetProductSpecificationsAction::class)
+            ->add(($require)('PRODUCT.READ'));
         $app->put('/api/v1/admin/products/{productPublicId}/specifications', AssignProductSpecificationsAction::class)
             ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
         $app->put('/api/v1/admin/products/{productPublicId}/seo', UpdateProductSeoAction::class)
@@ -537,6 +547,8 @@ final class AppBuilder
             ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
 
         $app->post('/api/v1/admin/product-media/{mediaPublicId}/set-primary', SetPrimaryProductImageAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/product-media/{mediaPublicId}/role', UpdateProductMediaRoleAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
 
         $app->post('/api/v1/admin/products/{productPublicId}/360-sets', CreateProduct360SetAction::class)

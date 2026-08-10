@@ -216,6 +216,35 @@ final class InMemoryProductMediaRepository implements ProductMediaRepository
         });
     }
 
+    public function updateImageRole(
+        ProductPublicId $productPublicId,
+        string $mediaPublicId,
+        string $imageRoleCode,
+        UserId $actorUserId,
+    ): void {
+        unset($actorUserId);
+        $exclusiveRoles = ['primary', 'cross-section', 'diagram', 'hero', 'thumbnail'];
+        foreach ($this->store->media() as $row) {
+            if (($row['productPublicId'] ?? '') !== $productPublicId->toString()) {
+                continue;
+            }
+            $publicId = (string) ($row['publicId'] ?? '');
+            if (
+                in_array($imageRoleCode, $exclusiveRoles, true)
+                && $publicId !== $mediaPublicId
+                && (($row['mediaCategoryCode'] ?? '') === $imageRoleCode)
+            ) {
+                $row['mediaCategoryCode'] = 'gallery';
+                $this->store->addMedia($row);
+                continue;
+            }
+            if ($publicId === $mediaPublicId) {
+                $row['mediaCategoryCode'] = $imageRoleCode;
+                $this->store->addMedia($row);
+            }
+        }
+    }
+
     public function setPrimary(
         ProductPublicId $productPublicId,
         string $mediaPublicId,

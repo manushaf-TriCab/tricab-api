@@ -200,6 +200,64 @@ SQL,
         );
     }
 
+    public function updateImageRole(
+        ProductPublicId $productPublicId,
+        string $mediaPublicId,
+        string $imageRoleCode,
+        UserId $actorUserId,
+    ): void {
+        $exclusiveRoles = ['primary', 'cross-section', 'diagram', 'hero', 'thumbnail'];
+        $this->runInTransaction(
+            $this->connection,
+            function () use ($productPublicId, $mediaPublicId, $imageRoleCode, $actorUserId, $exclusiveRoles): void {
+                if (in_array($imageRoleCode, $exclusiveRoles, true)) {
+                    $this->connection->execute(
+                        <<<'SQL'
+UPDATE i
+SET
+    i.[ImageRoleCode] = N'gallery',
+    i.[UpdatedAtUtc] = SYSUTCDATETIME(),
+    i.[UpdatedByUserId] = :updatedByUserId
+FROM [product].[ProductImages] i
+INNER JOIN [product].[Products] p ON p.[ProductId] = i.[ProductId]
+WHERE p.[PublicId] = :productPublicId
+  AND i.[PublicId] <> :mediaPublicId
+  AND i.[ImageRoleCode] = :imageRoleCode
+  AND i.[DeletedAtUtc] IS NULL
+SQL,
+                        [
+                            ':productPublicId' => $productPublicId->toString(),
+                            ':mediaPublicId' => $mediaPublicId,
+                            ':imageRoleCode' => $imageRoleCode,
+                            ':updatedByUserId' => $actorUserId->toInt(),
+                        ],
+                    );
+                }
+
+                $this->connection->execute(
+                    <<<'SQL'
+UPDATE i
+SET
+    i.[ImageRoleCode] = :imageRoleCode,
+    i.[UpdatedAtUtc] = SYSUTCDATETIME(),
+    i.[UpdatedByUserId] = :updatedByUserId
+FROM [product].[ProductImages] i
+INNER JOIN [product].[Products] p ON p.[ProductId] = i.[ProductId]
+WHERE p.[PublicId] = :productPublicId
+  AND i.[PublicId] = :mediaPublicId
+  AND i.[DeletedAtUtc] IS NULL
+SQL,
+                    [
+                        ':productPublicId' => $productPublicId->toString(),
+                        ':mediaPublicId' => $mediaPublicId,
+                        ':imageRoleCode' => $imageRoleCode,
+                        ':updatedByUserId' => $actorUserId->toInt(),
+                    ],
+                );
+            },
+        );
+    }
+
     public function setPrimary(
         ProductPublicId $productPublicId,
         string $mediaPublicId,

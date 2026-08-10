@@ -38,6 +38,7 @@ final class AzureSqlProductCustomerViewRepository implements ProductCustomerView
 SELECT
     CONVERT(NVARCHAR(36), p.[PublicId]) AS [PublicId],
     p.[ProductName],
+    p.[InternalCode],
     p.[ShortDescription],
     p.[FullDescription],
     f.[FamilyName],
@@ -103,10 +104,13 @@ SQL,
         $primarySlug = $slug !== '' ? $slug : null;
         $variants = $this->listPreviewVariants($pid);
 
+        $internalCode = AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null);
+
         return new ProductCustomerViewDetail(
             publicId: $publicId,
             productName: AzureSqlValueMapper::stringValue($row['ProductName'] ?? ''),
-            productCode: $this->primaryProductCode($pid),
+            // Header code block shows InternalCode (catalogue product code, e.g. BHA).
+            productCode: $internalCode ?? $this->primaryProductCode($pid),
             shortDescription: AzureSqlValueMapper::nullableString($row['ShortDescription'] ?? null),
             fullDescription: AzureSqlValueMapper::nullableString($row['FullDescription'] ?? null),
             familyName: AzureSqlValueMapper::nullableString($row['FamilyName'] ?? null),
@@ -230,6 +234,13 @@ SELECT
     CONVERT(NVARCHAR(50), psv.[ValueMinDecimal]) AS [ValueMinDecimal],
     CONVERT(NVARCHAR(50), psv.[ValueMaxDecimal]) AS [ValueMaxDecimal],
     so.[OptionLabel],
+    (
+        SELECT STRING_AGG(opt.[OptionLabel], N' | ') WITHIN GROUP (ORDER BY opt.[DisplayOrder], opt.[OptionLabel])
+        FROM [product].[ProductSpecificationOptionValues] pov
+        INNER JOIN [product].[SpecificationOptions] opt
+            ON opt.[SpecificationOptionId] = pov.[SpecificationOptionId]
+        WHERE pov.[ProductSpecificationValueId] = psv.[ProductSpecificationValueId]
+    ) AS [MultiOptionLabels],
     sd.[ValidationRulesJson],
     sd.[ScopeCode]
 FROM [product].[ProductSpecificationValues] psv
@@ -272,12 +283,36 @@ SQL,
     }
 
     /**
+     * Catalogue Technical Dimensions column codes (Customer View order).
+     *
+     * @var list<string>
+     */
+    private const TECHNICAL_DIMENSION_CODES = [
+        'SIZE',
+        'MIN-BEND-RADIUS',
+        'NOM-COND-OD',
+        'NOM-INS-OD',
+        'NOM-CABLE-OD',
+        'CURRENT',
+        'APPROX-WEIGHT',
+    ];
+
+    /**
      * @param list<ProductVariantSummary> $variants
      */
     private function buildVariantMatrix(ProductPublicId $productPublicId, array $variants): ProductCustomerViewVariantMatrix
     {
+        $placeholders = [];
+        $params = [];
+        foreach (self::TECHNICAL_DIMENSION_CODES as $index => $code) {
+            $key = ':code' . $index;
+            $placeholders[] = $key;
+            $params[$key] = $code;
+        }
+        $inList = implode(', ', $placeholders);
+
         $columnRows = $this->connection->fetchAll(
-            <<<'SQL'
+            <<<SQL
 SELECT
     CONVERT(NVARCHAR(36), sd.[PublicId]) AS [DefinitionPublicId],
     sd.[DefinitionCode] AS [Code],
@@ -292,14 +327,13 @@ FROM [product].[SpecificationDefinitions] sd
 LEFT JOIN [product].[SpecificationGroups] sg ON sg.[SpecificationGroupId] = sd.[SpecificationGroupId]
 WHERE sd.[DeletedAtUtc] IS NULL
   AND sd.[IsActive] = 1
-  AND sd.[IsComparable] = 1
   AND sd.[ScopeCode] IN (N'variant', N'both')
-ORDER BY sg.[DisplayOrder] ASC, sd.[DisplayOrder] ASC
+  AND sd.[DefinitionCode] IN ({$inList})
 SQL,
+            $params,
         );
 
-        $columns = [];
-        $columnIds = [];
+        $columnsByCode = [];
         foreach ($columnRows as $row) {
             $rules = SpecificationValidationRules::fromJson(
                 AzureSqlValueMapper::nullableString($row['ValidationRulesJson'] ?? null),
@@ -307,15 +341,26 @@ SQL,
             if ($rules->isAdminOnly || !$rules->isPublicVisible) {
                 continue;
             }
+            $code = AzureSqlValueMapper::stringValue($row['Code'] ?? '');
+            $columnsByCode[$code] = $row;
+        }
+
+        $columns = [];
+        $columnIds = [];
+        foreach (self::TECHNICAL_DIMENSION_CODES as $index => $code) {
+            $row = $columnsByCode[$code] ?? null;
+            if ($row === null) {
+                continue;
+            }
             $definitionPublicId = AzureSqlValueMapper::stringValue($row['DefinitionPublicId'] ?? '');
             $columns[] = new ProductCustomerViewMatrixColumn(
                 definitionPublicId: $definitionPublicId,
-                code: AzureSqlValueMapper::stringValue($row['Code'] ?? ''),
+                code: $code,
                 name: AzureSqlValueMapper::stringValue($row['Name'] ?? ''),
                 groupName: AzureSqlValueMapper::nullableString($row['GroupName'] ?? null),
                 unit: AzureSqlValueMapper::nullableString($row['Unit'] ?? null),
                 dataTypeCode: AzureSqlValueMapper::stringValue($row['DataTypeCode'] ?? ''),
-                displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+                displayOrder: $index + 1,
             );
             $columnIds[] = $definitionPublicId;
         }
@@ -393,6 +438,10 @@ SQL,
      */
     private function azureSpecDisplayValue(array $row): ?string
     {
+        $multiOptions = AzureSqlValueMapper::nullableString($row['MultiOptionLabels'] ?? null);
+        if ($multiOptions !== null && $multiOptions !== '') {
+            return $multiOptions;
+        }
         $option = AzureSqlValueMapper::nullableString($row['OptionLabel'] ?? null);
         if ($option !== null && $option !== '') {
             return $option;
@@ -408,18 +457,59 @@ SQL,
         }
         $decimal = AzureSqlValueMapper::nullableString($row['ValueDecimal'] ?? null);
         if ($decimal !== null && $decimal !== '') {
-            return $decimal;
+            return $this->formatNumericDisplay($decimal);
         }
         if (array_key_exists('ValueBoolean', $row) && $row['ValueBoolean'] !== null) {
             return AzureSqlValueMapper::boolValue($row['ValueBoolean']) ? 'Yes' : 'No';
         }
-        $min = AzureSqlValueMapper::nullableString($row['ValueMinDecimal'] ?? null);
-        $max = AzureSqlValueMapper::nullableString($row['ValueMaxDecimal'] ?? null);
+        $min = $this->formatNumericDisplay(AzureSqlValueMapper::nullableString($row['ValueMinDecimal'] ?? null));
+        $max = $this->formatNumericDisplay(AzureSqlValueMapper::nullableString($row['ValueMaxDecimal'] ?? null));
         if ($min !== null || $max !== null) {
+            $unit = AzureSqlValueMapper::nullableString($row['Unit'] ?? null) ?? '';
+            $name = strtolower(AzureSqlValueMapper::stringValue($row['Name'] ?? ''));
+            $isTemp = str_contains($name, 'temp') || str_contains($unit, '°') || strcasecmp($unit, 'C') === 0;
+            if ($isTemp) {
+                $minLabel = $min !== null ? $this->formatSignedTemp($min) : '';
+                $maxLabel = $max !== null ? $this->formatSignedTemp($max) : '';
+                $joined = trim($minLabel . ' to ' . $maxLabel);
+
+                return $joined !== '' ? $joined : null;
+            }
+
             return trim(($min ?? '') . ' – ' . ($max ?? ''), ' –');
         }
 
         return null;
+    }
+
+    private function formatNumericDisplay(?string $value): ?string
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+        if (!is_numeric($value)) {
+            return trim($value);
+        }
+        $number = (float) $value;
+        if (floor($number) === $number) {
+            return (string) (int) $number;
+        }
+
+        return rtrim(rtrim(sprintf('%.6F', $number), '0'), '.');
+    }
+
+    private function formatSignedTemp(string $value): string
+    {
+        if (!is_numeric($value)) {
+            return $value;
+        }
+        $number = (float) $value;
+        $formatted = $this->formatNumericDisplay($value) ?? $value;
+        if ($number > 0) {
+            return '+' . $formatted;
+        }
+
+        return $formatted;
     }
 
     /**
