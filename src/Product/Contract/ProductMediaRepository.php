@@ -116,6 +116,17 @@ interface ProductMediaRepository
     ): void;
 
     /**
+     * Updates ProductImages.ImageRoleCode (admin mediaCategoryCode).
+     * Exclusive roles (e.g. cross-section) should demote previous holders to gallery.
+     */
+    public function updateImageRole(
+        ProductPublicId $productPublicId,
+        string $mediaPublicId,
+        string $imageRoleCode,
+        UserId $actorUserId,
+    ): void;
+
+    /**
      * @param list<string> $orderedMediaPublicIds
      */
     public function reorder(

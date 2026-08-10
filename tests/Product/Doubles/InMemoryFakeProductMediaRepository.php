@@ -182,6 +182,34 @@ final class InMemoryFakeProductMediaRepository implements ProductMediaRepository
         $this->persistRow($row['productPublicId'], $row);
     }
 
+    public function updateImageRole(
+        ProductPublicId $productPublicId,
+        string $mediaPublicId,
+        string $imageRoleCode,
+        UserId $actorUserId,
+    ): void {
+        unset($actorUserId);
+        $exclusiveRoles = ['primary', 'cross-section', 'diagram', 'hero', 'thumbnail'];
+        $rows = $this->store->mediaFor($productPublicId->toString());
+        $map = $this->store->mediaByPublicIdMap();
+        foreach ($rows as &$row) {
+            if (
+                in_array($imageRoleCode, $exclusiveRoles, true)
+                && $row['publicId'] !== $mediaPublicId
+                && (($row['mediaCategoryCode'] ?? '') === $imageRoleCode)
+            ) {
+                $row['mediaCategoryCode'] = 'gallery';
+            }
+            if ($row['publicId'] === $mediaPublicId) {
+                $row['mediaCategoryCode'] = $imageRoleCode;
+            }
+            $map[$row['publicId']] = $row;
+        }
+        unset($row);
+        $this->store->setMediaFor($productPublicId->toString(), $rows);
+        $this->store->setMediaByPublicIdMap($map);
+    }
+
     public function setPrimary(ProductPublicId $productPublicId, string $mediaPublicId, UserId $actorUserId): void
     {
         $rows = $this->store->mediaFor($productPublicId->toString());
