@@ -2,6 +2,10 @@
 /.phpunit.cache/
 .phpunit.result.cache
 .env
+.env.*
+!.env.example
 .DS_Store
 /var/log/
 /var/cache/
+/tmp/
+/output/
