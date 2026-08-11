@@ -13,6 +13,10 @@ use TriCab\Api\Infrastructure\Database\DatabaseAuthFailed;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
 
+/**
+ * On-demand readiness. Opens Azure SQL and must not be used as a frequent
+ * serverless/non-prod probe — that prevents auto-pause. Prefer GET /health.
+ */
 final class DatabaseHealthAction
 {
     public function __construct(

@@ -9,6 +9,7 @@ use PDOException;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenException;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 
 /**
  * Creates PDO connections for Azure SQL using either SQL login or Entra CLI access tokens.
@@ -18,11 +19,14 @@ final class AzureSqlPdoFactory
     public function __construct(
         private readonly Settings $settings,
         private readonly AzureCliAccessTokenProvider $accessTokenProvider,
+        private readonly ?RequestPerformanceMetrics $metrics = null,
     ) {
     }
 
     public function create(): PDO
     {
+        $started = hrtime(true);
+        $this->metrics?->setDbAuthMode($this->settings->dbAuthMode);
         DatabaseAuthDiagnostics::log('pdo_factory.create.start', [
             'DB_AUTH_MODE' => $this->settings->dbAuthMode,
             'USER_REPOSITORY' => $this->settings->userRepository,
@@ -57,11 +61,15 @@ final class AzureSqlPdoFactory
             );
         }
 
-        if ($this->settings->usesEntraCliAuth()) {
-            return $this->createWithAccessToken();
-        }
+        try {
+            if ($this->settings->usesEntraCliAuth()) {
+                return $this->createWithAccessToken();
+            }
 
-        return $this->createWithSqlLogin();
+            return $this->createWithSqlLogin();
+        } finally {
+            $this->metrics?->recordPdoCreate(RequestPerformanceMetrics::durationMs($started));
+        }
     }
 
     private function createWithAccessToken(): PDO

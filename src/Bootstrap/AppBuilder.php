@@ -14,6 +14,9 @@ use TriCab\Api\Http\Action\Admin\AddProductMediaAction;
 use TriCab\Api\Http\Action\Admin\ProductSeriesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductCategoriesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductFamiliesAdminAction;
+use TriCab\Api\Http\Action\Admin\CatalogueTabsAdminAction;
+use TriCab\Api\Http\Action\Admin\CatalogueNodesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductCataloguePlacementsAdminAction;
 use TriCab\Api\Http\Action\Admin\SpecificationDefinitionsAdminAction;
 use TriCab\Api\Http\Action\Admin\SpecificationGroupsAdminAction;
 use TriCab\Api\Http\Action\Admin\SpecificationOptionsAdminAction;
@@ -111,6 +114,10 @@ use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
 use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
 use TriCab\Api\Http\Action\PublicProduct\DownloadProductDocumentAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductBySlugAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicCataloguePanelAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabsAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabTreeAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueNodeAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductDocumentsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductMediaAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductRelationshipsAction;
@@ -132,6 +139,8 @@ use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
 use TriCab\Api\Http\Middleware\DevelopmentAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\JsonExceptionMiddleware;
+use TriCab\Api\Http\Middleware\ReferenceDataCacheInvalidationMiddleware;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMiddleware;
 
 final class AppBuilder
 {
@@ -163,9 +172,17 @@ final class AppBuilder
         $corsMiddleware = $container->get(CorsMiddleware::class);
         $app->add($corsMiddleware);
 
+        /** @var ReferenceDataCacheInvalidationMiddleware $cacheInvalidation */
+        $cacheInvalidation = $container->get(ReferenceDataCacheInvalidationMiddleware::class);
+        $app->add($cacheInvalidation);
+
         /** @var Settings $settings */
         $settings = $container->get(Settings::class);
         $app->addErrorMiddleware($settings->appDebug, true, true);
+
+        /** @var RequestPerformanceMiddleware $performanceMiddleware */
+        $performanceMiddleware = $container->get(RequestPerformanceMiddleware::class);
+        $app->add($performanceMiddleware);
 
         self::registerRoutes($app, $settings, $container);
 
@@ -250,6 +267,10 @@ final class AppBuilder
         $app->get('/api/v1/products/{slug}/relationships', GetPublicProductRelationshipsAction::class);
         $app->get('/api/v1/products/{slug}/specifications', GetPublicProductSpecificationsAction::class);
         $app->get('/api/v1/product-search', SearchPublicProductsAction::class);
+        $app->get('/api/v1/catalogue/panel', GetPublicCataloguePanelAction::class);
+        $app->get('/api/v1/catalogue/tabs', GetPublicCatalogueTabsAction::class);
+        $app->get('/api/v1/catalogue/tabs/{tabSlug}/tree', GetPublicCatalogueTabTreeAction::class);
+        $app->get('/api/v1/catalogue/nodes/{nodeSlugOrPublicId}', GetPublicCatalogueNodeAction::class);
     }
 
     /**
@@ -394,6 +415,59 @@ final class AppBuilder
             ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
         $app->get('/api/v1/admin/product-series/{seriesPublicId}/usage', ProductSeriesAdminAction::class)
             ->add(($require)('PRODUCT.READ'));
+
+        $app->get('/api/v1/admin/catalogue-tabs', CatalogueTabsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/catalogue-tabs', CatalogueTabsAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-tabs/reorder', CatalogueTabsAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/catalogue-tabs/{tabPublicId}', CatalogueTabsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/catalogue-tabs/{tabPublicId}', CatalogueTabsAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-tabs/{tabPublicId}/activate', CatalogueTabsAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-tabs/{tabPublicId}/deactivate', CatalogueTabsAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-tabs/{tabPublicId}/archive', CatalogueTabsAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-tabs/{tabPublicId}/restore', CatalogueTabsAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+
+        $app->get('/api/v1/admin/catalogue-nodes', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->get('/api/v1/admin/catalogue-nodes/tree', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/catalogue-nodes', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-nodes/reorder', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/catalogue-nodes/{nodePublicId}', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/catalogue-nodes/{nodePublicId}', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-nodes/{nodePublicId}/move', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-nodes/{nodePublicId}/activate', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-nodes/{nodePublicId}/deactivate', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-nodes/{nodePublicId}/archive', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->post('/api/v1/admin/catalogue-nodes/{nodePublicId}/restore', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/catalogue-nodes/{nodePublicId}/usage', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->get('/api/v1/admin/catalogue-nodes/{nodePublicId}/products', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/catalogue-nodes/{nodePublicId}/products', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+
+        $app->get('/api/v1/admin/products/{productPublicId}/catalogue-placements', ProductCataloguePlacementsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/products/{productPublicId}/catalogue-placements', ProductCataloguePlacementsAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
 
         $app->get('/api/v1/admin/specification-groups', SpecificationGroupsAdminAction::class)
             ->add(($require)('PRODUCT.READ'));

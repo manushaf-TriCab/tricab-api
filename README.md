@@ -1,11 +1,11 @@
 # TriCab API
 
-Slim 4 API for the TriCab Platform Rebuild. Consumes `tricab/tricab-core` via a local Composer path repository (symlink).
+Slim 4 authentication slice for the TriCab Platform Rebuild. Consumes `tricab/tricab-core` via a local Composer path repository (symlink).
 
 ## Boundaries
 
-- **API owns:** Slim, PSR-7, DI, dotenv, Entra token validation adapters, persistence adapters (memory / Azure SQL), Dompdf rendering, templates/assets, and HTTP responses
-- **Core owns:** domain entities, value objects, document parsing/use cases, renderer and repository contracts
+- **API owns:** Slim, PSR-7, DI, dotenv, Entra token validation adapters, persistence adapters (memory / Azure SQL), JSON responses
+- **Core owns:** domain entities, value objects, `ResolveAuthenticatedUserHandler`, `UserRepository` contract
 
 ## Modes
 
@@ -19,7 +19,7 @@ Slim 4 API for the TriCab Platform Rebuild. Consumes `tricab/tricab-core` via a 
 ## Setup
 
 ```bash
-cd D:\TriCab\Projects\tricab-api
+cd /Users/thilanh/Documents/Projects/tricab-core/tricab-api
 cp .env.example .env
 composer install
 composer dump-autoload
@@ -50,10 +50,31 @@ DB_TRUST_SERVER_CERTIFICATE=false
 `entra-cli` acquires a short-lived Azure SQL access token via:
 
 ```bash
-az account get-access-token --resource https://database.windows.net/ --query accessToken --output tsv
+az account get-access-token --resource https://database.windows.net/ --output json
 ```
 
-Tokens are never written to `.env`, never logged, and never stored on disk.
+The token is cached **in-process** until `expires_on - 60 seconds`. It is never written to `.env`, never logged, and never stored on disk.
+
+Optional local SQL login (already supported; do not commit passwords):
+
+```env
+DB_AUTH_MODE=sql-login
+DB_USERNAME=
+DB_PASSWORD=
+```
+
+Request timing (development default on): `APP_PERFORMANCE_LOGGING=true` writes `[perf]` lines to STDERR and `var/log/request-performance.log`.
+
+## Azure SQL Serverless cost control
+
+Serverless bills primarily while the database is **resumed**, not per query. Interactive development (`/me`, lookups, catalogue, editor) keeps it awake. Auto-pause delay is often 60 minutes.
+
+- Do **not** add keep-alive polling to hide cold start.
+- Use `GET /health` for frequent liveness probes. Do **not** probe `GET /health/database` on an interval in non-prod.
+- Disconnect SSMS / Azure query editor sessions when finished.
+- First request after pause can take seconds (resume). Later requests should be hundreds of milliseconds when SQL is warm.
+- Production should prefer Managed Identity / an approved Entra mechanism, not `entra-cli`.
+- Check auto-pause delay and min vCores in the Azure Portal (not in this repo).
 
 External identity lookup key: `ProviderCode` + `TenantIdentifier` + `SubjectIdentifier`.
 
@@ -251,22 +272,6 @@ curl \
   -H "X-Dev-Entra-Email: thilanh@tricab.com" \
   http://localhost:8080/api/v1/me
 ```
-
-## Generate a PDF from an OCR stream
-
-`POST /api/v1/documents/pdf` accepts the legacy `.RET.`/`.RER.` stream as the raw request body and returns `application/pdf`. The route supports order confirmations (`tcord.ocr`), pick lists (`tcpick.ocr`), and quotations (`tcqu.ocr`).
-
-When `APP_ENV=development`, `DEV_AUTH_ENABLED=true`, and `USER_REPOSITORY=memory`, the existing development-auth middleware supplies the configured seeded identity for a short internal test. Otherwise, send a normal Microsoft Entra bearer token and use the configured user repository.
-
-```powershell
-curl.exe "http://localhost:8080/api/v1/documents/pdf" `
-  -H "Content-Type: text/plain; charset=utf-8" `
-  -H "Accept: application/pdf" `
-  --data-binary "@tests/Fixtures/DocumentGeneration/tcord.ocr.txt" `
-  --output order-confirmation.pdf
-```
-
-Successful responses include `X-OCR-Template` and `X-OCR-Warning-Count`. Invalid streams return a JSON error; payloads are limited to 5 MB. See [docs/document-generation.md](docs/document-generation.md) for the complete contract and architecture.
 
 ## Quality
 

@@ -62,26 +62,11 @@ SQL;
         $sql .= ' ORDER BY d.[DisplayOrder], d.[DefinitionName]';
 
         $definitions = $this->connection->fetchAll($sql);
-        $result = [];
+        $optionsByDefinition = $this->loadOptionsGroupedByDefinition($activeOnly);
 
+        $result = [];
         foreach ($definitions as $definitionRow) {
             $definitionPublicId = AzureSqlValueMapper::stringValue($definitionRow['PublicId'] ?? '');
-            $optionRows = $this->connection->fetchAll(
-                <<<'SQL'
-SELECT
-    CONVERT(NVARCHAR(36), o.[PublicId]) AS [PublicId],
-    o.[OptionCode],
-    o.[OptionLabel],
-    o.[DisplayOrder]
-FROM [product].[SpecificationOptions] o
-INNER JOIN [product].[SpecificationDefinitions] d ON d.[SpecificationDefinitionId] = o.[SpecificationDefinitionId]
-WHERE d.[PublicId] = :definitionPublicId
-  AND o.[DeletedAtUtc] IS NULL
-ORDER BY o.[DisplayOrder], o.[OptionLabel]
-SQL,
-                [':definitionPublicId' => $definitionPublicId],
-            );
-
             $result[] = [
                 'publicId' => $definitionPublicId,
                 'groupCode' => AzureSqlValueMapper::nullableString($definitionRow['GroupCode'] ?? null),
@@ -92,19 +77,47 @@ SQL,
                 'unit' => AzureSqlValueMapper::nullableString($definitionRow['Unit'] ?? null),
                 'isRequired' => AzureSqlValueMapper::boolValue($definitionRow['IsRequired'] ?? false),
                 'displayOrder' => AzureSqlValueMapper::intValue($definitionRow['DisplayOrder'] ?? 0),
-                'options' => array_map(
-                    static fn (array $row): array => [
-                        'publicId' => AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
-                        'optionCode' => AzureSqlValueMapper::stringValue($row['OptionCode'] ?? ''),
-                        'optionLabel' => AzureSqlValueMapper::stringValue($row['OptionLabel'] ?? ''),
-                        'displayOrder' => AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
-                    ],
-                    $optionRows,
-                ),
+                'options' => $optionsByDefinition[$definitionPublicId] ?? [],
             ];
         }
 
         return $result;
+    }
+
+    /**
+     * @return array<string, list<array{publicId: string, optionCode: string, optionLabel: string, displayOrder: int}>>
+     */
+    private function loadOptionsGroupedByDefinition(bool $activeOnly): array
+    {
+        $sql = <<<'SQL'
+SELECT
+    CONVERT(NVARCHAR(36), d.[PublicId]) AS [DefinitionPublicId],
+    CONVERT(NVARCHAR(36), o.[PublicId]) AS [PublicId],
+    o.[OptionCode],
+    o.[OptionLabel],
+    o.[DisplayOrder]
+FROM [product].[SpecificationOptions] o
+INNER JOIN [product].[SpecificationDefinitions] d ON d.[SpecificationDefinitionId] = o.[SpecificationDefinitionId]
+WHERE o.[DeletedAtUtc] IS NULL
+  AND d.[DeletedAtUtc] IS NULL
+SQL;
+        if ($activeOnly) {
+            $sql .= ' AND d.[IsActive] = 1';
+        }
+        $sql .= ' ORDER BY d.[DisplayOrder], o.[DisplayOrder], o.[OptionLabel]';
+
+        $grouped = [];
+        foreach ($this->connection->fetchAll($sql) as $row) {
+            $definitionPublicId = AzureSqlValueMapper::stringValue($row['DefinitionPublicId'] ?? '');
+            $grouped[$definitionPublicId][] = [
+                'publicId' => AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
+                'optionCode' => AzureSqlValueMapper::stringValue($row['OptionCode'] ?? ''),
+                'optionLabel' => AzureSqlValueMapper::stringValue($row['OptionLabel'] ?? ''),
+                'displayOrder' => AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+            ];
+        }
+
+        return $grouped;
     }
 
     public function listProductValues(ProductPublicId $productPublicId): array

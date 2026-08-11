@@ -12,6 +12,12 @@ use Throwable;
 use TriCab\Api\Http\Exception\HttpRequestValidationFailed;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
+use TriCab\Core\Product\Application\Exception\CatalogueConcurrencyConflict;
+use TriCab\Core\Product\Application\Exception\CatalogueInUse;
+use TriCab\Core\Product\Application\Exception\CatalogueNotFound;
+use TriCab\Core\Product\Application\Exception\DuplicateCatalogueCode;
+use TriCab\Core\Product\Application\Exception\DuplicateCatalogueSlug;
+use TriCab\Core\Product\Application\Exception\InvalidCatalogueHierarchy;
 use TriCab\Core\Product\Application\Exception\DuplicateProductCode;
 use TriCab\Core\Product\Application\Exception\DuplicateProductSlug;
 use TriCab\Core\Product\Application\Exception\DuplicateVariantSku;
@@ -84,6 +90,30 @@ final class ProductManagementErrorMapper
 
         if ($exception instanceof ProductClassificationInUse) {
             return $this->responder->error('PRODUCT_CLASSIFICATION_IN_USE', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof CatalogueNotFound) {
+            return $this->responder->error('CATALOGUE_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof CatalogueConcurrencyConflict) {
+            return $this->responder->error('CATALOGUE_CONCURRENCY_CONFLICT', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof DuplicateCatalogueCode) {
+            return $this->responder->error('DUPLICATE_CATALOGUE_CODE', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof DuplicateCatalogueSlug) {
+            return $this->responder->error('DUPLICATE_CATALOGUE_SLUG', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof CatalogueInUse) {
+            return $this->responder->error('CATALOGUE_IN_USE', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof InvalidCatalogueHierarchy) {
+            return $this->responder->error('INVALID_CATALOGUE_HIERARCHY', $exception->getMessage(), 422);
         }
 
         if ($exception instanceof SpecificationMasterNotFound) {

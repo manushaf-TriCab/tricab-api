@@ -84,6 +84,8 @@ final readonly class Settings
         public string $blobScanMode,
         public int $blobUploadSasTtlSeconds,
         public int $blobDownloadSasTtlSeconds,
+        public bool $performanceLogging,
+        public bool $performanceSqlVerbose,
     ) {
     }
 
@@ -395,6 +397,12 @@ final readonly class Settings
             blobScanMode: $blobScanMode,
             blobUploadSasTtlSeconds: $blobUploadSasTtlSeconds,
             blobDownloadSasTtlSeconds: $blobDownloadSasTtlSeconds,
+            performanceLogging: self::bool(
+                $env,
+                'APP_PERFORMANCE_LOGGING',
+                $appEnv === 'development',
+            ),
+            performanceSqlVerbose: self::bool($env, 'APP_PERFORMANCE_SQL_VERBOSE', false),
         );
     }
 

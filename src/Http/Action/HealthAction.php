@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Response\JsonResponder;
 
+/** Liveness only — does not open Azure SQL. Use this for frequent probes. */
 final class HealthAction
 {
     public function __construct(

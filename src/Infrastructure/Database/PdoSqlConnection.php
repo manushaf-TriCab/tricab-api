@@ -8,40 +8,50 @@ use PDO;
 use PDOException;
 use PDOStatement;
 use Throwable;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 
 final class PdoSqlConnection implements SqlConnection
 {
     public function __construct(
         private readonly PDO $pdo,
+        private readonly ?RequestPerformanceMetrics $metrics = null,
     ) {
     }
 
     public function fetchAll(string $sql, array $params = []): array
     {
+        $started = hrtime(true);
         try {
             $statement = $this->pdo->prepare($sql);
             $this->bindParams($statement, $params);
             $statement->execute();
             /** @var list<array<string, mixed>> $rows */
             $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+            $this->metrics?->recordSql(RequestPerformanceMetrics::durationMs($started), count($rows));
 
             return $rows;
         } catch (PDOException $exception) {
+            $this->metrics?->recordSql(RequestPerformanceMetrics::durationMs($started));
             throw DatabaseUnavailable::fromThrowable($exception);
         } catch (Throwable $exception) {
+            $this->metrics?->recordSql(RequestPerformanceMetrics::durationMs($started));
             throw DatabaseUnavailable::fromThrowable($exception);
         }
     }
 
     public function execute(string $sql, array $params = []): void
     {
+        $started = hrtime(true);
         try {
             $statement = $this->pdo->prepare($sql);
             $this->bindParams($statement, $params);
             $statement->execute();
+            $this->metrics?->recordSql(RequestPerformanceMetrics::durationMs($started));
         } catch (PDOException $exception) {
+            $this->metrics?->recordSql(RequestPerformanceMetrics::durationMs($started));
             throw DatabaseUnavailable::fromThrowable($exception);
         } catch (Throwable $exception) {
+            $this->metrics?->recordSql(RequestPerformanceMetrics::durationMs($started));
             throw DatabaseUnavailable::fromThrowable($exception);
         }
     }

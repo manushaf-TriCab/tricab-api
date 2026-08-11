@@ -133,6 +133,7 @@ use TriCab\Api\Product\Persistence\AzureSqlLegacyProductMappingRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductAdminQueryRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductAuditRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductClassificationRepository;
+use TriCab\Api\Product\Persistence\AzureSqlCatalogueNavigationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductCodeRuleRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductDocumentRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductIntegrationRepository;
@@ -159,6 +160,7 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryLegacyProductMappingReposito
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductAdminQueryRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductAuditRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductClassificationRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryCatalogueNavigationRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCodeRuleRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductDocumentRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductIntegrationRepository;
@@ -202,11 +204,16 @@ use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Identity\Persistence\InMemoryEmailOtpChallengeRepository;
 use TriCab\Api\Identity\Persistence\InMemoryGuestSessionRepository;
 use TriCab\Api\Identity\Persistence\InMemoryUserManagementStore;
+use TriCab\Api\Http\Middleware\ReferenceDataCacheInvalidationMiddleware;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
+use TriCab\Api\Infrastructure\Cache\ProcessMemoryCache;
+use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Infrastructure\Database\AzureSqlConnectionFactory;
 use TriCab\Api\Infrastructure\Database\AzureSqlPdoFactory;
 use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMiddleware;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
 use TriCab\Api\Infrastructure\Http\StreamJsonHttpClient;
 use TriCab\Api\Shared\Persistence\NoOpApplicationTransaction;
@@ -284,7 +291,16 @@ use TriCab\Core\Product\Application\Service\AddProductMediaService;
 use TriCab\Api\Http\Action\Admin\ProductSeriesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductCategoriesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductFamiliesAdminAction;
+use TriCab\Api\Http\Action\Admin\CatalogueTabsAdminAction;
+use TriCab\Api\Http\Action\Admin\CatalogueNodesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductCataloguePlacementsAdminAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicCataloguePanelAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabsAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabTreeAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueNodeAction;
 use TriCab\Core\Product\Application\Service\ManageProductClassificationService;
+use TriCab\Core\Product\Application\Service\ManageCatalogueNavigationService;
+use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 use TriCab\Core\Product\Application\Service\SpecificationDefinitionService;
 use TriCab\Core\Product\Application\Service\SpecificationGroupService;
 use TriCab\Core\Product\Application\Service\SpecificationOptionService;
@@ -374,6 +390,7 @@ use TriCab\Core\Product\Contract\LegacyProductMappingRepository;
 use TriCab\Core\Product\Contract\ProductAdminQueryRepository;
 use TriCab\Core\Product\Contract\ProductAuditRepository;
 use TriCab\Core\Product\Contract\ProductClassificationRepository;
+use TriCab\Core\Product\Contract\CatalogueNavigationRepository;
 use TriCab\Core\Product\Contract\ProductCodeRuleRepository;
 use TriCab\Core\Product\Contract\ProductDocumentRepository;
 use TriCab\Core\Product\Contract\ProductIntegrationRepository;
@@ -468,8 +485,17 @@ final class ContainerFactory
             BearerTokenAuthenticationMiddleware::class => \DI\autowire(BearerTokenAuthenticationMiddleware::class),
             CorsMiddleware::class => \DI\autowire(CorsMiddleware::class),
             JsonExceptionMiddleware::class => \DI\autowire(JsonExceptionMiddleware::class),
-            AzureCliAccessTokenProvider::class => \DI\create(AzureCliAccessTokenProvider::class)
-                ->constructor($settings->azureCliBinary),
+            RequestPerformanceMetrics::class => \DI\create(RequestPerformanceMetrics::class),
+            RequestPerformanceMiddleware::class => \DI\autowire(RequestPerformanceMiddleware::class),
+            ProcessMemoryCache::class => \DI\autowire(ProcessMemoryCache::class),
+            ReferenceDataCache::class => \DI\autowire(ReferenceDataCache::class),
+            ReferenceDataCacheInvalidationMiddleware::class => \DI\autowire(ReferenceDataCacheInvalidationMiddleware::class),
+            AzureCliAccessTokenProvider::class => static function (Container $container) use ($settings): AzureCliAccessTokenProvider {
+                return new AzureCliAccessTokenProvider(
+                    azBinary: $settings->azureCliBinary,
+                    metrics: self::get($container, RequestPerformanceMetrics::class),
+                );
+            },
             AzureSqlPdoFactory::class => \DI\autowire(AzureSqlPdoFactory::class),
             AzureSqlConnectionFactory::class => \DI\autowire(AzureSqlConnectionFactory::class),
             JsonHttpClient::class => \DI\autowire(StreamJsonHttpClient::class),
@@ -719,6 +745,8 @@ final class ContainerFactory
             SearchProductsService::class => \DI\autowire(SearchProductsService::class),
 
             ManageProductClassificationService::class => \DI\autowire(ManageProductClassificationService::class),
+            ManageCatalogueNavigationService::class => \DI\autowire(ManageCatalogueNavigationService::class),
+            GetPublicCatalogueService::class => \DI\autowire(GetPublicCatalogueService::class),
             SpecificationGroupService::class => \DI\autowire(SpecificationGroupService::class),
             SpecificationDefinitionService::class => \DI\autowire(SpecificationDefinitionService::class),
             SpecificationOptionService::class => \DI\autowire(SpecificationOptionService::class),
@@ -817,6 +845,13 @@ final class ContainerFactory
             },
 
             ProductFamiliesAdminAction::class => \DI\autowire(ProductFamiliesAdminAction::class),
+            CatalogueTabsAdminAction::class => \DI\autowire(CatalogueTabsAdminAction::class),
+            CatalogueNodesAdminAction::class => \DI\autowire(CatalogueNodesAdminAction::class),
+            ProductCataloguePlacementsAdminAction::class => \DI\autowire(ProductCataloguePlacementsAdminAction::class),
+            GetPublicCataloguePanelAction::class => \DI\autowire(GetPublicCataloguePanelAction::class),
+            GetPublicCatalogueTabsAction::class => \DI\autowire(GetPublicCatalogueTabsAction::class),
+            GetPublicCatalogueTabTreeAction::class => \DI\autowire(GetPublicCatalogueTabTreeAction::class),
+            GetPublicCatalogueNodeAction::class => \DI\autowire(GetPublicCatalogueNodeAction::class),
             ProductCategoriesAdminAction::class => \DI\autowire(ProductCategoriesAdminAction::class),
             ProductSeriesAdminAction::class => \DI\autowire(ProductSeriesAdminAction::class),
             SpecificationGroupsAdminAction::class => \DI\autowire(SpecificationGroupsAdminAction::class),
@@ -866,6 +901,7 @@ final class ContainerFactory
             $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(AzureSqlProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(AzureSqlProductClassificationRepository::class);
+            $definitions[CatalogueNavigationRepository::class] = \DI\autowire(AzureSqlCatalogueNavigationRepository::class);
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(AzureSqlProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(AzureSqlProductMediaRepository::class);
             $definitions[ProductDocumentRepository::class] = \DI\autowire(AzureSqlProductDocumentRepository::class);
@@ -962,6 +998,7 @@ SQL,
             $definitions[ProductSearchRepository::class] = \DI\autowire(InMemoryProductSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(InMemoryProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(InMemoryProductClassificationRepository::class);
+            $definitions[CatalogueNavigationRepository::class] = \DI\autowire(InMemoryCatalogueNavigationRepository::class);
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(InMemoryProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(InMemoryProductMediaRepository::class);
             $definitions[ProductDocumentRepository::class] = \DI\autowire(InMemoryProductDocumentRepository::class);

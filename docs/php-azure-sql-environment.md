@@ -55,8 +55,14 @@ new PDO(
 ## Health
 
 ```bash
+# Liveness — no SQL. Use this for App Service / Docker / uptime probes.
+curl http://localhost:8080/health
+
+# On-demand readiness — opens Azure SQL. Do not poll this on serverless non-prod.
 curl http://localhost:8080/health/database
 ```
+
+Portal / App Service health paths are not in this repository. If a probe currently hits `/health/database`, switch it to `/health` in Azure (manual).
 
 ## Implementation note
 

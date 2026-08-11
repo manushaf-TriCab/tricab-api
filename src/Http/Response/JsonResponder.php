@@ -11,13 +11,21 @@ final class JsonResponder
 {
     /**
      * @param array<string, mixed> $data
+     * @param array<string, string> $headers
      */
-    public function success(array $data, int $status = 200): ResponseInterface
+    public function success(array $data, int $status = 200, array $headers = []): ResponseInterface
     {
         return $this->write([
             'success' => true,
             'data' => $data,
-        ], $status);
+        ], $status, $headers);
+    }
+
+    public function notModified(string $etag): ResponseInterface
+    {
+        $response = new Response(304);
+
+        return $response->withHeader('ETag', $etag)->withHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
     }
 
     /**
@@ -41,14 +49,20 @@ final class JsonResponder
 
     /**
      * @param array<string, mixed> $payload
+     * @param array<string, string> $headers
      */
-    private function write(array $payload, int $status): ResponseInterface
+    private function write(array $payload, int $status, array $headers = []): ResponseInterface
     {
         $response = new Response($status);
         $json = json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
 
         $response->getBody()->write($json);
 
-        return $response->withHeader('Content-Type', 'application/json');
+        $response = $response->withHeader('Content-Type', 'application/json');
+        foreach ($headers as $name => $value) {
+            $response = $response->withHeader($name, $value);
+        }
+
+        return $response;
     }
 }

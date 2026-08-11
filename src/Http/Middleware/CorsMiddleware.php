@@ -18,7 +18,8 @@ use TriCab\Api\Config\Settings;
 final class CorsMiddleware implements MiddlewareInterface
 {
     private const ALLOWED_METHODS = 'GET, POST, PUT, PATCH, DELETE, OPTIONS';
-    private const ALLOWED_HEADERS = 'Authorization, Content-Type, Accept';
+    private const ALLOWED_HEADERS = 'Authorization, Content-Type, Accept, If-None-Match, X-Request-Id';
+    private const EXPOSED_HEADERS = 'ETag, Cache-Control';
 
     public function __construct(
         private readonly Settings $settings,
@@ -65,6 +66,7 @@ final class CorsMiddleware implements MiddlewareInterface
             ->withHeader('Access-Control-Allow-Origin', $allowedOrigin)
             ->withHeader('Access-Control-Allow-Methods', self::ALLOWED_METHODS)
             ->withHeader('Access-Control-Allow-Headers', self::ALLOWED_HEADERS)
+            ->withHeader('Access-Control-Expose-Headers', self::EXPOSED_HEADERS)
             ->withHeader('Access-Control-Max-Age', '86400')
             ->withHeader('Vary', 'Origin');
     }

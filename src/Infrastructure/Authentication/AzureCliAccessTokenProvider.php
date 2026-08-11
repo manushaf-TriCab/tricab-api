@@ -4,156 +4,238 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Infrastructure\Authentication;
 
+use JsonException;
 use TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 
 /**
  * Obtains a short-lived Azure SQL access token via Azure CLI.
- * Tokens are never logged or written to disk.
+ * Tokens are cached in-process until expiry - 60 seconds. Never logged or written to disk.
  */
 final class AzureCliAccessTokenProvider
 {
     private const RESOURCE = 'https://database.windows.net/';
 
+    private const REFRESH_SKEW_SECONDS = 60;
+
+    private static ?string $cachedToken = null;
+
+    private static int $cachedExpiresAt = 0;
+
+    private static bool $cliAvailable = false;
+
+    /** @var (callable(): int)|null */
+    private $nowFn;
+
+    /**
+     * @param (callable(): int)|null $now
+     */
     public function __construct(
         private readonly string $azBinary = 'az',
+        private readonly AzureCliProcessRunner $processRunner = new ProcOpenAzureCliProcessRunner(),
+        private readonly ?RequestPerformanceMetrics $metrics = null,
+        ?callable $now = null,
     ) {
+        $this->nowFn = $now;
+    }
+
+    public static function resetProcessCache(): void
+    {
+        self::$cachedToken = null;
+        self::$cachedExpiresAt = 0;
+        self::$cliAvailable = false;
     }
 
     public function getAccessToken(): string
     {
+        $started = hrtime(true);
+        $now = $this->now();
+
+        if (
+            self::$cachedToken !== null
+            && self::$cachedToken !== ''
+            && $now < (self::$cachedExpiresAt - self::REFRESH_SKEW_SECONDS)
+        ) {
+            $this->metrics?->recordTokenAcquisition(
+                RequestPerformanceMetrics::durationMs($started),
+                true,
+            );
+
+            return self::$cachedToken;
+        }
+
         DatabaseAuthDiagnostics::log('azure_cli.token.start', [
             'azBinary' => $this->azBinary,
             'resource' => self::RESOURCE,
             'pathEnvPresent' => getenv('PATH') !== false,
+            'cacheRefresh' => self::$cachedToken !== null,
         ]);
 
-        if (!$this->isAzureCliAvailable()) {
-            DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
-                'step' => 'az_available',
-                'success' => false,
-            ]);
-            throw new AzureCliAccessTokenException(
-                'Azure CLI is unavailable. Install Azure CLI and ensure "az" is on PATH.',
-            );
-        }
-        DatabaseAuthDiagnostics::log('azure_cli.command.success', [
-            'step' => 'az_available',
-            'success' => true,
-        ]);
+        $this->assertAzureCliAvailable();
 
-        if (!$this->isLoggedIn()) {
-            DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
-                'step' => 'az_account_show',
-                'success' => false,
-            ]);
-            throw new AzureCliAccessTokenException(
-                'Azure CLI is not logged in. Run "az login" and retry.',
-            );
-        }
-        DatabaseAuthDiagnostics::log('azure_cli.command.success', [
-            'step' => 'az_account_show',
-            'success' => true,
-        ]);
-
-        [$exitCode, $stdout, $stderr] = $this->run([
+        [$exitCode, $stdout] = $this->processRunner->run([
             $this->azBinary,
             'account',
             'get-access-token',
             '--resource',
             self::RESOURCE,
-            '--query',
-            'accessToken',
             '--output',
-            'tsv',
+            'json',
         ]);
 
-        $token = trim($stdout);
-
-        if ($exitCode !== 0 || $token === '') {
-            // Do not include stdout/stderr (may contain sensitive material).
-            unset($stderr);
+        if ($exitCode !== 0) {
+            self::$cachedToken = null;
+            self::$cachedExpiresAt = 0;
             DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
                 'step' => 'az_get_access_token',
                 'success' => false,
                 'exitCode' => $exitCode,
                 'tokenAcquired' => false,
-                'stdoutEmpty' => $token === '',
             ]);
             throw new AzureCliAccessTokenException(
                 'Failed to acquire an Azure SQL access token via Azure CLI.',
             );
         }
 
+        try {
+            $parsed = $this->parseTokenResponse($stdout);
+        } catch (AzureCliAccessTokenException $exception) {
+            self::$cachedToken = null;
+            self::$cachedExpiresAt = 0;
+            throw $exception;
+        }
+
+        self::$cachedToken = $parsed['token'];
+        self::$cachedExpiresAt = $parsed['expiresAt'];
+        self::$cliAvailable = true;
+
         DatabaseAuthDiagnostics::log('azure_cli.command.success', [
             'step' => 'az_get_access_token',
             'success' => true,
             'tokenAcquired' => true,
-            'tokenLength' => strlen($token),
+            'tokenLength' => strlen($parsed['token']),
+            'expiresAtUnix' => $parsed['expiresAt'],
         ]);
 
-        return $token;
+        $this->metrics?->recordTokenAcquisition(
+            RequestPerformanceMetrics::durationMs($started),
+            false,
+        );
+
+        return $parsed['token'];
     }
 
-    private function isAzureCliAvailable(): bool
+    private function assertAzureCliAvailable(): void
     {
-        if ($this->looksLikePath($this->azBinary)) {
-            return is_file($this->azBinary);
+        if (self::$cliAvailable) {
+            return;
         }
 
-        [$exitCode] = $this->run([$this->azBinary, '--version']);
+        if ($this->looksLikePath($this->azBinary)) {
+            if (!is_executable($this->azBinary)) {
+                DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
+                    'step' => 'az_available',
+                    'success' => false,
+                ]);
+                throw new AzureCliAccessTokenException(
+                    'Azure CLI is unavailable. Install Azure CLI and ensure "az" is on PATH.',
+                );
+            }
+            self::$cliAvailable = true;
 
-        return $exitCode === 0;
+            return;
+        }
     }
 
-    private function isLoggedIn(): bool
+    /**
+     * @return array{token: string, expiresAt: int}
+     */
+    private function parseTokenResponse(string $stdout): array
     {
-        [$exitCode] = $this->run([$this->azBinary, 'account', 'show']);
+        $raw = trim($stdout);
+        if ($raw === '') {
+            DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
+                'step' => 'az_get_access_token',
+                'success' => false,
+                'tokenAcquired' => false,
+                'stdoutEmpty' => true,
+            ]);
+            throw new AzureCliAccessTokenException(
+                'Failed to acquire an Azure SQL access token via Azure CLI.',
+            );
+        }
 
-        return $exitCode === 0;
+        try {
+            $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
+                'step' => 'az_get_access_token_parse',
+                'success' => false,
+                'tokenAcquired' => false,
+            ]);
+            throw new AzureCliAccessTokenException(
+                'Azure CLI returned an invalid access-token response.',
+            );
+        }
+
+        if (!is_array($decoded)) {
+            throw new AzureCliAccessTokenException(
+                'Azure CLI returned an invalid access-token response.',
+            );
+        }
+
+        $token = $decoded['accessToken'] ?? null;
+        if (!is_string($token) || trim($token) === '') {
+            throw new AzureCliAccessTokenException(
+                'Azure CLI returned an invalid access-token response.',
+            );
+        }
+
+        $expiresAt = $this->parseExpiry($decoded);
+        if ($expiresAt <= $this->now()) {
+            throw new AzureCliAccessTokenException(
+                'Azure CLI returned an expired access token.',
+            );
+        }
+
+        return [
+            'token' => trim($token),
+            'expiresAt' => $expiresAt,
+        ];
+    }
+
+    /**
+     * @param array<mixed> $decoded
+     */
+    private function parseExpiry(array $decoded): int
+    {
+        $unix = $decoded['expires_on'] ?? $decoded['expiresOnTimestamp'] ?? null;
+        if (is_numeric($unix)) {
+            return (int) $unix;
+        }
+
+        $expiresOn = $decoded['expiresOn'] ?? null;
+        if (is_string($expiresOn) && trim($expiresOn) !== '') {
+            $parsed = strtotime($expiresOn);
+            if ($parsed !== false) {
+                return $parsed;
+            }
+        }
+
+        return $this->now() + 3000;
+    }
+
+    private function now(): int
+    {
+        if ($this->nowFn !== null) {
+            return ($this->nowFn)();
+        }
+
+        return time();
     }
 
     private function looksLikePath(string $binary): bool
     {
-        return str_contains($binary, '/') || str_contains($binary, '\\');
-    }
-
-    /**
-     * @param list<string> $command
-     * @return array{0: int, 1: string, 2: string}
-     */
-    private function run(array $command): array
-    {
-        $binary = $command[0] ?? '';
-        if ($binary === '' || ($this->looksLikePath($binary) && !is_file($binary))) {
-            return [1, '', 'Azure CLI binary not found.'];
-        }
-
-        $descriptors = [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
-
-        $process = @proc_open($command, $descriptors, $pipes, null, null, [
-            'bypass_shell' => true,
-        ]);
-
-        if (!is_resource($process)) {
-            return [1, '', 'Unable to start Azure CLI process.'];
-        }
-
-        fclose($pipes[0]);
-        $stdout = stream_get_contents($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-
-        $exitCode = proc_close($process);
-
-        return [
-            $exitCode,
-            is_string($stdout) ? $stdout : '',
-            is_string($stderr) ? $stderr : '',
-        ];
+        return str_contains($binary, '/') || str_starts_with($binary, '\\');
     }
 }

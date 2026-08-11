@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Core\Product\Application\Service\GetProductLookupsService;
 
 final class GetProductLookupsAction
@@ -17,15 +18,29 @@ final class GetProductLookupsAction
         private readonly GetProductLookupsService $lookups,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
+        private readonly ReferenceDataCache $cache,
     ) {
     }
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        unset($response);
+        unset($request, $response);
 
         try {
-            return $this->responder->success(ProductManagementDtoSerializer::lookupsBundle($this->lookups->execute()));
+            $cached = $this->cache->getLookups();
+            if (is_array($cached)) {
+                /** @var array<string, mixed> $cached */
+                return $this->responder->success($cached, 200, [
+                    'Cache-Control' => 'private, max-age=0, must-revalidate',
+                ]);
+            }
+
+            $payload = ProductManagementDtoSerializer::lookupsBundle($this->lookups->execute());
+            $this->cache->setLookups($payload);
+
+            return $this->responder->success($payload, 200, [
+                'Cache-Control' => 'private, max-age=0, must-revalidate',
+            ]);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

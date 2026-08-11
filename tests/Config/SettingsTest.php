@@ -117,4 +117,23 @@ final class SettingsTest extends TestCase
         ]);
         self::assertFalse($production->isDevMemoryProductFileDeliveryEnabled());
     }
+
+    public function test_performance_logging_defaults_on_in_development_off_in_production(): void
+    {
+        $development = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+        ]);
+        self::assertTrue($development->performanceLogging);
+        self::assertFalse($development->performanceSqlVerbose);
+
+        $production = Settings::fromEnvironment([
+            'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'azure-sql',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
+        ]);
+        self::assertFalse($production->performanceLogging);
+        self::assertFalse($production->performanceSqlVerbose);
+    }
 }

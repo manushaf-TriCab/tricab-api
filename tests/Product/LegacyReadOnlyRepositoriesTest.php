@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Product;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Api\Product\Migration\MysqlLegacyTcRepository;
 use TriCab\Api\Product\Migration\MysqlLegacyWordPressRepository;
 use TriCab\Api\Product\Migration\RecordingLegacyReadOnlyConnection;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryMigrationBatchRepository;
@@ -16,8 +17,6 @@ use TriCab\Core\Product\Migration\Application\Command\CreateMigrationBatchComman
 use TriCab\Core\Product\Migration\Application\Exception\InvalidMigrationBatchState;
 use TriCab\Core\Product\Migration\Application\Exception\LegacyDatabaseWriteAttemptException;
 use TriCab\Core\Product\Migration\Application\Service\ProductMigrationService;
-use TriCab\Core\Product\Migration\Contract\LegacyTcRepository;
-use TriCab\Core\Product\Migration\Contract\LegacyWordPressRepository;
 use TriCab\Core\Product\Migration\Identity\EmptyMigrationLookupIndex;
 use TriCab\Core\Product\Migration\Identity\ProductIdentityMatcher;
 use TriCab\Core\Product\Migration\Identity\ProductVariantClassifier;
@@ -74,84 +73,41 @@ final class LegacyReadOnlyRepositoriesTest extends TestCase
 
     public function test_live_source_dry_run_populates_staging_without_product_writes(): void
     {
-        $wp = new class implements LegacyWordPressRepository {
-            public function findProducts(array $filter = []): array
-            {
-                return [[
-                    'ID' => 3812,
-                    'post_title' => 'FLEXI-TUFF',
-                    'post_name' => 'flexi-tuff',
-                    'post_status' => 'publish',
-                    'post_type' => 'cable',
-                    'post_content' => 'Full',
-                    'style_code' => 'FT',
-                    'small_desc' => 'short',
-                ]];
-            }
-
-            public function findAttachments(array $postIds): array
-            {
-                return [];
-            }
-
-            public function findCategories(array $postIds): array
-            {
-                return [];
-            }
-
-            public function findSpecifications(array $postIds): array
-            {
-                return [];
-            }
-
-            public function findRelationships(array $postIds): array
-            {
-                return [];
-            }
-
-            public function inspectSchema(): array
-            {
-                return ['tables' => ['wp_posts'], 'columns' => [], 'productCounts' => ['cable' => 1]];
-            }
-        };
-        $tc = new class implements LegacyTcRepository {
-            public function findVariants(array $filter = []): array
-            {
-                return [[
-                    'ida' => 'FT-2X1.5BK',
-                    'style' => 'FT',
-                    'style_code' => 'FT',
-                    'od' => '25.4',
-                ]];
-            }
-
-            public function findSpecifications(array $filter = []): array
-            {
-                return [];
-            }
-
-            public function findCodes(array $filter = []): array
-            {
-                return [];
-            }
-
-            public function findAccessories(array $filter = []): array
-            {
-                return [];
-            }
-
-            public function findDescriptions(array $filter = []): array
-            {
-                return [];
-            }
-
-            public function inspectSchema(): array
-            {
-                return ['tables' => ['tpro'], 'columns' => [], 'rowCounts' => ['tpro' => 1]];
-            }
-        };
-
-        $source = new LiveCombinedLegacyProductSource($wp, $tc);
+        $guard = new LegacyReadOnlySqlGuard();
+        $logger = new InMemoryLegacySqlStatementLogger();
+        $wpConn = new RecordingLegacyReadOnlyConnection($guard, $logger, [
+            'FROM `WP_POSTS` P' => [[
+                'ID' => 3812,
+                'post_title' => 'FLEXI-TUFF',
+                'post_name' => 'flexi-tuff',
+                'post_status' => 'publish',
+                'post_type' => 'cable',
+                'post_content' => 'Full',
+                'style_code' => 'FT',
+                'small_desc' => 'short',
+            ]],
+            'TERM_RELATIONSHIPS' => [],
+            'FROM `WP_POSTMETA`' => [],
+            "POST_TYPE = 'ATTACHMENT'" => [],
+        ], 'wordpress');
+        $tcConn = new RecordingLegacyReadOnlyConnection($guard, $logger, [
+            'INFORMATION_SCHEMA.TABLES' => [['name' => 'tpro']],
+            'INFORMATION_SCHEMA.COLUMNS' => [
+                ['name' => 'ida'], ['name' => 'style'], ['name' => 'od'],
+            ],
+            'FROM `TPRO`' => [[
+                'ida' => 'FT-2X1.5BK',
+                'style' => 'FT',
+                'od' => '25.4',
+            ]],
+            'CABLE_SPECS' => [],
+            'ACCESSORY_SPECS' => [],
+            'DESCRIPT' => [],
+        ], 'tc');
+        $source = new LiveCombinedLegacyProductSource(
+            new MysqlLegacyWordPressRepository($wpConn, 'wp_'),
+            new MysqlLegacyTcRepository($tcConn),
+        );
         $batches = new InMemoryMigrationBatchRepository();
         $legacy = TestAppFactory::create([])->getContainer()->get(LegacyProductMappingRepository::class);
         $service = new ProductMigrationService(
@@ -177,7 +133,7 @@ final class LegacyReadOnlyRepositoriesTest extends TestCase
         $report = $service->dryRun($actor, $batch->publicId);
         self::assertFalse($report->wouldWriteProducts);
         self::assertFalse($report->wouldWriteBlobs);
-        self::assertGreaterThan(0, $report->counts['productsDiscovered'] ?? 0);
+        self::assertGreaterThan(0, $report->counts['productsDiscovered'] ?? 0, json_encode($report->toArray()));
         $recon = $service->reconcile($actor, $batch->publicId);
         self::assertSame('draft', $recon['publicationDefault']);
         $this->expectException(InvalidMigrationBatchState::class);

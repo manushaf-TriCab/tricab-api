@@ -242,25 +242,30 @@ SQL,
      */
     private function listPublicRelationships(ProductPublicId $productPublicId): array
     {
-        $tables = [
-            'accessory' => '[product].[ProductAccessories]',
-            'related' => '[product].[RelatedProducts]',
-            'replacement' => '[product].[ReplacementProducts]',
-            'cross-sell' => '[product].[ProductCrossSells]',
-            'up-sell' => '[product].[ProductUpSells]',
-        ];
-
-        $items = [];
-        foreach ($tables as $typeCode => $table) {
-            $rows = $this->connection->fetchAll(
-                sprintf(
-                    <<<'SQL'
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
 SELECT
     CONVERT(NVARCHAR(36), rp.[PublicId]) AS [RelatedProductPublicId],
     rp.[ProductName] AS [RelatedProductName],
     slug.[Slug] AS [RelatedSlug],
-    l.[DisplayOrder]
-FROM %s l
+    l.[DisplayOrder],
+    l.[RelationshipTypeCode]
+FROM (
+    SELECT [ProductId], [RelatedProductId], [DisplayOrder], [DeletedAtUtc], N'accessory' AS [RelationshipTypeCode]
+    FROM [product].[ProductAccessories]
+    UNION ALL
+    SELECT [ProductId], [RelatedProductId], [DisplayOrder], [DeletedAtUtc], N'related'
+    FROM [product].[RelatedProducts]
+    UNION ALL
+    SELECT [ProductId], [RelatedProductId], [DisplayOrder], [DeletedAtUtc], N'replacement'
+    FROM [product].[ReplacementProducts]
+    UNION ALL
+    SELECT [ProductId], [RelatedProductId], [DisplayOrder], [DeletedAtUtc], N'cross-sell'
+    FROM [product].[ProductCrossSells]
+    UNION ALL
+    SELECT [ProductId], [RelatedProductId], [DisplayOrder], [DeletedAtUtc], N'up-sell'
+    FROM [product].[ProductUpSells]
+) l
 INNER JOIN [product].[Products] p ON p.[ProductId] = l.[ProductId]
 INNER JOIN [product].[Products] rp ON rp.[ProductId] = l.[RelatedProductId]
 INNER JOIN [product].[ProductStatuses] rps ON rps.[ProductStatusId] = rp.[ProductStatusId]
@@ -274,22 +279,20 @@ WHERE p.[PublicId] = :productPublicId
   AND rp.[DeletedAtUtc] IS NULL
   AND rp.[IsActive] = 1
   AND rps.[StatusCode] = N'published'
-ORDER BY l.[DisplayOrder] ASC
+ORDER BY l.[RelationshipTypeCode] ASC, l.[DisplayOrder] ASC
 SQL,
-                    $table,
-                ),
-                [':productPublicId' => $productPublicId->toString()],
-            );
+            [':productPublicId' => $productPublicId->toString()],
+        );
 
-            foreach ($rows as $row) {
-                $items[] = new ProductPublicRelationshipItem(
-                    relatedProductPublicId: AzureSqlValueMapper::stringValue($row['RelatedProductPublicId'] ?? ''),
-                    relatedProductName: AzureSqlValueMapper::stringValue($row['RelatedProductName'] ?? ''),
-                    relationshipTypeCode: $typeCode,
-                    relatedSlug: AzureSqlValueMapper::nullableString($row['RelatedSlug'] ?? null),
-                    displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
-                );
-            }
+        $items = [];
+        foreach ($rows as $row) {
+            $items[] = new ProductPublicRelationshipItem(
+                relatedProductPublicId: AzureSqlValueMapper::stringValue($row['RelatedProductPublicId'] ?? ''),
+                relatedProductName: AzureSqlValueMapper::stringValue($row['RelatedProductName'] ?? ''),
+                relationshipTypeCode: AzureSqlValueMapper::stringValue($row['RelationshipTypeCode'] ?? ''),
+                relatedSlug: AzureSqlValueMapper::nullableString($row['RelatedSlug'] ?? null),
+                displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+            );
         }
 
         return $items;
