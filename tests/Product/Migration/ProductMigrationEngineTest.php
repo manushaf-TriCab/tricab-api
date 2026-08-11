@@ -39,8 +39,8 @@ final class ProductMigrationEngineTest extends TestCase
             relationships: [],
         );
         $result = $matcher->match($product);
-        self::assertFalse($result->requiresReview);
-        self::assertSame(ProductIdentityMatchResult::CONFIDENCE_LOW, $result->matchConfidence);
+        self::assertTrue($result->requiresReview);
+        self::assertSame(ProductIdentityMatchResult::CONFIDENCE_MANUAL_REVIEW, $result->matchConfidence);
         self::assertSame('none', $result->matchMethod);
     }
 
