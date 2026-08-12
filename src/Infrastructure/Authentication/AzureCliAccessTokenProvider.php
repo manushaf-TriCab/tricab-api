@@ -5,24 +5,35 @@ declare(strict_types=1);
 namespace TriCab\Api\Infrastructure\Authentication;
 
 use JsonException;
+use TriCab\Api\Infrastructure\Cache\ApplicationCache;
+use TriCab\Api\Infrastructure\Cache\ArrayApplicationCache;
 use TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics;
 use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 
 /**
  * Obtains a short-lived Azure SQL access token via Azure CLI.
- * Tokens are cached in-process until expiry - 60 seconds. Never logged or written to disk.
+ * Tokens are cached for up to 60 minutes (typical Entra access-token lifetime),
+ * and refreshed 60 seconds before the Azure expiry. Never logged or written to disk.
  */
 final class AzureCliAccessTokenProvider
 {
+    public const CACHE_KEY = 'entra-sql-token:v1:https://database.windows.net/';
+
+    private const LOCK_KEY = 'entra-sql-token-refresh-lock';
+
     private const RESOURCE = 'https://database.windows.net/';
 
+    /** Cache at most this long (60 minutes). Real Azure expiry still wins if shorter. */
+    private const CACHE_TTL_SECONDS = 3600;
+
+    /** Refresh this many seconds before the Azure token's real expiry. */
     private const REFRESH_SKEW_SECONDS = 60;
 
-    private static ?string $cachedToken = null;
+    private const LOCK_TTL_SECONDS = 5;
 
-    private static int $cachedExpiresAt = 0;
+    private const LOCK_WAIT_SECONDS = 0.5;
 
-    private static bool $cliAvailable = false;
+    private readonly ApplicationCache $cache;
 
     /** @var (callable(): int)|null */
     private $nowFn;
@@ -35,40 +46,99 @@ final class AzureCliAccessTokenProvider
         private readonly AzureCliProcessRunner $processRunner = new ProcOpenAzureCliProcessRunner(),
         private readonly ?RequestPerformanceMetrics $metrics = null,
         ?callable $now = null,
+        ?ApplicationCache $cache = null,
     ) {
         $this->nowFn = $now;
-    }
-
-    public static function resetProcessCache(): void
-    {
-        self::$cachedToken = null;
-        self::$cachedExpiresAt = 0;
-        self::$cliAvailable = false;
+        $this->cache = $cache ?? new ArrayApplicationCache();
     }
 
     public function getAccessToken(): string
     {
         $started = hrtime(true);
-        $now = $this->now();
-
-        if (
-            self::$cachedToken !== null
-            && self::$cachedToken !== ''
-            && $now < (self::$cachedExpiresAt - self::REFRESH_SKEW_SECONDS)
-        ) {
+        $cached = $this->readValidCachedToken();
+        if ($cached !== null) {
             $this->metrics?->recordTokenAcquisition(
                 RequestPerformanceMetrics::durationMs($started),
                 true,
             );
 
-            return self::$cachedToken;
+            return $cached;
         }
 
+        $token = $this->acquireWithLock();
+        $this->metrics?->recordTokenAcquisition(
+            RequestPerformanceMetrics::durationMs($started),
+            false,
+        );
+
+        return $token;
+    }
+
+    private function acquireWithLock(): string
+    {
+        $deadline = microtime(true) + self::LOCK_WAIT_SECONDS;
+        do {
+            $cached = $this->readValidCachedToken();
+            if ($cached !== null) {
+                return $cached;
+            }
+
+            if ($this->cache->add(self::LOCK_KEY, 1, self::LOCK_TTL_SECONDS)) {
+                try {
+                    $cached = $this->readValidCachedToken();
+                    if ($cached !== null) {
+                        return $cached;
+                    }
+
+                    return $this->fetchAndStoreToken();
+                } finally {
+                    $this->cache->delete(self::LOCK_KEY);
+                }
+            }
+
+            usleep(50_000);
+        } while (microtime(true) < $deadline);
+
+        $cached = $this->readValidCachedToken();
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        return $this->fetchAndStoreToken();
+    }
+
+    private function readValidCachedToken(): ?string
+    {
+        $entry = $this->cache->get(self::CACHE_KEY);
+        if (!is_array($entry)) {
+            return null;
+        }
+
+        $token = $entry['token'] ?? null;
+        $expiresAt = $entry['expiresAt'] ?? null;
+        if (!is_string($token) || $token === '' || !is_int($expiresAt)) {
+            $this->cache->delete(self::CACHE_KEY);
+
+            return null;
+        }
+
+        if ($this->now() >= ($expiresAt - self::REFRESH_SKEW_SECONDS)) {
+            $this->cache->delete(self::CACHE_KEY);
+
+            return null;
+        }
+
+        return $token;
+    }
+
+    private function fetchAndStoreToken(): string
+    {
         DatabaseAuthDiagnostics::log('azure_cli.token.start', [
             'azBinary' => $this->azBinary,
             'resource' => self::RESOURCE,
             'pathEnvPresent' => getenv('PATH') !== false,
-            'cacheRefresh' => self::$cachedToken !== null,
+            'cacheRefresh' => $this->cache->get(self::CACHE_KEY) !== null,
+            'cache_driver' => $this->cache->driver(),
         ]);
 
         $this->assertAzureCliAvailable();
@@ -84,8 +154,7 @@ final class AzureCliAccessTokenProvider
         ]);
 
         if ($exitCode !== 0) {
-            self::$cachedToken = null;
-            self::$cachedExpiresAt = 0;
+            $this->cache->delete(self::CACHE_KEY);
             DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
                 'step' => 'az_get_access_token',
                 'success' => false,
@@ -100,14 +169,24 @@ final class AzureCliAccessTokenProvider
         try {
             $parsed = $this->parseTokenResponse($stdout);
         } catch (AzureCliAccessTokenException $exception) {
-            self::$cachedToken = null;
-            self::$cachedExpiresAt = 0;
+            $this->cache->delete(self::CACHE_KEY);
             throw $exception;
         }
 
-        self::$cachedToken = $parsed['token'];
-        self::$cachedExpiresAt = $parsed['expiresAt'];
-        self::$cliAvailable = true;
+        $ttl = min(
+            self::CACHE_TTL_SECONDS,
+            $parsed['expiresAt'] - $this->now() - self::REFRESH_SKEW_SECONDS,
+        );
+        if ($ttl >= 1) {
+            $this->cache->set(
+                self::CACHE_KEY,
+                [
+                    'token' => $parsed['token'],
+                    'expiresAt' => $parsed['expiresAt'],
+                ],
+                $ttl,
+            );
+        }
 
         DatabaseAuthDiagnostics::log('azure_cli.command.success', [
             'step' => 'az_get_access_token',
@@ -115,22 +194,14 @@ final class AzureCliAccessTokenProvider
             'tokenAcquired' => true,
             'tokenLength' => strlen($parsed['token']),
             'expiresAtUnix' => $parsed['expiresAt'],
+            'cache_driver' => $this->cache->driver(),
         ]);
-
-        $this->metrics?->recordTokenAcquisition(
-            RequestPerformanceMetrics::durationMs($started),
-            false,
-        );
 
         return $parsed['token'];
     }
 
     private function assertAzureCliAvailable(): void
     {
-        if (self::$cliAvailable) {
-            return;
-        }
-
         if ($this->looksLikePath($this->azBinary)) {
             if (!is_executable($this->azBinary)) {
                 DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
@@ -141,9 +212,6 @@ final class AzureCliAccessTokenProvider
                     'Azure CLI is unavailable. Install Azure CLI and ensure "az" is on PATH.',
                 );
             }
-            self::$cliAvailable = true;
-
-            return;
         }
     }
 
@@ -222,7 +290,7 @@ final class AzureCliAccessTokenProvider
             }
         }
 
-        return $this->now() + 3000;
+        return $this->now() + self::CACHE_TTL_SECONDS;
     }
 
     private function now(): int

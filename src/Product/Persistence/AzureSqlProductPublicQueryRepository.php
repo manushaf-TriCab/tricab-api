@@ -8,10 +8,12 @@ use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
+use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\DTO\ProductPublicDetail;
 use TriCab\Core\Product\Application\DTO\ProductPublicRelationshipItem;
 use TriCab\Core\Product\Application\DTO\ProductPublicSpecificationItem;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
+use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Contract\ProductPublicQueryRepository;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Product\Domain\ValueObject\ProductSlug;
@@ -37,6 +39,8 @@ SQL;
 
     public function __construct(
         private readonly SqlConnection $connection,
+        private readonly Product3DModelRepository $threeDModels,
+        private readonly bool $product3dEnabled = true,
     ) {
     }
 
@@ -212,6 +216,9 @@ SQL,
             industryNames: $this->listNames($pid, 'industries'),
             relationships: $this->listPublicRelationships($pid),
             specifications: $this->listPublicSpecifications($pid),
+            threeD: $this->product3dEnabled
+                ? $this->threeDModels->listPublicByProduct($pid)
+                : ProductPublic3DPayload::empty(),
         );
     }
 

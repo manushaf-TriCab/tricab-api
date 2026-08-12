@@ -7,10 +7,12 @@ namespace TriCab\Api\Product\Persistence\InMemory;
 use DateTimeImmutable;
 use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
+use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\DTO\ProductPublicDetail;
 use TriCab\Core\Product\Application\DTO\ProductPublicRelationshipItem;
 use TriCab\Core\Product\Application\DTO\ProductPublicSpecificationItem;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
+use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Contract\ProductPublicQueryRepository;
 use TriCab\Core\Product\Domain\Entity\Product;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
@@ -21,6 +23,8 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
 {
     public function __construct(
         private readonly InMemoryProductStore $store,
+        private readonly Product3DModelRepository $threeDModels,
+        private readonly bool $product3dEnabled = true,
     ) {
     }
 
@@ -157,6 +161,9 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
             industryNames: $this->listNames($publicId, 'industries'),
             relationships: $this->listPublicRelationships($publicId),
             specifications: $this->listPublicSpecifications($publicId),
+            threeD: $this->product3dEnabled
+                ? $this->threeDModels->listPublicByProduct(ProductPublicId::fromString($publicId))
+                : ProductPublic3DPayload::empty(),
         );
     }
 

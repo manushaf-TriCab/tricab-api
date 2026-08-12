@@ -32,6 +32,8 @@ use TriCab\Api\Http\Action\Admin\CompleteProductMediaUploadAction;
 use TriCab\Api\Http\Action\Admin\InitiateProductMediaUploadAction;
 use TriCab\Api\Http\Action\Admin\CompleteArModelUploadAction;
 use TriCab\Api\Http\Action\Admin\InitiateArModelUploadAction;
+use TriCab\Api\Http\Action\Admin\Product3DModelsAdminAction;
+use TriCab\Api\Http\Action\Admin\GetProduct3DSpecificationSourceAction;
 use TriCab\Api\Http\Action\Admin\ActivateProduct360SetAction;
 use TriCab\Api\Http\Action\Admin\Complete360FrameUploadAction;
 use TriCab\Api\Http\Action\Admin\Initiate360FrameUploadAction;
@@ -628,6 +630,26 @@ final class AppBuilder
         $app->post('/api/v1/admin/products/{productPublicId}/360-sets', CreateProduct360SetAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
         $app->post('/api/v1/admin/products/{productPublicId}/ar-models/upload-session', InitiateArModelUploadAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->get('/api/v1/admin/products/{productPublicId}/3d-models', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->get('/api/v1/admin/products/{productPublicId}/3d/specification-source', GetProduct3DSpecificationSourceAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/upload-session', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->get('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->patch('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/publish', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/unpublish', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/set-primary', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/soft-delete', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/product-3d-models/{modelPublicId}/complete-upload', Product3DModelsAdminAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
         $app->post('/api/v1/admin/product-360-sets/{setPublicId}/frames/upload-session', Initiate360FrameUploadAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));

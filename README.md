@@ -53,7 +53,7 @@ DB_TRUST_SERVER_CERTIFICATE=false
 az account get-access-token --resource https://database.windows.net/ --output json
 ```
 
-The token is cached **in-process** until `expires_on - 60 seconds`. It is never written to `.env`, never logged, and never stored on disk.
+The token is cached in `ApplicationCache` (APCu when available) until `expires_on - 60 seconds`. It is never written to `.env`, never logged, and never stored on disk. `APP_CACHE_DRIVER=array` is tests/fallback only and does not survive HTTP requests.
 
 Optional local SQL login (already supported; do not commit passwords):
 

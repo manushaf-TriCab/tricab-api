@@ -41,7 +41,7 @@ Do **not** place a Microsoft 365 password in configuration.
 ```php
 new PDO(
     'sqlsrv:Server=tcp:' . $host . ',' . $port . ';Database=' . $database .
-    ';Encrypt=yes;TrustServerCertificate=no',
+    ';Encrypt=yes;TrustServerCertificate=no;LoginTimeout=' . $loginTimeoutSeconds,
     $username,
     $password,
     [
@@ -51,6 +51,82 @@ new PDO(
     ],
 );
 ```
+
+`LoginTimeout` is `DB_LOGIN_TIMEOUT_SECONDS` (default 20, bounds 5–60). It applies only to PDO connection establishment, not to query timeouts.
+
+## Cross-request cache (APCu)
+
+`APP_CACHE_DRIVER=apcu` stores Entra SQL tokens, product lookups, and public catalogue
+panel payloads in APCu so they survive HTTP requests on the same app instance.
+
+- Do **not** use `array` for non-prod HTTP verification. It is request/container local.
+- Do **not** assume PHP static properties or PHP-FPM workers make `array`/statics reliable.
+- Redis is not used.
+- Tokens are never written to disk or logged.
+
+### php -S / CLI
+
+APCu is disabled for CLI by default. Start the API with:
+
+```bash
+php -d apc.enable_cli=1 -S 127.0.0.1:8080 -t public
+```
+
+Do not silently change the global `php.ini`. If APCu is missing, install the `apcu`
+extension (Homebrew `conf.d` drop-in is fine). Setting `APP_CACHE_DRIVER=apcu` when
+APCu is not usable fails at boot with a clear error.
+
+### Azure App Service / PHP-FPM
+
+App Service and PHP-FPM are **not** CLI. Do **not** set `apc.enable_cli` there.
+
+Verify from App Service log stream / SSH (not a public HTTP endpoint):
+
+1. APCu extension loaded (`extension_loaded('apcu')`).
+2. `apc.enabled=1`.
+3. Startup log: `[cache] driver=apcu cross_request=1`.
+4. `[perf] ... cache_driver=apcu` on a request.
+
+PHP-FPM checklist:
+
+```ini
+; php.ini / App Service PHP configuration
+extension=apcu
+apc.enabled=1
+; do NOT set apc.enable_cli — that flag is only for php -S / CLI / phpdbg
+```
+
+If APCu is unavailable:
+
+- `APP_CACHE_DRIVER=apcu` → boot fails with a clear `InvalidArgumentException`.
+- unset / `auto` → falls back to `array` (`cross_request=0`). Tokens and catalogue
+  cache will not survive requests. Logs will say `driver=array cross_request=0`.
+
+Do **not** expose APCu diagnostics on `/health` or any public route.
+
+## Azure SQL serverless resume
+
+Non-prod Azure SQL is serverless (`GP_S_Gen5_2`). Auto-pause is allowed.
+
+```env
+DB_LOGIN_TIMEOUT_SECONDS=20
+DB_CONNECT_RETRY_ENABLED=true
+DB_CONNECT_RETRY_MAX_ATTEMPTS=2
+DB_CONNECT_RETRY_DELAY_MS=1500
+```
+
+`DB_CONNECT_RETRY_MAX_ATTEMPTS=2` means 1 initial PDO create + at most 1 retry.
+Retry applies only to classified connection-establishment timeouts (HYT00 / login
+timeout, and documented Azure 40613). Queries are never retried. Writes are never
+retried. Authentication and configuration failures are not retried.
+
+Do **not** add keepalive, disable auto-pause, poll `/health/database`, or pre-warm.
+
+### Optional local SQL login
+
+`DB_AUTH_MODE=sql-login` already exists. If a dedicated **non-production** SQL user
+already exists, it avoids Azure CLI token overhead locally. Do not create a SQL user
+from this app, do not commit passwords, and do not use SQL login in production.
 
 ## Health
 

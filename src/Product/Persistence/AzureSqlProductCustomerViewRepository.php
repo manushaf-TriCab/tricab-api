@@ -12,10 +12,12 @@ use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixRow;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewVariantMatrix;
 use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
+use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\DTO\ProductPublicRelationshipItem;
 use TriCab\Core\Product\Application\DTO\ProductPublicSpecificationItem;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Application\DTO\SpecificationValidationRules;
+use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Contract\ProductCustomerViewQueryRepository;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 
@@ -28,6 +30,8 @@ final class AzureSqlProductCustomerViewRepository implements ProductCustomerView
 {
     public function __construct(
         private readonly SqlConnection $connection,
+        private readonly Product3DModelRepository $threeDModels,
+        private readonly bool $product3dEnabled = true,
     ) {
     }
 
@@ -131,6 +135,9 @@ SQL,
             isPublished: strcasecmp($statusCode, 'published') === 0,
             isArchived: AzureSqlValueMapper::boolValue($row['IsArchived'] ?? false),
             primarySlug: $primarySlug,
+            threeD: $this->product3dEnabled
+                ? $this->threeDModels->listPublicByProduct($pid)
+                : ProductPublic3DPayload::empty(),
         );
     }
 

@@ -10,8 +10,10 @@ use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Database\AzureSqlPdoFactory;
 use TriCab\Api\Infrastructure\Database\DatabaseAuthFailed;
+use TriCab\Api\Infrastructure\Database\DatabaseTemporarilyUnavailable;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 
 /**
  * On-demand readiness. Opens Azure SQL and must not be used as a frequent
@@ -23,6 +25,7 @@ final class DatabaseHealthAction
         private readonly Settings $settings,
         private readonly AzureSqlPdoFactory $pdoFactory,
         private readonly JsonResponder $responder,
+        private readonly RequestPerformanceMetrics $metrics,
     ) {
     }
 
@@ -45,7 +48,7 @@ final class DatabaseHealthAction
 
         try {
             $pdo = $this->pdoFactory->create();
-            $connection = new PdoSqlConnection($pdo);
+            $connection = new PdoSqlConnection($pdo, $this->metrics);
             $rows = $connection->fetchAll('SELECT DB_NAME() AS [DatabaseName]');
             $databaseName = isset($rows[0]['DatabaseName']) && is_scalar($rows[0]['DatabaseName'])
                 ? (string) $rows[0]['DatabaseName']
@@ -55,6 +58,23 @@ final class DatabaseHealthAction
                 'authMode' => $this->settings->dbAuthMode,
                 'userRepository' => $this->settings->userRepository,
             ]);
+        } catch (DatabaseTemporarilyUnavailable $exception) {
+            \TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics::logThrowable(
+                'database_health.temporarily_unavailable',
+                $exception,
+                [
+                    'failureLocation' => 'database_health',
+                    'firstSqlQuerySuccess' => false,
+                    'retryReason' => $exception->retryReason,
+                ],
+            );
+            error_log('Database temporarily unavailable: ' . $exception->getMessage());
+
+            return $this->responder->error(
+                'DATABASE_TEMPORARILY_UNAVAILABLE',
+                'The database is temporarily unavailable.',
+                503,
+            );
         } catch (DatabaseAuthFailed $exception) {
             \TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics::logThrowable(
                 'database_health.auth_failed',

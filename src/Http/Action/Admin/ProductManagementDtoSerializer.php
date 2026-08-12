@@ -21,6 +21,9 @@ use TriCab\Core\Product\Application\DTO\ProductUploadSessionResult;
 use TriCab\Core\Product\Application\DTO\Product360SetSummary;
 use TriCab\Core\Product\Application\DTO\Product360FrameSummary;
 use TriCab\Core\Product\Application\DTO\ProductArModelSummary;
+use TriCab\Core\Product\Application\DTO\Product3DModelSummary;
+use TriCab\Core\Product\Application\DTO\ProductPublic3DModel;
+use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\DTO\ProductMutationResult;
 use TriCab\Core\Product\Application\DTO\ProductPricingSummary;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewDetail;
@@ -164,6 +167,7 @@ final class ProductManagementDtoSerializer
             'industryNames' => $detail->industryNames,
             'relationships' => array_map(self::publicRelationship(...), $detail->relationships),
             'specifications' => array_map(self::publicSpecification(...), $detail->specifications),
+            'threeD' => self::publicThreeD($detail->threeD),
         ];
     }
 
@@ -232,6 +236,7 @@ final class ProductManagementDtoSerializer
                 'columns' => array_map(self::customerViewMatrixColumn(...), $detail->variantMatrix->columns),
                 'rows' => array_map(self::customerViewMatrixRow(...), $detail->variantMatrix->rows),
             ],
+            'threeD' => self::publicThreeD($detail->threeD),
         ];
     }
 
@@ -855,6 +860,74 @@ final class ProductManagementDtoSerializer
             'originalFileName' => $summary->originalFileName,
             'isPrimary' => $summary->isPrimary,
             'storagePath' => $summary->storagePath,
+        ];
+    }
+
+    /**
+     * Admin 3D Studio model summary. May include storage paths for upload completion.
+     *
+     * @return array<string, mixed>
+     */
+    public static function product3DModelSummary(Product3DModelSummary $summary): array
+    {
+        return [
+            'publicId' => $summary->publicId,
+            'productPublicId' => $summary->productPublicId,
+            'productVariantPublicId' => $summary->productVariantPublicId,
+            'name' => $summary->name,
+            'modelTypeCode' => $summary->modelTypeCode,
+            'sourceTypeCode' => $summary->sourceTypeCode,
+            'statusCode' => $summary->statusCode,
+            'uploadStatusCode' => $summary->uploadStatusCode,
+            'scanStatusCode' => $summary->scanStatusCode,
+            'publicUrl' => $summary->publicUrl,
+            'previewImagePublicUrl' => $summary->previewImagePublicUrl,
+            'storagePath' => $summary->storagePath,
+            'storageContainer' => $summary->storageContainer,
+            'mimeType' => $summary->mimeType,
+            'fileExtension' => $summary->fileExtension,
+            'fileSizeBytes' => $summary->fileSizeBytes,
+            'originalFileName' => $summary->originalFileName,
+            'viewerConfiguration' => $summary->viewerConfiguration,
+            'generationMetadata' => $summary->generationMetadata,
+            'materialOverrides' => $summary->materialOverrides,
+            'isPrimary' => $summary->isPrimary,
+            'isActive' => $summary->isActive,
+            'displayOrder' => $summary->displayOrder,
+            'publishedAtUtc' => $summary->publishedAtUtc,
+            'rowVersion' => $summary->rowVersion,
+            'createdAtUtc' => $summary->createdAtUtc,
+            'updatedAtUtc' => $summary->updatedAtUtc,
+        ];
+    }
+
+    /**
+     * Customer-safe 3D payload — no storage paths, scan status, or generation secrets.
+     *
+     * @return array<string, mixed>
+     */
+    public static function publicThreeD(ProductPublic3DPayload $payload): array
+    {
+        return [
+            'available' => $payload->available,
+            'primary' => $payload->primary === null ? null : self::publicThreeDModel($payload->primary),
+            'models' => array_map(self::publicThreeDModel(...), $payload->models),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function publicThreeDModel(ProductPublic3DModel $model): array
+    {
+        return [
+            'publicId' => $model->publicId,
+            'name' => $model->name,
+            'modelType' => $model->modelType,
+            'url' => $model->url,
+            'previewImageUrl' => $model->previewImageUrl,
+            'viewerConfiguration' => $model->viewerConfiguration,
+            'isPrimary' => $model->isPrimary,
         ];
     }
 

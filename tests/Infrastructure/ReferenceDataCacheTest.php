@@ -5,24 +5,14 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Infrastructure;
 
 use PHPUnit\Framework\TestCase;
-use TriCab\Api\Infrastructure\Cache\ProcessMemoryCache;
+use TriCab\Api\Infrastructure\Cache\ArrayApplicationCache;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 
 final class ReferenceDataCacheTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        ProcessMemoryCache::clearAll();
-    }
-
-    protected function tearDown(): void
-    {
-        ProcessMemoryCache::clearAll();
-    }
-
     public function test_lookups_round_trip_and_invalidation(): void
     {
-        $cache = new ReferenceDataCache(new ProcessMemoryCache());
+        $cache = new ReferenceDataCache(new ArrayApplicationCache());
         $cache->setLookups(['families' => ['a']]);
 
         self::assertSame(['families' => ['a']], $cache->getLookups());
@@ -32,13 +22,14 @@ final class ReferenceDataCacheTest extends TestCase
 
     public function test_catalogue_keys_differ_by_region_and_include_products(): void
     {
-        $cache = new ReferenceDataCache(new ProcessMemoryCache());
+        $cache = new ReferenceDataCache(new ArrayApplicationCache());
         $au = $cache->cataloguePanelKey(['tabSlug' => 'products', 'regionCode' => 'AU', 'includeProducts' => '0']);
         $nz = $cache->cataloguePanelKey(['tabSlug' => 'products', 'regionCode' => 'NZ', 'includeProducts' => '0']);
         $withProducts = $cache->cataloguePanelKey(['tabSlug' => 'products', 'regionCode' => 'AU', 'includeProducts' => '1']);
 
         self::assertNotSame($au, $nz);
         self::assertNotSame($au, $withProducts);
+        self::assertStringStartsWith('catalogue:panel:', $au);
 
         $cache->setCatalogue($au, ['etag' => '"a"', 'data' => ['tabs' => []]]);
         $cache->setCatalogue($nz, ['etag' => '"b"', 'data' => ['tabs' => ['nz']]]);
@@ -51,12 +42,15 @@ final class ReferenceDataCacheTest extends TestCase
 
     public function test_expired_items_are_not_returned(): void
     {
-        $store = new ProcessMemoryCache();
+        $store = new ArrayApplicationCache();
         $store->set('k', 'v', 1);
         self::assertSame('v', $store->get('k'));
-        $store->set('k', 'v', 1);
-        // Force expiry by deleting; TTL of 1 second is not slept here.
         $store->delete('k');
         self::assertNull($store->get('k'));
+    }
+
+    public function test_lookups_key_is_versioned_admin_namespace(): void
+    {
+        self::assertSame('admin:product-lookups:v1', ReferenceDataCache::LOOKUPS_KEY);
     }
 }

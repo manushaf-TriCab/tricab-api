@@ -7,7 +7,7 @@ namespace TriCab\Api\Infrastructure\Database;
 use RuntimeException;
 use Throwable;
 
-final class DatabaseUnavailable extends RuntimeException
+class DatabaseUnavailable extends RuntimeException
 {
     public static function because(string $reason): self
     {

@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 
 final class GetPublicCataloguePanelAction
@@ -23,6 +24,7 @@ final class GetPublicCataloguePanelAction
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
         private readonly ReferenceDataCache $cache,
+        private readonly RequestPerformanceMetrics $metrics,
     ) {
     }
 
@@ -42,6 +44,7 @@ final class GetPublicCataloguePanelAction
 
             $cached = $this->cache->getCatalogue($cacheKey);
             if (is_array($cached) && isset($cached['etag'], $cached['data']) && is_string($cached['etag']) && is_array($cached['data'])) {
+                $this->metrics->recordCatalogueCacheHit(true);
                 if ($this->etagMatches($request, $cached['etag'])) {
                     return $this->responder->notModified($cached['etag']);
                 }
@@ -54,6 +57,7 @@ final class GetPublicCataloguePanelAction
                 ]);
             }
 
+            $this->metrics->recordCatalogueCacheHit(false);
             $payload = CatalogueDtoSerializer::publicPanel(
                 $this->catalogue->getPanel($tabSlug, $regionCode, $includeProducts),
             );

@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use TriCab\Api\Config\Settings;
+use TriCab\Api\Infrastructure\Cache\ApplicationCache;
 
 /**
  * Logs request-level PDO/SQL metrics. Never logs tokens, Authorization, or SQL parameters.
@@ -18,14 +19,17 @@ final class RequestPerformanceMiddleware implements MiddlewareInterface
     public function __construct(
         private readonly Settings $settings,
         private readonly RequestPerformanceMetrics $metrics,
+        private readonly ApplicationCache $cache,
     ) {
     }
 
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
+        $this->metrics->reset();
+        $this->metrics->setCacheDriver($this->cache->driver());
         $requestId = trim($request->getHeaderLine('X-Request-Id'));
         if ($requestId === '') {
-            $requestId = $this->metrics->requestId;
+            $requestId = $this->metrics->requestId();
         }
 
         $request = $request->withAttribute('requestPerformanceId', $requestId);
@@ -50,7 +54,7 @@ final class RequestPerformanceMiddleware implements MiddlewareInterface
 
         $snap = $this->metrics->snapshot();
         $line = sprintf(
-            '%s %s status=%d total_ms=%.0f pdo_ms=%.0f token_ms=%.0f token_cache_hit=%s sql_count=%d sql_ms=%.0f slowest_sql_ms=%.0f rows=%d db_auth=%s request_id=%s',
+            '%s %s status=%d total_ms=%.0f pdo_ms=%.0f token_ms=%.0f token_cache_hit=%s sql_count=%d sql_ms=%.0f slowest_sql_ms=%.0f rows=%d db_auth=%s cache_driver=%s lookups_cache_hit=%s catalogue_cache_hit=%s db_connect_attempts=%d db_connect_retry=%d db_connect_retry_reason=%s db_connect_first_attempt_ms=%.0f db_connect_retry_ms=%.0f request_id=%s',
             strtoupper($request->getMethod()),
             $request->getUri()->getPath(),
             $status,
@@ -63,7 +67,15 @@ final class RequestPerformanceMiddleware implements MiddlewareInterface
             $snap['slowest_sql_ms'],
             $snap['rows'],
             $snap['db_auth_mode'] !== '' ? $snap['db_auth_mode'] : '-',
-            $this->metrics->requestId,
+            $snap['cache_driver'] !== '' ? $snap['cache_driver'] : $this->cache->driver(),
+            self::nullableFlag($snap['lookups_cache_hit']),
+            self::nullableFlag($snap['catalogue_cache_hit']),
+            $snap['db_connect_attempts'],
+            $snap['db_connect_retry'],
+            $snap['db_connect_retry_reason'] !== '' ? $snap['db_connect_retry_reason'] : '-',
+            $snap['db_connect_first_attempt_ms'],
+            $snap['db_connect_retry_ms'],
+            $this->metrics->requestId(),
         );
 
         error_log('[perf] ' . $line);
@@ -76,6 +88,15 @@ final class RequestPerformanceMiddleware implements MiddlewareInterface
                 FILE_APPEND | LOCK_EX,
             );
         }
+    }
+
+    private static function nullableFlag(?bool $value): string
+    {
+        if ($value === null) {
+            return '-';
+        }
+
+        return $value ? '1' : '0';
     }
 
     private function resolveLogFile(): ?string

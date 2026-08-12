@@ -142,6 +142,10 @@ use TriCab\Api\Product\Persistence\AzureSqlProductMarketRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductMediaRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProduct360Repository;
 use TriCab\Api\Product\Persistence\AzureSqlProductArModelRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProduct3DModelRepository;
+use TriCab\Api\Product\Generation\DisabledProduct3DGenerationProvider;
+use TriCab\Api\Product\Generation\Img2ThreeJs\Img2ThreeJsGenerationProvider;
+use TriCab\Api\Product\Generation\ProceduralCable3DGenerationProvider;
 use TriCab\Api\Product\Storage\AzureProductBlobStore;
 use TriCab\Api\Product\Storage\DisabledProductBlobStore;
 use TriCab\Api\Product\Storage\InMemoryProductBlobStore;
@@ -169,6 +173,7 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProductMarketRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductMediaRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct360Repository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductArModelRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct3DModelRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPricingRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCustomerViewRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPublicQueryRepository;
@@ -206,10 +211,12 @@ use TriCab\Api\Identity\Persistence\InMemoryGuestSessionRepository;
 use TriCab\Api\Identity\Persistence\InMemoryUserManagementStore;
 use TriCab\Api\Http\Middleware\ReferenceDataCacheInvalidationMiddleware;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
-use TriCab\Api\Infrastructure\Cache\ProcessMemoryCache;
+use TriCab\Api\Infrastructure\Cache\ApplicationCache;
+use TriCab\Api\Infrastructure\Cache\ApplicationCacheFactory;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Infrastructure\Database\AzureSqlConnectionFactory;
 use TriCab\Api\Infrastructure\Database\AzureSqlPdoFactory;
+use TriCab\Api\Infrastructure\Database\LazySqlConnection;
 use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
@@ -402,6 +409,8 @@ use TriCab\Core\Product\Contract\ProductFileScanPolicy;
 use TriCab\Core\Product\Contract\ProductImageMetadataExtractor;
 use TriCab\Core\Product\Contract\Product360Repository;
 use TriCab\Core\Product\Contract\ProductArModelRepository;
+use TriCab\Core\Product\Contract\Product3DGenerationProvider;
+use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Domain\Service\ProductFileValidationPolicy;
 use TriCab\Core\Product\Application\Service\ConfigurableProductFileScanPolicy;
 use TriCab\Core\Product\Application\Service\GdProductImageMetadataExtractor;
@@ -409,12 +418,18 @@ use TriCab\Core\Product\Application\Service\NullProductImageMetadataExtractor;
 use TriCab\Core\Product\Application\Service\InitiateProductMediaUploadService;
 use TriCab\Api\Http\Action\Admin\CompleteArModelUploadAction;
 use TriCab\Api\Http\Action\Admin\InitiateArModelUploadAction;
+use TriCab\Api\Http\Action\Admin\Product3DModelsAdminAction;
+use TriCab\Api\Http\Action\Admin\GetProduct3DSpecificationSourceAction;
 use TriCab\Api\Http\Action\Admin\ActivateProduct360SetAction;
 use TriCab\Api\Http\Action\Admin\Complete360FrameUploadAction;
 use TriCab\Api\Http\Action\Admin\Initiate360FrameUploadAction;
 use TriCab\Api\Http\Action\Admin\CreateProduct360SetAction;
 use TriCab\Core\Product\Application\Service\CompleteArModelUploadService;
 use TriCab\Core\Product\Application\Service\InitiateArModelUploadService;
+use TriCab\Core\Product\Application\Service\CompleteProduct3DModelUploadService;
+use TriCab\Core\Product\Application\Service\GetProduct3DSpecificationSourceService;
+use TriCab\Core\Product\Application\Service\InitiateProduct3DModelUploadService;
+use TriCab\Core\Product\Application\Service\ManageProduct3DModelService;
 use TriCab\Core\Product\Application\Service\ActivateProduct360SetService;
 use TriCab\Core\Product\Application\Service\Complete360FrameUploadService;
 use TriCab\Core\Product\Application\Service\Initiate360FrameUploadService;
@@ -485,15 +500,18 @@ final class ContainerFactory
             BearerTokenAuthenticationMiddleware::class => \DI\autowire(BearerTokenAuthenticationMiddleware::class),
             CorsMiddleware::class => \DI\autowire(CorsMiddleware::class),
             JsonExceptionMiddleware::class => \DI\autowire(JsonExceptionMiddleware::class),
-            RequestPerformanceMetrics::class => \DI\create(RequestPerformanceMetrics::class),
+            RequestPerformanceMetrics::class => \DI\autowire(RequestPerformanceMetrics::class),
             RequestPerformanceMiddleware::class => \DI\autowire(RequestPerformanceMiddleware::class),
-            ProcessMemoryCache::class => \DI\autowire(ProcessMemoryCache::class),
+            ApplicationCache::class => static function () use ($settings): ApplicationCache {
+                return ApplicationCacheFactory::create($settings);
+            },
             ReferenceDataCache::class => \DI\autowire(ReferenceDataCache::class),
             ReferenceDataCacheInvalidationMiddleware::class => \DI\autowire(ReferenceDataCacheInvalidationMiddleware::class),
             AzureCliAccessTokenProvider::class => static function (Container $container) use ($settings): AzureCliAccessTokenProvider {
                 return new AzureCliAccessTokenProvider(
                     azBinary: $settings->azureCliBinary,
                     metrics: self::get($container, RequestPerformanceMetrics::class),
+                    cache: self::get($container, ApplicationCache::class),
                 );
             },
             AzureSqlPdoFactory::class => \DI\autowire(AzureSqlPdoFactory::class),
@@ -722,12 +740,31 @@ final class ContainerFactory
             ActivateProduct360SetService::class => \DI\autowire(ActivateProduct360SetService::class),
             InitiateArModelUploadService::class => \DI\autowire(InitiateArModelUploadService::class),
             CompleteArModelUploadService::class => \DI\autowire(CompleteArModelUploadService::class),
+            ManageProduct3DModelService::class => \DI\autowire(ManageProduct3DModelService::class),
+            InitiateProduct3DModelUploadService::class => \DI\autowire(InitiateProduct3DModelUploadService::class),
+            CompleteProduct3DModelUploadService::class => \DI\autowire(CompleteProduct3DModelUploadService::class),
+            GetProduct3DSpecificationSourceService::class => \DI\autowire(GetProduct3DSpecificationSourceService::class),
+            Product3DGenerationProvider::class => static function () use ($settings): Product3DGenerationProvider {
+                if (!$settings->product3dEnabled) {
+                    return new DisabledProduct3DGenerationProvider();
+                }
+
+                return match ($settings->product3dProvider) {
+                    'procedural-cable' => new ProceduralCable3DGenerationProvider(),
+                    'img2threejs' => new Img2ThreeJsGenerationProvider(
+                        enabled: $settings->product3dGenerationEnabled,
+                    ),
+                    default => new DisabledProduct3DGenerationProvider(),
+                };
+            },
             CreateProduct360SetAction::class => \DI\autowire(CreateProduct360SetAction::class),
             Initiate360FrameUploadAction::class => \DI\autowire(Initiate360FrameUploadAction::class),
             Complete360FrameUploadAction::class => \DI\autowire(Complete360FrameUploadAction::class),
             ActivateProduct360SetAction::class => \DI\autowire(ActivateProduct360SetAction::class),
             InitiateArModelUploadAction::class => \DI\autowire(InitiateArModelUploadAction::class),
             CompleteArModelUploadAction::class => \DI\autowire(CompleteArModelUploadAction::class),
+            Product3DModelsAdminAction::class => \DI\autowire(Product3DModelsAdminAction::class),
+            GetProduct3DSpecificationSourceAction::class => \DI\autowire(GetProduct3DSpecificationSourceAction::class),
             AddProductDocumentService::class => \DI\autowire(AddProductDocumentService::class),
             WithdrawProductDocumentService::class => \DI\autowire(WithdrawProductDocumentService::class),
             SoftDeleteProductDocumentService::class => \DI\autowire(SoftDeleteProductDocumentService::class),
@@ -877,7 +914,14 @@ final class ContainerFactory
 
                 return $factory->create();
             };
-            $definitions[SqlConnection::class] = \DI\autowire(PdoSqlConnection::class);
+            $definitions[SqlConnection::class] = static function (Container $container): SqlConnection {
+                return new LazySqlConnection(static function () use ($container): PdoSqlConnection {
+                    return new PdoSqlConnection(
+                        self::get($container, PDO::class),
+                        self::get($container, RequestPerformanceMetrics::class),
+                    );
+                });
+            };
             $definitions[ApplicationTransaction::class] = \DI\autowire(SqlApplicationTransaction::class);
             $definitions[UserRepository::class] = \DI\autowire(AzureSqlUserRepository::class);
             $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(AzureSqlEmailOtpChallengeRepository::class);
@@ -896,8 +940,6 @@ final class ContainerFactory
             $definitions[ProductRepository::class] = \DI\autowire(AzureSqlProductRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
-            $definitions[ProductPublicQueryRepository::class] = \DI\autowire(AzureSqlProductPublicQueryRepository::class);
-            $definitions[ProductCustomerViewQueryRepository::class] = \DI\autowire(AzureSqlProductCustomerViewRepository::class);
             $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(AzureSqlProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(AzureSqlProductClassificationRepository::class);
@@ -907,6 +949,21 @@ final class ContainerFactory
             $definitions[ProductDocumentRepository::class] = \DI\autowire(AzureSqlProductDocumentRepository::class);
             $definitions[Product360Repository::class] = \DI\autowire(AzureSqlProduct360Repository::class);
             $definitions[ProductArModelRepository::class] = \DI\autowire(AzureSqlProductArModelRepository::class);
+            $definitions[Product3DModelRepository::class] = \DI\autowire(AzureSqlProduct3DModelRepository::class);
+            $definitions[ProductPublicQueryRepository::class] = static function (Container $container) use ($settings): ProductPublicQueryRepository {
+                return new AzureSqlProductPublicQueryRepository(
+                    self::get($container, SqlConnection::class),
+                    self::get($container, Product3DModelRepository::class),
+                    $settings->product3dEnabled,
+                );
+            };
+            $definitions[ProductCustomerViewQueryRepository::class] = static function (Container $container) use ($settings): ProductCustomerViewQueryRepository {
+                return new AzureSqlProductCustomerViewRepository(
+                    self::get($container, SqlConnection::class),
+                    self::get($container, Product3DModelRepository::class),
+                    $settings->product3dEnabled,
+                );
+            };
             $definitions[ProductMarketRepository::class] = \DI\autowire(AzureSqlProductMarketRepository::class);
             $definitions[ProductRelationshipRepository::class] = \DI\autowire(AzureSqlProductRelationshipRepository::class);
             $definitions[ProductSeoRepository::class] = \DI\autowire(AzureSqlProductSeoRepository::class);
@@ -993,8 +1050,21 @@ SQL,
             $definitions[ProductRepository::class] = \DI\autowire(InMemoryProductRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(InMemoryProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(InMemoryProductAdminQueryRepository::class);
-            $definitions[ProductPublicQueryRepository::class] = \DI\autowire(InMemoryProductPublicQueryRepository::class);
-            $definitions[ProductCustomerViewQueryRepository::class] = \DI\autowire(InMemoryProductCustomerViewRepository::class);
+            $definitions[Product3DModelRepository::class] = \DI\autowire(InMemoryProduct3DModelRepository::class);
+            $definitions[ProductPublicQueryRepository::class] = static function (Container $container) use ($settings): ProductPublicQueryRepository {
+                return new InMemoryProductPublicQueryRepository(
+                    self::get($container, InMemoryProductStore::class),
+                    self::get($container, Product3DModelRepository::class),
+                    $settings->product3dEnabled,
+                );
+            };
+            $definitions[ProductCustomerViewQueryRepository::class] = static function (Container $container) use ($settings): ProductCustomerViewQueryRepository {
+                return new InMemoryProductCustomerViewRepository(
+                    self::get($container, InMemoryProductStore::class),
+                    self::get($container, Product3DModelRepository::class),
+                    $settings->product3dEnabled,
+                );
+            };
             $definitions[ProductSearchRepository::class] = \DI\autowire(InMemoryProductSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(InMemoryProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(InMemoryProductClassificationRepository::class);

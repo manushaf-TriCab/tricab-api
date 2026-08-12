@@ -11,10 +11,12 @@ use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixRow;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewVariantMatrix;
 use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
+use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\DTO\ProductPublicRelationshipItem;
 use TriCab\Core\Product\Application\DTO\ProductPublicSpecificationItem;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Application\DTO\SpecificationValidationRules;
+use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Contract\ProductCustomerViewQueryRepository;
 use TriCab\Core\Product\Domain\Entity\Product;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
@@ -24,6 +26,8 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
 {
     public function __construct(
         private readonly InMemoryProductStore $store,
+        private readonly Product3DModelRepository $threeDModels,
+        private readonly bool $product3dEnabled = true,
     ) {
     }
 
@@ -91,6 +95,9 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
             isPublished: $product->status()->isPublished(),
             isArchived: $product->isArchived(),
             primarySlug: $primarySlug,
+            threeD: $this->product3dEnabled
+                ? $this->threeDModels->listPublicByProduct(ProductPublicId::fromString($publicId))
+                : ProductPublic3DPayload::empty(),
         );
     }
 

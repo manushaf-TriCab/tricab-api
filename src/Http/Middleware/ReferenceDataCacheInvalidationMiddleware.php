@@ -11,7 +11,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 
 /**
- * Clears in-process lookup/catalogue caches after successful mutating admin requests.
+ * Clears lookup/catalogue ApplicationCache entries after successful mutating admin requests.
  */
 final class ReferenceDataCacheInvalidationMiddleware implements MiddlewareInterface
 {

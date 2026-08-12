@@ -11,6 +11,7 @@ use RuntimeException;
 use Throwable;
 use TriCab\Api\Http\Exception\HttpRequestValidationFailed;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Infrastructure\Database\DatabaseTemporarilyUnavailable;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Core\Product\Application\Exception\CatalogueConcurrencyConflict;
 use TriCab\Core\Product\Application\Exception\CatalogueInUse;
@@ -27,6 +28,7 @@ use TriCab\Core\Product\Application\Exception\InvalidProductRelationshipAssignme
 use TriCab\Core\Product\Application\Exception\InvalidSpecificationSet;
 use TriCab\Core\Product\Application\Exception\ProductArchived;
 use TriCab\Core\Product\Application\Exception\ProductConcurrencyConflict;
+use TriCab\Core\Product\Application\Exception\Product3DModelNotFound;
 use TriCab\Core\Product\Application\Exception\ProductDocumentNotFound;
 use TriCab\Core\Product\Application\Exception\ProductFileUploadException;
 use TriCab\Core\Product\Application\Exception\ProductMediaNotFound;
@@ -66,6 +68,14 @@ final class ProductManagementErrorMapper
     {
         if ($exception instanceof HttpRequestValidationFailed) {
             return $this->responder->error($exception->errorCode, $exception->getMessage(), $exception->httpStatus);
+        }
+
+        if ($exception instanceof DatabaseTemporarilyUnavailable) {
+            return $this->responder->error(
+                'DATABASE_TEMPORARILY_UNAVAILABLE',
+                'The database is temporarily unavailable.',
+                503,
+            );
         }
 
         if ($exception instanceof DatabaseUnavailable) {
@@ -136,6 +146,10 @@ final class ProductManagementErrorMapper
 
         if ($exception instanceof ProductMediaNotFound) {
             return $this->responder->error('PRODUCT_MEDIA_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof Product3DModelNotFound) {
+            return $this->responder->error('PRODUCT_3D_MODEL_NOT_FOUND', $exception->getMessage(), 404);
         }
 
         if ($exception instanceof ProductDocumentNotFound) {

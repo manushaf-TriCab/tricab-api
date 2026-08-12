@@ -59,6 +59,9 @@ final class InMemoryProductStore
     /** @var array<string, array<string, mixed>> */
     private array $arModels = [];
 
+    /** @var array<string, array<string, mixed>> */
+    private array $threeDModels = [];
+
     /** @var list<array<string, mixed>> */
     private array $regions = [];
 
@@ -419,6 +422,19 @@ final class InMemoryProductStore
     {
         $this->arModels = $map;
     }
+
+    /** @return array<string, array<string, mixed>> */
+    public function threeDModelsMap(): array
+    {
+        return $this->threeDModels;
+    }
+
+    /** @param array<string, array<string, mixed>> $map */
+    public function setThreeDModelsMap(array $map): void
+    {
+        $this->threeDModels = $map;
+    }
+
 
     /** @return list<array<string, mixed>> */
     public function regions(): array

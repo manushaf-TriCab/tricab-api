@@ -19,5 +19,8 @@ final class HealthEndpointTest extends TestCase
         self::assertTrue($payload['success']);
         self::assertSame('tricab-api', $payload['service']);
         self::assertSame('healthy', $payload['status']);
+        self::assertArrayNotHasKey('cache', $payload);
+        self::assertArrayNotHasKey('database', $payload);
+        self::assertArrayNotHasKey('apcu', $payload);
     }
 }

@@ -136,4 +136,62 @@ final class SettingsTest extends TestCase
         self::assertFalse($production->performanceLogging);
         self::assertFalse($production->performanceSqlVerbose);
     }
+
+    public function test_unknown_cache_driver_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unsupported APP_CACHE_DRIVER');
+
+        Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'APP_CACHE_DRIVER' => 'redis',
+        ]);
+    }
+
+    public function test_explicit_array_cache_driver(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'APP_CACHE_DRIVER' => 'array',
+        ]);
+        self::assertSame(Settings::CACHE_DRIVER_ARRAY, $settings->appCacheDriver);
+    }
+
+    public function test_serverless_resume_defaults(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+        ]);
+
+        self::assertSame(20, $settings->dbLoginTimeoutSeconds);
+        self::assertTrue($settings->dbConnectRetryEnabled);
+        self::assertSame(2, $settings->dbConnectRetryMaxAttempts);
+        self::assertSame(1500, $settings->dbConnectRetryDelayMs);
+    }
+
+    public function test_serverless_resume_settings_are_bounded(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'DB_LOGIN_TIMEOUT_SECONDS' => '90',
+            'DB_CONNECT_RETRY_MAX_ATTEMPTS' => '9',
+            'DB_CONNECT_RETRY_DELAY_MS' => '50',
+            'DB_CONNECT_RETRY_ENABLED' => 'false',
+        ]);
+
+        self::assertSame(60, $settings->dbLoginTimeoutSeconds);
+        self::assertFalse($settings->dbConnectRetryEnabled);
+        self::assertSame(2, $settings->dbConnectRetryMaxAttempts);
+        self::assertSame(200, $settings->dbConnectRetryDelayMs);
+
+        $low = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'DB_LOGIN_TIMEOUT_SECONDS' => '1',
+            'DB_CONNECT_RETRY_MAX_ATTEMPTS' => '1',
+            'DB_CONNECT_RETRY_DELAY_MS' => '4000',
+        ]);
+        self::assertSame(5, $low->dbLoginTimeoutSeconds);
+        self::assertSame(1, $low->dbConnectRetryMaxAttempts);
+        self::assertSame(4000, $low->dbConnectRetryDelayMs);
+    }
 }

@@ -71,8 +71,6 @@ final class AzureBlobAccountSasIssuer
 
         $query = http_build_query([
             'sv' => $signedVersion,
-            'ss' => 'b',
-            'srt' => 'o',
             'sp' => $signedPermissions,
             'se' => $signedExpiry,
             'st' => $signedStart,
@@ -141,8 +139,6 @@ final class AzureBlobAccountSasIssuer
 
         $query = http_build_query([
             'sv' => $signedVersion,
-            'ss' => 'b',
-            'srt' => 'o',
             'sp' => $signedPermissions,
             'se' => $signedExpiry,
             'st' => $signedStart,

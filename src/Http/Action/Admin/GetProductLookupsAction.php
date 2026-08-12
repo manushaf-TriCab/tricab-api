@@ -10,6 +10,7 @@ use Throwable;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 use TriCab\Core\Product\Application\Service\GetProductLookupsService;
 
 final class GetProductLookupsAction
@@ -19,6 +20,7 @@ final class GetProductLookupsAction
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
         private readonly ReferenceDataCache $cache,
+        private readonly RequestPerformanceMetrics $metrics,
     ) {
     }
 
@@ -29,12 +31,14 @@ final class GetProductLookupsAction
         try {
             $cached = $this->cache->getLookups();
             if (is_array($cached)) {
+                $this->metrics->recordLookupsCacheHit(true);
                 /** @var array<string, mixed> $cached */
                 return $this->responder->success($cached, 200, [
                     'Cache-Control' => 'private, max-age=0, must-revalidate',
                 ]);
             }
 
+            $this->metrics->recordLookupsCacheHit(false);
             $payload = ProductManagementDtoSerializer::lookupsBundle($this->lookups->execute());
             $this->cache->setLookups($payload);
 

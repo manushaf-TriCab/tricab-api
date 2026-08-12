@@ -9,6 +9,7 @@ use TriCab\Api\Config\Settings;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
 use TriCab\Api\Infrastructure\Database\AzureSqlPdoFactory;
 use TriCab\Api\Infrastructure\Database\DatabaseAuthFailed;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 use TriCab\Api\Tests\TestAppFactory;
 
 final class DatabaseHealthEndpointTest extends TestCase
@@ -38,6 +39,7 @@ final class DatabaseHealthEndpointTest extends TestCase
             'DB_HOST' => 'tricab-mel.database.windows.net',
             'DB_DATABASE' => 'tc',
             'GUEST_JWT_SECRET' => str_repeat('t', 64),
+            'DB_CONNECT_RETRY_ENABLED' => 'false',
         ]);
 
         // Force provider binary to a missing executable via container replacement is hard;
@@ -52,6 +54,7 @@ final class DatabaseHealthEndpointTest extends TestCase
         $factory = new AzureSqlPdoFactory(
             $settings,
             new AzureCliAccessTokenProvider('/path/to/missing-az-binary'),
+            new RequestPerformanceMetrics(),
         );
 
         try {
@@ -75,7 +78,11 @@ final class DatabaseHealthEndpointTest extends TestCase
         self::assertIsArray($payload['error']);
         /** @var array<string, mixed> $error */
         $error = $payload['error'];
-        self::assertContains($error['code'], ['DATABASE_AUTH_FAILED', 'DATABASE_UNAVAILABLE']);
+        self::assertContains($error['code'], [
+            'DATABASE_AUTH_FAILED',
+            'DATABASE_UNAVAILABLE',
+            'DATABASE_TEMPORARILY_UNAVAILABLE',
+        ]);
         self::assertIsString($error['message']);
         self::assertStringNotContainsString('eyJ', (string) $error['message']);
     }
@@ -91,7 +98,11 @@ final class DatabaseHealthEndpointTest extends TestCase
             'DB_PASSWORD' => '',
         ]);
 
-        $factory = new AzureSqlPdoFactory($settings, new AzureCliAccessTokenProvider());
+        $factory = new AzureSqlPdoFactory(
+            $settings,
+            new AzureCliAccessTokenProvider(),
+            new RequestPerformanceMetrics(),
+        );
 
         $this->expectException(DatabaseAuthFailed::class);
         $factory->create();

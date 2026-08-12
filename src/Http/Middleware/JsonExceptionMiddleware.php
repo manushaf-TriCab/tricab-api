@@ -14,6 +14,7 @@ use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Exception\HttpRequestValidationFailed;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Database\DatabaseAuthFailed;
+use TriCab\Api\Infrastructure\Database\DatabaseTemporarilyUnavailable;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use Throwable;
 
@@ -38,6 +39,14 @@ final class JsonExceptionMiddleware implements MiddlewareInterface
                 'HTTP_ERROR',
                 $exception->getMessage() !== '' ? $exception->getMessage() : 'HTTP error.',
                 $exception->getCode() >= 400 ? $exception->getCode() : 400,
+            );
+        } catch (DatabaseTemporarilyUnavailable $exception) {
+            error_log('Database temporarily unavailable: ' . $exception->getMessage());
+
+            return $this->responder->error(
+                'DATABASE_TEMPORARILY_UNAVAILABLE',
+                'The database is temporarily unavailable.',
+                503,
             );
         } catch (DatabaseAuthFailed $exception) {
             error_log('Database authentication failed: ' . $exception->getMessage());

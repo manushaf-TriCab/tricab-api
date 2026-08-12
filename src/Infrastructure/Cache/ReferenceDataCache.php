@@ -9,7 +9,7 @@ namespace TriCab\Api\Infrastructure\Cache;
  */
 final class ReferenceDataCache
 {
-    public const LOOKUPS_KEY = 'product-lookups:v1';
+    public const LOOKUPS_KEY = 'admin:product-lookups:v1';
 
     public const LOOKUPS_TTL_SECONDS = 600;
 
@@ -18,7 +18,7 @@ final class ReferenceDataCache
     public const CATALOGUE_TTL_SECONDS = 300;
 
     public function __construct(
-        private readonly ProcessMemoryCache $cache,
+        private readonly ApplicationCache $cache,
     ) {
     }
 

@@ -36,6 +36,7 @@ final class TestAppFactory
             'GUEST_JWT_SECRET' => 'local-development-guest-jwt-secret-32b',
             'GUEST_JWT_TTL_SECONDS' => '86400',
             'APP_PERFORMANCE_LOGGING' => 'false',
+            'APP_CACHE_DRIVER' => 'array',
         ];
 
         $merged = array_merge($defaults, $env);

@@ -9,19 +9,10 @@ use TriCab\Api\Config\Settings;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenException;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
 use TriCab\Api\Infrastructure\Authentication\AzureCliProcessRunner;
+use TriCab\Api\Infrastructure\Cache\ArrayApplicationCache;
 
 final class AzureCliAccessTokenProviderTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        AzureCliAccessTokenProvider::resetProcessCache();
-    }
-
-    protected function tearDown(): void
-    {
-        AzureCliAccessTokenProvider::resetProcessCache();
-    }
-
     public function test_missing_azure_cli_throws_descriptive_exception(): void
     {
         $provider = new AzureCliAccessTokenProvider('/definitely/missing/az');
@@ -62,6 +53,20 @@ final class AzureCliAccessTokenProviderTest extends TestCase
         self::assertSame('get-access-token', $runner->commands[0][2] ?? null);
         self::assertNotContains('--version', $runner->commands[0]);
         self::assertNotContains('show', $runner->commands[0]);
+    }
+
+    public function test_separate_providers_share_application_cache(): void
+    {
+        $store = new ArrayApplicationCache();
+        $runner = new RecordingAzureCliProcessRunner();
+        $now = 1_700_000_000;
+        $runner->queueJson(self::tokenPayload('tok-shared', $now + 3600));
+        $first = new AzureCliAccessTokenProvider('az', $runner, null, static fn (): int => $now, $store);
+        $second = new AzureCliAccessTokenProvider('az', $runner, null, static fn (): int => $now, $store);
+
+        self::assertSame('tok-shared', $first->getAccessToken());
+        self::assertSame('tok-shared', $second->getAccessToken());
+        self::assertCount(1, $runner->commands);
     }
 
     public function test_near_expiry_refreshes_token(): void

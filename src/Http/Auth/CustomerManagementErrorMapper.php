@@ -11,6 +11,7 @@ use RuntimeException;
 use Throwable;
 use TriCab\Api\Http\Exception\HttpRequestValidationFailed;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Infrastructure\Database\DatabaseTemporarilyUnavailable;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Core\Customer\Application\Exception\CustomerCodeConflict;
 use TriCab\Core\Customer\Application\Exception\CustomerContactNotFound;
@@ -42,6 +43,14 @@ final class CustomerManagementErrorMapper
     {
         if ($exception instanceof HttpRequestValidationFailed) {
             return $this->responder->error($exception->errorCode, $exception->getMessage(), $exception->httpStatus);
+        }
+
+        if ($exception instanceof DatabaseTemporarilyUnavailable) {
+            return $this->responder->error(
+                'DATABASE_TEMPORARILY_UNAVAILABLE',
+                'The database is temporarily unavailable.',
+                503,
+            );
         }
 
         if ($exception instanceof DatabaseUnavailable) {

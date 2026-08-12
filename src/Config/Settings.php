@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Config;
 
 use InvalidArgumentException;
+use TriCab\Api\Infrastructure\Cache\ApcuApplicationCache;
 
 final readonly class Settings
 {
@@ -29,6 +30,9 @@ final readonly class Settings
     public const BLOB_SCAN_MODE_AUTO_CLEAN = 'auto-clean';
     public const BLOB_SCAN_MODE_PENDING = 'pending-scan';
     public const BLOB_SCAN_MODE_DEFENDER = 'defender';
+
+    public const CACHE_DRIVER_APCU = 'apcu';
+    public const CACHE_DRIVER_ARRAY = 'array';
 
     /**
      * @param list<string> $corsAllowedOrigins
@@ -86,6 +90,14 @@ final readonly class Settings
         public int $blobDownloadSasTtlSeconds,
         public bool $performanceLogging,
         public bool $performanceSqlVerbose,
+        public string $appCacheDriver,
+        public int $dbLoginTimeoutSeconds,
+        public bool $dbConnectRetryEnabled,
+        public int $dbConnectRetryMaxAttempts,
+        public int $dbConnectRetryDelayMs,
+        public bool $product3dEnabled,
+        public string $product3dProvider,
+        public bool $product3dGenerationEnabled,
     ) {
     }
 
@@ -403,7 +415,29 @@ final readonly class Settings
                 $appEnv === 'development',
             ),
             performanceSqlVerbose: self::bool($env, 'APP_PERFORMANCE_SQL_VERBOSE', false),
+            appCacheDriver: self::resolveCacheDriver($env),
+            dbLoginTimeoutSeconds: self::boundedInt($env, 'DB_LOGIN_TIMEOUT_SECONDS', 20, 5, 60),
+            dbConnectRetryEnabled: self::bool($env, 'DB_CONNECT_RETRY_ENABLED', true),
+            dbConnectRetryMaxAttempts: self::boundedInt($env, 'DB_CONNECT_RETRY_MAX_ATTEMPTS', 2, 1, 2),
+            dbConnectRetryDelayMs: self::boundedInt($env, 'DB_CONNECT_RETRY_DELAY_MS', 1500, 200, 5000),
+            product3dEnabled: self::bool($env, 'PRODUCT_3D_ENABLED', true),
+            product3dProvider: self::resolveProduct3dProvider($env),
+            product3dGenerationEnabled: self::bool($env, 'PRODUCT_3D_GENERATION_ENABLED', false),
         );
+    }
+
+    /**
+     * @param array<string, string|null> $env
+     */
+    private static function resolveProduct3dProvider(array $env): string
+    {
+        $provider = strtolower(trim(self::string($env, 'PRODUCT_3D_PROVIDER', 'disabled')));
+        $allowed = ['disabled', 'procedural-cable', 'img2threejs'];
+        if (!in_array($provider, $allowed, true)) {
+            return 'disabled';
+        }
+
+        return $provider;
     }
 
     /**
@@ -433,6 +467,33 @@ final readonly class Settings
             'accountKey' => $accountKey,
             'blobEndpoint' => rtrim($blobEndpoint, '/'),
         ];
+    }
+
+    /**
+     * @param array<string, string|null> $env
+     */
+    private static function resolveCacheDriver(array $env): string
+    {
+        $raw = strtolower(self::string($env, 'APP_CACHE_DRIVER', ''));
+        if ($raw === '' || $raw === 'auto') {
+            return ApcuApplicationCache::isUsable()
+                ? self::CACHE_DRIVER_APCU
+                : self::CACHE_DRIVER_ARRAY;
+        }
+
+        if ($raw !== self::CACHE_DRIVER_APCU && $raw !== self::CACHE_DRIVER_ARRAY) {
+            throw new InvalidArgumentException(
+                'Unsupported APP_CACHE_DRIVER "' . $raw . '". Use apcu or array.',
+            );
+        }
+
+        if ($raw === self::CACHE_DRIVER_APCU && !ApcuApplicationCache::isUsable()) {
+            throw new InvalidArgumentException(
+                'APP_CACHE_DRIVER=apcu requires the APCu extension. For php -S / CLI, start PHP with -d apc.enable_cli=1 (do not assume static PHP properties survive HTTP requests).',
+            );
+        }
+
+        return $raw;
     }
 
     /**
@@ -488,5 +549,21 @@ final readonly class Settings
         }
 
         return (int) $value;
+    }
+
+    /**
+     * @param array<string, string|null> $env
+     */
+    private static function boundedInt(array $env, string $key, int $default, int $min, int $max): int
+    {
+        $value = self::int($env, $key, $default);
+        if ($value < $min) {
+            return $min;
+        }
+        if ($value > $max) {
+            return $max;
+        }
+
+        return $value;
     }
 }
