@@ -27,7 +27,11 @@ final class PdoSqlConnection implements SqlConnection
             $statement->execute();
             /** @var list<array<string, mixed>> $rows */
             $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
-            $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started), count($rows));
+            $this->metrics->recordSql(
+                RequestPerformanceMetrics::durationMs($started),
+                count($rows),
+                self::queryName($sql),
+            );
 
             return $rows;
         } catch (PDOException $exception) {
@@ -46,12 +50,12 @@ final class PdoSqlConnection implements SqlConnection
             $statement = $this->pdo->prepare($sql);
             $this->bindParams($statement, $params);
             $statement->execute();
-            $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started));
+            $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started), 0, self::queryName($sql));
         } catch (PDOException $exception) {
-            $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started));
+            $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started), 0, self::queryName($sql));
             throw DatabaseUnavailable::fromThrowable($exception);
         } catch (Throwable $exception) {
-            $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started));
+            $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started), 0, self::queryName($sql));
             throw DatabaseUnavailable::fromThrowable($exception);
         }
     }
@@ -153,5 +157,14 @@ final class PdoSqlConnection implements SqlConnection
 
             $statement->bindValue($name, $value);
         }
+    }
+
+    private static function queryName(string $sql): string
+    {
+        if (preg_match('/\/\*q:([a-zA-Z0-9_.]+)\*\//', $sql, $matches) !== 1) {
+            return '';
+        }
+
+        return $matches[1];
     }
 }

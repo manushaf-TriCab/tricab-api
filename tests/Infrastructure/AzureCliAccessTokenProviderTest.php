@@ -10,6 +10,7 @@ use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenException;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
 use TriCab\Api\Infrastructure\Authentication\AzureCliProcessRunner;
 use TriCab\Api\Infrastructure\Cache\ArrayApplicationCache;
+use TriCab\Api\Infrastructure\Cache\FilesystemApplicationCache;
 
 final class AzureCliAccessTokenProviderTest extends TestCase
 {
@@ -80,6 +81,83 @@ final class AzureCliAccessTokenProviderTest extends TestCase
         self::assertSame('tok-old', $provider->getAccessToken());
         self::assertSame('tok-new', $provider->getAccessToken());
         self::assertCount(2, $runner->commands);
+    }
+
+    public function test_cached_token_inside_five_minute_skew_is_refreshed(): void
+    {
+        $store = new ArrayApplicationCache();
+        $now = 1_700_000_000;
+        $store->set(AzureCliAccessTokenProvider::CACHE_KEY, [
+            'token' => 'tok-old',
+            'expiresAt' => $now + 120,
+        ], 3600);
+        $runner = new RecordingAzureCliProcessRunner();
+        $runner->queueJson(self::tokenPayload('tok-new', $now + 3600));
+        $provider = new AzureCliAccessTokenProvider('az', $runner, null, static fn (): int => $now, $store);
+
+        self::assertSame('tok-new', $provider->getAccessToken());
+        self::assertCount(1, $runner->commands);
+    }
+
+    public function test_expired_cached_token_is_refreshed(): void
+    {
+        $store = new ArrayApplicationCache();
+        $now = 1_700_000_000;
+        $store->set(AzureCliAccessTokenProvider::CACHE_KEY, [
+            'token' => 'tok-old',
+            'expiresAt' => $now - 5,
+        ], 3600);
+        $runner = new RecordingAzureCliProcessRunner();
+        $runner->queueJson(self::tokenPayload('tok-new', $now + 3600));
+        $provider = new AzureCliAccessTokenProvider('az', $runner, null, static fn (): int => $now, $store);
+
+        self::assertSame('tok-new', $provider->getAccessToken());
+        self::assertCount(1, $runner->commands);
+    }
+
+    public function test_file_cache_is_shared_across_provider_instances(): void
+    {
+        $directory = sys_get_temp_dir() . '/tricab-token-cache-' . bin2hex(random_bytes(4));
+        $store = new FilesystemApplicationCache($directory);
+        $runner = new RecordingAzureCliProcessRunner();
+        $now = 1_700_000_000;
+        $runner->queueJson(self::tokenPayload('tok-file', $now + 3600));
+        $first = new AzureCliAccessTokenProvider('az', $runner, null, static fn (): int => $now, $store);
+        $secondStore = new FilesystemApplicationCache($directory);
+        $second = new AzureCliAccessTokenProvider('az', $runner, null, static fn (): int => $now, $secondStore);
+
+        try {
+            self::assertSame('tok-file', $first->getAccessToken());
+            self::assertSame('tok-file', $second->getAccessToken());
+            self::assertCount(1, $runner->commands);
+        } finally {
+            $store->delete(AzureCliAccessTokenProvider::CACHE_KEY);
+            $store->delete('entra-sql-token-refresh-lock');
+        }
+    }
+
+    public function test_access_token_value_is_not_written_to_auth_log(): void
+    {
+        $runner = new RecordingAzureCliProcessRunner();
+        $now = 1_700_000_000;
+        $secret = 'tok-secret-never-appear-in-logs';
+        $runner->queueJson(self::tokenPayload($secret, $now + 3600));
+        $provider = new AzureCliAccessTokenProvider('az', $runner, null, static fn (): int => $now);
+
+        $logFile = dirname(__DIR__, 2) . '/var/log/database-auth.log';
+        $before = is_file($logFile) ? (int) filesize($logFile) : 0;
+        self::assertSame($secret, $provider->getAccessToken());
+        if (!is_file($logFile)) {
+            return;
+        }
+        $handle = fopen($logFile, 'rb');
+        self::assertNotFalse($handle);
+        fseek($handle, $before);
+        $added = stream_get_contents($handle);
+        fclose($handle);
+        self::assertIsString($added);
+        self::assertStringNotContainsString($secret, $added);
+        self::assertStringNotContainsString('eyJ', $added);
     }
 
     public function test_expired_token_is_not_reused_after_cli_failure(): void

@@ -271,7 +271,30 @@ SQL;
         }
         $sql .= ' ORDER BY d.[DisplayOrder], d.[DefinitionName]';
 
-        return array_map(fn (array $row): SpecificationDefinitionRecord => $this->hydrateDefinition($row), $this->connection->fetchAll($sql, $params));
+        $rows = $this->connection->fetchAll($sql, $params);
+        $publicIds = [];
+        foreach ($rows as $row) {
+            $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
+            if ($publicId !== '') {
+                $publicIds[] = $publicId;
+            }
+        }
+        $usageById = $this->loadDefinitionUsageByPublicIds($publicIds);
+        $optionsById = $this->loadOptionsGroupedByDefinitionPublicIds($publicIds);
+
+        $result = [];
+        foreach ($rows as $row) {
+            $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
+            $usage = $usageById[$publicId] ?? ['product' => 0, 'variant' => 0];
+            $result[] = $this->hydrateDefinition(
+                $row,
+                $usage['product'],
+                $usage['variant'],
+                $optionsById[$publicId] ?? [],
+            );
+        }
+
+        return $result;
     }
 
     public function findDefinition(string $publicId, bool $includeDeleted = false): ?SpecificationDefinitionRecord
@@ -985,12 +1008,134 @@ SQL;
         );
     }
 
-    /** @param array<string, mixed> $row */
-    private function hydrateDefinition(array $row): SpecificationDefinitionRecord
+    /**
+     * @param list<string> $publicIds
+     * @return array<string, array{product: int, variant: int}>
+     */
+    private function loadDefinitionUsageByPublicIds(array $publicIds): array
     {
+        $usage = [];
+        foreach ($publicIds as $publicId) {
+            $usage[$publicId] = ['product' => 0, 'variant' => 0];
+        }
+        if ($publicIds === []) {
+            return $usage;
+        }
+
+        [$placeholders, $params] = $this->bindPublicIdList($publicIds);
+        $inList = implode(', ', $placeholders);
+
+        foreach ($this->connection->fetchAll(
+            'SELECT CONVERT(NVARCHAR(36), d.[PublicId]) AS [PublicId], COUNT(1) AS [Cnt]
+             FROM [product].[ProductSpecificationValues] v
+             INNER JOIN [product].[SpecificationDefinitions] d ON d.[SpecificationDefinitionId] = v.[SpecificationDefinitionId]
+             WHERE v.[DeletedAtUtc] IS NULL AND d.[PublicId] IN (' . $inList . ')
+             GROUP BY d.[PublicId]',
+            $params,
+        ) as $row) {
+            $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
+            if ($publicId !== '') {
+                $usage[$publicId]['product'] = AzureSqlValueMapper::intValue($row['Cnt'] ?? 0);
+            }
+        }
+
+        foreach ($this->connection->fetchAll(
+            'SELECT CONVERT(NVARCHAR(36), d.[PublicId]) AS [PublicId], COUNT(1) AS [Cnt]
+             FROM [product].[ProductVariantSpecificationValues] v
+             INNER JOIN [product].[SpecificationDefinitions] d ON d.[SpecificationDefinitionId] = v.[SpecificationDefinitionId]
+             WHERE v.[DeletedAtUtc] IS NULL AND d.[PublicId] IN (' . $inList . ')
+             GROUP BY d.[PublicId]',
+            $params,
+        ) as $row) {
+            $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
+            if ($publicId !== '') {
+                $usage[$publicId]['variant'] = AzureSqlValueMapper::intValue($row['Cnt'] ?? 0);
+            }
+        }
+
+        return $usage;
+    }
+
+    /**
+     * @param list<string> $publicIds
+     * @return array<string, list<SpecificationOptionRecord>>
+     */
+    private function loadOptionsGroupedByDefinitionPublicIds(array $publicIds): array
+    {
+        $grouped = [];
+        foreach ($publicIds as $publicId) {
+            $grouped[$publicId] = [];
+        }
+        if ($publicIds === []) {
+            return $grouped;
+        }
+
+        [$placeholders, $params] = $this->bindPublicIdList($publicIds);
+        $inList = implode(', ', $placeholders);
+        $sql = <<<SQL
+SELECT
+    CONVERT(NVARCHAR(36), o.[PublicId]) AS [PublicId],
+    CONVERT(NVARCHAR(36), d.[PublicId]) AS [DefinitionPublicId],
+    o.[OptionCode] AS [Code],
+    o.[OptionLabel] AS [Name],
+    o.[OptionValue] AS [Value],
+    o.[DisplayOrder],
+    o.[IsActive],
+    CASE WHEN o.[DeletedAtUtc] IS NULL THEN 0 ELSE 1 END AS [IsDeleted],
+    CONVERT(VARBINARY(8), o.[RowVersion]) AS [RowVersion],
+    CONVERT(NVARCHAR(33), o.[CreatedAtUtc], 126) AS [CreatedAtUtc],
+    CONVERT(NVARCHAR(33), o.[UpdatedAtUtc], 126) AS [UpdatedAtUtc]
+FROM [product].[SpecificationOptions] o
+INNER JOIN [product].[SpecificationDefinitions] d ON d.[SpecificationDefinitionId] = o.[SpecificationDefinitionId]
+WHERE d.[PublicId] IN ({$inList})
+ORDER BY o.[DisplayOrder], o.[OptionLabel]
+SQL;
+
+        foreach ($this->connection->fetchAll($sql, $params) as $row) {
+            $definitionPublicId = AzureSqlValueMapper::stringValue($row['DefinitionPublicId'] ?? '');
+            if ($definitionPublicId === '') {
+                continue;
+            }
+            $grouped[$definitionPublicId][] = $this->hydrateOption($row);
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * @param list<string> $publicIds
+     * @return array{0: list<string>, 1: array<string, string>}
+     */
+    private function bindPublicIdList(array $publicIds): array
+    {
+        $placeholders = [];
+        $params = [];
+        foreach (array_values($publicIds) as $index => $publicId) {
+            $key = ':pid' . $index;
+            $placeholders[] = $key;
+            $params[$key] = $publicId;
+        }
+
+        return [$placeholders, $params];
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @param list<SpecificationOptionRecord>|null $options
+     */
+    private function hydrateDefinition(
+        array $row,
+        ?int $productValueCount = null,
+        ?int $variantValueCount = null,
+        ?array $options = null,
+    ): SpecificationDefinitionRecord {
         $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
-        $usage = $this->definitionUsage($publicId);
-        $options = $this->listOptions(['definitionPublicId' => $publicId, 'includeDeleted' => true]);
+        if ($productValueCount === null || $variantValueCount === null) {
+            $usage = $this->definitionUsage($publicId);
+            $productValueCount = $usage->productValueCount;
+            $variantValueCount = $usage->variantValueCount;
+        }
+        $options ??= $this->listOptions(['definitionPublicId' => $publicId, 'includeDeleted' => true]);
 
         return new SpecificationDefinitionRecord(
             publicId: $publicId,
@@ -1021,8 +1166,8 @@ SQL;
             options: $options,
             createdAtUtc: AzureSqlValueMapper::nullableString($row['CreatedAtUtc'] ?? null),
             updatedAtUtc: AzureSqlValueMapper::nullableString($row['UpdatedAtUtc'] ?? null),
-            productValueCount: $usage->productValueCount,
-            variantValueCount: $usage->variantValueCount,
+            productValueCount: $productValueCount,
+            variantValueCount: $variantValueCount,
         );
     }
 

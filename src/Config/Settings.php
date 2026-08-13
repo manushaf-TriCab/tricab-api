@@ -33,6 +33,7 @@ final readonly class Settings
 
     public const CACHE_DRIVER_APCU = 'apcu';
     public const CACHE_DRIVER_ARRAY = 'array';
+    public const CACHE_DRIVER_FILE = 'file';
 
     /**
      * @param list<string> $corsAllowedOrigins
@@ -91,6 +92,7 @@ final readonly class Settings
         public bool $performanceLogging,
         public bool $performanceSqlVerbose,
         public string $appCacheDriver,
+        public string $appCachePath,
         public int $dbLoginTimeoutSeconds,
         public bool $dbConnectRetryEnabled,
         public int $dbConnectRetryMaxAttempts,
@@ -416,6 +418,7 @@ final readonly class Settings
             ),
             performanceSqlVerbose: self::bool($env, 'APP_PERFORMANCE_SQL_VERBOSE', false),
             appCacheDriver: self::resolveCacheDriver($env),
+            appCachePath: self::string($env, 'APP_CACHE_PATH', 'var/cache/app'),
             dbLoginTimeoutSeconds: self::boundedInt($env, 'DB_LOGIN_TIMEOUT_SECONDS', 20, 5, 60),
             dbConnectRetryEnabled: self::bool($env, 'DB_CONNECT_RETRY_ENABLED', true),
             dbConnectRetryMaxAttempts: self::boundedInt($env, 'DB_CONNECT_RETRY_MAX_ATTEMPTS', 2, 1, 2),
@@ -478,12 +481,16 @@ final readonly class Settings
         if ($raw === '' || $raw === 'auto') {
             return ApcuApplicationCache::isUsable()
                 ? self::CACHE_DRIVER_APCU
-                : self::CACHE_DRIVER_ARRAY;
+                : self::CACHE_DRIVER_FILE;
         }
 
-        if ($raw !== self::CACHE_DRIVER_APCU && $raw !== self::CACHE_DRIVER_ARRAY) {
+        if (
+            $raw !== self::CACHE_DRIVER_APCU
+            && $raw !== self::CACHE_DRIVER_ARRAY
+            && $raw !== self::CACHE_DRIVER_FILE
+        ) {
             throw new InvalidArgumentException(
-                'Unsupported APP_CACHE_DRIVER "' . $raw . '". Use apcu or array.',
+                'Unsupported APP_CACHE_DRIVER "' . $raw . '". Use apcu, file, or array.',
             );
         }
 

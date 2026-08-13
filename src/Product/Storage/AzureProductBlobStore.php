@@ -11,7 +11,7 @@ use TriCab\Core\Product\Application\DTO\ProductBlobWriteTicket;
 use TriCab\Core\Product\Contract\ProductBlobStore;
 
 /**
- * Azure Blob / Azurite adapter using account-key SAS (write-only, blob-scoped).
+ * Azure Blob / Azurite adapter using account-key SAS (blob-scoped write upload + read download).
  * Production Managed Identity / user-delegation SAS is documented for later;
  * connection-string mode is the approved non-production path.
  */

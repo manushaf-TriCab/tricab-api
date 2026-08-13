@@ -157,6 +157,17 @@ final class SettingsTest extends TestCase
         self::assertSame(Settings::CACHE_DRIVER_ARRAY, $settings->appCacheDriver);
     }
 
+    public function test_file_cache_driver_and_path(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'APP_CACHE_DRIVER' => 'file',
+            'APP_CACHE_PATH' => 'var/cache/app',
+        ]);
+        self::assertSame(Settings::CACHE_DRIVER_FILE, $settings->appCacheDriver);
+        self::assertSame('var/cache/app', $settings->appCachePath);
+    }
+
     public function test_serverless_resume_defaults(): void
     {
         $settings = Settings::fromEnvironment([

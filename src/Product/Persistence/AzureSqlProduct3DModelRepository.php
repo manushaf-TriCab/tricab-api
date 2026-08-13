@@ -87,6 +87,7 @@ SQL,
         $columns = self::SELECT_COLUMNS;
         $rows = $this->connection->fetchAll(
             <<<SQL
+/*q:cv.3d*/
 SELECT
 {$columns}
 FROM [product].[Product3DModels] m

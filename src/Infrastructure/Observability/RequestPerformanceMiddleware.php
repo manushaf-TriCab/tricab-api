@@ -54,14 +54,17 @@ final class RequestPerformanceMiddleware implements MiddlewareInterface
 
         $snap = $this->metrics->snapshot();
         $line = sprintf(
-            '%s %s status=%d total_ms=%.0f pdo_ms=%.0f token_ms=%.0f token_cache_hit=%s sql_count=%d sql_ms=%.0f slowest_sql_ms=%.0f rows=%d db_auth=%s cache_driver=%s lookups_cache_hit=%s catalogue_cache_hit=%s db_connect_attempts=%d db_connect_retry=%d db_connect_retry_reason=%s db_connect_first_attempt_ms=%.0f db_connect_retry_ms=%.0f request_id=%s',
+            '%s %s status=%d total_ms=%.0f pdo_ms=%.0f pdo_connect_ms=%.0f first_query_ms=%.0f token_ms=%.0f token_cache_hit=%s token_expires_in_seconds=%d sql_count=%d sql_ms=%.0f slowest_sql_ms=%.0f rows=%d db_auth=%s cache_driver=%s lookups_cache_hit=%s catalogue_cache_hit=%s db_connect_attempts=%d db_connect_retry=%d db_connect_retry_reason=%s db_connect_first_attempt_ms=%.0f db_connect_retry_ms=%.0f request_id=%s',
             strtoupper($request->getMethod()),
             $request->getUri()->getPath(),
             $status,
             $this->metrics->totalMs(),
             $snap['pdo_ms'],
+            $snap['pdo_connect_ms'],
+            $snap['first_query_ms'],
             $snap['token_ms'],
             $snap['token_cache_hit'] ? '1' : '0',
+            $snap['token_expires_in_seconds'],
             $snap['sql_count'],
             $snap['sql_ms'],
             $snap['slowest_sql_ms'],
@@ -77,6 +80,24 @@ final class RequestPerformanceMiddleware implements MiddlewareInterface
             $snap['db_connect_retry_ms'],
             $this->metrics->requestId(),
         );
+        $named = $snap['named_queries'] ?? [];
+        if (is_array($named) && $named !== []) {
+            $parts = [];
+            foreach ($named as $query) {
+                if (!is_array($query)) {
+                    continue;
+                }
+                $parts[] = sprintf(
+                    '%s:%dr/%.0fms',
+                    (string) ($query['name'] ?? ''),
+                    (int) ($query['rows'] ?? 0),
+                    (float) ($query['ms'] ?? 0),
+                );
+            }
+            if ($parts !== []) {
+                $line .= ' named=' . implode(',', $parts);
+            }
+        }
 
         error_log('[perf] ' . $line);
 

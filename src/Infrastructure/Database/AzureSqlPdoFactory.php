@@ -153,7 +153,9 @@ final class AzureSqlPdoFactory
         ]);
 
         $dsn = $this->buildAccessTokenDsn($token);
+        $connectStarted = hrtime(true);
         $pdo = $this->pdoConnector->connect($dsn, null, null, $this->pdoOptions());
+        $this->metrics->recordPdoConnect(RequestPerformanceMetrics::durationMs($connectStarted));
         DatabaseAuthDiagnostics::log('pdo_factory.pdo.created', [
             'pdoConnectionCreated' => true,
             'authMode' => 'entra-cli',
@@ -178,12 +180,14 @@ final class AzureSqlPdoFactory
             );
         }
 
+        $connectStarted = hrtime(true);
         $pdo = $this->pdoConnector->connect(
             $this->buildDsn(),
             $this->settings->dbUsername,
             $this->settings->dbPassword,
             $this->pdoOptions(),
         );
+        $this->metrics->recordPdoConnect(RequestPerformanceMetrics::durationMs($connectStarted));
         DatabaseAuthDiagnostics::log('pdo_factory.pdo.created', [
             'pdoConnectionCreated' => true,
             'authMode' => 'sql-login',

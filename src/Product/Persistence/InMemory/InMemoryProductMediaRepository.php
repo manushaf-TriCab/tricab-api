@@ -319,6 +319,7 @@ final class InMemoryProductMediaRepository implements ProductMediaRepository
             heightPx: isset($row['heightPx']) ? AzureSqlValueMapper::intValue($row['heightPx']) : null,
             thumbnailUrl: AzureSqlValueMapper::nullableString($row['thumbnailUrl'] ?? null),
             storagePath: AzureSqlValueMapper::nullableString($row['storagePath'] ?? null),
+            storageContainer: AzureSqlValueMapper::nullableString($row['storageContainer'] ?? null),
         );
     }
 

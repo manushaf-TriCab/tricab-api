@@ -106,14 +106,16 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function adminListItem(ProductAdminListItem $item): array
-    {
+    public static function adminListItem(
+        ProductAdminListItem $item,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
             'publicId' => $item->publicId,
             'productName' => $item->productName,
             'internalCode' => $item->internalCode,
             'primaryProductCode' => $item->primaryProductCode,
-            'thumbnailUrl' => $item->thumbnailUrl,
+            'thumbnailUrl' => self::resolveAssetUrl($devUrls, $item->thumbnailUrl, $item->publicId),
             'familyName' => $item->familyName,
             'categoryName' => $item->categoryName,
             'seriesName' => $item->seriesName,
@@ -131,10 +133,15 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function listResult(ProductListResult $result): array
-    {
+    public static function listResult(
+        ProductListResult $result,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
-            'items' => array_map(self::adminListItem(...), $result->items),
+            'items' => array_map(
+                static fn (ProductAdminListItem $item): array => self::adminListItem($item, $devUrls),
+                $result->items,
+            ),
             'pagination' => self::pagination($result->pagination),
         ];
     }
@@ -144,8 +151,15 @@ final class ProductManagementDtoSerializer
      *
      * @return array<string, mixed>
      */
-    public static function publicDetail(ProductPublicDetail $detail): array
-    {
+    public static function publicDetail(
+        ProductPublicDetail $detail,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
+        $media = array_map(
+            static fn (ProductMediaSummary $item): array => self::publicMediaSummary($item, $devUrls),
+            $detail->media,
+        );
+
         return [
             'publicId' => $detail->publicId,
             'productName' => $detail->productName,
@@ -156,18 +170,23 @@ final class ProductManagementDtoSerializer
             'categoryName' => $detail->categoryName,
             'seriesName' => $detail->seriesName,
             'slug' => $detail->slug,
-            'thumbnailUrl' => $detail->thumbnailUrl,
-            'variants' => array_map(self::variantSummary(...), $detail->variants),
-            'media' => array_map(
-                static fn (ProductMediaSummary $item): array => self::publicMediaSummary($item),
+            'thumbnailUrl' => self::resolveDetailThumbnail(
+                $detail->thumbnailUrl,
                 $detail->media,
+                $media,
+                $devUrls,
             ),
-            'documents' => array_map(self::publicDocumentSummary(...), $detail->documents),
+            'variants' => array_map(self::variantSummary(...), $detail->variants),
+            'media' => $media,
+            'documents' => array_map(
+                static fn (ProductDocumentSummary $item): array => self::publicDocumentSummary($item, $devUrls),
+                $detail->documents,
+            ),
             'applicationNames' => $detail->applicationNames,
             'industryNames' => $detail->industryNames,
             'relationships' => array_map(self::publicRelationship(...), $detail->relationships),
             'specifications' => array_map(self::publicSpecification(...), $detail->specifications),
-            'threeD' => self::publicThreeD($detail->threeD),
+            'threeD' => self::publicThreeD($detail->threeD, $devUrls),
         ];
     }
 
@@ -185,27 +204,12 @@ final class ProductManagementDtoSerializer
             $detail->media,
         );
 
-        $thumbnailUrl = $detail->thumbnailUrl;
-        if (($thumbnailUrl === null || $thumbnailUrl === '') && $media !== []) {
-            foreach ($media as $item) {
-                $candidate = $item['publicUrl'] ?? $item['thumbnailUrl'] ?? null;
-                if (is_string($candidate) && $candidate !== '') {
-                    $thumbnailUrl = $candidate;
-                    break;
-                }
-            }
-        } elseif ($thumbnailUrl !== null && $thumbnailUrl !== '' && $devUrls !== null && $detail->media !== []) {
-            // Stored thumbnail may be null in DB while the primary media file has bytes in memory blob.
-            foreach ($detail->media as $item) {
-                if ($item->isPrimary || ($item->publicUrl !== null && $item->publicUrl !== '')) {
-                    $resolved = $devUrls->resolvePublicUrl($thumbnailUrl, $item->publicId);
-                    if ($resolved !== null && $resolved !== '') {
-                        $thumbnailUrl = $resolved;
-                        break;
-                    }
-                }
-            }
-        }
+        $thumbnailUrl = self::resolveDetailThumbnail(
+            $detail->thumbnailUrl,
+            $detail->media,
+            $media,
+            $devUrls,
+        );
 
         return [
             'preview' => [
@@ -227,7 +231,10 @@ final class ProductManagementDtoSerializer
             'thumbnailUrl' => $thumbnailUrl,
             'variants' => array_map(self::variantSummary(...), $detail->variants),
             'media' => $media,
-            'documents' => array_map(self::publicDocumentSummary(...), $detail->documents),
+            'documents' => array_map(
+                static fn (ProductDocumentSummary $item): array => self::publicDocumentSummary($item, $devUrls),
+                $detail->documents,
+            ),
             'applicationNames' => $detail->applicationNames,
             'industryNames' => $detail->industryNames,
             'relationships' => array_map(self::publicRelationship(...), $detail->relationships),
@@ -236,7 +243,7 @@ final class ProductManagementDtoSerializer
                 'columns' => array_map(self::customerViewMatrixColumn(...), $detail->variantMatrix->columns),
                 'rows' => array_map(self::customerViewMatrixRow(...), $detail->variantMatrix->rows),
             ],
-            'threeD' => self::publicThreeD($detail->threeD),
+            'threeD' => self::publicThreeD($detail->threeD, $devUrls),
         ];
     }
 
@@ -381,8 +388,25 @@ final class ProductManagementDtoSerializer
         bool $includeAdminFields = true,
         ?ProductDevMediaUrlResolver $devUrls = null,
     ): array {
-        $publicUrl = $devUrls?->resolvePublicUrl($summary->publicUrl, $summary->publicId) ?? $summary->publicUrl;
-        $thumbnailUrl = $devUrls?->resolvePublicUrl($summary->thumbnailUrl, $summary->publicId) ?? $summary->thumbnailUrl;
+        $publicUrl = self::resolveAssetUrl(
+            $devUrls,
+            $summary->publicUrl,
+            $summary->publicId,
+            $summary->storageContainer,
+            $summary->storagePath,
+        );
+        $storedThumb = $summary->thumbnailUrl;
+        if ($storedThumb !== null && $storedThumb !== '' && $storedThumb !== $summary->publicUrl) {
+            $thumbnailUrl = self::resolveAssetUrl(
+                $devUrls,
+                $storedThumb,
+                $summary->publicId,
+                $summary->storageContainer,
+                $summary->storagePath,
+            );
+        } else {
+            $thumbnailUrl = $publicUrl;
+        }
         if (($thumbnailUrl === null || $thumbnailUrl === '') && $publicUrl !== null && $publicUrl !== '') {
             $thumbnailUrl = $publicUrl;
         }
@@ -410,6 +434,7 @@ final class ProductManagementDtoSerializer
             $payload['widthPx'] = $summary->widthPx;
             $payload['heightPx'] = $summary->heightPx;
             $payload['storagePath'] = $summary->storagePath;
+            $payload['storageContainer'] = $summary->storageContainer;
         }
 
         return $payload;
@@ -455,15 +480,24 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function documentSummary(ProductDocumentSummary $summary, bool $includeAdminFields = true): array
-    {
+    public static function documentSummary(
+        ProductDocumentSummary $summary,
+        bool $includeAdminFields = true,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         $payload = [
             'publicId' => $summary->publicId,
             'documentTypeCode' => $summary->documentTypeCode,
             'title' => $summary->title,
             'versionLabel' => $summary->versionLabel,
             'languageCode' => $summary->languageCode,
-            'publicUrl' => $summary->publicUrl,
+            'publicUrl' => self::resolveAssetUrl(
+                $devUrls,
+                $summary->publicUrl,
+                $summary->publicId,
+                $summary->storageContainer,
+                $summary->storagePath,
+            ),
             'accessCode' => $summary->accessCode,
             'displayOrder' => $summary->displayOrder,
         ];
@@ -478,6 +512,7 @@ final class ProductManagementDtoSerializer
             $payload['originalFileName'] = $summary->originalFileName;
             $payload['fileExtension'] = $summary->fileExtension;
             $payload['storagePath'] = $summary->storagePath;
+            $payload['storageContainer'] = $summary->storageContainer;
         }
 
         return $payload;
@@ -486,9 +521,11 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function publicDocumentSummary(ProductDocumentSummary $summary): array
-    {
-        return self::documentSummary($summary, false);
+    public static function publicDocumentSummary(
+        ProductDocumentSummary $summary,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
+        return self::documentSummary($summary, false, $devUrls);
     }
 
     /**
@@ -496,11 +533,13 @@ final class ProductManagementDtoSerializer
      *
      * @return list<array<string, mixed>>
      */
-    public static function documentList(array $items): array
-    {
+    public static function documentList(
+        array $items,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         $mapped = [];
         foreach ($items as $item) {
-            $mapped[] = self::documentSummary($item);
+            $mapped[] = self::documentSummary($item, true, $devUrls);
         }
 
         return $mapped;
@@ -809,8 +848,10 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function product360SetSummary(Product360SetSummary $summary): array
-    {
+    public static function product360SetSummary(
+        Product360SetSummary $summary,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
             'publicId' => $summary->publicId,
             'productPublicId' => $summary->productPublicId,
@@ -819,22 +860,33 @@ final class ProductManagementDtoSerializer
             'uploadedFrameCount' => $summary->uploadedFrameCount,
             'statusCode' => $summary->statusCode,
             'isActive' => $summary->isActive,
-            'frames' => array_map(self::product360FrameSummary(...), $summary->frames),
+            'frames' => array_map(
+                static fn (Product360FrameSummary $frame): array => self::product360FrameSummary($frame, $devUrls),
+                $summary->frames,
+            ),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    public static function product360FrameSummary(Product360FrameSummary $summary): array
-    {
+    public static function product360FrameSummary(
+        Product360FrameSummary $summary,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
             'publicId' => $summary->publicId,
             'setPublicId' => $summary->setPublicId,
             'frameNumber' => $summary->frameNumber,
             'uploadStatus' => $summary->uploadStatusCode,
             'scanStatus' => $summary->scanStatusCode,
-            'publicUrl' => $summary->publicUrl,
+            'publicUrl' => self::resolveAssetUrl(
+                $devUrls,
+                $summary->publicUrl,
+                $summary->publicId,
+                $summary->storageContainer,
+                $summary->storagePath,
+            ),
             'contentType' => $summary->contentType,
             'byteSize' => $summary->byteSize,
             'originalFileName' => $summary->originalFileName,
@@ -845,15 +897,23 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function productArModelSummary(ProductArModelSummary $summary): array
-    {
+    public static function productArModelSummary(
+        ProductArModelSummary $summary,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
             'publicId' => $summary->publicId,
             'productPublicId' => $summary->productPublicId,
             'title' => $summary->title,
             'uploadStatus' => $summary->uploadStatusCode,
             'scanStatus' => $summary->scanStatusCode,
-            'publicUrl' => $summary->publicUrl,
+            'publicUrl' => self::resolveAssetUrl(
+                $devUrls,
+                $summary->publicUrl,
+                $summary->publicId,
+                $summary->storageContainer,
+                $summary->storagePath,
+            ),
             'contentType' => $summary->contentType,
             'fileExtension' => $summary->fileExtension,
             'byteSize' => $summary->byteSize,
@@ -868,8 +928,10 @@ final class ProductManagementDtoSerializer
      *
      * @return array<string, mixed>
      */
-    public static function product3DModelSummary(Product3DModelSummary $summary): array
-    {
+    public static function product3DModelSummary(
+        Product3DModelSummary $summary,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
             'publicId' => $summary->publicId,
             'productPublicId' => $summary->productPublicId,
@@ -880,8 +942,18 @@ final class ProductManagementDtoSerializer
             'statusCode' => $summary->statusCode,
             'uploadStatusCode' => $summary->uploadStatusCode,
             'scanStatusCode' => $summary->scanStatusCode,
-            'publicUrl' => $summary->publicUrl,
-            'previewImagePublicUrl' => $summary->previewImagePublicUrl,
+            'publicUrl' => self::resolveAssetUrl(
+                $devUrls,
+                $summary->publicUrl,
+                $summary->publicId,
+                $summary->storageContainer,
+                $summary->storagePath,
+            ),
+            'previewImagePublicUrl' => self::resolveAssetUrl(
+                $devUrls,
+                $summary->previewImagePublicUrl,
+                $summary->publicId,
+            ),
             'storagePath' => $summary->storagePath,
             'storageContainer' => $summary->storageContainer,
             'mimeType' => $summary->mimeType,
@@ -906,26 +978,33 @@ final class ProductManagementDtoSerializer
      *
      * @return array<string, mixed>
      */
-    public static function publicThreeD(ProductPublic3DPayload $payload): array
-    {
+    public static function publicThreeD(
+        ProductPublic3DPayload $payload,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
             'available' => $payload->available,
-            'primary' => $payload->primary === null ? null : self::publicThreeDModel($payload->primary),
-            'models' => array_map(self::publicThreeDModel(...), $payload->models),
+            'primary' => $payload->primary === null ? null : self::publicThreeDModel($payload->primary, $devUrls),
+            'models' => array_map(
+                static fn (ProductPublic3DModel $model): array => self::publicThreeDModel($model, $devUrls),
+                $payload->models,
+            ),
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    public static function publicThreeDModel(ProductPublic3DModel $model): array
-    {
+    public static function publicThreeDModel(
+        ProductPublic3DModel $model,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
             'publicId' => $model->publicId,
             'name' => $model->name,
             'modelType' => $model->modelType,
-            'url' => $model->url,
-            'previewImageUrl' => $model->previewImageUrl,
+            'url' => self::resolveAssetUrl($devUrls, $model->url, $model->publicId) ?? $model->url,
+            'previewImageUrl' => self::resolveAssetUrl($devUrls, $model->previewImageUrl, $model->publicId),
             'viewerConfiguration' => $model->viewerConfiguration,
             'isPrimary' => $model->isPrimary,
         ];
@@ -1108,6 +1187,63 @@ final class ProductManagementDtoSerializer
             'templateCount' => $usage->templateCount,
             'summary' => $usage->summaryMessage(),
         ];
+    }
+
+    /**
+     * Response-time browser URL. SAS is never persisted.
+     */
+    private static function resolveAssetUrl(
+        ?ProductDevMediaUrlResolver $devUrls,
+        ?string $storedUrl,
+        string $filePublicId = '',
+        ?string $storageContainer = null,
+        ?string $storagePath = null,
+    ): ?string {
+        if ($devUrls === null) {
+            return $storedUrl;
+        }
+
+        return $devUrls->resolvePublicUrl($storedUrl, $filePublicId, $storageContainer, $storagePath);
+    }
+
+    /**
+     * @param list<ProductMediaSummary> $media
+     * @param list<array<string, mixed>> $serializedMedia
+     */
+    private static function resolveDetailThumbnail(
+        ?string $storedThumbnailUrl,
+        array $media,
+        array $serializedMedia,
+        ?ProductDevMediaUrlResolver $devUrls,
+    ): ?string {
+        if (($storedThumbnailUrl === null || $storedThumbnailUrl === '') && $serializedMedia !== []) {
+            foreach ($serializedMedia as $item) {
+                $candidate = $item['publicUrl'] ?? $item['thumbnailUrl'] ?? null;
+                if (is_string($candidate) && $candidate !== '') {
+                    return $candidate;
+                }
+            }
+
+            return $storedThumbnailUrl;
+        }
+
+        if ($storedThumbnailUrl !== null && $storedThumbnailUrl !== '' && $devUrls !== null && $media !== []) {
+            foreach ($media as $item) {
+                if ($item->isPrimary || ($item->publicUrl !== null && $item->publicUrl !== '')) {
+                    $resolved = $devUrls->resolvePublicUrl(
+                        $storedThumbnailUrl,
+                        $item->publicId,
+                        $item->storageContainer,
+                        $item->storagePath,
+                    );
+                    if ($resolved !== null && $resolved !== '') {
+                        return $resolved;
+                    }
+                }
+            }
+        }
+
+        return self::resolveAssetUrl($devUrls, $storedThumbnailUrl);
     }
 
 }

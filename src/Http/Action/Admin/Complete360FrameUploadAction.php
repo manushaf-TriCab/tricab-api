@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Command\Complete360FrameUploadCommand;
 use TriCab\Core\Product\Application\Service\Complete360FrameUploadService;
 
@@ -19,6 +20,7 @@ final class Complete360FrameUploadAction
 {
     public function __construct(
         private readonly Complete360FrameUploadService $complete,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly AdminMutationTransaction $transaction,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
@@ -38,7 +40,7 @@ final class Complete360FrameUploadAction
                 new Complete360FrameUploadCommand(framePublicId: $framePublicId),
             ));
 
-            return $this->responder->success(ProductManagementDtoSerializer::product360FrameSummary($completed));
+            return $this->responder->success(ProductManagementDtoSerializer::product360FrameSummary($completed, $this->devUrls));
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

@@ -387,6 +387,8 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
                 altText: $this->nullableStringValue($row, 'altText'),
                 displayOrder: $this->intValue($row, 'displayOrder'),
                 isPrimary: (bool) ($row['isPrimary'] ?? false),
+                storagePath: $this->nullableStringValue($row, 'storagePath'),
+                storageContainer: $this->nullableStringValue($row, 'storageContainer'),
             );
         }
 
@@ -442,6 +444,8 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
                 publicUrl: $this->nullableStringValue($row, 'publicUrl'),
                 accessCode: $this->stringValue($row, 'accessCode'),
                 displayOrder: $this->intValue($row, 'displayOrder'),
+                storagePath: $this->nullableStringValue($row, 'storagePath'),
+                storageContainer: $this->nullableStringValue($row, 'storageContainer'),
             );
         }
 

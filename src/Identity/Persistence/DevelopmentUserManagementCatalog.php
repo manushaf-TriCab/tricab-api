@@ -69,8 +69,19 @@ final class DevelopmentUserManagementCatalog
             'PRODUCT.AUDIT.VIEW' => ['name' => 'View Product Audit History', 'module' => 'PRODUCT'],
             'QUOTE.READ' => ['name' => 'View Quotes', 'module' => 'QUOTE'],
             'QUOTE.CREATE' => ['name' => 'Create Quotes', 'module' => 'QUOTE'],
+            'QUOTE.UPDATE' => ['name' => 'Update Quotes', 'module' => 'QUOTE'],
+            'QUOTE.DELETE' => ['name' => 'Delete Quotes', 'module' => 'QUOTE'],
             'ORDER.READ' => ['name' => 'View Orders', 'module' => 'ORDER'],
             'DOCUMENT.READ' => ['name' => 'View Documents', 'module' => 'DOCUMENT'],
+            'PRICE_LOOKUP.READ' => ['name' => 'Access Price Lookup', 'module' => 'PRICE_LOOKUP'],
+            'CUSTOMER_NOTE.READ' => ['name' => 'View Customer Notes', 'module' => 'CUSTOMER_NOTE'],
+            'CUSTOMER_NOTE.CREATE' => ['name' => 'Create Customer Notes', 'module' => 'CUSTOMER_NOTE'],
+            'CUSTOMER_NOTE.UPDATE' => ['name' => 'Update Customer Notes', 'module' => 'CUSTOMER_NOTE'],
+            'CUSTOMER_NOTE.DELETE' => ['name' => 'Delete Customer Notes', 'module' => 'CUSTOMER_NOTE'],
+            'ALIFLEX_ACCREDITATION.ACCESS' => ['name' => 'Access ALI-FLEX Accreditation', 'module' => 'ALIFLEX'],
+            'TRIEXPENSE.ACCESS' => ['name' => 'Access Tri Expense', 'module' => 'TRIEXPENSE'],
+            'CRM.ACCESS' => ['name' => 'Access CRM', 'module' => 'CRM'],
+            'ERP.ACCESS' => ['name' => 'Access ERP', 'module' => 'ERP'],
         ];
     }
 

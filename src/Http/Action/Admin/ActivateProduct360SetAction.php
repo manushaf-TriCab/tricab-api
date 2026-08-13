@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Command\ActivateProduct360SetCommand;
 use TriCab\Core\Product\Application\Service\ActivateProduct360SetService;
 
@@ -19,6 +20,7 @@ final class ActivateProduct360SetAction
 {
     public function __construct(
         private readonly ActivateProduct360SetService $activate,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly AdminMutationTransaction $transaction,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
@@ -38,7 +40,7 @@ final class ActivateProduct360SetAction
                 new ActivateProduct360SetCommand(setPublicId: $setPublicId),
             ));
 
-            return $this->responder->success(ProductManagementDtoSerializer::product360SetSummary($activated));
+            return $this->responder->success(ProductManagementDtoSerializer::product360SetSummary($activated, $this->devUrls));
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

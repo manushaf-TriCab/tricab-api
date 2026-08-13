@@ -431,7 +431,7 @@ SQL,
     public function findByPublicId(string $mediaPublicId): ?ProductMediaFileRecord
     {
         $rows = $this->connection->fetchAll(
-            self::LIST_SELECT_SQL . ' WHERE i.[PublicId] = :publicId AND i.[DeletedAtUtc] IS NULL',
+            '/*q:media.by_id*/' . self::LIST_SELECT_SQL . ' WHERE i.[PublicId] = :publicId AND i.[DeletedAtUtc] IS NULL',
             [':publicId' => $mediaPublicId],
         );
 

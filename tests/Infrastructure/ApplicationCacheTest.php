@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use TriCab\Api\Infrastructure\Cache\ApcuApplicationCache;
 use TriCab\Api\Infrastructure\Cache\ArrayApplicationCache;
+use TriCab\Api\Infrastructure\Cache\FilesystemApplicationCache;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Tests\TestAppFactory;
 
@@ -67,5 +68,34 @@ final class ApplicationCacheTest extends TestCase
         self::assertFalse($cache->add('lock', 1, 5));
         $cache->delete('lock');
         self::assertTrue($cache->add('lock', 1, 5));
+    }
+
+    public function test_file_cache_survives_across_instances_and_invalidates_by_prefix(): void
+    {
+        $directory = sys_get_temp_dir() . '/tricab-app-cache-' . bin2hex(random_bytes(4));
+        $first = new FilesystemApplicationCache($directory);
+        $first->set('admin:product-lookups:v1', ['marker' => 'file'], 60);
+        $first->set('catalogue:panel:one', ['n' => 1], 60);
+
+        $second = new FilesystemApplicationCache($directory);
+        $reference = new ReferenceDataCache($second);
+        self::assertSame(['marker' => 'file'], $reference->getLookups());
+
+        $reference->invalidateLookups();
+        $reference->invalidateCatalogue();
+        self::assertNull($second->get('admin:product-lookups:v1'));
+        self::assertNull($second->get('catalogue:panel:one'));
+    }
+
+    public function test_file_add_is_atomic_across_instances(): void
+    {
+        $directory = sys_get_temp_dir() . '/tricab-app-lock-' . bin2hex(random_bytes(4));
+        $first = new FilesystemApplicationCache($directory);
+        $second = new FilesystemApplicationCache($directory);
+        self::assertTrue($first->add('lock', 1, 5));
+        self::assertFalse($second->add('lock', 1, 5));
+        $first->delete('lock');
+        self::assertTrue($second->add('lock', 1, 5));
+        $second->delete('lock');
     }
 }
