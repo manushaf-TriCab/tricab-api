@@ -17,6 +17,7 @@ final class ProductFileValidationPolicy
     private const DOCUMENT_MAX_BYTES = 50 * 1024 * 1024;
     private const CAD_MAX_BYTES = 200 * 1024 * 1024;
     private const AR_MAX_BYTES = 200 * 1024 * 1024;
+    private const MODEL_3D_MAX_BYTES = 200 * 1024 * 1024;
     private const FRAME_360_MAX_BYTES = 20 * 1024 * 1024;
 
     /** @var list<string> */
@@ -90,6 +91,24 @@ final class ProductFileValidationPolicy
     ];
 
     /**
+     * Phase 1: GLB-only (self-contained). Multi-file GLTF packages are deferred.
+     *
+     * @var list<string>
+     */
+    private const MODEL_3D_EXTENSIONS = ['glb'];
+
+    /** @var list<string> */
+    private const MODEL_3D_MIMES = [
+        'model/gltf-binary',
+        'application/octet-stream',
+    ];
+
+    /** @var array<string, list<string>> */
+    private const MODEL_3D_EXT_MIME = [
+        'glb' => ['model/gltf-binary', 'application/octet-stream'],
+    ];
+
+    /**
      * @return array{safeFileName: string, extension: string, contentType: string, byteSize: int, fileKind: string}
      */
     public function validateImage(string $originalFileName, string $contentType, int $byteSize): array
@@ -154,6 +173,40 @@ final class ProductFileValidationPolicy
             self::AR_MIMES,
             self::AR_EXT_MIME,
             self::AR_MAX_BYTES,
+        );
+    }
+
+    /**
+     * @return array{safeFileName: string, extension: string, contentType: string, byteSize: int, fileKind: string}
+     */
+    public function validateModel3d(string $originalFileName, string $contentType, int $byteSize): array
+    {
+        return $this->validate(
+            ProductFileKind::MODEL_3D,
+            $originalFileName,
+            $contentType,
+            $byteSize,
+            self::MODEL_3D_EXTENSIONS,
+            self::MODEL_3D_MIMES,
+            self::MODEL_3D_EXT_MIME,
+            self::MODEL_3D_MAX_BYTES,
+        );
+    }
+
+    /**
+     * @return array{safeFileName: string, extension: string, contentType: string, byteSize: int, fileKind: string}
+     */
+    public function validateModel3dPreview(string $originalFileName, string $contentType, int $byteSize): array
+    {
+        return $this->validate(
+            ProductFileKind::MODEL_3D_PREVIEW,
+            $originalFileName,
+            $contentType,
+            $byteSize,
+            self::IMAGE_EXTENSIONS,
+            self::IMAGE_MIMES,
+            self::IMAGE_EXT_MIME,
+            self::IMAGE_MAX_BYTES,
         );
     }
 

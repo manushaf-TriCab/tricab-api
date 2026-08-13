@@ -37,6 +37,7 @@ final readonly class ProductPublicDetail
         public array $industryNames,
         public array $relationships = [],
         public array $specifications = [],
+        public ProductPublic3DPayload $threeD = new ProductPublic3DPayload(false, null, []),
     ) {
     }
 }

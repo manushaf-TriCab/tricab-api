@@ -51,6 +51,7 @@ final readonly class ProductDocumentFileRecord
             originalFileName: $this->originalFileName,
             fileExtension: $this->fileExtension,
             storagePath: $includeStoragePath ? $this->storagePath : null,
+            storageContainer: $includeStoragePath ? $this->storageContainer : null,
         );
     }
 }

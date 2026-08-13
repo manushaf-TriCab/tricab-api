@@ -228,6 +228,7 @@ final class InMemoryFakeProductDocumentRepository implements ProductDocumentRepo
             $row['originalFileName'] ?? null,
             $row['fileExtension'] ?? null,
             $row['storagePath'] ?? null,
+            $row['storageContainer'] ?? null,
         );
     }
 

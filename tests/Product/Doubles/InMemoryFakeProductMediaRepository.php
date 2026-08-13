@@ -312,6 +312,7 @@ final class InMemoryFakeProductMediaRepository implements ProductMediaRepository
             $row['heightPx'] ?? null,
             $row['thumbnailUrl'] ?? null,
             $row['storagePath'] ?? null,
+            $row['storageContainer'] ?? null,
         );
     }
 

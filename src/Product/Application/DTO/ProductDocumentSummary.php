@@ -22,6 +22,7 @@ final readonly class ProductDocumentSummary
         public ?string $originalFileName = null,
         public ?string $fileExtension = null,
         public ?string $storagePath = null,
+        public ?string $storageContainer = null,
     ) {
     }
 }

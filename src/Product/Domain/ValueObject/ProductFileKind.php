@@ -16,6 +16,8 @@ final class ProductFileKind
     public const CAD = 'cad';
     public const AR = 'ar';
     public const FRAME_360 = '360-frame';
+    public const MODEL_3D = '3d-model';
+    public const MODEL_3D_PREVIEW = '3d-preview';
 
     private const ALLOWED = [
         self::IMAGE,
@@ -23,6 +25,8 @@ final class ProductFileKind
         self::CAD,
         self::AR,
         self::FRAME_360,
+        self::MODEL_3D,
+        self::MODEL_3D_PREVIEW,
     ];
 
     private function __construct(private readonly string $value)
@@ -65,6 +69,16 @@ final class ProductFileKind
         return new self(self::FRAME_360);
     }
 
+    public static function model3d(): self
+    {
+        return new self(self::MODEL_3D);
+    }
+
+    public static function model3dPreview(): self
+    {
+        return new self(self::MODEL_3D_PREVIEW);
+    }
+
     /**
      * @return list<string>
      */
@@ -85,7 +99,9 @@ final class ProductFileKind
 
     public function isImage(): bool
     {
-        return $this->value === self::IMAGE || $this->value === self::FRAME_360;
+        return $this->value === self::IMAGE
+            || $this->value === self::FRAME_360
+            || $this->value === self::MODEL_3D_PREVIEW;
     }
 
     public function isDocument(): bool
@@ -106,5 +122,15 @@ final class ProductFileKind
     public function is360Frame(): bool
     {
         return $this->value === self::FRAME_360;
+    }
+
+    public function isModel3d(): bool
+    {
+        return $this->value === self::MODEL_3D;
+    }
+
+    public function isModel3dPreview(): bool
+    {
+        return $this->value === self::MODEL_3D_PREVIEW;
     }
 }

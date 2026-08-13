@@ -24,6 +24,7 @@ final readonly class ProductMediaSummary
         public ?int $heightPx = null,
         public ?string $thumbnailUrl = null,
         public ?string $storagePath = null,
+        public ?string $storageContainer = null,
     ) {
     }
 }

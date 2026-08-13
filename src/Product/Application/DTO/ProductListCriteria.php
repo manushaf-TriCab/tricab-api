@@ -51,6 +51,10 @@ final readonly class ProductListCriteria
         public ?bool $hasMedia = null,
         public ?bool $hasPricing = null,
         public ?bool $missingRequiredInformation = null,
+        public ?bool $missingRegion = null,
+        public ?bool $missingSeo = null,
+        public ?bool $missingSpecifications = null,
+        public ?bool $publicationBlockers = null,
         public ?bool $isActive = null,
         /** When true, filter to archived status only; when false, exclude archived; null = no filter. */
         public ?bool $isArchived = null,

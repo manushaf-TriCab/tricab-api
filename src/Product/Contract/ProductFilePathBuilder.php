@@ -39,6 +39,21 @@ final class ProductFilePathBuilder
         return sprintf('products/%s/ar/%s/%s', $productPublicId, $mediaPublicId, $safeFileName);
     }
 
+    public function model3dPath(string $productPublicId, string $modelPublicId, string $safeFileName): string
+    {
+        return sprintf('products/%s/3d/%s/model/%s', $productPublicId, $modelPublicId, $safeFileName);
+    }
+
+    public function model3dPreviewPath(string $productPublicId, string $modelPublicId, string $safeFileName): string
+    {
+        return sprintf('products/%s/3d/%s/preview/%s', $productPublicId, $modelPublicId, $safeFileName);
+    }
+
+    public function model3dSourcePath(string $productPublicId, string $modelPublicId, string $safeFileName): string
+    {
+        return sprintf('products/%s/3d/%s/source/%s', $productPublicId, $modelPublicId, $safeFileName);
+    }
+
     public function tempPath(string $productPublicId, string $uploadSessionPublicId, string $safeFileName): string
     {
         return sprintf('products/%s/tmp/%s/%s', $productPublicId, $uploadSessionPublicId, $safeFileName);

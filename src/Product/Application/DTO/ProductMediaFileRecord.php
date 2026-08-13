@@ -56,6 +56,7 @@ final readonly class ProductMediaFileRecord
             heightPx: $this->heightPx,
             thumbnailUrl: $this->thumbnailUrl,
             storagePath: $includeStoragePath ? $this->storagePath : null,
+            storageContainer: $includeStoragePath ? $this->storageContainer : null,
         );
     }
 }

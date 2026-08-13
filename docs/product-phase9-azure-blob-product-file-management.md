@@ -40,8 +40,8 @@ Public IDs only — no internal integer IDs in blob paths.
 
 ## 2. Security model
 
-- Short-lived, write-only, blob-path-scoped SAS (`BLOB_UPLOAD_SAS_TTL_SECONDS`, 60–3600).
-- Download SAS TTL separate (`BLOB_DOWNLOAD_SAS_TTL_SECONDS`) for restricted documents.
+- Short-lived, blob-path-scoped write SAS (`sp=cw`, `BLOB_UPLOAD_SAS_TTL_SECONDS`, 60–3600).
+- Short-lived blob-scoped READ SAS (`sp=r`, `sr=b`, `spr=https`, `BLOB_DOWNLOAD_SAS_TTL_SECONDS`, default 300) issued at API response time for private blobs. Never persist SAS URLs in Azure SQL.
 - HTTPS only for Azure endpoints.
 - MIME allowlist + extension allowlist + byte-size limits (`ProductFileValidationPolicy`).
 - Completion verifies blob HEAD (size/content-type) before activating metadata.
@@ -261,7 +261,40 @@ Storage under test: `BLOB_AUTH_MODE=memory` (Azurite/disposable Azure account no
 
 ---
 
-## 18. Remaining blockers / follow-ups
+## 18. Blob Service CORS (private container reads)
+
+The `products` container stays private. Browsers load images/GLB via short-lived READ SAS, which is a cross-origin GET to `*.blob.core.windows.net`. Configure **Blob service CORS** (not API CORS, not container public access).
+
+Do **not** enable anonymous blob access. Do **not** use `*` origins in production unless a specific viewer requires it and that is approved.
+
+| Rule | Value |
+|---|---|
+| Allowed origins | `http://localhost:5173`, `http://127.0.0.1:5173`, plus the current TriCab SPA production origin |
+| Allowed methods | `GET`, `HEAD`, `PUT`, `OPTIONS` (`PUT` only because direct browser upload already uses write SAS) |
+| Allowed headers | `content-type`, `x-ms-blob-type`, `x-ms-blob-content-type`, `content-length`, `origin`, `accept`, `range` |
+| Exposed headers | `content-type`, `content-length`, `etag`, `x-ms-request-id`, `x-ms-error-code` |
+| Max age | `3600` |
+
+`useGLTF` / Three.js issues a cross-origin GET for GLB. Images in `<img src>` do not require CORS unless canvas-tainted. Keep CORS enabled for GET/HEAD so 3D/AR viewers work.
+
+Apply with Azure Portal → Storage account `tricabv2` → Resource sharing (CORS) → Blob service, or:
+
+```bash
+az storage cors add \
+  --services b \
+  --methods GET HEAD PUT OPTIONS \
+  --origins "http://localhost:5173" "http://127.0.0.1:5173" "<PRODUCTION_SPA_ORIGIN>" \
+  --allowed-headers "content-type,x-ms-blob-type,x-ms-blob-content-type,content-length,origin,accept,range" \
+  --exposed-headers "content-type,content-length,etag,x-ms-request-id,x-ms-error-code" \
+  --max-age 3600 \
+  --account-name tricabv2
+```
+
+Do not print connection strings or account keys when applying this.
+
+---
+
+## 19. Remaining blockers / follow-ups
 
 1. Managed Identity + user-delegation SAS (replace connection-string for production).
 2. Automated upload-session / orphan-blob sweeper job.
@@ -270,10 +303,11 @@ Storage under test: `BLOB_AUTH_MODE=memory` (Azurite/disposable Azure account no
 5. Admin UI panels for 360 sets and AR models.
 6. Azurite-backed integration test in CI (optional).
 7. Apply Phase 9 schema to shared non-prod `tc` if not already applied.
+8. Blob path prefix cleanup: container `products` + blob path `products/{id}/...` yields `/products/products/{id}/...`. Existing records depend on this; do not change without a migration.
 
 ---
 
-## 19. Completion checklist
+## 20. Completion checklist
 
 1. Existing Azure patterns reused (none prior; new adapters isolated to API) — **yes**
 2. No credentials exposed to React — **yes**

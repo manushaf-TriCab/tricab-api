@@ -106,4 +106,12 @@ final class ScanStatusCode
     {
         return $this->value === self::PENDING_SCAN;
     }
+
+    /** Matches public media exposure policy (clean / not_required / skipped). */
+    public function allowsPublicExposure(): bool
+    {
+        return $this->value === self::CLEAN
+            || $this->value === self::NOT_REQUIRED
+            || $this->value === self::SKIPPED;
+    }
 }
