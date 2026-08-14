@@ -6,6 +6,12 @@ namespace TriCab\Core\Product\Contract;
 
 /**
  * Canonical relative blob paths for product files (no container prefix).
+ *
+ * Azure container is typically `products`. Paths intentionally start with
+ * `products/{productPublicId}/…`, so public URLs look like:
+ *   …/products/products/{productPublicId}/…
+ * That duplication matches Product Media / documents and is intentional —
+ * do not strip the path prefix for new 3D assets.
  */
 final class ProductFilePathBuilder
 {
@@ -52,6 +58,24 @@ final class ProductFilePathBuilder
     public function model3dSourcePath(string $productPublicId, string $modelPublicId, string $safeFileName): string
     {
         return sprintf('products/%s/3d/%s/source/%s', $productPublicId, $modelPublicId, $safeFileName);
+    }
+
+    /**
+     * Optimised GLB lives under a separate asset folder — never overwrite the original model path.
+     */
+    public function model3dOptimizedPath(
+        string $productPublicId,
+        string $modelPublicId,
+        string $assetPublicId,
+        string $safeFileName,
+    ): string {
+        return sprintf(
+            'products/%s/3d/%s/optimized/%s/%s',
+            $productPublicId,
+            $modelPublicId,
+            $assetPublicId,
+            $safeFileName,
+        );
     }
 
     public function tempPath(string $productPublicId, string $uploadSessionPublicId, string $safeFileName): string

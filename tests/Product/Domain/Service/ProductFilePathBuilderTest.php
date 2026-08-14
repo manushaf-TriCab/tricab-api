@@ -51,4 +51,24 @@ final class ProductFilePathBuilderTest extends TestCase
             $this->builder->tempPath('p1', 'u1', 'upload.bin'),
         );
     }
+
+    public function test_model_3d_and_preview_paths(): void
+    {
+        self::assertSame(
+            'products/p1/3d/m1/model/file.glb',
+            $this->builder->model3dPath('p1', 'm1', 'file.glb'),
+        );
+        self::assertSame(
+            'products/p1/3d/m1/preview/preview.webp',
+            $this->builder->model3dPreviewPath('p1', 'm1', 'preview.webp'),
+        );
+        self::assertSame(
+            'products/p1/3d/m1/optimized/a1/model.glb',
+            $this->builder->model3dOptimizedPath('p1', 'm1', 'a1', 'model.glb'),
+        );
+        // Path prefix is intentional with container `products` → …/products/products/…
+        self::assertStringStartsWith('products/', $this->builder->model3dPreviewPath('p1', 'm1', 'x.webp'));
+        self::assertStringNotContainsString('products/products/', $this->builder->model3dPreviewPath('p1', 'm1', 'x.webp'));
+        self::assertStringNotContainsString('products/products/', $this->builder->model3dOptimizedPath('p1', 'm1', 'a1', 'model.glb'));
+    }
 }

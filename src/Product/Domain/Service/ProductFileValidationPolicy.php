@@ -287,7 +287,9 @@ final class ProductFileValidationPolicy
         }
 
         // Strip path remnants and control characters; keep a conservative filename set.
-        $safe = preg_replace('/[^\w.\- ()[\]]+/u', '_', $base) ?? '';
+        // Prefer underscores over spaces so Azure SharedKey REST paths stay simple.
+        $safe = preg_replace('/[^\w.\-()[\]]+/u', '_', $base) ?? '';
+        $safe = preg_replace('/_+/', '_', $safe) ?? $safe;
         $safe = trim($safe, "._ \t\n\r\0\x0B");
 
         if ($safe === '') {

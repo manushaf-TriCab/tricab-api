@@ -52,4 +52,10 @@ interface ProductBlobStore
     ): ProductBlobObjectInfo;
 
     public function buildPublicUrl(string $container, string $blobPath): ?string;
+
+    /**
+     * Read blob bytes when the adapter supports server-side download.
+     * Returns null when the object is missing or the adapter cannot read.
+     */
+    public function getObjectBinary(string $container, string $blobPath): ?string;
 }
