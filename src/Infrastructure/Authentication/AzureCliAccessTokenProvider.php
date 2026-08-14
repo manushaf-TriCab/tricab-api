@@ -12,8 +12,8 @@ use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 
 /**
  * Obtains a short-lived Azure SQL access token via Azure CLI.
- * Tokens are cached for up to 60 minutes (typical Entra access-token lifetime),
- * and refreshed 60 seconds before the Azure expiry. Never logged or written to disk.
+ * Tokens are cached until 5 minutes before Azure expiry (capped at 60 minutes).
+ * Cache values are never logged. File-cache entries are 0600 under var/cache.
  */
 final class AzureCliAccessTokenProvider
 {
@@ -27,7 +27,7 @@ final class AzureCliAccessTokenProvider
     private const CACHE_TTL_SECONDS = 3600;
 
     /** Refresh this many seconds before the Azure token's real expiry. */
-    private const REFRESH_SKEW_SECONDS = 60;
+    private const REFRESH_SKEW_SECONDS = 300;
 
     private const LOCK_TTL_SECONDS = 5;
 
@@ -55,20 +55,31 @@ final class AzureCliAccessTokenProvider
     public function getAccessToken(): string
     {
         $started = hrtime(true);
-        $cached = $this->readValidCachedToken();
+        $cached = $this->readValidCachedEntry();
         if ($cached !== null) {
+            $expiresIn = max(0, $cached['expiresAt'] - $this->now());
             $this->metrics?->recordTokenAcquisition(
                 RequestPerformanceMetrics::durationMs($started),
                 true,
+                $expiresIn,
             );
+            DatabaseAuthDiagnostics::log('azure_cli.token.cache_hit', [
+                'cache_hit' => 1,
+                'refresh' => 0,
+                'expires_in_seconds' => $expiresIn,
+                'cache_driver' => $this->cache->driver(),
+            ]);
 
-            return $cached;
+            return $cached['token'];
         }
 
         $token = $this->acquireWithLock();
+        $cachedAfter = $this->readValidCachedEntry();
+        $expiresIn = $cachedAfter !== null ? max(0, $cachedAfter['expiresAt'] - $this->now()) : 0;
         $this->metrics?->recordTokenAcquisition(
             RequestPerformanceMetrics::durationMs($started),
             false,
+            $expiresIn,
         );
 
         return $token;
@@ -78,16 +89,16 @@ final class AzureCliAccessTokenProvider
     {
         $deadline = microtime(true) + self::LOCK_WAIT_SECONDS;
         do {
-            $cached = $this->readValidCachedToken();
+            $cached = $this->readValidCachedEntry();
             if ($cached !== null) {
-                return $cached;
+                return $cached['token'];
             }
 
             if ($this->cache->add(self::LOCK_KEY, 1, self::LOCK_TTL_SECONDS)) {
                 try {
-                    $cached = $this->readValidCachedToken();
+                    $cached = $this->readValidCachedEntry();
                     if ($cached !== null) {
-                        return $cached;
+                        return $cached['token'];
                     }
 
                     return $this->fetchAndStoreToken();
@@ -99,15 +110,18 @@ final class AzureCliAccessTokenProvider
             usleep(50_000);
         } while (microtime(true) < $deadline);
 
-        $cached = $this->readValidCachedToken();
+        $cached = $this->readValidCachedEntry();
         if ($cached !== null) {
-            return $cached;
+            return $cached['token'];
         }
 
         return $this->fetchAndStoreToken();
     }
 
-    private function readValidCachedToken(): ?string
+    /**
+     * @return array{token: string, expiresAt: int}|null
+     */
+    private function readValidCachedEntry(): ?array
     {
         $entry = $this->cache->get(self::CACHE_KEY);
         if (!is_array($entry)) {
@@ -128,7 +142,10 @@ final class AzureCliAccessTokenProvider
             return null;
         }
 
-        return $token;
+        return [
+            'token' => $token,
+            'expiresAt' => $expiresAt,
+        ];
     }
 
     private function fetchAndStoreToken(): string
@@ -191,9 +208,9 @@ final class AzureCliAccessTokenProvider
         DatabaseAuthDiagnostics::log('azure_cli.command.success', [
             'step' => 'az_get_access_token',
             'success' => true,
-            'tokenAcquired' => true,
-            'tokenLength' => strlen($parsed['token']),
-            'expiresAtUnix' => $parsed['expiresAt'],
+            'cache_hit' => 0,
+            'refresh' => 1,
+            'expires_in_seconds' => max(0, $parsed['expiresAt'] - $this->now()),
             'cache_driver' => $this->cache->driver(),
         ]);
 

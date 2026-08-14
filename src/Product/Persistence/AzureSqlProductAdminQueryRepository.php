@@ -460,6 +460,30 @@ SQL;
 SQL;
         }
 
+        if ($criteria->missingRegion === true) {
+            $where .= ' AND NOT EXISTS (SELECT 1 FROM [product].[ProductRegions] mr WHERE mr.[ProductId] = p.[ProductId] AND mr.[DeletedAtUtc] IS NULL)';
+        }
+
+        if ($criteria->missingSeo === true) {
+            $where .= ' AND NOT EXISTS (SELECT 1 FROM [product].[ProductSlugs] ms WHERE ms.[ProductId] = p.[ProductId] AND ms.[IsPrimary] = 1 AND ms.[DeletedAtUtc] IS NULL)';
+        }
+
+        if ($criteria->missingSpecifications === true) {
+            $where .= ' AND NOT EXISTS (SELECT 1 FROM [product].[ProductSpecificationValues] sv WHERE sv.[ProductId] = p.[ProductId] AND sv.[DeletedAtUtc] IS NULL)';
+        }
+
+        if ($criteria->publicationBlockers === true) {
+            $where .= <<<'SQL'
+ AND (
+    (p.[ProductFamilyId] IS NULL AND p.[ProductCategoryId] IS NULL)
+    OR NOT EXISTS (
+        SELECT 1 FROM [product].[ProductRegions] br
+        WHERE br.[ProductId] = p.[ProductId] AND br.[DeletedAtUtc] IS NULL
+    )
+ )
+SQL;
+        }
+
         return [$where, $params];
     }
 

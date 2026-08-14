@@ -58,7 +58,14 @@ final class AzureBlobAccountSasIssuerTest extends TestCase
         parse_str(parse_url($issued['url'], PHP_URL_QUERY) ?: '', $query);
         self::assertSame('r', $query['sp'] ?? null);
         self::assertSame('b', $query['sr'] ?? null);
+        self::assertSame('https', $query['spr'] ?? null);
         self::assertArrayNotHasKey('ss', $query);
         self::assertArrayNotHasKey('srt', $query);
+
+        $before = time();
+        $expiry = strtotime((string) ($query['se'] ?? ''));
+        self::assertIsInt($expiry);
+        self::assertGreaterThanOrEqual($before + 300 - 5, $expiry);
+        self::assertLessThanOrEqual(time() + 300 + 5, $expiry);
     }
 }

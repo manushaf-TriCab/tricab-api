@@ -81,7 +81,12 @@ use TriCab\Api\Http\Action\Admin\ListProductVariantsAction;
 use TriCab\Api\Http\Action\Admin\ListPermissionsAction;
 use TriCab\Api\Http\Action\Admin\ListRolesAction;
 use TriCab\Api\Http\Action\Admin\ListUsersAction;
+use TriCab\Api\Http\Action\Admin\GetAdminDashboardAction;
+use TriCab\Api\Http\Action\Admin\GetAdminDashboardProductActivityAction;
 use TriCab\Api\Http\Action\Admin\PreviewProductCodeAction;
+use TriCab\Api\Admin\Dashboard\AdminDashboardQueryRepository;
+use TriCab\Api\Admin\Dashboard\AzureSqlAdminDashboardQueryRepository;
+use TriCab\Api\Admin\Dashboard\InMemoryAdminDashboardQueryRepository;
 use TriCab\Api\Http\Action\Admin\PublishProductAction;
 use TriCab\Api\Http\Action\Admin\RemoveRolePermissionAction;
 use TriCab\Api\Http\Action\Admin\RemoveUserRoleAction;
@@ -619,6 +624,8 @@ final class ContainerFactory
             GetUserManagementAuditHistoryService::class => \DI\autowire(GetUserManagementAuditHistoryService::class),
             UserManagementErrorMapper::class => \DI\autowire(UserManagementErrorMapper::class),
             ListUsersAction::class => \DI\autowire(ListUsersAction::class),
+            GetAdminDashboardAction::class => \DI\autowire(GetAdminDashboardAction::class),
+            GetAdminDashboardProductActivityAction::class => \DI\autowire(GetAdminDashboardProductActivityAction::class),
             GetUserAction::class => \DI\autowire(GetUserAction::class),
             CreateUserAction::class => \DI\autowire(CreateUserAction::class),
             UpdateUserAction::class => \DI\autowire(UpdateUserAction::class),
@@ -1030,6 +1037,7 @@ final class ContainerFactory
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(AzureSqlProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(AzureSqlProductPricingRepository::class);
             $definitions[ProductAuditRepository::class] = \DI\autowire(AzureSqlProductAuditRepository::class);
+            $definitions[AdminDashboardQueryRepository::class] = \DI\autowire(AzureSqlAdminDashboardQueryRepository::class);
             $definitions[ProductIntegrationRepository::class] = \DI\autowire(AzureSqlProductIntegrationRepository::class);
             $definitions[LegacyProductMappingRepository::class] = \DI\autowire(AzureSqlLegacyProductMappingRepository::class);
             $definitions[MigrationBatchRepository::class] = \DI\autowire(AzureSqlMigrationBatchRepository::class);
@@ -1140,6 +1148,7 @@ SQL,
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(InMemoryProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(InMemoryProductPricingRepository::class);
             $definitions[ProductAuditRepository::class] = \DI\autowire(InMemoryProductAuditRepository::class);
+            $definitions[AdminDashboardQueryRepository::class] = \DI\autowire(InMemoryAdminDashboardQueryRepository::class);
             $definitions[ProductIntegrationRepository::class] = \DI\autowire(InMemoryProductIntegrationRepository::class);
             $definitions[LegacyProductMappingRepository::class] = \DI\autowire(InMemoryLegacyProductMappingRepository::class);
             $definitions[ProductSubResourceResolver::class] = static function (Container $container): ProductSubResourceResolver {

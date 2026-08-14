@@ -444,7 +444,9 @@ SELECT
     img.[PublicUrl],
     img.[AltText],
     img.[DisplayOrder],
-    img.[IsPrimary]
+    img.[IsPrimary],
+    img.[StorageContainer],
+    img.[StoragePath]
 FROM [product].[ProductImages] img
 INNER JOIN [product].[Products] p ON p.[ProductId] = img.[ProductId]
 INNER JOIN [product].[MediaTypes] mt ON mt.[MediaTypeId] = img.[MediaTypeId]
@@ -470,6 +472,8 @@ SQL,
             altText: AzureSqlValueMapper::nullableString($row['AltText'] ?? null),
             displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
             isPrimary: AzureSqlValueMapper::boolValue($row['IsPrimary'] ?? false),
+            storagePath: AzureSqlValueMapper::nullableString($row['StoragePath'] ?? null),
+            storageContainer: AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null),
         ), $rows);
     }
 
@@ -504,7 +508,9 @@ SELECT
     doc.[LanguageCode],
     doc.[PublicUrl],
     doc.[AccessCode],
-    doc.[DisplayOrder]
+    doc.[DisplayOrder],
+    doc.[StorageContainer],
+    doc.[StoragePath]
 FROM [product].[ProductDocuments] doc
 INNER JOIN [product].[Products] p ON p.[ProductId] = doc.[ProductId]
 INNER JOIN [product].[DocumentTypes] dt ON dt.[DocumentTypeId] = doc.[DocumentTypeId]
@@ -534,6 +540,8 @@ SQL,
             publicUrl: AzureSqlValueMapper::nullableString($row['PublicUrl'] ?? null),
             accessCode: AzureSqlValueMapper::stringValue($row['AccessCode'] ?? ''),
             displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+            storagePath: AzureSqlValueMapper::nullableString($row['StoragePath'] ?? null),
+            storageContainer: AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null),
         ), $rows);
     }
 

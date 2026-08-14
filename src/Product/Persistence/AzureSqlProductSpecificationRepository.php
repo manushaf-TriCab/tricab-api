@@ -690,42 +690,89 @@ SQL,
             }
         }
 
+        $valueIds = [];
+        foreach ($grouped as $item) {
+            $valueId = $item['_valueId'];
+            if ($valueId > 0) {
+                $valueIds[] = $valueId;
+            }
+        }
+        $optionsByValueId = $this->loadOptionPublicIdsByValueIds($valueIds, $isVariant);
+
         foreach ($grouped as &$item) {
             $valueId = $item['_valueId'];
             unset($item['_valueId']);
 
-            if ($isVariant) {
-                $junctionRows = $this->connection->fetchAll(
-                    <<<'SQL'
-SELECT CONVERT(NVARCHAR(36), o.[PublicId]) AS [OptionPublicId]
-FROM [product].[ProductVariantSpecificationOptionValues] j
-INNER JOIN [product].[SpecificationOptions] o ON o.[SpecificationOptionId] = j.[SpecificationOptionId]
-WHERE j.[ProductVariantSpecificationValueId] = :valueId
-SQL,
-                    [':valueId' => $valueId],
-                );
-            } else {
-                $junctionRows = $this->connection->fetchAll(
-                    <<<'SQL'
-SELECT CONVERT(NVARCHAR(36), o.[PublicId]) AS [OptionPublicId]
-FROM [product].[ProductSpecificationOptionValues] j
-INNER JOIN [product].[SpecificationOptions] o ON o.[SpecificationOptionId] = j.[SpecificationOptionId]
-WHERE j.[ProductSpecificationValueId] = :valueId
-SQL,
-                    [':valueId' => $valueId],
-                );
-            }
-
-            foreach ($junctionRows as $junctionRow) {
-                $optionPublicId = AzureSqlValueMapper::stringValue($junctionRow['OptionPublicId'] ?? '');
-                if ($optionPublicId !== '' && !in_array($optionPublicId, $item['optionPublicIds'], true)) {
-                    $item['optionPublicIds'][] = $optionPublicId;
+            foreach ($optionsByValueId[$valueId] ?? [] as $junctionOptionPublicId) {
+                if ($junctionOptionPublicId !== '' && !in_array($junctionOptionPublicId, $item['optionPublicIds'], true)) {
+                    $item['optionPublicIds'][] = $junctionOptionPublicId;
                 }
             }
         }
         unset($item);
 
         return array_values($grouped);
+    }
+
+    /**
+     * @param list<int> $valueIds
+     * @return array<int, list<string>>
+     */
+    private function loadOptionPublicIdsByValueIds(array $valueIds, bool $isVariant): array
+    {
+        $grouped = [];
+        foreach ($valueIds as $valueId) {
+            $grouped[$valueId] = [];
+        }
+        if ($valueIds === []) {
+            return $grouped;
+        }
+
+        [$placeholders, $params] = $this->bindIntIdList($valueIds);
+        $inList = implode(', ', $placeholders);
+        $valueIdColumn = $isVariant
+            ? 'j.[ProductVariantSpecificationValueId]'
+            : 'j.[ProductSpecificationValueId]';
+        $junctionTable = $isVariant
+            ? '[product].[ProductVariantSpecificationOptionValues]'
+            : '[product].[ProductSpecificationOptionValues]';
+
+        $sql = <<<SQL
+SELECT
+    {$valueIdColumn} AS [ValueId],
+    CONVERT(NVARCHAR(36), o.[PublicId]) AS [OptionPublicId]
+FROM {$junctionTable} j
+INNER JOIN [product].[SpecificationOptions] o ON o.[SpecificationOptionId] = j.[SpecificationOptionId]
+WHERE {$valueIdColumn} IN ({$inList})
+SQL;
+
+        foreach ($this->connection->fetchAll($sql, $params) as $row) {
+            $valueId = AzureSqlValueMapper::intValue($row['ValueId'] ?? 0);
+            $optionPublicId = AzureSqlValueMapper::stringValue($row['OptionPublicId'] ?? '');
+            if ($valueId <= 0 || $optionPublicId === '') {
+                continue;
+            }
+            $grouped[$valueId][] = $optionPublicId;
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * @param list<int> $ids
+     * @return array{0: list<string>, 1: array<string, int>}
+     */
+    private function bindIntIdList(array $ids): array
+    {
+        $placeholders = [];
+        $params = [];
+        foreach (array_values($ids) as $index => $id) {
+            $key = ':vid' . $index;
+            $placeholders[] = $key;
+            $params[$key] = $id;
+        }
+
+        return [$placeholders, $params];
     }
 
     private function requireProductId(ProductPublicId $publicId): int

@@ -16,6 +16,7 @@ final class ApplicationCacheFactory
         $cache = match ($settings->appCacheDriver) {
             Settings::CACHE_DRIVER_APCU => new ApcuApplicationCache(),
             Settings::CACHE_DRIVER_ARRAY => new ArrayApplicationCache(),
+            Settings::CACHE_DRIVER_FILE => new FilesystemApplicationCache(self::resolveDirectory($settings)),
             default => throw new InvalidArgumentException(
                 'Unsupported APP_CACHE_DRIVER "' . $settings->appCacheDriver . '".',
             ),
@@ -31,5 +32,21 @@ final class ApplicationCacheFactory
         }
 
         return $cache;
+    }
+
+    private static function resolveDirectory(Settings $settings): string
+    {
+        $path = trim($settings->appCachePath);
+        if ($path === '') {
+            $path = 'var/cache/app';
+        }
+
+        $isAbsolute = str_starts_with($path, '/')
+            || (strlen($path) > 1 && ctype_alpha($path[0]) && $path[1] === ':');
+        if (!$isAbsolute) {
+            $path = dirname(__DIR__, 3) . '/' . ltrim($path, '/\\');
+        }
+
+        return $path;
     }
 }

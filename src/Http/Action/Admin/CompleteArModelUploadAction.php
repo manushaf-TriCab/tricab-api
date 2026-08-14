@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Command\CompleteArModelUploadCommand;
 use TriCab\Core\Product\Application\Service\CompleteArModelUploadService;
 
@@ -19,6 +20,7 @@ final class CompleteArModelUploadAction
 {
     public function __construct(
         private readonly CompleteArModelUploadService $complete,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly AdminMutationTransaction $transaction,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
@@ -38,7 +40,7 @@ final class CompleteArModelUploadAction
                 new CompleteArModelUploadCommand(arPublicId: $arPublicId),
             ));
 
-            return $this->responder->success(ProductManagementDtoSerializer::productArModelSummary($completed));
+            return $this->responder->success(ProductManagementDtoSerializer::productArModelSummary($completed, $this->devUrls));
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

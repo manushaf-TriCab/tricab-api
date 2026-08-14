@@ -24,12 +24,17 @@ final class RequestPerformanceMetricsTest extends TestCase
         $metrics = new RequestPerformanceMetrics();
         $connection = new PdoSqlConnection($pdo, $metrics);
 
-        $connection->fetchAll('SELECT 1');
+        $connection->fetchAll('/*q:cv.product*/ SELECT 1');
         $connection->fetchAll('SELECT 2');
 
         $snap = $metrics->snapshot();
         self::assertSame(2, $snap['sql_count']);
         self::assertGreaterThan(0, $snap['sql_ms']);
+        self::assertGreaterThan(0, $snap['first_query_ms']);
+        self::assertArrayHasKey('pdo_connect_ms', $snap);
+        self::assertCount(1, $snap['named_queries']);
+        self::assertSame('cv.product', $snap['named_queries'][0]['name']);
+        self::assertSame(1, $snap['named_queries'][0]['rows']);
     }
 
     public function test_container_shares_one_metrics_instance(): void

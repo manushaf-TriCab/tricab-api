@@ -156,12 +156,15 @@ final class AzureBlobRestClient
             throw new RuntimeException('Unable to initialise cURL for Blob request.');
         }
 
+        $verb = strtoupper($method);
         curl_setopt_array($ch, [
-            CURLOPT_CUSTOMREQUEST => strtoupper($method),
+            CURLOPT_CUSTOMREQUEST => $verb,
             CURLOPT_HTTPHEADER => $headerLines,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HEADER => true,
             CURLOPT_TIMEOUT => 60,
+            // HEAD must not wait for a body; Azure still sends Content-Length of the blob.
+            CURLOPT_NOBODY => $verb === 'HEAD',
         ]);
 
         if ($body !== null) {

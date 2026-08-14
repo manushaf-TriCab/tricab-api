@@ -11,12 +11,14 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\Product\ProductListQuery;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Service\ListAdminProductsService;
 
 final class ListProductsAction
 {
     public function __construct(
         private readonly ListAdminProductsService $listProducts,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
     ) {
@@ -30,7 +32,7 @@ final class ListProductsAction
             $criteria = ProductListQuery::fromQueryParams(QueryParams::normalize($request->getQueryParams()));
             $result = $this->listProducts->execute($criteria);
 
-            return $this->responder->success(ProductManagementDtoSerializer::listResult($result));
+            return $this->responder->success(ProductManagementDtoSerializer::listResult($result, $this->devUrls));
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

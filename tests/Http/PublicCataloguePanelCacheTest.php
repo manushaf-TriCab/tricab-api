@@ -87,4 +87,43 @@ final class PublicCataloguePanelCacheTest extends TestCase
         self::assertSame(0.0, $snap['pdo_ms']);
         self::assertSame(0.0, $snap['token_ms']);
     }
+
+    public function test_specification_mutation_invalidates_lookups_cache(): void
+    {
+        $app = TestAppFactory::create([
+            'APP_ENV' => 'development',
+            'DEV_AUTH_ENABLED' => 'true',
+            'APP_PERFORMANCE_LOGGING' => 'false',
+            'APP_CACHE_DRIVER' => 'array',
+        ]);
+        $container = $app->getContainer();
+        self::assertInstanceOf(ContainerInterface::class, $container);
+        $metrics = $container->get(RequestPerformanceMetrics::class);
+        self::assertInstanceOf(RequestPerformanceMetrics::class, $metrics);
+
+        $lookups = TestAppFactory::request('GET', '/api/v1/admin/product-lookups')
+            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_TENANT, 'development-tenant')
+            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_SUBJECT, 'development-thilan')
+            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_EMAIL, 'thilanh@tricab.com');
+
+        $app->handle($lookups);
+        $app->handle($lookups);
+        self::assertTrue($metrics->snapshot()['lookups_cache_hit']);
+
+        $create = TestAppFactory::request('POST', '/api/v1/admin/specification-groups')
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_TENANT, 'development-tenant')
+            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_SUBJECT, 'development-thilan')
+            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_EMAIL, 'thilanh@tricab.com');
+        $create->getBody()->write(json_encode([
+            'name' => 'Cache Invalidation Group',
+            'code' => 'CACHE_INV',
+        ], JSON_THROW_ON_ERROR));
+        $created = $app->handle($create);
+        self::assertSame(201, $created->getStatusCode(), (string) $created->getBody());
+
+        $after = $app->handle($lookups);
+        self::assertSame(200, $after->getStatusCode());
+        self::assertFalse($metrics->snapshot()['lookups_cache_hit']);
+    }
 }

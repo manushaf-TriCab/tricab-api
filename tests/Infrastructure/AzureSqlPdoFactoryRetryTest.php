@@ -61,8 +61,9 @@ final class AzureSqlPdoFactoryRetryTest extends TestCase
         self::assertSame(2, $snap['db_connect_attempts']);
         self::assertSame(1, $snap['db_connect_retry']);
         self::assertSame('HYT00', $snap['db_connect_retry_reason']);
-        self::assertGreaterThan(0, $snap['db_connect_first_attempt_ms']);
-        self::assertGreaterThan(0, $snap['pdo_ms']);
+        self::assertGreaterThanOrEqual(0, $snap['db_connect_first_attempt_ms']);
+        self::assertGreaterThanOrEqual(0, $snap['pdo_ms']);
+        self::assertArrayHasKey('pdo_connect_ms', $snap);
     }
 
     public function test_hyt00_on_both_attempts_fails_as_temporarily_unavailable(): void

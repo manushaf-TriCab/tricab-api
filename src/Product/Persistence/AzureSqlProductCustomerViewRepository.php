@@ -39,6 +39,7 @@ final class AzureSqlProductCustomerViewRepository implements ProductCustomerView
     {
         $rows = $this->connection->fetchAll(
             <<<'SQL'
+/*q:cv.product*/
 SELECT
     CONVERT(NVARCHAR(36), p.[PublicId]) AS [PublicId],
     p.[ProductName],
@@ -145,6 +146,7 @@ SQL,
     {
         $rows = $this->connection->fetchAll(
             <<<'SQL'
+/*q:cv.product_code*/
 SELECT TOP (1) pc.[CodeValue]
 FROM [product].[ProductCodes] pc
 INNER JOIN [product].[Products] p ON p.[ProductId] = pc.[ProductId]
@@ -170,6 +172,7 @@ SQL,
     {
         $rows = $this->connection->fetchAll(
             <<<'SQL'
+/*q:cv.relationships*/
 SELECT
     CONVERT(NVARCHAR(36), rp.[PublicId]) AS [RelatedProductPublicId],
     rp.[ProductName] AS [RelatedProductName],
@@ -231,6 +234,7 @@ SQL,
     {
         $rows = $this->connection->fetchAll(
             <<<'SQL'
+/*q:cv.product_specs*/
 SELECT
     sd.[DefinitionCode] AS [Code],
     sd.[DefinitionName] AS [Name],
@@ -323,6 +327,7 @@ SQL,
 
         $columnRows = $this->connection->fetchAll(
             <<<SQL
+/*q:cv.matrix_columns*/
 SELECT
     CONVERT(NVARCHAR(36), sd.[PublicId]) AS [DefinitionPublicId],
     sd.[DefinitionCode] AS [Code],
@@ -375,8 +380,12 @@ SQL,
             $columnIds[] = $definitionPublicId;
         }
 
-        $valueRows = $this->connection->fetchAll(
-            <<<'SQL'
+        $valueRows = [];
+        if ($columnIds !== []) {
+            $valueParams = [':productPublicId' => $productPublicId->toString()] + $params;
+            $valueRows = $this->connection->fetchAll(
+                <<<SQL
+/*q:cv.matrix_values*/
 SELECT
     CONVERT(NVARCHAR(36), v.[PublicId]) AS [VariantPublicId],
     CONVERT(NVARCHAR(36), sd.[PublicId]) AS [DefinitionPublicId],
@@ -388,22 +397,23 @@ SELECT
     CONVERT(NVARCHAR(50), psv.[ValueMinDecimal]) AS [ValueMinDecimal],
     CONVERT(NVARCHAR(50), psv.[ValueMaxDecimal]) AS [ValueMaxDecimal],
     so.[OptionLabel]
-FROM [product].[ProductVariants] v
-INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
-LEFT JOIN [product].[ProductVariantSpecificationValues] psv
-    ON psv.[ProductVariantId] = v.[ProductVariantId]
+FROM [product].[SpecificationDefinitions] sd
+INNER JOIN [product].[ProductVariantSpecificationValues] psv
+    ON psv.[SpecificationDefinitionId] = sd.[SpecificationDefinitionId]
    AND psv.[DeletedAtUtc] IS NULL
-LEFT JOIN [product].[SpecificationDefinitions] sd
-    ON sd.[SpecificationDefinitionId] = psv.[SpecificationDefinitionId]
-   AND sd.[DeletedAtUtc] IS NULL
+INNER JOIN [product].[ProductVariants] v
+    ON v.[ProductVariantId] = psv.[ProductVariantId]
+   AND v.[DeletedAtUtc] IS NULL
+   AND v.[IsActive] = 1
+INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
 LEFT JOIN [product].[SpecificationOptions] so ON so.[SpecificationOptionId] = psv.[SpecificationOptionId]
 WHERE p.[PublicId] = :productPublicId
-  AND v.[DeletedAtUtc] IS NULL
-  AND v.[IsActive] = 1
-ORDER BY v.[DisplayOrder] ASC, v.[ProductVariantId] ASC
+  AND sd.[DeletedAtUtc] IS NULL
+  AND sd.[DefinitionCode] IN ({$inList})
 SQL,
-            [':productPublicId' => $productPublicId->toString()],
-        );
+                $valueParams,
+            );
+        }
 
         /** @var array<string, array<string, string|null>> $cellsByVariant */
         $cellsByVariant = [];
@@ -531,6 +541,7 @@ SQL,
     {
         $rows = $this->connection->fetchAll(
             <<<'SQL'
+/*q:cv.variants*/
 SELECT
     CONVERT(NVARCHAR(36), v.[PublicId]) AS [PublicId],
     v.[VariantName],
@@ -568,6 +579,7 @@ SQL,
     {
         $rows = $this->connection->fetchAll(
             <<<'SQL'
+/*q:cv.media*/
 SELECT
     CONVERT(NVARCHAR(36), img.[PublicId]) AS [PublicId],
     img.[ImageRoleCode] AS [MediaCategoryCode],
@@ -576,7 +588,9 @@ SELECT
     img.[PublicUrl],
     img.[AltText],
     img.[DisplayOrder],
-    img.[IsPrimary]
+    img.[IsPrimary],
+    img.[StorageContainer],
+    img.[StoragePath]
 FROM [product].[ProductImages] img
 INNER JOIN [product].[Products] p ON p.[ProductId] = img.[ProductId]
 INNER JOIN [product].[MediaTypes] mt ON mt.[MediaTypeId] = img.[MediaTypeId]
@@ -602,6 +616,8 @@ SQL,
             altText: AzureSqlValueMapper::nullableString($row['AltText'] ?? null),
             displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
             isPrimary: AzureSqlValueMapper::boolValue($row['IsPrimary'] ?? false),
+            storagePath: AzureSqlValueMapper::nullableString($row['StoragePath'] ?? null),
+            storageContainer: AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null),
         ), $rows);
     }
 
@@ -628,6 +644,7 @@ SQL;
 
         $rows = $this->connection->fetchAll(
             <<<SQL
+/*q:cv.documents*/
 SELECT
     CONVERT(NVARCHAR(36), doc.[PublicId]) AS [PublicId],
     dt.[DocumentTypeCode],
@@ -636,7 +653,9 @@ SELECT
     doc.[LanguageCode],
     doc.[PublicUrl],
     doc.[AccessCode],
-    doc.[DisplayOrder]
+    doc.[DisplayOrder],
+    doc.[StorageContainer],
+    doc.[StoragePath]
 FROM [product].[ProductDocuments] doc
 INNER JOIN [product].[Products] p ON p.[ProductId] = doc.[ProductId]
 INNER JOIN [product].[DocumentTypes] dt ON dt.[DocumentTypeId] = doc.[DocumentTypeId]
@@ -666,6 +685,8 @@ SQL,
             publicUrl: AzureSqlValueMapper::nullableString($row['PublicUrl'] ?? null),
             accessCode: AzureSqlValueMapper::stringValue($row['AccessCode'] ?? ''),
             displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+            storagePath: AzureSqlValueMapper::nullableString($row['StoragePath'] ?? null),
+            storageContainer: AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null),
         ), $rows);
     }
 
@@ -676,6 +697,7 @@ SQL,
     {
         $sql = $kind === 'industries'
             ? <<<'SQL'
+/*q:cv.industries*/
 SELECT i.[IndustryName] AS [Name]
 FROM [product].[ProductIndustries] pi
 INNER JOIN [product].[Industries] i ON i.[IndustryId] = pi.[IndustryId]
@@ -684,6 +706,7 @@ WHERE p.[PublicId] = :productPublicId AND i.[DeletedAtUtc] IS NULL AND i.[IsActi
 ORDER BY pi.[DisplayOrder]
 SQL
             : <<<'SQL'
+/*q:cv.applications*/
 SELECT a.[ApplicationName] AS [Name]
 FROM [product].[ProductApplications] pa
 INNER JOIN [product].[Applications] a ON a.[ApplicationId] = pa.[ApplicationId]

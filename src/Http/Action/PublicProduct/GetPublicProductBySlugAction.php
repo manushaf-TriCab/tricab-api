@@ -12,12 +12,14 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Service\GetPublicProductService;
 
 final class GetPublicProductBySlugAction
 {
     public function __construct(
         private readonly GetPublicProductService $getPublicProduct,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
     ) {
@@ -33,7 +35,7 @@ final class GetPublicProductBySlugAction
             $regionCode = QueryParams::stringOrNull($query, 'regionCode');
             $detail = $this->getPublicProduct->bySlug($slug, $regionCode);
 
-            return $this->responder->success(ProductManagementDtoSerializer::publicDetail($detail));
+            return $this->responder->success(ProductManagementDtoSerializer::publicDetail($detail, $this->devUrls));
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

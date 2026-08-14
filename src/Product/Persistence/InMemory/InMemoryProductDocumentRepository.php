@@ -243,6 +243,7 @@ final class InMemoryProductDocumentRepository implements ProductDocumentReposito
             originalFileName: AzureSqlValueMapper::nullableString($row['originalFileName'] ?? null),
             fileExtension: AzureSqlValueMapper::nullableString($row['fileExtension'] ?? null),
             storagePath: AzureSqlValueMapper::nullableString($row['storagePath'] ?? null),
+            storageContainer: AzureSqlValueMapper::nullableString($row['storageContainer'] ?? null),
         );
     }
 

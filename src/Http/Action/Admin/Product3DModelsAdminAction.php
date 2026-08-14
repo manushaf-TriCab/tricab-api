@@ -16,6 +16,7 @@ use TriCab\Api\Http\Request\Admin\RequestFields;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Command\CompleteProduct3DModelUploadCommand;
 use TriCab\Core\Product\Application\Command\InitiateProduct3DModelUploadCommand;
 use TriCab\Core\Product\Application\Command\Product3DModelRowVersionCommand;
@@ -31,6 +32,7 @@ final class Product3DModelsAdminAction
         private readonly InitiateProduct3DModelUploadService $initiate,
         private readonly CompleteProduct3DModelUploadService $complete,
         private readonly Settings $settings,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly AdminMutationTransaction $transaction,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
@@ -49,7 +51,10 @@ final class Product3DModelsAdminAction
                 $items = $this->manage->list($productPublicId);
 
                 return $this->responder->success([
-                    'items' => array_map(ProductManagementDtoSerializer::product3DModelSummary(...), $items),
+                    'items' => array_map(
+                        fn ($item) => ProductManagementDtoSerializer::product3DModelSummary($item, $this->devUrls),
+                        $items,
+                    ),
                 ]);
             }
 
@@ -58,7 +63,7 @@ final class Product3DModelsAdminAction
                 $modelPublicId = RouteParams::require($request, 'modelPublicId');
                 $item = $this->manage->get($productPublicId, $modelPublicId);
 
-                return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($item));
+                return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($item, $this->devUrls));
             }
 
             if ($method === 'POST' && str_ends_with($path, '/3d-models/upload-session')) {
@@ -114,7 +119,7 @@ final class Product3DModelsAdminAction
                     ),
                 ));
 
-                return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($completed));
+                return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($completed, $this->devUrls));
             }
 
             $productPublicId = RouteParams::require($request, 'productPublicId');
@@ -136,7 +141,7 @@ final class Product3DModelsAdminAction
                     ),
                 ));
 
-                return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($updated));
+                return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($updated, $this->devUrls));
             }
 
             $cmd = new Product3DModelRowVersionCommand($productPublicId, $modelPublicId, $expected);
@@ -152,7 +157,7 @@ final class Product3DModelsAdminAction
                 throw HttpRequestValidationFailed::unprocessable('VALIDATION_FAILED', 'Unsupported 3D model operation.');
             }
 
-            return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($updated));
+            return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($updated, $this->devUrls));
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

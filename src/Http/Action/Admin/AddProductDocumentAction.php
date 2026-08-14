@@ -14,6 +14,7 @@ use TriCab\Api\Http\Request\Admin\Product\AddProductDocumentRequest;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Command\AddProductDocumentCommand;
 use TriCab\Core\Product\Application\Service\AddProductDocumentService;
 
@@ -21,6 +22,7 @@ final class AddProductDocumentAction
 {
     public function __construct(
         private readonly AddProductDocumentService $addDocument,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly AdminMutationTransaction $transaction,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
@@ -55,7 +57,7 @@ final class AddProductDocumentAction
                 ),
             ));
 
-            return $this->responder->success(ProductManagementDtoSerializer::documentSummary($created), 201);
+            return $this->responder->success(ProductManagementDtoSerializer::documentSummary($created, true, $this->devUrls), 201);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

@@ -129,6 +129,8 @@ use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
+use TriCab\Api\Http\Action\Admin\GetAdminDashboardAction;
+use TriCab\Api\Http\Action\Admin\GetAdminDashboardProductActivityAction;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
 use TriCab\Api\Http\Action\Dev\DevProductFileDeliveryAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
@@ -222,6 +224,11 @@ final class AppBuilder
     private static function registerAdminRoutes(App $app, Container $container): void
     {
         $require = new RequirePermission($container);
+
+        $app->get('/api/v1/admin/dashboard', GetAdminDashboardAction::class)
+            ->add(($require)('ACCOUNT.LOGIN'));
+        $app->get('/api/v1/admin/dashboard/product-activity', GetAdminDashboardProductActivityAction::class)
+            ->add(($require)('PRODUCT.READ'));
 
         $app->get('/api/v1/admin/users', ListUsersAction::class)->add(($require)('USER.READ'));
         $app->get('/api/v1/admin/users/{publicId}', GetUserAction::class)->add(($require)('USER.READ'));
