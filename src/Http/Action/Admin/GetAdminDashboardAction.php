@@ -10,6 +10,7 @@ use Throwable;
 use TriCab\Api\Admin\Dashboard\AdminDashboardQueryRepository;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 
 /**
@@ -22,6 +23,7 @@ final class GetAdminDashboardAction
 {
     public function __construct(
         private readonly AdminDashboardQueryRepository $dashboard,
+        private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly JsonResponder $responder,
     ) {
     }
@@ -80,6 +82,11 @@ final class GetAdminDashboardAction
                 'activity' => $canAudit,
             ];
 
+            // Same private-blob READ SAS signing as Product Catalog list thumbnails.
+            if (is_array($snapshot['recentProducts'] ?? null)) {
+                $snapshot['recentProducts'] = $this->signRecentProductThumbnails($snapshot['recentProducts']);
+            }
+
             return $this->responder->success($snapshot);
         } catch (Throwable $exception) {
             error_log('Admin dashboard failed: ' . $exception->getMessage() . "\n" . $exception->getTraceAsString());
@@ -90,6 +97,48 @@ final class GetAdminDashboardAction
                 500,
             );
         }
+    }
+
+    /**
+     * @param list<array<string, mixed>> $products
+     * @return list<array<string, mixed>>
+     */
+    private function signRecentProductThumbnails(array $products): array
+    {
+        $signed = [];
+        foreach ($products as $product) {
+            if (!is_array($product)) {
+                continue;
+            }
+            $url = $product['thumbnailUrl'] ?? null;
+            $imagePublicId = is_string($product['thumbnailImagePublicId'] ?? null)
+                ? (string) $product['thumbnailImagePublicId']
+                : '';
+            $container = is_string($product['thumbnailStorageContainer'] ?? null)
+                ? (string) $product['thumbnailStorageContainer']
+                : null;
+            $path = is_string($product['thumbnailStoragePath'] ?? null)
+                ? (string) $product['thumbnailStoragePath']
+                : null;
+
+            if (is_string($url) && $url !== '') {
+                $product['thumbnailUrl'] = $this->devUrls->resolvePublicUrl(
+                    $url,
+                    $imagePublicId !== '' ? $imagePublicId : (string) ($product['publicId'] ?? ''),
+                    $container,
+                    $path,
+                );
+            }
+
+            unset(
+                $product['thumbnailImagePublicId'],
+                $product['thumbnailStorageContainer'],
+                $product['thumbnailStoragePath'],
+            );
+            $signed[] = $product;
+        }
+
+        return $signed;
     }
 
     private function has(AuthenticatedUser $user, string $permission): bool

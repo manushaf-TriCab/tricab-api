@@ -22,7 +22,7 @@ final class AzureSqlProduct3DModelRepository implements Product3DModelRepository
 {
     use AzureSqlTransaction;
 
-    private const SELECT_COLUMNS = <<<'SQL'
+    private const SELECT_COLUMNS_BASE = <<<'SQL'
     CONVERT(NVARCHAR(36), m.[PublicId]) AS [PublicId],
     CONVERT(NVARCHAR(36), p.[PublicId]) AS [ProductPublicId],
     CONVERT(NVARCHAR(36), v.[PublicId]) AS [ProductVariantPublicId],
@@ -34,6 +34,7 @@ final class AzureSqlProduct3DModelRepository implements Product3DModelRepository
     m.[ScanStatusCode],
     m.[PublicUrl],
     m.[PreviewImagePublicUrl],
+    m.[PreviewImageStoragePath],
     m.[StoragePath],
     m.[StorageContainer],
     m.[MimeType],
@@ -52,9 +53,65 @@ final class AzureSqlProduct3DModelRepository implements Product3DModelRepository
     CONVERT(NVARCHAR(33), m.[UpdatedAtUtc], 126) AS [UpdatedAtUtc]
 SQL;
 
+    private const SELECT_COLUMNS_PHASE2D = <<<'SQL'
+    ,
+    m.[AnalysisJson],
+    m.[LatestOptimisationMetadataJson],
+    CONVERT(NVARCHAR(36), aa.[PublicId]) AS [ActiveAssetPublicId]
+SQL;
+
+    /** @var bool|null Cached Phase 2D schema presence for this process. */
+    private static ?bool $phase2dSchemaReady = null;
+
     public function __construct(
         private readonly SqlConnection $connection,
     ) {
+    }
+
+    private function phase2dSchemaReady(): bool
+    {
+        if (self::$phase2dSchemaReady !== null) {
+            return self::$phase2dSchemaReady;
+        }
+
+        try {
+            $rows = $this->connection->fetchAll(
+                <<<'SQL'
+SELECT CASE
+    WHEN COL_LENGTH(N'product.Product3DModels', N'AnalysisJson') IS NOT NULL
+     AND OBJECT_ID(N'product.Product3DModelAssets', N'U') IS NOT NULL
+    THEN 1 ELSE 0 END AS [Ready]
+SQL
+            );
+            self::$phase2dSchemaReady = ((int) ($rows[0]['Ready'] ?? 0)) === 1;
+        } catch (\Throwable) {
+            self::$phase2dSchemaReady = false;
+        }
+
+        return self::$phase2dSchemaReady;
+    }
+
+    /**
+     * @return array{0: string, 1: string} [selectColumns, assetJoinSql]
+     */
+    private function selectSqlParts(): array
+    {
+        if ($this->phase2dSchemaReady()) {
+            return [
+                self::SELECT_COLUMNS_BASE . self::SELECT_COLUMNS_PHASE2D,
+                'LEFT JOIN [product].[Product3DModelAssets] aa ON aa.[Product3DModelAssetId] = m.[ActiveAssetId]',
+            ];
+        }
+
+        return [
+            self::SELECT_COLUMNS_BASE . <<<'SQL'
+    ,
+    CAST(NULL AS NVARCHAR(MAX)) AS [AnalysisJson],
+    CAST(NULL AS NVARCHAR(MAX)) AS [LatestOptimisationMetadataJson],
+    CAST(NULL AS NVARCHAR(36)) AS [ActiveAssetPublicId]
+SQL,
+            '',
+        ];
     }
 
     public function findByPublicId(string $modelPublicId): ?Product3DModelSummary
@@ -64,7 +121,7 @@ SQL;
 
     public function listByProduct(ProductPublicId $productPublicId): array
     {
-        $columns = self::SELECT_COLUMNS;
+        [$columns, $assetJoin] = $this->selectSqlParts();
         $rows = $this->connection->fetchAll(
             <<<SQL
 SELECT
@@ -72,6 +129,7 @@ SELECT
 FROM [product].[Product3DModels] m
 INNER JOIN [product].[Products] p ON p.[ProductId] = m.[ProductId]
 LEFT JOIN [product].[ProductVariants] v ON v.[ProductVariantId] = m.[ProductVariantId]
+{$assetJoin}
 WHERE p.[PublicId] = :productPublicId
   AND m.[DeletedAtUtc] IS NULL
 ORDER BY m.[DisplayOrder], m.[Name]
@@ -84,7 +142,7 @@ SQL,
 
     public function listPublicByProduct(ProductPublicId $productPublicId): ProductPublic3DPayload
     {
-        $columns = self::SELECT_COLUMNS;
+        [$columns, $assetJoin] = $this->selectSqlParts();
         $rows = $this->connection->fetchAll(
             <<<SQL
 /*q:cv.3d*/
@@ -93,6 +151,7 @@ SELECT
 FROM [product].[Product3DModels] m
 INNER JOIN [product].[Products] p ON p.[ProductId] = m.[ProductId]
 LEFT JOIN [product].[ProductVariants] v ON v.[ProductVariantId] = m.[ProductVariantId]
+{$assetJoin}
 WHERE p.[PublicId] = :productPublicId
   AND m.[DeletedAtUtc] IS NULL
   AND m.[IsActive] = 1
@@ -120,6 +179,10 @@ SQL,
                 previewImageUrl: $summary->previewImagePublicUrl,
                 viewerConfiguration: $summary->viewerConfiguration,
                 isPrimary: $summary->isPrimary,
+                productVariantPublicId: $summary->productVariantPublicId,
+                storageContainer: $summary->storageContainer,
+                storagePath: $summary->storagePath,
+                previewImageStoragePath: $summary->previewImageStoragePath,
             );
         }
 
@@ -127,11 +190,20 @@ SQL,
             return ProductPublic3DPayload::empty();
         }
 
+        // Default public primary: product-level published primary, then any product-level, then first.
         $primary = null;
         foreach ($models as $model) {
-            if ($model->isPrimary) {
+            if ($model->productVariantPublicId === null && $model->isPrimary) {
                 $primary = $model;
                 break;
+            }
+        }
+        if ($primary === null) {
+            foreach ($models as $model) {
+                if ($model->productVariantPublicId === null) {
+                    $primary = $model;
+                    break;
+                }
             }
         }
         $primary ??= $models[0];
@@ -524,7 +596,7 @@ SQL,
 
     private function findByPublicIdInternal(string $modelPublicId, bool $includeDeleted): ?Product3DModelSummary
     {
-        $columns = self::SELECT_COLUMNS;
+        [$columns, $assetJoin] = $this->selectSqlParts();
         $deletedClause = $includeDeleted ? '' : ' AND m.[DeletedAtUtc] IS NULL';
         $rows = $this->connection->fetchAll(
             <<<SQL
@@ -533,6 +605,7 @@ SELECT
 FROM [product].[Product3DModels] m
 INNER JOIN [product].[Products] p ON p.[ProductId] = m.[ProductId]
 LEFT JOIN [product].[ProductVariants] v ON v.[ProductVariantId] = m.[ProductVariantId]
+{$assetJoin}
 WHERE m.[PublicId] = :modelPublicId
 {$deletedClause}
 SQL,
@@ -560,6 +633,8 @@ SQL,
 
         $generation = $this->decodeJsonObject($row['GenerationMetadataJson'] ?? null);
         $materials = $this->decodeJsonList($row['MaterialOverridesJson'] ?? null);
+        $analysis = $this->decodeJsonObject($row['AnalysisJson'] ?? null);
+        $optimisation = $this->decodeJsonObject($row['LatestOptimisationMetadataJson'] ?? null);
 
         return new Product3DModelSummary(
             publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
@@ -573,6 +648,7 @@ SQL,
             scanStatusCode: AzureSqlValueMapper::stringValue($row['ScanStatusCode'] ?? 'pending_upload'),
             publicUrl: AzureSqlValueMapper::nullableString($row['PublicUrl'] ?? null),
             previewImagePublicUrl: AzureSqlValueMapper::nullableString($row['PreviewImagePublicUrl'] ?? null),
+            previewImageStoragePath: AzureSqlValueMapper::nullableString($row['PreviewImageStoragePath'] ?? null),
             storagePath: AzureSqlValueMapper::nullableString($row['StoragePath'] ?? null),
             storageContainer: AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null),
             mimeType: AzureSqlValueMapper::nullableString($row['MimeType'] ?? null),
@@ -589,6 +665,11 @@ SQL,
             rowVersion: ProductRowVersionMapper::toToken($row['RowVersion'] ?? null)->toBase64(),
             createdAtUtc: AzureSqlValueMapper::stringValue($row['CreatedAtUtc'] ?? ''),
             updatedAtUtc: AzureSqlValueMapper::stringValue($row['UpdatedAtUtc'] ?? ''),
+            analysis: $analysis,
+            optimisation: $optimisation,
+            activeAsset: null,
+            assets: null,
+            activeAssetPublicId: AzureSqlValueMapper::nullableString($row['ActiveAssetPublicId'] ?? null),
         );
     }
 

@@ -89,6 +89,13 @@ final class RecordingBlobStore implements ProductBlobStore
         return 'https://tricabv2.blob.core.windows.net/' . rawurlencode($container) . '/' . ltrim($blobPath, '/');
     }
 
+    public function getObjectBinary(string $container, string $blobPath): ?string
+    {
+        unset($container, $blobPath);
+
+        return null;
+    }
+
     private function ticket(
         string $container,
         string $blobPath,

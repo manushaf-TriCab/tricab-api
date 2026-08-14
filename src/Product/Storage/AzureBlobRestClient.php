@@ -55,6 +55,19 @@ final class AzureBlobRestClient
         }
     }
 
+    public function get(string $container, string $blobPath): ?string
+    {
+        $response = $this->request('GET', $container, $blobPath);
+        if ($response['status'] === 404) {
+            return null;
+        }
+        if ($response['status'] < 200 || $response['status'] >= 300) {
+            throw new RuntimeException('Blob GET failed with HTTP ' . $response['status']);
+        }
+
+        return $response['body'];
+    }
+
     public function delete(string $container, string $blobPath): void
     {
         $response = $this->request('DELETE', $container, $blobPath);
@@ -110,7 +123,11 @@ final class AzureBlobRestClient
             'x-ms-date' => $date,
             'x-ms-version' => '2022-11-02',
         ]));
-        $canonicalizedResource = '/' . $this->accountName . '/' . $container . '/' . ltrim($blobPath, '/');
+        // Must match URL encoding exactly (e.g. spaces as %20). Unencoded spaces
+        // in CanonicalizedResource cause SharedKey HTTP 403 while SAS PUT still works.
+        $canonicalizedResource = '/' . $this->accountName
+            . '/' . $container
+            . '/' . $this->encodeBlobPath(ltrim($blobPath, '/'));
 
         $stringToSign = implode("\n", [
             strtoupper($method),

@@ -38,7 +38,7 @@ final class DeleteProductMediaFileAction
                 new DeleteProductMediaFileCommand(mediaPublicId: $mediaPublicId),
             ));
 
-            return $this->responder->success(['deleted' => true]);
+            return $this->responder->success(ProductManagementDtoSerializer::acknowledged());
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

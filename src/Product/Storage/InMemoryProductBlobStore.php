@@ -156,6 +156,13 @@ final class InMemoryProductBlobStore implements ProductBlobStore
         );
     }
 
+    public function getObjectBinary(string $container, string $blobPath): ?string
+    {
+        $object = $this->readObject($container, $blobPath);
+
+        return $object['binary'] ?? null;
+    }
+
     public function buildPublicUrl(string $container, string $blobPath): ?string
     {
         if ($this->cdnBaseUrl === '') {

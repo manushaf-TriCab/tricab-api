@@ -62,6 +62,12 @@ final class InMemoryProductStore
     /** @var array<string, array<string, mixed>> */
     private array $threeDModels = [];
 
+    /** @var array<string, array<string, mixed>> */
+    private array $threeDAssets = [];
+
+    /** @var array<string, array<string, mixed>> */
+    private array $threeDAssetJobs = [];
+
     /** @var list<array<string, mixed>> */
     private array $regions = [];
 
@@ -433,6 +439,30 @@ final class InMemoryProductStore
     public function setThreeDModelsMap(array $map): void
     {
         $this->threeDModels = $map;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function threeDAssetsMap(): array
+    {
+        return $this->threeDAssets;
+    }
+
+    /** @param array<string, array<string, mixed>> $map */
+    public function setThreeDAssetsMap(array $map): void
+    {
+        $this->threeDAssets = $map;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function threeDAssetJobsMap(): array
+    {
+        return $this->threeDAssetJobs;
+    }
+
+    /** @param array<string, array<string, mixed>> $map */
+    public function setThreeDAssetJobsMap(array $map): void
+    {
+        $this->threeDAssetJobs = $map;
     }
 
 

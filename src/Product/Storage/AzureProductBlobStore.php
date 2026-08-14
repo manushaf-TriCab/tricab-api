@@ -125,4 +125,9 @@ final class AzureProductBlobStore implements ProductBlobStore
         // Fallback: direct blob endpoint (not preferred for public delivery).
         return $this->rest->objectUrl($container, $blobPath);
     }
+
+    public function getObjectBinary(string $container, string $blobPath): ?string
+    {
+        return $this->rest->get($container, $blobPath);
+    }
 }

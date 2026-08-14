@@ -17,20 +17,32 @@ use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
+use TriCab\Core\Product\Application\Command\ActivateProduct3DAssetCommand;
+use TriCab\Core\Product\Application\Command\AnalyseProduct3DModelCommand;
 use TriCab\Core\Product\Application\Command\CompleteProduct3DModelUploadCommand;
+use TriCab\Core\Product\Application\Command\CompleteProduct3DPreviewUploadCommand;
 use TriCab\Core\Product\Application\Command\InitiateProduct3DModelUploadCommand;
+use TriCab\Core\Product\Application\Command\InitiateProduct3DPreviewUploadCommand;
+use TriCab\Core\Product\Application\Command\OptimiseProduct3DModelCommand;
 use TriCab\Core\Product\Application\Command\Product3DModelRowVersionCommand;
+use TriCab\Core\Product\Application\Command\RevertProduct3DAssetToSourceCommand;
 use TriCab\Core\Product\Application\Command\UpdateProduct3DModelCommand;
 use TriCab\Core\Product\Application\Service\CompleteProduct3DModelUploadService;
+use TriCab\Core\Product\Application\Service\CompleteProduct3DPreviewUploadService;
 use TriCab\Core\Product\Application\Service\InitiateProduct3DModelUploadService;
+use TriCab\Core\Product\Application\Service\InitiateProduct3DPreviewUploadService;
 use TriCab\Core\Product\Application\Service\ManageProduct3DModelService;
+use TriCab\Core\Product\Application\Service\ProcessProduct3DAssetService;
 
 final class Product3DModelsAdminAction
 {
     public function __construct(
         private readonly ManageProduct3DModelService $manage,
+        private readonly ProcessProduct3DAssetService $processAssets,
         private readonly InitiateProduct3DModelUploadService $initiate,
         private readonly CompleteProduct3DModelUploadService $complete,
+        private readonly InitiateProduct3DPreviewUploadService $initiatePreview,
+        private readonly CompleteProduct3DPreviewUploadService $completePreview,
         private readonly Settings $settings,
         private readonly ProductDevMediaUrlResolver $devUrls,
         private readonly AdminMutationTransaction $transaction,
@@ -120,6 +132,170 @@ final class Product3DModelsAdminAction
                 ));
 
                 return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($completed, $this->devUrls));
+            }
+
+            if ($method === 'POST' && preg_match('#/3d-models/[^/]+/preview-upload-session$#', $path) === 1) {
+                $productPublicId = RouteParams::require($request, 'productPublicId');
+                $modelPublicId = RouteParams::require($request, 'modelPublicId');
+                $body = JsonRequestBody::requireObject($request);
+                $byteSize = RequestFields::intOrNull($body, 'byteSize');
+                if ($byteSize === null) {
+                    throw HttpRequestValidationFailed::unprocessable('VALIDATION_FAILED', 'byteSize is required.');
+                }
+                $actor = AdminActorFactory::fromRequest($request);
+                $result = $this->transaction->run(fn () => $this->initiatePreview->execute(
+                    $actor,
+                    new InitiateProduct3DPreviewUploadCommand(
+                        productPublicId: $productPublicId,
+                        modelPublicId: $modelPublicId,
+                        originalFileName: RequestFields::requireString($body, 'originalFileName'),
+                        contentType: RequestFields::requireString($body, 'contentType'),
+                        byteSize: $byteSize,
+                        storageContainer: $this->settings->blobContainerProducts,
+                        expectedRowVersion: RequestFields::requireString($body, 'expectedRowVersion'),
+                        uploadExpiresInSeconds: $this->settings->blobUploadSasTtlSeconds,
+                    ),
+                ));
+
+                return $this->responder->success(ProductManagementDtoSerializer::uploadSessionResult($result), 201);
+            }
+
+            if ($method === 'POST' && preg_match('#/3d-models/[^/]+/preview-complete$#', $path) === 1) {
+                $productPublicId = RouteParams::require($request, 'productPublicId');
+                $modelPublicId = RouteParams::require($request, 'modelPublicId');
+                $body = JsonRequestBody::requireObject($request);
+                $byteSize = RequestFields::intOrNull($body, 'byteSize');
+                if ($byteSize === null) {
+                    throw HttpRequestValidationFailed::unprocessable('VALIDATION_FAILED', 'byteSize is required.');
+                }
+                $actor = AdminActorFactory::fromRequest($request);
+                $completed = $this->transaction->run(fn () => $this->completePreview->execute(
+                    $actor,
+                    new CompleteProduct3DPreviewUploadCommand(
+                        productPublicId: $productPublicId,
+                        modelPublicId: $modelPublicId,
+                        expectedRowVersion: RequestFields::requireString($body, 'expectedRowVersion'),
+                        storagePath: RequestFields::requireString($body, 'storagePath'),
+                        storageContainer: RequestFields::stringOrDefault(
+                            $body,
+                            'storageContainer',
+                            $this->settings->blobContainerProducts,
+                        ),
+                        contentType: RequestFields::requireString($body, 'contentType'),
+                        byteSize: $byteSize,
+                    ),
+                ));
+
+                return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($completed, $this->devUrls));
+            }
+
+            if ($method === 'GET' && preg_match('#/3d-models/[^/]+/analysis$#', $path) === 1) {
+                $productPublicId = RouteParams::require($request, 'productPublicId');
+                $modelPublicId = RouteParams::require($request, 'modelPublicId');
+                $analysis = $this->processAssets->getAnalysis($productPublicId, $modelPublicId);
+                if ($analysis === null) {
+                    return $this->responder->error('PRODUCT_3D_ANALYSIS_NOT_FOUND', 'No analysis is persisted for this model.', 404);
+                }
+
+                return $this->responder->success(['analysis' => $analysis]);
+            }
+
+            if ($method === 'POST' && preg_match('#/3d-models/[^/]+/analyse$#', $path) === 1) {
+                $productPublicId = RouteParams::require($request, 'productPublicId');
+                $modelPublicId = RouteParams::require($request, 'modelPublicId');
+                $rawBody = $request->getParsedBody();
+                $body = is_array($rawBody) ? $rawBody : [];
+                if ($body === []) {
+                    try {
+                        $body = JsonRequestBody::requireObject($request);
+                    } catch (Throwable) {
+                        $body = [];
+                    }
+                }
+                $actor = AdminActorFactory::fromRequest($request);
+                $result = $this->processAssets->analyse(
+                    $actor,
+                    new AnalyseProduct3DModelCommand(
+                        productPublicId: $productPublicId,
+                        modelPublicId: $modelPublicId,
+                        expectedRowVersion: RequestFields::stringOrNull($body, 'expectedRowVersion'),
+                        localInputPath: RequestFields::stringOrNull($body, 'localInputPath'),
+                    ),
+                );
+
+                return $this->responder->success([
+                    'analysis' => $result['analysis'],
+                    'model' => ProductManagementDtoSerializer::product3DModelSummary($result['model'], $this->devUrls),
+                ]);
+            }
+
+            if ($method === 'POST' && preg_match('#/3d-models/[^/]+/optimise$#', $path) === 1) {
+                $productPublicId = RouteParams::require($request, 'productPublicId');
+                $modelPublicId = RouteParams::require($request, 'modelPublicId');
+                $body = JsonRequestBody::requireObject($request);
+                $actor = AdminActorFactory::fromRequest($request);
+                $result = $this->processAssets->optimise(
+                    $actor,
+                    new OptimiseProduct3DModelCommand(
+                        productPublicId: $productPublicId,
+                        modelPublicId: $modelPublicId,
+                        expectedRowVersion: RequestFields::requireString($body, 'expectedRowVersion'),
+                        profile: RequestFields::stringOrDefault($body, 'profile', 'web-standard'),
+                        localInputPath: RequestFields::stringOrNull($body, 'localInputPath'),
+                    ),
+                );
+
+                return $this->responder->success([
+                    'skipped' => $result['skipped'],
+                    'reason' => $result['reason'] ?? null,
+                    'jobPublicId' => $result['jobPublicId'],
+                    'status' => $result['status'],
+                    'profile' => $result['profile'],
+                    'analysis' => $result['analysis'] ?? null,
+                    'metadata' => $result['metadata'] ?? null,
+                    'before' => $result['before'] ?? null,
+                    'after' => $result['after'] ?? null,
+                    'optimisedAsset' => isset($result['optimisedAsset']) && $result['optimisedAsset'] !== null
+                        ? ProductManagementDtoSerializer::product3DAssetSummary($result['optimisedAsset'], $this->devUrls)
+                        : null,
+                    'model' => ProductManagementDtoSerializer::product3DModelSummary($result['model'], $this->devUrls),
+                ]);
+            }
+
+            if ($method === 'POST' && preg_match('#/3d-models/[^/]+/assets/[^/]+/activate$#', $path) === 1) {
+                $productPublicId = RouteParams::require($request, 'productPublicId');
+                $modelPublicId = RouteParams::require($request, 'modelPublicId');
+                $assetPublicId = RouteParams::require($request, 'assetPublicId');
+                $body = JsonRequestBody::requireObject($request);
+                $actor = AdminActorFactory::fromRequest($request);
+                $updated = $this->processAssets->activate(
+                    $actor,
+                    new ActivateProduct3DAssetCommand(
+                        productPublicId: $productPublicId,
+                        modelPublicId: $modelPublicId,
+                        assetPublicId: $assetPublicId,
+                        expectedRowVersion: RequestFields::requireString($body, 'expectedRowVersion'),
+                    ),
+                );
+
+                return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($updated, $this->devUrls));
+            }
+
+            if ($method === 'POST' && preg_match('#/3d-models/[^/]+/assets/revert-to-source$#', $path) === 1) {
+                $productPublicId = RouteParams::require($request, 'productPublicId');
+                $modelPublicId = RouteParams::require($request, 'modelPublicId');
+                $body = JsonRequestBody::requireObject($request);
+                $actor = AdminActorFactory::fromRequest($request);
+                $updated = $this->processAssets->revertToSource(
+                    $actor,
+                    new RevertProduct3DAssetToSourceCommand(
+                        productPublicId: $productPublicId,
+                        modelPublicId: $modelPublicId,
+                        expectedRowVersion: RequestFields::requireString($body, 'expectedRowVersion'),
+                    ),
+                );
+
+                return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($updated, $this->devUrls));
             }
 
             $productPublicId = RouteParams::require($request, 'productPublicId');

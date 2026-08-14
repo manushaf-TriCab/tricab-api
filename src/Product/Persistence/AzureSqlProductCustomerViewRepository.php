@@ -136,10 +136,22 @@ SQL,
             isPublished: strcasecmp($statusCode, 'published') === 0,
             isArchived: AzureSqlValueMapper::boolValue($row['IsArchived'] ?? false),
             primarySlug: $primarySlug,
-            threeD: $this->product3dEnabled
-                ? $this->threeDModels->listPublicByProduct($pid)
-                : ProductPublic3DPayload::empty(),
+            threeD: $this->loadPublicThreeD($pid),
         );
+    }
+
+    private function loadPublicThreeD(ProductPublicId $pid): ProductPublic3DPayload
+    {
+        if (!$this->product3dEnabled) {
+            return ProductPublic3DPayload::empty();
+        }
+
+        try {
+            return $this->threeDModels->listPublicByProduct($pid);
+        } catch (\Throwable) {
+            // Phase 2D schema may be pending migration — never break Customer View.
+            return ProductPublic3DPayload::empty();
+        }
     }
 
     private function primaryProductCode(ProductPublicId $productPublicId): ?string

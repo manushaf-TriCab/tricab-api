@@ -55,7 +55,8 @@ final class Img2ThreeJsGenerationProvider implements Product3DGenerationProvider
             'accepted' => false,
             'status' => 'failed',
             'errorCode' => 'PROVIDER_NOT_IMPLEMENTED',
-            'errorMessage' => 'Image-to-3D worker integration is reserved for Phase 3.',
+            'errorMessage' =>
+                'Image-to-3D worker is not approved for production. Upstream img2threejs requires external LLM vision or img2threejs.org — TriCab will not transmit Product images without an explicit governance decision for a private/Azure worker.',
         ];
     }
 

@@ -148,9 +148,13 @@ final class Product3DModelEndpointsTest extends TestCase
         self::assertArrayHasKey('threeD', $publicData);
         self::assertTrue($publicData['threeD']['available']);
         self::assertSame($modelPublicId, $publicData['threeD']['primary']['publicId']);
+        self::assertArrayHasKey('productVariantPublicId', $publicData['threeD']['primary']);
+        self::assertNull($publicData['threeD']['primary']['productVariantPublicId']);
         self::assertArrayNotHasKey('storagePath', $publicData['threeD']['primary']);
         self::assertArrayNotHasKey('scanStatusCode', $publicData['threeD']['primary']);
         self::assertArrayNotHasKey('generationMetadata', $publicData['threeD']['primary']);
+        self::assertArrayNotHasKey('sourceHash', $publicData['threeD']['primary']);
+        self::assertArrayNotHasKey('rowVersion', $publicData['threeD']['primary']);
 
         $unpublish = $app->handle($this->jsonRequest(
             'POST',
@@ -341,6 +345,279 @@ final class Product3DModelEndpointsTest extends TestCase
         self::assertNull($completed['publishedAtUtc'] ?? null);
         self::assertSame($data['sourceHash'], $completed['generationMetadata']['sourceHash']);
         self::assertSame('cutaway', $completed['generationMetadata']['style']);
+    }
+
+    public function test_preview_upload_session_complete_and_public_preview_url(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+        $binary = 'glb-bytes-for-preview-test';
+
+        $initiate = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session',
+            [
+                'name' => 'Preview Cable',
+                'originalFileName' => 'cable.glb',
+                'contentType' => 'model/gltf-binary',
+                'byteSize' => strlen($binary),
+                'isPrimary' => true,
+            ],
+        ));
+        self::assertSame(201, $initiate->getStatusCode(), (string) $initiate->getBody());
+        $session = TestAppFactory::json($initiate)['data'];
+        $modelPublicId = (string) $session['entityPublicId'];
+        self::assertStringStartsWith('products/' . $productPublicId . '/3d/', (string) $session['storagePath']);
+        self::assertStringNotContainsString('products/products/', (string) $session['storagePath']);
+
+        $this->blobStore($app)->putObject(
+            (string) $session['storageContainer'],
+            (string) $session['storagePath'],
+            'model/gltf-binary',
+            $binary,
+        );
+        $complete = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/product-3d-models/' . $modelPublicId . '/complete-upload',
+            [],
+        ));
+        self::assertSame(200, $complete->getStatusCode(), (string) $complete->getBody());
+        $completed = TestAppFactory::json($complete)['data'];
+        $rowVersion = (string) $completed['rowVersion'];
+
+        $previewBytes = 'webp-preview-bytes-for-test';
+        $previewSession = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $modelPublicId . '/preview-upload-session',
+            [
+                'originalFileName' => 'preview.webp',
+                'contentType' => 'image/webp',
+                'byteSize' => strlen($previewBytes),
+                'expectedRowVersion' => $rowVersion,
+            ],
+        ));
+        self::assertSame(201, $previewSession->getStatusCode(), (string) $previewSession->getBody());
+        $preview = TestAppFactory::json($previewSession)['data'];
+        self::assertSame('3d-preview', $preview['fileKind']);
+        self::assertStringContainsString('/preview/', (string) $preview['storagePath']);
+        self::assertStringStartsWith('products/' . $productPublicId . '/3d/', (string) $preview['storagePath']);
+        self::assertStringNotContainsString('products/products/', (string) $preview['storagePath']);
+        self::assertArrayNotHasKey('writeSas', $preview);
+
+        $this->blobStore($app)->putObject(
+            (string) $preview['storageContainer'],
+            (string) $preview['storagePath'],
+            'image/webp',
+            $previewBytes,
+        );
+
+        $previewComplete = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $modelPublicId . '/preview-complete',
+            [
+                'expectedRowVersion' => $rowVersion,
+                'storagePath' => $preview['storagePath'],
+                'storageContainer' => $preview['storageContainer'],
+                'contentType' => 'image/webp',
+                'byteSize' => strlen($previewBytes),
+            ],
+        ));
+        self::assertSame(200, $previewComplete->getStatusCode(), (string) $previewComplete->getBody());
+        $withPreview = TestAppFactory::json($previewComplete)['data'];
+        self::assertNotEmpty($withPreview['previewImagePublicUrl']);
+        self::assertArrayNotHasKey('previewImageStoragePath', $withPreview);
+        $rowVersion = (string) $withPreview['rowVersion'];
+
+        $publish = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $modelPublicId . '/publish',
+            ['expectedRowVersion' => $rowVersion],
+        ));
+        self::assertSame(200, $publish->getStatusCode(), (string) $publish->getBody());
+        $published = TestAppFactory::json($publish)['data'];
+
+        $detail = $app->handle(TestAppFactory::request('GET', '/api/v1/admin/products/' . $productPublicId));
+        $productRowVersion = (string) TestAppFactory::json($detail)['data']['rowVersion'];
+        $slug = $this->publishProductWithSlug($app, $productPublicId, $productRowVersion, 'preview-3d-cable');
+
+        $public = $app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug));
+        self::assertSame(200, $public->getStatusCode(), (string) $public->getBody());
+        $publicPayload = TestAppFactory::json($public)['data'];
+        self::assertTrue($publicPayload['threeD']['available']);
+        self::assertNotEmpty($publicPayload['threeD']['primary']['previewImageUrl']);
+        self::assertArrayNotHasKey('storagePath', $publicPayload['threeD']['primary']);
+        self::assertArrayNotHasKey('previewImageStoragePath', $publicPayload['threeD']['primary']);
+        self::assertSame($published['publicId'], $publicPayload['threeD']['primary']['publicId']);
+    }
+
+    public function test_analyse_optimise_activate_revert_and_row_version_conflict(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+
+        $smallBinary = str_repeat('s', 1024);
+        $session = TestAppFactory::json($app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session',
+            [
+                'name' => 'Small Cable',
+                'originalFileName' => 'small.glb',
+                'contentType' => 'model/gltf-binary',
+                'byteSize' => strlen($smallBinary),
+                'isPrimary' => true,
+            ],
+        )))['data'];
+        $modelPublicId = (string) $session['entityPublicId'];
+        $this->blobStore($app)->putObject(
+            (string) $session['storageContainer'],
+            (string) $session['storagePath'],
+            'model/gltf-binary',
+            $smallBinary,
+        );
+        $completed = TestAppFactory::json($app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/product-3d-models/' . $modelPublicId . '/complete-upload',
+            [],
+        )))['data'];
+        $rowVersion = (string) $completed['rowVersion'];
+        $originalPath = (string) $completed['storagePath'];
+
+        $missing = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/99999999-9999-9999-9999-999999999999/analyse',
+            [],
+        ));
+        self::assertSame(404, $missing->getStatusCode());
+        self::assertSame('PRODUCT_3D_MODEL_NOT_FOUND', TestAppFactory::json($missing)['error']['code']);
+
+        $analyse = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $modelPublicId . '/analyse',
+            ['expectedRowVersion' => $rowVersion],
+        ));
+        self::assertSame(200, $analyse->getStatusCode(), (string) $analyse->getBody());
+        $analyseData = TestAppFactory::json($analyse)['data'];
+        self::assertSame('not_required', $analyseData['analysis']['recommendation']);
+        self::assertArrayHasKey('analysis', $analyseData['model']);
+        $rowVersion = (string) $analyseData['model']['rowVersion'];
+
+        $getAnalysis = $app->handle(TestAppFactory::request(
+            'GET',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $modelPublicId . '/analysis',
+        ));
+        self::assertSame(200, $getAnalysis->getStatusCode());
+        self::assertSame('not_required', TestAppFactory::json($getAnalysis)['data']['analysis']['recommendation']);
+
+        $skip = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $modelPublicId . '/optimise',
+            ['expectedRowVersion' => $rowVersion, 'profile' => 'web-standard'],
+        ));
+        self::assertSame(200, $skip->getStatusCode(), (string) $skip->getBody());
+        $skipData = TestAppFactory::json($skip)['data'];
+        self::assertTrue($skipData['skipped']);
+        self::assertNull($skipData['optimisedAsset']);
+        self::assertNotEmpty($skipData['jobPublicId']);
+        $rowVersion = (string) $skipData['model']['rowVersion'];
+
+        $largeBinary = str_repeat('L', 70_000);
+        $largeSession = TestAppFactory::json($app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session',
+            [
+                'name' => 'Large Cable',
+                'originalFileName' => 'large.glb',
+                'contentType' => 'model/gltf-binary',
+                'byteSize' => strlen($largeBinary),
+            ],
+        )))['data'];
+        $largeModelId = (string) $largeSession['entityPublicId'];
+        $this->blobStore($app)->putObject(
+            (string) $largeSession['storageContainer'],
+            (string) $largeSession['storagePath'],
+            'model/gltf-binary',
+            $largeBinary,
+        );
+        $largeCompleted = TestAppFactory::json($app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/product-3d-models/' . $largeModelId . '/complete-upload',
+            [],
+        )))['data'];
+        $largeRowVersion = (string) $largeCompleted['rowVersion'];
+        $largeOriginalPath = (string) $largeCompleted['storagePath'];
+
+        $optimise = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $largeModelId . '/optimise',
+            ['expectedRowVersion' => $largeRowVersion, 'profile' => 'web-standard'],
+        ));
+        self::assertSame(200, $optimise->getStatusCode(), (string) $optimise->getBody());
+        $optData = TestAppFactory::json($optimise)['data'];
+        self::assertFalse($optData['skipped']);
+        self::assertNotNull($optData['optimisedAsset']);
+        $assetPublicId = (string) $optData['optimisedAsset']['publicId'];
+        self::assertStringContainsString('/optimized/', (string) $optData['optimisedAsset']['storagePath']);
+        self::assertSame($largeOriginalPath, $optData['model']['storagePath']);
+        $largeRowVersion = (string) $optData['model']['rowVersion'];
+
+        $conflict = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $largeModelId . '/assets/' . $assetPublicId . '/activate',
+            ['expectedRowVersion' => 'AAAAAAAAAAA='],
+        ));
+        self::assertSame(409, $conflict->getStatusCode());
+        self::assertSame('PRODUCT_CONCURRENCY_CONFLICT', TestAppFactory::json($conflict)['error']['code']);
+
+        $activate = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $largeModelId . '/assets/' . $assetPublicId . '/activate',
+            ['expectedRowVersion' => $largeRowVersion],
+        ));
+        self::assertSame(200, $activate->getStatusCode(), (string) $activate->getBody());
+        $activated = TestAppFactory::json($activate)['data'];
+        self::assertStringContainsString('/optimized/', (string) $activated['storagePath']);
+        self::assertNotSame($largeOriginalPath, $activated['storagePath']);
+        $largeRowVersion = (string) $activated['rowVersion'];
+
+        $publish = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $largeModelId . '/publish',
+            ['expectedRowVersion' => $largeRowVersion],
+        ));
+        self::assertSame(200, $publish->getStatusCode(), (string) $publish->getBody());
+        $largeRowVersion = (string) TestAppFactory::json($publish)['data']['rowVersion'];
+
+        $setPrimary = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $largeModelId . '/set-primary',
+            ['expectedRowVersion' => $largeRowVersion],
+        ));
+        self::assertSame(200, $setPrimary->getStatusCode(), (string) $setPrimary->getBody());
+        $largeRowVersion = (string) TestAppFactory::json($setPrimary)['data']['rowVersion'];
+        $activatedPath = (string) TestAppFactory::json($setPrimary)['data']['storagePath'];
+
+        $productDetail = $app->handle(TestAppFactory::request('GET', '/api/v1/admin/products/' . $productPublicId));
+        $slug = $this->publishProductWithSlug(
+            $app,
+            $productPublicId,
+            (string) TestAppFactory::json($productDetail)['data']['rowVersion'],
+            'optimised-3d-cable',
+        );
+        $public = $app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug));
+        self::assertSame(200, $public->getStatusCode(), (string) $public->getBody());
+        $publicUrl = (string) TestAppFactory::json($public)['data']['threeD']['primary']['url'];
+        self::assertStringContainsString('/optimized/', $publicUrl);
+
+        $revert = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $largeModelId . '/assets/revert-to-source',
+            ['expectedRowVersion' => $largeRowVersion],
+        ));
+        self::assertSame(200, $revert->getStatusCode(), (string) $revert->getBody());
+        $reverted = TestAppFactory::json($revert)['data'];
+        self::assertSame($largeOriginalPath, $reverted['storagePath']);
+        self::assertNotSame($activatedPath, $reverted['storagePath']);
+        unset($originalPath);
     }
 
     /**

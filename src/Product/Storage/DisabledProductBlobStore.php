@@ -64,4 +64,11 @@ final class DisabledProductBlobStore implements ProductBlobStore
     {
         return null;
     }
+
+    public function getObjectBinary(string $container, string $blobPath): ?string
+    {
+        unset($container, $blobPath);
+
+        return null;
+    }
 }

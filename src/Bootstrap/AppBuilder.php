@@ -658,6 +658,20 @@ final class AppBuilder
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
         $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/soft-delete', Product3DModelsAdminAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/preview-upload-session', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/preview-complete', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/analyse', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->get('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/analysis', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/optimise', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/assets/{assetPublicId}/activate', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/3d-models/{modelPublicId}/assets/revert-to-source', Product3DModelsAdminAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
         $app->post('/api/v1/admin/product-3d-models/{modelPublicId}/complete-upload', Product3DModelsAdminAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
         $app->post('/api/v1/admin/product-360-sets/{setPublicId}/frames/upload-session', Initiate360FrameUploadAction::class)

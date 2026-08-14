@@ -160,10 +160,12 @@ use TriCab\Api\Product\Persistence\AzureSqlProductMarketRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductMediaRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProduct360Repository;
 use TriCab\Api\Product\Persistence\AzureSqlProductArModelRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProduct3DAssetRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProduct3DModelRepository;
 use TriCab\Api\Product\Generation\DisabledProduct3DGenerationProvider;
 use TriCab\Api\Product\Generation\Img2ThreeJs\Img2ThreeJsGenerationProvider;
 use TriCab\Api\Product\Generation\ProceduralCable3DGenerationProvider;
+use TriCab\Api\Product\Processing\ProcOpenProduct3DAssetProcessRunner;
 use TriCab\Api\Product\Storage\AzureProductBlobStore;
 use TriCab\Api\Product\Storage\DisabledProductBlobStore;
 use TriCab\Api\Product\Storage\InMemoryProductBlobStore;
@@ -191,6 +193,7 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProductMarketRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductMediaRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct360Repository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductArModelRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct3DAssetRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct3DModelRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPricingRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCustomerViewRepository;
@@ -430,6 +433,8 @@ use TriCab\Core\Product\Contract\ProductImageMetadataExtractor;
 use TriCab\Core\Product\Contract\Product360Repository;
 use TriCab\Core\Product\Contract\ProductArModelRepository;
 use TriCab\Core\Product\Contract\Product3DGenerationProvider;
+use TriCab\Core\Product\Contract\Product3DAssetProcessRunner;
+use TriCab\Core\Product\Contract\Product3DAssetRepository;
 use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Domain\Service\ProductFileValidationPolicy;
 use TriCab\Core\Product\Application\Service\ConfigurableProductFileScanPolicy;
@@ -447,8 +452,11 @@ use TriCab\Api\Http\Action\Admin\CreateProduct360SetAction;
 use TriCab\Core\Product\Application\Service\CompleteArModelUploadService;
 use TriCab\Core\Product\Application\Service\InitiateArModelUploadService;
 use TriCab\Core\Product\Application\Service\CompleteProduct3DModelUploadService;
+use TriCab\Core\Product\Application\Service\CompleteProduct3DPreviewUploadService;
 use TriCab\Core\Product\Application\Service\GetProduct3DSpecificationSourceService;
 use TriCab\Core\Product\Application\Service\InitiateProduct3DModelUploadService;
+use TriCab\Core\Product\Application\Service\InitiateProduct3DPreviewUploadService;
+use TriCab\Core\Product\Application\Service\ProcessProduct3DAssetService;
 use TriCab\Core\Product\Application\Service\ManageProduct3DModelService;
 use TriCab\Core\Product\Application\Service\ActivateProduct360SetService;
 use TriCab\Core\Product\Application\Service\Complete360FrameUploadService;
@@ -807,8 +815,14 @@ final class ContainerFactory
             InitiateArModelUploadService::class => \DI\autowire(InitiateArModelUploadService::class),
             CompleteArModelUploadService::class => \DI\autowire(CompleteArModelUploadService::class),
             ManageProduct3DModelService::class => \DI\autowire(ManageProduct3DModelService::class),
+            ProcessProduct3DAssetService::class => \DI\autowire(ProcessProduct3DAssetService::class),
+            Product3DAssetProcessRunner::class => static function (): Product3DAssetProcessRunner {
+                return ProcOpenProduct3DAssetProcessRunner::fromEnvironment();
+            },
             InitiateProduct3DModelUploadService::class => \DI\autowire(InitiateProduct3DModelUploadService::class),
             CompleteProduct3DModelUploadService::class => \DI\autowire(CompleteProduct3DModelUploadService::class),
+            InitiateProduct3DPreviewUploadService::class => \DI\autowire(InitiateProduct3DPreviewUploadService::class),
+            CompleteProduct3DPreviewUploadService::class => \DI\autowire(CompleteProduct3DPreviewUploadService::class),
             GetProduct3DSpecificationSourceService::class => \DI\autowire(GetProduct3DSpecificationSourceService::class),
             Product3DGenerationProvider::class => static function () use ($settings): Product3DGenerationProvider {
                 if (!$settings->product3dEnabled) {
@@ -1016,6 +1030,7 @@ final class ContainerFactory
             $definitions[Product360Repository::class] = \DI\autowire(AzureSqlProduct360Repository::class);
             $definitions[ProductArModelRepository::class] = \DI\autowire(AzureSqlProductArModelRepository::class);
             $definitions[Product3DModelRepository::class] = \DI\autowire(AzureSqlProduct3DModelRepository::class);
+            $definitions[Product3DAssetRepository::class] = \DI\autowire(AzureSqlProduct3DAssetRepository::class);
             $definitions[ProductPublicQueryRepository::class] = static function (Container $container) use ($settings): ProductPublicQueryRepository {
                 return new AzureSqlProductPublicQueryRepository(
                     self::get($container, SqlConnection::class),
@@ -1118,6 +1133,7 @@ SQL,
             $definitions[ProductVariantRepository::class] = \DI\autowire(InMemoryProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(InMemoryProductAdminQueryRepository::class);
             $definitions[Product3DModelRepository::class] = \DI\autowire(InMemoryProduct3DModelRepository::class);
+            $definitions[Product3DAssetRepository::class] = \DI\autowire(InMemoryProduct3DAssetRepository::class);
             $definitions[ProductPublicQueryRepository::class] = static function (Container $container) use ($settings): ProductPublicQueryRepository {
                 return new InMemoryProductPublicQueryRepository(
                     self::get($container, InMemoryProductStore::class),

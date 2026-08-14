@@ -378,8 +378,37 @@ SELECT TOP (%d)
         FROM [product].[ProductImages] img
         WHERE img.[ProductId] = p.[ProductId]
           AND img.[DeletedAtUtc] IS NULL
-        ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder]
+          AND img.[UploadStatusCode] = N'active'
+          AND img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+        ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder] ASC, img.[ProductImagesId] ASC
     ) AS [ThumbnailUrl],
+    (
+        SELECT TOP 1 CONVERT(NVARCHAR(36), img.[PublicId])
+        FROM [product].[ProductImages] img
+        WHERE img.[ProductId] = p.[ProductId]
+          AND img.[DeletedAtUtc] IS NULL
+          AND img.[UploadStatusCode] = N'active'
+          AND img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+        ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder] ASC, img.[ProductImagesId] ASC
+    ) AS [ThumbnailImagePublicId],
+    (
+        SELECT TOP 1 img.[StorageContainer]
+        FROM [product].[ProductImages] img
+        WHERE img.[ProductId] = p.[ProductId]
+          AND img.[DeletedAtUtc] IS NULL
+          AND img.[UploadStatusCode] = N'active'
+          AND img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+        ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder] ASC, img.[ProductImagesId] ASC
+    ) AS [ThumbnailStorageContainer],
+    (
+        SELECT TOP 1 img.[StoragePath]
+        FROM [product].[ProductImages] img
+        WHERE img.[ProductId] = p.[ProductId]
+          AND img.[DeletedAtUtc] IS NULL
+          AND img.[UploadStatusCode] = N'active'
+          AND img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+        ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder] ASC, img.[ProductImagesId] ASC
+    ) AS [ThumbnailStoragePath],
     ps.[StatusCode],
     CONVERT(VARCHAR(33), p.[UpdatedAtUtc], 127) AS [UpdatedAtUtc]
 FROM [product].[Products] p
@@ -398,6 +427,9 @@ SQL,
                 'productName' => AzureSqlValueMapper::stringValue($row['ProductName'] ?? ''),
                 'productCode' => AzureSqlValueMapper::nullableString($row['ProductCode'] ?? null),
                 'thumbnailUrl' => AzureSqlValueMapper::nullableString($row['ThumbnailUrl'] ?? null),
+                'thumbnailImagePublicId' => AzureSqlValueMapper::nullableString($row['ThumbnailImagePublicId'] ?? null),
+                'thumbnailStorageContainer' => AzureSqlValueMapper::nullableString($row['ThumbnailStorageContainer'] ?? null),
+                'thumbnailStoragePath' => AzureSqlValueMapper::nullableString($row['ThumbnailStoragePath'] ?? null),
                 'statusCode' => AzureSqlValueMapper::stringValue($row['StatusCode'] ?? ''),
                 'updatedAtUtc' => AzureSqlValueMapper::stringValue($row['UpdatedAtUtc'] ?? ''),
             ];

@@ -953,6 +953,8 @@ final class ProductManagementDtoSerializer
                 $devUrls,
                 $summary->previewImagePublicUrl,
                 $summary->publicId,
+                $summary->storageContainer,
+                $summary->previewImageStoragePath,
             ),
             'storagePath' => $summary->storagePath,
             'storageContainer' => $summary->storageContainer,
@@ -963,6 +965,18 @@ final class ProductManagementDtoSerializer
             'viewerConfiguration' => $summary->viewerConfiguration,
             'generationMetadata' => $summary->generationMetadata,
             'materialOverrides' => $summary->materialOverrides,
+            'analysis' => $summary->analysis,
+            'recommendation' => $summary->recommendation(),
+            'optimisation' => $summary->optimisation,
+            'activeAsset' => $summary->activeAsset === null
+                ? null
+                : self::product3DAssetSummary($summary->activeAsset, $devUrls),
+            'assets' => $summary->assets === null
+                ? null
+                : array_map(
+                    static fn ($asset) => self::product3DAssetSummary($asset, $devUrls),
+                    $summary->assets,
+                ),
             'isPrimary' => $summary->isPrimary,
             'isActive' => $summary->isActive,
             'displayOrder' => $summary->displayOrder,
@@ -970,6 +984,42 @@ final class ProductManagementDtoSerializer
             'rowVersion' => $summary->rowVersion,
             'createdAtUtc' => $summary->createdAtUtc,
             'updatedAtUtc' => $summary->updatedAtUtc,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function product3DAssetSummary(
+        \TriCab\Core\Product\Application\DTO\Product3DAssetSummary $asset,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
+        return [
+            'publicId' => $asset->publicId,
+            'modelPublicId' => $asset->modelPublicId,
+            'assetTypeCode' => $asset->assetTypeCode,
+            'statusCode' => $asset->statusCode,
+            'scanStatusCode' => $asset->scanStatusCode,
+            'publicUrl' => self::resolveAssetUrl(
+                $devUrls,
+                $asset->publicUrl,
+                $asset->publicId,
+                $asset->storageContainer,
+                $asset->storagePath,
+            ),
+            'storagePath' => $asset->storagePath,
+            'storageContainer' => $asset->storageContainer,
+            'mimeType' => $asset->mimeType,
+            'fileExtension' => $asset->fileExtension,
+            'fileSizeBytes' => $asset->fileSizeBytes,
+            'originalFileName' => $asset->originalFileName,
+            'sha256' => $asset->sha256,
+            'optimisationProfile' => $asset->optimisationProfile,
+            'analysis' => $asset->analysis,
+            'optimisationMetadata' => $asset->optimisationMetadata,
+            'rowVersion' => $asset->rowVersion,
+            'createdAtUtc' => $asset->createdAtUtc,
+            'updatedAtUtc' => $asset->updatedAtUtc,
         ];
     }
 
@@ -1003,10 +1053,25 @@ final class ProductManagementDtoSerializer
             'publicId' => $model->publicId,
             'name' => $model->name,
             'modelType' => $model->modelType,
-            'url' => self::resolveAssetUrl($devUrls, $model->url, $model->publicId) ?? $model->url,
-            'previewImageUrl' => self::resolveAssetUrl($devUrls, $model->previewImageUrl, $model->publicId),
+            'url' => self::resolveAssetUrl(
+                $devUrls,
+                $model->url,
+                $model->publicId,
+                $model->storageContainer,
+                $model->storagePath,
+            ) ?? $model->url,
+            'previewImageUrl' => $model->previewImageUrl === null || $model->previewImageUrl === ''
+                ? null
+                : self::resolveAssetUrl(
+                    $devUrls,
+                    $model->previewImageUrl,
+                    $model->publicId,
+                    $model->storageContainer,
+                    $model->previewImageStoragePath,
+                ),
             'viewerConfiguration' => $model->viewerConfiguration,
             'isPrimary' => $model->isPrimary,
+            'productVariantPublicId' => $model->productVariantPublicId,
         ];
     }
 

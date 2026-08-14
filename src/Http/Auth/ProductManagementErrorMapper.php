@@ -28,6 +28,8 @@ use TriCab\Core\Product\Application\Exception\InvalidProductRelationshipAssignme
 use TriCab\Core\Product\Application\Exception\InvalidSpecificationSet;
 use TriCab\Core\Product\Application\Exception\ProductArchived;
 use TriCab\Core\Product\Application\Exception\ProductConcurrencyConflict;
+use TriCab\Core\Product\Application\Exception\Product3DAssetNotFound;
+use TriCab\Core\Product\Application\Exception\Product3DAssetProcessingException;
 use TriCab\Core\Product\Application\Exception\Product3DModelNotFound;
 use TriCab\Core\Product\Application\Exception\ProductDocumentNotFound;
 use TriCab\Core\Product\Application\Exception\ProductFileUploadException;
@@ -152,6 +154,14 @@ final class ProductManagementErrorMapper
             return $this->responder->error('PRODUCT_3D_MODEL_NOT_FOUND', $exception->getMessage(), 404);
         }
 
+        if ($exception instanceof Product3DAssetNotFound) {
+            return $this->responder->error('PRODUCT_3D_ASSET_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof Product3DAssetProcessingException) {
+            return $this->responder->error($exception->errorCode, $exception->getMessage(), $exception->httpStatus);
+        }
+
         if ($exception instanceof ProductDocumentNotFound) {
             return $this->responder->error('PRODUCT_DOCUMENT_NOT_FOUND', $exception->getMessage(), 404);
         }
@@ -162,6 +172,17 @@ final class ProductManagementErrorMapper
 
         if ($exception instanceof ProductFileUploadException) {
             return $this->responder->error('PRODUCT_FILE_UPLOAD_FAILED', $exception->getMessage(), 422);
+        }
+
+        if (
+            $exception instanceof RuntimeException
+            && str_starts_with($exception->getMessage(), 'Blob ')
+        ) {
+            return $this->responder->error(
+                'PRODUCT_FILE_UPLOAD_FAILED',
+                'Azure Blob verification failed during upload completion. Retry the upload. If it persists, check Blob credentials and file name characters.',
+                422,
+            );
         }
 
         if ($exception instanceof InvalidProductFileException) {
