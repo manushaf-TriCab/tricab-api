@@ -16,7 +16,9 @@ final class ProcOpenAzureCliProcessRunner implements AzureCliProcessRunner
         if ($binary === '') {
             return [1, '', 'Azure CLI binary not found.'];
         }
-        if ((str_contains($binary, '/') || str_starts_with($binary, '\\')) && !is_executable($binary)) {
+
+        $isWindowsBatchFile = $this->isWindowsBatchFile($binary);
+        if ($this->looksLikePath($binary) && !$this->isAvailable($binary, $isWindowsBatchFile)) {
             return [1, '', 'Azure CLI binary not found.'];
         }
 
@@ -26,7 +28,11 @@ final class ProcOpenAzureCliProcessRunner implements AzureCliProcessRunner
             2 => ['pipe', 'w'],
         ];
 
-        $process = @proc_open($command, $descriptors, $pipes, null, null, [
+        $processCommand = $isWindowsBatchFile
+            ? $this->windowsBatchCommand($command)
+            : $command;
+
+        $process = @proc_open($processCommand, $descriptors, $pipes, null, null, [
             'bypass_shell' => true,
         ]);
 
@@ -47,5 +53,45 @@ final class ProcOpenAzureCliProcessRunner implements AzureCliProcessRunner
             is_string($stdout) ? $stdout : '',
             is_string($stderr) ? $stderr : '',
         ];
+    }
+
+    private function looksLikePath(string $binary): bool
+    {
+        return str_contains($binary, '/') || str_contains($binary, '\\');
+    }
+
+    private function isWindowsBatchFile(string $binary): bool
+    {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            return false;
+        }
+
+        $extension = strtolower(pathinfo($binary, PATHINFO_EXTENSION));
+
+        return $extension === 'cmd' || $extension === 'bat';
+    }
+
+    private function isAvailable(string $binary, bool $isWindowsBatchFile): bool
+    {
+        if ($isWindowsBatchFile) {
+            return is_file($binary) && is_readable($binary);
+        }
+
+        return is_executable($binary);
+    }
+
+    /**
+     * @param list<string> $command
+     */
+    private function windowsBatchCommand(array $command): string
+    {
+        $comSpec = getenv('COMSPEC');
+        if (!is_string($comSpec) || trim($comSpec) === '') {
+            $comSpec = 'cmd.exe';
+        }
+
+        $escapedCommand = implode(' ', array_map(escapeshellarg(...), $command));
+
+        return escapeshellarg($comSpec) . ' /d /s /c "' . $escapedCommand . '"';
     }
 }

@@ -126,6 +126,7 @@ use TriCab\Api\Http\Action\PublicProduct\GetPublicProductRelationshipsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductSpecificationsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductVariantsAction;
 use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
+use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 use TriCab\Api\Http\Action\DatabaseHealthAction;
@@ -261,6 +262,7 @@ final class AppBuilder
      */
     private static function registerPublicProductRoutes(App $app): void
     {
+        $app->post('/api/v1/assistant/messages', AssistantMessageAction::class);
         $app->get('/api/v1/products/{slug}', GetPublicProductBySlugAction::class);
         $app->get('/api/v1/products/{slug}/variants', GetPublicProductVariantsAction::class);
         $app->get('/api/v1/products/{slug}/media', GetPublicProductMediaAction::class);

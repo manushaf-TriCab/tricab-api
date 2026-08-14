@@ -13,7 +13,7 @@ final class FakeJsonHttpClient implements JsonHttpClient
      * @var list<array{
      *   url: string,
      *   headers: array<string, string>,
-     *   kind: 'json'|'form',
+     *   kind: 'get'|'json'|'form',
      *   payload: array<string, mixed>|null,
      *   fields: array<string, string>|null
      * }>
@@ -28,6 +28,19 @@ final class FakeJsonHttpClient implements JsonHttpClient
 
     /** @var list<array{status: int, body: string}|RuntimeException> */
     public array $queue = [];
+
+    public function getJson(string $url, array $headers = []): array
+    {
+        $this->calls[] = [
+            'url' => $url,
+            'headers' => $headers,
+            'kind' => 'get',
+            'payload' => null,
+            'fields' => null,
+        ];
+
+        return $this->nextResponse();
+    }
 
     public function postJson(string $url, array $headers, array $payload): array
     {

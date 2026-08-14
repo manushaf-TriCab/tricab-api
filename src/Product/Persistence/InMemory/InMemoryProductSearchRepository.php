@@ -25,7 +25,13 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
 
         foreach ($this->store->productRecords() as $record) {
             $product = $record['product'];
-            if (!$this->matchesSearch($product, $query, $criteria->regionCode, $criteria->publishedOnly)) {
+            if (!$this->matchesSearch(
+                $product,
+                $query,
+                $criteria->regionCode,
+                $criteria->publishedOnly,
+                $criteria->normalizedStatusCodes(),
+            )) {
                 continue;
             }
             $matches[] = $this->toSearchResult($product, $query);
@@ -90,11 +96,13 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
         return $unique;
     }
 
+    /** @param list<string> $statusCodes */
     private function matchesSearch(
         Product $product,
         string $query,
         ?string $regionCode,
         bool $publishedOnly,
+        array $statusCodes,
     ): bool {
         if ($product->isSoftDeleted()) {
             return false;
@@ -111,6 +119,13 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
             if ($product->unpublishAtUtc() !== null && $product->unpublishAtUtc() <= $now) {
                 return false;
             }
+        }
+
+        if (
+            $statusCodes !== []
+            && !in_array(strtolower($product->status()->toString()), $statusCodes, true)
+        ) {
+            return false;
         }
 
         if ($regionCode !== null && trim($regionCode) !== '') {
@@ -144,6 +159,15 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
             return true;
         }
         if ($this->categoryOrSeriesMatches($product, $needle)) {
+            return true;
+        }
+        if ($this->descriptionMatches($product, $needle)) {
+            return true;
+        }
+        if ($this->applicationMatches($product, $needle)) {
+            return true;
+        }
+        if ($this->specificationMatches($product, $needle)) {
             return true;
         }
 
@@ -210,6 +234,70 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
         $series = $this->store->seriesNameForId($product->seriesId());
 
         return $series !== null && str_contains(strtolower($series), $needle);
+    }
+
+    private function descriptionMatches(Product $product, string $needle): bool
+    {
+        foreach ([$product->shortDescription(), $product->fullDescription()] as $description) {
+            if ($description !== null && str_contains(strtolower($description), $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function applicationMatches(Product $product, string $needle): bool
+    {
+        $publicId = $product->publicId()->toString();
+        foreach ($this->store->productApplications($publicId) as $applicationPublicId) {
+            $name = $this->store->applicationNameForPublicId($applicationPublicId);
+            if ($name !== null && str_contains(strtolower($name), $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function specificationMatches(Product $product, string $needle): bool
+    {
+        $definitions = [];
+        foreach ($this->store->specDefinitions() as $definition) {
+            $publicId = $definition['publicId'] ?? null;
+            if (is_string($publicId) && ($definition['isActive'] ?? true) !== false) {
+                $definitions[$publicId] = $definition;
+            }
+        }
+
+        $productPublicId = $product->publicId()->toString();
+        foreach ($this->store->productSpecValues() as $value) {
+            if (($value['productPublicId'] ?? '') !== $productPublicId) {
+                continue;
+            }
+            $definitionPublicId = $value['definitionPublicId'] ?? null;
+            $definition = is_string($definitionPublicId) ? ($definitions[$definitionPublicId] ?? []) : [];
+            foreach ([
+                $definition['name'] ?? null,
+                $definition['code'] ?? null,
+                $definition['unit'] ?? null,
+                $value['value'] ?? null,
+                $value['textValue'] ?? null,
+                $value['optionLabel'] ?? null,
+                $value['unitOverride'] ?? null,
+                $value['minimum'] ?? null,
+                $value['maximum'] ?? null,
+            ] as $candidate) {
+                if (
+                    (is_string($candidate) || is_numeric($candidate))
+                    && str_contains(strtolower((string) $candidate), $needle)
+                ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function toSearchResult(Product $product, string $query): ProductSearchResult

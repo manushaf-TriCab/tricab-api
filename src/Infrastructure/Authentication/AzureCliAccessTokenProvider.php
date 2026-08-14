@@ -203,7 +203,7 @@ final class AzureCliAccessTokenProvider
     private function assertAzureCliAvailable(): void
     {
         if ($this->looksLikePath($this->azBinary)) {
-            if (!is_executable($this->azBinary)) {
+            if (!is_file($this->azBinary) || !is_readable($this->azBinary)) {
                 DatabaseAuthDiagnostics::log('azure_cli.command.failed', [
                     'step' => 'az_available',
                     'success' => false,
@@ -304,6 +304,6 @@ final class AzureCliAccessTokenProvider
 
     private function looksLikePath(string $binary): bool
     {
-        return str_contains($binary, '/') || str_starts_with($binary, '\\');
+        return str_contains($binary, '/') || str_contains($binary, '\\');
     }
 }

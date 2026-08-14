@@ -17,6 +17,16 @@ final class StreamJsonHttpClient implements JsonHttpClient
     ) {
     }
 
+    public function getJson(string $url, array $headers = []): array
+    {
+        return $this->request(
+            'GET',
+            $url,
+            array_merge(['Accept' => 'application/json'], $headers),
+            null,
+        );
+    }
+
     public function postJson(string $url, array $headers, array $payload): array
     {
         try {
@@ -25,7 +35,8 @@ final class StreamJsonHttpClient implements JsonHttpClient
             throw $exception;
         }
 
-        return $this->post(
+        return $this->request(
+            'POST',
             $url,
             array_merge(
                 [
@@ -42,7 +53,8 @@ final class StreamJsonHttpClient implements JsonHttpClient
     {
         $encoded = http_build_query($fields, '', '&', PHP_QUERY_RFC3986);
 
-        return $this->post(
+        return $this->request(
+            'POST',
             $url,
             array_merge(
                 [
@@ -59,23 +71,28 @@ final class StreamJsonHttpClient implements JsonHttpClient
      * @param array<string, string> $headers
      * @return array{status: int, body: string}
      */
-    private function post(string $url, array $headers, string $body): array
+    private function request(string $method, string $url, array $headers, ?string $body): array
     {
-        $headerLines = [
-            'Content-Length: ' . (string) strlen($body),
-        ];
+        $headerLines = [];
+        if ($body !== null) {
+            $headerLines[] = 'Content-Length: ' . (string) strlen($body);
+        }
         foreach ($headers as $name => $value) {
             $headerLines[] = $name . ': ' . $value;
         }
 
+        $httpOptions = [
+            'method' => $method,
+            'header' => implode("\r\n", $headerLines),
+            'timeout' => $this->timeoutSeconds,
+            'ignore_errors' => true,
+        ];
+        if ($body !== null) {
+            $httpOptions['content'] = $body;
+        }
+
         $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => implode("\r\n", $headerLines),
-                'content' => $body,
-                'timeout' => $this->timeoutSeconds,
-                'ignore_errors' => true,
-            ],
+            'http' => $httpOptions,
             'ssl' => $this->sslOptions(),
         ]);
 
@@ -84,8 +101,16 @@ final class StreamJsonHttpClient implements JsonHttpClient
             throw new RuntimeException('HTTP request failed.');
         }
 
+        if (function_exists('http_get_last_response_headers')) {
+            $http_response_header = http_get_last_response_headers();
+        }
+        $responseHeaders = $http_response_header;
+        if (!is_array($responseHeaders)) {
+            $responseHeaders = [];
+        }
+
         return [
-            'status' => self::statusFromResponseHeaders($http_response_header),
+            'status' => self::statusFromResponseHeaders($responseHeaders),
             'body' => $responseBody,
         ];
     }

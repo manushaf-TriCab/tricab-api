@@ -194,4 +194,78 @@ final class SettingsTest extends TestCase
         self::assertSame(1, $low->dbConnectRetryMaxAttempts);
         self::assertSame(4000, $low->dbConnectRetryDelayMs);
     }
+
+    public function test_foundry_is_disabled_by_default(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+        ]);
+
+        self::assertFalse($settings->foundryEnabled);
+        self::assertFalse($settings->isFoundryConfigured());
+        self::assertSame(Settings::FOUNDRY_AUTH_MODE_MANAGED_IDENTITY, $settings->foundryAuthMode);
+        self::assertSame(30, $settings->foundryTimeoutSeconds);
+        self::assertSame(5, $settings->foundryMaxToolCalls);
+    }
+
+    public function test_enabled_foundry_requires_endpoint_and_deployment(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('FOUNDRY_ENDPOINT and FOUNDRY_MODEL_DEPLOYMENT are required');
+
+        Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'FOUNDRY_ENABLED' => 'true',
+        ]);
+    }
+
+    public function test_development_foundry_api_key_configuration_is_allowed(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'FOUNDRY_ENABLED' => 'true',
+            'FOUNDRY_ENDPOINT' => 'https://example.services.ai.azure.com/',
+            'FOUNDRY_MODEL_DEPLOYMENT' => 'product-assistant',
+            'FOUNDRY_AUTH_MODE' => 'api-key',
+            'FOUNDRY_API_KEY' => 'development-key',
+        ]);
+
+        self::assertTrue($settings->isFoundryConfigured());
+        self::assertSame(
+            'https://example.services.ai.azure.com',
+            $settings->foundryEndpoint,
+        );
+    }
+
+    public function test_enabled_foundry_rejects_untrusted_endpoint(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('HTTPS root endpoint on services.ai.azure.com');
+
+        Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'FOUNDRY_ENABLED' => 'true',
+            'FOUNDRY_ENDPOINT' => 'http://example.com/foundry',
+            'FOUNDRY_MODEL_DEPLOYMENT' => 'product-assistant',
+        ]);
+    }
+
+    public function test_production_foundry_rejects_api_key_authentication(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('FOUNDRY_AUTH_MODE=api-key is not allowed');
+
+        Settings::fromEnvironment([
+            'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'azure-sql',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
+            'FOUNDRY_ENABLED' => 'true',
+            'FOUNDRY_ENDPOINT' => 'https://example.services.ai.azure.com',
+            'FOUNDRY_MODEL_DEPLOYMENT' => 'product-assistant',
+            'FOUNDRY_AUTH_MODE' => 'api-key',
+            'FOUNDRY_API_KEY' => 'development-key',
+        ]);
+    }
 }

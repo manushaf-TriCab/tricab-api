@@ -8,6 +8,19 @@ use DI\Container;
 use DI\ContainerBuilder;
 use InvalidArgumentException;
 use PDO;
+use TriCab\Api\Assistant\Application\AssistantQueryInterpreter;
+use TriCab\Api\Assistant\Application\AssistantResponseProvider;
+use TriCab\Api\Assistant\Application\AssistantConversationRepository;
+use TriCab\Api\Assistant\Application\ProductAssistantService;
+use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantQueryInterpreter;
+use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantResponseProvider;
+use TriCab\Api\Assistant\Infrastructure\FallbackAssistantResponseProvider;
+use TriCab\Api\Assistant\Infrastructure\Foundry\ClaudeFoundryQueryInterpreter;
+use TriCab\Api\Assistant\Infrastructure\Foundry\ClaudeFoundryResponseProvider;
+use TriCab\Api\Assistant\Infrastructure\Foundry\ManagedIdentityFoundryAccessTokenProvider;
+use TriCab\Api\Assistant\Infrastructure\HybridAssistantQueryInterpreter;
+use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantConversationRepository;
+use TriCab\Api\Assistant\Infrastructure\Prompt\MarkdownPromptRepository;
 use TriCab\Api\Config\Settings;
 
 use TriCab\Api\Http\Action\Admin\AddProductDocumentAction;
@@ -185,6 +198,8 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSpecificationReposito
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductStore;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductVariantRepository;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Http\Action\AssistantMessageAction;
+use TriCab\Api\Http\Auth\AssistantErrorMapper;
 use TriCab\Api\Identity\Authentication\CompositeBearerTokenValidator;
 use TriCab\Api\Identity\Authentication\EntraJwksClient;
 use TriCab\Api\Identity\Authentication\EntraJwksProvider;
@@ -478,10 +493,54 @@ final class ContainerFactory
         $builder = new ContainerBuilder();
         $builder->useAutowiring(true);
         $documentResources = dirname(__DIR__, 2) . '/resources/document-generation';
+        $prompts = new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS');
 
         $definitions = [
             Settings::class => $settings,
             JsonResponder::class => \DI\create(JsonResponder::class),
+            AssistantQueryInterpreter::class => static function () use ($settings, $prompts): AssistantQueryInterpreter {
+                $rules = new DeterministicAssistantQueryInterpreter();
+                if (!$settings->isFoundryConfigured()) {
+                    return $rules;
+                }
+
+                $http = new StreamJsonHttpClient((float) $settings->foundryTimeoutSeconds);
+                $semantic = new ClaudeFoundryQueryInterpreter(
+                    http: $http,
+                    accessTokens: new ManagedIdentityFoundryAccessTokenProvider($http),
+                    endpoint: $settings->foundryEndpoint,
+                    deployment: $settings->foundryModelDeployment,
+                    authMode: $settings->foundryAuthMode,
+                    prompt: $prompts->get('product-assistant-query', 'v1'),
+                    apiKey: $settings->foundryApiKey,
+                );
+
+                return new HybridAssistantQueryInterpreter($rules, $semantic);
+            },
+            AssistantResponseProvider::class => static function () use ($settings, $prompts): AssistantResponseProvider {
+                $fallback = new DeterministicAssistantResponseProvider();
+                if (!$settings->isFoundryConfigured()) {
+                    return $fallback;
+                }
+
+                $http = new StreamJsonHttpClient((float) $settings->foundryTimeoutSeconds);
+                $primary = new ClaudeFoundryResponseProvider(
+                    http: $http,
+                    accessTokens: new ManagedIdentityFoundryAccessTokenProvider($http),
+                    endpoint: $settings->foundryEndpoint,
+                    deployment: $settings->foundryModelDeployment,
+                    authMode: $settings->foundryAuthMode,
+                    prompt: $prompts->get('product-assistant-response', 'v2'),
+                    apiKey: $settings->foundryApiKey,
+                );
+
+                return new FallbackAssistantResponseProvider($primary, $fallback);
+            },
+            InMemoryAssistantConversationRepository::class => \DI\create(InMemoryAssistantConversationRepository::class),
+            AssistantConversationRepository::class => \DI\get(InMemoryAssistantConversationRepository::class),
+            ProductAssistantService::class => \DI\autowire(ProductAssistantService::class),
+            AssistantErrorMapper::class => \DI\autowire(AssistantErrorMapper::class),
+            AssistantMessageAction::class => \DI\autowire(AssistantMessageAction::class),
             EntraJwksProvider::class => \DI\autowire(EntraJwksClient::class),
             EntraJwksClient::class => \DI\autowire(EntraJwksClient::class),
             EntraJwtValidationDebugLogger::class => \DI\autowire(EntraJwtValidationDebugLogger::class),

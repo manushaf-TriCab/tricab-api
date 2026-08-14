@@ -27,7 +27,12 @@ final class AzureSqlProductSearchRepository implements ProductSearchRepository
     public function search(ProductSearchCriteria $criteria): ProductSearchListResult
     {
         $query = $criteria->normalizedQuery();
-        [$where, $params] = $this->buildWhere($query, $criteria->regionCode, $criteria->publishedOnly);
+        [$where, $params] = $this->buildWhere(
+            $query,
+            $criteria->regionCode,
+            $criteria->publishedOnly,
+            $criteria->normalizedStatusCodes(),
+        );
 
         $countRows = $this->connection->fetchAll(
             <<<SQL
@@ -171,9 +176,15 @@ SQL,
     }
 
     /**
+     * @param list<string> $statusCodes
      * @return array{0: string, 1: array<string, scalar|SqlBinary|null>}
      */
-    private function buildWhere(string $query, ?string $regionCode, bool $publishedOnly): array
+    private function buildWhere(
+        string $query,
+        ?string $regionCode,
+        bool $publishedOnly,
+        array $statusCodes,
+    ): array
     {
         $where = ' AND p.[DeletedAtUtc] IS NULL';
         $like = '%' . $query . '%';
@@ -186,6 +197,16 @@ SQL,
             ':exactCode' => $query,
             ':likeCategory' => $like,
             ':likeSeries' => $like,
+            ':likeShortDescription' => $like,
+            ':likeFullDescription' => $like,
+            ':likeApplicationName' => $like,
+            ':likeApplicationCode' => $like,
+            ':likeSpecificationName' => $like,
+            ':likeSpecificationCode' => $like,
+            ':likeSpecificationText' => $like,
+            ':likeSpecificationLongText' => $like,
+            ':likeSpecificationOption' => $like,
+            ':likeSpecificationUnit' => $like,
         ];
 
         if ($publishedOnly) {
@@ -195,6 +216,16 @@ SQL,
  AND (p.[PublishAtUtc] IS NULL OR p.[PublishAtUtc] <= SYSUTCDATETIME())
  AND (p.[UnpublishAtUtc] IS NULL OR p.[UnpublishAtUtc] > SYSUTCDATETIME())
 SQL;
+        }
+
+        if ($statusCodes !== []) {
+            $statusPlaceholders = [];
+            foreach ($statusCodes as $index => $statusCode) {
+                $placeholder = ':allowedStatus' . $index;
+                $statusPlaceholders[] = $placeholder;
+                $params[$placeholder] = $statusCode;
+            }
+            $where .= ' AND LOWER(ps.[StatusCode]) IN (' . implode(', ', $statusPlaceholders) . ')';
         }
 
         $where .= <<<'SQL'
@@ -221,6 +252,40 @@ SQL;
     )
     OR c.[CategoryName] LIKE :likeCategory
     OR s.[SeriesName] LIKE :likeSeries
+    OR p.[ShortDescription] LIKE :likeShortDescription
+    OR p.[FullDescription] LIKE :likeFullDescription
+    OR EXISTS (
+        SELECT 1
+        FROM [product].[ProductApplications] pa
+        INNER JOIN [product].[Applications] a ON a.[ApplicationId] = pa.[ApplicationId]
+        WHERE pa.[ProductId] = p.[ProductId]
+          AND a.[DeletedAtUtc] IS NULL
+          AND a.[IsActive] = 1
+          AND (
+              a.[ApplicationName] LIKE :likeApplicationName
+              OR a.[ApplicationCode] LIKE :likeApplicationCode
+          )
+    )
+    OR EXISTS (
+        SELECT 1
+        FROM [product].[ProductSpecificationValues] psv
+        INNER JOIN [product].[SpecificationDefinitions] sd
+            ON sd.[SpecificationDefinitionId] = psv.[SpecificationDefinitionId]
+        LEFT JOIN [product].[SpecificationOptions] so
+            ON so.[SpecificationOptionId] = psv.[SpecificationOptionId]
+        WHERE psv.[ProductId] = p.[ProductId]
+          AND psv.[DeletedAtUtc] IS NULL
+          AND sd.[DeletedAtUtc] IS NULL
+          AND sd.[IsActive] = 1
+          AND (
+              sd.[DefinitionName] LIKE :likeSpecificationName
+              OR sd.[DefinitionCode] LIKE :likeSpecificationCode
+              OR psv.[ValueText] LIKE :likeSpecificationText
+              OR psv.[ValueLongText] LIKE :likeSpecificationLongText
+              OR so.[OptionLabel] LIKE :likeSpecificationOption
+              OR COALESCE(psv.[UnitOverride], sd.[Unit]) LIKE :likeSpecificationUnit
+          )
+    )
  )
 SQL;
 

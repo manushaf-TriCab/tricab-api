@@ -11,6 +11,12 @@ interface JsonHttpClient
 {
     /**
      * @param array<string, string> $headers
+     * @return array{status: int, body: string}
+     */
+    public function getJson(string $url, array $headers = []): array;
+
+    /**
+     * @param array<string, string> $headers
      * @param array<string, mixed> $payload
      * @return array{status: int, body: string}
      */

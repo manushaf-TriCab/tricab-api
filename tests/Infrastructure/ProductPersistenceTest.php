@@ -15,6 +15,8 @@ use TriCab\Api\Product\Persistence\ProductRowVersionMapper;
 use TriCab\Api\Tests\Doubles\FakeSqlConnection;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\ProductListCriteria;
+use TriCab\Core\Product\Application\DTO\ProductSearchCriteria;
+use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Domain\Entity\Product;
 use TriCab\Core\Product\Domain\Exception\ProductConcurrencyException;
 use TriCab\Core\Product\Domain\ValueObject\ProductLifecycleStatusCode;
@@ -127,7 +129,11 @@ final class ProductPersistenceTest extends TestCase
     {
         $connection = new FakeSqlConnection([$this->publicDetailRow()]);
 
-        $repository = new AzureSqlProductPublicQueryRepository($connection);
+        $repository = new AzureSqlProductPublicQueryRepository(
+            $connection,
+            $this->createStub(Product3DModelRepository::class),
+            product3dEnabled: false,
+        );
         $detail = $repository->findByPublicId(
             ProductPublicId::fromString(self::SAMPLE_PRODUCT_PUBLIC_ID),
         );
@@ -201,6 +207,32 @@ final class ProductPersistenceTest extends TestCase
         self::assertStringNotContainsString('TOP :', $sql);
         self::assertArrayNotHasKey(':limit', $params);
         self::assertArrayNotHasKey(':top', $params);
+    }
+
+    public function test_search_can_be_restricted_to_authorized_product_statuses(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([['Total' => 0]]);
+        $connection->queueFetch([]);
+
+        $repository = new AzureSqlProductSearchRepository($connection);
+        $repository->search(new ProductSearchCriteria(
+            query: 'VFD',
+            page: 1,
+            pageSize: 5,
+            publishedOnly: false,
+            statusCodes: ['published', 'draft'],
+        ));
+
+        self::assertCount(2, $connection->calls);
+        foreach ($connection->calls as $call) {
+            self::assertStringContainsString(
+                'LOWER(ps.[StatusCode]) IN (:allowedStatus0, :allowedStatus1)',
+                $call['sql'],
+            );
+            self::assertSame('published', $call['params'][':allowedStatus0']);
+            self::assertSame('draft', $call['params'][':allowedStatus1']);
+        }
     }
 
     private function unsavedProduct(): Product

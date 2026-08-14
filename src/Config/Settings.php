@@ -34,6 +34,9 @@ final readonly class Settings
     public const CACHE_DRIVER_APCU = 'apcu';
     public const CACHE_DRIVER_ARRAY = 'array';
 
+    public const FOUNDRY_AUTH_MODE_MANAGED_IDENTITY = 'managed-identity';
+    public const FOUNDRY_AUTH_MODE_API_KEY = 'api-key';
+
     /**
      * @param list<string> $corsAllowedOrigins
      */
@@ -98,6 +101,13 @@ final readonly class Settings
         public bool $product3dEnabled,
         public string $product3dProvider,
         public bool $product3dGenerationEnabled,
+        public bool $foundryEnabled,
+        public string $foundryEndpoint,
+        public string $foundryModelDeployment,
+        public string $foundryAuthMode,
+        public string $foundryApiKey,
+        public int $foundryTimeoutSeconds,
+        public int $foundryMaxToolCalls,
     ) {
     }
 
@@ -183,6 +193,13 @@ final readonly class Settings
     public function productFileScanAutoCleans(): bool
     {
         return $this->blobScanMode === self::BLOB_SCAN_MODE_AUTO_CLEAN;
+    }
+
+    public function isFoundryConfigured(): bool
+    {
+        return $this->foundryEnabled
+            && $this->foundryEndpoint !== ''
+            && $this->foundryModelDeployment !== '';
     }
 
     /**
@@ -358,6 +375,61 @@ final readonly class Settings
             throw new InvalidArgumentException('BLOB_DOWNLOAD_SAS_TTL_SECONDS must be between 60 and 3600.');
         }
 
+        $foundryEnabled = self::bool($env, 'FOUNDRY_ENABLED', false);
+        $foundryEndpoint = rtrim(self::string($env, 'FOUNDRY_ENDPOINT', ''), '/');
+        $foundryModelDeployment = self::string($env, 'FOUNDRY_MODEL_DEPLOYMENT', '');
+        $foundryAuthMode = strtolower(self::string(
+            $env,
+            'FOUNDRY_AUTH_MODE',
+            self::FOUNDRY_AUTH_MODE_MANAGED_IDENTITY,
+        ));
+        if (
+            $foundryAuthMode !== self::FOUNDRY_AUTH_MODE_MANAGED_IDENTITY
+            && $foundryAuthMode !== self::FOUNDRY_AUTH_MODE_API_KEY
+        ) {
+            throw new InvalidArgumentException(
+                'Unsupported FOUNDRY_AUTH_MODE. Supported values: managed-identity, api-key.',
+            );
+        }
+
+        $foundryApiKey = self::string($env, 'FOUNDRY_API_KEY', '');
+        $foundryTimeoutSeconds = self::int($env, 'FOUNDRY_TIMEOUT_SECONDS', 30);
+        if ($foundryTimeoutSeconds < 1 || $foundryTimeoutSeconds > 120) {
+            throw new InvalidArgumentException('FOUNDRY_TIMEOUT_SECONDS must be between 1 and 120.');
+        }
+        $foundryMaxToolCalls = self::int($env, 'FOUNDRY_MAX_TOOL_CALLS', 5);
+        if ($foundryMaxToolCalls < 1 || $foundryMaxToolCalls > 10) {
+            throw new InvalidArgumentException('FOUNDRY_MAX_TOOL_CALLS must be between 1 and 10.');
+        }
+
+        if ($foundryEnabled && ($foundryEndpoint === '' || $foundryModelDeployment === '')) {
+            throw new InvalidArgumentException(
+                'FOUNDRY_ENDPOINT and FOUNDRY_MODEL_DEPLOYMENT are required when FOUNDRY_ENABLED=true.',
+            );
+        }
+
+        if ($foundryEnabled && !self::isTrustedFoundryEndpoint($foundryEndpoint)) {
+            throw new InvalidArgumentException(
+                'FOUNDRY_ENDPOINT must be an HTTPS root endpoint on services.ai.azure.com.',
+            );
+        }
+
+        if (
+            $foundryEnabled
+            && $foundryAuthMode === self::FOUNDRY_AUTH_MODE_API_KEY
+            && $foundryApiKey === ''
+        ) {
+            throw new InvalidArgumentException(
+                'FOUNDRY_API_KEY is required when FOUNDRY_ENABLED=true and FOUNDRY_AUTH_MODE=api-key.',
+            );
+        }
+
+        if ($appEnv === 'production' && $foundryEnabled && $foundryAuthMode === self::FOUNDRY_AUTH_MODE_API_KEY) {
+            throw new InvalidArgumentException(
+                'FOUNDRY_AUTH_MODE=api-key is not allowed when APP_ENV=production.',
+            );
+        }
+
         return new self(
             appEnv: $appEnv,
             appName: self::string($env, 'APP_NAME', 'tricab-api'),
@@ -423,6 +495,13 @@ final readonly class Settings
             product3dEnabled: self::bool($env, 'PRODUCT_3D_ENABLED', true),
             product3dProvider: self::resolveProduct3dProvider($env),
             product3dGenerationEnabled: self::bool($env, 'PRODUCT_3D_GENERATION_ENABLED', false),
+            foundryEnabled: $foundryEnabled,
+            foundryEndpoint: $foundryEndpoint,
+            foundryModelDeployment: $foundryModelDeployment,
+            foundryAuthMode: $foundryAuthMode,
+            foundryApiKey: $foundryApiKey,
+            foundryTimeoutSeconds: $foundryTimeoutSeconds,
+            foundryMaxToolCalls: $foundryMaxToolCalls,
         );
     }
 
@@ -467,6 +546,27 @@ final readonly class Settings
             'accountKey' => $accountKey,
             'blobEndpoint' => rtrim($blobEndpoint, '/'),
         ];
+    }
+
+    private static function isTrustedFoundryEndpoint(string $endpoint): bool
+    {
+        $parts = parse_url($endpoint);
+        if (!is_array($parts)) {
+            return false;
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        $path = (string) ($parts['path'] ?? '');
+
+        return $scheme === 'https'
+            && str_ends_with($host, '.services.ai.azure.com')
+            && strlen($host) > strlen('.services.ai.azure.com')
+            && ($path === '' || $path === '/')
+            && !isset($parts['user'])
+            && !isset($parts['pass'])
+            && !isset($parts['query'])
+            && !isset($parts['fragment']);
     }
 
     /**
