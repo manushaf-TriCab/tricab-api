@@ -125,6 +125,7 @@ foreach ($s in @(
     'seed-product-reference-data.sql',
     'seed-user-management-permissions.sql',
     'seed-product-roles-and-permissions.sql',
+    'alter-product-regions.sql',
     'seed-customer-roles-and-permissions.sql',
     'seed-guest-role-and-login-permission.sql',
     'seed-product-catalogue-sample.sql',

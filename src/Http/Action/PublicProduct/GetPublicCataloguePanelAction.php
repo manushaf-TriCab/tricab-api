@@ -13,6 +13,7 @@ use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
+use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 
 final class GetPublicCataloguePanelAction
@@ -25,6 +26,7 @@ final class GetPublicCataloguePanelAction
         private readonly ProductManagementErrorMapper $errors,
         private readonly ReferenceDataCache $cache,
         private readonly RequestPerformanceMetrics $metrics,
+        private readonly RegionPreferenceResolver $regions,
     ) {
     }
 
@@ -34,7 +36,7 @@ final class GetPublicCataloguePanelAction
         try {
             $query = QueryParams::normalize($request->getQueryParams());
             $tabSlug = QueryParams::stringOrNull($query, 'tabSlug');
-            $regionCode = QueryParams::stringOrNull($query, 'regionCode');
+            $regionCode = $this->regions->resolveCode($request, QueryParams::stringOrNull($query, 'regionCode'));
             $includeProducts = QueryParams::boolOrNull($query, 'includeProducts') ?? false;
             $cacheKey = $this->cache->cataloguePanelKey([
                 'tabSlug' => $tabSlug,

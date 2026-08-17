@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 
 final class GetPublicCatalogueTabTreeAction
@@ -20,6 +21,7 @@ final class GetPublicCatalogueTabTreeAction
         private readonly GetPublicCatalogueService $catalogue,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
+        private readonly RegionPreferenceResolver $regions,
     ) {
     }
 
@@ -29,7 +31,7 @@ final class GetPublicCatalogueTabTreeAction
         try {
             $tabSlug = RouteParams::require($request, 'tabSlug');
             $query = QueryParams::normalize($request->getQueryParams());
-            $regionCode = QueryParams::stringOrNull($query, 'regionCode');
+            $regionCode = $this->regions->resolveCode($request, QueryParams::stringOrNull($query, 'regionCode'));
             $includeProducts = QueryParams::boolOrNull($query, 'includeProducts') ?? false;
 
             return $this->responder->success([

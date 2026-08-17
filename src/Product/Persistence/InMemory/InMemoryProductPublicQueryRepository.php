@@ -53,8 +53,7 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
             if ($regionCode !== null && trim($regionCode) !== '') {
                 $regionPublicId = $row['regionPublicId'] ?? null;
                 if (is_string($regionPublicId)) {
-                    $slugRegionCode = $this->store->regionCodeForPublicId($regionPublicId);
-                    if ($slugRegionCode !== null && strcasecmp($slugRegionCode, trim($regionCode)) !== 0) {
+                    if (!$this->store->regionPublicIdMatchesCode($regionPublicId, $regionCode)) {
                         continue;
                     }
                 }
@@ -114,8 +113,7 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
 
         $normalizedRegion = trim($regionCode);
         foreach ($this->store->productRegions($product->publicId()->toString()) as $regionPublicId) {
-            $code = $this->store->regionCodeForPublicId($regionPublicId);
-            if ($code !== null && strcasecmp($code, $normalizedRegion) === 0) {
+            if ($this->store->regionPublicIdMatchesCode($regionPublicId, $normalizedRegion)) {
                 return true;
             }
         }
@@ -428,8 +426,7 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
             if ($regionCode !== null && trim($regionCode) !== '') {
                 $regionPublicId = $row['regionPublicId'] ?? null;
                 if (is_string($regionPublicId)) {
-                    $docRegionCode = $this->store->regionCodeForPublicId($regionPublicId);
-                    if ($docRegionCode !== null && strcasecmp($docRegionCode, trim($regionCode)) !== 0) {
+                    if (!$this->store->regionPublicIdMatchesCode($regionPublicId, $regionCode)) {
                         continue;
                     }
                 }

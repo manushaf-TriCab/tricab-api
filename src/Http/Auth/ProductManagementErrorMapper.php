@@ -47,6 +47,10 @@ use TriCab\Core\Product\Domain\Exception\InvalidProductFileException;
 use TriCab\Core\Product\Application\Exception\ProductNotReadyForPublication;
 use TriCab\Core\Product\Application\Exception\ProductSoftDeleted;
 use TriCab\Core\Product\Application\Exception\ProductVariantNotFound;
+use TriCab\Core\Product\Application\Exception\DuplicateRegionCode;
+use TriCab\Core\Product\Application\Exception\InvalidRegion;
+use TriCab\Core\Product\Application\Exception\RegionInUse;
+use TriCab\Core\Product\Application\Exception\RegionNotFound;
 use TriCab\Core\Product\Domain\Exception\InvalidProductLifecycleException;
 use TriCab\Core\Product\Domain\Exception\InvalidProductRelationshipException;
 use TriCab\Core\Product\Domain\Exception\InvalidProductStatusTransition;
@@ -86,6 +90,22 @@ final class ProductManagementErrorMapper
 
         if ($exception instanceof ProductNotFound) {
             return $this->responder->error('PRODUCT_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof RegionNotFound) {
+            return $this->responder->error('REGION_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof DuplicateRegionCode) {
+            return $this->responder->error('DUPLICATE_REGION_CODE', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof RegionInUse) {
+            return $this->responder->error('REGION_IN_USE', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof InvalidRegion) {
+            return $this->responder->error('INVALID_REGION', $exception->getMessage(), 422);
         }
 
         if ($exception instanceof ProductClassificationNotFound) {

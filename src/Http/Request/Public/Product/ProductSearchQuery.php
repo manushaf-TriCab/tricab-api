@@ -18,7 +18,7 @@ final class ProductSearchQuery
     /**
      * @param array<string, mixed> $query
      */
-    public static function fromQueryParams(array $query): ProductSearchCriteria
+    public static function fromQueryParams(array $query, ?string $resolvedRegionCode = null): ProductSearchCriteria
     {
         $searchQuery = QueryParams::stringOrNull($query, 'query');
         if ($searchQuery === null) {
@@ -29,7 +29,7 @@ final class ProductSearchQuery
             query: $searchQuery,
             page: QueryParams::int($query, 'page', 1),
             pageSize: QueryParams::int($query, 'pageSize', 25),
-            regionCode: QueryParams::stringOrNull($query, 'regionCode'),
+            regionCode: $resolvedRegionCode ?? QueryParams::stringOrNull($query, 'regionCode'),
             publishedOnly: true,
         );
     }

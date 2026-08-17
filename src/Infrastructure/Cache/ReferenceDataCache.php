@@ -13,6 +13,10 @@ final class ReferenceDataCache
 
     public const LOOKUPS_TTL_SECONDS = 600;
 
+    public const REGIONS_KEY = 'public:regions:v1';
+
+    public const REGIONS_TTL_SECONDS = 600;
+
     public const CATALOGUE_PREFIX = 'catalogue:';
 
     public const CATALOGUE_TTL_SECONDS = 300;
@@ -35,6 +39,21 @@ final class ReferenceDataCache
     public function invalidateLookups(): void
     {
         $this->cache->delete(self::LOOKUPS_KEY);
+    }
+
+    public function getRegions(): mixed
+    {
+        return $this->cache->get(self::REGIONS_KEY);
+    }
+
+    public function setRegions(mixed $value): void
+    {
+        $this->cache->set(self::REGIONS_KEY, $value, self::REGIONS_TTL_SECONDS);
+    }
+
+    public function invalidateRegions(): void
+    {
+        $this->cache->delete(self::REGIONS_KEY);
     }
 
     /**

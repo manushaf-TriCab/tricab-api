@@ -478,6 +478,19 @@ final class InMemoryProductStore
         $this->regions[] = $row;
     }
 
+    /** @param array<string, mixed> $row */
+    public function upsertRegion(array $row): void
+    {
+        foreach ($this->regions as $index => $existing) {
+            if (($existing['publicId'] ?? null) === ($row['publicId'] ?? null)) {
+                $this->regions[$index] = $row;
+
+                return;
+            }
+        }
+        $this->regions[] = $row;
+    }
+
     /** @return list<array<string, mixed>> */
     public function markets(): array
     {
@@ -518,6 +531,12 @@ final class InMemoryProductStore
     public function productRegions(string $productPublicId): array
     {
         return $this->productRegions[$productPublicId] ?? [];
+    }
+
+    /** @return list<string> */
+    public function productPublicIds(): array
+    {
+        return array_keys($this->productRegions);
     }
 
     /** @param list<string> $regionPublicIds */
@@ -1027,6 +1046,21 @@ final class InMemoryProductStore
         }
 
         return null;
+    }
+
+    public function regionPublicIdMatchesCode(string $regionPublicId, string $regionCode): bool
+    {
+        $assigned = $this->regionCodeForPublicId($regionPublicId);
+        if ($assigned === null) {
+            return false;
+        }
+        if (strcasecmp($assigned, $regionCode) === 0) {
+            return true;
+        }
+
+        // Preserve the legacy aggregate ANZ assignment while resolving new AU/NZ preferences.
+        return strcasecmp($assigned, 'ANZ') === 0
+            && in_array(strtoupper(trim($regionCode)), ['AU', 'NZ'], true);
     }
 
     public function industryNameForPublicId(string $industryPublicId): ?string

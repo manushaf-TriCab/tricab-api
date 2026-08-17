@@ -14,6 +14,7 @@ use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Request\GuestAuthRequestMetadata;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
+use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
@@ -28,6 +29,7 @@ final class DownloadProductDocumentAction
         private readonly GetRestrictedDocumentDownloadService $download,
         private readonly ResolveAuthenticatedUserHandler $resolveUser,
         private readonly Settings $settings,
+        private readonly RegionPreferenceResolver $regions,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
     ) {
@@ -40,7 +42,7 @@ final class DownloadProductDocumentAction
         try {
             $slug = RouteParams::require($request, 'slug');
             $documentPublicId = RouteParams::require($request, 'documentPublicId');
-            $detail = $this->getPublicProduct->bySlug($slug);
+            $detail = $this->getPublicProduct->bySlug($slug, $this->regions->resolveCode($request));
 
             $actor = new ActorContext(userId: 0, publicId: '', emailAddress: '');
             $hasManage = false;
@@ -59,6 +61,19 @@ final class DownloadProductDocumentAction
                     $hasManage = in_array('PRODUCT.DOCUMENTS.MANAGE', $user->permissions, true);
                 } catch (Throwable) {
                     // anonymous download path for public documents
+                }
+            }
+
+            if (!$hasManage) {
+                $available = false;
+                foreach ($detail->documents as $document) {
+                    if ($document->publicId === $documentPublicId) {
+                        $available = true;
+                        break;
+                    }
+                }
+                if (!$available) {
+                    throw \TriCab\Core\Product\Application\Exception\ProductDocumentNotFound::forPublicId($documentPublicId);
                 }
             }
 

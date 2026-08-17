@@ -51,6 +51,10 @@ final class ReferenceDataCacheInvalidationMiddleware implements MiddlewareInterf
         }
 
         $path = $request->getUri()->getPath();
+        if ($path === '/api/v1/admin/regions' || str_starts_with($path, '/api/v1/admin/regions/')) {
+            $this->cache->invalidateRegions();
+            $this->cache->invalidateCatalogue();
+        }
         if ($this->matches($path, self::LOOKUP_PREFIXES)) {
             $this->cache->invalidateLookups();
         }

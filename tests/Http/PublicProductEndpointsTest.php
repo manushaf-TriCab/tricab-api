@@ -86,6 +86,25 @@ final class PublicProductEndpointsTest extends TestCase
         }
     }
 
+    public function test_public_product_uses_region_cookie_when_query_is_absent(): void
+    {
+        $app = TestAppFactory::create();
+        $this->seedReferenceData($app);
+        $slug = $this->createPublishedProductWithSlug($app, 'regional-widget', 'Regional Widget');
+
+        $available = $app->handle(
+            TestAppFactory::request('GET', '/api/v1/products/' . $slug)
+                ->withCookieParams(['tricab_region' => 'AU']),
+        );
+        self::assertSame(200, $available->getStatusCode());
+
+        $unavailable = $app->handle(
+            TestAppFactory::request('GET', '/api/v1/products/' . $slug)
+                ->withCookieParams(['tricab_region' => 'US']),
+        );
+        self::assertSame(404, $unavailable->getStatusCode());
+    }
+
     public function test_public_product_nested_routes_404_for_unknown_slug(): void
     {
         $app = TestAppFactory::create(['DEV_AUTH_ENABLED' => 'false']);

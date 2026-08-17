@@ -90,6 +90,7 @@ use TriCab\Api\Http\Action\Admin\ListProductVariantsAction;
 use TriCab\Api\Http\Action\Admin\ListPermissionsAction;
 use TriCab\Api\Http\Action\Admin\ListRolesAction;
 use TriCab\Api\Http\Action\Admin\ListUsersAction;
+use TriCab\Api\Http\Action\Admin\RegionAdminAction;
 use TriCab\Api\Http\Action\Admin\PreviewProductCodeAction;
 use TriCab\Api\Http\Action\Admin\PublishProductAction;
 use TriCab\Api\Http\Action\Admin\RemoveRolePermissionAction;
@@ -126,6 +127,7 @@ use TriCab\Api\Http\Action\PublicProduct\GetPublicProductRelationshipsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductSpecificationsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductVariantsAction;
 use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
+use TriCab\Api\Http\Action\PublicRegionAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
@@ -227,6 +229,9 @@ final class AppBuilder
         }
 
         self::registerPublicProductRoutes($app);
+        $app->get('/api/v1/regions', PublicRegionAction::class);
+        $app->get('/api/v1/regions/current', PublicRegionAction::class);
+        $app->post('/api/v1/regions/select', PublicRegionAction::class);
         self::registerAdminRoutes($app, $container);
     }
 
@@ -273,6 +278,16 @@ final class AppBuilder
             ->add(($require)('AUDIT.USER_MANAGEMENT.READ'));
 
         self::registerAdminCustomerRoutes($app, $require);
+        $app->get('/api/v1/admin/regions', RegionAdminAction::class)->add(($require)('REGION.READ'));
+        $app->get('/api/v1/admin/regions/{publicId}', RegionAdminAction::class)->add(($require)('REGION.READ'));
+        $app->post('/api/v1/admin/regions', RegionAdminAction::class)->add(($require)('REGION.CREATE'));
+        $app->put('/api/v1/admin/regions/{publicId}', RegionAdminAction::class)->add(($require)('REGION.UPDATE'));
+        $app->post('/api/v1/admin/regions/{publicId}/activate', RegionAdminAction::class)
+            ->add(($require)('REGION.UPDATE'));
+        $app->post('/api/v1/admin/regions/{publicId}/deactivate', RegionAdminAction::class)
+            ->add(($require)('REGION.UPDATE'));
+        $app->delete('/api/v1/admin/regions/{publicId}', RegionAdminAction::class)
+            ->add(($require)('REGION.DELETE'));
         self::registerAdminProductRoutes($app, $require);
     }
 

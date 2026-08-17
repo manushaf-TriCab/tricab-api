@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Public\Product\ProductSearchQuery;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\SearchProductsService;
 
 final class SearchPublicProductsAction
@@ -20,6 +21,7 @@ final class SearchPublicProductsAction
         private readonly SearchProductsService $searchProducts,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
+        private readonly RegionPreferenceResolver $regions,
     ) {
     }
 
@@ -28,7 +30,11 @@ final class SearchPublicProductsAction
         unset($response);
 
         try {
-            $criteria = ProductSearchQuery::fromQueryParams(QueryParams::normalize($request->getQueryParams()));
+            $query = QueryParams::normalize($request->getQueryParams());
+            $criteria = ProductSearchQuery::fromQueryParams($query, $this->regions->resolveCode(
+                $request,
+                QueryParams::stringOrNull($query, 'regionCode'),
+            ));
             $result = $this->searchProducts->execute($criteria);
 
             return $this->responder->success(ProductManagementDtoSerializer::searchListResult($result));

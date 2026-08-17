@@ -10,6 +10,7 @@
     TRIEXPENSE.ACCESS
     CRM.ACCESS
     ERP.ACCESS
+    REGION.READ / CREATE / UPDATE / DELETE
 
   - Safe to re-run
   - Does not rename or remove existing permission codes
@@ -53,7 +54,11 @@ BEGIN TRY
         (N'ALIFLEX_ACCREDITATION.ACCESS', N'Access ALI-FLEX Accreditation', N'Open the ALI-FLEX Accreditation external system from Admin.', N'aliflex'),
         (N'TRIEXPENSE.ACCESS', N'Access Tri Expense', N'Open Tri Expense from Admin.', N'triexpense'),
         (N'CRM.ACCESS', N'Access CRM', N'Open CRM from Admin.', N'crm'),
-        (N'ERP.ACCESS', N'Access ERP', N'Open ERP from Admin.', N'erp');
+        (N'ERP.ACCESS', N'Access ERP', N'Open ERP from Admin.', N'erp'),
+        (N'REGION.READ', N'Read regions', N'View website regions in TriCab Admin.', N'region'),
+        (N'REGION.CREATE', N'Create regions', N'Create website regions in TriCab Admin.', N'region'),
+        (N'REGION.UPDATE', N'Update regions', N'Update and activate website regions in TriCab Admin.', N'region'),
+        (N'REGION.DELETE', N'Delete regions', N'Delete unused website regions in TriCab Admin.', N'region');
 
     DECLARE @PermissionCode NVARCHAR(150);
     DECLARE @PermissionName NVARCHAR(200);

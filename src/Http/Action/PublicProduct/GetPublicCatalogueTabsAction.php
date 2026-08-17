@@ -11,6 +11,7 @@ use TriCab\Api\Http\Action\Admin\CatalogueDtoSerializer;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 
 final class GetPublicCatalogueTabsAction
@@ -19,6 +20,7 @@ final class GetPublicCatalogueTabsAction
         private readonly GetPublicCatalogueService $catalogue,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
+        private readonly RegionPreferenceResolver $regions,
     ) {
     }
 
@@ -27,7 +29,7 @@ final class GetPublicCatalogueTabsAction
         unset($response);
         try {
             $query = QueryParams::normalize($request->getQueryParams());
-            $regionCode = QueryParams::stringOrNull($query, 'regionCode');
+            $regionCode = $this->regions->resolveCode($request, QueryParams::stringOrNull($query, 'regionCode'));
 
             return $this->responder->success([
                 'items' => CatalogueDtoSerializer::publicTabList($this->catalogue->listTabs($regionCode)),

@@ -81,6 +81,8 @@ use TriCab\Api\Http\Action\Admin\ListProductVariantsAction;
 use TriCab\Api\Http\Action\Admin\ListPermissionsAction;
 use TriCab\Api\Http\Action\Admin\ListRolesAction;
 use TriCab\Api\Http\Action\Admin\ListUsersAction;
+use TriCab\Api\Http\Action\Admin\RegionAdminAction;
+use TriCab\Api\Http\Action\PublicRegionAction;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardAction;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardProductActivityAction;
 use TriCab\Api\Http\Action\Admin\PreviewProductCodeAction;
@@ -185,6 +187,7 @@ use TriCab\Api\Product\Persistence\AzureSqlProductSearchRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductSeoRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductSpecificationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductVariantRepository;
+use TriCab\Api\Product\Persistence\AzureSqlRegionRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryLegacyProductMappingRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductAdminQueryRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductAuditRepository;
@@ -210,7 +213,9 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSeoRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSpecificationRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductStore;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductVariantRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryRegionRepository;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Auth\AssistantErrorMapper;
 use TriCab\Api\Identity\Authentication\CompositeBearerTokenValidator;
@@ -411,6 +416,8 @@ use TriCab\Core\Product\Application\Service\GetProductPricingService;
 use TriCab\Core\Product\Application\Service\GetProductPublishReadinessService;
 use TriCab\Core\Product\Application\Service\GetProductVariantsService;
 use TriCab\Core\Product\Application\Service\GetPublicProductService;
+use TriCab\Core\Product\Application\Service\GetRegionsService;
+use TriCab\Core\Product\Application\Service\ManageRegionService;
 use TriCab\Core\Product\Application\Service\ListAdminProductsService;
 use TriCab\Core\Product\Application\Service\PreviewProductCodeService;
 use TriCab\Core\Product\Application\Service\ProductAuditRecorder;
@@ -507,6 +514,7 @@ use TriCab\Core\Product\Contract\ProductSearchRepository;
 use TriCab\Core\Product\Contract\ProductSeoRepository;
 use TriCab\Core\Product\Contract\ProductSpecificationRepository;
 use TriCab\Core\Product\Contract\ProductVariantRepository;
+use TriCab\Core\Product\Contract\RegionRepository;
 use TriCab\Core\Shared\Persistence\ApplicationTransaction;
 use TriCab\Core\Shared\Time\Clock;
 use TriCab\Core\Shared\Time\SystemClock;
@@ -701,6 +709,11 @@ final class ContainerFactory
             ChangeCustomerPortalAccessAction::class => \DI\autowire(ChangeCustomerPortalAccessAction::class),
             ListCustomerPortalUsersAction::class => \DI\autowire(ListCustomerPortalUsersAction::class),
             ProductManagementErrorMapper::class => \DI\autowire(ProductManagementErrorMapper::class),
+            GetRegionsService::class => \DI\autowire(GetRegionsService::class),
+            ManageRegionService::class => \DI\autowire(ManageRegionService::class),
+            RegionPreferenceResolver::class => \DI\autowire(RegionPreferenceResolver::class),
+            PublicRegionAction::class => \DI\autowire(PublicRegionAction::class),
+            RegionAdminAction::class => \DI\autowire(RegionAdminAction::class),
             ListProductsAction::class => \DI\autowire(ListProductsAction::class),
             GetProductAction::class => \DI\autowire(GetProductAction::class),
             GetProductCustomerViewAction::class => \DI\autowire(GetProductCustomerViewAction::class),
@@ -912,7 +925,7 @@ final class ContainerFactory
                     'PHASE12_PILOT_APPROVED',
                 ] as $key) {
                     $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
-                    $env[$key] = ($value === false || $value === null) ? null : (string) $value;
+                    $env[$key] = is_string($value) || is_numeric($value) ? (string) $value : null;
                 }
                 return LiveLegacySourceConfig::fromEnvironment($env);
             },
@@ -1035,6 +1048,7 @@ final class ContainerFactory
             $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
             $definitions[GuestLoginEligibilityLookup::class] = \DI\autowire(AzureSqlGuestLoginEligibilityLookup::class);
             $definitions[ProductRepository::class] = \DI\autowire(AzureSqlProductRepository::class);
+            $definitions[RegionRepository::class] = \DI\autowire(AzureSqlRegionRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
             $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
@@ -1146,6 +1160,7 @@ SQL,
             $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
             $definitions[GuestLoginEligibilityLookup::class] = \DI\autowire(CompositeGuestLoginEligibilityLookup::class);
             $definitions[InMemoryProductStore::class] = \DI\autowire(InMemoryProductStore::class);
+            $definitions[RegionRepository::class] = \DI\autowire(InMemoryRegionRepository::class);
             $definitions[ProductRepository::class] = \DI\autowire(InMemoryProductRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(InMemoryProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(InMemoryProductAdminQueryRepository::class);

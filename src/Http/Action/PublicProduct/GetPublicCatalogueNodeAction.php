@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 
 final class GetPublicCatalogueNodeAction
@@ -20,6 +21,7 @@ final class GetPublicCatalogueNodeAction
         private readonly GetPublicCatalogueService $catalogue,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
+        private readonly RegionPreferenceResolver $regions,
     ) {
     }
 
@@ -30,7 +32,7 @@ final class GetPublicCatalogueNodeAction
             $nodeSlugOrPublicId = RouteParams::require($request, 'nodeSlugOrPublicId');
             $query = QueryParams::normalize($request->getQueryParams());
             $tabSlug = QueryParams::stringOrNull($query, 'tabSlug');
-            $regionCode = QueryParams::stringOrNull($query, 'regionCode');
+            $regionCode = $this->regions->resolveCode($request, QueryParams::stringOrNull($query, 'regionCode'));
 
             if (self::looksLikeUuid($nodeSlugOrPublicId)) {
                 $node = $this->catalogue->getNodeByPublicId($nodeSlugOrPublicId, $regionCode);

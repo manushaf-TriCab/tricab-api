@@ -131,8 +131,7 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
         if ($regionCode !== null && trim($regionCode) !== '') {
             $found = false;
             foreach ($this->store->productRegions($product->publicId()->toString()) as $regionPublicId) {
-                $code = $this->store->regionCodeForPublicId($regionPublicId);
-                if ($code !== null && strcasecmp($code, trim($regionCode)) === 0) {
+                if ($this->store->regionPublicIdMatchesCode($regionPublicId, $regionCode)) {
                     $found = true;
                     break;
                 }
