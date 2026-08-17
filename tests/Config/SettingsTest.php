@@ -279,4 +279,55 @@ final class SettingsTest extends TestCase
             'FOUNDRY_API_KEY' => 'development-key',
         ]);
     }
+
+    public function test_apple_auth_requires_https_redirect_and_guest_jwt(): void
+    {
+        $key = openssl_pkey_new([
+            'private_key_type' => OPENSSL_KEYTYPE_EC,
+            'curve_name' => 'prime256v1',
+        ]);
+        self::assertNotFalse($key);
+        $pem = '';
+        self::assertTrue(openssl_pkey_export($key, $pem));
+        $escaped = str_replace("\n", "\\n", $pem);
+
+        $configured = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'GUEST_JWT_ISSUER' => 'https://api.tricab.local',
+            'GUEST_JWT_AUDIENCE' => 'tricab-api',
+            'GUEST_JWT_SECRET' => 'local-development-guest-jwt-secret-32b',
+            'APPLE_CLIENT_ID' => 'com.tricab.services',
+            'APPLE_TEAM_ID' => 'TEAMID1234',
+            'APPLE_KEY_ID' => 'KEYID12345',
+            'APPLE_PRIVATE_KEY' => $escaped,
+            'APPLE_REDIRECT_URI' => 'https://app.tricab.local/auth/apple/callback',
+        ]);
+        self::assertTrue($configured->isAppleAuthConfigured());
+
+        $httpRedirect = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'GUEST_JWT_ISSUER' => 'https://api.tricab.local',
+            'GUEST_JWT_AUDIENCE' => 'tricab-api',
+            'GUEST_JWT_SECRET' => 'local-development-guest-jwt-secret-32b',
+            'APPLE_CLIENT_ID' => 'com.tricab.services',
+            'APPLE_TEAM_ID' => 'TEAMID1234',
+            'APPLE_KEY_ID' => 'KEYID12345',
+            'APPLE_PRIVATE_KEY' => $escaped,
+            'APPLE_REDIRECT_URI' => 'http://localhost/callback',
+        ]);
+        self::assertFalse($httpRedirect->isAppleAuthConfigured());
+
+        $missingSecret = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'GUEST_JWT_ISSUER' => 'https://api.tricab.local',
+            'GUEST_JWT_AUDIENCE' => 'tricab-api',
+            'GUEST_JWT_SECRET' => '',
+            'APPLE_CLIENT_ID' => 'com.tricab.services',
+            'APPLE_TEAM_ID' => 'TEAMID1234',
+            'APPLE_KEY_ID' => 'KEYID12345',
+            'APPLE_PRIVATE_KEY' => $escaped,
+            'APPLE_REDIRECT_URI' => 'https://app.tricab.local/auth/apple/callback',
+        ]);
+        self::assertFalse($missingSecret->isAppleAuthConfigured());
+    }
 }

@@ -54,6 +54,12 @@ final readonly class Settings
         public string $entraAudience,
         public string $entraRequiredScope,
         public string $entraSubjectClaim,
+        public string $googleClientId,
+        public string $appleClientId,
+        public string $appleTeamId,
+        public string $appleKeyId,
+        public string $applePrivateKey,
+        public string $appleRedirectUri,
         public array $corsAllowedOrigins,
         public string $userRepository,
         public string $dbAuthMode,
@@ -168,6 +174,83 @@ final readonly class Settings
         return $this->guestJwtIssuer !== ''
             && $this->guestJwtAudience !== ''
             && strlen($this->guestJwtSecret) >= self::MIN_GUEST_JWT_SECRET_BYTES;
+    }
+
+    public function isGoogleAuthConfigured(): bool
+    {
+        return $this->isGuestJwtConfigured() && trim($this->googleClientId) !== '';
+    }
+
+    public function isAppleAuthConfigured(): bool
+    {
+        if (!$this->isGuestJwtConfigured()) {
+            return false;
+        }
+
+        if (
+            trim($this->appleClientId) === ''
+            || trim($this->appleTeamId) === ''
+            || trim($this->appleKeyId) === ''
+            || trim($this->applePrivateKey) === ''
+            || trim($this->appleRedirectUri) === ''
+        ) {
+            return false;
+        }
+
+        if (!str_starts_with(strtolower(trim($this->appleRedirectUri)), 'https://')) {
+            return false;
+        }
+
+        try {
+            $this->resolvedApplePrivateKeyPem();
+        } catch (InvalidArgumentException) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Resolves APPLE_PRIVATE_KEY from an inline PEM (with escaped \\n) or file://absolute/path.
+     * Never log or expose the returned material.
+     */
+    public function resolvedApplePrivateKeyPem(): string
+    {
+        $raw = trim($this->applePrivateKey);
+        if ($raw === '') {
+            throw new InvalidArgumentException('APPLE_PRIVATE_KEY is required.');
+        }
+
+        if (str_starts_with($raw, 'file://')) {
+            $path = substr($raw, strlen('file://'));
+            if ($path === '' || !str_starts_with($path, '/')) {
+                throw new InvalidArgumentException('APPLE_PRIVATE_KEY file:// path must be absolute.');
+            }
+            if (!is_readable($path)) {
+                throw new InvalidArgumentException('APPLE_PRIVATE_KEY file path is not readable.');
+            }
+            $contents = file_get_contents($path);
+            if (!is_string($contents) || trim($contents) === '') {
+                throw new InvalidArgumentException('APPLE_PRIVATE_KEY file is empty.');
+            }
+
+            return self::normalizePem($contents);
+        }
+
+        return self::normalizePem($raw);
+    }
+
+    private static function normalizePem(string $value): string
+    {
+        $pem = str_replace(["\\n", "\r\n", "\r"], "\n", trim($value));
+        if (
+            !str_contains($pem, 'BEGIN PRIVATE KEY')
+            && !str_contains($pem, 'BEGIN EC PRIVATE KEY')
+        ) {
+            throw new InvalidArgumentException('APPLE_PRIVATE_KEY must be a PEM private key.');
+        }
+
+        return $pem;
     }
 
     public function isProductBlobEnabled(): bool
@@ -445,6 +528,12 @@ final readonly class Settings
             entraAudience: self::string($env, 'ENTRA_AUDIENCE', ''),
             entraRequiredScope: self::string($env, 'ENTRA_REQUIRED_SCOPE', 'access_as_user'),
             entraSubjectClaim: $subjectClaim,
+            googleClientId: self::string($env, 'GOOGLE_CLIENT_ID', ''),
+            appleClientId: self::string($env, 'APPLE_CLIENT_ID', ''),
+            appleTeamId: self::string($env, 'APPLE_TEAM_ID', ''),
+            appleKeyId: self::string($env, 'APPLE_KEY_ID', ''),
+            applePrivateKey: self::string($env, 'APPLE_PRIVATE_KEY', ''),
+            appleRedirectUri: self::string($env, 'APPLE_REDIRECT_URI', ''),
             corsAllowedOrigins: self::csvList($env, 'CORS_ALLOWED_ORIGINS', 'http://localhost:5173'),
             userRepository: $userRepository,
             dbAuthMode: $dbAuthMode,

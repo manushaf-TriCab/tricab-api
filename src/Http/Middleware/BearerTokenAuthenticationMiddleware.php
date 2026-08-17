@@ -14,6 +14,7 @@ use TriCab\Api\Identity\Authentication\CompositeBearerTokenValidator;
 use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
 use TriCab\Api\Identity\Authentication\EntraTokenValidationFailed;
 use TriCab\Api\Identity\Authentication\EntraTokenValidationNotConfigured;
+use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\ValidatedGuestTokenAttribute;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
@@ -164,6 +165,12 @@ final class BearerTokenAuthenticationMiddleware implements MiddlewareInterface
         $request = $request->withAttribute(VerifiedIdentityAttribute::KEY, $authResult->identity);
         if ($authResult->guestToken !== null) {
             $request = $request->withAttribute(ValidatedGuestTokenAttribute::KEY, $authResult->guestToken);
+            if ($authResult->guestToken->authenticatedUser !== null) {
+                $request = $request->withAttribute(
+                    AuthenticatedUserAttribute::KEY,
+                    $authResult->guestToken->authenticatedUser,
+                );
+            }
         }
 
         return $handler->handle($request);

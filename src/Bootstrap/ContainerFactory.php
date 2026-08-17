@@ -128,11 +128,16 @@ use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\RequestGuestOtpAction;
+use TriCab\Api\Http\Action\AuthenticateGoogleAction;
+use TriCab\Api\Http\Action\AppleAuthChallengeAction;
+use TriCab\Api\Http\Action\AuthenticateAppleAction;
 use TriCab\Api\Http\Action\VerifyGuestOtpAction;
 use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\CustomerManagementErrorMapper;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthErrorMapper;
+use TriCab\Api\Http\Auth\GoogleAuthErrorMapper;
+use TriCab\Api\Http\Auth\AppleAuthErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthEventLogger;
 use TriCab\Api\Http\Auth\GuestAuthRateLimiter;
 use TriCab\Api\Http\Auth\NoOpGuestAuthRateLimiter;
@@ -213,6 +218,13 @@ use TriCab\Api\Identity\Authentication\EntraJwksClient;
 use TriCab\Api\Identity\Authentication\EntraJwksProvider;
 use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
 use TriCab\Api\Identity\Authentication\EntraTokenValidator;
+use TriCab\Api\Identity\Authentication\GoogleJwksClient;
+use TriCab\Api\Identity\Authentication\GoogleOidcIdTokenValidator;
+use TriCab\Api\Identity\Authentication\AppleJwksClient;
+use TriCab\Api\Identity\Authentication\AppleOidcIdTokenValidator;
+use TriCab\Api\Identity\Authentication\AppleClientSecretGenerator;
+use TriCab\Api\Identity\Authentication\AppleAuthorizationCodeHttpExchanger;
+use TriCab\Api\Identity\Authentication\AppleAuthorizationChallengeService;
 use TriCab\Api\Identity\Authentication\GuestJwtIssuer;
 use TriCab\Api\Identity\Authentication\GuestJwtValidator;
 use TriCab\Api\Identity\Authentication\MicrosoftEntraJwtValidator;
@@ -269,6 +281,8 @@ use TriCab\Core\Customer\Contract\CustomerContactUserRepository;
 use TriCab\Core\Customer\Contract\CustomerPortalUserProvisioner;
 use TriCab\Core\Customer\Contract\CustomerRepository;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
+use TriCab\Core\Identity\Application\Service\AuthenticateWithGoogleService;
+use TriCab\Core\Identity\Application\Service\AuthenticateWithAppleService;
 use TriCab\Core\Identity\Application\Service\CompositeGuestLoginEligibilityLookup;
 use TriCab\Core\Identity\Application\Service\CreateGuestSessionService;
 use TriCab\Core\Identity\Application\Service\GuestLoginEligibilityService;
@@ -298,6 +312,9 @@ use TriCab\Core\Identity\Application\Service\UserManagement\UpdateUserService;
 use TriCab\Core\Identity\Application\Service\UserManagement\UserManagementAuditRecorder;
 use TriCab\Core\Identity\Application\Service\VerifyGuestOtpService;
 use TriCab\Core\Identity\Contract\EmailOtpChallengeRepository;
+use TriCab\Core\Identity\Contract\GoogleIdTokenValidator;
+use TriCab\Core\Identity\Contract\AppleIdTokenValidator;
+use TriCab\Core\Identity\Contract\AppleAuthorizationCodeExchanger;
 use TriCab\Core\Identity\Contract\GuestAccessTokenIssuer;
 use TriCab\Core\Identity\Contract\GuestAccessTokenValidator;
 use TriCab\Core\Identity\Contract\GuestLoginEligibilityLookup;
@@ -1229,6 +1246,34 @@ SQL,
         $definitions[RequestGuestOtpAction::class] = \DI\autowire(RequestGuestOtpAction::class);
         $definitions[VerifyGuestOtpAction::class] = \DI\autowire(VerifyGuestOtpAction::class);
         $definitions[LogoutGuestAction::class] = \DI\autowire(LogoutGuestAction::class);
+
+        $definitions[GoogleJwksClient::class] = \DI\create(GoogleJwksClient::class);
+        $definitions[GoogleIdTokenValidator::class] = static function (Container $container) use ($settings): GoogleIdTokenValidator {
+            return new GoogleOidcIdTokenValidator(
+                googleClientId: $settings->googleClientId,
+                jwksClient: self::get($container, GoogleJwksClient::class),
+                clockSkewSeconds: $settings->guestJwtClockSkewSeconds,
+            );
+        };
+        $definitions[AuthenticateWithGoogleService::class] = \DI\autowire(AuthenticateWithGoogleService::class);
+        $definitions[GoogleAuthErrorMapper::class] = \DI\autowire(GoogleAuthErrorMapper::class);
+        $definitions[AuthenticateGoogleAction::class] = \DI\autowire(AuthenticateGoogleAction::class);
+
+        $definitions[AppleJwksClient::class] = \DI\create(AppleJwksClient::class);
+        $definitions[AppleClientSecretGenerator::class] = \DI\autowire(AppleClientSecretGenerator::class);
+        $definitions[AppleAuthorizationChallengeService::class] = \DI\autowire(AppleAuthorizationChallengeService::class);
+        $definitions[AppleAuthorizationCodeExchanger::class] = \DI\autowire(AppleAuthorizationCodeHttpExchanger::class);
+        $definitions[AppleIdTokenValidator::class] = static function (Container $container) use ($settings): AppleIdTokenValidator {
+            return new AppleOidcIdTokenValidator(
+                settings: $settings,
+                jwksClient: self::get($container, AppleJwksClient::class),
+                clockSkewSeconds: $settings->guestJwtClockSkewSeconds,
+            );
+        };
+        $definitions[AuthenticateWithAppleService::class] = \DI\autowire(AuthenticateWithAppleService::class);
+        $definitions[AppleAuthErrorMapper::class] = \DI\autowire(AppleAuthErrorMapper::class);
+        $definitions[AppleAuthChallengeAction::class] = \DI\autowire(AppleAuthChallengeAction::class);
+        $definitions[AuthenticateAppleAction::class] = \DI\autowire(AuthenticateAppleAction::class);
     }
 
     /**

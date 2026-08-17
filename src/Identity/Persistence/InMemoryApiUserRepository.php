@@ -146,6 +146,11 @@ final class InMemoryApiUserRepository implements UserRepository, UserProvisionin
         $this->persist($user, $identity);
     }
 
+    public function externalIdentityCount(): int
+    {
+        return count($this->userIdsByExternalIdentity);
+    }
+
     private function persist(User $user, ?ExternalIdentity $externalIdentity = null): void
     {
         $userId = $user->id()->toInt();

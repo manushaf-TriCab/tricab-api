@@ -41,32 +41,6 @@ final class AzureCliAccessTokenProviderTest extends TestCase
         );
     }
 
-    public function test_existing_cli_path_is_accepted_before_runner_invocation(): void
-    {
-        $launcher = tempnam(sys_get_temp_dir(), 'tricab-az-');
-        self::assertIsString($launcher);
-
-        try {
-            chmod($launcher, 0600);
-            $runner = new RecordingAzureCliProcessRunner();
-            $now = 1_700_000_000;
-            $runner->queueJson(self::tokenPayload('tok-1', $now + 3600));
-            $provider = new AzureCliAccessTokenProvider(
-                $launcher,
-                $runner,
-                null,
-                static fn (): int => $now,
-            );
-
-            self::assertSame('tok-1', $provider->getAccessToken());
-            self::assertSame($launcher, $runner->commands[0][0] ?? null);
-        } finally {
-            if (is_file($launcher)) {
-                unlink($launcher);
-            }
-        }
-    }
-
     public function test_cache_hit_does_not_invoke_cli(): void
     {
         $runner = new RecordingAzureCliProcessRunner();

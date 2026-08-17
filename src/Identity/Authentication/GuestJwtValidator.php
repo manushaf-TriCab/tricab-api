@@ -12,6 +12,7 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\SignatureInvalidException;
 use Throwable;
+use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\ValidatedGuestToken;
 use TriCab\Core\Identity\Contract\GuestAccessTokenValidator;
 use TriCab\Core\Identity\Contract\GuestSessionRepository;
@@ -113,6 +114,10 @@ final class GuestJwtValidator implements GuestAccessTokenValidator
             jwtId: $jwtId->toString(),
             expiresAtUtc: (new DateTimeImmutable('@' . $exp))->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM),
             emailAddress: $user->emailAddress()->toString(),
+            // Session-backed TriCab JWTs resolve the user by GuestSession.UserId.
+            // Attach AuthenticatedUser so /me and RequirePermission work without ExternalIdentity
+            // (Apple Sign-In does not persist provider links).
+            authenticatedUser: AuthenticatedUser::fromUser($user),
         );
     }
 

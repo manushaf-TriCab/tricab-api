@@ -200,7 +200,7 @@ final class InMemoryProduct3DModelRepository implements Product3DModelRepository
         $map[$modelPublicId] = $row;
         $this->store->setThreeDModelsMap($map);
 
-        return self::toSummary($row, $this->store);
+        return self::toSummary($row);
     }
 
     public function markUploadCompleted(string $modelPublicId, array $blobMeta, UserId $actorUserId): Product3DModelSummary
@@ -222,7 +222,7 @@ final class InMemoryProduct3DModelRepository implements Product3DModelRepository
         $map[$modelPublicId] = $row;
         $this->store->setThreeDModelsMap($map);
 
-        return self::toSummary($row, $this->store);
+        return self::toSummary($row);
     }
 
     public function publish(string $modelPublicId, string $expectedRowVersion, UserId $actorUserId): Product3DModelSummary
@@ -255,7 +255,7 @@ final class InMemoryProduct3DModelRepository implements Product3DModelRepository
         $map[$modelPublicId] = $row;
         $this->store->setThreeDModelsMap($map);
 
-        return self::toSummary($row, $this->store);
+        return self::toSummary($row);
     }
 
     public function softDelete(string $modelPublicId, string $expectedRowVersion, UserId $actorUserId): Product3DModelSummary
@@ -278,7 +278,7 @@ final class InMemoryProduct3DModelRepository implements Product3DModelRepository
         $map[$modelPublicId] = $row;
         $this->store->setThreeDModelsMap($map);
 
-        return self::toSummary($row, $this->store);
+        return self::toSummary($row);
     }
 
     private function transition(string $modelPublicId, string $expectedRowVersion, UserId $actorUserId, string $status, bool $published): Product3DModelSummary
@@ -299,7 +299,7 @@ final class InMemoryProduct3DModelRepository implements Product3DModelRepository
         $map[$modelPublicId] = $row;
         $this->store->setThreeDModelsMap($map);
 
-        return self::toSummary($row, $this->store);
+        return self::toSummary($row);
     }
 
     private function clearPrimary(string $productPublicId, mixed $variantPublicId, ?string $exceptModelPublicId = null): void

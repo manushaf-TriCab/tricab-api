@@ -7,6 +7,7 @@ namespace TriCab\Api\Http\Action;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerContextService;
@@ -30,6 +31,11 @@ final class GetAuthenticatedUserAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         unset($response);
+
+        $attachedUser = $request->getAttribute(AuthenticatedUserAttribute::KEY);
+        if ($attachedUser instanceof AuthenticatedUser) {
+            return $this->responder->success($this->serialize($attachedUser));
+        }
 
         $verifiedIdentity = $request->getAttribute(VerifiedIdentityAttribute::KEY);
 

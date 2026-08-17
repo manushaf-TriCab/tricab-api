@@ -138,6 +138,9 @@ use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\RequestGuestOtpAction;
+use TriCab\Api\Http\Action\AuthenticateGoogleAction;
+use TriCab\Api\Http\Action\AppleAuthChallengeAction;
+use TriCab\Api\Http\Action\AuthenticateAppleAction;
 use TriCab\Api\Http\Action\VerifyGuestOtpAction;
 use TriCab\Api\Http\Auth\RequirePermission;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
@@ -208,6 +211,15 @@ final class AppBuilder
             $app->post('/api/v1/auth/guest/request-otp', RequestGuestOtpAction::class);
             $app->post('/api/v1/auth/guest/verify-otp', VerifyGuestOtpAction::class);
             $app->post('/api/v1/auth/guest/logout', LogoutGuestAction::class);
+        }
+
+        if ($settings->isGoogleAuthConfigured()) {
+            $app->post('/api/v1/auth/google', AuthenticateGoogleAction::class);
+        }
+
+        if ($settings->isAppleAuthConfigured()) {
+            $app->get('/api/v1/auth/apple/challenge', AppleAuthChallengeAction::class);
+            $app->post('/api/v1/auth/apple', AuthenticateAppleAction::class);
         }
 
         if ($settings->isDevMemoryProductFileDeliveryEnabled()) {

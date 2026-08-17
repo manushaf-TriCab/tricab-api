@@ -43,26 +43,32 @@ final class RequirePermissionMiddleware implements MiddlewareInterface
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $responder = $this->get(JsonResponder::class);
-        $verifiedIdentity = $request->getAttribute(VerifiedIdentityAttribute::KEY);
 
-        if (!$verifiedIdentity instanceof VerifiedIdentity) {
-            return $responder->error(
-                'UNAUTHENTICATED',
-                'Authentication is required.',
-                401,
-            );
-        }
+        $attachedUser = $request->getAttribute(AuthenticatedUserAttribute::KEY);
+        if ($attachedUser instanceof AuthenticatedUser) {
+            $user = $attachedUser;
+        } else {
+            $verifiedIdentity = $request->getAttribute(VerifiedIdentityAttribute::KEY);
 
-        try {
-            $user = $this->get(ResolveAuthenticatedUserHandler::class)->handle($verifiedIdentity);
-        } catch (IdentityNotLinked) {
-            return $responder->error(
-                'IDENTITY_NOT_LINKED',
-                'This Microsoft identity is not linked to a TriCab user.',
-                403,
-            );
-        } catch (AuthenticationNotAllowed $exception) {
-            return $this->mapAuthenticationNotAllowed($responder, $exception);
+            if (!$verifiedIdentity instanceof VerifiedIdentity) {
+                return $responder->error(
+                    'UNAUTHENTICATED',
+                    'Authentication is required.',
+                    401,
+                );
+            }
+
+            try {
+                $user = $this->get(ResolveAuthenticatedUserHandler::class)->handle($verifiedIdentity);
+            } catch (IdentityNotLinked) {
+                return $responder->error(
+                    'IDENTITY_NOT_LINKED',
+                    'This Microsoft identity is not linked to a TriCab user.',
+                    403,
+                );
+            } catch (AuthenticationNotAllowed $exception) {
+                return $this->mapAuthenticationNotAllowed($responder, $exception);
+            }
         }
 
         if (!$this->hasPermission($user, PermissionCode::fromString($this->requiredPermission))) {

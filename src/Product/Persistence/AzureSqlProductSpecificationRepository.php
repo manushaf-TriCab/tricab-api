@@ -356,11 +356,11 @@ SQL,
 
         $existing = $this->connection->fetchAll(
             <<<'SQL'
-SELECT [ProductSpecificationValueId]
+SELECT TOP (1) [ProductSpecificationValueId]
 FROM [product].[ProductSpecificationValues]
 WHERE [ProductId] = :productId
   AND [SpecificationDefinitionId] = :definitionId
-  AND [DeletedAtUtc] IS NULL
+ORDER BY CASE WHEN [DeletedAtUtc] IS NULL THEN 0 ELSE 1 END, [ProductSpecificationValueId]
 SQL,
             [
                 ':productId' => $productId,
@@ -438,7 +438,7 @@ WHERE [ProductSpecificationValueId] = :valueId
 SQL,
                 [
                     ':valueId' => $valueId,
-                    ...$bind,
+                    ...$this->withoutCreatedByParam($bind),
                 ],
             );
         }
@@ -456,11 +456,11 @@ SQL,
 
         $existing = $this->connection->fetchAll(
             <<<'SQL'
-SELECT [ProductVariantSpecificationValueId]
+SELECT TOP (1) [ProductVariantSpecificationValueId]
 FROM [product].[ProductVariantSpecificationValues]
 WHERE [ProductVariantId] = :variantId
   AND [SpecificationDefinitionId] = :definitionId
-  AND [DeletedAtUtc] IS NULL
+ORDER BY CASE WHEN [DeletedAtUtc] IS NULL THEN 0 ELSE 1 END, [ProductVariantSpecificationValueId]
 SQL,
             [
                 ':variantId' => $variantId,
@@ -538,7 +538,7 @@ WHERE [ProductVariantSpecificationValueId] = :valueId
 SQL,
                 [
                     ':valueId' => $valueId,
-                    ...$bind,
+                    ...$this->withoutCreatedByParam($bind),
                 ],
             );
         }
@@ -638,6 +638,20 @@ SQL,
             ':createdByUserId' => $actorUserId->toInt(),
             ':updatedByUserId' => $actorUserId->toInt(),
         ];
+    }
+
+    /**
+     * Update statements never set CreatedByUserId, and binding an unused
+     * parameter fails with HY093.
+     *
+     * @param array<string, scalar|SqlBinary|null> $bind
+     * @return array<string, scalar|SqlBinary|null>
+     */
+    private function withoutCreatedByParam(array $bind): array
+    {
+        unset($bind[':createdByUserId']);
+
+        return $bind;
     }
 
     /**

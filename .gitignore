@@ -9,3 +9,4 @@
 /var/cache/
 /tmp/
 /output/
+*.p8
