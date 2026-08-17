@@ -10,10 +10,12 @@ final class ExternalProvider
 {
     public const MICROSOFT_ENTRA = 'microsoft_entra';
     public const EMAIL_OTP = 'email_otp';
+    public const GOOGLE = 'google';
 
     private const ALLOWED = [
         self::MICROSOFT_ENTRA,
         self::EMAIL_OTP,
+        self::GOOGLE,
     ];
 
     private function __construct(private readonly string $value)
@@ -42,6 +44,11 @@ final class ExternalProvider
         return new self(self::EMAIL_OTP);
     }
 
+    public static function google(): self
+    {
+        return new self(self::GOOGLE);
+    }
+
     public function toString(): string
     {
         return $this->value;
@@ -60,5 +67,10 @@ final class ExternalProvider
     public function isEmailOtp(): bool
     {
         return $this->value === self::EMAIL_OTP;
+    }
+
+    public function isGoogle(): bool
+    {
+        return $this->value === self::GOOGLE;
     }
 }

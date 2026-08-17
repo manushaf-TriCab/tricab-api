@@ -62,6 +62,14 @@ final class InMemoryUserRepository implements UserRepository
         return $this->usersById[$userId] ?? null;
     }
 
+    /**
+     * @return list<string>
+     */
+    public function externalIdentityKeys(): array
+    {
+        return array_keys($this->userIdsByExternalIdentity);
+    }
+
     private function externalIdentityKey(ExternalIdentity $identity): string
     {
         return implode('|', [

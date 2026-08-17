@@ -7,6 +7,9 @@ namespace TriCab\Core\Identity\Application\DTO;
 /**
  * Cryptographically and session-validated guest token identity.
  * Roles/permissions are not taken from JWT claims.
+ *
+ * When authenticatedUser is present, API middleware can attach it for /me and
+ * RequirePermission without resolving via ExternalIdentity (needed for Apple Sign-In).
  */
 final readonly class ValidatedGuestToken
 {
@@ -16,6 +19,7 @@ final readonly class ValidatedGuestToken
         public string $jwtId,
         public string $expiresAtUtc,
         public string $emailAddress,
+        public ?AuthenticatedUser $authenticatedUser = null,
     ) {
     }
 }

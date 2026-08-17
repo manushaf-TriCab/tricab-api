@@ -44,6 +44,15 @@ final class ExternalProviderTest extends TestCase
         self::assertTrue(ExternalProvider::emailOtp()->equals($provider));
     }
 
+    public function test_accepts_google_provider(): void
+    {
+        $provider = ExternalProvider::fromString('Google');
+
+        self::assertSame(ExternalProvider::GOOGLE, $provider->toString());
+        self::assertTrue($provider->isGoogle());
+        self::assertTrue(ExternalProvider::google()->equals($provider));
+    }
+
     #[DataProvider('invalidValues')]
     public function test_rejects_unknown_providers(string $value): void
     {
@@ -56,8 +65,8 @@ final class ExternalProviderTest extends TestCase
     public static function invalidValues(): iterable
     {
         yield 'empty' => [''];
-        yield 'google' => ['google'];
         yield 'okta' => ['okta'];
+        yield 'github' => ['github'];
     }
 
     public function test_equality(): void
