@@ -1767,7 +1767,7 @@
             "dist": {
                 "type": "path",
                 "url": "core",
-                "reference": "e748f90fa272ae4ef65c01dff6132d7d64dda425"
+                "reference": "b2e013966880042461494b6d95c9110d1fe3387b"
             },
             "require": {
                 "php": "^8.3"

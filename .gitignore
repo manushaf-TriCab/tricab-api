@@ -9,4 +9,5 @@
 /var/cache/
 /tmp/
 /output/
+/artifacts/
 *.p8

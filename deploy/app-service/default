@@ -1,0 +1,82 @@
+server {
+    listen 8080;
+    listen [::]:8080;
+
+    root /home/site/wwwroot;
+    index index.html;
+    server_name _;
+    port_in_redirect off;
+
+    location = /api {
+        try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
+    location ^~ /api/ {
+        try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
+    location = /health {
+        try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
+    location = /health/database {
+        try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
+    location @tricab_api {
+        include fastcgi_params;
+        fastcgi_pass 127.0.0.1:9000;
+
+        fastcgi_param HTTP_PROXY "";
+        fastcgi_param SCRIPT_FILENAME /home/site/wwwroot/api/index.php;
+        fastcgi_param SCRIPT_NAME /api/index.php;
+        fastcgi_param DOCUMENT_ROOT /home/site/wwwroot;
+        fastcgi_param REQUEST_URI $request_uri;
+        fastcgi_param QUERY_STRING $query_string;
+
+        fastcgi_intercept_errors off;
+        fastcgi_connect_timeout 300;
+        fastcgi_send_timeout 3600;
+        fastcgi_read_timeout 3600;
+        fastcgi_buffer_size 128k;
+        fastcgi_buffers 4 256k;
+        fastcgi_busy_buffers_size 256k;
+        fastcgi_temp_file_write_size 256k;
+    }
+
+    location = /app {
+        deny all;
+    }
+
+    location ^~ /app/ {
+        deny all;
+    }
+
+    location = /default {
+        deny all;
+    }
+
+    location ~ [^/]\.php(?:/|$) {
+        return 404;
+    }
+
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+
+    location = /auth-redirect.html {
+        try_files $uri =404;
+        add_header Cache-Control "no-store" always;
+    }
+
+    location = /auth-logout-complete.html {
+        try_files $uri =404;
+        add_header Cache-Control "no-store" always;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
