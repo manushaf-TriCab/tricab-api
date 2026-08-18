@@ -22,6 +22,8 @@ final class AzureSqlRegionRepository implements RegionRepository
 {
     private ?bool $hasCatalogueNodeRegions = null;
 
+    private ?bool $hasProductDocumentRegionId = null;
+
     public function __construct(
         private readonly SqlConnection $connection,
     ) {
@@ -41,8 +43,11 @@ final class AzureSqlRegionRepository implements RegionRepository
         $where = $criteria->includeDeleted ? '1 = 1' : 'r.[DeletedAtUtc] IS NULL';
         $params = [];
         if ($criteria->normalizedSearch() !== null) {
-            $where .= ' AND (r.[RegionCode] LIKE :search OR r.[RegionName] LIKE :search OR r.[DisplayName] LIKE :search)';
-            $params[':search'] = '%' . $criteria->normalizedSearch() . '%';
+            $searchTerm = '%' . $criteria->normalizedSearch() . '%';
+            $where .= ' AND (r.[RegionCode] LIKE :searchCode OR r.[RegionName] LIKE :searchName OR r.[DisplayName] LIKE :searchDisplayName)';
+            $params[':searchCode'] = $searchTerm;
+            $params[':searchName'] = $searchTerm;
+            $params[':searchDisplayName'] = $searchTerm;
         }
         foreach ([
             'isActive' => ['r.[IsActive]', $criteria->isActive],
@@ -131,7 +136,7 @@ VALUES (
     :code, :name, :displayName, :flag, :themeColour, :displayOrder,
     :isDefault, :isActive, :websiteEnabled, :showInPicker, :defaultWebsiteRegion,
     :countryCodes, :currencyCode, :timezoneId, :languageCode, :office, :phone, :email,
-    :salesContact, :actorUserId, :actorUserId
+    :salesContact, :createdByUserId, :updatedByUserId
 )
 SQL,
             $this->writeParams($data, $actorUserId),
@@ -146,10 +151,6 @@ SQL,
         string $expectedRowVersion,
         UserId $actorUserId,
     ): RegionRecord {
-        $params = $this->writeParams($data, $actorUserId) + [
-            ':publicId' => $publicId,
-            ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary(RowVersionToken::fromBase64($expectedRowVersion)),
-        ];
         $rows = $this->connection->fetchAll(
             <<<'SQL'
 UPDATE [product].[Regions] SET
@@ -159,11 +160,14 @@ UPDATE [product].[Regions] SET
     [ShowInRegionPicker] = :showInPicker, [IsDefaultWebsiteRegion] = :defaultWebsiteRegion,
     [CountryCodes] = :countryCodes, [CurrencyCode] = :currencyCode, [TimezoneId] = :timezoneId,
     [LanguageCode] = :languageCode, [Office] = :office, [Phone] = :phone, [Email] = :email,
-    [SalesContact] = :salesContact, [UpdatedAtUtc] = SYSUTCDATETIME(), [UpdatedByUserId] = :actorUserId
+    [SalesContact] = :salesContact, [UpdatedAtUtc] = SYSUTCDATETIME(), [UpdatedByUserId] = :updatedByUserId
 OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
 WHERE [PublicId] = :publicId AND [DeletedAtUtc] IS NULL AND [RowVersion] = :expectedRowVersion
 SQL,
-            $params,
+            $this->writeParams($data, $actorUserId) + [
+                ':publicId' => $publicId,
+                ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary(RowVersionToken::fromBase64($expectedRowVersion)),
+            ],
         );
         $this->assertMutation($publicId, $rows);
         return $this->require($publicId);
@@ -188,12 +192,15 @@ SQL,
         $catalogueExpression = $this->hasCatalogueNodeRegions()
             ? '(SELECT COUNT_BIG(1) FROM [product].[CatalogueNodeRegions] x WHERE x.[RegionId] = r.[RegionId])'
             : '0';
+        $documentExpression = $this->hasProductDocumentRegionId()
+            ? '(SELECT COUNT_BIG(1) FROM [product].[ProductDocuments] x WHERE x.[RegionId] = r.[RegionId] AND x.[DeletedAtUtc] IS NULL)'
+            : '0';
         $rows = $this->connection->fetchAll(
             <<<SQL
 SELECT
     (SELECT COUNT_BIG(1) FROM [product].[ProductRegions] x WHERE x.[RegionId] = r.[RegionId] AND x.[DeletedAtUtc] IS NULL) AS [ProductCount],
     (SELECT COUNT_BIG(1) FROM [product].[Markets] x WHERE x.[RegionId] = r.[RegionId] AND x.[DeletedAtUtc] IS NULL) AS [MarketCount],
-    (SELECT COUNT_BIG(1) FROM [product].[ProductDocuments] x WHERE x.[RegionId] = r.[RegionId] AND x.[DeletedAtUtc] IS NULL) AS [DocumentCount],
+    {$documentExpression} AS [DocumentCount],
     {$catalogueExpression} AS [CatalogueCount]
 FROM [product].[Regions] r
 WHERE r.[PublicId] = :publicId
@@ -286,7 +293,9 @@ SQL,
             ':countryCodes' => implode(',', $data->countryCodes), ':currencyCode' => $data->currencyCode,
             ':timezoneId' => $data->timezoneId, ':languageCode' => $data->languageCode,
             ':office' => $data->office, ':phone' => $data->phone, ':email' => $data->email,
-            ':salesContact' => $data->salesContact, ':actorUserId' => $actor->toInt(),
+            ':salesContact' => $data->salesContact,
+            ':createdByUserId' => $actor->toInt(),
+            ':updatedByUserId' => $actor->toInt(),
         ];
     }
 
@@ -309,20 +318,25 @@ SQL,
         bool $delete,
         bool $active,
     ): RegionRecord {
+        $actorUserId = $actor->toInt();
         $deleteSet = $delete
-            ? '[DeletedAtUtc] = SYSUTCDATETIME(), [DeletedByUserId] = :actorUserId,'
+            ? '[DeletedAtUtc] = SYSUTCDATETIME(), [DeletedByUserId] = :deletedByUserId,'
             : '';
+        $params = [
+            ':publicId' => $publicId,
+            ':isActive' => $active ? 1 : 0,
+            ':updatedByUserId' => $actorUserId,
+            ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary(RowVersionToken::fromBase64($expectedRowVersion)),
+        ];
+        if ($delete) {
+            $params[':deletedByUserId'] = $actorUserId;
+        }
         $rows = $this->connection->fetchAll(
             "UPDATE [product].[Regions] SET {$deleteSet}
-                [IsActive] = :isActive, [UpdatedAtUtc] = SYSUTCDATETIME(), [UpdatedByUserId] = :actorUserId
+                [IsActive] = :isActive, [UpdatedAtUtc] = SYSUTCDATETIME(), [UpdatedByUserId] = :updatedByUserId
              OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
              WHERE [PublicId] = :publicId AND [DeletedAtUtc] IS NULL AND [RowVersion] = :expectedRowVersion",
-            [
-                ':publicId' => $publicId,
-                ':isActive' => $active ? 1 : 0,
-                ':actorUserId' => $actor->toInt(),
-                ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary(RowVersionToken::fromBase64($expectedRowVersion)),
-            ],
+            $params,
         );
         $this->assertMutation($publicId, $rows);
         return $this->require($publicId, $delete);
@@ -358,5 +372,17 @@ SQL,
             $this->hasCatalogueNodeRegions = AzureSqlValueMapper::boolValue($rows[0]['ExistsFlag'] ?? 0);
         }
         return $this->hasCatalogueNodeRegions;
+    }
+
+    private function hasProductDocumentRegionId(): bool
+    {
+        if ($this->hasProductDocumentRegionId === null) {
+            $rows = $this->connection->fetchAll(
+                "SELECT CASE WHEN COL_LENGTH(N'product.ProductDocuments', N'RegionId') IS NULL THEN 0 ELSE 1 END AS [ExistsFlag]",
+            );
+            $this->hasProductDocumentRegionId = AzureSqlValueMapper::boolValue($rows[0]['ExistsFlag'] ?? 0);
+        }
+
+        return $this->hasProductDocumentRegionId;
     }
 }

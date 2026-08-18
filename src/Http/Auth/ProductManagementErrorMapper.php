@@ -85,6 +85,24 @@ final class ProductManagementErrorMapper
         }
 
         if ($exception instanceof DatabaseUnavailable) {
+            if ($exception->isForeignKeyViolation()) {
+                return $this->responder->error(
+                    'REFERENCE_IN_USE',
+                    'This record is referenced by other data and cannot be deleted yet.',
+                    422,
+                );
+            }
+
+            if ($exception->isInvalidObjectReference()) {
+                error_log('Database schema mismatch during region operation: ' . $exception->getMessage());
+
+                return $this->responder->error(
+                    'DATABASE_SCHEMA_MISMATCH',
+                    'The database schema is missing a required region table or column. Run the latest region migration scripts.',
+                    503,
+                );
+            }
+
             return $this->responder->error('DATABASE_UNAVAILABLE', 'The database is temporarily unavailable.', 503);
         }
 

@@ -44,6 +44,7 @@ use TriCab\Api\Http\Action\Admin\AssignProductApplicationsAction;
 use TriCab\Api\Http\Action\Admin\AssignProductCodeAction;
 use TriCab\Api\Http\Action\Admin\AssignProductIndustriesAction;
 use TriCab\Api\Http\Action\Admin\AssignProductMarketsAction;
+use TriCab\Api\Http\Action\Admin\AssignProductRegionsAction;
 use TriCab\Api\Http\Action\Admin\AssignProductSpecificationsAction;
 use TriCab\Api\Http\Action\Admin\GetProductSpecificationsAction;
 use TriCab\Api\Http\Action\Admin\AssignRolePermissionAction;
@@ -75,6 +76,7 @@ use TriCab\Api\Http\Action\Admin\UpdateProductMediaRoleAction;
 use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
 use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
 use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
+use TriCab\Api\Http\Action\Admin\GetProductRegionsAction;
 use TriCab\Api\Http\Action\Admin\GetProductSeoAction;
 use TriCab\Api\Http\Action\Admin\GetRoleAction;
 use TriCab\Api\Http\Action\Admin\GetUserAction;
@@ -117,6 +119,7 @@ use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
 use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
 use TriCab\Api\Http\Action\PublicProduct\DownloadProductDocumentAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductBySlugAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductCustomerViewAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCataloguePanelAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabTreeAction;
@@ -266,6 +269,8 @@ final class AppBuilder
             ->add(($require)('ROLE.STATUS.UPDATE'));
         $app->post('/api/v1/admin/roles/{roleCode}/permissions', AssignRolePermissionAction::class)
             ->add(($require)('ROLE.PERMISSION.ASSIGN'));
+        $app->delete('/api/v1/admin/roles/{roleCode}/permissions', RemoveRolePermissionAction::class)
+            ->add(($require)('ROLE.PERMISSION.REMOVE'));
         $app->delete('/api/v1/admin/roles/{roleCode}/permissions/{permissionCode}', RemoveRolePermissionAction::class)
             ->add(($require)('ROLE.PERMISSION.REMOVE'));
 
@@ -298,6 +303,8 @@ final class AppBuilder
     {
         $app->post('/api/v1/assistant/messages', AssistantMessageAction::class);
         $app->get('/api/v1/products/{slug}', GetPublicProductBySlugAction::class);
+        $app->get('/api/v1/products/{slug}/customer-view', GetPublicProductCustomerViewAction::class);
+        $app->get('/api/v1/customer-view-theme', GetCustomerViewThemeAction::class);
         $app->get('/api/v1/products/{slug}/variants', GetPublicProductVariantsAction::class);
         $app->get('/api/v1/products/{slug}/media', GetPublicProductMediaAction::class);
         $app->get('/api/v1/products/{slug}/documents', GetPublicProductDocumentsAction::class);
@@ -368,6 +375,10 @@ final class AppBuilder
             ->add(($require)('PRODUCT.DOCUMENTS.MANAGE'));
 
         $app->put('/api/v1/admin/products/{productPublicId}/markets', AssignProductMarketsAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
+        $app->get('/api/v1/admin/products/{productPublicId}/regions', GetProductRegionsAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/products/{productPublicId}/regions', AssignProductRegionsAction::class)
             ->add(($require)('PRODUCT.UPDATE'));
         $app->put('/api/v1/admin/products/{productPublicId}/industries', AssignProductIndustriesAction::class)
             ->add(($require)('PRODUCT.UPDATE'));

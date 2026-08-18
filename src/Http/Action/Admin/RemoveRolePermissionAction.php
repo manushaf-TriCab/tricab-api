@@ -10,6 +10,8 @@ use Throwable;
 use TriCab\Api\Http\Auth\AdminActorFactory;
 use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\UserManagementErrorMapper;
+use TriCab\Api\Http\Exception\HttpRequestValidationFailed;
+use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Identity\Application\DTO\UserManagement\RoleDetails;
@@ -31,7 +33,7 @@ final class RemoveRolePermissionAction
 
         try {
             $roleCode = RouteParams::require($request, 'roleCode');
-            $permissionCode = RouteParams::require($request, 'permissionCode');
+            $permissionCode = self::resolvePermissionCode($request);
             $actor = AdminActorFactory::fromRequest($request);
 
             /** @var RoleDetails $updated */
@@ -45,5 +47,24 @@ final class RemoveRolePermissionAction
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }
+    }
+
+    /**
+     * Prefer ?permissionCode= so the last path segment is `permissions`.
+     * PHP's built-in server treats a dotted last segment (PRODUCT.READ) as a
+     * missing static file, so CORS preflight never reaches Slim.
+     */
+    private static function resolvePermissionCode(ServerRequestInterface $request): string
+    {
+        $fromQuery = QueryParams::stringOrNull(
+            QueryParams::normalize($request->getQueryParams()),
+            'permissionCode',
+        );
+        $permissionCode = $fromQuery ?? RouteParams::optional($request, 'permissionCode');
+        if ($permissionCode === null) {
+            throw HttpRequestValidationFailed::invalid('permissionCode is required.');
+        }
+
+        return $permissionCode;
     }
 }

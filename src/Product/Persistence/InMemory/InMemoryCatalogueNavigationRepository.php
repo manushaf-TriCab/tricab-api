@@ -1061,7 +1061,14 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
                 [$a->displayOrder, $a->nodeName] <=> [$b->displayOrder, $b->nodeName],
         );
         $products = $includeProducts ? $this->listPublicNodeProducts($publicId, $regionCode) : [];
-        $productCount = count($this->nodeProducts[$publicId] ?? []);
+        $productCount = $includeProducts
+            ? count($products)
+            : (($regionCode !== null && trim($regionCode) !== '')
+                ? count($this->listPublicNodeProducts($publicId, $regionCode))
+                : count(array_filter(
+                    $this->nodeProducts[$publicId] ?? [],
+                    static fn (array $placement): bool => (bool) ($placement['isActive'] ?? true),
+                )));
 
         return new PublicCatalogueTreeNode(
             publicId: $publicId,

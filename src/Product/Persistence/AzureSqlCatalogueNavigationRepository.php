@@ -1368,8 +1368,14 @@ SQL;
      */
     private function fetchPublicNodes(string $tabPublicId, ?string $regionCode): array
     {
+        $productCountSelect = $this->publicNodeProductCountSelect($regionCode);
+        $params = [':tabPublicId' => $tabPublicId];
+        if ($regionCode !== null && trim($regionCode) !== '') {
+            $params[':regionCode'] = strtoupper(trim($regionCode));
+        }
+
         $rows = $this->connection->fetchAll(
-            <<<'SQL'
+            <<<SQL
 SELECT
     CONVERT(NVARCHAR(36), n.[PublicId]) AS [PublicId],
     n.[NodeCode],
@@ -1381,11 +1387,7 @@ SELECT
     n.[ImageAltText],
     n.[DisplayOrder],
     CONVERT(NVARCHAR(36), parent.[PublicId]) AS [ParentPublicId],
-    (
-        SELECT COUNT(*)
-        FROM [product].[CatalogueNodeProducts] cnp
-        WHERE cnp.[CatalogueNodeId] = n.[CatalogueNodeId] AND cnp.[IsActive] = 1
-    ) AS [ProductCount]
+    {$productCountSelect}
 FROM [product].[CatalogueNodes] n
 INNER JOIN [product].[CatalogueTabs] t ON t.[CatalogueTabId] = n.[CatalogueTabId]
 LEFT JOIN [product].[CatalogueNodes] parent ON parent.[CatalogueNodeId] = n.[ParentNodeId]
@@ -1395,7 +1397,7 @@ WHERE t.[PublicId] = :tabPublicId
   AND n.[IsPublic] = 1
 ORDER BY n.[DisplayOrder], n.[NodeName]
 SQL,
-            [':tabPublicId' => $tabPublicId],
+            $params,
         );
         $publicIds = [];
         foreach ($rows as $row) {
@@ -1490,8 +1492,14 @@ SQL,
     /** @return list<array<string, mixed>> */
     private function fetchPublicChildren(string $nodePublicId, ?string $regionCode): array
     {
+        $productCountSelect = $this->publicNodeProductCountSelect($regionCode);
+        $params = [':nodePublicId' => $nodePublicId];
+        if ($regionCode !== null && trim($regionCode) !== '') {
+            $params[':regionCode'] = strtoupper(trim($regionCode));
+        }
+
         $rows = $this->connection->fetchAll(
-            <<<'SQL'
+            <<<SQL
 SELECT
     CONVERT(NVARCHAR(36), n.[PublicId]) AS [PublicId],
     n.[NodeCode],
@@ -1503,11 +1511,7 @@ SELECT
     n.[ImageAltText],
     n.[DisplayOrder],
     CONVERT(NVARCHAR(36), parent.[PublicId]) AS [ParentPublicId],
-    (
-        SELECT COUNT(*)
-        FROM [product].[CatalogueNodeProducts] cnp
-        WHERE cnp.[CatalogueNodeId] = n.[CatalogueNodeId] AND cnp.[IsActive] = 1
-    ) AS [ProductCount]
+    {$productCountSelect}
 FROM [product].[CatalogueNodes] n
 INNER JOIN [product].[CatalogueNodes] parent ON parent.[CatalogueNodeId] = n.[ParentNodeId]
 WHERE parent.[PublicId] = :nodePublicId
@@ -1516,7 +1520,7 @@ WHERE parent.[PublicId] = :nodePublicId
   AND n.[IsPublic] = 1
 ORDER BY n.[DisplayOrder], n.[NodeName]
 SQL,
-            [':nodePublicId' => $nodePublicId],
+            $params,
         );
         $publicIds = [];
         foreach ($rows as $row) {
@@ -1569,6 +1573,46 @@ SQL,
     private function nodeVisibleForRegion(string $nodePublicId, ?string $regionCode): bool
     {
         return $this->nodeVisibleForRegionCodes($this->loadRegionCodes($nodePublicId), $regionCode);
+    }
+
+    private function publicNodeProductCountSelect(?string $regionCode): string
+    {
+        if ($regionCode === null || trim($regionCode) === '') {
+            return <<<'SQL'
+(
+    SELECT COUNT(*)
+    FROM [product].[CatalogueNodeProducts] cnp
+    WHERE cnp.[CatalogueNodeId] = n.[CatalogueNodeId] AND cnp.[IsActive] = 1
+) AS [ProductCount]
+SQL;
+        }
+
+        return <<<'SQL'
+(
+    SELECT COUNT(*)
+    FROM [product].[CatalogueNodeProducts] cnp
+    INNER JOIN [product].[Products] p ON p.[ProductId] = cnp.[ProductId]
+    INNER JOIN [product].[ProductStatuses] ps ON ps.[ProductStatusId] = p.[ProductStatusId]
+    WHERE cnp.[CatalogueNodeId] = n.[CatalogueNodeId]
+      AND cnp.[IsActive] = 1
+      AND p.[DeletedAtUtc] IS NULL
+      AND p.[IsActive] = 1
+      AND ps.[StatusCode] = N'published'
+      AND (p.[PublishAtUtc] IS NULL OR p.[PublishAtUtc] <= SYSUTCDATETIME())
+      AND (p.[UnpublishAtUtc] IS NULL OR p.[UnpublishAtUtc] > SYSUTCDATETIME())
+      AND EXISTS (
+          SELECT 1
+          FROM [product].[ProductRegions] prv
+          INNER JOIN [product].[Regions] rv ON rv.[RegionId] = prv.[RegionId]
+          WHERE prv.[ProductId] = p.[ProductId]
+            AND prv.[DeletedAtUtc] IS NULL
+            AND prv.[IsVisible] = 1
+            AND rv.[RegionCode] = :regionCode
+            AND (prv.[AvailableFromUtc] IS NULL OR prv.[AvailableFromUtc] <= SYSUTCDATETIME())
+            AND (prv.[AvailableToUtc] IS NULL OR prv.[AvailableToUtc] > SYSUTCDATETIME())
+      )
+) AS [ProductCount]
+SQL;
     }
 
     /**

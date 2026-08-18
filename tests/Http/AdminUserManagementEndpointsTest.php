@@ -388,6 +388,21 @@ final class AdminUserManagementEndpointsTest extends TestCase
         );
         self::assertSame(200, $removePermission->getStatusCode());
 
+        $reassignPermission = $app->handle($this->jsonRequest(
+            'POST',
+            '/api/v1/admin/roles/SUPPORT_AGENT/permissions',
+            ['permissionCode' => 'USER.READ'],
+        ));
+        self::assertSame(200, $reassignPermission->getStatusCode());
+
+        $removePermissionByQuery = $app->handle(
+            TestAppFactory::request(
+                'DELETE',
+                '/api/v1/admin/roles/SUPPORT_AGENT/permissions?permissionCode=USER.READ',
+            ),
+        );
+        self::assertSame(200, $removePermissionByQuery->getStatusCode());
+
         $deactivate = $app->handle($this->jsonRequest('PATCH', '/api/v1/admin/roles/SUPPORT_AGENT/status', [
             'isActive' => false,
         ]));

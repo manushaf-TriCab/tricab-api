@@ -77,10 +77,7 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
             return null;
         }
 
-        $slug = $this->primarySlug($publicId->toString());
-        if ($slug === null) {
-            return null;
-        }
+        $slug = $this->primarySlug($publicId->toString()) ?? $publicId->toString();
 
         return $this->buildDetail($record['product'], $slug, $regionCode);
     }

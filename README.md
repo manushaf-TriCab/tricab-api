@@ -23,8 +23,10 @@ cd /Users/thilanh/Documents/Projects/tricab-core/tricab-api
 cp .env.example .env
 composer install
 composer dump-autoload
-php -S localhost:8080 -t public
+php -S localhost:8080 -t public public/router.php
 ```
+
+Use `public/router.php` with `php -S`. Without it, paths such as `PRODUCT.READ` are treated as missing files and CORS preflight returns 404.
 
 ### Azure SQL prerequisites
 

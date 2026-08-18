@@ -62,6 +62,59 @@ final class PublicProductEndpointsTest extends TestCase
         self::assertArrayNotHasKey('unitPrice', $data);
     }
 
+    public function test_public_customer_view_matches_datasheet_shape_without_auth(): void
+    {
+        $app = TestAppFactory::create();
+        $this->seedReferenceData($app);
+        $slug = $this->createPublishedProductWithSlug($app, 'customer-view-widget', 'Customer View Widget');
+
+        $response = $app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug . '/customer-view'));
+        $payload = TestAppFactory::json($response);
+
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+        /** @var array<string, mixed> $data */
+        $data = $payload['data'];
+        self::assertSame('Customer View Widget', $data['productName']);
+        self::assertArrayHasKey('variantMatrix', $data);
+        self::assertArrayHasKey('columns', $data['variantMatrix']);
+        self::assertArrayHasKey('rows', $data['variantMatrix']);
+        self::assertArrayHasKey('preview', $data);
+        self::assertTrue((bool) $data['preview']['isPublished']);
+        self::assertArrayNotHasKey('rowVersion', $data);
+        self::assertArrayNotHasKey('pricing', $data);
+
+        $theme = $app->handle(TestAppFactory::request('GET', '/api/v1/customer-view-theme'));
+        self::assertSame(200, $theme->getStatusCode());
+        $themePayload = TestAppFactory::json($theme);
+        self::assertArrayHasKey('theme', $themePayload['data']);
+    }
+
+    public function test_public_product_and_customer_view_accept_public_id(): void
+    {
+        $app = TestAppFactory::create();
+        $this->seedReferenceData($app);
+        $seeded = $this->seedPublishedProduct($app, 'public-id-widget', 'Public Id Widget');
+        $publicId = $seeded['publicId'];
+
+        $detail = $app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $publicId));
+        $detailPayload = TestAppFactory::json($detail);
+        self::assertSame(200, $detail->getStatusCode(), (string) $detail->getBody());
+        /** @var array<string, mixed> $detailData */
+        $detailData = $detailPayload['data'];
+        self::assertSame('Public Id Widget', $detailData['productName']);
+        self::assertSame($publicId, $detailData['publicId']);
+
+        $customerView = $app->handle(
+            TestAppFactory::request('GET', '/api/v1/products/' . $publicId . '/customer-view'),
+        );
+        $customerPayload = TestAppFactory::json($customerView);
+        self::assertSame(200, $customerView->getStatusCode(), (string) $customerView->getBody());
+        /** @var array<string, mixed> $customerData */
+        $customerData = $customerPayload['data'];
+        self::assertSame('Public Id Widget', $customerData['productName']);
+        self::assertSame($publicId, $customerData['publicId']);
+    }
+
     public function test_public_product_nested_routes_return_items_without_auth(): void
     {
         $app = TestAppFactory::create();
@@ -152,6 +205,15 @@ final class PublicProductEndpointsTest extends TestCase
      */
     private function createPublishedProductWithSlug(App $app, string $slug, string $productName): string
     {
+        return $this->seedPublishedProduct($app, $slug, $productName)['slug'];
+    }
+
+    /**
+     * @param App<ContainerInterface> $app
+     * @return array{publicId: string, slug: string}
+     */
+    private function seedPublishedProduct(App $app, string $slug, string $productName): array
+    {
         $create = $app->handle($this->jsonRequest('POST', '/api/v1/admin/products', [
             'productName' => $productName,
             'familyPublicId' => self::FAMILY_PUBLIC_ID,
@@ -179,7 +241,7 @@ final class PublicProductEndpointsTest extends TestCase
         ]));
         self::assertSame(200, $slugResponse->getStatusCode(), (string) $slugResponse->getBody());
 
-        return $slug;
+        return ['publicId' => $publicId, 'slug' => $slug];
     }
 
     /**

@@ -31,6 +31,7 @@ use TriCab\Api\Http\Action\Admin\AssignProductApplicationsAction;
 use TriCab\Api\Http\Action\Admin\AssignProductCodeAction;
 use TriCab\Api\Http\Action\Admin\AssignProductIndustriesAction;
 use TriCab\Api\Http\Action\Admin\AssignProductMarketsAction;
+use TriCab\Api\Http\Action\Admin\AssignProductRegionsAction;
 use TriCab\Api\Http\Action\Admin\AssignProductSpecificationsAction;
 use TriCab\Api\Http\Action\Admin\GetProductSpecificationsAction;
 use TriCab\Api\Http\Action\Admin\AssignRolePermissionAction;
@@ -66,6 +67,7 @@ use TriCab\Core\Site\Contract\SiteConfigurationRepository;
 use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
 use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
 use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
+use TriCab\Api\Http\Action\Admin\GetProductRegionsAction;
 use TriCab\Api\Http\Action\Admin\GetProductSeoAction;
 use TriCab\Api\Http\Action\Admin\GetRoleAction;
 use TriCab\Api\Http\Action\Admin\GetUserAction;
@@ -113,6 +115,7 @@ use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
 use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
 use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductBySlugAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProductCustomerViewAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductDocumentsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductMediaAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductRelationshipsAction;
@@ -401,6 +404,7 @@ use TriCab\Core\Product\Application\Service\AssignProductApplicationsService;
 use TriCab\Core\Product\Application\Service\AssignProductCodeService;
 use TriCab\Core\Product\Application\Service\AssignProductIndustriesService;
 use TriCab\Core\Product\Application\Service\AssignProductMarketsService;
+use TriCab\Core\Product\Application\Service\AssignProductRegionsService;
 use TriCab\Core\Product\Application\Service\AssignProductSpecificationsService;
 use TriCab\Core\Product\Application\Service\AssignVariantSpecificationsService;
 use TriCab\Core\Product\Application\Service\ChangeProductLifecycleService;
@@ -414,6 +418,7 @@ use TriCab\Core\Product\Application\Service\GetProductAuditHistoryService;
 use TriCab\Core\Product\Application\Service\GetProductLookupsService;
 use TriCab\Core\Product\Application\Service\GetProductPricingService;
 use TriCab\Core\Product\Application\Service\GetProductPublishReadinessService;
+use TriCab\Core\Product\Application\Service\GetProductRegionsService;
 use TriCab\Core\Product\Application\Service\GetProductVariantsService;
 use TriCab\Core\Product\Application\Service\GetPublicProductService;
 use TriCab\Core\Product\Application\Service\GetRegionsService;
@@ -754,6 +759,8 @@ final class ContainerFactory
             WithdrawProductDocumentAction::class => \DI\autowire(WithdrawProductDocumentAction::class),
             SoftDeleteProductDocumentAction::class => \DI\autowire(SoftDeleteProductDocumentAction::class),
             AssignProductMarketsAction::class => \DI\autowire(AssignProductMarketsAction::class),
+            GetProductRegionsAction::class => \DI\autowire(GetProductRegionsAction::class),
+            AssignProductRegionsAction::class => \DI\autowire(AssignProductRegionsAction::class),
             AssignProductIndustriesAction::class => \DI\autowire(AssignProductIndustriesAction::class),
             AssignProductApplicationsAction::class => \DI\autowire(AssignProductApplicationsAction::class),
             ReplaceProductRelationshipsAction::class => \DI\autowire(ReplaceProductRelationshipsAction::class),
@@ -763,6 +770,7 @@ final class ContainerFactory
             GetProductPricingAction::class => \DI\autowire(GetProductPricingAction::class),
             UpsertProductPricingAction::class => \DI\autowire(UpsertProductPricingAction::class),
             GetPublicProductBySlugAction::class => \DI\autowire(GetPublicProductBySlugAction::class),
+            GetPublicProductCustomerViewAction::class => \DI\autowire(GetPublicProductCustomerViewAction::class),
             GetPublicProductVariantsAction::class => \DI\autowire(GetPublicProductVariantsAction::class),
             GetPublicProductMediaAction::class => \DI\autowire(GetPublicProductMediaAction::class),
             GetPublicProductDocumentsAction::class => \DI\autowire(GetPublicProductDocumentsAction::class),
@@ -879,6 +887,7 @@ final class ContainerFactory
             WithdrawProductDocumentService::class => \DI\autowire(WithdrawProductDocumentService::class),
             SoftDeleteProductDocumentService::class => \DI\autowire(SoftDeleteProductDocumentService::class),
             AssignProductMarketsService::class => \DI\autowire(AssignProductMarketsService::class),
+            AssignProductRegionsService::class => \DI\autowire(AssignProductRegionsService::class),
             AssignProductIndustriesService::class => \DI\autowire(AssignProductIndustriesService::class),
             AssignProductApplicationsService::class => \DI\autowire(AssignProductApplicationsService::class),
             ReplaceProductRelationshipsService::class => \DI\autowire(ReplaceProductRelationshipsService::class),
@@ -1007,6 +1016,7 @@ final class ContainerFactory
             SpecificationUnitsAdminAction::class => \DI\autowire(SpecificationUnitsAdminAction::class),
             GetProductLookupsService::class => \DI\autowire(GetProductLookupsService::class),
             GetProductPublishReadinessService::class => \DI\autowire(GetProductPublishReadinessService::class),
+            GetProductRegionsService::class => \DI\autowire(GetProductRegionsService::class),
             GetProductAuditHistoryService::class => \DI\autowire(GetProductAuditHistoryService::class),
             GetProductPricingService::class => \DI\autowire(GetProductPricingService::class),
             GetProductVariantsService::class => \DI\autowire(GetProductVariantsService::class),

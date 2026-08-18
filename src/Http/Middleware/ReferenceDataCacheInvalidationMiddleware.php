@@ -64,8 +64,22 @@ final class ReferenceDataCacheInvalidationMiddleware implements MiddlewareInterf
         ) {
             $this->cache->invalidateCatalogue();
         }
+        if ($this->isProductRegionMutation($path)) {
+            $this->cache->invalidateLookups();
+            $this->cache->invalidateRegions();
+            $this->cache->invalidateCatalogue();
+        }
 
         return $response;
+    }
+
+    private function isProductRegionMutation(string $path): bool
+    {
+        if (!preg_match('#^/api/v1/admin/products/[^/]+/(markets|regions)$#', $path)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
