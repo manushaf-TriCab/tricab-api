@@ -27,4 +27,19 @@ final class InvalidMarketAssignment extends RuntimeException
     {
         return new self(sprintf('Unknown or inactive application "%s".', $publicId));
     }
+
+    public static function duplicateRegions(): self
+    {
+        return new self('Duplicate region assignments are not allowed.');
+    }
+
+    public static function duplicateMarkets(): self
+    {
+        return new self('Duplicate market assignments are not allowed.');
+    }
+
+    public static function publishedRequiresRegion(): self
+    {
+        return new self('Published products must remain assigned to at least one active region.');
+    }
 }

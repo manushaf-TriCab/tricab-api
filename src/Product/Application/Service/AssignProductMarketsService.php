@@ -30,6 +30,9 @@ final class AssignProductMarketsService
         $this->transaction->run(function () use ($actor, $command): void {
             $productPublicId = ProductPublicId::fromString($command->productPublicId);
 
+            $this->assertNoDuplicates($command->regionPublicIds, InvalidMarketAssignment::duplicateRegions());
+            $this->assertNoDuplicates($command->marketPublicIds, InvalidMarketAssignment::duplicateMarkets());
+
             $activeRegionIds = array_map(
                 static fn ($item): string => $item->publicId,
                 $this->markets->listRegions(true),
@@ -66,5 +69,15 @@ final class AssignProductMarketsService
                 ],
             );
         });
+    }
+
+    /**
+     * @param list<string> $publicIds
+     */
+    private function assertNoDuplicates(array $publicIds, InvalidMarketAssignment $exception): void
+    {
+        if (count($publicIds) !== count(array_unique($publicIds))) {
+            throw $exception;
+        }
     }
 }

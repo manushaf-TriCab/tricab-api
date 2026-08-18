@@ -25,6 +25,13 @@ final class ProductPublicId
         return new self($normalized);
     }
 
+    public static function isValid(string $value): bool
+    {
+        $normalized = strtolower(trim($value));
+
+        return $normalized !== '' && preg_match(self::UUID_PATTERN, $normalized) === 1;
+    }
+
     public function toString(): string
     {
         return $this->value;

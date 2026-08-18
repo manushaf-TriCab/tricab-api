@@ -17,9 +17,26 @@ final class GetPublicProductService
     ) {
     }
 
+    /**
+     * Resolve a published product from a URL segment.
+     *
+     * Catalogue cards fall back to the product public id when no primary slug
+     * exists, so UUID path segments are looked up as public ids first.
+     */
     public function bySlug(string $slug, ?string $regionCode = null): ProductPublicDetail
     {
-        $detail = $this->publicQuery->findBySlug(ProductSlug::fromString($slug), $regionCode);
+        $trimmed = trim($slug);
+        if (ProductPublicId::isValid($trimmed)) {
+            $byPublicId = $this->publicQuery->findByPublicId(
+                ProductPublicId::fromString($trimmed),
+                $regionCode,
+            );
+            if ($byPublicId !== null) {
+                return $byPublicId;
+            }
+        }
+
+        $detail = $this->publicQuery->findBySlug(ProductSlug::fromString($trimmed), $regionCode);
         if ($detail === null) {
             throw ProductNotFound::forSlug($slug);
         }

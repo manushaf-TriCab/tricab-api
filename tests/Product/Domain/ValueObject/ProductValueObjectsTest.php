@@ -36,6 +36,12 @@ final class ProductValueObjectsTest extends TestCase
         ProductPublicId::fromString('not-a-uuid');
     }
 
+    public function test_product_public_id_is_valid_accepts_mixed_case_uuid(): void
+    {
+        self::assertTrue(ProductPublicId::isValid('9B70E6F0-F091-F111-B337-000D3AE094E4'));
+        self::assertFalse(ProductPublicId::isValid('flexible-control-lszh'));
+    }
+
     public function test_product_code_value_rejects_blank(): void
     {
         $this->expectException(InvalidProductValue::class);

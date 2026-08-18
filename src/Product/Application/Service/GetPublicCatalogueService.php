@@ -17,6 +17,7 @@ final class GetPublicCatalogueService
 {
     public function __construct(
         private readonly CatalogueNavigationRepository $catalogue,
+        private readonly RegionAwareCatalogueTreeFilter $treeFilter = new RegionAwareCatalogueTreeFilter(),
     ) {
     }
 
@@ -59,7 +60,10 @@ final class GetPublicCatalogueService
             throw CatalogueNotFound::forTab((string) $selected);
         }
 
-        $tree = $this->catalogue->getPublicTabTree($match->slug, $region, $includeProducts);
+        $tree = $this->applyRegionTreeFilter(
+            $this->catalogue->getPublicTabTree($match->slug, $region, $includeProducts),
+            $region,
+        );
 
         return [
             'tabs' => $tabs,
@@ -71,7 +75,11 @@ final class GetPublicCatalogueService
     /** @return list<PublicCatalogueTreeNode> */
     public function getTabTree(string $tabSlug, ?string $regionCode = null, bool $includeProducts = false): array
     {
-        $tree = $this->catalogue->getPublicTabTree($tabSlug, $this->normalizeRegion($regionCode), $includeProducts);
+        $region = $this->normalizeRegion($regionCode);
+        $tree = $this->applyRegionTreeFilter(
+            $this->catalogue->getPublicTabTree($tabSlug, $region, $includeProducts),
+            $region,
+        );
         if ($tree === [] && $this->catalogue->findTabBySlug($tabSlug) === null) {
             throw CatalogueNotFound::forTab($tabSlug);
         }
@@ -81,22 +89,24 @@ final class GetPublicCatalogueService
 
     public function getNodeBySlug(string $nodeSlug, ?string $tabSlug = null, ?string $regionCode = null): PublicCatalogueTreeNode
     {
-        $node = $this->catalogue->getPublicNodeBySlug($nodeSlug, $tabSlug, $this->normalizeRegion($regionCode));
+        $region = $this->normalizeRegion($regionCode);
+        $node = $this->catalogue->getPublicNodeBySlug($nodeSlug, $tabSlug, $region);
         if ($node === null) {
             throw CatalogueNotFound::forNode($nodeSlug);
         }
 
-        return $node;
+        return $this->requireVisibleNode($node, $nodeSlug, $region);
     }
 
     public function getNodeByPublicId(string $nodePublicId, ?string $regionCode = null): PublicCatalogueTreeNode
     {
-        $node = $this->catalogue->getPublicNodeByPublicId($nodePublicId, $this->normalizeRegion($regionCode));
+        $region = $this->normalizeRegion($regionCode);
+        $node = $this->catalogue->getPublicNodeByPublicId($nodePublicId, $region);
         if ($node === null) {
             throw CatalogueNotFound::forNode($nodePublicId);
         }
 
-        return $node;
+        return $this->requireVisibleNode($node, $nodePublicId, $region);
     }
 
     /** @return list<PublicCatalogueTreeNode> */
@@ -104,7 +114,12 @@ final class GetPublicCatalogueService
     {
         $this->getNodeByPublicId($nodePublicId, $regionCode);
 
-        return $this->catalogue->listPublicChildren($nodePublicId, $this->normalizeRegion($regionCode));
+        $region = $this->normalizeRegion($regionCode);
+
+        return $this->applyRegionTreeFilter(
+            $this->catalogue->listPublicChildren($nodePublicId, $region),
+            $region,
+        );
     }
 
     /** @return list<PublicCatalogueProductCard> */
@@ -123,5 +138,35 @@ final class GetPublicCatalogueService
         $normalized = strtoupper(trim($regionCode));
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    /**
+     * @param list<PublicCatalogueTreeNode> $tree
+     * @return list<PublicCatalogueTreeNode>
+     */
+    private function applyRegionTreeFilter(array $tree, ?string $regionCode): array
+    {
+        if ($regionCode === null) {
+            return $tree;
+        }
+
+        return $this->treeFilter->filterTree($tree);
+    }
+
+    private function requireVisibleNode(
+        PublicCatalogueTreeNode $node,
+        string $identifier,
+        ?string $regionCode,
+    ): PublicCatalogueTreeNode {
+        if ($regionCode === null) {
+            return $node;
+        }
+
+        $filtered = $this->treeFilter->filterNode($node);
+        if ($filtered === null) {
+            throw CatalogueNotFound::forNode($identifier);
+        }
+
+        return $filtered;
     }
 }
