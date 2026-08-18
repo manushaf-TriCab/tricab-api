@@ -1,0 +1,289 @@
+{
+    "pilot": "FT fixture",
+    "ranAtUtc": "2026-08-06T00:27:05+00:00",
+    "environment": "non-production fixture + in-memory target",
+    "productionMigrationExecuted": false,
+    "dryRun": {
+        "batchPublicId": "ea485f36-36fc-454b-9c6a-5a333ed32a94",
+        "counts": {
+            "productsDiscovered": 1,
+            "productsMatched": 0,
+            "productsReady": 1,
+            "productsNeedingReview": 2,
+            "variantsDiscovered": 2,
+            "variantsReady": 2,
+            "unresolvedClassifications": 1,
+            "unresolvedSpecificationDefinitions": 0,
+            "unresolvedOptions": 0,
+            "duplicateProductCodes": 0,
+            "duplicateSkus": 0,
+            "duplicateSlugs": 0,
+            "invalidValues": 0,
+            "missingFiles": 0,
+            "orphanRelationships": 1,
+            "simulatedImported": 1,
+            "simulatedSkipped": 0
+        },
+        "warnings": [],
+        "blockingErrors": [],
+        "unresolved": [
+            {
+                "publicId": "5e8535b2-be4e-4f09-a99d-7a278f466976",
+                "batchPublicId": "ea485f36-36fc-454b-9c6a-5a333ed32a94",
+                "issueTypeCode": "unknown-classification",
+                "severityCode": "manual-review",
+                "sourceSystem": "wordpress",
+                "sourceTable": "wp_terms",
+                "sourceIdentifier": "cat:flexible-power",
+                "sourceKey": null,
+                "message": "Unmapped classification: flexible-power",
+                "suggestedMatch": null,
+                "matchConfidence": null,
+                "statusCode": "open",
+                "resolution": null,
+                "createdAtUtc": "2026-08-06T00:27:05Z"
+            },
+            {
+                "publicId": "c96f3dd9-0768-409e-bc69-f9074bec47c5",
+                "batchPublicId": "ea485f36-36fc-454b-9c6a-5a333ed32a94",
+                "issueTypeCode": "unresolved-relationship",
+                "severityCode": "manual-review",
+                "sourceSystem": null,
+                "sourceTable": null,
+                "sourceIdentifier": null,
+                "sourceKey": "wordpress:wp_postmeta:3812:accessory:J09",
+                "message": "Relationship target not resolved: wordpress:wp_posts:9001",
+                "suggestedMatch": null,
+                "matchConfidence": null,
+                "statusCode": "open",
+                "resolution": null,
+                "createdAtUtc": "2026-08-06T00:27:05Z"
+            }
+        ],
+        "wouldWriteProducts": false,
+        "wouldWriteBlobs": false,
+        "dryRunNoWriteGuarantee": true
+    },
+    "dryRunCsv": "metric,value\nproductsDiscovered,1\nproductsMatched,0\nproductsReady,1\nproductsNeedingReview,2\nvariantsDiscovered,2\nvariantsReady,2\nunresolvedClassifications,1\nunresolvedSpecificationDefinitions,0\nunresolvedOptions,0\nduplicateProductCodes,0\nduplicateSkus,0\nduplicateSlugs,0\ninvalidValues,0\nmissingFiles,0\norphanRelationships,1\nsimulatedImported,1\nsimulatedSkipped,0\nwarnings,0\nblockingErrors,0\n",
+    "dryRunReconciliation": {
+        "batchPublicId": "ea485f36-36fc-454b-9c6a-5a333ed32a94",
+        "sourceProducts": 1,
+        "importedProducts": 0,
+        "updatedProducts": 0,
+        "skippedProducts": 0,
+        "failedProducts": 0,
+        "sourceVariants": 2,
+        "importedVariants": 2,
+        "sourceMedia": 1,
+        "copiedMedia": 1,
+        "missingMedia": 0,
+        "sourceDocuments": 1,
+        "importedDocuments": 1,
+        "missingDocuments": 0,
+        "sourceRelationships": 1,
+        "resolvedRelationships": 0,
+        "pendingRelationships": 1,
+        "publicationDefault": "draft",
+        "publicId": "11c928a9-6295-45ca-b372-11c3b209aa51",
+        "createdAtUtc": "2026-08-06T00:27:05Z"
+    },
+    "execute": {
+        "batch": {
+            "publicId": "e3a83bb9-93d3-422b-8542-bc7a51166cd8",
+            "name": "Pilot FT \u2014 execute (fixture/in-memory only)",
+            "description": "Non-production in-memory execute; products remain Draft",
+            "sourceSystem": "combined",
+            "sourceFilter": {
+                "styleCode": "FT"
+            },
+            "dryRun": false,
+            "statusCode": "completed",
+            "createdAtUtc": "2026-08-06T00:27:05Z",
+            "createdByUserId": 1,
+            "startedAtUtc": "2026-08-06T00:27:05Z",
+            "completedAtUtc": "2026-08-06T00:27:05Z",
+            "rolledBackAtUtc": null,
+            "rolledBackByUserId": null,
+            "totalRecords": 8,
+            "importedRecords": 1,
+            "updatedRecords": 0,
+            "skippedRecords": 0,
+            "warningRecords": 0,
+            "failedRecords": 0,
+            "manualReviewRecords": 0,
+            "rowVersion": "14"
+        },
+        "importedProducts": [
+            {
+                "sourceKey": "wordpress:wp_posts:3812",
+                "targetPublicId": "0908898f-7783-4763-966e-f06618f5670c",
+                "status": "draft",
+                "manuallyEdited": false
+            }
+        ],
+        "allDraft": true,
+        "reconciliation": {
+            "batchPublicId": "e3a83bb9-93d3-422b-8542-bc7a51166cd8",
+            "sourceProducts": 1,
+            "importedProducts": 1,
+            "updatedProducts": 0,
+            "skippedProducts": 0,
+            "failedProducts": 0,
+            "sourceVariants": 2,
+            "importedVariants": 2,
+            "sourceMedia": 1,
+            "copiedMedia": 1,
+            "missingMedia": 0,
+            "sourceDocuments": 1,
+            "importedDocuments": 1,
+            "missingDocuments": 0,
+            "sourceRelationships": 1,
+            "resolvedRelationships": 0,
+            "pendingRelationships": 1,
+            "publicationDefault": "draft",
+            "publicId": "fa3776cc-2939-43a6-b968-f62395c4b52e",
+            "createdAtUtc": "2026-08-06T00:27:05Z"
+        },
+        "openIssues": [
+            {
+                "publicId": "ed2453f9-07e4-40f5-a060-4ae8b9fb52ab",
+                "batchPublicId": "e3a83bb9-93d3-422b-8542-bc7a51166cd8",
+                "issueTypeCode": "unknown-classification",
+                "severityCode": "manual-review",
+                "sourceSystem": "wordpress",
+                "sourceTable": "wp_terms",
+                "sourceIdentifier": "cat:flexible-power",
+                "sourceKey": null,
+                "message": "Unmapped classification: flexible-power",
+                "suggestedMatch": null,
+                "matchConfidence": null,
+                "statusCode": "open",
+                "resolution": null,
+                "createdAtUtc": "2026-08-06T00:27:05Z"
+            },
+            {
+                "publicId": "b2e74143-8fe5-4332-9fd4-fba76ec77393",
+                "batchPublicId": "e3a83bb9-93d3-422b-8542-bc7a51166cd8",
+                "issueTypeCode": "unresolved-relationship",
+                "severityCode": "manual-review",
+                "sourceSystem": null,
+                "sourceTable": null,
+                "sourceIdentifier": null,
+                "sourceKey": "wordpress:wp_postmeta:3812:accessory:J09",
+                "message": "Relationship target not resolved: wordpress:wp_posts:9001",
+                "suggestedMatch": null,
+                "matchConfidence": null,
+                "statusCode": "open",
+                "resolution": null,
+                "createdAtUtc": "2026-08-06T00:27:05Z"
+            }
+        ],
+        "canonicalProducts": [
+            {
+                "sourceKey": "wordpress:wp_posts:3812",
+                "legacyStyleCode": "FT",
+                "name": "FLEXI-TUFF",
+                "slug": "flexi-tuff",
+                "familyCode": null,
+                "categoryCode": null,
+                "seriesCode": null,
+                "shortDescription": "Flexible industrial cable",
+                "fullDescription": "Full marketing description",
+                "status": "draft",
+                "regions": [
+                    "AU"
+                ],
+                "productCode": null,
+                "legacyPostType": "cable",
+                "productDecisionCode": "product",
+                "productDecisionReason": "WordPress CPT cable is a marketing Product; tc rows sharing style_code become variants",
+                "variants": [
+                    {
+                        "sourceKey": "tc:tpro:FT-2X1.5BK",
+                        "sku": "FT-2X1.5BK",
+                        "productCode": "FT-2X1.5BK",
+                        "name": null,
+                        "legacyStyleCode": "FT",
+                        "specifications": [
+                            {
+                                "sourceField": "od",
+                                "definitionCode": "OUTER_DIAMETER",
+                                "rawValue": "25.4",
+                                "transformedValue": "25.4",
+                                "unitCode": "mm",
+                                "scope": "variant",
+                                "outcome": "preserved",
+                                "message": null
+                            }
+                        ]
+                    },
+                    {
+                        "sourceKey": "tc:tpro:FT-3X2.5BK",
+                        "sku": "FT-3X2.5BK",
+                        "productCode": "FT-3X2.5BK",
+                        "name": null,
+                        "legacyStyleCode": "FT",
+                        "specifications": []
+                    }
+                ],
+                "specifications": [],
+                "media": [
+                    {
+                        "sourceKey": "files:thumbs:FT-gr.jpg",
+                        "legacyPath": "thumbs/FT-gr.jpg",
+                        "legacyUrl": "/thumbs/FT-gr.jpg",
+                        "originalFileName": "FT-gr.jpg",
+                        "roleCode": "primary",
+                        "checksum": "724dc4bf5dfcd9628e570baf7609042db0ae5297e93f501fe92820056bc5fc3b",
+                        "sourceExists": true,
+                        "regionCode": null
+                    }
+                ],
+                "documents": [
+                    {
+                        "sourceKey": "files:thumbs/data_sheet:FT-datasheet.pdf",
+                        "documentTypeCode": "Datasheet",
+                        "title": "FLEXI-TUFF Datasheet",
+                        "legacyPath": "thumbs/data_sheet/FT-datasheet.pdf",
+                        "legacyUrl": "/thumbs/data_sheet/FT-datasheet.pdf",
+                        "originalFileName": "FT-datasheet.pdf",
+                        "checksum": "0c3071f4212e42499dccaca34d8576ab4a82a2c0b6b6a972a827c0f7c68fe801",
+                        "sourceExists": true,
+                        "languageCode": null,
+                        "regionCode": null,
+                        "classificationOutcome": "mapped"
+                    }
+                ],
+                "relationships": [
+                    {
+                        "sourceKey": "wordpress:wp_postmeta:3812:accessory:J09",
+                        "relationshipTypeCode": "accessory",
+                        "fromSourceKey": "wordpress:wp_posts:3812",
+                        "toSourceKey": "wordpress:wp_posts:9001",
+                        "outcome": "pending",
+                        "message": null
+                    }
+                ],
+                "slugs": [
+                    {
+                        "legacySlug": "flexi-tuff",
+                        "legacyPath": "/cable/flexi-tuff/",
+                        "legacyFullUrl": null,
+                        "newSlug": "flexi-tuff",
+                        "regionCode": "AU",
+                        "redirectRequired": true
+                    }
+                ],
+                "regionalContent": []
+            }
+        ]
+    },
+    "comparison": {
+        "legacyPage": "/cable/flexi-tuff/",
+        "newAdminProduct": "Draft Product from wordpress:wp_posts:3812 (in-memory)",
+        "newPublicProductPage": "not published (Draft)",
+        "styleCode": "FT",
+        "variants": 2,
+        "redirect": "/cable/flexi-tuff/ \u2192 /products/flexi-tuff"
+    }
+}

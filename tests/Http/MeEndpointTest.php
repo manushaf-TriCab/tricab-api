@@ -144,10 +144,17 @@ final class MeEndpointTest extends TestCase
 
     public function test_api_depends_on_core_through_composer(): void
     {
+        $apiRoot = dirname(__DIR__, 2);
+        $vendorCore = $apiRoot . '/vendor/tricab/tricab-core';
+
         self::assertTrue(class_exists(ResolveAuthenticatedUserHandler::class));
         self::assertTrue(interface_exists(UserRepository::class));
         self::assertSame('tricab/tricab-core', Package::NAME);
-        self::assertFalse(is_dir(dirname(__DIR__, 2) . '/../tricab-core/src/Http'));
+        self::assertDirectoryExists($apiRoot . '/core/src');
+        self::assertFalse(is_dir($apiRoot . '/core/src/Http'));
+        self::assertFalse(is_dir($apiRoot . '/../tricab-core/src/Http'));
+        self::assertDirectoryExists($vendorCore);
+        self::assertFalse(is_link($vendorCore));
         self::assertFalse(class_exists('TriCab\\Core\\Identity\\Persistence\\InMemoryApiUserRepository'));
     }
 }

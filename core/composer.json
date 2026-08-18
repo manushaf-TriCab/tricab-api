@@ -1,0 +1,41 @@
+{
+    "name": "tricab/tricab-core",
+    "description": "TriCab Core — framework-independent domain and application library for the TriCab Platform Rebuild",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.3"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "TriCab\\Core\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TriCab\\Core\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse",
+        "check": [
+            "@test",
+            "@analyse"
+        ]
+    },
+    "scripts-descriptions": {
+        "test": "Run the PHPUnit test suite",
+        "analyse": "Run PHPStan static analysis",
+        "check": "Run tests and static analysis"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

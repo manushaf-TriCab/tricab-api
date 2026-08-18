@@ -1,6 +1,6 @@
 # TriCab API
 
-Slim 4 authentication slice for the TriCab Platform Rebuild. Consumes `tricab/tricab-core` via a local Composer path repository (symlink).
+Slim 4 authentication slice for the TriCab Platform Rebuild. Core lives in-repo at `core/` and is consumed as the Composer path package `tricab/tricab-core`.
 
 ## Boundaries
 
@@ -19,12 +19,15 @@ Slim 4 authentication slice for the TriCab Platform Rebuild. Consumes `tricab/tr
 ## Setup
 
 ```bash
-cd /Users/thilanh/Documents/Projects/tricab-core/tricab-api
+git clone https://github.com/tricab/tricab-api.git
+cd tricab-api
 cp .env.example .env
 composer install
 composer dump-autoload
 php -S localhost:8080 -t public public/router.php
 ```
+
+A separate `tricab-core` checkout is not required. Domain and application code is at `core/`.
 
 Use `public/router.php` with `php -S`. Without it, paths such as `PRODUCT.READ` are treated as missing files and CORS preflight returns 404.
 

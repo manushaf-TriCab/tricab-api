@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TriCab\Core\Identity\Domain\ValueObject;
+
+use TriCab\Core\Identity\Domain\Exception\InvalidIdentityValue;
+
+final class ExternalProvider
+{
+    public const MICROSOFT_ENTRA = 'microsoft_entra';
+    public const EMAIL_OTP = 'email_otp';
+    public const GOOGLE = 'google';
+
+    private const ALLOWED = [
+        self::MICROSOFT_ENTRA,
+        self::EMAIL_OTP,
+        self::GOOGLE,
+    ];
+
+    private function __construct(private readonly string $value)
+    {
+    }
+
+    public static function fromString(string $value): self
+    {
+        $normalized = strtolower(trim($value));
+        $normalized = str_replace('-', '_', $normalized);
+
+        if (!in_array($normalized, self::ALLOWED, true)) {
+            throw InvalidIdentityValue::for('ExternalProvider', $value);
+        }
+
+        return new self($normalized);
+    }
+
+    public static function microsoftEntra(): self
+    {
+        return new self(self::MICROSOFT_ENTRA);
+    }
+
+    public static function emailOtp(): self
+    {
+        return new self(self::EMAIL_OTP);
+    }
+
+    public static function google(): self
+    {
+        return new self(self::GOOGLE);
+    }
+
+    public function toString(): string
+    {
+        return $this->value;
+    }
+
+    public function equals(self $other): bool
+    {
+        return $this->value === $other->value;
+    }
+
+    public function isMicrosoftEntra(): bool
+    {
+        return $this->value === self::MICROSOFT_ENTRA;
+    }
+
+    public function isEmailOtp(): bool
+    {
+        return $this->value === self::EMAIL_OTP;
+    }
+
+    public function isGoogle(): bool
+    {
+        return $this->value === self::GOOGLE;
+    }
+}
