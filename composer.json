@@ -20,9 +20,9 @@
     "repositories": [
         {
             "type": "path",
-            "url": "../tricab-core",
+            "url": "core",
             "options": {
-                "symlink": true
+                "symlink": false
             }
         }
     ],

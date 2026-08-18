@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e1844f5c08971e77e5236810a9d1c1c1",
+    "content-hash": "6e0a71f663807086952dfa7bdfb70cfc",
     "packages": [
         {
             "name": "dompdf/dompdf",
@@ -1766,8 +1766,8 @@
             "version": "dev-main",
             "dist": {
                 "type": "path",
-                "url": "../tricab-core",
-                "reference": "7e1bf4c6ba07415bfa29c8d4b944562cdb7a80e6"
+                "url": "core",
+                "reference": "e748f90fa272ae4ef65c01dff6132d7d64dda425"
             },
             "require": {
                 "php": "^8.3"
@@ -1804,7 +1804,7 @@
             ],
             "description": "TriCab Core — framework-independent domain and application library for the TriCab Platform Rebuild",
             "transport-options": {
-                "symlink": true,
+                "symlink": false,
                 "relative": true
             }
         },
