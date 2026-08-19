@@ -34,7 +34,8 @@ use TriCab\Core\Product\Application\Exception\Product3DModelNotFound;
 use TriCab\Core\Product\Application\Exception\ProductDocumentNotFound;
 use TriCab\Core\Product\Application\Exception\ProductFileUploadException;
 use TriCab\Core\Product\Application\Exception\ProductMediaNotFound;
-use TriCab\Core\Product\Application\Exception\ProductNotFound;
+use TriCab\Core\Product\Application\Exception\OverlappingBaseCostRecord;
+use TriCab\Core\Product\Application\Exception\ProductPricingConcurrencyConflict;
 use TriCab\Core\Product\Application\Exception\DuplicateProductClassificationCode;
 use TriCab\Core\Product\Application\Exception\ProductClassificationConcurrencyConflict;
 use TriCab\Core\Product\Application\Exception\ProductClassificationInUse;
@@ -229,6 +230,14 @@ final class ProductManagementErrorMapper
 
         if ($exception instanceof ProductConcurrencyConflict) {
             return $this->responder->error('PRODUCT_CONCURRENCY_CONFLICT', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof ProductPricingConcurrencyConflict) {
+            return $this->responder->error('PRODUCT_PRICING_CONCURRENCY_CONFLICT', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof OverlappingBaseCostRecord) {
+            return $this->responder->error('OVERLAPPING_BASE_COST_RECORD', $exception->getMessage(), 422);
         }
 
         if ($exception instanceof DuplicateProductCode) {

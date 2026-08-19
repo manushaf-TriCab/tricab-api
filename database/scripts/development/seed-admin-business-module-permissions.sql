@@ -11,6 +11,7 @@
     CRM.ACCESS
     ERP.ACCESS
     REGION.READ / CREATE / UPDATE / DELETE
+    MIGRATION.ADMIN
 
   - Safe to re-run
   - Does not rename or remove existing permission codes
@@ -58,7 +59,8 @@ BEGIN TRY
         (N'REGION.READ', N'Read regions', N'View website regions in TriCab Admin.', N'region'),
         (N'REGION.CREATE', N'Create regions', N'Create website regions in TriCab Admin.', N'region'),
         (N'REGION.UPDATE', N'Update regions', N'Update and activate website regions in TriCab Admin.', N'region'),
-        (N'REGION.DELETE', N'Delete regions', N'Delete unused website regions in TriCab Admin.', N'region');
+        (N'REGION.DELETE', N'Delete regions', N'Delete unused website regions in TriCab Admin.', N'region'),
+        (N'MIGRATION.ADMIN', N'Administer Legacy Migration', N'Operate the reusable legacy migration framework. Administrators only.', N'migration');
 
     DECLARE @PermissionCode NVARCHAR(150);
     DECLARE @PermissionName NVARCHAR(200);

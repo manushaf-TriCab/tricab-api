@@ -200,6 +200,48 @@ final class MysqlLegacyTcRepository implements LegacyTcRepository
         ];
     }
 
+    public function findLatestBaseCost(string $itemCode, int $debtorCompanyCode): ?array
+    {
+        if (!$this->tableExists('price')) {
+            return null;
+        }
+
+        $cols = $this->existingColumns('price', ['code', 'dbco', 'cost', 'dc']);
+        if (!in_array('code', $cols, true) || !in_array('cost', $cols, true)) {
+            return null;
+        }
+
+        $dbcoClause = in_array('dbco', $cols, true) ? ' AND `dbco` = :dbco' : '';
+        $orderClause = in_array('dc', $cols, true) ? ' ORDER BY `dc` DESC' : '';
+        $sql = 'SELECT `cost`' . (in_array('dc', $cols, true) ? ', `dc`' : '') .
+            ' FROM `price` WHERE `code` = :code' . $dbcoClause . $orderClause . ' LIMIT 1';
+        $params = ['code' => $itemCode];
+        if ($dbcoClause !== '') {
+            $params['dbco'] = $debtorCompanyCode;
+        }
+
+        $rows = $this->connection->query($sql, $params, self::REPO, 'findLatestBaseCost');
+        if ($rows === []) {
+            return null;
+        }
+
+        $row = $rows[0];
+        $cost = MigrationPayload::string($row['cost'] ?? '');
+        if ($cost === '' || !is_numeric($cost)) {
+            return null;
+        }
+
+        $lastUpdated = null;
+        if (isset($row['dc']) && $row['dc'] !== null && $row['dc'] !== '') {
+            $lastUpdated = MigrationPayload::string($row['dc']);
+        }
+
+        return [
+            'cost' => $cost,
+            'lastUpdatedUtc' => $lastUpdated,
+        ];
+    }
+
     private function tableExists(string $table): bool
     {
         if (!preg_match('/^[A-Za-z0-9_]+$/', $table)) {

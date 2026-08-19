@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Assistant\Infrastructure\Foundry;
 
-use JsonException;
+use TriCab\Api\Infrastructure\Authentication\ManagedIdentityTokenClient;
+use TriCab\Api\Infrastructure\Authentication\ManagedIdentityTokenException;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
 
 /**
@@ -13,11 +14,9 @@ use TriCab\Api\Infrastructure\Http\JsonHttpClient;
 final class ManagedIdentityFoundryAccessTokenProvider implements FoundryAccessTokenProvider
 {
     private const RESOURCE = 'https://ai.azure.com';
-    private const IMDS_ENDPOINT = 'http://169.254.169.254/metadata/identity/oauth2/token';
     private const CACHE_SKEW_SECONDS = 60;
 
-    /** @var array<string, string|null> */
-    private array $environment;
+    private readonly ManagedIdentityTokenClient $client;
 
     private ?string $cachedToken = null;
 
@@ -27,10 +26,11 @@ final class ManagedIdentityFoundryAccessTokenProvider implements FoundryAccessTo
      * @param array<string, string|null>|null $environment
      */
     public function __construct(
-        private readonly JsonHttpClient $http,
+        JsonHttpClient $http,
         ?array $environment = null,
+        ?ManagedIdentityTokenClient $client = null,
     ) {
-        $this->environment = $environment ?? self::processEnvironment();
+        $this->client = $client ?? new ManagedIdentityTokenClient($http, $environment);
     }
 
     public function accessToken(): string
@@ -43,140 +43,19 @@ final class ManagedIdentityFoundryAccessTokenProvider implements FoundryAccessTo
             return $this->cachedToken;
         }
 
-        [$endpoint, $headers, $apiVersion] = $this->tokenRequest();
-        $url = self::appendQuery($endpoint, [
-            'api-version' => $apiVersion,
-            'resource' => self::RESOURCE,
-        ]);
-
         try {
-            $response = $this->http->getJson($url, $headers);
-        } catch (\Throwable $exception) {
+            $acquired = $this->client->fetch(self::RESOURCE);
+        } catch (ManagedIdentityTokenException $exception) {
             throw new FoundryProviderUnavailable(
-                'Managed identity token request failed.',
-                previous: $exception,
+                $exception->getMessage(),
+                0,
+                $exception,
             );
         }
 
-        if ($response['status'] < 200 || $response['status'] >= 300) {
-            throw new FoundryProviderUnavailable('Managed identity token request was rejected.');
-        }
+        $this->cachedToken = $acquired->token;
+        $this->cachedExpiresAt = $acquired->expiresAt;
 
-        try {
-            $decoded = json_decode($response['body'], true, flags: JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new FoundryProviderUnavailable(
-                'Managed identity token response was invalid.',
-                previous: $exception,
-            );
-        }
-
-        if (!is_array($decoded)) {
-            throw new FoundryProviderUnavailable('Managed identity token response was invalid.');
-        }
-
-        $token = $decoded['access_token'] ?? null;
-        if (!is_string($token) || trim($token) === '') {
-            throw new FoundryProviderUnavailable('Managed identity token response did not contain a token.');
-        }
-
-        $this->cachedToken = $token;
-        $this->cachedExpiresAt = self::parseExpiry($decoded['expires_on'] ?? null, $now);
-
-        return $token;
-    }
-
-    /**
-     * @return array{string, array<string, string>, string}
-     */
-    private function tokenRequest(): array
-    {
-        $identityEndpoint = trim($this->environment['IDENTITY_ENDPOINT'] ?? '');
-        $identityHeader = trim($this->environment['IDENTITY_HEADER'] ?? '');
-
-        if ($identityEndpoint !== '' || $identityHeader !== '') {
-            if ($identityEndpoint === '' || $identityHeader === '') {
-                throw new FoundryProviderUnavailable(
-                    'Managed identity environment is incomplete.',
-                );
-            }
-            self::assertLocalEndpoint($identityEndpoint);
-
-            return [
-                $identityEndpoint,
-                ['X-IDENTITY-HEADER' => $identityHeader],
-                '2019-08-01',
-            ];
-        }
-
-        return [
-            self::IMDS_ENDPOINT,
-            ['Metadata' => 'true'],
-            '2018-02-01',
-        ];
-    }
-
-    /**
-     * @param array<string, string> $query
-     */
-    private static function appendQuery(string $endpoint, array $query): string
-    {
-        return $endpoint
-            . (str_contains($endpoint, '?') ? '&' : '?')
-            . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
-    }
-
-    private static function assertLocalEndpoint(string $endpoint): void
-    {
-        $parts = parse_url($endpoint);
-        if (!is_array($parts)) {
-            throw new FoundryProviderUnavailable('Managed identity endpoint is invalid.');
-        }
-
-        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
-        $host = strtolower((string) ($parts['host'] ?? ''));
-        $isLoopback = $host === 'localhost'
-            || $host === '::1'
-            || str_starts_with($host, '127.');
-        $isLinkLocal = str_starts_with($host, '169.254.');
-
-        if (
-            $scheme !== 'http'
-            || (!$isLoopback && !$isLinkLocal)
-            || isset($parts['user'])
-            || isset($parts['pass'])
-        ) {
-            throw new FoundryProviderUnavailable(
-                'Managed identity endpoint must be a local HTTP address.',
-            );
-        }
-    }
-
-    private static function parseExpiry(mixed $value, int $now): int
-    {
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_string($value)) {
-            if (ctype_digit($value)) {
-                return (int) $value;
-            }
-
-            $parsed = strtotime($value);
-            if ($parsed !== false) {
-                return $parsed;
-            }
-        }
-
-        return $now + 300;
-    }
-
-    /**
-     * @return array<string, string|null>
-     */
-    private static function processEnvironment(): array
-    {
-        return getenv();
+        return $this->cachedToken;
     }
 }

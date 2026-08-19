@@ -7,11 +7,13 @@ namespace TriCab\Core\Tests\Identity\Application\Service;
 use PHPUnit\Framework\TestCase;
 use TriCab\Core\Identity\Application\DTO\VerifiedAppleIdToken;
 use TriCab\Core\Identity\Application\Exception\AppleIdTokenInvalid;
-use TriCab\Core\Identity\Application\Exception\AppleUserNotRegistered;
+use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Service\AuthenticateWithAppleService;
+use TriCab\Core\Identity\Application\Service\IdentityResolutionService;
 use TriCab\Core\Identity\Contract\AppleAuthorizationCodeExchanger;
 use TriCab\Core\Identity\Contract\AppleIdTokenValidator;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
+use TriCab\Core\Identity\Domain\Service\AppleExternalIdentityFactory;
 use TriCab\Core\Identity\Domain\Service\EmailOtpExternalIdentityFactory;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
@@ -21,7 +23,7 @@ use TriCab\Core\Tests\Identity\Doubles\InMemoryUserProvisioningRepository;
 
 final class AuthenticateWithAppleServiceTest extends TestCase
 {
-    public function test_authenticates_registered_active_user_without_linking_identities(): void
+    public function test_authenticates_registered_active_user_and_links_apple_identity(): void
     {
         $users = new InMemoryUserProvisioningRepository();
         $email = EmailAddress::fromString('admin@tricab.com');
@@ -36,8 +38,6 @@ final class AuthenticateWithAppleServiceTest extends TestCase
             ),
         );
 
-        $linkedBefore = count($users->inner()->externalIdentityKeys());
-
         $service = new AuthenticateWithAppleService(
             new FakeAppleAuthorizationCodeExchanger('apple.header.payload'),
             new FakeAppleIdTokenValidator(new VerifiedAppleIdToken(
@@ -45,13 +45,15 @@ final class AuthenticateWithAppleServiceTest extends TestCase
                 emailAddress: 'Admin@TriCab.com',
                 emailVerified: true,
             )),
-            $users->inner(),
+            new IdentityResolutionService($users),
         );
 
         $user = $service->execute('auth-code', 'expected-nonce');
 
         self::assertSame('admin@tricab.com', $user->emailAddress()->toString());
-        self::assertSame($linkedBefore, count($users->inner()->externalIdentityKeys()));
+        self::assertNotNull($users->findByExternalIdentity(
+            AppleExternalIdentityFactory::forSubject('apple-sub-123'),
+        ));
     }
 
     public function test_rejects_unregistered_email(): void
@@ -63,11 +65,10 @@ final class AuthenticateWithAppleServiceTest extends TestCase
                 emailAddress: 'unknown@example.com',
                 emailVerified: true,
             )),
-            (new InMemoryUserProvisioningRepository())->inner(),
+            new IdentityResolutionService(new InMemoryUserProvisioningRepository()),
         );
 
-        $this->expectException(AppleUserNotRegistered::class);
-        $this->expectExceptionMessage('This Apple account is not linked to a registered TriCab user.');
+        $this->expectException(UserNotRegistered::class);
         $service->execute('auth-code', 'expected-nonce');
     }
 
@@ -80,7 +81,7 @@ final class AuthenticateWithAppleServiceTest extends TestCase
                 emailAddress: 'admin@tricab.com',
                 emailVerified: false,
             )),
-            (new InMemoryUserProvisioningRepository())->inner(),
+            new IdentityResolutionService(new InMemoryUserProvisioningRepository()),
         );
 
         $this->expectException(AppleIdTokenInvalid::class);
@@ -109,7 +110,7 @@ final class AuthenticateWithAppleServiceTest extends TestCase
                 emailAddress: 'disabled@tricab.com',
                 emailVerified: true,
             )),
-            $users->inner(),
+            new IdentityResolutionService($users),
         );
 
         $this->expectException(AuthenticationNotAllowed::class);

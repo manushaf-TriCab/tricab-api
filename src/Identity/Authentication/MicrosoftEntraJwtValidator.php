@@ -120,7 +120,20 @@ final class MicrosoftEntraJwtValidator implements EntraTokenValidator
             provider: ExternalProvider::MICROSOFT_ENTRA,
             subjectId: $subject,
             tenantId: $tenant,
+            verifiedEmail: $this->resolveVerifiedEmail($decoded),
         );
+    }
+
+    private function resolveVerifiedEmail(stdClass $decoded): ?string
+    {
+        foreach (['preferred_username', 'upn', 'email', 'unique_name'] as $claim) {
+            $value = $this->stringClaim($decoded, $claim);
+            if ($value !== '' && str_contains($value, '@')) {
+                return strtolower($value);
+            }
+        }
+
+        return null;
     }
 
     private function debugStage(string $stage, bool $ok, ?string $failureReason): void

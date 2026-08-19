@@ -8,6 +8,8 @@ use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Identity\Domain\Entity\ExternalIdentity;
 use TriCab\Core\Identity\Domain\Entity\User;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
+use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
+use TriCab\Core\Identity\Domain\ValueObject\ExternalSubjectId;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 
 /**
@@ -24,6 +26,9 @@ final class InMemoryUserRepository implements UserRepository
     /** @var array<string, int> */
     private array $userIdsByExternalIdentity = [];
 
+    /** @var array<int, array<string, string>> */
+    private array $providerSubjectsByUserId = [];
+
     public function save(User $user, ?ExternalIdentity $externalIdentity = null): void
     {
         $userId = $user->id()->toInt();
@@ -32,6 +37,8 @@ final class InMemoryUserRepository implements UserRepository
 
         if ($externalIdentity !== null) {
             $this->userIdsByExternalIdentity[$this->externalIdentityKey($externalIdentity)] = $userId;
+            $this->providerSubjectsByUserId[$userId][$externalIdentity->provider()->toString()]
+                = $externalIdentity->subjectId()->toString();
         }
     }
 
@@ -51,6 +58,21 @@ final class InMemoryUserRepository implements UserRepository
         return $this->usersById[$userId] ?? null;
     }
 
+    /**
+     * @return list<User>
+     */
+    public function findAllByEmail(EmailAddress $emailAddress): array
+    {
+        $matches = [];
+        foreach ($this->usersById as $user) {
+            if ($user->emailAddress()->equals($emailAddress)) {
+                $matches[] = $user;
+            }
+        }
+
+        return $matches;
+    }
+
     public function findByExternalIdentity(ExternalIdentity $identity): ?User
     {
         $userId = $this->userIdsByExternalIdentity[$this->externalIdentityKey($identity)] ?? null;
@@ -60,6 +82,13 @@ final class InMemoryUserRepository implements UserRepository
         }
 
         return $this->usersById[$userId] ?? null;
+    }
+
+    public function findActiveProviderSubjectForUser(UserId $userId, ExternalProvider $provider): ?ExternalSubjectId
+    {
+        $subject = $this->providerSubjectsByUserId[$userId->toInt()][$provider->toString()] ?? null;
+
+        return $subject !== null ? ExternalSubjectId::fromString($subject) : null;
     }
 
     /**

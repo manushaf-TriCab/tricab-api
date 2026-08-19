@@ -34,6 +34,7 @@ final class AzureCliAccessTokenProviderTest extends TestCase
 
         self::assertTrue($settings->usesEntraCliAuth());
         self::assertFalse($settings->usesSqlLoginAuth());
+        self::assertFalse($settings->usesManagedIdentityAuth());
         self::assertSame(Settings::DB_AUTH_MODE_ENTRA_CLI, $settings->dbAuthMode);
         self::assertSame(
             'C:/Program Files/Microsoft SDKs/Azure/CLI2/wbin/az.cmd',

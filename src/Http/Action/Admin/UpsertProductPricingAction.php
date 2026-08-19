@@ -36,12 +36,12 @@ final class UpsertProductPricingAction
             $input = UpsertPricingRequest::fromArray(JsonRequestBody::requireObject($request));
             $actor = AdminActorFactory::fromRequest($request);
 
-            $this->transaction->run(fn () => $this->upsertPricing->execute(
+            $saved = $this->transaction->run(fn () => $this->upsertPricing->execute(
                 $actor,
                 new UpsertProductPricingCommand(
                     productPublicId: $productPublicId,
                     currencyCode: $input->currencyCode,
-                    unitPrice: $input->unitPrice,
+                    baseCost: $input->baseCost,
                     minimumQuantity: $input->minimumQuantity,
                     priceListPublicId: $input->priceListPublicId,
                     regionPublicId: $input->regionPublicId,
@@ -51,10 +51,14 @@ final class UpsertProductPricingAction
                     effectiveFromUtc: $input->effectiveFromUtc,
                     effectiveToUtc: $input->effectiveToUtc,
                     variantPublicId: $input->variantPublicId,
+                    priceSourceCode: $input->priceSourceCode,
+                    createRevision: $input->createRevision,
+                    pricingPublicId: $input->pricingPublicId,
+                    expectedRowVersion: $input->expectedRowVersion,
                 ),
             ));
 
-            return $this->responder->success(ProductManagementDtoSerializer::acknowledged());
+            return $this->responder->success(ProductManagementDtoSerializer::pricingSummary($saved));
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

@@ -11,6 +11,9 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Identity\Application\Exception\GoogleIdTokenInvalid;
 use TriCab\Core\Identity\Application\Exception\GoogleUserNotRegistered;
 use TriCab\Core\Identity\Application\Exception\GuestSessionIssuanceFailed;
+use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
+use TriCab\Core\Identity\Application\Exception\IdentityConflict;
+use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
 use TriCab\Core\Identity\Domain\Exception\InvalidIdentityValue;
 
@@ -41,7 +44,7 @@ final class GoogleAuthErrorMapper
             );
         }
 
-        if ($exception instanceof GoogleUserNotRegistered) {
+        if ($exception instanceof GoogleUserNotRegistered || $exception instanceof UserNotRegistered) {
             $this->logger->log($event, [
                 'route' => $route,
                 'auth_provider' => 'google',
@@ -51,6 +54,34 @@ final class GoogleAuthErrorMapper
             return $this->responder->error(
                 'USER_NOT_REGISTERED',
                 'Your Google account is not registered with TriCab.',
+                403,
+            );
+        }
+
+        if ($exception instanceof IdentityAmbiguous) {
+            $this->logger->log($event, [
+                'route' => $route,
+                'auth_provider' => 'google',
+                'reason' => 'IDENTITY_AMBIGUOUS',
+            ]);
+
+            return $this->responder->error(
+                'IDENTITY_AMBIGUOUS',
+                'Multiple TriCab accounts match this verified email. Contact IT for help.',
+                403,
+            );
+        }
+
+        if ($exception instanceof IdentityConflict) {
+            $this->logger->log($event, [
+                'route' => $route,
+                'auth_provider' => 'google',
+                'reason' => 'IDENTITY_CONFLICT',
+            ]);
+
+            return $this->responder->error(
+                'IDENTITY_CONFLICT',
+                'This Google sign-in could not be linked safely. Contact IT for help.',
                 403,
             );
         }

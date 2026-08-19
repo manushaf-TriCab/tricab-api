@@ -169,7 +169,7 @@ final class ProductPersistenceTest extends TestCase
             ProductPublicId::fromString(self::SAMPLE_PRODUCT_PUBLIC_ID),
             [
                 'currencyCode' => 'AUD',
-                'unitPrice' => '19.99',
+                'baseCost' => '19.99',
                 'minimumQuantity' => '1.0000',
                 'discountPercent' => null,
                 'taxInclusive' => false,
@@ -179,7 +179,7 @@ final class ProductPersistenceTest extends TestCase
             UserId::fromInt(1),
         );
 
-        self::assertSame('19.9900', $summary->unitPrice);
+        self::assertSame('19.9900', $summary->baseCost);
         self::assertTrue($connection->committed);
 
         $insertCall = $connection->calls[3];

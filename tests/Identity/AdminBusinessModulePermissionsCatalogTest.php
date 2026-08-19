@@ -34,6 +34,7 @@ final class AdminBusinessModulePermissionsCatalogTest extends TestCase
             'REGION.CREATE',
             'REGION.UPDATE',
             'REGION.DELETE',
+            'MIGRATION.ADMIN',
         ];
     }
 

@@ -38,4 +38,11 @@ final class UnavailableLegacyTcRepository implements LegacyTcRepository
         return ['tables' => [], 'columns' => [], 'rowCounts' => []];
     }
 
+    public function findLatestBaseCost(string $itemCode, int $debtorCompanyCode): ?array
+    {
+        unset($itemCode, $debtorCompanyCode);
+
+        return null;
+    }
+
 }

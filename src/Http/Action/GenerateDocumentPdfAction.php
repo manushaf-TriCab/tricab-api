@@ -12,7 +12,9 @@ use TriCab\Core\DocumentGeneration\Application\Exception\InvalidOcrStream;
 use TriCab\Core\DocumentGeneration\Application\Exception\UnsupportedDocumentTemplate;
 use TriCab\Core\DocumentGeneration\Application\Handler\GenerateOcrPdfHandler;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
-use TriCab\Core\Identity\Application\Exception\IdentityNotLinked;
+use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
+use TriCab\Core\Identity\Application\Exception\IdentityConflict;
+use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
 
@@ -116,10 +118,22 @@ final class GenerateDocumentPdfAction
 
         try {
             $this->resolveUser->handle($verifiedIdentity);
-        } catch (IdentityNotLinked) {
+        } catch (UserNotRegistered) {
             return $this->responder->error(
-                'IDENTITY_NOT_LINKED',
-                'This Microsoft identity is not linked to a TriCab user.',
+                'USER_NOT_REGISTERED',
+                'No registered TriCab user matches this verified identity.',
+                403,
+            );
+        } catch (IdentityAmbiguous) {
+            return $this->responder->error(
+                'IDENTITY_AMBIGUOUS',
+                'Multiple TriCab accounts match this verified email. Contact IT for help.',
+                403,
+            );
+        } catch (IdentityConflict) {
+            return $this->responder->error(
+                'IDENTITY_CONFLICT',
+                'This sign-in could not be linked safely. Contact IT for help.',
                 403,
             );
         } catch (AuthenticationNotAllowed) {

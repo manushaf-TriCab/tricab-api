@@ -9,13 +9,15 @@ use TriCab\Core\Identity\Domain\Entity\ExternalIdentity;
 use TriCab\Core\Identity\Domain\Entity\User;
 use TriCab\Core\Identity\Domain\Service\UuidV4Generator;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
+use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
+use TriCab\Core\Identity\Domain\ValueObject\ExternalSubjectId;
 use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
 use TriCab\Core\Identity\Domain\ValueObject\RoleCode;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Identity\Domain\ValueObject\UserPublicId;
 use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 
-final class InMemoryUserProvisioningRepository implements UserProvisioningRepository
+class InMemoryUserProvisioningRepository implements UserProvisioningRepository
 {
     private readonly InMemoryUserRepository $inner;
 
@@ -32,6 +34,14 @@ final class InMemoryUserProvisioningRepository implements UserProvisioningReposi
     public function findByEmail(EmailAddress $emailAddress): ?User
     {
         return $this->inner->findByEmail($emailAddress);
+    }
+
+    /**
+     * @return list<User>
+     */
+    public function findAllByEmail(EmailAddress $emailAddress): array
+    {
+        return $this->inner->findAllByEmail($emailAddress);
     }
 
     public function findByExternalIdentity(ExternalIdentity $identity): ?User
@@ -70,6 +80,11 @@ final class InMemoryUserProvisioningRepository implements UserProvisioningReposi
     public function linkExternalIdentity(User $user, ExternalIdentity $identity): void
     {
         $this->inner->save($user, $identity);
+    }
+
+    public function findActiveProviderSubjectForUser(UserId $userId, ExternalProvider $provider): ?ExternalSubjectId
+    {
+        return $this->inner->findActiveProviderSubjectForUser($userId, $provider);
     }
 
     public function inner(): InMemoryUserRepository

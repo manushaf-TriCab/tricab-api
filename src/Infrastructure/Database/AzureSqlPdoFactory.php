@@ -9,10 +9,12 @@ use PDOException;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenException;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
+use TriCab\Api\Infrastructure\Authentication\ManagedIdentitySqlAccessTokenException;
+use TriCab\Api\Infrastructure\Authentication\ManagedIdentitySqlAccessTokenProvider;
 use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 
 /**
- * Creates PDO connections for Azure SQL using either SQL login or Entra CLI access tokens.
+ * Creates PDO connections for Azure SQL using managed identity, Entra CLI, or SQL login.
  * May retry *connection establishment* once on classified serverless-resume timeouts.
  * Does not retry SQL queries.
  */
@@ -27,6 +29,7 @@ final class AzureSqlPdoFactory
         private readonly RequestPerformanceMetrics $metrics,
         private readonly PdoConnector $pdoConnector = new NativePdoConnector(),
         ?callable $sleeper = null,
+        private readonly ?ManagedIdentitySqlAccessTokenProvider $managedIdentityTokenProvider = null,
     ) {
         $this->sleeper = $sleeper ?? static function (int $milliseconds): void {
             if ($milliseconds > 0) {
@@ -88,12 +91,13 @@ final class AzureSqlPdoFactory
                 $this->metrics->recordConnectAttempt($attempt, $attemptMs, $lastTransient);
 
                 return $pdo;
-            } catch (AzureCliAccessTokenException $exception) {
+            } catch (AzureCliAccessTokenException | ManagedIdentitySqlAccessTokenException $exception) {
                 DatabaseAuthDiagnostics::logThrowable('pdo_factory.token.failed', $exception, [
                     'failureLocation' => 'before_obtaining_token',
                     'tokenAcquired' => false,
                     'tokenPassedIntoPdo' => false,
                     'connectAttempt' => $attempt,
+                    'authMode' => $this->settings->dbAuthMode,
                 ]);
                 throw DatabaseAuthFailed::fromThrowable($exception);
             } catch (PDOException $exception) {
@@ -136,20 +140,47 @@ final class AzureSqlPdoFactory
 
     private function openPdo(): PDO
     {
-        if ($this->settings->usesEntraCliAuth()) {
-            return $this->createWithAccessToken();
+        if ($this->settings->usesManagedIdentityAuth()) {
+            return $this->createWithAccessToken(
+                $this->managedIdentityAccessToken(),
+                Settings::DB_AUTH_MODE_MANAGED_IDENTITY,
+            );
         }
 
-        return $this->createWithSqlLogin();
+        if ($this->settings->usesEntraCliAuth()) {
+            return $this->createWithAccessToken(
+                $this->accessTokenProvider->getAccessToken(),
+                Settings::DB_AUTH_MODE_ENTRA_CLI,
+            );
+        }
+
+        if ($this->settings->usesSqlLoginAuth()) {
+            return $this->createWithSqlLogin();
+        }
+
+        throw DatabaseAuthFailed::because(
+            'Unsupported DB_AUTH_MODE for Azure SQL connections.',
+        );
     }
 
-    private function createWithAccessToken(): PDO
+    private function managedIdentityAccessToken(): string
     {
-        $token = $this->accessTokenProvider->getAccessToken();
+        if ($this->managedIdentityTokenProvider === null) {
+            throw new ManagedIdentitySqlAccessTokenException(
+                'Managed identity SQL token provider is not configured.',
+            );
+        }
+
+        return $this->managedIdentityTokenProvider->getAccessToken();
+    }
+
+    private function createWithAccessToken(string $token, string $authMode): PDO
+    {
         DatabaseAuthDiagnostics::log('pdo_factory.token.acquired', [
             'tokenAcquired' => true,
             'tokenLength' => strlen($token),
             'tokenPassedIntoPdo' => true,
+            'authMode' => $authMode,
         ]);
 
         $dsn = $this->buildAccessTokenDsn($token);
@@ -158,7 +189,7 @@ final class AzureSqlPdoFactory
         $this->metrics->recordPdoConnect(RequestPerformanceMetrics::durationMs($connectStarted));
         DatabaseAuthDiagnostics::log('pdo_factory.pdo.created', [
             'pdoConnectionCreated' => true,
-            'authMode' => 'entra-cli',
+            'authMode' => $authMode,
             'dsnBase' => $this->buildAccessTokenDsn('[REDACTED]'),
             'accessTokenOptionPresent' => true,
             'uidPwdPassed' => false,
@@ -262,7 +293,7 @@ final class AzureSqlPdoFactory
 
     private function redactedDsn(): string
     {
-        if ($this->settings->usesEntraCliAuth()) {
+        if ($this->settings->usesManagedIdentityAuth() || $this->settings->usesEntraCliAuth()) {
             return $this->buildAccessTokenDsn('[REDACTED]');
         }
 

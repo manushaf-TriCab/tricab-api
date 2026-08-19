@@ -13,6 +13,9 @@ use TriCab\Core\Identity\Application\Exception\AppleIdTokenInvalid;
 use TriCab\Core\Identity\Application\Exception\AppleTokenExchangeFailed;
 use TriCab\Core\Identity\Application\Exception\AppleUserNotRegistered;
 use TriCab\Core\Identity\Application\Exception\GuestSessionIssuanceFailed;
+use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
+use TriCab\Core\Identity\Application\Exception\IdentityConflict;
+use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
 use TriCab\Core\Identity\Domain\Exception\InvalidIdentityValue;
 
@@ -44,7 +47,7 @@ final class AppleAuthErrorMapper
             );
         }
 
-        if ($exception instanceof AppleUserNotRegistered) {
+        if ($exception instanceof AppleUserNotRegistered || $exception instanceof UserNotRegistered) {
             $this->logger->log($event, [
                 'route' => $route,
                 'auth_provider' => 'apple',
@@ -54,6 +57,34 @@ final class AppleAuthErrorMapper
             return $this->responder->error(
                 'USER_NOT_REGISTERED',
                 'This Apple account is not linked to a registered TriCab user.',
+                403,
+            );
+        }
+
+        if ($exception instanceof IdentityAmbiguous) {
+            $this->logger->log($event, [
+                'route' => $route,
+                'auth_provider' => 'apple',
+                'reason' => 'IDENTITY_AMBIGUOUS',
+            ]);
+
+            return $this->responder->error(
+                'IDENTITY_AMBIGUOUS',
+                'Multiple TriCab accounts match this verified email. Contact IT for help.',
+                403,
+            );
+        }
+
+        if ($exception instanceof IdentityConflict) {
+            $this->logger->log($event, [
+                'route' => $route,
+                'auth_provider' => 'apple',
+                'reason' => 'IDENTITY_CONFLICT',
+            ]);
+
+            return $this->responder->error(
+                'IDENTITY_CONFLICT',
+                'This Apple sign-in could not be linked safely. Contact IT for help.',
                 403,
             );
         }

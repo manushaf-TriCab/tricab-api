@@ -14,9 +14,8 @@ use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Shared\Persistence\ApplicationTransaction;
 
 /**
- * Internal/admin-only pricing. Never exposed via public product reads.
- * The unit price is masked (`***`) in audit records — only the currency and
- * minimum quantity are recorded in clear text.
+ * Internal/admin-only base-cost maintenance. Never exposed via public product reads.
+ * Audit masks baseCost values.
  */
 final class UpsertProductPricingService
 {
@@ -32,7 +31,7 @@ final class UpsertProductPricingService
         return $this->transaction->run(function () use ($actor, $command): ProductPricingSummary {
             $productPublicId = ProductPublicId::fromString($command->productPublicId);
             $currency = CurrencyCode::fromString($command->currencyCode);
-            $unitPrice = Money::of($command->unitPrice, $currency);
+            $baseCost = Money::of($command->baseCost, $currency);
 
             $actorUserId = $this->audit->actorUserId($actor);
 
@@ -40,7 +39,7 @@ final class UpsertProductPricingService
                 $productPublicId,
                 [
                     'currencyCode' => $currency->toString(),
-                    'unitPrice' => $unitPrice->amount(),
+                    'baseCost' => $baseCost->amount(),
                     'minimumQuantity' => $command->minimumQuantity,
                     'priceListPublicId' => $command->priceListPublicId,
                     'regionPublicId' => $command->regionPublicId,
@@ -50,6 +49,10 @@ final class UpsertProductPricingService
                     'effectiveFromUtc' => $command->effectiveFromUtc,
                     'effectiveToUtc' => $command->effectiveToUtc,
                     'variantPublicId' => $command->variantPublicId,
+                    'priceSourceCode' => $command->priceSourceCode,
+                    'createRevision' => $command->createRevision,
+                    'pricingPublicId' => $command->pricingPublicId,
+                    'expectedRowVersion' => $command->expectedRowVersion,
                 ],
                 $actorUserId,
             );
@@ -59,11 +62,13 @@ final class UpsertProductPricingService
                 productPublicId: $productPublicId,
                 entityTypeCode: 'product-pricing',
                 entityId: null,
-                actionCode: 'upserted',
+                actionCode: $command->pricingPublicId !== null ? 'updated' : 'created',
                 newValues: [
                     'currencyCode' => $saved->currencyCode,
-                    'unitPrice' => $saved->unitPrice,
+                    'baseCost' => $saved->baseCost,
                     'minimumQuantity' => $saved->minimumQuantity,
+                    'variantPublicId' => $saved->variantPublicId,
+                    'priceSourceCode' => $saved->priceSourceCode,
                 ],
             );
 

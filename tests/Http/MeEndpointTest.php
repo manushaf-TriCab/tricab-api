@@ -73,7 +73,8 @@ final class MeEndpointTest extends TestCase
 
         $request = TestAppFactory::request('GET', '/api/v1/me')
             ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_TENANT, 'development-tenant')
-            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_SUBJECT, 'unknown-subject');
+            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_SUBJECT, 'unknown-subject')
+            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_EMAIL, 'unknown@example.com');
 
         $response = $app->handle($request);
         $payload = TestAppFactory::json($response);
@@ -83,7 +84,7 @@ final class MeEndpointTest extends TestCase
         self::assertIsArray($payload['error']);
         /** @var array<string, mixed> $error */
         $error = $payload['error'];
-        self::assertSame('IDENTITY_NOT_LINKED', $error['code']);
+        self::assertSame('USER_NOT_REGISTERED', $error['code']);
     }
 
     public function test_development_auth_cannot_run_in_production_mode(): void

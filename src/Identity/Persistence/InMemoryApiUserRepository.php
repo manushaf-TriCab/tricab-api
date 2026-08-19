@@ -34,6 +34,9 @@ final class InMemoryApiUserRepository implements UserRepository, UserProvisionin
     /** @var array<string, int> */
     private array $userIdsByExternalIdentity = [];
 
+    /** @var array<int, array<string, string>> */
+    private array $providerSubjectsByUserId = [];
+
     private int $nextId = 2;
 
     private readonly UuidV4Generator $uuids;
@@ -106,6 +109,21 @@ final class InMemoryApiUserRepository implements UserRepository, UserProvisionin
         return $userId === null ? null : ($this->usersById[$userId] ?? null);
     }
 
+    /**
+     * @return list<User>
+     */
+    public function findAllByEmail(EmailAddress $emailAddress): array
+    {
+        $matches = [];
+        foreach ($this->usersById as $user) {
+            if ($user->emailAddress()->equals($emailAddress)) {
+                $matches[] = $user;
+            }
+        }
+
+        return $matches;
+    }
+
     public function findByExternalIdentity(ExternalIdentity $identity): ?User
     {
         $userId = $this->userIdsByExternalIdentity[$this->externalIdentityKey($identity)] ?? null;
@@ -146,6 +164,13 @@ final class InMemoryApiUserRepository implements UserRepository, UserProvisionin
         $this->persist($user, $identity);
     }
 
+    public function findActiveProviderSubjectForUser(UserId $userId, ExternalProvider $provider): ?ExternalSubjectId
+    {
+        $subject = $this->providerSubjectsByUserId[$userId->toInt()][$provider->toString()] ?? null;
+
+        return $subject !== null ? ExternalSubjectId::fromString($subject) : null;
+    }
+
     public function externalIdentityCount(): int
     {
         return count($this->userIdsByExternalIdentity);
@@ -159,6 +184,8 @@ final class InMemoryApiUserRepository implements UserRepository, UserProvisionin
 
         if ($externalIdentity !== null) {
             $this->userIdsByExternalIdentity[$this->externalIdentityKey($externalIdentity)] = $userId;
+            $this->providerSubjectsByUserId[$userId][$externalIdentity->provider()->toString()]
+                = $externalIdentity->subjectId()->toString();
         }
     }
 

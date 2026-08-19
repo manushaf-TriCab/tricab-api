@@ -26,6 +26,10 @@ use TriCab\Core\Product\Application\DTO\ProductPublic3DModel;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\DTO\ProductMutationResult;
 use TriCab\Core\Product\Application\DTO\ProductPricingSummary;
+use TriCab\Core\Product\Application\DTO\ProductPricingOverview;
+use TriCab\Core\Product\Application\DTO\ProductPricingMatrixRow;
+use TriCab\Core\Product\Application\DTO\ProductBaseCostHistoryEntry;
+use TriCab\Core\Product\Application\DTO\LegacyBaseCostComparison;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewDetail;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixColumn;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixRow;
@@ -356,12 +360,28 @@ final class ProductManagementDtoSerializer
     {
         return [
             'publicId' => $summary->publicId,
+            'recordType' => $summary->recordType,
+            'variantPublicId' => $summary->variantPublicId,
+            'variantName' => $summary->variantName,
+            'variantCode' => $summary->variantCode,
             'currencyCode' => $summary->currencyCode,
-            'unitPrice' => $summary->unitPrice,
+            'baseCost' => $summary->baseCost,
+            'unitPrice' => $summary->baseCost,
             'minimumQuantity' => $summary->minimumQuantity,
             'priceListCode' => $summary->priceListCode,
+            'priceListPublicId' => $summary->priceListPublicId,
+            'regionPublicId' => $summary->regionPublicId,
+            'marketPublicId' => $summary->marketPublicId,
+            'unitOfMeasureCode' => $summary->unitOfMeasureCode,
+            'priceSourceCode' => $summary->priceSourceCode,
             'effectiveFromUtc' => $summary->effectiveFromUtc,
             'effectiveToUtc' => $summary->effectiveToUtc,
+            'status' => $summary->status,
+            'isActive' => $summary->isActive,
+            'rowVersion' => $summary->rowVersion,
+            'legacyItemCode' => $summary->legacyItemCode,
+            'erpSourceReference' => $summary->erpSourceReference,
+            'lastSourceUpdatedAtUtc' => $summary->lastSourceUpdatedAtUtc,
         ];
     }
 
@@ -378,6 +398,113 @@ final class ProductManagementDtoSerializer
         }
 
         return $mapped;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function pricingOverview(ProductPricingOverview $overview): array
+    {
+        return [
+            'variantCount' => $overview->variantCount,
+            'variantsWithPricing' => $overview->variantsWithPricing,
+            'missingBaseCostCount' => $overview->missingBaseCostCount,
+            'currentRecordCount' => $overview->currentRecordCount,
+            'scheduledRecordCount' => $overview->scheduledRecordCount,
+            'expiredRecordCount' => $overview->expiredRecordCount,
+            'inactiveRecordCount' => $overview->inactiveRecordCount,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function pricingMatrixRow(ProductPricingMatrixRow $row): array
+    {
+        return [
+            'variantPublicId' => $row->variantPublicId,
+            'variantName' => $row->variantName,
+            'variantCode' => $row->variantCode,
+            'sku' => $row->sku,
+            'displayOrder' => $row->displayOrder,
+            'legacyItemCode' => $row->legacyItemCode,
+            'currentPricingPublicId' => $row->currentPricingPublicId,
+            'currencyCode' => $row->currencyCode,
+            'baseCost' => $row->baseCost,
+            'unitOfMeasureCode' => $row->unitOfMeasureCode,
+            'unitOfMeasureSymbol' => $row->unitOfMeasureSymbol,
+            'priceListCode' => $row->priceListCode,
+            'priceSourceCode' => $row->priceSourceCode,
+            'effectiveFromUtc' => $row->effectiveFromUtc,
+            'effectiveToUtc' => $row->effectiveToUtc,
+            'status' => $row->status,
+            'isActive' => $row->isActive,
+            'rowVersion' => $row->rowVersion,
+        ];
+    }
+
+    /**
+     * @param list<ProductPricingMatrixRow> $items
+     * @return list<array<string, mixed>>
+     */
+    public static function pricingMatrixList(array $items): array
+    {
+        return array_map(self::pricingMatrixRow(...), $items);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function baseCostHistoryEntry(ProductBaseCostHistoryEntry $entry): array
+    {
+        return [
+            'publicId' => $entry->publicId,
+            'recordType' => $entry->recordType,
+            'variantPublicId' => $entry->variantPublicId,
+            'variantName' => $entry->variantName,
+            'currencyCode' => $entry->currencyCode,
+            'baseCost' => $entry->baseCost,
+            'unitOfMeasureCode' => $entry->unitOfMeasureCode,
+            'priceListCode' => $entry->priceListCode,
+            'priceSourceCode' => $entry->priceSourceCode,
+            'effectiveFromUtc' => $entry->effectiveFromUtc,
+            'effectiveToUtc' => $entry->effectiveToUtc,
+            'status' => $entry->status,
+            'isActive' => $entry->isActive,
+            'rowVersion' => $entry->rowVersion,
+        ];
+    }
+
+    /**
+     * @param list<ProductBaseCostHistoryEntry> $items
+     * @return list<array<string, mixed>>
+     */
+    public static function baseCostHistoryList(array $items): array
+    {
+        return array_map(self::baseCostHistoryEntry(...), $items);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function legacyBaseCostComparison(LegacyBaseCostComparison $comparison): array
+    {
+        return [
+            'variantPublicId' => $comparison->variantPublicId,
+            'variantName' => $comparison->variantName,
+            'legacyItemCode' => $comparison->legacyItemCode,
+            'legacyPriceCode' => $comparison->legacyPriceCode,
+            'newBaseCost' => $comparison->newBaseCost,
+            'newCurrencyCode' => $comparison->newCurrencyCode,
+            'newPriceSourceCode' => $comparison->newPriceSourceCode,
+            'legacyBaseCost' => $comparison->legacyBaseCost,
+            'legacyCurrencyCode' => $comparison->legacyCurrencyCode,
+            'legacyDebtorCompanyCode' => $comparison->legacyDebtorCompanyCode,
+            'legacyLastUpdatedUtc' => $comparison->legacyLastUpdatedUtc,
+            'differenceAmount' => $comparison->differenceAmount,
+            'legacyAvailable' => $comparison->legacyAvailable,
+            'message' => $comparison->message,
+        ];
     }
 
     /**

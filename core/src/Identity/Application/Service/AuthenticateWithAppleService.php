@@ -6,26 +6,19 @@ namespace TriCab\Core\Identity\Application\Service;
 
 use TriCab\Core\Identity\Application\Exception\AppleIdTokenInvalid;
 use TriCab\Core\Identity\Application\Exception\AppleTokenExchangeFailed;
-use TriCab\Core\Identity\Application\Exception\AppleUserNotRegistered;
 use TriCab\Core\Identity\Contract\AppleAuthorizationCodeExchanger;
 use TriCab\Core\Identity\Contract\AppleIdTokenValidator;
-use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Identity\Domain\Entity\User;
+use TriCab\Core\Identity\Domain\Service\AppleExternalIdentityFactory;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 
-/**
- * Validates an Apple authorization code flow and resolves an existing TriCab user by verified email.
- *
- * Does not auto-create Users. Does not link Apple or email-otp ExternalIdentities.
- * Session JWT /me resolution for Apple relies on GuestJwtValidator loading the user by session UserId
- * and attaching AuthenticatedUser — not on ExternalIdentity rows.
- */
+/** Validates Apple Sign-In and resolves an existing TriCab user. */
 final class AuthenticateWithAppleService
 {
     public function __construct(
         private readonly AppleAuthorizationCodeExchanger $authorizationCodeExchanger,
         private readonly AppleIdTokenValidator $appleIdTokenValidator,
-        private readonly UserRepository $users,
+        private readonly IdentityResolutionService $identityResolution,
     ) {
     }
 
@@ -43,13 +36,8 @@ final class AuthenticateWithAppleService
         }
 
         $emailAddress = EmailAddress::fromString($verified->emailAddress);
-        $user = $this->users->findByEmail($emailAddress);
-        if ($user === null) {
-            throw AppleUserNotRegistered::create();
-        }
+        $appleIdentity = AppleExternalIdentityFactory::forSubject($verified->subjectId);
 
-        $user->assertAuthenticationAllowed();
-
-        return $user;
+        return $this->identityResolution->resolve($appleIdentity, $emailAddress);
     }
 }

@@ -43,4 +43,11 @@ interface LegacyTcRepository
      * @return array{tables: list<string>, columns: array<string, list<string>>, rowCounts: array<string, int>}
      */
     public function inspectSchema(): array;
+
+    /**
+     * Read-only latest tc.price.cost for an item code and debtor company (dbco).
+     *
+     * @return array{cost: string, lastUpdatedUtc: ?string}|null
+     */
+    public function findLatestBaseCost(string $itemCode, int $debtorCompanyCode): ?array;
 }

@@ -115,6 +115,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'create-customer-schema.sql')          # b
 Invoke-SqlFile (Join-Path $DevScripts 'create-product-schema.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-product-construction-schema.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-product-migration-schema.sql') -ContinueOnError
+Invoke-SqlFile (Join-Path $DevScripts 'create-legacy-migration-schema.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-site-configurations.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-user-management-audit.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
@@ -124,6 +125,7 @@ Write-Host "`n[4/6] Reference data and seeds" -ForegroundColor Cyan
 foreach ($s in @(
     'seed-product-reference-data.sql',
     'seed-user-management-permissions.sql',
+    'seed-legacy-migration-permission.sql',
     'seed-product-roles-and-permissions.sql',
     'alter-product-regions.sql',
     'seed-customer-roles-and-permissions.sql',
