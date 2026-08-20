@@ -10,12 +10,15 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use TriCab\Api\Http\Auth\IdentityResolutionErrorMapper;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
-use TriCab\Core\Identity\Application\Exception\IdentityNotLinked;
+use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
+use TriCab\Core\Identity\Application\Exception\IdentityConflict;
+use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
 use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
@@ -60,14 +63,8 @@ final class RequirePermissionMiddleware implements MiddlewareInterface
 
             try {
                 $user = $this->get(ResolveAuthenticatedUserHandler::class)->handle($verifiedIdentity);
-            } catch (IdentityNotLinked) {
-                return $responder->error(
-                    'IDENTITY_NOT_LINKED',
-                    'This Microsoft identity is not linked to a TriCab user.',
-                    403,
-                );
-            } catch (AuthenticationNotAllowed $exception) {
-                return $this->mapAuthenticationNotAllowed($responder, $exception);
+            } catch (UserNotRegistered|IdentityConflict|IdentityAmbiguous|AuthenticationNotAllowed $exception) {
+                return $this->get(IdentityResolutionErrorMapper::class)->map($exception);
             }
         }
 

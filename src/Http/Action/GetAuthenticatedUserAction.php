@@ -7,16 +7,18 @@ namespace TriCab\Api\Http\Action;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Http\Auth\IdentityResolutionErrorMapper;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerContextService;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
-use TriCab\Core\Identity\Application\Exception\IdentityNotLinked;
+use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
+use TriCab\Core\Identity\Application\Exception\IdentityConflict;
+use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
-use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 
 final class GetAuthenticatedUserAction
 {
@@ -25,6 +27,7 @@ final class GetAuthenticatedUserAction
         private readonly ResolveAuthenticatedCustomerContextService $resolveCustomerContext,
         private readonly JsonResponder $responder,
         private readonly EntraJwtValidationDebugLogger $debugLogger,
+        private readonly IdentityResolutionErrorMapper $identityErrors,
     ) {
     }
 
@@ -59,14 +62,8 @@ final class GetAuthenticatedUserAction
 
         try {
             $user = $this->handler->handle($verifiedIdentity);
-        } catch (IdentityNotLinked) {
-            return $this->responder->error(
-                'IDENTITY_NOT_LINKED',
-                'This Microsoft identity is not linked to a TriCab user.',
-                403,
-            );
-        } catch (AuthenticationNotAllowed $exception) {
-            return $this->mapAuthenticationNotAllowed($exception);
+        } catch (UserNotRegistered|IdentityConflict|IdentityAmbiguous|AuthenticationNotAllowed $exception) {
+            return $this->identityErrors->map($exception);
         }
 
         return $this->responder->success($this->serialize($user));
@@ -98,24 +95,5 @@ final class GetAuthenticatedUserAction
                 'isCustomerAdmin' => $customerContext->isCustomerAdmin,
             ],
         ];
-    }
-
-    private function mapAuthenticationNotAllowed(AuthenticationNotAllowed $exception): ResponseInterface
-    {
-        $message = $exception->getMessage();
-
-        if (str_contains($message, '"' . UserStatus::PENDING . '"')) {
-            return $this->responder->error(
-                'ACCOUNT_PENDING',
-                'This TriCab account is pending activation.',
-                403,
-            );
-        }
-
-        return $this->responder->error(
-            'ACCOUNT_DISABLED',
-            'This TriCab account is disabled.',
-            403,
-        );
     }
 }

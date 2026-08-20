@@ -66,6 +66,7 @@ final class DevelopmentUserManagementCatalog
             'PRODUCT.PRICING.MANAGE' => ['name' => 'Manage Product Pricing', 'module' => 'PRODUCT'],
             'PRODUCT.LOOKUPS.MANAGE' => ['name' => 'Manage Product Lookups', 'module' => 'PRODUCT'],
             'PRODUCT.MIGRATION.MANAGE' => ['name' => 'Manage Product Migration', 'module' => 'PRODUCT'],
+            'MIGRATION.ADMIN' => ['name' => 'Administer Legacy Migration', 'module' => 'MIGRATION'],
             'PRODUCT.AUDIT.VIEW' => ['name' => 'View Product Audit History', 'module' => 'PRODUCT'],
             'REGION.READ' => ['name' => 'View Regions', 'module' => 'REGION'],
             'REGION.CREATE' => ['name' => 'Create Regions', 'module' => 'REGION'],

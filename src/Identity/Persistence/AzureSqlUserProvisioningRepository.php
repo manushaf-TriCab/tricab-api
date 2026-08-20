@@ -12,8 +12,11 @@ use TriCab\Core\Identity\Domain\Entity\ExternalIdentity;
 use TriCab\Core\Identity\Domain\Entity\User;
 use TriCab\Core\Identity\Domain\Service\UuidV4Generator;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
+use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
+use TriCab\Core\Identity\Domain\ValueObject\ExternalSubjectId;
 use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
 use TriCab\Core\Identity\Domain\ValueObject\RoleCode;
+use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 
 /**
@@ -32,6 +35,16 @@ final class AzureSqlUserProvisioningRepository implements UserProvisioningReposi
     public function findByEmail(EmailAddress $emailAddress): ?User
     {
         return $this->users->findByEmail($emailAddress);
+    }
+
+    /**
+     * @return list<User>
+     */
+    public function findAllByEmail(EmailAddress $emailAddress): array
+    {
+        $user = $this->users->findByEmail($emailAddress);
+
+        return $user !== null ? [$user] : [];
     }
 
     public function findByExternalIdentity(ExternalIdentity $identity): ?User
@@ -114,6 +127,33 @@ final class AzureSqlUserProvisioningRepository implements UserProvisioningReposi
 
             throw $exception;
         }
+    }
+
+    public function findActiveProviderSubjectForUser(UserId $userId, ExternalProvider $provider): ?ExternalSubjectId
+    {
+        $providerAlt = str_replace('_', '-', $provider->toString());
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT TOP 1 [SubjectIdentifier]
+FROM [identity].[ExternalIdentities]
+WHERE [UserId] = :userId
+  AND [IsActive] = 1
+  AND ([ProviderCode] = :provider OR [ProviderCode] = :providerAlt)
+SQL,
+            [
+                ':userId' => $userId->toInt(),
+                ':provider' => $provider->toString(),
+                ':providerAlt' => $providerAlt,
+            ],
+        );
+
+        if ($rows === []) {
+            return null;
+        }
+
+        $subject = trim((string) ($rows[0]['SubjectIdentifier'] ?? ''));
+
+        return $subject !== '' ? ExternalSubjectId::fromString($subject) : null;
     }
 
     private function resolveStatusId(UserStatus $status): int

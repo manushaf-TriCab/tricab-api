@@ -113,6 +113,8 @@ use TriCab\Api\Http\Action\Admin\UpdateProductAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductSeoAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
 use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
+use TriCab\Api\Http\Action\Admin\CompareLegacyBaseCostAction;
+use TriCab\Api\Http\Action\Admin\SetProductPricingActiveAction;
 use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductBySlugAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductCustomerViewAction;
@@ -254,12 +256,15 @@ use TriCab\Api\Identity\Persistence\InMemoryGuestSessionRepository;
 use TriCab\Api\Identity\Persistence\InMemoryUserManagementStore;
 use TriCab\Api\Http\Middleware\ReferenceDataCacheInvalidationMiddleware;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
+use TriCab\Api\Infrastructure\Authentication\ManagedIdentitySqlAccessTokenProvider;
+use TriCab\Api\Infrastructure\Authentication\ManagedIdentityTokenClient;
 use TriCab\Api\Infrastructure\Cache\ApplicationCache;
 use TriCab\Api\Infrastructure\Cache\ApplicationCacheFactory;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Infrastructure\Database\AzureSqlConnectionFactory;
 use TriCab\Api\Infrastructure\Database\AzureSqlPdoFactory;
 use TriCab\Api\Infrastructure\Database\LazySqlConnection;
+use TriCab\Api\Infrastructure\Database\NativePdoConnector;
 use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
@@ -289,6 +294,7 @@ use TriCab\Core\Customer\Contract\CustomerContactUserRepository;
 use TriCab\Core\Customer\Contract\CustomerPortalUserProvisioner;
 use TriCab\Core\Customer\Contract\CustomerRepository;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
+use TriCab\Core\Identity\Application\Service\IdentityResolutionService;
 use TriCab\Core\Identity\Application\Service\AuthenticateWithGoogleService;
 use TriCab\Core\Identity\Application\Service\AuthenticateWithAppleService;
 use TriCab\Core\Identity\Application\Service\CompositeGuestLoginEligibilityLookup;
@@ -364,10 +370,54 @@ use TriCab\Api\Http\Action\Admin\SpecificationDefinitionsAdminAction;
 use TriCab\Api\Http\Action\Admin\SpecificationGroupsAdminAction;
 use TriCab\Api\Http\Action\Admin\SpecificationOptionsAdminAction;
 use TriCab\Api\Http\Action\Admin\SpecificationUnitsAdminAction;
+use TriCab\Api\Http\Action\Admin\Migration\LegacyMigrationAdminAction;
 use TriCab\Api\Http\Action\Admin\Migration\ProductMigrationAdminAction;
 use TriCab\Api\Product\Persistence\AzureSqlMigrationBatchRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryMigrationBatchRepository;
 use TriCab\Core\Product\Migration\Application\Service\GetCatalogueReadinessService;
+use TriCab\Api\LegacyMigration\Application\Service\LegacyStaffReadOnlyAnalysisService;
+use TriCab\Api\LegacyMigration\Application\Service\StaffEntraLinkDryRunService;
+use TriCab\Api\LegacyMigration\Application\Service\StaffEntraLinkExecuteService;
+use TriCab\Api\LegacyMigration\Application\Service\StaffUserMigrationDryRunService;
+use TriCab\Api\LegacyMigration\Application\Service\StaffUserMigrationExecuteService;
+use TriCab\Api\LegacyMigration\Application\Service\StaffMigrationPreparationService;
+use TriCab\Api\LegacyMigration\Persistence\AzureSqlLegacyStaffUserMappingRepository;
+use TriCab\Api\LegacyMigration\Persistence\AzureSqlStaffIdentityUserCreator;
+use TriCab\Api\LegacyMigration\Infrastructure\MicrosoftGraphEntraDirectoryReader;
+use TriCab\Api\LegacyMigration\Persistence\AzureSqlStaffEntraLinkWriteUnit;
+use TriCab\Api\LegacyMigration\Persistence\InMemoryLegacyMigrationStore;
+use TriCab\Api\LegacyMigration\Persistence\AzureSqlLegacyMigrationStore;
+use TriCab\Api\LegacyMigration\Persistence\AzureSqlExistingNormalizedEmailLookup;
+use TriCab\Api\LegacyMigration\LiveLegacyIdentityHealthProbe;
+use TriCab\Core\LegacyMigration\Application\Service\LegacyMigrationEngine;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationAuditService;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationBatchService;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationConflictService;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationExecutionService;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationReportingService;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationRollbackService;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationSettingsService;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationSourceService;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationStatisticsService;
+use TriCab\Core\LegacyMigration\Application\Service\MigrationValidationService;
+use TriCab\Core\LegacyMigration\Contract\EntraDirectoryReader;
+use TriCab\Core\LegacyMigration\Contract\ExistingNormalizedEmailLookup;
+use TriCab\Core\LegacyMigration\Contract\StaffEntraLinkWriteUnit;
+use TriCab\Core\LegacyMigration\Contract\StaffIdentityUserCreator;
+use TriCab\Core\LegacyMigration\Contract\StaffMigrationWriteUnit;
+use TriCab\Api\LegacyMigration\Persistence\AzureSqlStaffMigrationWriteUnit;
+use TriCab\Core\LegacyMigration\Contract\LegacyStaffUserMappingRepository;
+use TriCab\Core\LegacyMigration\StaffEntraLink\StaffEntraLinkExecutor;
+use TriCab\Core\LegacyMigration\StaffMigration\StaffUserMigrationExecutor;
+use TriCab\Core\LegacyMigration\Contract\LegacyMigrationModuleRegistry;
+use TriCab\Core\LegacyMigration\Contract\LegacyMigrationStore;
+use TriCab\Core\LegacyMigration\Contract\LegacySourceHealthProbe;
+use TriCab\Core\LegacyMigration\Live\LegacyIdentitySourceConfig;
+use TriCab\Core\LegacyMigration\Live\LegacyIdentitySourceHealth;
+use TriCab\Core\LegacyMigration\Module\DefaultModuleRegistry;
+use TriCab\Core\LegacyMigration\Module\FrameworkModule;
+use TriCab\Core\LegacyMigration\Plugin\LegacyWordPressUserExtractor;
+use TriCab\Core\LegacyMigration\Plugin\NullExistingNormalizedEmailLookup;
 use TriCab\Core\Product\Migration\Application\Service\ProductMigrationService;
 use TriCab\Core\Product\Migration\Contract\MigrationBatchRepository;
 use TriCab\Core\Product\Migration\Contract\MigrationLookupIndex;
@@ -417,6 +467,11 @@ use TriCab\Core\Product\Application\Service\GetAdminProductService;
 use TriCab\Core\Product\Application\Service\GetProductAuditHistoryService;
 use TriCab\Core\Product\Application\Service\GetProductLookupsService;
 use TriCab\Core\Product\Application\Service\GetProductPricingService;
+use TriCab\Core\Product\Application\Service\GetProductPricingOverviewService;
+use TriCab\Core\Product\Application\Service\GetProductPricingMatrixService;
+use TriCab\Core\Product\Application\Service\GetProductBaseCostHistoryService;
+use TriCab\Core\Product\Application\Service\CompareLegacyBaseCostService;
+use TriCab\Core\Product\Application\Service\SetProductPricingActiveService;
 use TriCab\Core\Product\Application\Service\GetProductPublishReadinessService;
 use TriCab\Core\Product\Application\Service\GetProductRegionsService;
 use TriCab\Core\Product\Application\Service\GetProductVariantsService;
@@ -589,6 +644,7 @@ final class ContainerFactory
             EntraJwtValidationDebugLogger::class => \DI\autowire(EntraJwtValidationDebugLogger::class),
             EntraTokenValidator::class => \DI\autowire(MicrosoftEntraJwtValidator::class),
             ResolveAuthenticatedUserHandler::class => \DI\autowire(ResolveAuthenticatedUserHandler::class),
+            IdentityResolutionService::class => \DI\autowire(IdentityResolutionService::class),
             LegacyStreamParser::class => \DI\autowire(LegacyStreamParser::class),
             DompdfPdfRenderer::class => \DI\create(DompdfPdfRenderer::class)
                 ->constructor($documentResources . '/templates', $documentResources . '/assets'),
@@ -616,7 +672,26 @@ final class ContainerFactory
                     cache: self::get($container, ApplicationCache::class),
                 );
             },
-            AzureSqlPdoFactory::class => \DI\autowire(AzureSqlPdoFactory::class),
+            ManagedIdentityTokenClient::class => static function (Container $container): ManagedIdentityTokenClient {
+                return new ManagedIdentityTokenClient(self::get($container, JsonHttpClient::class));
+            },
+            ManagedIdentitySqlAccessTokenProvider::class => static function (Container $container): ManagedIdentitySqlAccessTokenProvider {
+                return new ManagedIdentitySqlAccessTokenProvider(
+                    self::get($container, ManagedIdentityTokenClient::class),
+                    self::get($container, ApplicationCache::class),
+                    self::get($container, RequestPerformanceMetrics::class),
+                );
+            },
+            AzureSqlPdoFactory::class => static function (Container $container) use ($settings): AzureSqlPdoFactory {
+                return new AzureSqlPdoFactory(
+                    $settings,
+                    self::get($container, AzureCliAccessTokenProvider::class),
+                    self::get($container, RequestPerformanceMetrics::class),
+                    new NativePdoConnector(),
+                    null,
+                    self::get($container, ManagedIdentitySqlAccessTokenProvider::class),
+                );
+            },
             AzureSqlConnectionFactory::class => \DI\autowire(AzureSqlConnectionFactory::class),
             JsonHttpClient::class => \DI\autowire(StreamJsonHttpClient::class),
             SessionTokenHasher::class => \DI\autowire(Sha256SessionTokenHasher::class),
@@ -768,6 +843,8 @@ final class ContainerFactory
             UpdateProductSeoAction::class => \DI\autowire(UpdateProductSeoAction::class),
             ChangeProductSlugAction::class => \DI\autowire(ChangeProductSlugAction::class),
             GetProductPricingAction::class => \DI\autowire(GetProductPricingAction::class),
+            CompareLegacyBaseCostAction::class => \DI\autowire(CompareLegacyBaseCostAction::class),
+            SetProductPricingActiveAction::class => \DI\autowire(SetProductPricingActiveAction::class),
             UpsertProductPricingAction::class => \DI\autowire(UpsertProductPricingAction::class),
             GetPublicProductBySlugAction::class => \DI\autowire(GetPublicProductBySlugAction::class),
             GetPublicProductCustomerViewAction::class => \DI\autowire(GetPublicProductCustomerViewAction::class),
@@ -894,6 +971,11 @@ final class ContainerFactory
             UpdateProductSeoService::class => \DI\autowire(UpdateProductSeoService::class),
             ChangeProductSlugService::class => \DI\autowire(ChangeProductSlugService::class),
             UpsertProductPricingService::class => \DI\autowire(UpsertProductPricingService::class),
+            GetProductPricingOverviewService::class => \DI\autowire(GetProductPricingOverviewService::class),
+            GetProductPricingMatrixService::class => \DI\autowire(GetProductPricingMatrixService::class),
+            GetProductBaseCostHistoryService::class => \DI\autowire(GetProductBaseCostHistoryService::class),
+            CompareLegacyBaseCostService::class => \DI\autowire(CompareLegacyBaseCostService::class),
+            SetProductPricingActiveService::class => \DI\autowire(SetProductPricingActiveService::class),
             ListAdminProductsService::class => \DI\autowire(ListAdminProductsService::class),
             GetAdminProductService::class => \DI\autowire(GetAdminProductService::class),
             GetAdminProductCustomerViewService::class => \DI\autowire(GetAdminProductCustomerViewService::class),
@@ -908,6 +990,257 @@ final class ContainerFactory
             SpecificationOptionService::class => \DI\autowire(SpecificationOptionService::class),
             SpecificationUnitService::class => \DI\autowire(SpecificationUnitService::class),
             ProductMigrationService::class => \DI\autowire(ProductMigrationService::class),
+            LegacyIdentitySourceConfig::class => static function (Container $container): LegacyIdentitySourceConfig {
+                $legacy = self::get($container, LiveLegacySourceConfig::class);
+                /** @var array<string, string|null> $env */
+                $env = [];
+                foreach ([
+                    'APP_ENV',
+                    'LEGACY_MIGRATION_ALLOW_WRITE_CAPABLE_READER',
+                    'LEGACY_WP_DSN', 'LEGACY_WP_HOST', 'LEGACY_WP_PORT', 'LEGACY_WP_DATABASE',
+                    'LEGACY_WP_USER', 'LEGACY_WP_PASSWORD', 'LEGACY_WP_TABLE_PREFIX', 'LEGACY_WP_SSL_MODE',
+                    'LEGACY_WP_READ_ONLY',
+                    'LEGACY_TC_DSN', 'LEGACY_TC_HOST', 'LEGACY_TC_PORT', 'LEGACY_TC_DATABASE',
+                    'LEGACY_TC_USER', 'LEGACY_TC_PASSWORD', 'LEGACY_TC_SSL_MODE',
+                    'LEGACY_TC_READ_ONLY',
+                ] as $key) {
+                    $value = $_ENV[$key] ?? $_SERVER[$key] ?? getenv($key);
+                    $env[$key] = is_string($value) || is_numeric($value) ? (string) $value : null;
+                }
+
+                return LegacyIdentitySourceConfig::fromEnvironment($env);
+            },
+            ExistingNormalizedEmailLookup::class => static function (Container $container) use ($settings): ExistingNormalizedEmailLookup {
+                if ($settings->usesAzureSqlUserRepository()) {
+                    return new AzureSqlExistingNormalizedEmailLookup(self::get($container, SqlConnection::class));
+                }
+
+                return new NullExistingNormalizedEmailLookup();
+            },
+            LegacySourceHealthProbe::class => static function (Container $container): LegacySourceHealthProbe {
+                $config = self::get($container, LegacyIdentitySourceConfig::class);
+                $factory = self::get($container, ReadOnlyMysqlConnectionFactory::class);
+                $wp = null;
+                $tc = null;
+                $wpError = null;
+                $tcError = null;
+                if ($config->legacy->wordpressConfigured()) {
+                    try {
+                        $wp = $factory->create(
+                            (string) $config->legacy->wordpressDsn,
+                            (string) $config->legacy->wordpressUser,
+                            (string) $config->legacy->wordpressPassword,
+                            'wordpress-identity',
+                            $config->legacy->wordpressSslMode ?? 'required',
+                        );
+                    } catch (\Throwable $e) {
+                        $wpError = $e;
+                    }
+                }
+                if ($config->legacy->tcConfigured()) {
+                    try {
+                        $tc = $factory->create(
+                            (string) $config->legacy->tcDsn,
+                            (string) $config->legacy->tcUser,
+                            (string) $config->legacy->tcPassword,
+                            'tc-identity',
+                            $config->legacy->tcSslMode ?? 'required',
+                        );
+                    } catch (\Throwable $e) {
+                        $tcError = $e;
+                    }
+                }
+
+                return new LiveLegacyIdentityHealthProbe(
+                    $config,
+                    new LegacyIdentitySourceHealth(),
+                    $wp,
+                    $tc,
+                    $wpError,
+                    $tcError,
+                );
+            },
+            LegacyMigrationStore::class => static function (Container $container) use ($settings): LegacyMigrationStore {
+                $mode = strtolower((string) (getenv('LEGACY_MIGRATION_STORE') ?: ($_ENV['LEGACY_MIGRATION_STORE'] ?? '')));
+                if ($mode === 'memory') {
+                    return new InMemoryLegacyMigrationStore();
+                }
+                if ($mode === 'azure-sql' || ($mode === '' && $settings->usesAzureSqlUserRepository())) {
+                    if (!$settings->usesAzureSqlUserRepository()) {
+                        throw new InvalidArgumentException('LEGACY_MIGRATION_STORE=azure-sql requires USER_REPOSITORY=azure-sql.');
+                    }
+
+                    return new AzureSqlLegacyMigrationStore(self::get($container, SqlConnection::class));
+                }
+
+                return new InMemoryLegacyMigrationStore();
+            },
+            LegacyMigrationModuleRegistry::class => static function (Container $container): LegacyMigrationModuleRegistry {
+                $config = self::get($container, LegacyIdentitySourceConfig::class);
+                $users = null;
+                if ($config->liveExtractionConfigured()) {
+                    $factory = self::get($container, ReadOnlyMysqlConnectionFactory::class);
+                    $wp = $factory->create(
+                        (string) $config->legacy->wordpressDsn,
+                        (string) $config->legacy->wordpressUser,
+                        (string) $config->legacy->wordpressPassword,
+                        'wordpress-identity',
+                        $config->legacy->wordpressSslMode ?? 'required',
+                    );
+                    $tc = $factory->create(
+                        (string) $config->legacy->tcDsn,
+                        (string) $config->legacy->tcUser,
+                        (string) $config->legacy->tcPassword,
+                        'tc-identity',
+                        $config->legacy->tcSslMode ?? 'required',
+                    );
+                    $users = FrameworkModule::usersLive(
+                        new LegacyWordPressUserExtractor(
+                            $wp,
+                            $tc,
+                            $config,
+                            new LegacyIdentitySourceHealth(),
+                        ),
+                        self::get($container, ExistingNormalizedEmailLookup::class),
+                    );
+                }
+
+                return new DefaultModuleRegistry($users);
+            },
+            LegacyMigrationEngine::class => \DI\autowire(LegacyMigrationEngine::class)
+                ->constructorParameter('healthProbe', \DI\get(LegacySourceHealthProbe::class)),
+            MigrationBatchService::class => \DI\autowire(MigrationBatchService::class),
+            MigrationSourceService::class => \DI\autowire(MigrationSourceService::class),
+            MigrationValidationService::class => \DI\autowire(MigrationValidationService::class),
+            MigrationConflictService::class => \DI\autowire(MigrationConflictService::class),
+            MigrationExecutionService::class => \DI\autowire(MigrationExecutionService::class),
+            MigrationRollbackService::class => \DI\autowire(MigrationRollbackService::class),
+            MigrationReportingService::class => \DI\autowire(MigrationReportingService::class),
+            MigrationAuditService::class => \DI\autowire(MigrationAuditService::class),
+            MigrationStatisticsService::class => \DI\autowire(MigrationStatisticsService::class),
+            MigrationSettingsService::class => \DI\autowire(MigrationSettingsService::class),
+            LegacyMigrationAdminAction::class => \DI\autowire(LegacyMigrationAdminAction::class),
+            LegacyStaffReadOnlyAnalysisService::class => static function (Container $container) use ($settings): LegacyStaffReadOnlyAnalysisService {
+                $azure = $settings->usesAzureSqlUserRepository()
+                    ? self::get($container, SqlConnection::class)
+                    : null;
+
+                return new LegacyStaffReadOnlyAnalysisService(
+                    self::get($container, LegacyIdentitySourceConfig::class),
+                    self::get($container, ReadOnlyMysqlConnectionFactory::class),
+                    self::get($container, LegacyIdentitySourceHealth::class),
+                    $settings,
+                    $azure,
+                );
+            },
+            StaffUserMigrationDryRunService::class => static function (Container $container) use ($settings): StaffUserMigrationDryRunService {
+                $azure = $settings->usesAzureSqlUserRepository()
+                    ? self::get($container, SqlConnection::class)
+                    : null;
+
+                return new StaffUserMigrationDryRunService(
+                    self::get($container, LegacyIdentitySourceConfig::class),
+                    self::get($container, ReadOnlyMysqlConnectionFactory::class),
+                    self::get($container, LegacyIdentitySourceHealth::class),
+                    $settings,
+                    $azure,
+                );
+            },
+            StaffMigrationPreparationService::class => static function (Container $container) use ($settings): StaffMigrationPreparationService {
+                $azure = $settings->usesAzureSqlUserRepository()
+                    ? self::get($container, SqlConnection::class)
+                    : null;
+
+                return new StaffMigrationPreparationService(
+                    self::get($container, LegacyIdentitySourceConfig::class),
+                    self::get($container, ReadOnlyMysqlConnectionFactory::class),
+                    self::get($container, LegacyIdentitySourceHealth::class),
+                    $settings,
+                    $azure,
+                );
+            },
+            LegacyStaffUserMappingRepository::class => static function (Container $container) use ($settings): LegacyStaffUserMappingRepository {
+                if (!$settings->usesAzureSqlUserRepository()) {
+                    throw new InvalidArgumentException('Legacy staff user mapping requires USER_REPOSITORY=azure-sql.');
+                }
+
+                return new AzureSqlLegacyStaffUserMappingRepository(self::get($container, SqlConnection::class));
+            },
+            StaffIdentityUserCreator::class => static function (Container $container) use ($settings): StaffIdentityUserCreator {
+                if (!$settings->usesAzureSqlUserRepository()) {
+                    throw new InvalidArgumentException('Staff identity user creator requires USER_REPOSITORY=azure-sql.');
+                }
+
+                return new AzureSqlStaffIdentityUserCreator(
+                    self::get($container, UserManagementRepository::class),
+                    self::get($container, SqlConnection::class),
+                );
+            },
+            StaffMigrationWriteUnit::class => static function (Container $container): StaffMigrationWriteUnit {
+                return new AzureSqlStaffMigrationWriteUnit(
+                    self::get($container, SqlConnection::class),
+                    self::get($container, StaffIdentityUserCreator::class),
+                    self::get($container, LegacyStaffUserMappingRepository::class),
+                );
+            },
+            StaffUserMigrationExecutor::class => \DI\autowire(StaffUserMigrationExecutor::class),
+            StaffUserMigrationExecuteService::class => static function (Container $container) use ($settings): StaffUserMigrationExecuteService {
+                $azure = $settings->usesAzureSqlUserRepository()
+                    ? self::get($container, SqlConnection::class)
+                    : null;
+
+                return new StaffUserMigrationExecuteService(
+                    self::get($container, StaffMigrationPreparationService::class),
+                    self::get($container, StaffUserMigrationExecutor::class),
+                    self::get($container, LegacyMigrationStore::class),
+                    self::get($container, LegacyStaffUserMappingRepository::class),
+                    $settings,
+                    $azure,
+                );
+            },
+            EntraDirectoryReader::class => static function (Container $container) use ($settings): EntraDirectoryReader {
+                return new MicrosoftGraphEntraDirectoryReader(
+                    self::get($container, JsonHttpClient::class),
+                    $settings->graphTenantId,
+                    $settings->graphClientId,
+                    $settings->graphClientSecret,
+                );
+            },
+            StaffEntraLinkWriteUnit::class => static function (Container $container) use ($settings): StaffEntraLinkWriteUnit {
+                if (!$settings->usesAzureSqlUserRepository()) {
+                    throw new InvalidArgumentException('Staff Entra link write unit requires USER_REPOSITORY=azure-sql.');
+                }
+
+                return new AzureSqlStaffEntraLinkWriteUnit(self::get($container, SqlConnection::class));
+            },
+            StaffEntraLinkExecutor::class => \DI\autowire(StaffEntraLinkExecutor::class),
+            StaffEntraLinkDryRunService::class => static function (Container $container) use ($settings): StaffEntraLinkDryRunService {
+                $azure = $settings->usesAzureSqlUserRepository()
+                    ? self::get($container, SqlConnection::class)
+                    : null;
+
+                return new StaffEntraLinkDryRunService(
+                    self::get($container, LegacyIdentitySourceConfig::class),
+                    self::get($container, ReadOnlyMysqlConnectionFactory::class),
+                    self::get($container, LegacySourceHealthProbe::class),
+                    $settings,
+                    $azure,
+                    self::get($container, EntraDirectoryReader::class),
+                );
+            },
+            StaffEntraLinkExecuteService::class => static function (Container $container) use ($settings): StaffEntraLinkExecuteService {
+                $azure = $settings->usesAzureSqlUserRepository()
+                    ? self::get($container, SqlConnection::class)
+                    : null;
+
+                return new StaffEntraLinkExecuteService(
+                    self::get($container, StaffEntraLinkDryRunService::class),
+                    self::get($container, StaffEntraLinkExecutor::class),
+                    self::get($container, LegacyMigrationStore::class),
+                    $settings,
+                    $azure,
+                );
+            },
             ProductMigrationAdminAction::class => \DI\autowire(ProductMigrationAdminAction::class),
             GetCatalogueReadinessService::class => static function (Container $container) use ($settings): GetCatalogueReadinessService {
                 $azure = $settings->usesAzureSqlUserRepository();
@@ -927,9 +1260,11 @@ final class ContainerFactory
                 foreach ([
                     'LEGACY_WP_DSN', 'LEGACY_WP_HOST', 'LEGACY_WP_PORT', 'LEGACY_WP_DATABASE',
                     'LEGACY_WP_USER', 'LEGACY_WP_PASSWORD', 'LEGACY_WP_TABLE_PREFIX', 'LEGACY_WP_SSL_MODE',
+                    'LEGACY_WP_READ_ONLY',
                     'LEGACY_SOURCE_WAIVE_WP',
                     'LEGACY_TC_DSN', 'LEGACY_TC_HOST', 'LEGACY_TC_PORT', 'LEGACY_TC_DATABASE',
                     'LEGACY_TC_USER', 'LEGACY_TC_PASSWORD', 'LEGACY_TC_SSL_MODE',
+                    'LEGACY_TC_READ_ONLY',
                     'LEGACY_SOURCE_WAIVE_TC', 'LEGACY_FILES_ROOT', 'LEGACY_SOURCE_WAIVE_FILES',
                     'PHASE12_PILOT_APPROVED',
                 ] as $key) {

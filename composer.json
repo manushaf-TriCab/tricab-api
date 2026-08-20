@@ -28,7 +28,8 @@
     ],
     "autoload": {
         "psr-4": {
-            "TriCab\\Api\\": "src/"
+            "TriCab\\Api\\": "src/",
+            "TriCab\\Core\\LegacyMigration\\": "core/src/LegacyMigration/"
         }
     },
     "autoload-dev": {

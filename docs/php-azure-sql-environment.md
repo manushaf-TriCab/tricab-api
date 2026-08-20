@@ -19,11 +19,21 @@ DB_DRIVER=sqlsrv
 DB_HOST=tricab-mel.database.windows.net
 DB_PORT=1433
 DB_DATABASE=tc
-DB_USERNAME=<secure-user>
-DB_PASSWORD=<secure-secret>
 DB_ENCRYPT=yes
 DB_TRUST_SERVER_CERTIFICATE=false
 ```
+
+`DB_AUTH_MODE`:
+
+| Value | Where | How |
+|---|---|---|
+| `entra-cli` | Local development | `az account get-access-token --resource https://database.windows.net/` |
+| `managed-identity` | Azure App Service | App Service `IDENTITY_ENDPOINT` + `IDENTITY_HEADER`, IMDS fallback. Resource `https://database.windows.net/` |
+| `sql-login` | Only when explicitly required | `DB_USERNAME` / `DB_PASSWORD` (not a Microsoft 365 password) |
+
+Unknown `DB_AUTH_MODE` values are rejected. There is no silent fallback to `sql-login`.
+
+Azure App Service should set `DB_AUTH_MODE=managed-identity`. Do not set `entra-cli` on App Service. Do not set `DB_USERNAME` / `DB_PASSWORD` for managed identity.
 
 Database authentication must use an approved SQL database identity, service principal, managed identity, or supported Microsoft Entra access-token flow.
 
@@ -122,9 +132,9 @@ retried. Authentication and configuration failures are not retried.
 
 Do **not** add keepalive, disable auto-pause, poll `/health/database`, or pre-warm.
 
-### Optional local SQL login
+### Optional explicit SQL login
 
-`DB_AUTH_MODE=sql-login` already exists. If a dedicated **non-production** SQL user
+`DB_AUTH_MODE=sql-login` is supported only when set explicitly. If a dedicated **non-production** SQL user
 already exists, it avoids Azure CLI token overhead locally. Do not create a SQL user
 from this app, do not commit passwords, and do not use SQL login in production.
 

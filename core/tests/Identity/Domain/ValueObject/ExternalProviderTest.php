@@ -53,6 +53,15 @@ final class ExternalProviderTest extends TestCase
         self::assertTrue(ExternalProvider::google()->equals($provider));
     }
 
+    public function test_accepts_apple_provider(): void
+    {
+        $provider = ExternalProvider::fromString('apple');
+
+        self::assertSame(ExternalProvider::APPLE, $provider->toString());
+        self::assertTrue($provider->isApple());
+        self::assertTrue(ExternalProvider::apple()->equals($provider));
+    }
+
     #[DataProvider('invalidValues')]
     public function test_rejects_unknown_providers(string $value): void
     {

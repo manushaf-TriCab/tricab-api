@@ -1823,16 +1823,67 @@ final class InMemoryFakeProductPricingRepository implements ProductPricingReposi
         return $this->store->pricingFor($productPublicId->toString());
     }
 
+    public function getOverview(ProductPublicId $productPublicId): \TriCab\Core\Product\Application\DTO\ProductPricingOverview
+    {
+        $items = $this->listByProduct($productPublicId);
+
+        return new \TriCab\Core\Product\Application\DTO\ProductPricingOverview(
+            variantCount: 0,
+            variantsWithPricing: count($items),
+            missingBaseCostCount: 0,
+            currentRecordCount: count($items),
+            scheduledRecordCount: 0,
+            expiredRecordCount: 0,
+            inactiveRecordCount: 0,
+        );
+    }
+
+    public function listMatrixByProduct(ProductPublicId $productPublicId): array
+    {
+        return [];
+    }
+
+    public function listHistory(ProductPublicId $productPublicId, ?string $variantPublicId = null, ?string $priceListPublicId = null): array
+    {
+        unset($variantPublicId, $priceListPublicId);
+
+        return [];
+    }
+
+    public function findByPublicId(string $publicId): ?ProductPricingSummary
+    {
+        unset($publicId);
+
+        return null;
+    }
+
     public function upsert(ProductPublicId $productPublicId, array $data, UserId $actorUserId): ProductPricingSummary
     {
+        unset($actorUserId);
+        $baseCost = $data['baseCost'] ?? $data['unitPrice'] ?? '0';
         $summary = new ProductPricingSummary(
             publicId: bin2hex(random_bytes(16)),
+            recordType: ($data['variantPublicId'] ?? null) !== null ? 'variant' : 'product',
+            variantPublicId: $data['variantPublicId'] ?? null,
+            variantName: null,
+            variantCode: null,
             currencyCode: $data['currencyCode'],
-            unitPrice: $data['unitPrice'],
+            baseCost: $baseCost,
             minimumQuantity: $data['minimumQuantity'],
             priceListCode: $data['priceListPublicId'] ?? null,
+            priceListPublicId: $data['priceListPublicId'] ?? null,
+            regionPublicId: $data['regionPublicId'] ?? null,
+            marketPublicId: $data['marketPublicId'] ?? null,
+            unitOfMeasureCode: 'M',
+            priceSourceCode: $data['priceSourceCode'] ?? 'manual',
             effectiveFromUtc: $data['effectiveFromUtc'] ?? null,
             effectiveToUtc: $data['effectiveToUtc'] ?? null,
+            status: \TriCab\Core\Product\Support\PricingRecordStatus::CURRENT,
+            isActive: true,
+            rowVersion: null,
+            legacyItemCode: null,
+            erpSourceReference: null,
+            lastSourceUpdatedAtUtc: null,
         );
 
         $rows = $this->store->pricingFor($productPublicId->toString());
@@ -1840,6 +1891,12 @@ final class InMemoryFakeProductPricingRepository implements ProductPricingReposi
         $this->store->setPricingFor($productPublicId->toString(), $rows);
 
         return $summary;
+    }
+
+    public function setActive(string $pricingPublicId, bool $isActive, UserId $actorUserId, ?string $expectedRowVersion = null): ProductPricingSummary
+    {
+        unset($pricingPublicId, $isActive, $actorUserId, $expectedRowVersion);
+        throw new \RuntimeException('Not implemented in fake pricing repository.');
     }
 }
 

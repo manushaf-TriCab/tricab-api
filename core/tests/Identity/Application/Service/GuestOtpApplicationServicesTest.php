@@ -9,10 +9,12 @@ use TriCab\Core\Identity\Application\Exception\ActiveOtpChallengeNotFound;
 use TriCab\Core\Identity\Application\Service\CreateGuestSessionService;
 use TriCab\Core\Identity\Application\Service\GuestLoginEligibilityService;
 use TriCab\Core\Identity\Application\Service\GuestUserProvisioningService;
+use TriCab\Core\Identity\Application\Service\IdentityResolutionService;
 use TriCab\Core\Identity\Application\Service\RequestGuestOtpService;
 use TriCab\Core\Identity\Application\Service\VerifyGuestOtpService;
 use TriCab\Core\Identity\Domain\Exception\OtpInvalid;
 use TriCab\Core\Identity\Domain\Service\EmailOtpExternalIdentityFactory;
+use TriCab\Core\Identity\Domain\Service\GoogleExternalIdentityFactory;
 use TriCab\Core\Identity\Domain\Service\PasswordOtpHasher;
 use TriCab\Core\Identity\Domain\Service\SecureOtpGenerator;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
@@ -59,9 +61,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
             status: UserStatus::active(),
             roles: [RoleCode::fromString('CUSTOMER_USER')],
             permissions: [PermissionCode::fromString('ACCOUNT.LOGIN')],
-            identity: EmailOtpExternalIdentityFactory::forEmail(
-                EmailAddress::fromString('seed-' . $email->toString()),
-            ),
+            identity: GoogleExternalIdentityFactory::forSubject('seed-' . $email->toString()),
         );
 
         $requested = $this->requestService($challenges, $clock, $hasher)->execute('guest@example.com');
@@ -69,7 +69,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
         $authenticated = (new VerifyGuestOtpService(
             $challenges,
             $hasher,
-            new GuestUserProvisioningService($users),
+            new GuestUserProvisioningService(new IdentityResolutionService($users)),
             $clock,
         ))->execute('guest@example.com', $requested->plaintextOtp);
 
@@ -102,7 +102,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
         $verify = new VerifyGuestOtpService(
             $challenges,
             $hasher,
-            new GuestUserProvisioningService(new InMemoryUserProvisioningRepository()),
+            new GuestUserProvisioningService(new IdentityResolutionService(new InMemoryUserProvisioningRepository())),
             $clock,
         );
 
@@ -123,7 +123,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
         (new VerifyGuestOtpService(
             new InMemoryEmailOtpChallengeRepository($clock),
             new PasswordOtpHasher(),
-            new GuestUserProvisioningService(new InMemoryUserProvisioningRepository()),
+            new GuestUserProvisioningService(new IdentityResolutionService(new InMemoryUserProvisioningRepository())),
             $clock,
         ))->execute('nobody@example.com', '123456');
     }
@@ -142,16 +142,14 @@ final class GuestOtpApplicationServicesTest extends TestCase
             status: UserStatus::active(),
             roles: [RoleCode::fromString('CUSTOMER_USER')],
             permissions: [PermissionCode::fromString('ACCOUNT.LOGIN')],
-            identity: EmailOtpExternalIdentityFactory::forEmail(
-                EmailAddress::fromString('seed-' . $email->toString()),
-            ),
+            identity: GoogleExternalIdentityFactory::forSubject('seed-' . $email->toString()),
         );
 
         $requested = $this->requestService($challenges, $clock, $hasher)->execute('guest@example.com');
         $user = (new VerifyGuestOtpService(
             $challenges,
             $hasher,
-            new GuestUserProvisioningService($users),
+            new GuestUserProvisioningService(new IdentityResolutionService($users)),
             $clock,
         ))->execute('guest@example.com', $requested->plaintextOtp);
 
@@ -179,7 +177,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
         $verify = new VerifyGuestOtpService(
             $challenges,
             $hasher,
-            new GuestUserProvisioningService(new InMemoryUserProvisioningRepository()),
+            new GuestUserProvisioningService(new IdentityResolutionService(new InMemoryUserProvisioningRepository())),
             $clock,
         );
 
@@ -200,9 +198,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
             status: UserStatus::active(),
             roles: [RoleCode::fromString('CUSTOMER_USER')],
             permissions: [PermissionCode::fromString('ACCOUNT.LOGIN')],
-            identity: EmailOtpExternalIdentityFactory::forEmail(
-                EmailAddress::fromString('seed-' . $email->toString()),
-            ),
+            identity: GoogleExternalIdentityFactory::forSubject('seed-' . $email->toString()),
         );
 
         $requested = $this->requestService($challenges, $clock, $hasher)->execute('guest@example.com');
@@ -210,7 +206,7 @@ final class GuestOtpApplicationServicesTest extends TestCase
         $user = (new VerifyGuestOtpService(
             $challenges,
             $hasher,
-            new GuestUserProvisioningService($users),
+            new GuestUserProvisioningService(new IdentityResolutionService($users)),
             $clock,
         ))->execute('guest@example.com', $requested->plaintextOtp, $requested->challengePublicId);
 

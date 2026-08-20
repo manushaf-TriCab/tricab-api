@@ -8,7 +8,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Assistant\Application\AssistantCatalogueVisibility;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
-use TriCab\Core\Identity\Application\Exception\IdentityNotLinked;
+use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
+use TriCab\Core\Identity\Application\Exception\IdentityConflict;
+use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
 use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
@@ -39,7 +41,7 @@ final readonly class AssistantCatalogueVisibilityResolver
 
         try {
             $user = $this->resolveAuthenticatedUser->handle($identity);
-        } catch (IdentityNotLinked|AuthenticationNotAllowed) {
+        } catch (UserNotRegistered|IdentityConflict|IdentityAmbiguous|AuthenticationNotAllowed) {
             return AssistantCatalogueVisibility::PUBLIC;
         }
 

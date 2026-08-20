@@ -7,8 +7,11 @@ namespace TriCab\Core\Identity\Contract;
 use TriCab\Core\Identity\Domain\Entity\ExternalIdentity;
 use TriCab\Core\Identity\Domain\Entity\User;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
+use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
+use TriCab\Core\Identity\Domain\ValueObject\ExternalSubjectId;
 use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
 use TriCab\Core\Identity\Domain\ValueObject\RoleCode;
+use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 
 /**
@@ -18,6 +21,11 @@ use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 interface UserProvisioningRepository
 {
     public function findByEmail(EmailAddress $emailAddress): ?User;
+
+    /**
+     * @return list<User>
+     */
+    public function findAllByEmail(EmailAddress $emailAddress): array;
 
     public function findByExternalIdentity(ExternalIdentity $identity): ?User;
 
@@ -41,4 +49,9 @@ interface UserProvisioningRepository
      * Links an external identity to an existing user when the identity is absent.
      */
     public function linkExternalIdentity(User $user, ExternalIdentity $identity): void;
+
+    /**
+     * Returns the active provider subject for a user, if one exists.
+     */
+    public function findActiveProviderSubjectForUser(UserId $userId, ExternalProvider $provider): ?ExternalSubjectId;
 }

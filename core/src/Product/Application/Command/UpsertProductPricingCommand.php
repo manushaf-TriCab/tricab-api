@@ -9,7 +9,7 @@ final readonly class UpsertProductPricingCommand
     public function __construct(
         public string $productPublicId,
         public string $currencyCode,
-        public string $unitPrice,
+        public string $baseCost,
         public string $minimumQuantity,
         public ?string $priceListPublicId = null,
         public ?string $regionPublicId = null,
@@ -19,6 +19,10 @@ final readonly class UpsertProductPricingCommand
         public ?string $effectiveFromUtc = null,
         public ?string $effectiveToUtc = null,
         public ?string $variantPublicId = null,
+        public ?string $priceSourceCode = null,
+        public bool $createRevision = false,
+        public ?string $pricingPublicId = null,
+        public ?string $expectedRowVersion = null,
     ) {
     }
 }

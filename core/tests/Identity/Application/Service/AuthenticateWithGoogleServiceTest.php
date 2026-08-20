@@ -7,8 +7,9 @@ namespace TriCab\Core\Tests\Identity\Application\Service;
 use PHPUnit\Framework\TestCase;
 use TriCab\Core\Identity\Application\DTO\VerifiedGoogleIdToken;
 use TriCab\Core\Identity\Application\Exception\GoogleIdTokenInvalid;
-use TriCab\Core\Identity\Application\Exception\GoogleUserNotRegistered;
+use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Service\AuthenticateWithGoogleService;
+use TriCab\Core\Identity\Application\Service\IdentityResolutionService;
 use TriCab\Core\Identity\Contract\GoogleIdTokenValidator;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
 use TriCab\Core\Identity\Domain\Service\EmailOtpExternalIdentityFactory;
@@ -21,7 +22,7 @@ use TriCab\Core\Tests\Identity\Doubles\InMemoryUserProvisioningRepository;
 
 final class AuthenticateWithGoogleServiceTest extends TestCase
 {
-    public function test_authenticates_registered_active_user_and_links_identities(): void
+    public function test_authenticates_registered_active_user_and_links_google_identity(): void
     {
         $users = new InMemoryUserProvisioningRepository();
         $email = EmailAddress::fromString('admin@tricab.com');
@@ -42,7 +43,7 @@ final class AuthenticateWithGoogleServiceTest extends TestCase
                 emailAddress: 'Admin@TriCab.com',
                 emailVerified: true,
             )),
-            $users,
+            new IdentityResolutionService($users),
         );
 
         $user = $service->execute('header.payload.signature');
@@ -51,7 +52,7 @@ final class AuthenticateWithGoogleServiceTest extends TestCase
         self::assertNotNull($users->findByExternalIdentity(
             GoogleExternalIdentityFactory::forSubject('google-sub-123'),
         ));
-        self::assertNotNull($users->findByExternalIdentity(
+        self::assertNull($users->findByExternalIdentity(
             EmailOtpExternalIdentityFactory::forEmail($email),
         ));
     }
@@ -64,10 +65,10 @@ final class AuthenticateWithGoogleServiceTest extends TestCase
                 emailAddress: 'unknown@example.com',
                 emailVerified: true,
             )),
-            new InMemoryUserProvisioningRepository(),
+            new IdentityResolutionService(new InMemoryUserProvisioningRepository()),
         );
 
-        $this->expectException(GoogleUserNotRegistered::class);
+        $this->expectException(UserNotRegistered::class);
         $service->execute('header.payload.signature');
     }
 
@@ -79,7 +80,7 @@ final class AuthenticateWithGoogleServiceTest extends TestCase
                 emailAddress: 'admin@tricab.com',
                 emailVerified: false,
             )),
-            new InMemoryUserProvisioningRepository(),
+            new IdentityResolutionService(new InMemoryUserProvisioningRepository()),
         );
 
         $this->expectException(GoogleIdTokenInvalid::class);
@@ -107,7 +108,7 @@ final class AuthenticateWithGoogleServiceTest extends TestCase
                 emailAddress: 'disabled@tricab.com',
                 emailVerified: true,
             )),
-            $users,
+            new IdentityResolutionService($users),
         );
 
         $this->expectException(AuthenticationNotAllowed::class);

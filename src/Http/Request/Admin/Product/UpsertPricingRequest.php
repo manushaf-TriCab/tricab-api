@@ -13,7 +13,7 @@ final readonly class UpsertPricingRequest
 {
     private function __construct(
         public string $currencyCode,
-        public string $unitPrice,
+        public string $baseCost,
         public string $minimumQuantity,
         public ?string $priceListPublicId,
         public ?string $regionPublicId,
@@ -23,6 +23,10 @@ final readonly class UpsertPricingRequest
         public ?string $effectiveFromUtc,
         public ?string $effectiveToUtc,
         public ?string $variantPublicId,
+        public ?string $priceSourceCode,
+        public bool $createRevision,
+        public ?string $pricingPublicId,
+        public ?string $expectedRowVersion,
     ) {
     }
 
@@ -31,9 +35,12 @@ final readonly class UpsertPricingRequest
      */
     public static function fromArray(array $body): self
     {
+        $baseCost = RequestFields::stringOrNull($body, 'baseCost')
+            ?? RequestFields::requireString($body, 'unitPrice');
+
         return new self(
             currencyCode: RequestFields::requireString($body, 'currencyCode'),
-            unitPrice: RequestFields::requireString($body, 'unitPrice'),
+            baseCost: $baseCost,
             minimumQuantity: RequestFields::stringOrDefault($body, 'minimumQuantity', '1'),
             priceListPublicId: RequestFields::stringOrNull($body, 'priceListPublicId'),
             regionPublicId: RequestFields::stringOrNull($body, 'regionPublicId'),
@@ -43,6 +50,10 @@ final readonly class UpsertPricingRequest
             effectiveFromUtc: RequestFields::stringOrNull($body, 'effectiveFromUtc'),
             effectiveToUtc: RequestFields::stringOrNull($body, 'effectiveToUtc'),
             variantPublicId: RequestFields::stringOrNull($body, 'variantPublicId'),
+            priceSourceCode: RequestFields::stringOrNull($body, 'priceSourceCode'),
+            createRevision: RequestFields::boolOrDefault($body, 'createRevision', false),
+            pricingPublicId: RequestFields::stringOrNull($body, 'pricingPublicId'),
+            expectedRowVersion: RequestFields::stringOrNull($body, 'expectedRowVersion'),
         );
     }
 }

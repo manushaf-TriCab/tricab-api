@@ -14,6 +14,7 @@ final readonly class VerifiedIdentity
         public string $provider,
         public string $subjectId,
         public string $tenantId,
+        public ?string $verifiedEmail = null,
     ) {
     }
 }

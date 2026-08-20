@@ -6,28 +6,35 @@ namespace TriCab\Core\Identity\Application\Handler;
 
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
-use TriCab\Core\Identity\Application\Exception\IdentityNotLinked;
-use TriCab\Core\Identity\Contract\UserRepository;
+use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
+use TriCab\Core\Identity\Application\Exception\IdentityConflict;
+use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
+use TriCab\Core\Identity\Application\Service\IdentityResolutionService;
 use TriCab\Core\Identity\Domain\Entity\ExternalIdentity;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
+use TriCab\Core\Identity\Domain\Exception\InvalidIdentityValue;
+use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
 use TriCab\Core\Identity\Domain\ValueObject\ExternalSubjectId;
 use TriCab\Core\Identity\Domain\ValueObject\ExternalTenantId;
 
 /**
  * Resolves a platform user from an already-verified external identity.
- * JWT / Entra token validation belongs in the API adapter, not here.
+ * JWT / provider token validation belongs in the API adapter, not here.
  */
 final class ResolveAuthenticatedUserHandler
 {
     public function __construct(
-        private readonly UserRepository $users,
+        private readonly IdentityResolutionService $identityResolution,
     ) {
     }
 
     /**
-     * @throws IdentityNotLinked
+     * @throws UserNotRegistered
+     * @throws IdentityConflict
+     * @throws IdentityAmbiguous
      * @throws AuthenticationNotAllowed
+     * @throws InvalidIdentityValue
      */
     public function handle(VerifiedIdentity $verifiedIdentity): AuthenticatedUser
     {
@@ -37,17 +44,12 @@ final class ResolveAuthenticatedUserHandler
             ExternalTenantId::fromString($verifiedIdentity->tenantId),
         );
 
-        $user = $this->users->findByExternalIdentity($externalIdentity);
+        $verifiedEmail = trim((string) ($verifiedIdentity->verifiedEmail ?? ''));
+        $emailAddress = $verifiedEmail !== ''
+            ? EmailAddress::fromString($verifiedEmail)
+            : null;
 
-        if ($user === null) {
-            throw IdentityNotLinked::forExternalIdentity(
-                $verifiedIdentity->provider,
-                $verifiedIdentity->subjectId,
-                $verifiedIdentity->tenantId,
-            );
-        }
-
-        $user->assertAuthenticationAllowed();
+        $user = $this->identityResolution->resolve($externalIdentity, $emailAddress);
 
         return AuthenticatedUser::fromUser($user);
     }

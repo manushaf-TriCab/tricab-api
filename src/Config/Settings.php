@@ -14,6 +14,7 @@ final readonly class Settings
 
     public const DB_AUTH_MODE_SQL_LOGIN = 'sql-login';
     public const DB_AUTH_MODE_ENTRA_CLI = 'entra-cli';
+    public const DB_AUTH_MODE_MANAGED_IDENTITY = 'managed-identity';
 
     public const GUEST_EMAIL_PROVIDER_POSTMARK = 'postmark';
     public const GUEST_EMAIL_PROVIDER_DEVELOPMENT = 'development';
@@ -142,6 +143,11 @@ final readonly class Settings
     public function usesEntraCliAuth(): bool
     {
         return $this->dbAuthMode === self::DB_AUTH_MODE_ENTRA_CLI;
+    }
+
+    public function usesManagedIdentityAuth(): bool
+    {
+        return $this->dbAuthMode === self::DB_AUTH_MODE_MANAGED_IDENTITY;
     }
 
     public function usesSqlLoginAuth(): bool
@@ -323,12 +329,20 @@ final readonly class Settings
             }
         }
 
-        $dbAuthMode = strtolower(self::string($env, 'DB_AUTH_MODE', self::DB_AUTH_MODE_SQL_LOGIN));
+        $dbAuthModeRaw = self::string($env, 'DB_AUTH_MODE', self::DB_AUTH_MODE_SQL_LOGIN);
+        $dbAuthMode = strtolower(trim($dbAuthModeRaw));
         if (
             $dbAuthMode !== self::DB_AUTH_MODE_SQL_LOGIN
             && $dbAuthMode !== self::DB_AUTH_MODE_ENTRA_CLI
+            && $dbAuthMode !== self::DB_AUTH_MODE_MANAGED_IDENTITY
         ) {
-            $dbAuthMode = self::DB_AUTH_MODE_SQL_LOGIN;
+            throw new InvalidArgumentException(sprintf(
+                'Unsupported DB_AUTH_MODE "%s". Supported values: %s, %s, %s.',
+                $dbAuthModeRaw,
+                self::DB_AUTH_MODE_SQL_LOGIN,
+                self::DB_AUTH_MODE_ENTRA_CLI,
+                self::DB_AUTH_MODE_MANAGED_IDENTITY,
+            ));
         }
 
         $subjectClaim = strtolower(self::string($env, 'ENTRA_SUBJECT_CLAIM', 'oid'));

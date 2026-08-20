@@ -82,6 +82,89 @@ final class SettingsTest extends TestCase
         self::assertTrue($settings->usesAzureSqlUserRepository());
     }
 
+    public function test_managed_identity_db_auth_mode_is_preserved(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'azure-sql',
+            'DB_AUTH_MODE' => 'managed-identity',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
+        ]);
+
+        self::assertSame(Settings::DB_AUTH_MODE_MANAGED_IDENTITY, $settings->dbAuthMode);
+        self::assertTrue($settings->usesManagedIdentityAuth());
+        self::assertFalse($settings->usesEntraCliAuth());
+        self::assertFalse($settings->usesSqlLoginAuth());
+    }
+
+    public function test_entra_cli_db_auth_mode_is_preserved(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'USER_REPOSITORY' => 'azure-sql',
+            'DB_AUTH_MODE' => 'entra-cli',
+        ]);
+
+        self::assertSame(Settings::DB_AUTH_MODE_ENTRA_CLI, $settings->dbAuthMode);
+        self::assertTrue($settings->usesEntraCliAuth());
+        self::assertFalse($settings->usesManagedIdentityAuth());
+        self::assertFalse($settings->usesSqlLoginAuth());
+    }
+
+    public function test_explicit_sql_login_db_auth_mode_is_preserved(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'USER_REPOSITORY' => 'azure-sql',
+            'DB_AUTH_MODE' => 'sql-login',
+        ]);
+
+        self::assertSame(Settings::DB_AUTH_MODE_SQL_LOGIN, $settings->dbAuthMode);
+        self::assertTrue($settings->usesSqlLoginAuth());
+        self::assertFalse($settings->usesManagedIdentityAuth());
+        self::assertFalse($settings->usesEntraCliAuth());
+    }
+
+    public function test_unknown_db_auth_mode_throws(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unsupported DB_AUTH_MODE "bogus"');
+
+        Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'USER_REPOSITORY' => 'azure-sql',
+            'DB_AUTH_MODE' => 'bogus',
+        ]);
+    }
+
+    public function test_unknown_db_auth_mode_does_not_fall_back_to_sql_login(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unsupported DB_AUTH_MODE "password"');
+
+        Settings::fromEnvironment([
+            'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'azure-sql',
+            'DB_AUTH_MODE' => 'password',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
+        ]);
+    }
+
+    public function test_db_auth_mode_is_case_insensitive(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'USER_REPOSITORY' => 'azure-sql',
+            'DB_AUTH_MODE' => 'MANAGED-IDENTITY',
+        ]);
+
+        self::assertTrue($settings->usesManagedIdentityAuth());
+    }
+
     public function test_user_repository_value_is_case_insensitive(): void
     {
         $settings = Settings::fromEnvironment([

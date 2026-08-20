@@ -28,8 +28,10 @@ final class ReadOnlyMysqlConnectionFactory
         string $password,
         string $sourceLabel,
         ?string $sslMode = null,
+        ?LegacySqlStatementLogger $logger = null,
     ): GuardedReadOnlyMysqlConnection
     {
+        $logger ??= $this->logger;
         if (!str_starts_with(strtolower($dsn), 'mysql:')) {
             throw new RuntimeException('Legacy read-only DSN must use the mysql: PDO driver.');
         }
@@ -66,6 +68,6 @@ final class ReadOnlyMysqlConnectionFactory
             );
         }
 
-        return new GuardedReadOnlyMysqlConnection($pdo, $this->guard, $this->logger, $sourceLabel);
+        return new GuardedReadOnlyMysqlConnection($pdo, $this->guard, $logger, $sourceLabel);
     }
 }

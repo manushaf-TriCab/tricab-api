@@ -379,11 +379,11 @@ final class ProductServicesTest extends TestCase
         $saved = $pricingService->execute($this->actor, new UpsertProductPricingCommand(
             productPublicId: $created->publicId,
             currencyCode: 'AUD',
-            unitPrice: '199.995000',
+            baseCost: '199.995000',
             minimumQuantity: '1',
         ));
 
-        self::assertSame('199.995', $saved->unitPrice);
+        self::assertSame('199.995', $saved->baseCost);
 
         $entries = $this->store->auditEntries();
         $pricingEntry = array_values(array_filter($entries, static fn ($entry) => $entry->actionCode === 'upserted'))[0];

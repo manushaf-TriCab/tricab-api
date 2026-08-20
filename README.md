@@ -35,11 +35,13 @@ Use `public/router.php` with `php -S`. Without it, paths such as `PRODUCT.READ` 
 
 - Microsoft ODBC Driver 18 for SQL Server
 - PHP extensions: `pdo_sqlsrv` (and typically `sqlsrv`)
-- For `DB_AUTH_MODE=entra-cli`: Azure CLI installed and logged in (`az login`)
+- For `DB_AUTH_MODE=entra-cli` (local): Azure CLI installed and logged in (`az login`)
+- For `DB_AUTH_MODE=managed-identity` (Azure App Service): system-assigned (or user-assigned) identity; do not use `entra-cli` on App Service
 - **Do not** use a Microsoft 365 user password as `DB_PASSWORD`
 
 ```env
 USER_REPOSITORY=azure-sql
+# Local: entra-cli. Azure App Service: managed-identity. sql-login only when explicitly required.
 DB_AUTH_MODE=entra-cli
 DB_DRIVER=sqlsrv
 DB_HOST=tricab-mel.database.windows.net
@@ -52,15 +54,17 @@ DB_TRUST_SERVER_CERTIFICATE=false
 # DB_PASSWORD=
 ```
 
+`managed-identity` acquires a short-lived Azure SQL access token from App Service `IDENTITY_ENDPOINT` + `IDENTITY_HEADER`, with IMDS (`http://169.254.169.254`) only when those variables are absent. Resource: `https://database.windows.net/`. Do not use Azure CLI for this mode.
+
 `entra-cli` acquires a short-lived Azure SQL access token via:
 
 ```bash
 az account get-access-token --resource https://database.windows.net/ --output json
 ```
 
-The token is cached in `ApplicationCache` (APCu when available) until `expires_on - 60 seconds`. It is never written to `.env`, never logged, and never stored on disk. `APP_CACHE_DRIVER=array` is tests/fallback only and does not survive HTTP requests.
+The token is cached in `ApplicationCache` (APCu when available) until `expires_on - 5 minutes`. It is never written to `.env`, never logged, and never stored on disk. `APP_CACHE_DRIVER=array` is tests/fallback only and does not survive HTTP requests.
 
-Optional local SQL login (already supported; do not commit passwords):
+Optional SQL login (already supported; do not commit passwords; do not use in Azure production):
 
 ```env
 DB_AUTH_MODE=sql-login
@@ -78,7 +82,7 @@ Serverless bills primarily while the database is **resumed**, not per query. Int
 - Use `GET /health` for frequent liveness probes. Do **not** probe `GET /health/database` on an interval in non-prod.
 - Disconnect SSMS / Azure query editor sessions when finished.
 - First request after pause can take seconds (resume). Later requests should be hundreds of milliseconds when SQL is warm.
-- Production should prefer Managed Identity / an approved Entra mechanism, not `entra-cli`.
+- Production should use `DB_AUTH_MODE=managed-identity`, not `entra-cli`.
 - Check auto-pause delay and min vCores in the Azure Portal (not in this repo).
 
 External identity lookup key: `ProviderCode` + `TenantIdentifier` + `SubjectIdentifier`.

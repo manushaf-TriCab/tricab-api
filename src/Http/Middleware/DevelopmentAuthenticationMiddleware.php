@@ -45,13 +45,13 @@ final class DevelopmentAuthenticationMiddleware implements MiddlewareInterface
 
         $tenant = $this->headerOrDefault($request, self::HEADER_TENANT, $this->settings->devAuthDefaultTenant);
         $subject = $this->headerOrDefault($request, self::HEADER_SUBJECT, $this->settings->devAuthDefaultSubject);
-        // Email is accepted for local diagnostics only; Core identity key is provider+tenant+subject.
-        $this->headerOrDefault($request, self::HEADER_EMAIL, $this->settings->devAuthDefaultEmail);
+        $email = $this->headerOrDefault($request, self::HEADER_EMAIL, $this->settings->devAuthDefaultEmail);
 
         $verifiedIdentity = new VerifiedIdentity(
             provider: ExternalProvider::MICROSOFT_ENTRA,
             subjectId: $subject,
             tenantId: $tenant,
+            verifiedEmail: $email !== '' ? $email : null,
         );
 
         return $handler->handle(

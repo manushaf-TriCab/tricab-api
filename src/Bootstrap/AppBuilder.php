@@ -21,6 +21,7 @@ use TriCab\Api\Http\Action\Admin\SpecificationDefinitionsAdminAction;
 use TriCab\Api\Http\Action\Admin\SpecificationGroupsAdminAction;
 use TriCab\Api\Http\Action\Admin\SpecificationOptionsAdminAction;
 use TriCab\Api\Http\Action\Admin\SpecificationUnitsAdminAction;
+use TriCab\Api\Http\Action\Admin\Migration\LegacyMigrationAdminAction;
 use TriCab\Api\Http\Action\Admin\Migration\ProductMigrationAdminAction;
 use TriCab\Api\Http\Action\Admin\DeleteProductDocumentFileAction;
 use TriCab\Api\Http\Action\Admin\ReplaceProductDocumentUploadAction;
@@ -75,6 +76,8 @@ use TriCab\Api\Http\Action\Admin\UpdateCustomerViewThemeAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductMediaRoleAction;
 use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
 use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
+use TriCab\Api\Http\Action\Admin\CompareLegacyBaseCostAction;
+use TriCab\Api\Http\Action\Admin\SetProductPricingActiveAction;
 use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
 use TriCab\Api\Http\Action\Admin\GetProductRegionsAction;
 use TriCab\Api\Http\Action\Admin\GetProductSeoAction;
@@ -294,6 +297,45 @@ final class AppBuilder
         $app->delete('/api/v1/admin/regions/{publicId}', RegionAdminAction::class)
             ->add(($require)('REGION.DELETE'));
         self::registerAdminProductRoutes($app, $require);
+        self::registerAdminLegacyMigrationRoutes($app, $require);
+    }
+
+    /**
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerAdminLegacyMigrationRoutes(App $app, RequirePermission $require): void
+    {
+        $gate = 'MIGRATION.ADMIN';
+        $action = LegacyMigrationAdminAction::class;
+        $app->get('/api/v1/admin/legacy-migration/overview', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/user-workspace', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/staff-readonly-analysis', $action)->add(($require)($gate));
+        $app->post('/api/v1/admin/legacy-migration/staff-migration-dry-run', $action)->add(($require)($gate));
+        $app->post('/api/v1/admin/legacy-migration/staff-migration/execute', $action)->add(($require)($gate));
+        $app->post('/api/v1/admin/legacy-migration/staff-entra/dry-run', $action)->add(($require)($gate));
+        $app->post('/api/v1/admin/legacy-migration/staff-entra/execute', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/statistics', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/settings', $action)->add(($require)($gate));
+        $app->put('/api/v1/admin/legacy-migration/settings', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/sources', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/sources/{sourceCode}/health', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/logs', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/conflicts', $action)->add(($require)($gate));
+        $app->post('/api/v1/admin/legacy-migration/conflicts/{conflictPublicId}/resolve', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/batches', $action)->add(($require)($gate));
+        $app->post('/api/v1/admin/legacy-migration/batches', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/batches/{batchPublicId}', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/batches/{batchPublicId}/items', $action)->add(($require)($gate));
+        foreach ([
+            'extract', 'refresh', 'incremental', 'normalize', 'validate', 'preview',
+            'approve', 'execute', 'rollback', 'cancel', 'retry',
+        ] as $step) {
+            $app->post('/api/v1/admin/legacy-migration/batches/{batchPublicId}/' . $step, $action)
+                ->add(($require)($gate));
+        }
+        $app->get('/api/v1/admin/legacy-migration/batches/{batchPublicId}/conflicts', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/batches/{batchPublicId}/logs', $action)->add(($require)($gate));
+        $app->get('/api/v1/admin/legacy-migration/batches/{batchPublicId}/reports', $action)->add(($require)($gate));
     }
 
     /**
@@ -393,6 +435,14 @@ final class AppBuilder
         $app->put('/api/v1/admin/products/{productPublicId}/seo', UpdateProductSeoAction::class)
             ->add(($require)('PRODUCT.UPDATE'));
         $app->put('/api/v1/admin/products/{productPublicId}/pricing', UpsertProductPricingAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->get('/api/v1/admin/products/{productPublicId}/pricing/history', GetProductPricingAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+        $app->get('/api/v1/admin/products/{productPublicId}/pricing/legacy-comparison', CompareLegacyBaseCostAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+        $app->post('/api/v1/admin/products/{productPublicId}/pricing/{pricingPublicId}/activate', SetProductPricingActiveAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->post('/api/v1/admin/products/{productPublicId}/pricing/{pricingPublicId}/deactivate', SetProductPricingActiveAction::class)
             ->add(($require)('PRODUCT.PRICING.MANAGE'));
         $app->post('/api/v1/admin/products/{productPublicId}/slugs', ChangeProductSlugAction::class)
             ->add(($require)('PRODUCT.UPDATE'));
