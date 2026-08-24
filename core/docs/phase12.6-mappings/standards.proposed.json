@@ -1,0 +1,710 @@
+{
+    "metaKey": "standards",
+    "values": [
+        {
+            "rawValue": "UPM",
+            "parsedValue": "UPM",
+            "canonicalCandidate": "UPM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FEC, FEM",
+            "parsedValue": "FEC",
+            "canonicalCandidate": "FEC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FEC, FEM",
+            "parsedValue": "FEM",
+            "canonicalCandidate": "FEM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NTC, NTM",
+            "parsedValue": "NTC",
+            "canonicalCandidate": "NTC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NTC, NTM",
+            "parsedValue": "NTM",
+            "canonicalCandidate": "NTM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FZC, FZM",
+            "parsedValue": "FZC",
+            "canonicalCandidate": "FZC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FZC, FZM",
+            "parsedValue": "FZM",
+            "canonicalCandidate": "FZM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "fire rated",
+            "parsedValue": "fire rated",
+            "canonicalCandidate": "fire rated",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NFC, NFM",
+            "parsedValue": "NFC",
+            "canonicalCandidate": "NFC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NFC, NFM",
+            "parsedValue": "NFM",
+            "canonicalCandidate": "NFM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NJC, NJM",
+            "parsedValue": "NJC",
+            "canonicalCandidate": "NJC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NJC, NJM",
+            "parsedValue": "NJM",
+            "canonicalCandidate": "NJM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NVC, NVM",
+            "parsedValue": "NVC",
+            "canonicalCandidate": "NVC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NVC, NVM",
+            "parsedValue": "NVM",
+            "canonicalCandidate": "NVM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RBC, RBM",
+            "parsedValue": "RBC",
+            "canonicalCandidate": "RBC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RBC, RBM",
+            "parsedValue": "RBM",
+            "canonicalCandidate": "RBM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NRC, NRM",
+            "parsedValue": "NRC",
+            "canonicalCandidate": "NRC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NRC, NRM",
+            "parsedValue": "NRM",
+            "canonicalCandidate": "NRM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FKC, FKM",
+            "parsedValue": "FKC",
+            "canonicalCandidate": "FKC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FKC, FKM",
+            "parsedValue": "FKM",
+            "canonicalCandidate": "FKM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NUC, NUM",
+            "parsedValue": "NUC",
+            "canonicalCandidate": "NUC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NUC, NUM",
+            "parsedValue": "NUM",
+            "canonicalCandidate": "NUM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "AS/NZS 1125",
+            "canonicalCandidate": "AS/NZS 1125",
+            "usageCount": 51,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "AS/NZS 1660.5.1",
+            "canonicalCandidate": "AS/NZS 1660.5.1",
+            "usageCount": 32,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "AS/NZS 1660.5.6",
+            "canonicalCandidate": "AS/NZS 1660.5.6",
+            "usageCount": 32,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "AS/NZS 3808",
+            "canonicalCandidate": "AS/NZS 3808",
+            "usageCount": 45,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "AS/NZS 5000.1",
+            "canonicalCandidate": "AS/NZS 5000.1",
+            "usageCount": 34,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "IEC 60228",
+            "canonicalCandidate": "IEC 60228",
+            "usageCount": 52,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "IEC 60332-1",
+            "canonicalCandidate": "IEC 60332-1",
+            "usageCount": 36,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAIEC 60332-1",
+            "parsedValue": "AS/NZS 1429.1",
+            "canonicalCandidate": "AS/NZS 1429.1",
+            "usageCount": 7,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAIEC 60332-1",
+            "parsedValue": "AIEC 60332-1",
+            "canonicalCandidate": "AIEC 60332-1",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "AS/NZS 3008.1",
+            "canonicalCandidate": "AS/NZS 3008.1",
+            "usageCount": 27,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud",
+            "parsedValue": "AS/NZS IEC 60332-1 \u2013 Flame Test",
+            "canonicalCandidate": "AS/NZS IEC 60332-1 \u2013 Flame Test",
+            "usageCount": 10,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud",
+            "parsedValue": "AS/NZS IEC 60754 - Halogen",
+            "canonicalCandidate": "AS/NZS IEC 60754 - Halogen",
+            "usageCount": 8,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud",
+            "parsedValue": "NEK TS 606 \u2013 Oil & Mud",
+            "canonicalCandidate": "NEK TS 606 \u2013 Oil & Mud",
+            "usageCount": 8,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "AS/NZS 1660.5.2",
+            "canonicalCandidate": "AS/NZS 1660.5.2",
+            "usageCount": 11,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "AS/NZS 1660.5.4",
+            "canonicalCandidate": "AS/NZS 1660.5.4",
+            "usageCount": 11,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "AS/NZS 5033",
+            "canonicalCandidate": "AS/NZS 5033",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "IEC 62930",
+            "canonicalCandidate": "IEC 62930",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "IEC 60332-3-22",
+            "canonicalCandidate": "IEC 60332-3-22",
+            "usageCount": 16,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "IEC 60754-2",
+            "canonicalCandidate": "IEC 60754-2",
+            "usageCount": 16,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "IEC 61034-1&2",
+            "canonicalCandidate": "IEC 61034-1&2",
+            "usageCount": 14,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+            "parsedValue": "AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+            "canonicalCandidate": "AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nCat A\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "Cat A",
+            "canonicalCandidate": "Cat A",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+            "parsedValue": "AS/NZS 1660.5.5",
+            "canonicalCandidate": "AS/NZS 1660.5.5",
+            "usageCount": 5,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+            "parsedValue": "AS/NZS 3013",
+            "canonicalCandidate": "AS/NZS 3013",
+            "usageCount": 5,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+            "parsedValue": "IEC 60331",
+            "canonicalCandidate": "IEC 60331",
+            "usageCount": 5,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+            "parsedValue": "BS 6387 (C",
+            "canonicalCandidate": "BS 6387 (C",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+            "parsedValue": "W",
+            "canonicalCandidate": "W",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+            "parsedValue": "Z)",
+            "canonicalCandidate": "Z)",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+            "parsedValue": "BS EN 50267",
+            "canonicalCandidate": "BS EN 50267",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+            "parsedValue": "BS EN 61034",
+            "canonicalCandidate": "BS EN 61034",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.3\r\nAS 1670\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "AS/NZS 5000.3",
+            "canonicalCandidate": "AS/NZS 5000.3",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.3\r\nAS 1670\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "AS 1670",
+            "canonicalCandidate": "AS 1670",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3808\r\nAS/NZS 5000.2\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+            "parsedValue": "AS/NZS 5000.2",
+            "canonicalCandidate": "AS/NZS 5000.2",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "VDE 0207/20\r\nVDE 0250/602\r\nUL 1581\r\nAS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "VDE 0207/20",
+            "canonicalCandidate": "VDE 0207/20",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "VDE 0207/20\r\nVDE 0250/602\r\nUL 1581\r\nAS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "VDE 0250/602",
+            "canonicalCandidate": "VDE 0250/602",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "VDE 0207/20\r\nVDE 0250/602\r\nUL 1581\r\nAS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "UL 1581",
+            "canonicalCandidate": "UL 1581",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Operating Temp:-15\u00b0C to +90\u00b0C\r\nVoltage Rating:12700/22000 Volts\r\nCore Colour:Black (with colour strip)\r\nJacket Colour:Black or to customer specification",
+            "parsedValue": "Operating Temp:-15\u00b0C to +90\u00b0C",
+            "canonicalCandidate": "Operating Temp:-15\u00b0C to +90\u00b0C",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Operating Temp:-15\u00b0C to +90\u00b0C\r\nVoltage Rating:12700/22000 Volts\r\nCore Colour:Black (with colour strip)\r\nJacket Colour:Black or to customer specification",
+            "parsedValue": "Voltage Rating:12700/22000 Volts",
+            "canonicalCandidate": "Voltage Rating:12700/22000 Volts",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Operating Temp:-15\u00b0C to +90\u00b0C\r\nVoltage Rating:12700/22000 Volts\r\nCore Colour:Black (with colour strip)\r\nJacket Colour:Black or to customer specification",
+            "parsedValue": "Core Colour:Black (with colour strip)",
+            "canonicalCandidate": "Core Colour:Black (with colour strip)",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Operating Temp:-15\u00b0C to +90\u00b0C\r\nVoltage Rating:12700/22000 Volts\r\nCore Colour:Black (with colour strip)\r\nJacket Colour:Black or to customer specification",
+            "parsedValue": "Jacket Colour:Black or to customer specification",
+            "canonicalCandidate": "Jacket Colour:Black or to customer specification",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC60754 - Halogen",
+            "parsedValue": "AS/NZS IEC60754 - Halogen",
+            "canonicalCandidate": "AS/NZS IEC60754 - Halogen",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC60754 - Halogen\r\nNEK TS 606 \u2013Oil & Mud",
+            "parsedValue": "NEK TS 606 \u2013Oil & Mud",
+            "canonicalCandidate": "NEK TS 606 \u2013Oil & Mud",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+            "parsedValue": "IEC 60092-350",
+            "canonicalCandidate": "IEC 60092-350",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+            "parsedValue": "IEC 60092-353",
+            "canonicalCandidate": "IEC 60092-353",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+            "parsedValue": "IEC 60092-360",
+            "canonicalCandidate": "IEC 60092-360",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+            "parsedValue": "IEEE 45",
+            "canonicalCandidate": "IEEE 45",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+            "parsedValue": "IEEE 1580",
+            "canonicalCandidate": "IEEE 1580",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+            "parsedValue": "IEEE 1202",
+            "canonicalCandidate": "IEEE 1202",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+            "parsedValue": "NEK TS 606",
+            "canonicalCandidate": "NEK TS 606",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3008\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "AS/NZS 3008",
+            "canonicalCandidate": "AS/NZS 3008",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "ASN/NZS 1125",
+            "canonicalCandidate": "ASN/NZS 1125",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "ASN/NZS 1660.5.1",
+            "canonicalCandidate": "ASN/NZS 1660.5.1",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "ASN/NZS 1660.5.6",
+            "canonicalCandidate": "ASN/NZS 1660.5.6",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "ASN/NZS 3008.1",
+            "canonicalCandidate": "ASN/NZS 3008.1",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "ASN/NZS 3808",
+            "canonicalCandidate": "ASN/NZS 3808",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+            "parsedValue": "ASN/NZS 5000.1",
+            "canonicalCandidate": "ASN/NZS 5000.1",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        }
+    ],
+    "distinctParsed": 78,
+    "rawRows": 45,
+    "note": "Do not silently canonicalize aliases. Operator approval required."
+}

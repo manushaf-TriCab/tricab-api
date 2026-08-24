@@ -1,0 +1,434 @@
+[
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "OVERALL_LENGTH_MM",
+        "code": "OVERALL-LENGTH",
+        "name": "Overall Length",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Length<br><i>mm</>",
+            "Length (L)<br><i>mm</>",
+            "Length<br><i>mm</i>",
+            "<div>Length</div><div><i>mm</i></div>",
+            "Length<br><i>mm<i/>"
+        ],
+        "mappingRows": 55,
+        "stylesAffected": 55,
+        "sampleValues": [
+            "15.00",
+            "10.00",
+            "10.00",
+            "15.00",
+            "15.00",
+            "15.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "WIDTH_MM",
+        "code": "WIDTH",
+        "name": "Width",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Width<br><i>mm</>",
+            "Width(W)<br><i>mm</>",
+            "Width<br><i>mm</i>",
+            "<div>Width</div><div><i>mm</i></div>",
+            "<div>Width</div><div class=\"table-hdr-filler\">&nbsp;</div><div><i>mm</i></div>",
+            "Width<br><i>mm<i/>"
+        ],
+        "mappingRows": 52,
+        "stylesAffected": 52,
+        "sampleValues": [
+            "2.00",
+            "2.00",
+            "2.00",
+            "3.00",
+            "2.00",
+            "4.30"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "CORE_COLOUR_MATRIX",
+        "code": "CORE-COLOURS",
+        "name": null,
+        "group": null,
+        "dataType": null,
+        "unit": null,
+        "legacyLabels": [
+            "Color<br><i>&nbsp;</>",
+            "Colour<br>&nbsp;",
+            "Cable Colour<br>&nbsp;",
+            "Colour<br>&nbsp;</>"
+        ],
+        "mappingRows": 26,
+        "stylesAffected": 26,
+        "sampleValues": [
+            "BLACK",
+            "Black",
+            "Black",
+            "Black",
+            "Black",
+            "Black"
+        ],
+        "reason": "full_colour_matrix_to_existing_core_colours"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "HEIGHT_MM",
+        "code": "HEIGHT",
+        "name": "Height",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Body (H)<br><i>mm</>",
+            "Height<br><i>mm</>",
+            "Height<br><i>mm</i>",
+            "Body<br><i>mm</>",
+            "Height<br><i>mm<i/>"
+        ],
+        "mappingRows": 25,
+        "stylesAffected": 25,
+        "sampleValues": [
+            "3.00",
+            "3.00",
+            "3.00",
+            "3.00",
+            "10.00",
+            "10.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "INNER_DIAMETER_MM",
+        "code": "INNER-DIAMETER",
+        "name": "Inner Diameter",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Inner&#8960;<br><i>mm</i>",
+            "<div>Inner&#8960;</div><div><i>mm</i></div>",
+            "<div>Inner&#8960;</div><div class=\"table-hdr-filler\">&nbsp;</div><div><i>mm</i></div>",
+            "Inner&#8960;<br><i>mm</>",
+            "Inner &#8960;<br><i>mm<i/>",
+            "Inner&#8960;<br><i>mm<i/>"
+        ],
+        "mappingRows": 24,
+        "stylesAffected": 24,
+        "sampleValues": [
+            "12.00",
+            "2.00",
+            "2.00",
+            "15.00",
+            "12.00",
+            "4.30"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "CABLE_LENGTH_M",
+        "code": "CABLE-LENGTH",
+        "name": "Cable Length",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "m",
+        "legacyLabels": [
+            "Length<br><i>m</>",
+            "Length<br><i>m<i/>",
+            "Length<br><i>m</i>"
+        ],
+        "mappingRows": 24,
+        "stylesAffected": 24,
+        "sampleValues": [
+            "15.00",
+            "15.00",
+            "2.00",
+            "10.00",
+            "2.00",
+            "10.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "BARREL_LENGTH_MM",
+        "code": "BARREL-LENGTH",
+        "name": "Barrel Length",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Barrel<br><i>mm</>",
+            "<div>Barrel</div><div class=\"table-hdr-filler\">&nbsp;</div><div><i>mm</i></div>",
+            "Barrel<br><i>mm</i>",
+            "<div>Barrel</div><div><i>mm</i></div>"
+        ],
+        "mappingRows": 21,
+        "stylesAffected": 21,
+        "sampleValues": [
+            "12.00",
+            "12.00",
+            "12.00",
+            "3.00",
+            "10.00",
+            "10.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "STUD_OD_MM",
+        "code": "STUD-OD",
+        "name": "Stud OD",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Stud&#8960;<br><i>mm</>",
+            "Stud<br><i>mm</i>",
+            "Stud&#8960;<br><i>mm</i>",
+            "Stud<br><i>mm</>"
+        ],
+        "mappingRows": 21,
+        "stylesAffected": 21,
+        "sampleValues": [
+            "12.00",
+            "12.00",
+            "12.00",
+            "12.00",
+            "12.00",
+            "12.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "OUTER_DIAMETER_MM",
+        "code": "OUTER-DIAMETER",
+        "name": "Outer Diameter",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Outer&#8960;<br><i>mm</i>",
+            "<div>Outer&#8960;</div><div><i>mm</i></div>",
+            "<div>Outer&#8960;</div><div class=\"table-hdr-filler\">&nbsp;</div><div><i>mm</i></div>",
+            "Outer&#8960;<br><i>mm</>",
+            "Outer &#8960;<br><i>mm<i/>",
+            "Outer&#8960;<br><i>mm<i/>"
+        ],
+        "mappingRows": 20,
+        "stylesAffected": 20,
+        "sampleValues": [
+            "4.30",
+            "4.30",
+            "10.00",
+            "15.00",
+            "0.00",
+            "3.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "THREAD_LENGTH_MM",
+        "code": "THREAD-LENGTH",
+        "name": "Thread Length",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Thread Length<br><i>mm</>",
+            "Thread Length<br><i>mm</i>",
+            "Thread Length<br><i>mm<i/>"
+        ],
+        "mappingRows": 18,
+        "stylesAffected": 18,
+        "sampleValues": [
+            "15.00",
+            "15.00",
+            "15.00",
+            "15.00",
+            "15.00",
+            "15.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "BARREL_OD_MM",
+        "code": "BARREL-OD",
+        "name": "Barrel OD",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Barrel&#8960;<br><i>mm</>",
+            "<div>Barrel&#8960;</div><div class=\"table-hdr-filler\">&nbsp;</div><div><i>mm</i></div>",
+            "Barrel &#8960;<br><i>mm</>"
+        ],
+        "mappingRows": 17,
+        "stylesAffected": 17,
+        "sampleValues": [
+            "3.00",
+            "10.00",
+            "2.00",
+            "15.00",
+            "15.00",
+            "4.30"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "THICKNESS_MM",
+        "code": "THICKNESS",
+        "name": "Thickness",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Thickness<br><i>mm</>",
+            "Thickness (T)<br><i>mm</>",
+            "Thickness<br><i>mm</i>"
+        ],
+        "mappingRows": 14,
+        "stylesAffected": 14,
+        "sampleValues": [
+            "2.00",
+            "2.00",
+            "10.00",
+            "10.00",
+            "10.00",
+            "10.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "DEPTH_MM",
+        "code": "DEPTH",
+        "name": "Depth",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Depth<br><i>mm</>",
+            "Depth<br><i>mm<i/>",
+            "Depth<br><i>mm</i>"
+        ],
+        "mappingRows": 12,
+        "stylesAffected": 12,
+        "sampleValues": [
+            "3.00",
+            "3.00",
+            "10.00",
+            "15.00",
+            "15.00",
+            "15.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "PHASE_COLOUR_MISLABEL",
+        "code": "CORE-COLOURS",
+        "name": null,
+        "group": null,
+        "dataType": null,
+        "unit": null,
+        "legacyLabels": [
+            "Phase<br>&nbsp;"
+        ],
+        "mappingRows": 11,
+        "stylesAffected": 11,
+        "sampleValues": [
+            "BLACK",
+            "BLACK",
+            "BLACK",
+            "BLACK",
+            "BLACK",
+            "BLACK"
+        ],
+        "reason": "samples_are_colour_tokens_BLACK_not_numeric_phase_or_cores"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "POLE_PHASE_COUNT",
+        "code": "CORES",
+        "name": null,
+        "group": null,
+        "dataType": null,
+        "unit": null,
+        "legacyLabels": [
+            "No. of <br>Pole/Phase"
+        ],
+        "mappingRows": 8,
+        "stylesAffected": 8,
+        "sampleValues": [
+            "3.00",
+            "3.00",
+            "3.00",
+            "3.00",
+            "10.00",
+            "10.00"
+        ],
+        "reason": "numeric_pole_phase_count_only"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "PIN_COUNT_LABEL",
+        "code": "PIN-COUNT",
+        "name": null,
+        "group": null,
+        "dataType": null,
+        "unit": null,
+        "legacyLabels": [
+            "No. of Pins<br>&nbsp;\n",
+            "No. of Pins<br>&nbsp;\r\n",
+            "No. of Pins<br>&nbsp;"
+        ],
+        "mappingRows": 8,
+        "stylesAffected": 8,
+        "sampleValues": [
+            "15.00",
+            "15.00",
+            "15.00",
+            "15.00",
+            "15.00",
+            "15.00"
+        ],
+        "reason": "explicit_no_of_pins_when_integer_compatible"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "concept": "PIN_DIAMETER_MM",
+        "code": "PIN-DIAMETER",
+        "name": "Pin Diameter",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm",
+        "legacyLabels": [
+            "Pin<br><i>mm</>"
+        ],
+        "mappingRows": 3,
+        "stylesAffected": 3,
+        "sampleValues": [
+            "12.00",
+            "12.00",
+            "12.00"
+        ],
+        "reason": "create_converted_to_map_existing_code_already_live"
+    }
+]

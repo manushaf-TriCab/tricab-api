@@ -1,0 +1,60 @@
+{
+    "meaning": "STYLE_SPECIFIC_LEGACY_OVERLOAD \u2014 not one global Definition",
+    "evidenceClass": "STRONG_CORRELATION",
+    "confidence": "MEDIUM",
+    "resolution": "EXPLICITLY_UNRESOLVED",
+    "perStyle": {
+        "B1": {
+            "ins": "2.000",
+            "od_ins": "8.000",
+            "cdia": "4.00",
+            "computedThickness": "2.0000000",
+            "probableMeaning": "small thickness decimal",
+            "derivable": true,
+            "resolution": "PROVEN_NOT_A_SPECIFICATION",
+            "reason": "DERIVABLE_FROM_EXISTING_DIMENSIONS"
+        },
+        "KN": {
+            "ins": "18.700",
+            "od_ins": null,
+            "cdia": "16.20",
+            "computedThickness": null,
+            "probableMeaning": "insulation OD-like mm",
+            "derivable": false,
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "reason": "STYLE_SPECIFIC_LEGACY_OVERLOAD"
+        },
+        "NR": {
+            "ins": "1.000",
+            "od_ins": "4.200",
+            "cdia": "1.50",
+            "computedThickness": "1.3500000",
+            "probableMeaning": "insulation thickness mm (derivable)",
+            "derivable": false,
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "reason": "STYLE_SPECIFIC_LEGACY_OVERLOAD"
+        },
+        "NV": {
+            "ins": "1.000",
+            "od_ins": "3.600",
+            "cdia": "1.50",
+            "computedThickness": "1.0500000",
+            "probableMeaning": "insulation thickness mm (derivable)",
+            "derivable": true,
+            "resolution": "PROVEN_NOT_A_SPECIFICATION",
+            "reason": "DERIVABLE_FROM_EXISTING_DIMENSIONS"
+        },
+        "XN": {
+            "ins": "5.400",
+            "od_ins": null,
+            "cdia": "4.00",
+            "computedThickness": null,
+            "probableMeaning": "insulation OD-like mm",
+            "derivable": false,
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "reason": "STYLE_SPECIFIC_LEGACY_OVERLOAD"
+        }
+    },
+    "scopedMappingRequired": true,
+    "productsBlocked": 5
+}

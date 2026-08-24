@@ -1,0 +1,3203 @@
+{
+    "phase": "12.7-batch-d5-1-cable-spec-final-resolution",
+    "mode": "FINAL_SEMANTIC_INVESTIGATION_ONLY",
+    "packageStatus": "READY_FOR_FINAL_OPERATOR_DECISIONS",
+    "investigationBanner": "FINAL SEMANTIC INVESTIGATION \u2014 NOTHING APPLIED",
+    "cableSpecApply": "NOT_AVAILABLE",
+    "approvalBoundary": {
+        "cableSpecD51ApplyGuard": "CABLE_SPEC_D5_1_APPLY_NOT_AVAILABLE"
+    },
+    "legacySafety": {
+        "wordpressWrites": 0,
+        "tcWrites": 0,
+        "forbiddenWriteAttempts": 0
+    },
+    "targetSafety": {
+        "definitionWrites": 0,
+        "optionWrites": 0,
+        "unitWrites": 0,
+        "fieldMappingWrites": 0,
+        "productSpecValueWrites": 0,
+        "variantSpecValueWrites": 0,
+        "totalWrites": 0
+    },
+    "baselineIntegrity": {
+        "status": "BASELINE_OK",
+        "definitions": 64,
+        "expectedDefinitions": 64,
+        "totalFieldMappings": 1044,
+        "expectedTotalFieldMappings": 1044,
+        "cableFieldMappings": 538,
+        "expectedCableFieldMappings": 538,
+        "d5PackagePresent": true,
+        "d5IntegrityOk": true,
+        "driftDetected": false
+    },
+    "legacySourceScan": {
+        "mode": "FILE_SCAN",
+        "hitCount": 121,
+        "directCableSpecsFieldLabels": {
+            "cc": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+            "ct": "'directEvidence' => ($labels['ct'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['ct'] : null,",
+            "walu": "'walu' => $this->weightFinding('walu', 'APPROX-WEIGHT-ALU', 'aluminium', $unitProof, $labels, $presence),",
+            "wbnz": "'wbnz' => $this->weightFinding('wbnz', 'APPROX-WEIGHT-BRONZE', 'bronze', $unitProof, $labels, $presence),",
+            "ins": "'ins' => $this->insFinding($insStyles, $labels, $presence),",
+            "Af": "'Af' => $this->b1FieldFinding('Af', $b1, $labels, $presence),",
+            "r": "'r' => $this->b1FieldFinding('r', $b1, $labels, $presence),",
+            "x50": "'x50' => $this->b1FieldFinding('x50', $b1, $labels, $presence),",
+            "x60": "'x60' => $this->b1FieldFinding('x60', $b1, $labels, $presence),",
+            "tension": "'tension' => $this->b1FieldFinding('tension', $b1, $labels, $presence),"
+        }
+    },
+    "targetMasterScan": {
+        "definitionCount": 9,
+        "conductorMatches": [],
+        "hasKgPerKm": true,
+        "hasLbPer1000ft": false,
+        "unitCodes": [
+            "KG_PER_KM"
+        ]
+    },
+    "fieldFindings": {
+        "cc": {
+            "meaning": "Core-configuration / nc interpretation mode \u2014 not a standalone customer dimension",
+            "evidenceClass": "STRONG_CORRELATION",
+            "confidence": "MEDIUM",
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "isCustomerSpecification": false,
+            "safeTargetRepresentation": "CORE-CONFIGURATION (candidate) or derive nc interpretation at migration \u2014 not proven HIGH",
+            "safeExclusion": false,
+            "operatorExclusionNotRecommended": true,
+            "exclusionRisks": [
+                "May misinterpret nc (cores vs pairs vs triples)",
+                "cc=a VUF AWG rows would lose encoding",
+                "All 54 products populated"
+            ],
+            "valueBreakdown": [
+                {
+                    "code": "c",
+                    "meaning": "cores counting mode \u2014 nc counts individual cores",
+                    "rows": 3027,
+                    "styles": 39,
+                    "styleSamples": [
+                        "B1",
+                        "BH",
+                        "BV",
+                        "C1",
+                        "DF",
+                        "DG",
+                        "DV",
+                        "EA",
+                        "HT",
+                        "KA",
+                        "KC",
+                        "KL",
+                        "KN",
+                        "KU",
+                        "LP",
+                        "LS",
+                        "NF",
+                        "NJ",
+                        "NR",
+                        "NT"
+                    ],
+                    "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                    "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+                    "confidence": "MEDIUM",
+                    "evidenceClass": "STRONG_CORRELATION"
+                },
+                {
+                    "code": "p",
+                    "meaning": "pairs counting mode \u2014 nc counts pairs",
+                    "rows": 1177,
+                    "styles": 14,
+                    "styleSamples": [
+                        "EG",
+                        "ES",
+                        "EW",
+                        "FC",
+                        "FE",
+                        "FJ",
+                        "FK",
+                        "FL",
+                        "FZ",
+                        "R1",
+                        "RB",
+                        "RC",
+                        "RE",
+                        "RS"
+                    ],
+                    "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                    "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+                    "confidence": "MEDIUM",
+                    "evidenceClass": "STRONG_CORRELATION"
+                },
+                {
+                    "code": "t",
+                    "meaning": "triples/triads counting mode",
+                    "rows": 279,
+                    "styles": 14,
+                    "styleSamples": [
+                        "EG",
+                        "ES",
+                        "EW",
+                        "FC",
+                        "FE",
+                        "FJ",
+                        "FK",
+                        "FL",
+                        "FZ",
+                        "R1",
+                        "RB",
+                        "RC",
+                        "RE",
+                        "RS"
+                    ],
+                    "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                    "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+                    "confidence": "MEDIUM",
+                    "evidenceClass": "STRONG_CORRELATION"
+                },
+                {
+                    "code": "a",
+                    "meaning": "VUF-only AWG-style xa mode (1/0, 250, 500) \u2014 exception not global cores",
+                    "rows": 8,
+                    "styles": 1,
+                    "styleSamples": [
+                        "VUF"
+                    ],
+                    "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                    "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+                    "confidence": "MEDIUM",
+                    "evidenceClass": "STRONG_CORRELATION"
+                }
+            ],
+            "splitExceptionStrategy": "Treat cc=a as VUF-specific AWG mode; c/p/t as nc interpretation metadata",
+            "productsBlocked": 54,
+            "stylesAffected": 54
+        },
+        "ct": {
+            "meaning": "Conductor material encoding \u2014 p\u2248copper default, a\u2248aluminium (hypothesis)",
+            "evidenceClass": "STRONG_CORRELATION",
+            "confidence": "MEDIUM",
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "directEvidence": "'directEvidence' => ($labels['ct'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['ct'] : null,",
+            "correlationEvidence": "KL ct=a lower wght + larger OD vs ct=p; rating.ct uses C/A not p/a",
+            "physicalComparisons": {
+                "klXa1": [],
+                "styleAverages": [
+                    {
+                        "cable_style": "B1",
+                        "ct": "p",
+                        "avg_wght": "3864.27272727",
+                        "avg_od": "40.92727273",
+                        "rows_cnt": 11
+                    },
+                    {
+                        "cable_style": "BH",
+                        "ct": "p",
+                        "avg_wght": "1347.71518987",
+                        "avg_od": "13.80693038",
+                        "rows_cnt": 158
+                    },
+                    {
+                        "cable_style": "BV",
+                        "ct": "p",
+                        "avg_wght": "1362.56024096",
+                        "avg_od": "12.68828313",
+                        "rows_cnt": 166
+                    },
+                    {
+                        "cable_style": "C1",
+                        "ct": "p",
+                        "avg_wght": "384.93162393",
+                        "avg_od": "14.45555556",
+                        "rows_cnt": 117
+                    },
+                    {
+                        "cable_style": "DF",
+                        "ct": "p",
+                        "avg_wght": "2988.17647059",
+                        "avg_od": "14.84264706",
+                        "rows_cnt": 34
+                    },
+                    {
+                        "cable_style": "DG",
+                        "ct": "p",
+                        "avg_wght": "2988.94736842",
+                        "avg_od": "1.60631579",
+                        "rows_cnt": 19
+                    },
+                    {
+                        "cable_style": "DV",
+                        "ct": "p",
+                        "avg_wght": "1306.07453416",
+                        "avg_od": "12.46658385",
+                        "rows_cnt": 161
+                    },
+                    {
+                        "cable_style": "EA",
+                        "ct": "a",
+                        "avg_wght": "2892.40000000",
+                        "avg_od": "42.62000000",
+                        "rows_cnt": 5
+                    },
+                    {
+                        "cable_style": "EA",
+                        "ct": "p",
+                        "avg_wght": "2020.10000000",
+                        "avg_od": "28.79000000",
+                        "rows_cnt": 10
+                    },
+                    {
+                        "cable_style": "EG",
+                        "ct": "p",
+                        "avg_wght": "792.89814815",
+                        "avg_od": "14.04240741",
+                        "rows_cnt": 108
+                    },
+                    {
+                        "cable_style": "ES",
+                        "ct": "p",
+                        "avg_wght": "694.09090909",
+                        "avg_od": "15.86722727",
+                        "rows_cnt": 110
+                    },
+                    {
+                        "cable_style": "EW",
+                        "ct": "p",
+                        "avg_wght": "642.05454545",
+                        "avg_od": "13.41463636",
+                        "rows_cnt": 110
+                    },
+                    {
+                        "cable_style": "FC",
+                        "ct": "p",
+                        "avg_wght": "809.92727273",
+                        "avg_od": "16.46204545",
+                        "rows_cnt": 110
+                    },
+                    {
+                        "cable_style": "FE",
+                        "ct": "p",
+                        "avg_wght": "1122.88392857",
+                        "avg_od": "19.12808036",
+                        "rows_cnt": 112
+                    },
+                    {
+                        "cable_style": "FJ",
+                        "ct": "p",
+                        "avg_wght": "817.58333333",
+                        "avg_od": "16.04745370",
+                        "rows_cnt": 108
+                    },
+                    {
+                        "cable_style": "FK",
+                        "ct": "p",
+                        "avg_wght": "994.16666667",
+                        "avg_od": "18.59061404",
+                        "rows_cnt": 114
+                    },
+                    {
+                        "cable_style": "FL",
+                        "ct": "p",
+                        "avg_wght": "961.05555556",
+                        "avg_od": "16.94689815",
+                        "rows_cnt": 108
+                    },
+                    {
+                        "cable_style": "FZ",
+                        "ct": "p",
+                        "avg_wght": "894.07272727",
+                        "avg_od": "15.86118182",
+                        "rows_cnt": 110
+                    },
+                    {
+                        "cable_style": "HT",
+                        "ct": "p",
+                        "avg_wght": "1673.29931973",
+                        "avg_od": "15.50656463",
+                        "rows_cnt": 147
+                    },
+                    {
+                        "cable_style": "KA",
+                        "ct": "a",
+                        "avg_wght": "2125.76923077",
+                        "avg_od": "37.70769231",
+                        "rows_cnt": 13
+                    },
+                    {
+                        "cable_style": "KA",
+                        "ct": "p",
+                        "avg_wght": "1731.40000000",
+                        "avg_od": "26.55600000",
+                        "rows_cnt": 75
+                    },
+                    {
+                        "cable_style": "KC",
+                        "ct": "p",
+                        "avg_wght": "392.76562500",
+                        "avg_od": "17.38593750",
+                        "rows_cnt": 64
+                    },
+                    {
+                        "cable_style": "KL",
+                        "ct": "a",
+                        "avg_wght": "1532.90697674",
+                        "avg_od": "39.56279070",
+                        "rows_cnt": 43
+                    },
+                    {
+                        "cable_style": "KL",
+                        "ct": "p",
+                        "avg_wght": "1936.58571429",
+                        "avg_od": "25.11000000",
+                        "rows_cnt": 70
+                    },
+                    {
+                        "cable_style": "KN",
+                        "ct": "a",
+                        "avg_wght": "1689.51162791",
+                        "avg_od": "41.66744186",
+                        "rows_cnt": 43
+                    },
+                    {
+                        "cable_style": "KN",
+                        "ct": "p",
+                        "avg_wght": "1776.51470588",
+                        "avg_od": "27.10294118",
+                        "rows_cnt": 68
+                    },
+                    {
+                        "cable_style": "KU",
+                        "ct": "a",
+                        "avg_wght": "1662.50000000",
+                        "avg_od": "36.41250000",
+                        "rows_cnt": 24
+                    },
+                    {
+                        "cable_style": "KU",
+                        "ct": "p",
+                        "avg_wght": "2468.81250000",
+                        "avg_od": "27.55500000",
+                        "rows_cnt": 32
+                    },
+                    {
+                        "cable_style": "LP",
+                        "ct": "a",
+                        "avg_wght": "810.53846154",
+                        "avg_od": "24.13076923",
+                        "rows_cnt": 13
+                    },
+                    {
+                        "cable_style": "LP",
+                        "ct": "p",
+                        "avg_wght": "1229.86363636",
+                        "avg_od": "14.28181818",
+                        "rows_cnt": 22
+                    },
+                    {
+                        "cable_style": "LS",
+                        "ct": "a",
+                        "avg_wght": "1090.46666667",
+                        "avg_od": "27.02666667",
+                        "rows_cnt": 15
+                    },
+                    {
+                        "cable_style": "LS",
+                        "ct": "p",
+                        "avg_wght": "1174.00000000",
+                        "avg_od": "13.56818182",
+                        "rows_cnt": 22
+                    },
+                    {
+                        "cable_style": "NF",
+                        "ct": "p",
+                        "avg_wght": "4467.50000000",
+                        "avg_od": "42.66750000",
+                        "rows_cnt": 12
+                    },
+                    {
+                        "cable_style": "NJ",
+                        "ct": "p",
+                        "avg_wght": "2079.61363636",
+                        "avg_od": "29.58750000",
+                        "rows_cnt": 88
+                    },
+                    {
+                        "cable_style": "NR",
+                        "ct": "p",
+                        "avg_wght": "1576.07317073",
+                        "avg_od": "25.84390244",
+                        "rows_cnt": 82
+                    },
+                    {
+                        "cable_style": "NT",
+                        "ct": "p",
+                        "avg_wght": "2211.45454545",
+                        "avg_od": "31.72613636",
+                        "rows_cnt": 88
+                    },
+                    {
+                        "cable_style": "NU",
+                        "ct": "p",
+                        "avg_wght": "4308.25000000",
+                        "avg_od": "41.09166667",
+                        "rows_cnt": 12
+                    },
+                    {
+                        "cable_style": "NV",
+                        "ct": "p",
+                        "avg_wght": "1777.91954023",
+                        "avg_od": "25.50689655",
+                        "rows_cnt": 87
+                    },
+                    {
+                        "cable_style": "PJ",
+                        "ct": "p",
+                        "avg_wght": "1668.30303030",
+                        "avg_od": "15.12657576",
+                        "rows_cnt": 165
+                    },
+                    {
+                        "cable_style": "R1",
+                        "ct": "p",
+                        "avg_wght": "456.26470588",
+                        "avg_od": "16.34117647",
+                        "rows_cnt": 68
+                    }
+                ]
+            },
+            "targetConductorModels": [],
+            "safeTargetRepresentation": "CONDUCTOR-MATERIAL with COPPER/ALUMINIUM options \u2014 requires operator approval at MEDIUM",
+            "safeExclusion": false,
+            "operatorExclusionNotRecommended": true,
+            "exclusionRisks": [
+                "Loses conductor material on all 54 products",
+                "May mislabel aluminium vs copper cables"
+            ],
+            "productsBlocked": 54
+        },
+        "walu": {
+            "meaning": "Approximate aluminium component weight (distinct from total wght)",
+            "meaningEvidenceClass": "DIRECT_EVIDENCE",
+            "meaningConfidence": "HIGH",
+            "resolution": "PROVEN_CREATE_DEFINITION",
+            "unit": "LB_PER_1000FT",
+            "unitEvidenceClass": "STRONG_CORRELATION",
+            "unitConfidence": "MEDIUM",
+            "unitEvidence": [
+                "Only populated when mt=1302 (Imperial)",
+                "wght/walu mean ~0.91517 \u2014 component not total weight",
+                "No lb/1000ft string in scanned repo",
+                "Hypothesis LB_PER_1000FT \u2014 STRONG_CORRELATION not DIRECT_EVIDENCE"
+            ],
+            "targetDefinition": "APPROX-WEIGHT-ALU",
+            "targetUnit": "LB_PER_1000FT",
+            "unitResolution": "PROVEN_CREATE_UNIT",
+            "productsBlocked": 14
+        },
+        "wbnz": {
+            "meaning": "Approximate bronze component weight (distinct from total wght)",
+            "meaningEvidenceClass": "DIRECT_EVIDENCE",
+            "meaningConfidence": "HIGH",
+            "resolution": "PROVEN_CREATE_DEFINITION",
+            "unit": "LB_PER_1000FT",
+            "unitEvidenceClass": "STRONG_CORRELATION",
+            "unitConfidence": "MEDIUM",
+            "unitEvidence": [
+                "Only populated when mt=1302 (Imperial)",
+                "wght/walu mean ~0.91517 \u2014 component not total weight",
+                "No lb/1000ft string in scanned repo",
+                "Hypothesis LB_PER_1000FT \u2014 STRONG_CORRELATION not DIRECT_EVIDENCE"
+            ],
+            "targetDefinition": "APPROX-WEIGHT-BRONZE",
+            "targetUnit": "LB_PER_1000FT",
+            "unitResolution": "PROVEN_CREATE_UNIT",
+            "productsBlocked": 14
+        },
+        "ins": {
+            "meaning": "STYLE_SPECIFIC_LEGACY_OVERLOAD \u2014 not one global Definition",
+            "evidenceClass": "STRONG_CORRELATION",
+            "confidence": "MEDIUM",
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "perStyle": {
+                "B1": {
+                    "ins": "2.000",
+                    "od_ins": "8.000",
+                    "cdia": "4.00",
+                    "computedThickness": "2.0000000",
+                    "probableMeaning": "small thickness decimal",
+                    "derivable": true,
+                    "resolution": "PROVEN_NOT_A_SPECIFICATION",
+                    "reason": "DERIVABLE_FROM_EXISTING_DIMENSIONS"
+                },
+                "KN": {
+                    "ins": "18.700",
+                    "od_ins": null,
+                    "cdia": "16.20",
+                    "computedThickness": null,
+                    "probableMeaning": "insulation OD-like mm",
+                    "derivable": false,
+                    "resolution": "EXPLICITLY_UNRESOLVED",
+                    "reason": "STYLE_SPECIFIC_LEGACY_OVERLOAD"
+                },
+                "NR": {
+                    "ins": "1.000",
+                    "od_ins": "4.200",
+                    "cdia": "1.50",
+                    "computedThickness": "1.3500000",
+                    "probableMeaning": "insulation thickness mm (derivable)",
+                    "derivable": false,
+                    "resolution": "EXPLICITLY_UNRESOLVED",
+                    "reason": "STYLE_SPECIFIC_LEGACY_OVERLOAD"
+                },
+                "NV": {
+                    "ins": "1.000",
+                    "od_ins": "3.600",
+                    "cdia": "1.50",
+                    "computedThickness": "1.0500000",
+                    "probableMeaning": "insulation thickness mm (derivable)",
+                    "derivable": true,
+                    "resolution": "PROVEN_NOT_A_SPECIFICATION",
+                    "reason": "DERIVABLE_FROM_EXISTING_DIMENSIONS"
+                },
+                "XN": {
+                    "ins": "5.400",
+                    "od_ins": null,
+                    "cdia": "4.00",
+                    "computedThickness": null,
+                    "probableMeaning": "insulation OD-like mm",
+                    "derivable": false,
+                    "resolution": "EXPLICITLY_UNRESOLVED",
+                    "reason": "STYLE_SPECIFIC_LEGACY_OVERLOAD"
+                }
+            },
+            "scopedMappingRequired": true,
+            "productsBlocked": 5
+        },
+        "Af": {
+            "meaning": "Unknown electrical scalar \u2014 not proven ampacity",
+            "unit": null,
+            "evidenceClass": "DIRECT_EVIDENCE",
+            "confidence": "LOW",
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "directEvidence": "'Af' => $this->b1FieldFinding('Af', $b1, $labels, $presence),",
+            "b1Context": {
+                "aggregate": {
+                    "rows_cnt": 11,
+                    "af_min": "1.4",
+                    "af_max": "34.3",
+                    "r_min": "0.105",
+                    "r_max": "2.452",
+                    "x50_min": "0.073",
+                    "x50_max": "0.106",
+                    "x60_min": "0.088",
+                    "x60_max": "0.127",
+                    "tension_min": "1.9",
+                    "tension_max": "50.5",
+                    "mt_min": 1301,
+                    "mt_max": 1301
+                },
+                "samples": [
+                    {
+                        "cable_style": "B1",
+                        "xa": "10",
+                        "mt": 1301,
+                        "Af": "1.4",
+                        "r": "2.452",
+                        "x50": "0.106",
+                        "x60": "0.127",
+                        "tension": "1.9",
+                        "od": "25.500",
+                        "cdia": "4.00",
+                        "wght": 913
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "120",
+                        "mt": 1301,
+                        "Af": "17.2",
+                        "r": "0.208",
+                        "x50": "0.077",
+                        "x60": "0.093",
+                        "tension": "25.7",
+                        "od": "48.500",
+                        "cdia": "13.90",
+                        "wght": 5145
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "150",
+                        "mt": 1301,
+                        "Af": "21.5",
+                        "r": "0.167",
+                        "x50": "0.076",
+                        "x60": "0.091",
+                        "tension": "30.4",
+                        "od": "51.200",
+                        "cdia": "15.10",
+                        "wght": 5968
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "16",
+                        "mt": 1301,
+                        "Af": "2.3",
+                        "r": "1.554",
+                        "x50": "0.099",
+                        "x60": "0.119",
+                        "tension": "5.1",
+                        "od": "26.700",
+                        "cdia": "5.00",
+                        "wght": 1097
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "185",
+                        "mt": 1301,
+                        "Af": "26.5",
+                        "r": "0.138",
+                        "x50": "0.075",
+                        "x60": "0.090",
+                        "tension": "38.3",
+                        "od": "56.000",
+                        "cdia": "16.90",
+                        "wght": 7074
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "240",
+                        "mt": 1301,
+                        "Af": "34.3",
+                        "r": "0.105",
+                        "x50": "0.073",
+                        "x60": "0.088",
+                        "tension": "50.5",
+                        "od": "60.500",
+                        "cdia": "18.90",
+                        "wght": 9054
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "25",
+                        "mt": 1301,
+                        "Af": "3.6",
+                        "r": "1.002",
+                        "x50": "0.093",
+                        "x60": "0.112",
+                        "tension": "6.9",
+                        "od": "29.500",
+                        "cdia": "6.20",
+                        "wght": 1450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "35",
+                        "mt": 1301,
+                        "Af": "5.0",
+                        "r": "0.712",
+                        "x50": "0.089",
+                        "x60": "0.107",
+                        "tension": "8.9",
+                        "od": "32.100",
+                        "cdia": "7.40",
+                        "wght": 1838
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "50",
+                        "mt": 1301,
+                        "Af": "7.2",
+                        "r": "0.496",
+                        "x50": "0.085",
+                        "x60": "0.102",
+                        "tension": "12.0",
+                        "od": "35.600",
+                        "cdia": "8.80",
+                        "wght": 2462
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "70",
+                        "mt": 1301,
+                        "Af": "10.0",
+                        "r": "0.350",
+                        "x50": "0.082",
+                        "x60": "0.098",
+                        "tension": "16.3",
+                        "od": "40.400",
+                        "cdia": "10.60",
+                        "wght": 3450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "95",
+                        "mt": 1301,
+                        "Af": "13.6",
+                        "r": "0.265",
+                        "x50": "0.079",
+                        "x60": "0.095",
+                        "tension": "20.3",
+                        "od": "44.200",
+                        "cdia": "12.30",
+                        "wght": 4056
+                    }
+                ]
+            },
+            "safeToExclude": true,
+            "legacyUnresolvedExcludeCandidate": true,
+            "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+            "productsBlocked": 1
+        },
+        "r": {
+            "meaning": "Resistance hypothesis \u2014 unit unproven",
+            "unit": null,
+            "evidenceClass": "DIRECT_EVIDENCE",
+            "confidence": "LOW",
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "directEvidence": "'r' => $this->b1FieldFinding('r', $b1, $labels, $presence),",
+            "b1Context": {
+                "aggregate": {
+                    "rows_cnt": 11,
+                    "af_min": "1.4",
+                    "af_max": "34.3",
+                    "r_min": "0.105",
+                    "r_max": "2.452",
+                    "x50_min": "0.073",
+                    "x50_max": "0.106",
+                    "x60_min": "0.088",
+                    "x60_max": "0.127",
+                    "tension_min": "1.9",
+                    "tension_max": "50.5",
+                    "mt_min": 1301,
+                    "mt_max": 1301
+                },
+                "samples": [
+                    {
+                        "cable_style": "B1",
+                        "xa": "10",
+                        "mt": 1301,
+                        "Af": "1.4",
+                        "r": "2.452",
+                        "x50": "0.106",
+                        "x60": "0.127",
+                        "tension": "1.9",
+                        "od": "25.500",
+                        "cdia": "4.00",
+                        "wght": 913
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "120",
+                        "mt": 1301,
+                        "Af": "17.2",
+                        "r": "0.208",
+                        "x50": "0.077",
+                        "x60": "0.093",
+                        "tension": "25.7",
+                        "od": "48.500",
+                        "cdia": "13.90",
+                        "wght": 5145
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "150",
+                        "mt": 1301,
+                        "Af": "21.5",
+                        "r": "0.167",
+                        "x50": "0.076",
+                        "x60": "0.091",
+                        "tension": "30.4",
+                        "od": "51.200",
+                        "cdia": "15.10",
+                        "wght": 5968
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "16",
+                        "mt": 1301,
+                        "Af": "2.3",
+                        "r": "1.554",
+                        "x50": "0.099",
+                        "x60": "0.119",
+                        "tension": "5.1",
+                        "od": "26.700",
+                        "cdia": "5.00",
+                        "wght": 1097
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "185",
+                        "mt": 1301,
+                        "Af": "26.5",
+                        "r": "0.138",
+                        "x50": "0.075",
+                        "x60": "0.090",
+                        "tension": "38.3",
+                        "od": "56.000",
+                        "cdia": "16.90",
+                        "wght": 7074
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "240",
+                        "mt": 1301,
+                        "Af": "34.3",
+                        "r": "0.105",
+                        "x50": "0.073",
+                        "x60": "0.088",
+                        "tension": "50.5",
+                        "od": "60.500",
+                        "cdia": "18.90",
+                        "wght": 9054
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "25",
+                        "mt": 1301,
+                        "Af": "3.6",
+                        "r": "1.002",
+                        "x50": "0.093",
+                        "x60": "0.112",
+                        "tension": "6.9",
+                        "od": "29.500",
+                        "cdia": "6.20",
+                        "wght": 1450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "35",
+                        "mt": 1301,
+                        "Af": "5.0",
+                        "r": "0.712",
+                        "x50": "0.089",
+                        "x60": "0.107",
+                        "tension": "8.9",
+                        "od": "32.100",
+                        "cdia": "7.40",
+                        "wght": 1838
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "50",
+                        "mt": 1301,
+                        "Af": "7.2",
+                        "r": "0.496",
+                        "x50": "0.085",
+                        "x60": "0.102",
+                        "tension": "12.0",
+                        "od": "35.600",
+                        "cdia": "8.80",
+                        "wght": 2462
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "70",
+                        "mt": 1301,
+                        "Af": "10.0",
+                        "r": "0.350",
+                        "x50": "0.082",
+                        "x60": "0.098",
+                        "tension": "16.3",
+                        "od": "40.400",
+                        "cdia": "10.60",
+                        "wght": 3450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "95",
+                        "mt": 1301,
+                        "Af": "13.6",
+                        "r": "0.265",
+                        "x50": "0.079",
+                        "x60": "0.095",
+                        "tension": "20.3",
+                        "od": "44.200",
+                        "cdia": "12.30",
+                        "wght": 4056
+                    }
+                ]
+            },
+            "safeToExclude": true,
+            "legacyUnresolvedExcludeCandidate": true,
+            "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+            "productsBlocked": 1
+        },
+        "x50": {
+            "meaning": "Reactance at 50 Hz hypothesis",
+            "unit": null,
+            "evidenceClass": "DIRECT_EVIDENCE",
+            "confidence": "LOW",
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "directEvidence": "'x50' => $this->b1FieldFinding('x50', $b1, $labels, $presence),",
+            "b1Context": {
+                "aggregate": {
+                    "rows_cnt": 11,
+                    "af_min": "1.4",
+                    "af_max": "34.3",
+                    "r_min": "0.105",
+                    "r_max": "2.452",
+                    "x50_min": "0.073",
+                    "x50_max": "0.106",
+                    "x60_min": "0.088",
+                    "x60_max": "0.127",
+                    "tension_min": "1.9",
+                    "tension_max": "50.5",
+                    "mt_min": 1301,
+                    "mt_max": 1301
+                },
+                "samples": [
+                    {
+                        "cable_style": "B1",
+                        "xa": "10",
+                        "mt": 1301,
+                        "Af": "1.4",
+                        "r": "2.452",
+                        "x50": "0.106",
+                        "x60": "0.127",
+                        "tension": "1.9",
+                        "od": "25.500",
+                        "cdia": "4.00",
+                        "wght": 913
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "120",
+                        "mt": 1301,
+                        "Af": "17.2",
+                        "r": "0.208",
+                        "x50": "0.077",
+                        "x60": "0.093",
+                        "tension": "25.7",
+                        "od": "48.500",
+                        "cdia": "13.90",
+                        "wght": 5145
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "150",
+                        "mt": 1301,
+                        "Af": "21.5",
+                        "r": "0.167",
+                        "x50": "0.076",
+                        "x60": "0.091",
+                        "tension": "30.4",
+                        "od": "51.200",
+                        "cdia": "15.10",
+                        "wght": 5968
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "16",
+                        "mt": 1301,
+                        "Af": "2.3",
+                        "r": "1.554",
+                        "x50": "0.099",
+                        "x60": "0.119",
+                        "tension": "5.1",
+                        "od": "26.700",
+                        "cdia": "5.00",
+                        "wght": 1097
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "185",
+                        "mt": 1301,
+                        "Af": "26.5",
+                        "r": "0.138",
+                        "x50": "0.075",
+                        "x60": "0.090",
+                        "tension": "38.3",
+                        "od": "56.000",
+                        "cdia": "16.90",
+                        "wght": 7074
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "240",
+                        "mt": 1301,
+                        "Af": "34.3",
+                        "r": "0.105",
+                        "x50": "0.073",
+                        "x60": "0.088",
+                        "tension": "50.5",
+                        "od": "60.500",
+                        "cdia": "18.90",
+                        "wght": 9054
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "25",
+                        "mt": 1301,
+                        "Af": "3.6",
+                        "r": "1.002",
+                        "x50": "0.093",
+                        "x60": "0.112",
+                        "tension": "6.9",
+                        "od": "29.500",
+                        "cdia": "6.20",
+                        "wght": 1450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "35",
+                        "mt": 1301,
+                        "Af": "5.0",
+                        "r": "0.712",
+                        "x50": "0.089",
+                        "x60": "0.107",
+                        "tension": "8.9",
+                        "od": "32.100",
+                        "cdia": "7.40",
+                        "wght": 1838
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "50",
+                        "mt": 1301,
+                        "Af": "7.2",
+                        "r": "0.496",
+                        "x50": "0.085",
+                        "x60": "0.102",
+                        "tension": "12.0",
+                        "od": "35.600",
+                        "cdia": "8.80",
+                        "wght": 2462
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "70",
+                        "mt": 1301,
+                        "Af": "10.0",
+                        "r": "0.350",
+                        "x50": "0.082",
+                        "x60": "0.098",
+                        "tension": "16.3",
+                        "od": "40.400",
+                        "cdia": "10.60",
+                        "wght": 3450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "95",
+                        "mt": 1301,
+                        "Af": "13.6",
+                        "r": "0.265",
+                        "x50": "0.079",
+                        "x60": "0.095",
+                        "tension": "20.3",
+                        "od": "44.200",
+                        "cdia": "12.30",
+                        "wght": 4056
+                    }
+                ]
+            },
+            "safeToExclude": true,
+            "legacyUnresolvedExcludeCandidate": true,
+            "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+            "productsBlocked": 1
+        },
+        "x60": {
+            "meaning": "Reactance at 60 Hz hypothesis",
+            "unit": null,
+            "evidenceClass": "DIRECT_EVIDENCE",
+            "confidence": "LOW",
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "directEvidence": "'x60' => $this->b1FieldFinding('x60', $b1, $labels, $presence),",
+            "b1Context": {
+                "aggregate": {
+                    "rows_cnt": 11,
+                    "af_min": "1.4",
+                    "af_max": "34.3",
+                    "r_min": "0.105",
+                    "r_max": "2.452",
+                    "x50_min": "0.073",
+                    "x50_max": "0.106",
+                    "x60_min": "0.088",
+                    "x60_max": "0.127",
+                    "tension_min": "1.9",
+                    "tension_max": "50.5",
+                    "mt_min": 1301,
+                    "mt_max": 1301
+                },
+                "samples": [
+                    {
+                        "cable_style": "B1",
+                        "xa": "10",
+                        "mt": 1301,
+                        "Af": "1.4",
+                        "r": "2.452",
+                        "x50": "0.106",
+                        "x60": "0.127",
+                        "tension": "1.9",
+                        "od": "25.500",
+                        "cdia": "4.00",
+                        "wght": 913
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "120",
+                        "mt": 1301,
+                        "Af": "17.2",
+                        "r": "0.208",
+                        "x50": "0.077",
+                        "x60": "0.093",
+                        "tension": "25.7",
+                        "od": "48.500",
+                        "cdia": "13.90",
+                        "wght": 5145
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "150",
+                        "mt": 1301,
+                        "Af": "21.5",
+                        "r": "0.167",
+                        "x50": "0.076",
+                        "x60": "0.091",
+                        "tension": "30.4",
+                        "od": "51.200",
+                        "cdia": "15.10",
+                        "wght": 5968
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "16",
+                        "mt": 1301,
+                        "Af": "2.3",
+                        "r": "1.554",
+                        "x50": "0.099",
+                        "x60": "0.119",
+                        "tension": "5.1",
+                        "od": "26.700",
+                        "cdia": "5.00",
+                        "wght": 1097
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "185",
+                        "mt": 1301,
+                        "Af": "26.5",
+                        "r": "0.138",
+                        "x50": "0.075",
+                        "x60": "0.090",
+                        "tension": "38.3",
+                        "od": "56.000",
+                        "cdia": "16.90",
+                        "wght": 7074
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "240",
+                        "mt": 1301,
+                        "Af": "34.3",
+                        "r": "0.105",
+                        "x50": "0.073",
+                        "x60": "0.088",
+                        "tension": "50.5",
+                        "od": "60.500",
+                        "cdia": "18.90",
+                        "wght": 9054
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "25",
+                        "mt": 1301,
+                        "Af": "3.6",
+                        "r": "1.002",
+                        "x50": "0.093",
+                        "x60": "0.112",
+                        "tension": "6.9",
+                        "od": "29.500",
+                        "cdia": "6.20",
+                        "wght": 1450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "35",
+                        "mt": 1301,
+                        "Af": "5.0",
+                        "r": "0.712",
+                        "x50": "0.089",
+                        "x60": "0.107",
+                        "tension": "8.9",
+                        "od": "32.100",
+                        "cdia": "7.40",
+                        "wght": 1838
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "50",
+                        "mt": 1301,
+                        "Af": "7.2",
+                        "r": "0.496",
+                        "x50": "0.085",
+                        "x60": "0.102",
+                        "tension": "12.0",
+                        "od": "35.600",
+                        "cdia": "8.80",
+                        "wght": 2462
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "70",
+                        "mt": 1301,
+                        "Af": "10.0",
+                        "r": "0.350",
+                        "x50": "0.082",
+                        "x60": "0.098",
+                        "tension": "16.3",
+                        "od": "40.400",
+                        "cdia": "10.60",
+                        "wght": 3450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "95",
+                        "mt": 1301,
+                        "Af": "13.6",
+                        "r": "0.265",
+                        "x50": "0.079",
+                        "x60": "0.095",
+                        "tension": "20.3",
+                        "od": "44.200",
+                        "cdia": "12.30",
+                        "wght": 4056
+                    }
+                ]
+            },
+            "safeToExclude": true,
+            "legacyUnresolvedExcludeCandidate": true,
+            "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+            "productsBlocked": 1
+        },
+        "tension": {
+            "meaning": "Mechanical/pulling tension hypothesis",
+            "unit": null,
+            "evidenceClass": "DIRECT_EVIDENCE",
+            "confidence": "LOW",
+            "resolution": "EXPLICITLY_UNRESOLVED",
+            "directEvidence": "'tension' => $this->b1FieldFinding('tension', $b1, $labels, $presence),",
+            "b1Context": {
+                "aggregate": {
+                    "rows_cnt": 11,
+                    "af_min": "1.4",
+                    "af_max": "34.3",
+                    "r_min": "0.105",
+                    "r_max": "2.452",
+                    "x50_min": "0.073",
+                    "x50_max": "0.106",
+                    "x60_min": "0.088",
+                    "x60_max": "0.127",
+                    "tension_min": "1.9",
+                    "tension_max": "50.5",
+                    "mt_min": 1301,
+                    "mt_max": 1301
+                },
+                "samples": [
+                    {
+                        "cable_style": "B1",
+                        "xa": "10",
+                        "mt": 1301,
+                        "Af": "1.4",
+                        "r": "2.452",
+                        "x50": "0.106",
+                        "x60": "0.127",
+                        "tension": "1.9",
+                        "od": "25.500",
+                        "cdia": "4.00",
+                        "wght": 913
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "120",
+                        "mt": 1301,
+                        "Af": "17.2",
+                        "r": "0.208",
+                        "x50": "0.077",
+                        "x60": "0.093",
+                        "tension": "25.7",
+                        "od": "48.500",
+                        "cdia": "13.90",
+                        "wght": 5145
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "150",
+                        "mt": 1301,
+                        "Af": "21.5",
+                        "r": "0.167",
+                        "x50": "0.076",
+                        "x60": "0.091",
+                        "tension": "30.4",
+                        "od": "51.200",
+                        "cdia": "15.10",
+                        "wght": 5968
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "16",
+                        "mt": 1301,
+                        "Af": "2.3",
+                        "r": "1.554",
+                        "x50": "0.099",
+                        "x60": "0.119",
+                        "tension": "5.1",
+                        "od": "26.700",
+                        "cdia": "5.00",
+                        "wght": 1097
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "185",
+                        "mt": 1301,
+                        "Af": "26.5",
+                        "r": "0.138",
+                        "x50": "0.075",
+                        "x60": "0.090",
+                        "tension": "38.3",
+                        "od": "56.000",
+                        "cdia": "16.90",
+                        "wght": 7074
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "240",
+                        "mt": 1301,
+                        "Af": "34.3",
+                        "r": "0.105",
+                        "x50": "0.073",
+                        "x60": "0.088",
+                        "tension": "50.5",
+                        "od": "60.500",
+                        "cdia": "18.90",
+                        "wght": 9054
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "25",
+                        "mt": 1301,
+                        "Af": "3.6",
+                        "r": "1.002",
+                        "x50": "0.093",
+                        "x60": "0.112",
+                        "tension": "6.9",
+                        "od": "29.500",
+                        "cdia": "6.20",
+                        "wght": 1450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "35",
+                        "mt": 1301,
+                        "Af": "5.0",
+                        "r": "0.712",
+                        "x50": "0.089",
+                        "x60": "0.107",
+                        "tension": "8.9",
+                        "od": "32.100",
+                        "cdia": "7.40",
+                        "wght": 1838
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "50",
+                        "mt": 1301,
+                        "Af": "7.2",
+                        "r": "0.496",
+                        "x50": "0.085",
+                        "x60": "0.102",
+                        "tension": "12.0",
+                        "od": "35.600",
+                        "cdia": "8.80",
+                        "wght": 2462
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "70",
+                        "mt": 1301,
+                        "Af": "10.0",
+                        "r": "0.350",
+                        "x50": "0.082",
+                        "x60": "0.098",
+                        "tension": "16.3",
+                        "od": "40.400",
+                        "cdia": "10.60",
+                        "wght": 3450
+                    },
+                    {
+                        "cable_style": "B1",
+                        "xa": "95",
+                        "mt": 1301,
+                        "Af": "13.6",
+                        "r": "0.265",
+                        "x50": "0.079",
+                        "x60": "0.095",
+                        "tension": "20.3",
+                        "od": "44.200",
+                        "cdia": "12.30",
+                        "wght": 4056
+                    }
+                ]
+            },
+            "safeToExclude": true,
+            "legacyUnresolvedExcludeCandidate": true,
+            "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+            "productsBlocked": 1
+        }
+    },
+    "operatorOptions": [
+        {
+            "field": "cc",
+            "finding": {
+                "meaning": "Core-configuration / nc interpretation mode \u2014 not a standalone customer dimension",
+                "evidenceClass": "STRONG_CORRELATION",
+                "confidence": "MEDIUM",
+                "resolution": "EXPLICITLY_UNRESOLVED",
+                "isCustomerSpecification": false,
+                "safeTargetRepresentation": "CORE-CONFIGURATION (candidate) or derive nc interpretation at migration \u2014 not proven HIGH",
+                "safeExclusion": false,
+                "operatorExclusionNotRecommended": true,
+                "exclusionRisks": [
+                    "May misinterpret nc (cores vs pairs vs triples)",
+                    "cc=a VUF AWG rows would lose encoding",
+                    "All 54 products populated"
+                ],
+                "valueBreakdown": [
+                    {
+                        "code": "c",
+                        "meaning": "cores counting mode \u2014 nc counts individual cores",
+                        "rows": 3027,
+                        "styles": 39,
+                        "styleSamples": [
+                            "B1",
+                            "BH",
+                            "BV",
+                            "C1",
+                            "DF",
+                            "DG",
+                            "DV",
+                            "EA",
+                            "HT",
+                            "KA",
+                            "KC",
+                            "KL",
+                            "KN",
+                            "KU",
+                            "LP",
+                            "LS",
+                            "NF",
+                            "NJ",
+                            "NR",
+                            "NT"
+                        ],
+                        "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                        "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+                        "confidence": "MEDIUM",
+                        "evidenceClass": "STRONG_CORRELATION"
+                    },
+                    {
+                        "code": "p",
+                        "meaning": "pairs counting mode \u2014 nc counts pairs",
+                        "rows": 1177,
+                        "styles": 14,
+                        "styleSamples": [
+                            "EG",
+                            "ES",
+                            "EW",
+                            "FC",
+                            "FE",
+                            "FJ",
+                            "FK",
+                            "FL",
+                            "FZ",
+                            "R1",
+                            "RB",
+                            "RC",
+                            "RE",
+                            "RS"
+                        ],
+                        "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                        "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+                        "confidence": "MEDIUM",
+                        "evidenceClass": "STRONG_CORRELATION"
+                    },
+                    {
+                        "code": "t",
+                        "meaning": "triples/triads counting mode",
+                        "rows": 279,
+                        "styles": 14,
+                        "styleSamples": [
+                            "EG",
+                            "ES",
+                            "EW",
+                            "FC",
+                            "FE",
+                            "FJ",
+                            "FK",
+                            "FL",
+                            "FZ",
+                            "R1",
+                            "RB",
+                            "RC",
+                            "RE",
+                            "RS"
+                        ],
+                        "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                        "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+                        "confidence": "MEDIUM",
+                        "evidenceClass": "STRONG_CORRELATION"
+                    },
+                    {
+                        "code": "a",
+                        "meaning": "VUF-only AWG-style xa mode (1/0, 250, 500) \u2014 exception not global cores",
+                        "rows": 8,
+                        "styles": 1,
+                        "styleSamples": [
+                            "VUF"
+                        ],
+                        "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                        "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+                        "confidence": "MEDIUM",
+                        "evidenceClass": "STRONG_CORRELATION"
+                    }
+                ],
+                "splitExceptionStrategy": "Treat cc=a as VUF-specific AWG mode; c/p/t as nc interpretation metadata",
+                "productsBlocked": 54,
+                "stylesAffected": 54
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "APPROVE_CORE_CONFIGURATION",
+                    "label": "Approve CORE-CONFIGURATION Definition + options (c/p/t + VUF exception for a) at operator MEDIUM acceptance",
+                    "readinessImpact": "unlocks 54 if ct also resolved"
+                },
+                {
+                    "id": "APPROVE_NOT_A_SPECIFICATION_METADATA",
+                    "label": "Exclude as nc-interpretation metadata (NOT recommended \u2014 OPERATOR_EXCLUSION_NOT_RECOMMENDED)",
+                    "readinessImpact": "unlocks 54 if ct also resolved \u2014 risks nc misread"
+                }
+            ]
+        },
+        {
+            "field": "ct",
+            "finding": {
+                "meaning": "Conductor material encoding \u2014 p\u2248copper default, a\u2248aluminium (hypothesis)",
+                "evidenceClass": "STRONG_CORRELATION",
+                "confidence": "MEDIUM",
+                "resolution": "EXPLICITLY_UNRESOLVED",
+                "directEvidence": "'directEvidence' => ($labels['ct'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['ct'] : null,",
+                "correlationEvidence": "KL ct=a lower wght + larger OD vs ct=p; rating.ct uses C/A not p/a",
+                "physicalComparisons": {
+                    "klXa1": [],
+                    "styleAverages": [
+                        {
+                            "cable_style": "B1",
+                            "ct": "p",
+                            "avg_wght": "3864.27272727",
+                            "avg_od": "40.92727273",
+                            "rows_cnt": 11
+                        },
+                        {
+                            "cable_style": "BH",
+                            "ct": "p",
+                            "avg_wght": "1347.71518987",
+                            "avg_od": "13.80693038",
+                            "rows_cnt": 158
+                        },
+                        {
+                            "cable_style": "BV",
+                            "ct": "p",
+                            "avg_wght": "1362.56024096",
+                            "avg_od": "12.68828313",
+                            "rows_cnt": 166
+                        },
+                        {
+                            "cable_style": "C1",
+                            "ct": "p",
+                            "avg_wght": "384.93162393",
+                            "avg_od": "14.45555556",
+                            "rows_cnt": 117
+                        },
+                        {
+                            "cable_style": "DF",
+                            "ct": "p",
+                            "avg_wght": "2988.17647059",
+                            "avg_od": "14.84264706",
+                            "rows_cnt": 34
+                        },
+                        {
+                            "cable_style": "DG",
+                            "ct": "p",
+                            "avg_wght": "2988.94736842",
+                            "avg_od": "1.60631579",
+                            "rows_cnt": 19
+                        },
+                        {
+                            "cable_style": "DV",
+                            "ct": "p",
+                            "avg_wght": "1306.07453416",
+                            "avg_od": "12.46658385",
+                            "rows_cnt": 161
+                        },
+                        {
+                            "cable_style": "EA",
+                            "ct": "a",
+                            "avg_wght": "2892.40000000",
+                            "avg_od": "42.62000000",
+                            "rows_cnt": 5
+                        },
+                        {
+                            "cable_style": "EA",
+                            "ct": "p",
+                            "avg_wght": "2020.10000000",
+                            "avg_od": "28.79000000",
+                            "rows_cnt": 10
+                        },
+                        {
+                            "cable_style": "EG",
+                            "ct": "p",
+                            "avg_wght": "792.89814815",
+                            "avg_od": "14.04240741",
+                            "rows_cnt": 108
+                        },
+                        {
+                            "cable_style": "ES",
+                            "ct": "p",
+                            "avg_wght": "694.09090909",
+                            "avg_od": "15.86722727",
+                            "rows_cnt": 110
+                        },
+                        {
+                            "cable_style": "EW",
+                            "ct": "p",
+                            "avg_wght": "642.05454545",
+                            "avg_od": "13.41463636",
+                            "rows_cnt": 110
+                        },
+                        {
+                            "cable_style": "FC",
+                            "ct": "p",
+                            "avg_wght": "809.92727273",
+                            "avg_od": "16.46204545",
+                            "rows_cnt": 110
+                        },
+                        {
+                            "cable_style": "FE",
+                            "ct": "p",
+                            "avg_wght": "1122.88392857",
+                            "avg_od": "19.12808036",
+                            "rows_cnt": 112
+                        },
+                        {
+                            "cable_style": "FJ",
+                            "ct": "p",
+                            "avg_wght": "817.58333333",
+                            "avg_od": "16.04745370",
+                            "rows_cnt": 108
+                        },
+                        {
+                            "cable_style": "FK",
+                            "ct": "p",
+                            "avg_wght": "994.16666667",
+                            "avg_od": "18.59061404",
+                            "rows_cnt": 114
+                        },
+                        {
+                            "cable_style": "FL",
+                            "ct": "p",
+                            "avg_wght": "961.05555556",
+                            "avg_od": "16.94689815",
+                            "rows_cnt": 108
+                        },
+                        {
+                            "cable_style": "FZ",
+                            "ct": "p",
+                            "avg_wght": "894.07272727",
+                            "avg_od": "15.86118182",
+                            "rows_cnt": 110
+                        },
+                        {
+                            "cable_style": "HT",
+                            "ct": "p",
+                            "avg_wght": "1673.29931973",
+                            "avg_od": "15.50656463",
+                            "rows_cnt": 147
+                        },
+                        {
+                            "cable_style": "KA",
+                            "ct": "a",
+                            "avg_wght": "2125.76923077",
+                            "avg_od": "37.70769231",
+                            "rows_cnt": 13
+                        },
+                        {
+                            "cable_style": "KA",
+                            "ct": "p",
+                            "avg_wght": "1731.40000000",
+                            "avg_od": "26.55600000",
+                            "rows_cnt": 75
+                        },
+                        {
+                            "cable_style": "KC",
+                            "ct": "p",
+                            "avg_wght": "392.76562500",
+                            "avg_od": "17.38593750",
+                            "rows_cnt": 64
+                        },
+                        {
+                            "cable_style": "KL",
+                            "ct": "a",
+                            "avg_wght": "1532.90697674",
+                            "avg_od": "39.56279070",
+                            "rows_cnt": 43
+                        },
+                        {
+                            "cable_style": "KL",
+                            "ct": "p",
+                            "avg_wght": "1936.58571429",
+                            "avg_od": "25.11000000",
+                            "rows_cnt": 70
+                        },
+                        {
+                            "cable_style": "KN",
+                            "ct": "a",
+                            "avg_wght": "1689.51162791",
+                            "avg_od": "41.66744186",
+                            "rows_cnt": 43
+                        },
+                        {
+                            "cable_style": "KN",
+                            "ct": "p",
+                            "avg_wght": "1776.51470588",
+                            "avg_od": "27.10294118",
+                            "rows_cnt": 68
+                        },
+                        {
+                            "cable_style": "KU",
+                            "ct": "a",
+                            "avg_wght": "1662.50000000",
+                            "avg_od": "36.41250000",
+                            "rows_cnt": 24
+                        },
+                        {
+                            "cable_style": "KU",
+                            "ct": "p",
+                            "avg_wght": "2468.81250000",
+                            "avg_od": "27.55500000",
+                            "rows_cnt": 32
+                        },
+                        {
+                            "cable_style": "LP",
+                            "ct": "a",
+                            "avg_wght": "810.53846154",
+                            "avg_od": "24.13076923",
+                            "rows_cnt": 13
+                        },
+                        {
+                            "cable_style": "LP",
+                            "ct": "p",
+                            "avg_wght": "1229.86363636",
+                            "avg_od": "14.28181818",
+                            "rows_cnt": 22
+                        },
+                        {
+                            "cable_style": "LS",
+                            "ct": "a",
+                            "avg_wght": "1090.46666667",
+                            "avg_od": "27.02666667",
+                            "rows_cnt": 15
+                        },
+                        {
+                            "cable_style": "LS",
+                            "ct": "p",
+                            "avg_wght": "1174.00000000",
+                            "avg_od": "13.56818182",
+                            "rows_cnt": 22
+                        },
+                        {
+                            "cable_style": "NF",
+                            "ct": "p",
+                            "avg_wght": "4467.50000000",
+                            "avg_od": "42.66750000",
+                            "rows_cnt": 12
+                        },
+                        {
+                            "cable_style": "NJ",
+                            "ct": "p",
+                            "avg_wght": "2079.61363636",
+                            "avg_od": "29.58750000",
+                            "rows_cnt": 88
+                        },
+                        {
+                            "cable_style": "NR",
+                            "ct": "p",
+                            "avg_wght": "1576.07317073",
+                            "avg_od": "25.84390244",
+                            "rows_cnt": 82
+                        },
+                        {
+                            "cable_style": "NT",
+                            "ct": "p",
+                            "avg_wght": "2211.45454545",
+                            "avg_od": "31.72613636",
+                            "rows_cnt": 88
+                        },
+                        {
+                            "cable_style": "NU",
+                            "ct": "p",
+                            "avg_wght": "4308.25000000",
+                            "avg_od": "41.09166667",
+                            "rows_cnt": 12
+                        },
+                        {
+                            "cable_style": "NV",
+                            "ct": "p",
+                            "avg_wght": "1777.91954023",
+                            "avg_od": "25.50689655",
+                            "rows_cnt": 87
+                        },
+                        {
+                            "cable_style": "PJ",
+                            "ct": "p",
+                            "avg_wght": "1668.30303030",
+                            "avg_od": "15.12657576",
+                            "rows_cnt": 165
+                        },
+                        {
+                            "cable_style": "R1",
+                            "ct": "p",
+                            "avg_wght": "456.26470588",
+                            "avg_od": "16.34117647",
+                            "rows_cnt": 68
+                        }
+                    ]
+                },
+                "targetConductorModels": [],
+                "safeTargetRepresentation": "CONDUCTOR-MATERIAL with COPPER/ALUMINIUM options \u2014 requires operator approval at MEDIUM",
+                "safeExclusion": false,
+                "operatorExclusionNotRecommended": true,
+                "exclusionRisks": [
+                    "Loses conductor material on all 54 products",
+                    "May mislabel aluminium vs copper cables"
+                ],
+                "productsBlocked": 54
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "APPROVE_CONDUCTOR_MATERIAL",
+                    "label": "Approve CONDUCTOR-MATERIAL Definition with COPPER/ALUMINIUM options (MEDIUM evidence)",
+                    "readinessImpact": "unlocks 54 if cc also resolved"
+                },
+                {
+                    "id": "EXCLUDE_CT_NOT_RECOMMENDED",
+                    "label": "Exclude conductor type (NOT recommended)",
+                    "readinessImpact": "would lose material on all 54"
+                }
+            ]
+        },
+        {
+            "field": "walu",
+            "finding": {
+                "meaning": "Approximate aluminium component weight (distinct from total wght)",
+                "meaningEvidenceClass": "DIRECT_EVIDENCE",
+                "meaningConfidence": "HIGH",
+                "resolution": "PROVEN_CREATE_DEFINITION",
+                "unit": "LB_PER_1000FT",
+                "unitEvidenceClass": "STRONG_CORRELATION",
+                "unitConfidence": "MEDIUM",
+                "unitEvidence": [
+                    "Only populated when mt=1302 (Imperial)",
+                    "wght/walu mean ~0.91517 \u2014 component not total weight",
+                    "No lb/1000ft string in scanned repo",
+                    "Hypothesis LB_PER_1000FT \u2014 STRONG_CORRELATION not DIRECT_EVIDENCE"
+                ],
+                "targetDefinition": "APPROX-WEIGHT-ALU",
+                "targetUnit": "LB_PER_1000FT",
+                "unitResolution": "PROVEN_CREATE_UNIT",
+                "productsBlocked": 14
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "APPROVE_WEIGHT_DEF_AND_UNIT",
+                    "label": "Approve APPROX-WEIGHT-* Definition + LB_PER_1000FT unit (meaning HIGH, unit MEDIUM)",
+                    "readinessImpact": "unlocks 14 styles when cc+ct resolved"
+                }
+            ]
+        },
+        {
+            "field": "wbnz",
+            "finding": {
+                "meaning": "Approximate bronze component weight (distinct from total wght)",
+                "meaningEvidenceClass": "DIRECT_EVIDENCE",
+                "meaningConfidence": "HIGH",
+                "resolution": "PROVEN_CREATE_DEFINITION",
+                "unit": "LB_PER_1000FT",
+                "unitEvidenceClass": "STRONG_CORRELATION",
+                "unitConfidence": "MEDIUM",
+                "unitEvidence": [
+                    "Only populated when mt=1302 (Imperial)",
+                    "wght/walu mean ~0.91517 \u2014 component not total weight",
+                    "No lb/1000ft string in scanned repo",
+                    "Hypothesis LB_PER_1000FT \u2014 STRONG_CORRELATION not DIRECT_EVIDENCE"
+                ],
+                "targetDefinition": "APPROX-WEIGHT-BRONZE",
+                "targetUnit": "LB_PER_1000FT",
+                "unitResolution": "PROVEN_CREATE_UNIT",
+                "productsBlocked": 14
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "APPROVE_WEIGHT_DEF_AND_UNIT",
+                    "label": "Approve APPROX-WEIGHT-* Definition + LB_PER_1000FT unit (meaning HIGH, unit MEDIUM)",
+                    "readinessImpact": "unlocks 14 styles when cc+ct resolved"
+                }
+            ]
+        },
+        {
+            "field": "ins",
+            "finding": {
+                "meaning": "STYLE_SPECIFIC_LEGACY_OVERLOAD \u2014 not one global Definition",
+                "evidenceClass": "STRONG_CORRELATION",
+                "confidence": "MEDIUM",
+                "resolution": "EXPLICITLY_UNRESOLVED",
+                "perStyle": {
+                    "B1": {
+                        "ins": "2.000",
+                        "od_ins": "8.000",
+                        "cdia": "4.00",
+                        "computedThickness": "2.0000000",
+                        "probableMeaning": "small thickness decimal",
+                        "derivable": true,
+                        "resolution": "PROVEN_NOT_A_SPECIFICATION",
+                        "reason": "DERIVABLE_FROM_EXISTING_DIMENSIONS"
+                    },
+                    "KN": {
+                        "ins": "18.700",
+                        "od_ins": null,
+                        "cdia": "16.20",
+                        "computedThickness": null,
+                        "probableMeaning": "insulation OD-like mm",
+                        "derivable": false,
+                        "resolution": "EXPLICITLY_UNRESOLVED",
+                        "reason": "STYLE_SPECIFIC_LEGACY_OVERLOAD"
+                    },
+                    "NR": {
+                        "ins": "1.000",
+                        "od_ins": "4.200",
+                        "cdia": "1.50",
+                        "computedThickness": "1.3500000",
+                        "probableMeaning": "insulation thickness mm (derivable)",
+                        "derivable": false,
+                        "resolution": "EXPLICITLY_UNRESOLVED",
+                        "reason": "STYLE_SPECIFIC_LEGACY_OVERLOAD"
+                    },
+                    "NV": {
+                        "ins": "1.000",
+                        "od_ins": "3.600",
+                        "cdia": "1.50",
+                        "computedThickness": "1.0500000",
+                        "probableMeaning": "insulation thickness mm (derivable)",
+                        "derivable": true,
+                        "resolution": "PROVEN_NOT_A_SPECIFICATION",
+                        "reason": "DERIVABLE_FROM_EXISTING_DIMENSIONS"
+                    },
+                    "XN": {
+                        "ins": "5.400",
+                        "od_ins": null,
+                        "cdia": "4.00",
+                        "computedThickness": null,
+                        "probableMeaning": "insulation OD-like mm",
+                        "derivable": false,
+                        "resolution": "EXPLICITLY_UNRESOLVED",
+                        "reason": "STYLE_SPECIFIC_LEGACY_OVERLOAD"
+                    }
+                },
+                "scopedMappingRequired": true,
+                "productsBlocked": 5
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "STYLE_SPECIFIC_RESOLUTION",
+                    "label": "Per-style: NR/NV exclude as derivable; KN/XN/B1 map or review individually",
+                    "readinessImpact": "unlocks up to 5 styles when cc+ct resolved"
+                }
+            ]
+        },
+        {
+            "field": "Af",
+            "finding": {
+                "meaning": "Unknown electrical scalar \u2014 not proven ampacity",
+                "unit": null,
+                "evidenceClass": "DIRECT_EVIDENCE",
+                "confidence": "LOW",
+                "resolution": "EXPLICITLY_UNRESOLVED",
+                "directEvidence": "'Af' => $this->b1FieldFinding('Af', $b1, $labels, $presence),",
+                "b1Context": {
+                    "aggregate": {
+                        "rows_cnt": 11,
+                        "af_min": "1.4",
+                        "af_max": "34.3",
+                        "r_min": "0.105",
+                        "r_max": "2.452",
+                        "x50_min": "0.073",
+                        "x50_max": "0.106",
+                        "x60_min": "0.088",
+                        "x60_max": "0.127",
+                        "tension_min": "1.9",
+                        "tension_max": "50.5",
+                        "mt_min": 1301,
+                        "mt_max": 1301
+                    },
+                    "samples": [
+                        {
+                            "cable_style": "B1",
+                            "xa": "10",
+                            "mt": 1301,
+                            "Af": "1.4",
+                            "r": "2.452",
+                            "x50": "0.106",
+                            "x60": "0.127",
+                            "tension": "1.9",
+                            "od": "25.500",
+                            "cdia": "4.00",
+                            "wght": 913
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "120",
+                            "mt": 1301,
+                            "Af": "17.2",
+                            "r": "0.208",
+                            "x50": "0.077",
+                            "x60": "0.093",
+                            "tension": "25.7",
+                            "od": "48.500",
+                            "cdia": "13.90",
+                            "wght": 5145
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "150",
+                            "mt": 1301,
+                            "Af": "21.5",
+                            "r": "0.167",
+                            "x50": "0.076",
+                            "x60": "0.091",
+                            "tension": "30.4",
+                            "od": "51.200",
+                            "cdia": "15.10",
+                            "wght": 5968
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "16",
+                            "mt": 1301,
+                            "Af": "2.3",
+                            "r": "1.554",
+                            "x50": "0.099",
+                            "x60": "0.119",
+                            "tension": "5.1",
+                            "od": "26.700",
+                            "cdia": "5.00",
+                            "wght": 1097
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "185",
+                            "mt": 1301,
+                            "Af": "26.5",
+                            "r": "0.138",
+                            "x50": "0.075",
+                            "x60": "0.090",
+                            "tension": "38.3",
+                            "od": "56.000",
+                            "cdia": "16.90",
+                            "wght": 7074
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "240",
+                            "mt": 1301,
+                            "Af": "34.3",
+                            "r": "0.105",
+                            "x50": "0.073",
+                            "x60": "0.088",
+                            "tension": "50.5",
+                            "od": "60.500",
+                            "cdia": "18.90",
+                            "wght": 9054
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "25",
+                            "mt": 1301,
+                            "Af": "3.6",
+                            "r": "1.002",
+                            "x50": "0.093",
+                            "x60": "0.112",
+                            "tension": "6.9",
+                            "od": "29.500",
+                            "cdia": "6.20",
+                            "wght": 1450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "35",
+                            "mt": 1301,
+                            "Af": "5.0",
+                            "r": "0.712",
+                            "x50": "0.089",
+                            "x60": "0.107",
+                            "tension": "8.9",
+                            "od": "32.100",
+                            "cdia": "7.40",
+                            "wght": 1838
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "50",
+                            "mt": 1301,
+                            "Af": "7.2",
+                            "r": "0.496",
+                            "x50": "0.085",
+                            "x60": "0.102",
+                            "tension": "12.0",
+                            "od": "35.600",
+                            "cdia": "8.80",
+                            "wght": 2462
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "70",
+                            "mt": 1301,
+                            "Af": "10.0",
+                            "r": "0.350",
+                            "x50": "0.082",
+                            "x60": "0.098",
+                            "tension": "16.3",
+                            "od": "40.400",
+                            "cdia": "10.60",
+                            "wght": 3450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "95",
+                            "mt": 1301,
+                            "Af": "13.6",
+                            "r": "0.265",
+                            "x50": "0.079",
+                            "x60": "0.095",
+                            "tension": "20.3",
+                            "od": "44.200",
+                            "cdia": "12.30",
+                            "wght": 4056
+                        }
+                    ]
+                },
+                "safeToExclude": true,
+                "legacyUnresolvedExcludeCandidate": true,
+                "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+                "productsBlocked": 1
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "LEGACY_UNRESOLVED_EXCLUDE",
+                    "label": "Audited exclusion LEGACY_UNRESOLVED_EXCLUDE (B1-only obscure field)",
+                    "readinessImpact": "unlocks 1 style (B1) when other B1/ins blockers cleared"
+                }
+            ]
+        },
+        {
+            "field": "r",
+            "finding": {
+                "meaning": "Resistance hypothesis \u2014 unit unproven",
+                "unit": null,
+                "evidenceClass": "DIRECT_EVIDENCE",
+                "confidence": "LOW",
+                "resolution": "EXPLICITLY_UNRESOLVED",
+                "directEvidence": "'r' => $this->b1FieldFinding('r', $b1, $labels, $presence),",
+                "b1Context": {
+                    "aggregate": {
+                        "rows_cnt": 11,
+                        "af_min": "1.4",
+                        "af_max": "34.3",
+                        "r_min": "0.105",
+                        "r_max": "2.452",
+                        "x50_min": "0.073",
+                        "x50_max": "0.106",
+                        "x60_min": "0.088",
+                        "x60_max": "0.127",
+                        "tension_min": "1.9",
+                        "tension_max": "50.5",
+                        "mt_min": 1301,
+                        "mt_max": 1301
+                    },
+                    "samples": [
+                        {
+                            "cable_style": "B1",
+                            "xa": "10",
+                            "mt": 1301,
+                            "Af": "1.4",
+                            "r": "2.452",
+                            "x50": "0.106",
+                            "x60": "0.127",
+                            "tension": "1.9",
+                            "od": "25.500",
+                            "cdia": "4.00",
+                            "wght": 913
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "120",
+                            "mt": 1301,
+                            "Af": "17.2",
+                            "r": "0.208",
+                            "x50": "0.077",
+                            "x60": "0.093",
+                            "tension": "25.7",
+                            "od": "48.500",
+                            "cdia": "13.90",
+                            "wght": 5145
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "150",
+                            "mt": 1301,
+                            "Af": "21.5",
+                            "r": "0.167",
+                            "x50": "0.076",
+                            "x60": "0.091",
+                            "tension": "30.4",
+                            "od": "51.200",
+                            "cdia": "15.10",
+                            "wght": 5968
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "16",
+                            "mt": 1301,
+                            "Af": "2.3",
+                            "r": "1.554",
+                            "x50": "0.099",
+                            "x60": "0.119",
+                            "tension": "5.1",
+                            "od": "26.700",
+                            "cdia": "5.00",
+                            "wght": 1097
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "185",
+                            "mt": 1301,
+                            "Af": "26.5",
+                            "r": "0.138",
+                            "x50": "0.075",
+                            "x60": "0.090",
+                            "tension": "38.3",
+                            "od": "56.000",
+                            "cdia": "16.90",
+                            "wght": 7074
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "240",
+                            "mt": 1301,
+                            "Af": "34.3",
+                            "r": "0.105",
+                            "x50": "0.073",
+                            "x60": "0.088",
+                            "tension": "50.5",
+                            "od": "60.500",
+                            "cdia": "18.90",
+                            "wght": 9054
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "25",
+                            "mt": 1301,
+                            "Af": "3.6",
+                            "r": "1.002",
+                            "x50": "0.093",
+                            "x60": "0.112",
+                            "tension": "6.9",
+                            "od": "29.500",
+                            "cdia": "6.20",
+                            "wght": 1450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "35",
+                            "mt": 1301,
+                            "Af": "5.0",
+                            "r": "0.712",
+                            "x50": "0.089",
+                            "x60": "0.107",
+                            "tension": "8.9",
+                            "od": "32.100",
+                            "cdia": "7.40",
+                            "wght": 1838
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "50",
+                            "mt": 1301,
+                            "Af": "7.2",
+                            "r": "0.496",
+                            "x50": "0.085",
+                            "x60": "0.102",
+                            "tension": "12.0",
+                            "od": "35.600",
+                            "cdia": "8.80",
+                            "wght": 2462
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "70",
+                            "mt": 1301,
+                            "Af": "10.0",
+                            "r": "0.350",
+                            "x50": "0.082",
+                            "x60": "0.098",
+                            "tension": "16.3",
+                            "od": "40.400",
+                            "cdia": "10.60",
+                            "wght": 3450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "95",
+                            "mt": 1301,
+                            "Af": "13.6",
+                            "r": "0.265",
+                            "x50": "0.079",
+                            "x60": "0.095",
+                            "tension": "20.3",
+                            "od": "44.200",
+                            "cdia": "12.30",
+                            "wght": 4056
+                        }
+                    ]
+                },
+                "safeToExclude": true,
+                "legacyUnresolvedExcludeCandidate": true,
+                "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+                "productsBlocked": 1
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "LEGACY_UNRESOLVED_EXCLUDE",
+                    "label": "Audited exclusion LEGACY_UNRESOLVED_EXCLUDE (B1-only obscure field)",
+                    "readinessImpact": "unlocks 1 style (B1) when other B1/ins blockers cleared"
+                }
+            ]
+        },
+        {
+            "field": "x50",
+            "finding": {
+                "meaning": "Reactance at 50 Hz hypothesis",
+                "unit": null,
+                "evidenceClass": "DIRECT_EVIDENCE",
+                "confidence": "LOW",
+                "resolution": "EXPLICITLY_UNRESOLVED",
+                "directEvidence": "'x50' => $this->b1FieldFinding('x50', $b1, $labels, $presence),",
+                "b1Context": {
+                    "aggregate": {
+                        "rows_cnt": 11,
+                        "af_min": "1.4",
+                        "af_max": "34.3",
+                        "r_min": "0.105",
+                        "r_max": "2.452",
+                        "x50_min": "0.073",
+                        "x50_max": "0.106",
+                        "x60_min": "0.088",
+                        "x60_max": "0.127",
+                        "tension_min": "1.9",
+                        "tension_max": "50.5",
+                        "mt_min": 1301,
+                        "mt_max": 1301
+                    },
+                    "samples": [
+                        {
+                            "cable_style": "B1",
+                            "xa": "10",
+                            "mt": 1301,
+                            "Af": "1.4",
+                            "r": "2.452",
+                            "x50": "0.106",
+                            "x60": "0.127",
+                            "tension": "1.9",
+                            "od": "25.500",
+                            "cdia": "4.00",
+                            "wght": 913
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "120",
+                            "mt": 1301,
+                            "Af": "17.2",
+                            "r": "0.208",
+                            "x50": "0.077",
+                            "x60": "0.093",
+                            "tension": "25.7",
+                            "od": "48.500",
+                            "cdia": "13.90",
+                            "wght": 5145
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "150",
+                            "mt": 1301,
+                            "Af": "21.5",
+                            "r": "0.167",
+                            "x50": "0.076",
+                            "x60": "0.091",
+                            "tension": "30.4",
+                            "od": "51.200",
+                            "cdia": "15.10",
+                            "wght": 5968
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "16",
+                            "mt": 1301,
+                            "Af": "2.3",
+                            "r": "1.554",
+                            "x50": "0.099",
+                            "x60": "0.119",
+                            "tension": "5.1",
+                            "od": "26.700",
+                            "cdia": "5.00",
+                            "wght": 1097
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "185",
+                            "mt": 1301,
+                            "Af": "26.5",
+                            "r": "0.138",
+                            "x50": "0.075",
+                            "x60": "0.090",
+                            "tension": "38.3",
+                            "od": "56.000",
+                            "cdia": "16.90",
+                            "wght": 7074
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "240",
+                            "mt": 1301,
+                            "Af": "34.3",
+                            "r": "0.105",
+                            "x50": "0.073",
+                            "x60": "0.088",
+                            "tension": "50.5",
+                            "od": "60.500",
+                            "cdia": "18.90",
+                            "wght": 9054
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "25",
+                            "mt": 1301,
+                            "Af": "3.6",
+                            "r": "1.002",
+                            "x50": "0.093",
+                            "x60": "0.112",
+                            "tension": "6.9",
+                            "od": "29.500",
+                            "cdia": "6.20",
+                            "wght": 1450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "35",
+                            "mt": 1301,
+                            "Af": "5.0",
+                            "r": "0.712",
+                            "x50": "0.089",
+                            "x60": "0.107",
+                            "tension": "8.9",
+                            "od": "32.100",
+                            "cdia": "7.40",
+                            "wght": 1838
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "50",
+                            "mt": 1301,
+                            "Af": "7.2",
+                            "r": "0.496",
+                            "x50": "0.085",
+                            "x60": "0.102",
+                            "tension": "12.0",
+                            "od": "35.600",
+                            "cdia": "8.80",
+                            "wght": 2462
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "70",
+                            "mt": 1301,
+                            "Af": "10.0",
+                            "r": "0.350",
+                            "x50": "0.082",
+                            "x60": "0.098",
+                            "tension": "16.3",
+                            "od": "40.400",
+                            "cdia": "10.60",
+                            "wght": 3450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "95",
+                            "mt": 1301,
+                            "Af": "13.6",
+                            "r": "0.265",
+                            "x50": "0.079",
+                            "x60": "0.095",
+                            "tension": "20.3",
+                            "od": "44.200",
+                            "cdia": "12.30",
+                            "wght": 4056
+                        }
+                    ]
+                },
+                "safeToExclude": true,
+                "legacyUnresolvedExcludeCandidate": true,
+                "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+                "productsBlocked": 1
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "LEGACY_UNRESOLVED_EXCLUDE",
+                    "label": "Audited exclusion LEGACY_UNRESOLVED_EXCLUDE (B1-only obscure field)",
+                    "readinessImpact": "unlocks 1 style (B1) when other B1/ins blockers cleared"
+                }
+            ]
+        },
+        {
+            "field": "x60",
+            "finding": {
+                "meaning": "Reactance at 60 Hz hypothesis",
+                "unit": null,
+                "evidenceClass": "DIRECT_EVIDENCE",
+                "confidence": "LOW",
+                "resolution": "EXPLICITLY_UNRESOLVED",
+                "directEvidence": "'x60' => $this->b1FieldFinding('x60', $b1, $labels, $presence),",
+                "b1Context": {
+                    "aggregate": {
+                        "rows_cnt": 11,
+                        "af_min": "1.4",
+                        "af_max": "34.3",
+                        "r_min": "0.105",
+                        "r_max": "2.452",
+                        "x50_min": "0.073",
+                        "x50_max": "0.106",
+                        "x60_min": "0.088",
+                        "x60_max": "0.127",
+                        "tension_min": "1.9",
+                        "tension_max": "50.5",
+                        "mt_min": 1301,
+                        "mt_max": 1301
+                    },
+                    "samples": [
+                        {
+                            "cable_style": "B1",
+                            "xa": "10",
+                            "mt": 1301,
+                            "Af": "1.4",
+                            "r": "2.452",
+                            "x50": "0.106",
+                            "x60": "0.127",
+                            "tension": "1.9",
+                            "od": "25.500",
+                            "cdia": "4.00",
+                            "wght": 913
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "120",
+                            "mt": 1301,
+                            "Af": "17.2",
+                            "r": "0.208",
+                            "x50": "0.077",
+                            "x60": "0.093",
+                            "tension": "25.7",
+                            "od": "48.500",
+                            "cdia": "13.90",
+                            "wght": 5145
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "150",
+                            "mt": 1301,
+                            "Af": "21.5",
+                            "r": "0.167",
+                            "x50": "0.076",
+                            "x60": "0.091",
+                            "tension": "30.4",
+                            "od": "51.200",
+                            "cdia": "15.10",
+                            "wght": 5968
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "16",
+                            "mt": 1301,
+                            "Af": "2.3",
+                            "r": "1.554",
+                            "x50": "0.099",
+                            "x60": "0.119",
+                            "tension": "5.1",
+                            "od": "26.700",
+                            "cdia": "5.00",
+                            "wght": 1097
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "185",
+                            "mt": 1301,
+                            "Af": "26.5",
+                            "r": "0.138",
+                            "x50": "0.075",
+                            "x60": "0.090",
+                            "tension": "38.3",
+                            "od": "56.000",
+                            "cdia": "16.90",
+                            "wght": 7074
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "240",
+                            "mt": 1301,
+                            "Af": "34.3",
+                            "r": "0.105",
+                            "x50": "0.073",
+                            "x60": "0.088",
+                            "tension": "50.5",
+                            "od": "60.500",
+                            "cdia": "18.90",
+                            "wght": 9054
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "25",
+                            "mt": 1301,
+                            "Af": "3.6",
+                            "r": "1.002",
+                            "x50": "0.093",
+                            "x60": "0.112",
+                            "tension": "6.9",
+                            "od": "29.500",
+                            "cdia": "6.20",
+                            "wght": 1450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "35",
+                            "mt": 1301,
+                            "Af": "5.0",
+                            "r": "0.712",
+                            "x50": "0.089",
+                            "x60": "0.107",
+                            "tension": "8.9",
+                            "od": "32.100",
+                            "cdia": "7.40",
+                            "wght": 1838
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "50",
+                            "mt": 1301,
+                            "Af": "7.2",
+                            "r": "0.496",
+                            "x50": "0.085",
+                            "x60": "0.102",
+                            "tension": "12.0",
+                            "od": "35.600",
+                            "cdia": "8.80",
+                            "wght": 2462
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "70",
+                            "mt": 1301,
+                            "Af": "10.0",
+                            "r": "0.350",
+                            "x50": "0.082",
+                            "x60": "0.098",
+                            "tension": "16.3",
+                            "od": "40.400",
+                            "cdia": "10.60",
+                            "wght": 3450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "95",
+                            "mt": 1301,
+                            "Af": "13.6",
+                            "r": "0.265",
+                            "x50": "0.079",
+                            "x60": "0.095",
+                            "tension": "20.3",
+                            "od": "44.200",
+                            "cdia": "12.30",
+                            "wght": 4056
+                        }
+                    ]
+                },
+                "safeToExclude": true,
+                "legacyUnresolvedExcludeCandidate": true,
+                "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+                "productsBlocked": 1
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "LEGACY_UNRESOLVED_EXCLUDE",
+                    "label": "Audited exclusion LEGACY_UNRESOLVED_EXCLUDE (B1-only obscure field)",
+                    "readinessImpact": "unlocks 1 style (B1) when other B1/ins blockers cleared"
+                }
+            ]
+        },
+        {
+            "field": "tension",
+            "finding": {
+                "meaning": "Mechanical/pulling tension hypothesis",
+                "unit": null,
+                "evidenceClass": "DIRECT_EVIDENCE",
+                "confidence": "LOW",
+                "resolution": "EXPLICITLY_UNRESOLVED",
+                "directEvidence": "'tension' => $this->b1FieldFinding('tension', $b1, $labels, $presence),",
+                "b1Context": {
+                    "aggregate": {
+                        "rows_cnt": 11,
+                        "af_min": "1.4",
+                        "af_max": "34.3",
+                        "r_min": "0.105",
+                        "r_max": "2.452",
+                        "x50_min": "0.073",
+                        "x50_max": "0.106",
+                        "x60_min": "0.088",
+                        "x60_max": "0.127",
+                        "tension_min": "1.9",
+                        "tension_max": "50.5",
+                        "mt_min": 1301,
+                        "mt_max": 1301
+                    },
+                    "samples": [
+                        {
+                            "cable_style": "B1",
+                            "xa": "10",
+                            "mt": 1301,
+                            "Af": "1.4",
+                            "r": "2.452",
+                            "x50": "0.106",
+                            "x60": "0.127",
+                            "tension": "1.9",
+                            "od": "25.500",
+                            "cdia": "4.00",
+                            "wght": 913
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "120",
+                            "mt": 1301,
+                            "Af": "17.2",
+                            "r": "0.208",
+                            "x50": "0.077",
+                            "x60": "0.093",
+                            "tension": "25.7",
+                            "od": "48.500",
+                            "cdia": "13.90",
+                            "wght": 5145
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "150",
+                            "mt": 1301,
+                            "Af": "21.5",
+                            "r": "0.167",
+                            "x50": "0.076",
+                            "x60": "0.091",
+                            "tension": "30.4",
+                            "od": "51.200",
+                            "cdia": "15.10",
+                            "wght": 5968
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "16",
+                            "mt": 1301,
+                            "Af": "2.3",
+                            "r": "1.554",
+                            "x50": "0.099",
+                            "x60": "0.119",
+                            "tension": "5.1",
+                            "od": "26.700",
+                            "cdia": "5.00",
+                            "wght": 1097
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "185",
+                            "mt": 1301,
+                            "Af": "26.5",
+                            "r": "0.138",
+                            "x50": "0.075",
+                            "x60": "0.090",
+                            "tension": "38.3",
+                            "od": "56.000",
+                            "cdia": "16.90",
+                            "wght": 7074
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "240",
+                            "mt": 1301,
+                            "Af": "34.3",
+                            "r": "0.105",
+                            "x50": "0.073",
+                            "x60": "0.088",
+                            "tension": "50.5",
+                            "od": "60.500",
+                            "cdia": "18.90",
+                            "wght": 9054
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "25",
+                            "mt": 1301,
+                            "Af": "3.6",
+                            "r": "1.002",
+                            "x50": "0.093",
+                            "x60": "0.112",
+                            "tension": "6.9",
+                            "od": "29.500",
+                            "cdia": "6.20",
+                            "wght": 1450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "35",
+                            "mt": 1301,
+                            "Af": "5.0",
+                            "r": "0.712",
+                            "x50": "0.089",
+                            "x60": "0.107",
+                            "tension": "8.9",
+                            "od": "32.100",
+                            "cdia": "7.40",
+                            "wght": 1838
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "50",
+                            "mt": 1301,
+                            "Af": "7.2",
+                            "r": "0.496",
+                            "x50": "0.085",
+                            "x60": "0.102",
+                            "tension": "12.0",
+                            "od": "35.600",
+                            "cdia": "8.80",
+                            "wght": 2462
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "70",
+                            "mt": 1301,
+                            "Af": "10.0",
+                            "r": "0.350",
+                            "x50": "0.082",
+                            "x60": "0.098",
+                            "tension": "16.3",
+                            "od": "40.400",
+                            "cdia": "10.60",
+                            "wght": 3450
+                        },
+                        {
+                            "cable_style": "B1",
+                            "xa": "95",
+                            "mt": 1301,
+                            "Af": "13.6",
+                            "r": "0.265",
+                            "x50": "0.079",
+                            "x60": "0.095",
+                            "tension": "20.3",
+                            "od": "44.200",
+                            "cdia": "12.30",
+                            "wght": 4056
+                        }
+                    ]
+                },
+                "safeToExclude": true,
+                "legacyUnresolvedExcludeCandidate": true,
+                "auditNote": "B1-only; raw values preserved in legacy extract; customer experience impact low if excluded",
+                "productsBlocked": 1
+            },
+            "options": [
+                {
+                    "id": "KEEP_REVIEW",
+                    "label": "Keep REVIEW \u2014 no mapping change",
+                    "readinessImpact": "no change"
+                },
+                {
+                    "id": "LEGACY_UNRESOLVED_EXCLUDE",
+                    "label": "Audited exclusion LEGACY_UNRESOLVED_EXCLUDE (B1-only obscure field)",
+                    "readinessImpact": "unlocks 1 style (B1) when other B1/ins blockers cleared"
+                }
+            ]
+        }
+    ],
+    "readinessOptions": {
+        "current": {
+            "READY": 0,
+            "REVIEW": 54,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "ct": 54,
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            }
+        },
+        "ccCtResolvedMedium": {
+            "READY": 35,
+            "REVIEW": 19,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 35,
+            "stillBlockingConcepts": {
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            }
+        },
+        "waluWbnzApproved": {
+            "READY": 0,
+            "REVIEW": 54,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "ct": 54,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            }
+        },
+        "insStyleResolved": {
+            "READY": 0,
+            "REVIEW": 54,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "ct": 54,
+                "walu": 14,
+                "wbnz": 14,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            }
+        },
+        "b1Excluded": {
+            "READY": 0,
+            "REVIEW": 54,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "ct": 54,
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5
+            }
+        },
+        "minimumSafeClosure": {
+            "READY": 54,
+            "REVIEW": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 54,
+            "stillBlockingConcepts": []
+        },
+        "pathAAllProven": {
+            "READY": 53,
+            "REVIEW": 1,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 53,
+            "stillBlockingConcepts": {
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            }
+        },
+        "perOperatorOption": {
+            "cc_APPROVE_CORE_CONFIGURATION": {
+                "READY": 0,
+                "REVIEW": 54,
+                "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+                "stillBlockingConcepts": {
+                    "cc": 54,
+                    "walu": 14,
+                    "wbnz": 14,
+                    "ins": 5,
+                    "Af": 1,
+                    "r": 1,
+                    "x50": 1,
+                    "x60": 1,
+                    "tension": 1
+                }
+            },
+            "ct_APPROVE_CONDUCTOR_MATERIAL": {
+                "READY": 0,
+                "REVIEW": 54,
+                "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+                "stillBlockingConcepts": {
+                    "ct": 54,
+                    "walu": 14,
+                    "wbnz": 14,
+                    "ins": 5,
+                    "Af": 1,
+                    "r": 1,
+                    "x50": 1,
+                    "x60": 1,
+                    "tension": 1
+                }
+            },
+            "ccCtBothMediumApproved": {
+                "READY": 35,
+                "REVIEW": 19,
+                "CABLE_SPEC_FIELD_MAPPING_READY": 35,
+                "stillBlockingConcepts": {
+                    "walu": 14,
+                    "wbnz": 14,
+                    "ins": 5,
+                    "Af": 1,
+                    "r": 1,
+                    "x50": 1,
+                    "x60": 1,
+                    "tension": 1
+                }
+            },
+            "waluWbnzPlusCcCt": {
+                "READY": 49,
+                "REVIEW": 5,
+                "CABLE_SPEC_FIELD_MAPPING_READY": 49,
+                "stillBlockingConcepts": {
+                    "ins": 5,
+                    "Af": 1,
+                    "r": 1,
+                    "x50": 1,
+                    "x60": 1,
+                    "tension": 1
+                }
+            },
+            "fullClosureSet": {
+                "READY": 54,
+                "REVIEW": 0,
+                "CABLE_SPEC_FIELD_MAPPING_READY": 54,
+                "stillBlockingConcepts": []
+            }
+        }
+    },
+    "scopedMappingSupport": {
+        "requiredForIns": true,
+        "note": "ins requires field+style scoped decisions; cc=a requires VUF exception handling",
+        "architectureChangeRequired": false
+    },
+    "closureRecommendation": {
+        "recommendedPath": "PATH_C_MIGRATION_REMAINS_BLOCKED",
+        "canComplete": true,
+        "rationale": "cc and/or ct lack HIGH-confidence proof \u2014 operator must accept MEDIUM mappings or remain blocked",
+        "ccCtBlockAll54": true
+    },
+    "minimumSafeClosureSet": {
+        "requiredDecisions": {
+            "cc": "Must map or audited exclude \u2014 exclusion NOT recommended",
+            "ct": "Must map or audited exclude \u2014 exclusion NOT recommended",
+            "walu": "PROVEN_CREATE_DEFINITION + PROVEN_CREATE_UNIT (operator approve)",
+            "wbnz": "PROVEN_CREATE_DEFINITION + PROVEN_CREATE_UNIT (operator approve)",
+            "ins": "Per-style resolution or exclusion",
+            "B1 fields": "LEGACY_UNRESOLVED_EXCLUDE candidate per field"
+        },
+        "forCableSpecReady54": "Resolve cc+ct+walu+wbnz+ins+B1 blockers for affected styles",
+        "ccCtOnlyUnlocks": 35,
+        "full54Unlocks": 54
+    },
+    "semanticGuards": {
+        "ccCtExclusionNotRecommended": true,
+        "noMediumToHighUpgrade": true,
+        "noApplyInD51": true
+    },
+    "investigationEvidenceMode": "LIVE_SELECT_ONLY",
+    "artifacts": [
+        "cable-spec-d5-1-cc-final.json",
+        "cable-spec-d5-1-ct-final.json",
+        "cable-spec-d5-1-weight-unit-final.json",
+        "cable-spec-d5-1-ins-final.json",
+        "cable-spec-d5-1-b1-final.json",
+        "cable-spec-d5-1-operator-options.json",
+        "cable-spec-d5-1-readiness-options.json",
+        "cable-spec-d5-1-final-package.json"
+    ],
+    "generatedAtUtc": "2026-08-24T00:51:20+00:00"
+}

@@ -1,0 +1,234 @@
+{
+    "generatedAtUtc": "2026-08-20T21:46:48Z",
+    "mode": "apply",
+    "server": "tricab-mel",
+    "database": "tc",
+    "environment": "NON-PRODUCTION",
+    "scopes": [
+        "specification-units",
+        "accessories-family",
+        "migration-spec-field-schema"
+    ],
+    "plan": {
+        "scopes": [
+            "specification-units",
+            "accessories-family",
+            "migration-spec-field-schema"
+        ],
+        "operations": [
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "product.SpecificationUnits",
+                "detail": "already present"
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:M",
+                "detail": "already exists",
+                "unit": {
+                    "code": "M",
+                    "name": "Metre",
+                    "symbol": "m",
+                    "meaning": "metre (pricing default + length)",
+                    "displayOrder": 10
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:EA",
+                "detail": "already exists",
+                "unit": {
+                    "code": "EA",
+                    "name": "Each",
+                    "symbol": "ea",
+                    "meaning": "each (pricing)",
+                    "displayOrder": 20
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:FT",
+                "detail": "already exists",
+                "unit": {
+                    "code": "FT",
+                    "name": "Foot",
+                    "symbol": "ft",
+                    "meaning": "foot (pricing US display)",
+                    "displayOrder": 30
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:PK",
+                "detail": "already exists",
+                "unit": {
+                    "code": "PK",
+                    "name": "Pack",
+                    "symbol": "pk",
+                    "meaning": "pack (pricing)",
+                    "displayOrder": 40
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:MM",
+                "detail": "already exists",
+                "unit": {
+                    "code": "MM",
+                    "name": "Millimetre",
+                    "symbol": "mm",
+                    "meaning": "millimetre (spec length)",
+                    "displayOrder": 50
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:MM2",
+                "detail": "already exists",
+                "unit": {
+                    "code": "MM2",
+                    "name": "Square millimetre",
+                    "symbol": "mm\u00b2",
+                    "meaning": "square millimetre (cross-section)",
+                    "displayOrder": 60
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:KG",
+                "detail": "already exists",
+                "unit": {
+                    "code": "KG",
+                    "name": "Kilogram",
+                    "symbol": "kg",
+                    "meaning": "kilogram",
+                    "displayOrder": 70
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:KG_PER_KM",
+                "detail": "already exists",
+                "unit": {
+                    "code": "KG_PER_KM",
+                    "name": "Kilogram per km",
+                    "symbol": "kg/km",
+                    "meaning": "kilogram per kilometre",
+                    "displayOrder": 80
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:A",
+                "detail": "already exists",
+                "unit": {
+                    "code": "A",
+                    "name": "Ampere",
+                    "symbol": "A",
+                    "meaning": "ampere",
+                    "displayOrder": 90
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:V",
+                "detail": "already exists",
+                "unit": {
+                    "code": "V",
+                    "name": "Volt",
+                    "symbol": "V",
+                    "meaning": "volt",
+                    "displayOrder": 100
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "specification-units",
+                "action": "SKIP",
+                "object": "SpecificationUnit:C",
+                "detail": "already exists",
+                "unit": {
+                    "code": "C",
+                    "name": "Degree Celsius",
+                    "symbol": "\u00b0C",
+                    "meaning": "degree Celsius",
+                    "displayOrder": 110
+                },
+                "alreadyExists": true
+            },
+            {
+                "scope": "accessories-family",
+                "action": "SKIP",
+                "object": "ProductFamily:ACCESSORIES",
+                "detail": "MAP_EXISTING",
+                "family": {
+                    "code": "ACCESSORIES",
+                    "name": "Accessories",
+                    "conflict": "same code exists"
+                }
+            },
+            {
+                "scope": "migration-spec-field-schema",
+                "action": "SKIP",
+                "object": "migration.SpecificationFieldMappings.LegacyStyleCode",
+                "detail": "already present"
+            },
+            {
+                "scope": "migration-spec-field-schema",
+                "action": "SKIP",
+                "object": "UQ_migration_SpecificationFieldMappings_SourceStyle",
+                "detail": "already present"
+            }
+        ],
+        "counts": {
+            "CREATE_TABLE": 0,
+            "ALTER_TABLE": 0,
+            "INSERT": 0,
+            "UPDATE": 0,
+            "SKIP": 15,
+            "CONFLICT": 0,
+            "DROP_CONSTRAINT": 0,
+            "CREATE_INDEX": 0
+        },
+        "forbiddenGuarantees": {
+            "dvMappingRecordInserts": 0,
+            "categoryCreates": 0,
+            "seriesCreates": 0,
+            "definitionCreates": 0,
+            "optionAliasCreates": 0,
+            "productWrites": 0,
+            "variantWrites": 0,
+            "priceWrites": 0,
+            "mediaWrites": 0,
+            "legacyWrites": 0
+        }
+    },
+    "countsBefore": {
+        "products": 118,
+        "variants": 4178,
+        "catalogueNodes": 97,
+        "productPrices": 0,
+        "productVariantPrices": 0
+    },
+    "legacyWrites": 0
+}

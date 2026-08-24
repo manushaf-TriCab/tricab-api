@@ -186,14 +186,20 @@ final class AzureSqlSpecificationDefinitionAdmin
 
     public function unitUsage(string $publicId): SpecificationUsage
     {
-        $unit = $this->findUnit($publicId, true);
-        $symbol = $unit?->symbol;
+        // Load symbol directly — do not call findUnit/hydrateUnit (infinite recursion).
+        $symbolRows = $this->connection->fetchAll(
+            'SELECT TOP 1 [Symbol] AS [Symbol]
+             FROM [product].[SpecificationUnits]
+             WHERE [PublicId] = :publicId',
+            [':publicId' => $publicId],
+        );
+        $symbol = AzureSqlValueMapper::stringValue($symbolRows[0]['Symbol'] ?? '');
         $rows = $this->connection->fetchAll(
             'SELECT COUNT(1) AS [Cnt]
              FROM [product].[SpecificationDefinitions] d
              WHERE d.[DeletedAtUtc] IS NULL
                AND (d.[Unit] = :symbol)',
-            [':symbol' => $symbol ?? ''],
+            [':symbol' => $symbol],
         );
 
         return new SpecificationUsage(
@@ -324,7 +330,7 @@ SQL;
              VALUES
                 (:code, :name, :description, :groupId, :dataTypeCode, :scopeCode, :unit,
                  :displayOrder, :isRequired, :isFilterable, :isSearchable, :isComparable, :minimumValue, :maximumValue,
-                 :decimalPrecision, :validationRulesJson, :isActive, :actor, :actor)',
+                 :decimalPrecision, :validationRulesJson, :isActive, :createdBy, :updatedBy)',
             [
                 ':code' => $data['code'],
                 ':name' => $data['name'],
@@ -343,7 +349,8 @@ SQL;
                 ':decimalPrecision' => $data['decimalPrecision'] ?? null,
                 ':validationRulesJson' => $data['validationRulesJson'] ?? null,
                 ':isActive' => ($data['isActive'] ?? true) ? 1 : 0,
-                ':actor' => $actorUserId->toInt(),
+                ':createdBy' => $actorUserId->toInt(),
+                ':updatedBy' => $actorUserId->toInt(),
             ],
         );
         $publicId = AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? '');
@@ -565,7 +572,7 @@ SQL;
             'INSERT INTO [product].[SpecificationOptions]
                 ([SpecificationDefinitionId], [OptionCode], [OptionLabel], [OptionValue], [DisplayOrder], [IsActive], [CreatedByUserId], [UpdatedByUserId])
              OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
-             VALUES (:definitionId, :code, :name, :value, :displayOrder, :isActive, :actor, :actor)',
+             VALUES (:definitionId, :code, :name, :value, :displayOrder, :isActive, :createdBy, :updatedBy)',
             [
                 ':definitionId' => $definitionId,
                 ':code' => $data['code'],
@@ -573,7 +580,8 @@ SQL;
                 ':value' => $data['value'] ?? null,
                 ':displayOrder' => $data['displayOrder'] ?? 0,
                 ':isActive' => ($data['isActive'] ?? true) ? 1 : 0,
-                ':actor' => $actorUserId->toInt(),
+                ':createdBy' => $actorUserId->toInt(),
+                ':updatedBy' => $actorUserId->toInt(),
             ],
         );
         $publicId = AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? '');
@@ -990,13 +998,22 @@ SQL;
     private function hydrateUnit(array $row): SpecificationUnitRecord
     {
         $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
-        $usage = $this->unitUsage($publicId);
+        $symbol = AzureSqlValueMapper::stringValue($row['Symbol'] ?? '');
+        // Count usage from the already-loaded symbol to avoid re-fetch / recursion.
+        $usageRows = $this->connection->fetchAll(
+            'SELECT COUNT(1) AS [Cnt]
+             FROM [product].[SpecificationDefinitions] d
+             WHERE d.[DeletedAtUtc] IS NULL
+               AND (d.[Unit] = :symbol)',
+            [':symbol' => $symbol],
+        );
+        $definitionCount = AzureSqlValueMapper::intValue($usageRows[0]['Cnt'] ?? 0);
 
         return new SpecificationUnitRecord(
             publicId: $publicId,
             code: AzureSqlValueMapper::stringValue($row['Code'] ?? ''),
             name: AzureSqlValueMapper::stringValue($row['Name'] ?? ''),
-            symbol: AzureSqlValueMapper::stringValue($row['Symbol'] ?? ''),
+            symbol: $symbol,
             description: AzureSqlValueMapper::nullableString($row['Description'] ?? null),
             displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
             isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
@@ -1004,7 +1021,7 @@ SQL;
             rowVersion: ProductRowVersionMapper::toToken($row['RowVersion'] ?? null)->toBase64(),
             createdAtUtc: AzureSqlValueMapper::nullableString($row['CreatedAtUtc'] ?? null),
             updatedAtUtc: AzureSqlValueMapper::nullableString($row['UpdatedAtUtc'] ?? null),
-            definitionCount: $usage->definitionCount,
+            definitionCount: $definitionCount,
         );
     }
 

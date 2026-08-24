@@ -1,0 +1,89 @@
+{
+    "currentTarget": {
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "note": "No D.2 decisions applied to DB \u2014 target readiness unchanged."
+    },
+    "projectedAfterApprovedDecisionsApplied": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "tension": 1,
+            "x50": 1,
+            "x60": 1
+        },
+        "note": "Product READY iff no remaining REVIEW blockers for that product. cc+ct keep READY at 0 while REVIEW. SPEC_FIELD stays accessory baseline 27 until cables are included after apply."
+    },
+    "blockerConceptSummary": [
+        {
+            "concept": "cc",
+            "productsBlocked": 54,
+            "confidence": "MEDIUM",
+            "reason": "UNKNOWN_SEMANTICS"
+        },
+        {
+            "concept": "ct",
+            "productsBlocked": 54,
+            "confidence": "MEDIUM",
+            "reason": "UNKNOWN_SEMANTICS"
+        },
+        {
+            "concept": "walu",
+            "productsBlocked": 14,
+            "confidence": "MEDIUM",
+            "reason": "UNIT_AMBIGUITY"
+        },
+        {
+            "concept": "wbnz",
+            "productsBlocked": 14,
+            "confidence": "MEDIUM",
+            "reason": "UNIT_AMBIGUITY"
+        },
+        {
+            "concept": "ins",
+            "productsBlocked": 5,
+            "confidence": "MEDIUM",
+            "reason": "TYPE_AMBIGUITY"
+        },
+        {
+            "concept": "Af",
+            "productsBlocked": 1,
+            "confidence": "LOW",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        },
+        {
+            "concept": "r",
+            "productsBlocked": 1,
+            "confidence": "MEDIUM",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        },
+        {
+            "concept": "tension",
+            "productsBlocked": 1,
+            "confidence": "MEDIUM",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        },
+        {
+            "concept": "x50",
+            "productsBlocked": 1,
+            "confidence": "MEDIUM",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        },
+        {
+            "concept": "x60",
+            "productsBlocked": 1,
+            "confidence": "MEDIUM",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "style_code": "F12",
+    "wordpress": {
+        "wp_posts": "POSSIBLE",
+        "postmeta_acf": "POSSIBLE",
+        "taxonomy": "POSSIBLE",
+        "media_references": "POSSIBLE",
+        "document_references": "POSSIBLE"
+    },
+    "tcMysql": {
+        "tpro": "EXPECTED",
+        "tpro_ext": "POSSIBLE",
+        "accessory_specs": "CONFIRMED",
+        "descript_spec_labels": "POSSIBLE"
+    },
+    "filesystem": {
+        "wp-content/uploads": "POSSIBLE",
+        "thumbs": "POSSIBLE",
+        "access-topinfo": "POSSIBLE"
+    },
+    "readOnly": true
+}

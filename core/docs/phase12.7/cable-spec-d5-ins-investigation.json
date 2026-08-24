@@ -1,0 +1,245 @@
+{
+    "insByStyle": [
+        {
+            "style": "B1",
+            "rows_cnt": 11,
+            "ins_min": "2.000",
+            "ins_max": "2.000",
+            "od_ins_min": "8.000",
+            "od_ins_max": "23.000",
+            "cdia_min": "4.00",
+            "cdia_max": "18.90"
+        },
+        {
+            "style": "KN",
+            "rows_cnt": 13,
+            "ins_min": "9.200",
+            "ins_max": "42.800",
+            "od_ins_min": null,
+            "od_ins_max": null,
+            "cdia_min": "7.40",
+            "cdia_max": "37.90"
+        },
+        {
+            "style": "NR",
+            "rows_cnt": 66,
+            "ins_min": "1.000",
+            "ins_max": "2.200",
+            "od_ins_min": "4.200",
+            "od_ins_max": "24.100",
+            "cdia_min": "1.50",
+            "cdia_max": "18.90"
+        },
+        {
+            "style": "NV",
+            "rows_cnt": 71,
+            "ins_min": "1.000",
+            "ins_max": "2.200",
+            "od_ins_min": "3.600",
+            "od_ins_max": "23.400",
+            "cdia_min": "1.50",
+            "cdia_max": "18.90"
+        },
+        {
+            "style": "XN",
+            "rows_cnt": 29,
+            "ins_min": "4.400",
+            "ins_max": "42.800",
+            "od_ins_min": null,
+            "od_ins_max": null,
+            "cdia_min": "3.00",
+            "cdia_max": "37.90"
+        }
+    ],
+    "insDimensionalCheck": {
+        "samples": [
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "4.500",
+                "cdia": "2.50",
+                "implied_thickness": "1.0000000",
+                "thickness_delta": "0.0000000"
+            },
+            {
+                "cable_style": "B1",
+                "ins": "2.000",
+                "od_ins": "19.100",
+                "cdia": "15.10",
+                "implied_thickness": "2.0000000",
+                "thickness_delta": "0.0000000"
+            },
+            {
+                "cable_style": "B1",
+                "ins": "2.000",
+                "od_ins": "9.000",
+                "cdia": "5.00",
+                "implied_thickness": "2.0000000",
+                "thickness_delta": "0.0000000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "4.500",
+                "cdia": "2.50",
+                "implied_thickness": "1.0000000",
+                "thickness_delta": "0.0000000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "4.500",
+                "cdia": "2.50",
+                "implied_thickness": "1.0000000",
+                "thickness_delta": "0.0000000"
+            },
+            {
+                "cable_style": "B1",
+                "ins": "2.000",
+                "od_ins": "11.400",
+                "cdia": "7.40",
+                "implied_thickness": "2.0000000",
+                "thickness_delta": "0.0000000"
+            },
+            {
+                "cable_style": "B1",
+                "ins": "2.000",
+                "od_ins": "8.000",
+                "cdia": "4.00",
+                "implied_thickness": "2.0000000",
+                "thickness_delta": "0.0000000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "4.500",
+                "cdia": "2.50",
+                "implied_thickness": "1.0000000",
+                "thickness_delta": "0.0000000"
+            },
+            {
+                "cable_style": "B1",
+                "ins": "2.000",
+                "od_ins": "16.400",
+                "cdia": "12.30",
+                "implied_thickness": "2.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "4.000",
+                "cdia": "1.90",
+                "implied_thickness": "1.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.200",
+                "od_ins": "8.700",
+                "cdia": "6.20",
+                "implied_thickness": "1.2500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "6.100",
+                "cdia": "4.00",
+                "implied_thickness": "1.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "3.600",
+                "cdia": "1.50",
+                "implied_thickness": "1.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "5.100",
+                "cdia": "3.00",
+                "implied_thickness": "1.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "3.600",
+                "cdia": "1.50",
+                "implied_thickness": "1.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "NV",
+                "ins": "1.000",
+                "od_ins": "4.000",
+                "cdia": "1.90",
+                "implied_thickness": "1.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "B1",
+                "ins": "2.000",
+                "od_ins": "12.900",
+                "cdia": "8.80",
+                "implied_thickness": "2.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "B1",
+                "ins": "2.000",
+                "od_ins": "10.300",
+                "cdia": "6.20",
+                "implied_thickness": "2.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "B1",
+                "ins": "2.000",
+                "od_ins": "23.000",
+                "cdia": "18.90",
+                "implied_thickness": "2.0500000",
+                "thickness_delta": "0.0500000"
+            },
+            {
+                "cable_style": "B1",
+                "ins": "2.000",
+                "od_ins": "21.000",
+                "cdia": "16.90",
+                "implied_thickness": "2.0500000",
+                "thickness_delta": "0.0500000"
+            }
+        ],
+        "matchesThicknessFormula": 20,
+        "totalWithCdiaOdIns": 20,
+        "note": "ins \u2248 (od_ins - cdia)/2 \u2014 supporting evidence only; TYPE_AMBIGUITY if styles disagree"
+    },
+    "proposal": {
+        "legacyField": "ins",
+        "inferredMeaning": "Insulation dimension \u2014 thickness vs OD ambiguity across styles",
+        "decision": "REVIEW",
+        "targetDefinition": null,
+        "targetUnit": "MM (if thickness) or MM (if OD-like)",
+        "targetOptions": null,
+        "confidence": "MEDIUM",
+        "evidence": [
+            "NR/NV thickness-like; KN/XN OD-like",
+            "Dimensional check: 20/20 rows match ins\u2248(od_ins-cdia)/2",
+            "TYPE_AMBIGUITY \u2014 cannot approve single Definition without style-specific rules."
+        ],
+        "stylesAffected": 5,
+        "styleSamples": [
+            "B1",
+            "KN",
+            "NR",
+            "NV",
+            "XN"
+        ],
+        "rowsAffected": null,
+        "productsBlocked": 5
+    }
+}

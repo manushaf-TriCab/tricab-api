@@ -34,14 +34,17 @@ final class CompareLegacyBaseCostAction
             if ($variantPublicId === '') {
                 throw new \InvalidArgumentException('variantPublicId is required.');
             }
-            $dbco = (int) ($query['legacyDebtorCompanyCode'] ?? 2507);
+            $priceListPublicId = is_string($query['priceListPublicId'] ?? null) ? $query['priceListPublicId'] : '';
+            if ($priceListPublicId === '') {
+                throw new \InvalidArgumentException('priceListPublicId is required.');
+            }
             $actor = AdminActorFactory::fromRequest($request);
 
             $comparison = $this->compare->execute($actor, new CompareLegacyBaseCostCommand(
                 productPublicId: $productPublicId,
                 variantPublicId: $variantPublicId,
-                legacyDebtorCompanyCode: $dbco,
-                priceListPublicId: is_string($query['priceListPublicId'] ?? null) ? $query['priceListPublicId'] : null,
+                legacyDebtorCompanyCode: null,
+                priceListPublicId: $priceListPublicId,
             ));
 
             return $this->responder->success(ProductManagementDtoSerializer::legacyBaseCostComparison($comparison));

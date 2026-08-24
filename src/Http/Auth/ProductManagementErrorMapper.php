@@ -36,7 +36,13 @@ use TriCab\Core\Product\Application\Exception\ProductFileUploadException;
 use TriCab\Core\Product\Application\Exception\ProductMediaNotFound;
 use TriCab\Core\Product\Application\Exception\OverlappingBaseCostRecord;
 use TriCab\Core\Product\Application\Exception\ProductPricingConcurrencyConflict;
-use TriCab\Core\Product\Application\Exception\DuplicateProductClassificationCode;
+use TriCab\Core\Product\Application\Exception\DuplicateLegacyPriceContext;
+use TriCab\Core\Product\Application\Exception\DuplicatePriceListCode;
+use TriCab\Core\Product\Application\Exception\InvalidPricingUnit;
+use TriCab\Core\Product\Application\Exception\InvalidPriceListCurrency;
+use TriCab\Core\Product\Application\Exception\PriceListConcurrencyConflict;
+use TriCab\Core\Product\Application\Exception\PriceListInUse;
+use TriCab\Core\Product\Application\Exception\PriceListNotFound;
 use TriCab\Core\Product\Application\Exception\ProductClassificationConcurrencyConflict;
 use TriCab\Core\Product\Application\Exception\ProductClassificationInUse;
 use TriCab\Core\Product\Application\Exception\ProductClassificationNotFound;
@@ -141,6 +147,34 @@ final class ProductManagementErrorMapper
 
         if ($exception instanceof ProductClassificationInUse) {
             return $this->responder->error('PRODUCT_CLASSIFICATION_IN_USE', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof PriceListNotFound) {
+            return $this->responder->error('PRICE_LIST_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof PriceListConcurrencyConflict) {
+            return $this->responder->error('PRICE_LIST_CONCURRENCY_CONFLICT', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof DuplicatePriceListCode) {
+            return $this->responder->error('DUPLICATE_PRICE_LIST_CODE', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof DuplicateLegacyPriceContext) {
+            return $this->responder->error('DUPLICATE_LEGACY_PRICE_CONTEXT', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof PriceListInUse) {
+            return $this->responder->error('PRICE_LIST_IN_USE', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof InvalidPriceListCurrency) {
+            return $this->responder->error('INVALID_PRICE_LIST_CURRENCY', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof InvalidPricingUnit) {
+            return $this->responder->error('INVALID_PRICING_UNIT', $exception->getMessage(), 422);
         }
 
         if ($exception instanceof CatalogueNotFound) {

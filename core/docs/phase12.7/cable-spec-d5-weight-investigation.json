@@ -1,0 +1,329 @@
+{
+    "waluWbnzUnitAnalysis": {
+        "imperialRatioSamples": [
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 442,
+                "walu": 478,
+                "wbnz": 560,
+                "wght_per_walu": "0.9247"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 523,
+                "walu": 561,
+                "wbnz": 647,
+                "wght_per_walu": "0.9323"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 104,
+                "walu": 124,
+                "wbnz": 171,
+                "wght_per_walu": "0.8387"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 364,
+                "walu": 397,
+                "wbnz": 472,
+                "wght_per_walu": "0.9169"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 626,
+                "walu": 666,
+                "wbnz": 759,
+                "wght_per_walu": "0.9399"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 1152,
+                "walu": 1206,
+                "wbnz": 1329,
+                "wght_per_walu": "0.9552"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 750,
+                "walu": 793,
+                "wbnz": 891,
+                "wght_per_walu": "0.9458"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 1333,
+                "walu": 1388,
+                "wbnz": 1516,
+                "wght_per_walu": "0.9604"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 1537,
+                "walu": 1595,
+                "wbnz": 1729,
+                "wght_per_walu": "0.9636"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 251,
+                "walu": 279,
+                "wbnz": 343,
+                "wght_per_walu": "0.8996"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 939,
+                "walu": 988,
+                "wbnz": 1100,
+                "wght_per_walu": "0.9504"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 1754,
+                "walu": 1816,
+                "wbnz": 1959,
+                "wght_per_walu": "0.9659"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 2116,
+                "walu": 2183,
+                "wbnz": 2337,
+                "wght_per_walu": "0.9693"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 189,
+                "walu": 215,
+                "wbnz": 273,
+                "wght_per_walu": "0.8791"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 133,
+                "walu": 155,
+                "wbnz": 205,
+                "wght_per_walu": "0.8581"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 238,
+                "walu": 270,
+                "wbnz": 345,
+                "wght_per_walu": "0.8815"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 192,
+                "walu": 222,
+                "wbnz": 290,
+                "wght_per_walu": "0.8649"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 146,
+                "walu": 172,
+                "wbnz": 233,
+                "wght_per_walu": "0.8488"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 124,
+                "walu": 149,
+                "wbnz": 205,
+                "wght_per_walu": "0.8322"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 859,
+                "walu": 916,
+                "wbnz": 1045,
+                "wght_per_walu": "0.9378"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 632,
+                "walu": 682,
+                "wbnz": 798,
+                "wght_per_walu": "0.9267"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 445,
+                "walu": 488,
+                "wbnz": 587,
+                "wght_per_walu": "0.9119"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 306,
+                "walu": 342,
+                "wbnz": 424,
+                "wght_per_walu": "0.8947"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 1320,
+                "walu": 1386,
+                "wbnz": 1537,
+                "wght_per_walu": "0.9524"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 1577,
+                "walu": 1647,
+                "wbnz": 1809,
+                "wght_per_walu": "0.9575"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 279,
+                "walu": 313,
+                "wbnz": 391,
+                "wght_per_walu": "0.8914"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 220,
+                "walu": 251,
+                "wbnz": 323,
+                "wght_per_walu": "0.8765"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 165,
+                "walu": 193,
+                "wbnz": 256,
+                "wght_per_walu": "0.8549"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 138,
+                "walu": 164,
+                "wbnz": 223,
+                "wght_per_walu": "0.8415"
+            },
+            {
+                "cable_style": "BH",
+                "mt": 1302,
+                "wght": 1077,
+                "walu": 1137,
+                "wbnz": 1274,
+                "wght_per_walu": "0.9472"
+            }
+        ],
+        "byMt": [
+            {
+                "mt": "1302",
+                "avg_walu": "924.9530",
+                "avg_wbnz": "1047.7023",
+                "avg_wght": "871.3890",
+                "rows_cnt": 766
+            }
+        ],
+        "note": "walu/wbnz only on mt=1302; compare wght (kg/km target) ratio for unit inference \u2014 MEDIUM not HIGH",
+        "proposedUnitCandidate": "LB_PER_1000FT",
+        "confidence": "MEDIUM"
+    },
+    "proposals": [
+        {
+            "legacyField": "walu",
+            "inferredMeaning": "Approximate aluminium component weight (imperial rows only)",
+            "decision": "PROPOSED_CREATE_DEFINITION",
+            "targetDefinition": "APPROX-WEIGHT-ALU",
+            "targetUnit": "LB_PER_1000FT (candidate \u2014 not in target Units)",
+            "targetOptions": null,
+            "confidence": "HIGH",
+            "evidence": [
+                "Distinct from wght; non-zero only when mt=1302 (Imperial System).",
+                "Parallel numeric column alongside APPROX-WEIGHT (wght) on imperial styles.",
+                "14 styles populated \u2014 D.2 semantic evidence retained.",
+                "Unit: imperial mass/length likely lb/1000ft \u2014 MEDIUM confidence (no direct label)."
+            ],
+            "stylesAffected": 14,
+            "styleSamples": [
+                "BH",
+                "BV",
+                "DV",
+                "EG",
+                "ES",
+                "EW",
+                "FC",
+                "FJ",
+                "FL",
+                "RC",
+                "RR",
+                "RS",
+                "TG",
+                "TS"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 14,
+            "unitDecision": "PROPOSED_CREATE_UNIT"
+        },
+        {
+            "legacyField": "wbnz",
+            "inferredMeaning": "Approximate bronze component weight (imperial rows only)",
+            "decision": "PROPOSED_CREATE_DEFINITION",
+            "targetDefinition": "APPROX-WEIGHT-BRONZE",
+            "targetUnit": "LB_PER_1000FT (candidate \u2014 not in target Units)",
+            "targetOptions": null,
+            "confidence": "HIGH",
+            "evidence": [
+                "Distinct from wght; non-zero only when mt=1302.",
+                "14 styles \u2014 mirrors walu population pattern.",
+                "Unit: imperial mass/length likely lb/1000ft \u2014 MEDIUM confidence."
+            ],
+            "stylesAffected": 14,
+            "styleSamples": [
+                "BH",
+                "BV",
+                "DV",
+                "EG",
+                "ES",
+                "EW",
+                "FC",
+                "FJ",
+                "FL",
+                "RC",
+                "RR",
+                "RS",
+                "TG",
+                "TS"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 14,
+            "unitDecision": "PROPOSED_CREATE_UNIT"
+        }
+    ]
+}

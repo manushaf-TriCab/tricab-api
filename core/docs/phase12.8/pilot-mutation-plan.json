@@ -1,0 +1,21 @@
+{
+    "productCreate": 1,
+    "productUpdate": 0,
+    "variantsCreate": 1,
+    "variantsUpdate": 0,
+    "productSpecValuesInsert": 0,
+    "variantSpecValuesInsert": 6,
+    "marketAssignments": 1,
+    "mediaUploads": 0,
+    "documentUploads": 0,
+    "relationships": 0,
+    "classificationCreates": 0,
+    "definitionCreates": 0,
+    "unitCreates": 0,
+    "optionCreates": 0,
+    "fieldMappingCreates": 0,
+    "pricingWrites": 0,
+    "publication": "Draft",
+    "actualTargetWrites": 0,
+    "note": "PROJECTION ONLY \u2014 dry-run does not mutate target."
+}

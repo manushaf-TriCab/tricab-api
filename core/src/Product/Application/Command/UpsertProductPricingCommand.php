@@ -23,6 +23,8 @@ final readonly class UpsertProductPricingCommand
         public bool $createRevision = false,
         public ?string $pricingPublicId = null,
         public ?string $expectedRowVersion = null,
+        /** Explicit price-row UOM; null inherits variant → product → system default. */
+        public ?string $unitOfMeasurePublicId = null,
     ) {
     }
 }

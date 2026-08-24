@@ -1,0 +1,163 @@
+{
+    "current": {
+        "READY": 0,
+        "REVIEW": 54,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        }
+    },
+    "ccCtResolvedMedium": {
+        "READY": 35,
+        "REVIEW": 19,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 35,
+        "stillBlockingConcepts": {
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        }
+    },
+    "waluWbnzApproved": {
+        "READY": 0,
+        "REVIEW": 54,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        }
+    },
+    "insStyleResolved": {
+        "READY": 0,
+        "REVIEW": 54,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        }
+    },
+    "b1Excluded": {
+        "READY": 0,
+        "REVIEW": 54,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5
+        }
+    },
+    "minimumSafeClosure": {
+        "READY": 54,
+        "REVIEW": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 54,
+        "stillBlockingConcepts": []
+    },
+    "pathAAllProven": {
+        "READY": 53,
+        "REVIEW": 1,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 53,
+        "stillBlockingConcepts": {
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        }
+    },
+    "perOperatorOption": {
+        "cc_APPROVE_CORE_CONFIGURATION": {
+            "READY": 0,
+            "REVIEW": 54,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            }
+        },
+        "ct_APPROVE_CONDUCTOR_MATERIAL": {
+            "READY": 0,
+            "REVIEW": 54,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "stillBlockingConcepts": {
+                "ct": 54,
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            }
+        },
+        "ccCtBothMediumApproved": {
+            "READY": 35,
+            "REVIEW": 19,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 35,
+            "stillBlockingConcepts": {
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            }
+        },
+        "waluWbnzPlusCcCt": {
+            "READY": 49,
+            "REVIEW": 5,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 49,
+            "stillBlockingConcepts": {
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            }
+        },
+        "fullClosureSet": {
+            "READY": 54,
+            "REVIEW": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 54,
+            "stillBlockingConcepts": []
+        }
+    }
+}

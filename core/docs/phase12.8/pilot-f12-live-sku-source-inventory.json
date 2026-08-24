@@ -1,0 +1,71 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "tcConnected": true,
+    "tcError": null,
+    "tproExtStyleRowCount": 0,
+    "schemaColumns": [
+        "product_code",
+        "nom_conductor",
+        "min_cable",
+        "max_cable",
+        "imax",
+        "volts",
+        "tensile",
+        "torque",
+        "spool_len",
+        "quantity",
+        "weight",
+        "d1",
+        "d2",
+        "d3",
+        "d4",
+        "d5",
+        "d6",
+        "d7",
+        "v1",
+        "v2",
+        "v3",
+        "v4"
+    ],
+    "discoveryQuery": "accessory_specs.product_code LIKE 'F12-%'",
+    "inventory": {
+        "discoveryQuery": "accessory_specs.product_code LIKE 'F12-%'",
+        "tproExtStyleRowsForF12": 0,
+        "tproExtStyleHasF12": false,
+        "rowsDiscovered": 2,
+        "uniqueProductCodes": 2,
+        "duplicateProductCodes": [],
+        "invalidProductCodes": [],
+        "rowsMissingRequiredDimensions": [],
+        "rows": [
+            {
+                "legacyRowId": "F12-AHXX/XD20GY",
+                "productCode": "F12-AHXX/XD20GY",
+                "styleRoot": "F12",
+                "styleCode": "",
+                "d1": "20.00",
+                "d2": "24.00",
+                "d3": "22.00",
+                "d4": "92.00",
+                "d5": "55.00",
+                "d6": "29.00",
+                "synthetic": false
+            },
+            {
+                "legacyRowId": "F12-AHXX/XD25GY",
+                "productCode": "F12-AHXX/XD25GY",
+                "styleRoot": "F12",
+                "styleCode": "",
+                "d1": "25.00",
+                "d2": "29.00",
+                "d3": "25.00",
+                "d4": "108.00",
+                "d5": "69.00",
+                "d6": "37.00",
+                "synthetic": false
+            }
+        ]
+    },
+    "wordpressWrites": 0,
+    "tcWrites": 0
+}

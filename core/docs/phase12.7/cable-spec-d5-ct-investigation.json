@@ -1,0 +1,290 @@
+{
+    "ctByValue": [
+        {
+            "value": "p",
+            "rows": 4215,
+            "styles": 54,
+            "avgWght": "1234.04080664",
+            "avgOd": "15.47705172",
+            "styleSamples": [
+                "B1",
+                "BH",
+                "BV",
+                "C1",
+                "DF",
+                "DG",
+                "DV",
+                "EA",
+                "EG",
+                "ES"
+            ]
+        },
+        {
+            "value": "a",
+            "rows": 276,
+            "styles": 11,
+            "avgWght": "1616.94927536",
+            "avgOd": "38.13550725",
+            "styleSamples": [
+                "EA",
+                "KA",
+                "KL",
+                "KN",
+                "KU",
+                "LP",
+                "LS",
+                "XA",
+                "XL",
+                "XN"
+            ]
+        }
+    ],
+    "ctPhysicalSamples": {
+        "klSamples": [
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "10.200",
+                "wght": 139,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "23.800",
+                "wght": 717,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "18.700",
+                "wght": 446,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "22.100",
+                "wght": 605,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "24.700",
+                "wght": 791,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "12.800",
+                "wght": 200,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "11.800",
+                "wght": 180,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "21.500",
+                "wght": 551,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "16.100",
+                "wght": 309,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "10.900",
+                "wght": 152,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "10",
+                "ct": "p",
+                "od": "15.900",
+                "wght": 465,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "10",
+                "ct": "p",
+                "od": "14.900",
+                "wght": 365,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "10",
+                "ct": "p",
+                "od": "8.400",
+                "wght": 134,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "10",
+                "ct": "p",
+                "od": "17.500",
+                "wght": 576,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "120",
+                "ct": "a",
+                "od": "51.800",
+                "wght": 2174,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "120",
+                "ct": "a",
+                "od": "57.600",
+                "wght": 2689,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "120",
+                "ct": "a",
+                "od": "46.500",
+                "wght": 1674,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "120",
+                "ct": "a",
+                "od": "22.600",
+                "wght": 556,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "120",
+                "ct": "p",
+                "od": "48.100",
+                "wght": 5604,
+                "walu": null,
+                "wbnz": null
+            },
+            {
+                "cable_style": "KL",
+                "xa": "120",
+                "ct": "p",
+                "od": "20.600",
+                "wght": 1229,
+                "walu": null,
+                "wbnz": null
+            }
+        ],
+        "note": "Compare ct=p vs ct=a on same style/xa \u2014 physical correlation only"
+    },
+    "ratingCtEncoding": {
+        "tableExists": true,
+        "ctDistribution": [
+            {
+                "ct": "C",
+                "cnt": 361
+            },
+            {
+                "ct": "A",
+                "cnt": 196
+            }
+        ],
+        "note": "rating.ct encoding may differ from cable_specs.ct (C/A vs p/a)"
+    },
+    "targetConductorScan": {
+        "CODE_CONDUCTOR": {
+            "code": "CODE_CONDUCTOR",
+            "name": "Conductor",
+            "dataTypeCode": "single-select",
+            "unit": null
+        },
+        "CONDUCTORS": {
+            "code": "CONDUCTORS",
+            "name": "Conductors",
+            "dataTypeCode": "long-text",
+            "unit": null
+        }
+    },
+    "proposal": {
+        "legacyField": "ct",
+        "inferredMeaning": "Conductor material/type encoding (p vs a \u2014 copper vs aluminium hypothesis MEDIUM)",
+        "decision": "REVIEW",
+        "targetDefinition": "CONDUCTORS (long-text \u2014 semantic mismatch risk)",
+        "targetUnit": null,
+        "targetOptions": null,
+        "confidence": "MEDIUM",
+        "evidence": [
+            "Values p (4215 rows) and a (276 rows) on all 54 styles.",
+            "KL ct=a lighter wght + larger OD vs ct=p",
+            "rating.ct uses C/A \u2014 different alphabet from cable_specs.ct p/a.",
+            "Target CONDUCTORS/CODE_CONDUCTOR exist but are not proven equivalents.",
+            "No direct legacy label for cable_specs.ct found."
+        ],
+        "stylesAffected": 54,
+        "styleSamples": [
+            "BV",
+            "DV",
+            "RR",
+            "BH",
+            "RC",
+            "RS",
+            "ES",
+            "FJ",
+            "EW",
+            "EG",
+            "FC",
+            "FL",
+            "PJ",
+            "HT"
+        ],
+        "rowsAffected": 4491,
+        "productsBlocked": 54
+    }
+}

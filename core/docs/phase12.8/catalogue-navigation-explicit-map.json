@@ -1,0 +1,5 @@
+{
+  "description": "Explicit legacy catalogue path/taxonomy to existing CatalogueNode map. operatorApproved must be true before MAP_EXISTING_NODE. Names alone are never stored as the target key.",
+  "operatorApprovedRequired": true,
+  "items": []
+}

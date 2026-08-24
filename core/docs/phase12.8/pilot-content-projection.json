@@ -1,0 +1,36 @@
+{
+    "productName": {
+        "source": "Inspection Tee",
+        "target": "Inspection Tee"
+    },
+    "shortDescription": {
+        "source": null,
+        "target": null,
+        "status": "ABSENT"
+    },
+    "longDescription": {
+        "source": null,
+        "target": null,
+        "status": "ABSENT"
+    },
+    "technicalDescription": {
+        "source": null,
+        "target": null,
+        "status": "ABSENT"
+    },
+    "features": {
+        "source": [],
+        "target": []
+    },
+    "seoTitle": {
+        "source": null,
+        "target": null,
+        "status": "ABSENT"
+    },
+    "seoDescription": {
+        "source": null,
+        "target": null,
+        "status": "ABSENT"
+    },
+    "note": "Unsupported WP metadata is not migrated."
+}

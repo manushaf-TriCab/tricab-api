@@ -1,0 +1,146 @@
+{
+    "sourcePopulatedFields": 6,
+    "mappedFields": 6,
+    "excludedApprovedFields": 0,
+    "reviewFields": 0,
+    "rejectFields": 0,
+    "unmappedFields": 0,
+    "requiredUnresolvedFields": 0,
+    "fields": [
+        {
+            "legacyField": "d1",
+            "legacyValue": "12.00",
+            "scope": "VARIANT",
+            "targetDefinition": "INNER-DIAMETER",
+            "targetUnit": "MM",
+            "targetOption": null,
+            "transformedValue": "12.00",
+            "parseStatus": "OK",
+            "validationStatus": "OK",
+            "mappingProvenance": "concept_approved_map_existing_INNER_DIAMETER_MM",
+            "status": "APPROVED_MAP"
+        },
+        {
+            "legacyField": "d2",
+            "legacyValue": "15.00",
+            "scope": "VARIANT",
+            "targetDefinition": "OUTER-DIAMETER",
+            "targetUnit": "MM",
+            "targetOption": null,
+            "transformedValue": "15.00",
+            "parseStatus": "OK",
+            "validationStatus": "OK",
+            "mappingProvenance": "concept_approved_map_existing_OUTER_DIAMETER_MM",
+            "status": "APPROVED_MAP"
+        },
+        {
+            "legacyField": "d3",
+            "legacyValue": "10.00",
+            "scope": "VARIANT",
+            "targetDefinition": "DEPTH",
+            "targetUnit": "MM",
+            "targetOption": null,
+            "transformedValue": "10.00",
+            "parseStatus": "OK",
+            "validationStatus": "OK",
+            "mappingProvenance": "concept_approved_map_existing_DEPTH_MM",
+            "status": "APPROVED_MAP"
+        },
+        {
+            "legacyField": "d4",
+            "legacyValue": "3.00",
+            "scope": "VARIANT",
+            "targetDefinition": "OVERALL-LENGTH",
+            "targetUnit": "MM",
+            "targetOption": null,
+            "transformedValue": "3.00",
+            "parseStatus": "OK",
+            "validationStatus": "OK",
+            "mappingProvenance": "concept_approved_map_existing_OVERALL_LENGTH_MM",
+            "status": "APPROVED_MAP"
+        },
+        {
+            "legacyField": "d5",
+            "legacyValue": "2.00",
+            "scope": "VARIANT",
+            "targetDefinition": "WIDTH",
+            "targetUnit": "MM",
+            "targetOption": null,
+            "transformedValue": "2.00",
+            "parseStatus": "OK",
+            "validationStatus": "OK",
+            "mappingProvenance": "concept_approved_map_existing_WIDTH_MM",
+            "status": "APPROVED_MAP"
+        },
+        {
+            "legacyField": "d6",
+            "legacyValue": "4.30",
+            "scope": "VARIANT",
+            "targetDefinition": "HEIGHT",
+            "targetUnit": "MM",
+            "targetOption": null,
+            "transformedValue": "4.30",
+            "parseStatus": "OK",
+            "validationStatus": "OK",
+            "mappingProvenance": "concept_approved_map_existing_HEIGHT_MM",
+            "status": "APPROVED_MAP"
+        }
+    ],
+    "projectedProductSpecificationValues": [],
+    "projectedVariantSpecificationValues": [
+        {
+            "target": "VARIANT:F12-01",
+            "definition": "INNER-DIAMETER",
+            "value": "12.00",
+            "unit": "MM",
+            "option": null,
+            "legacySource": "accessory_specs.d1",
+            "mappingSource": "concept_approved_map_existing_INNER_DIAMETER_MM"
+        },
+        {
+            "target": "VARIANT:F12-01",
+            "definition": "OUTER-DIAMETER",
+            "value": "15.00",
+            "unit": "MM",
+            "option": null,
+            "legacySource": "accessory_specs.d2",
+            "mappingSource": "concept_approved_map_existing_OUTER_DIAMETER_MM"
+        },
+        {
+            "target": "VARIANT:F12-01",
+            "definition": "DEPTH",
+            "value": "10.00",
+            "unit": "MM",
+            "option": null,
+            "legacySource": "accessory_specs.d3",
+            "mappingSource": "concept_approved_map_existing_DEPTH_MM"
+        },
+        {
+            "target": "VARIANT:F12-01",
+            "definition": "OVERALL-LENGTH",
+            "value": "3.00",
+            "unit": "MM",
+            "option": null,
+            "legacySource": "accessory_specs.d4",
+            "mappingSource": "concept_approved_map_existing_OVERALL_LENGTH_MM"
+        },
+        {
+            "target": "VARIANT:F12-01",
+            "definition": "WIDTH",
+            "value": "2.00",
+            "unit": "MM",
+            "option": null,
+            "legacySource": "accessory_specs.d5",
+            "mappingSource": "concept_approved_map_existing_WIDTH_MM"
+        },
+        {
+            "target": "VARIANT:F12-01",
+            "definition": "HEIGHT",
+            "value": "4.30",
+            "unit": "MM",
+            "option": null,
+            "legacySource": "accessory_specs.d6",
+            "mappingSource": "concept_approved_map_existing_HEIGHT_MM"
+        }
+    ]
+}

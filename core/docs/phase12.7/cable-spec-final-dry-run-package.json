@@ -1,0 +1,2503 @@
+{
+    "phase": "12.7-batch-d1-cable-spec-field-mapping",
+    "mode": "DRY_RUN_ONLY",
+    "packageStatus": "READY_FOR_OPERATOR_REVIEW",
+    "cableSpecApply": "NOT_APPROVED",
+    "approvalBoundary": {
+        "cableSpecApplyGuard": "CABLE_SPEC_FIELD_MAPPING_APPLY_NOT_APPROVED",
+        "noTargetWrites": true,
+        "noSpecificationValueWrites": true,
+        "noLegacyWrites": true
+    },
+    "legacySafety": {
+        "wordpressWrites": 0,
+        "tcWrites": 0,
+        "forbiddenWriteAttempts": 0
+    },
+    "targetSafety": {
+        "definitionsCreated": 0,
+        "mappingsInserted": 0,
+        "specificationValuesWritten": 0,
+        "productsWritten": 0,
+        "variantsWritten": 0,
+        "unitsCreated": 0,
+        "optionsCreated": 0
+    },
+    "target": {
+        "server": "tricab-mel",
+        "database": "tc",
+        "liveValidation": "AVAILABLE",
+        "definitions": 55,
+        "units": 11,
+        "options": 416,
+        "styleFieldMappingCount": 483,
+        "fieldMappingCount": 506
+    },
+    "sourceModel": {
+        "table": "cable_specs",
+        "rowCount": 4491,
+        "columns": [
+            "A15c",
+            "A25c",
+            "A30c",
+            "A40c",
+            "A45c",
+            "Af",
+            "br",
+            "cable_style",
+            "cap",
+            "cc",
+            "cdia",
+            "core_con",
+            "ct",
+            "height",
+            "ins",
+            "mt",
+            "my_row_id",
+            "nc",
+            "ne",
+            "od",
+            "od_arm",
+            "od_bed",
+            "od_brd",
+            "od_ins",
+            "ode_ins",
+            "r",
+            "tension",
+            "walu",
+            "wbnz",
+            "wght",
+            "width",
+            "x50",
+            "x60",
+            "xa",
+            "xae"
+        ],
+        "grain": "VARIANT",
+        "wordpressRole": "not_source_for_this_phase",
+        "note": "All cable_specs fields are VARIANT-level (row grain style+nc+xa+ct)."
+    },
+    "cablePopulation": {
+        "expected": 54,
+        "discovered": 54,
+        "identityMatched": 54,
+        "identityBlocked": 0,
+        "stylesMissingCableSpecs": [],
+        "stylesMissingCableSpecsCount": 0,
+        "discrepancy": false,
+        "status": "READY",
+        "note": "Classification-ready CABLE population matches expected 54."
+    },
+    "semanticGuards": {
+        "odMapsToNomCableOd": true,
+        "odNeverOuterDiameter": true,
+        "noIndLszhFire": true
+    },
+    "fieldInventory": {
+        "rawFields": 35,
+        "concepts": 27,
+        "totalPopulatedValues": 63223,
+        "productLevel": 0,
+        "variantLevel": 63223,
+        "compoundFields": 0,
+        "items": [
+            {
+                "field": "A15c",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 0,
+                "populatedNonZero": 0,
+                "distinct": 0,
+                "styles": 0,
+                "samples": [],
+                "note": null
+            },
+            {
+                "field": "A25c",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 0,
+                "populatedNonZero": 0,
+                "distinct": 0,
+                "styles": 0,
+                "samples": [],
+                "note": null
+            },
+            {
+                "field": "A30c",
+                "concept": "CURRENT",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "current_rating_ambient_30c",
+                "targetDefinitionCode": "CURRENT",
+                "scope": "VARIANT",
+                "populated": 1513,
+                "populatedNonZero": 1513,
+                "distinct": 221,
+                "styles": 22,
+                "samples": [
+                    "10",
+                    "100",
+                    "104",
+                    "1052",
+                    "1059",
+                    "106",
+                    "1069",
+                    "11",
+                    "110",
+                    "112",
+                    "114",
+                    "115"
+                ],
+                "note": "Ambient 30\u00b0C current rating; shares CURRENT Definition with ambient note."
+            },
+            {
+                "field": "A40c",
+                "concept": "CURRENT",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "current_rating_ambient_40c",
+                "targetDefinitionCode": "CURRENT",
+                "scope": "VARIANT",
+                "populated": 966,
+                "populatedNonZero": 966,
+                "distinct": 169,
+                "styles": 13,
+                "samples": [
+                    "10",
+                    "102",
+                    "103",
+                    "106",
+                    "108",
+                    "109",
+                    "11",
+                    "111",
+                    "1125",
+                    "116",
+                    "117",
+                    "12"
+                ],
+                "note": "Ambient 40\u00b0C current rating; shares CURRENT Definition with ambient note."
+            },
+            {
+                "field": "A45c",
+                "concept": "CURRENT",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "current_rating_ambient_45c",
+                "targetDefinitionCode": "CURRENT",
+                "scope": "VARIANT",
+                "populated": 1492,
+                "populatedNonZero": 1492,
+                "distinct": 115,
+                "styles": 18,
+                "samples": [
+                    "10",
+                    "101",
+                    "105",
+                    "108",
+                    "11",
+                    "110",
+                    "111",
+                    "118",
+                    "12",
+                    "127",
+                    "13",
+                    "130"
+                ],
+                "note": "Ambient 45\u00b0C current rating; shares CURRENT Definition with ambient note."
+            },
+            {
+                "field": "Af",
+                "concept": "CURRENT_AF",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 11,
+                "populatedNonZero": 11,
+                "distinct": 11,
+                "styles": 1,
+                "samples": [
+                    "1.4",
+                    "10.0",
+                    "13.6",
+                    "17.2",
+                    "2.3",
+                    "21.5",
+                    "26.5",
+                    "3.6",
+                    "34.3",
+                    "5.0",
+                    "7.2"
+                ],
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "br",
+                "concept": "MIN_BEND_RADIUS",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "min_bend_radius",
+                "targetDefinitionCode": "MIN-BEND-RADIUS",
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4491,
+                "distinct": 1348,
+                "styles": 54,
+                "samples": [
+                    "0.84",
+                    "1.00",
+                    "1.02",
+                    "1.04",
+                    "1.05",
+                    "1.07",
+                    "1.08",
+                    "1.10",
+                    "1.11",
+                    "1.14",
+                    "1.16",
+                    "1.17"
+                ],
+                "note": null
+            },
+            {
+                "field": "cable_style",
+                "concept": "IDENTITY",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "identity_style_key",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4491,
+                "distinct": 54,
+                "styles": 54,
+                "samples": [
+                    "B1",
+                    "BH",
+                    "BV",
+                    "C1",
+                    "DF",
+                    "DG",
+                    "DV",
+                    "EA",
+                    "EG",
+                    "ES",
+                    "EW",
+                    "FC"
+                ],
+                "note": null
+            },
+            {
+                "field": "cap",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 0,
+                "populatedNonZero": 0,
+                "distinct": 0,
+                "styles": 0,
+                "samples": [],
+                "note": null
+            },
+            {
+                "field": "cc",
+                "concept": "CONSTRUCTION_CODE",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4491,
+                "distinct": 4,
+                "styles": 54,
+                "samples": [
+                    "a",
+                    "c",
+                    "p",
+                    "t"
+                ],
+                "note": "c/p/t/a construction codes \u2014 option ambiguity."
+            },
+            {
+                "field": "cdia",
+                "concept": "NOM_COND_OD",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "conductor_od_mm",
+                "targetDefinitionCode": "NOM-COND-OD",
+                "scope": "VARIANT",
+                "populated": 3132,
+                "populatedNonZero": 3132,
+                "distinct": 76,
+                "styles": 41,
+                "samples": [
+                    "0.05",
+                    "0.06",
+                    "0.08",
+                    "0.10",
+                    "0.12",
+                    "0.15",
+                    "0.19",
+                    "0.20",
+                    "0.24",
+                    "0.30",
+                    "0.34",
+                    "0.38"
+                ],
+                "note": null
+            },
+            {
+                "field": "core_con",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 0,
+                "populatedNonZero": 0,
+                "distinct": 0,
+                "styles": 0,
+                "samples": [],
+                "note": null
+            },
+            {
+                "field": "ct",
+                "concept": "CONDUCTOR_TYPE",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4491,
+                "distinct": 2,
+                "styles": 54,
+                "samples": [
+                    "a",
+                    "p"
+                ],
+                "note": "p/a codes \u2014 option ambiguity."
+            },
+            {
+                "field": "height",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 0,
+                "populatedNonZero": 0,
+                "distinct": 0,
+                "styles": 0,
+                "samples": [],
+                "note": null
+            },
+            {
+                "field": "ins",
+                "concept": "INSULATION",
+                "decision": "REVIEW",
+                "reason": "TYPE_AMBIGUITY",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 190,
+                "populatedNonZero": 190,
+                "distinct": 35,
+                "styles": 5,
+                "samples": [
+                    "1.000",
+                    "1.200",
+                    "1.400",
+                    "1.600",
+                    "1.800",
+                    "10.500",
+                    "10.800",
+                    "12.800",
+                    "12.900",
+                    "14.500",
+                    "14.600",
+                    "16.400"
+                ],
+                "note": "Sparse; values may be thickness or OD."
+            },
+            {
+                "field": "mt",
+                "concept": "MATERIAL_TYPE",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4472,
+                "distinct": 3,
+                "styles": 54,
+                "samples": [
+                    "0",
+                    "1301",
+                    "1302"
+                ],
+                "note": "Codes 1301/1302 \u2014 option ambiguity."
+            },
+            {
+                "field": "my_row_id",
+                "concept": "IDENTITY",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "surrogate_primary_key",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 0,
+                "populatedNonZero": 0,
+                "distinct": 0,
+                "styles": 0,
+                "samples": [],
+                "note": null
+            },
+            {
+                "field": "nc",
+                "concept": "CORES",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "integer_cores",
+                "targetDefinitionCode": "CORES",
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4491,
+                "distinct": 39,
+                "styles": 54,
+                "samples": [
+                    "1",
+                    "10",
+                    "100",
+                    "11",
+                    "12",
+                    "13",
+                    "14",
+                    "15",
+                    "16",
+                    "18",
+                    "19",
+                    "2"
+                ],
+                "note": "Integer core count (nc)."
+            },
+            {
+                "field": "ne",
+                "concept": "EARTH_CORES",
+                "decision": "PROPOSED_CREATE",
+                "reason": "earth_core_count_mechanical_construction",
+                "targetDefinitionCode": "EARTH-CORES",
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 586,
+                "distinct": 3,
+                "styles": 54,
+                "samples": [
+                    "0",
+                    "1",
+                    "3"
+                ],
+                "note": null
+            },
+            {
+                "field": "od",
+                "concept": "NOM_CABLE_OD",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "cable_od_mm_maps_to_nom_cable_od",
+                "targetDefinitionCode": "NOM-CABLE-OD",
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4491,
+                "distinct": 967,
+                "styles": 54,
+                "samples": [
+                    "0.280",
+                    "0.285",
+                    "0.295",
+                    "0.305",
+                    "0.320",
+                    "0.325",
+                    "0.335",
+                    "0.340",
+                    "0.345",
+                    "0.350",
+                    "0.355",
+                    "0.360"
+                ],
+                "note": "Cable OD mm \u2192 NOM-CABLE-OD. Accessory OUTER-DIAMETER is distinct and must never be aliased here."
+            },
+            {
+                "field": "od_arm",
+                "concept": "ARMOUR_OD",
+                "decision": "PROPOSED_CREATE",
+                "reason": "armour_od_mm",
+                "targetDefinitionCode": "ARMOUR-OD",
+                "scope": "VARIANT",
+                "populated": 184,
+                "populatedNonZero": 184,
+                "distinct": 113,
+                "styles": 3,
+                "samples": [
+                    "10.300",
+                    "10.500",
+                    "11.300",
+                    "11.400",
+                    "12.100",
+                    "12.200",
+                    "12.700",
+                    "12.900",
+                    "13.500",
+                    "13.800",
+                    "14.000",
+                    "14.300"
+                ],
+                "note": null
+            },
+            {
+                "field": "od_bed",
+                "concept": "BEDDING_OD",
+                "decision": "PROPOSED_CREATE",
+                "reason": "bedding_od_mm",
+                "targetDefinitionCode": "BEDDING-OD",
+                "scope": "VARIANT",
+                "populated": 1949,
+                "populatedNonZero": 1949,
+                "distinct": 828,
+                "styles": 21,
+                "samples": [
+                    "0.196",
+                    "0.220",
+                    "0.246",
+                    "0.250",
+                    "0.259",
+                    "0.262",
+                    "0.268",
+                    "0.277",
+                    "0.282",
+                    "0.286",
+                    "0.290",
+                    "0.291"
+                ],
+                "note": null
+            },
+            {
+                "field": "od_brd",
+                "concept": "BRAID_OD",
+                "decision": "PROPOSED_CREATE",
+                "reason": "braid_od_mm",
+                "targetDefinitionCode": "BRAID-OD",
+                "scope": "VARIANT",
+                "populated": 1951,
+                "populatedNonZero": 1951,
+                "distinct": 879,
+                "styles": 21,
+                "samples": [
+                    "0.242",
+                    "0.266",
+                    "0.292",
+                    "0.298",
+                    "0.305",
+                    "0.308",
+                    "0.314",
+                    "0.323",
+                    "0.332",
+                    "0.336",
+                    "0.337",
+                    "0.340"
+                ],
+                "note": null
+            },
+            {
+                "field": "od_ins",
+                "concept": "NOM_INS_OD",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "insulation_od_mm",
+                "targetDefinitionCode": "NOM-INS-OD",
+                "scope": "VARIANT",
+                "populated": 759,
+                "populatedNonZero": 759,
+                "distinct": 144,
+                "styles": 18,
+                "samples": [
+                    "0.122",
+                    "0.138",
+                    "0.146",
+                    "0.156",
+                    "0.162",
+                    "0.181",
+                    "0.244",
+                    "0.284",
+                    "0.334",
+                    "0.394",
+                    "0.451",
+                    "0.491"
+                ],
+                "note": null
+            },
+            {
+                "field": "ode_ins",
+                "concept": "EARTH_INS_OD",
+                "decision": "PROPOSED_CREATE",
+                "reason": "earth_insulation_od_mm",
+                "targetDefinitionCode": "EARTH-INS-OD",
+                "scope": "VARIANT",
+                "populated": 99,
+                "populatedNonZero": 99,
+                "distinct": 20,
+                "styles": 3,
+                "samples": [
+                    "10.500",
+                    "12.800",
+                    "14.600",
+                    "16.600",
+                    "18.700",
+                    "2.900",
+                    "20.700",
+                    "23.500",
+                    "25.700",
+                    "29.200",
+                    "3.400",
+                    "3.500"
+                ],
+                "note": null
+            },
+            {
+                "field": "r",
+                "concept": "RESISTANCE",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 11,
+                "populatedNonZero": 11,
+                "distinct": 11,
+                "styles": 1,
+                "samples": [
+                    "0.105",
+                    "0.138",
+                    "0.167",
+                    "0.208",
+                    "0.265",
+                    "0.350",
+                    "0.496",
+                    "0.712",
+                    "1.002",
+                    "1.554",
+                    "2.452"
+                ],
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "tension",
+                "concept": "TENSION",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 11,
+                "populatedNonZero": 11,
+                "distinct": 11,
+                "styles": 1,
+                "samples": [
+                    "1.9",
+                    "12.0",
+                    "16.3",
+                    "20.3",
+                    "25.7",
+                    "30.4",
+                    "38.3",
+                    "5.1",
+                    "50.5",
+                    "6.9",
+                    "8.9"
+                ],
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "walu",
+                "concept": "ALUMINIUM_WEIGHT",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 766,
+                "populatedNonZero": 766,
+                "distinct": 496,
+                "styles": 14,
+                "samples": [
+                    "100",
+                    "1002",
+                    "1007",
+                    "1008",
+                    "1013",
+                    "1022",
+                    "1027",
+                    "1029",
+                    "1031",
+                    "1040",
+                    "1043",
+                    "1044"
+                ],
+                "note": "Aluminium weight \u2014 semantics unclear."
+            },
+            {
+                "field": "wbnz",
+                "concept": "BRONZE_WEIGHT",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 766,
+                "populatedNonZero": 766,
+                "distinct": 510,
+                "styles": 14,
+                "samples": [
+                    "1009",
+                    "1010",
+                    "1015",
+                    "1024",
+                    "1025",
+                    "1026",
+                    "1027",
+                    "1028",
+                    "1029",
+                    "1034",
+                    "1041",
+                    "1045"
+                ],
+                "note": "Bronze weight \u2014 semantics unclear."
+            },
+            {
+                "field": "wght",
+                "concept": "APPROX_WEIGHT",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "approx_weight_kg_per_km",
+                "targetDefinitionCode": "APPROX-WEIGHT",
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4491,
+                "distinct": 2013,
+                "styles": 54,
+                "samples": [
+                    "100",
+                    "1000",
+                    "1001",
+                    "1002",
+                    "1003",
+                    "1004",
+                    "1005",
+                    "1007",
+                    "1008",
+                    "101",
+                    "1012",
+                    "1013"
+                ],
+                "note": null
+            },
+            {
+                "field": "width",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 0,
+                "populatedNonZero": 0,
+                "distinct": 0,
+                "styles": 0,
+                "samples": [],
+                "note": null
+            },
+            {
+                "field": "x50",
+                "concept": "REACTANCE_50",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 11,
+                "populatedNonZero": 11,
+                "distinct": 11,
+                "styles": 1,
+                "samples": [
+                    "0.073",
+                    "0.075",
+                    "0.076",
+                    "0.077",
+                    "0.079",
+                    "0.082",
+                    "0.085",
+                    "0.089",
+                    "0.093",
+                    "0.099",
+                    "0.106"
+                ],
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "x60",
+                "concept": "REACTANCE_60",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "scope": "VARIANT",
+                "populated": 11,
+                "populatedNonZero": 11,
+                "distinct": 11,
+                "styles": 1,
+                "samples": [
+                    "0.088",
+                    "0.090",
+                    "0.091",
+                    "0.093",
+                    "0.095",
+                    "0.098",
+                    "0.102",
+                    "0.107",
+                    "0.112",
+                    "0.119",
+                    "0.127"
+                ],
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "xa",
+                "concept": "CSA",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "conductor_csa_mm2",
+                "targetDefinitionCode": "CSA",
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4491,
+                "distinct": 46,
+                "styles": 54,
+                "samples": [
+                    "0.5",
+                    "0.75",
+                    "1",
+                    "1.5",
+                    "1/0",
+                    "10",
+                    "1000",
+                    "1111",
+                    "12",
+                    "120",
+                    "14",
+                    "14*"
+                ],
+                "note": "Conductor CSA (mm\u00b2)."
+            },
+            {
+                "field": "xae",
+                "concept": "EARTH_CSA",
+                "decision": "PROPOSED_CREATE",
+                "reason": "earth_conductor_csa_mm2",
+                "targetDefinitionCode": "EARTH-CSA",
+                "scope": "VARIANT",
+                "populated": 4491,
+                "populatedNonZero": 4491,
+                "distinct": 20,
+                "styles": 54,
+                "samples": [
+                    "0.00",
+                    "1.50",
+                    "10.00",
+                    "12.00",
+                    "120.00",
+                    "14.00",
+                    "150.00",
+                    "16.00",
+                    "185.00",
+                    "2.50",
+                    "240.00",
+                    "25.00"
+                ],
+                "note": null
+            }
+        ]
+    },
+    "conceptDecisions": {
+        "counts": {
+            "NOT_A_SPECIFICATION": 8,
+            "PROPOSED_MAP_EXISTING": 10,
+            "REVIEW": 11,
+            "PROPOSED_CREATE": 6
+        },
+        "items": [
+            {
+                "field": "A15c",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "note": null
+            },
+            {
+                "field": "A25c",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "note": null
+            },
+            {
+                "field": "A30c",
+                "concept": "CURRENT",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "current_rating_ambient_30c",
+                "targetDefinitionCode": "CURRENT",
+                "note": "Ambient 30\u00b0C current rating; shares CURRENT Definition with ambient note."
+            },
+            {
+                "field": "A40c",
+                "concept": "CURRENT",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "current_rating_ambient_40c",
+                "targetDefinitionCode": "CURRENT",
+                "note": "Ambient 40\u00b0C current rating; shares CURRENT Definition with ambient note."
+            },
+            {
+                "field": "A45c",
+                "concept": "CURRENT",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "current_rating_ambient_45c",
+                "targetDefinitionCode": "CURRENT",
+                "note": "Ambient 45\u00b0C current rating; shares CURRENT Definition with ambient note."
+            },
+            {
+                "field": "Af",
+                "concept": "CURRENT_AF",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "br",
+                "concept": "MIN_BEND_RADIUS",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "min_bend_radius",
+                "targetDefinitionCode": "MIN-BEND-RADIUS",
+                "note": null
+            },
+            {
+                "field": "cable_style",
+                "concept": "IDENTITY",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "identity_style_key",
+                "targetDefinitionCode": null,
+                "note": null
+            },
+            {
+                "field": "cap",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "note": null
+            },
+            {
+                "field": "cc",
+                "concept": "CONSTRUCTION_CODE",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "note": "c/p/t/a construction codes \u2014 option ambiguity."
+            },
+            {
+                "field": "cdia",
+                "concept": "NOM_COND_OD",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "conductor_od_mm",
+                "targetDefinitionCode": "NOM-COND-OD",
+                "note": null
+            },
+            {
+                "field": "core_con",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "note": null
+            },
+            {
+                "field": "ct",
+                "concept": "CONDUCTOR_TYPE",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "note": "p/a codes \u2014 option ambiguity."
+            },
+            {
+                "field": "height",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "note": null
+            },
+            {
+                "field": "ins",
+                "concept": "INSULATION",
+                "decision": "REVIEW",
+                "reason": "TYPE_AMBIGUITY",
+                "targetDefinitionCode": null,
+                "note": "Sparse; values may be thickness or OD."
+            },
+            {
+                "field": "mt",
+                "concept": "MATERIAL_TYPE",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "note": "Codes 1301/1302 \u2014 option ambiguity."
+            },
+            {
+                "field": "my_row_id",
+                "concept": "IDENTITY",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "surrogate_primary_key",
+                "targetDefinitionCode": null,
+                "note": null
+            },
+            {
+                "field": "nc",
+                "concept": "CORES",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "integer_cores",
+                "targetDefinitionCode": "CORES",
+                "note": "Integer core count (nc)."
+            },
+            {
+                "field": "ne",
+                "concept": "EARTH_CORES",
+                "decision": "PROPOSED_CREATE",
+                "reason": "earth_core_count_mechanical_construction",
+                "targetDefinitionCode": "EARTH-CORES",
+                "note": null
+            },
+            {
+                "field": "od",
+                "concept": "NOM_CABLE_OD",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "cable_od_mm_maps_to_nom_cable_od",
+                "targetDefinitionCode": "NOM-CABLE-OD",
+                "note": "Cable OD mm \u2192 NOM-CABLE-OD. Accessory OUTER-DIAMETER is distinct and must never be aliased here."
+            },
+            {
+                "field": "od_arm",
+                "concept": "ARMOUR_OD",
+                "decision": "PROPOSED_CREATE",
+                "reason": "armour_od_mm",
+                "targetDefinitionCode": "ARMOUR-OD",
+                "note": null
+            },
+            {
+                "field": "od_bed",
+                "concept": "BEDDING_OD",
+                "decision": "PROPOSED_CREATE",
+                "reason": "bedding_od_mm",
+                "targetDefinitionCode": "BEDDING-OD",
+                "note": null
+            },
+            {
+                "field": "od_brd",
+                "concept": "BRAID_OD",
+                "decision": "PROPOSED_CREATE",
+                "reason": "braid_od_mm",
+                "targetDefinitionCode": "BRAID-OD",
+                "note": null
+            },
+            {
+                "field": "od_ins",
+                "concept": "NOM_INS_OD",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "insulation_od_mm",
+                "targetDefinitionCode": "NOM-INS-OD",
+                "note": null
+            },
+            {
+                "field": "ode_ins",
+                "concept": "EARTH_INS_OD",
+                "decision": "PROPOSED_CREATE",
+                "reason": "earth_insulation_od_mm",
+                "targetDefinitionCode": "EARTH-INS-OD",
+                "note": null
+            },
+            {
+                "field": "r",
+                "concept": "RESISTANCE",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "tension",
+                "concept": "TENSION",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "walu",
+                "concept": "ALUMINIUM_WEIGHT",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "note": "Aluminium weight \u2014 semantics unclear."
+            },
+            {
+                "field": "wbnz",
+                "concept": "BRONZE_WEIGHT",
+                "decision": "REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "targetDefinitionCode": null,
+                "note": "Bronze weight \u2014 semantics unclear."
+            },
+            {
+                "field": "wght",
+                "concept": "APPROX_WEIGHT",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "approx_weight_kg_per_km",
+                "targetDefinitionCode": "APPROX-WEIGHT",
+                "note": null
+            },
+            {
+                "field": "width",
+                "concept": "UNUSED",
+                "decision": "NOT_A_SPECIFICATION",
+                "reason": "unused_in_cable_population",
+                "targetDefinitionCode": null,
+                "note": null
+            },
+            {
+                "field": "x50",
+                "concept": "REACTANCE_50",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "x60",
+                "concept": "REACTANCE_60",
+                "decision": "REVIEW",
+                "reason": "INSUFFICIENT_VALUES",
+                "targetDefinitionCode": null,
+                "note": "Only 1 style populated."
+            },
+            {
+                "field": "xa",
+                "concept": "CSA",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "reason": "conductor_csa_mm2",
+                "targetDefinitionCode": "CSA",
+                "note": "Conductor CSA (mm\u00b2)."
+            },
+            {
+                "field": "xae",
+                "concept": "EARTH_CSA",
+                "decision": "PROPOSED_CREATE",
+                "reason": "earth_conductor_csa_mm2",
+                "targetDefinitionCode": "EARTH-CSA",
+                "note": null
+            }
+        ]
+    },
+    "proposedFieldMappings": {
+        "count": 16,
+        "items": [
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "A30c",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "CURRENT",
+                "targetDefinitionName": "Current",
+                "group": "electrical",
+                "dataType": "decimal",
+                "unit": "A",
+                "scope": "VARIANT",
+                "reason": "current_rating_ambient_30c",
+                "note": "Ambient 30\u00b0C current rating; shares CURRENT Definition with ambient note.",
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 1513,
+                    "parseableValues": 1513,
+                    "parseFailureCount": 0,
+                    "emptyCount": 2978,
+                    "typeCompatibleCount": 1513,
+                    "unitCompatibleCount": 1513,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "A40c",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "CURRENT",
+                "targetDefinitionName": "Current",
+                "group": "electrical",
+                "dataType": "decimal",
+                "unit": "A",
+                "scope": "VARIANT",
+                "reason": "current_rating_ambient_40c",
+                "note": "Ambient 40\u00b0C current rating; shares CURRENT Definition with ambient note.",
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 966,
+                    "parseableValues": 966,
+                    "parseFailureCount": 0,
+                    "emptyCount": 3525,
+                    "typeCompatibleCount": 966,
+                    "unitCompatibleCount": 966,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "A45c",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "CURRENT",
+                "targetDefinitionName": "Current",
+                "group": "electrical",
+                "dataType": "decimal",
+                "unit": "A",
+                "scope": "VARIANT",
+                "reason": "current_rating_ambient_45c",
+                "note": "Ambient 45\u00b0C current rating; shares CURRENT Definition with ambient note.",
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 1492,
+                    "parseableValues": 1492,
+                    "parseFailureCount": 0,
+                    "emptyCount": 2999,
+                    "typeCompatibleCount": 1492,
+                    "unitCompatibleCount": 1492,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "br",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "MIN-BEND-RADIUS",
+                "targetDefinitionName": "Min. Bend Radius",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "scope": "VARIANT",
+                "reason": "min_bend_radius",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 4491,
+                    "parseableValues": 4491,
+                    "parseFailureCount": 0,
+                    "emptyCount": 0,
+                    "typeCompatibleCount": 4491,
+                    "unitCompatibleCount": 4491,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "cdia",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "NOM-COND-OD",
+                "targetDefinitionName": "Nom. Cond. OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "scope": "VARIANT",
+                "reason": "conductor_od_mm",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 3132,
+                    "parseableValues": 3132,
+                    "parseFailureCount": 0,
+                    "emptyCount": 1359,
+                    "typeCompatibleCount": 3132,
+                    "unitCompatibleCount": 3132,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "nc",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "CORES",
+                "targetDefinitionName": "Number of cores",
+                "group": "construction",
+                "dataType": "integer",
+                "unit": null,
+                "scope": "VARIANT",
+                "reason": "integer_cores",
+                "note": "Integer core count (nc).",
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 4491,
+                    "parseableValues": 4491,
+                    "parseFailureCount": 0,
+                    "emptyCount": 0,
+                    "typeCompatibleCount": 4491,
+                    "unitCompatibleCount": 4491,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "ne",
+                "decision": "PROPOSED_CREATE",
+                "targetDefinitionCode": "EARTH-CORES",
+                "targetDefinitionName": "Earth cores",
+                "group": "construction",
+                "dataType": "integer",
+                "unit": null,
+                "scope": "VARIANT",
+                "reason": "earth_core_count_mechanical_construction",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 4491,
+                    "parseableValues": 4491,
+                    "parseFailureCount": 0,
+                    "emptyCount": 0,
+                    "typeCompatibleCount": 4491,
+                    "unitCompatibleCount": 4491,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "od",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "NOM-CABLE-OD",
+                "targetDefinitionName": "Nom. Cable",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "scope": "VARIANT",
+                "reason": "cable_od_mm_maps_to_nom_cable_od",
+                "note": "Cable OD mm \u2192 NOM-CABLE-OD. Accessory OUTER-DIAMETER is distinct and must never be aliased here.",
+                "neverMapTo": "OUTER-DIAMETER",
+                "valueCompatibility": {
+                    "totalValues": 4491,
+                    "parseableValues": 4491,
+                    "parseFailureCount": 0,
+                    "emptyCount": 0,
+                    "typeCompatibleCount": 4491,
+                    "unitCompatibleCount": 4491,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "od_arm",
+                "decision": "PROPOSED_CREATE",
+                "targetDefinitionCode": "ARMOUR-OD",
+                "targetDefinitionName": "Armour OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "scope": "VARIANT",
+                "reason": "armour_od_mm",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 184,
+                    "parseableValues": 184,
+                    "parseFailureCount": 0,
+                    "emptyCount": 4307,
+                    "typeCompatibleCount": 184,
+                    "unitCompatibleCount": 184,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "od_bed",
+                "decision": "PROPOSED_CREATE",
+                "targetDefinitionCode": "BEDDING-OD",
+                "targetDefinitionName": "Bedding OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "scope": "VARIANT",
+                "reason": "bedding_od_mm",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 1949,
+                    "parseableValues": 1949,
+                    "parseFailureCount": 0,
+                    "emptyCount": 2542,
+                    "typeCompatibleCount": 1949,
+                    "unitCompatibleCount": 1949,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "od_brd",
+                "decision": "PROPOSED_CREATE",
+                "targetDefinitionCode": "BRAID-OD",
+                "targetDefinitionName": "Braid OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "scope": "VARIANT",
+                "reason": "braid_od_mm",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 1951,
+                    "parseableValues": 1951,
+                    "parseFailureCount": 0,
+                    "emptyCount": 2540,
+                    "typeCompatibleCount": 1951,
+                    "unitCompatibleCount": 1951,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "od_ins",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "NOM-INS-OD",
+                "targetDefinitionName": "Nom. Ins. OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "scope": "VARIANT",
+                "reason": "insulation_od_mm",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 759,
+                    "parseableValues": 759,
+                    "parseFailureCount": 0,
+                    "emptyCount": 3732,
+                    "typeCompatibleCount": 759,
+                    "unitCompatibleCount": 759,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "ode_ins",
+                "decision": "PROPOSED_CREATE",
+                "targetDefinitionCode": "EARTH-INS-OD",
+                "targetDefinitionName": "Earth insulation OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "scope": "VARIANT",
+                "reason": "earth_insulation_od_mm",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 99,
+                    "parseableValues": 99,
+                    "parseFailureCount": 0,
+                    "emptyCount": 4392,
+                    "typeCompatibleCount": 99,
+                    "unitCompatibleCount": 99,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "wght",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "APPROX-WEIGHT",
+                "targetDefinitionName": "Approx. Wt.",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "kg/km",
+                "scope": "VARIANT",
+                "reason": "approx_weight_kg_per_km",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 4491,
+                    "parseableValues": 4491,
+                    "parseFailureCount": 0,
+                    "emptyCount": 0,
+                    "typeCompatibleCount": 4491,
+                    "unitCompatibleCount": 4491,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "xa",
+                "decision": "PROPOSED_MAP_EXISTING",
+                "targetDefinitionCode": "CSA",
+                "targetDefinitionName": "Conductor CSA",
+                "group": "construction",
+                "dataType": "text",
+                "unit": "mm2",
+                "scope": "VARIANT",
+                "reason": "conductor_csa_mm2",
+                "note": "Conductor CSA (mm\u00b2).",
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 4491,
+                    "parseableValues": 4491,
+                    "parseFailureCount": 0,
+                    "emptyCount": 0,
+                    "typeCompatibleCount": 4491,
+                    "unitCompatibleCount": 4491,
+                    "optionCompatibleCount": null
+                }
+            },
+            {
+                "sourceTable": "cable_specs",
+                "sourceField": "xae",
+                "decision": "PROPOSED_CREATE",
+                "targetDefinitionCode": "EARTH-CSA",
+                "targetDefinitionName": "Earth CSA",
+                "group": "construction",
+                "dataType": "text",
+                "unit": "mm2",
+                "scope": "VARIANT",
+                "reason": "earth_conductor_csa_mm2",
+                "note": null,
+                "neverMapTo": null,
+                "valueCompatibility": {
+                    "totalValues": 4491,
+                    "parseableValues": 4491,
+                    "parseFailureCount": 0,
+                    "emptyCount": 0,
+                    "typeCompatibleCount": 4491,
+                    "unitCompatibleCount": 4491,
+                    "optionCompatibleCount": null
+                }
+            }
+        ]
+    },
+    "proposedDefinitions": {
+        "count": 6,
+        "items": [
+            {
+                "code": "ARMOUR-OD",
+                "name": "Armour OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "sourceFields": [
+                    "od_arm"
+                ],
+                "reason": "armour_od_mm",
+                "note": null
+            },
+            {
+                "code": "BEDDING-OD",
+                "name": "Bedding OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "sourceFields": [
+                    "od_bed"
+                ],
+                "reason": "bedding_od_mm",
+                "note": null
+            },
+            {
+                "code": "BRAID-OD",
+                "name": "Braid OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "sourceFields": [
+                    "od_brd"
+                ],
+                "reason": "braid_od_mm",
+                "note": null
+            },
+            {
+                "code": "EARTH-CORES",
+                "name": "Earth cores",
+                "group": "construction",
+                "dataType": "integer",
+                "unit": null,
+                "sourceFields": [
+                    "ne"
+                ],
+                "reason": "earth_core_count_mechanical_construction",
+                "note": null
+            },
+            {
+                "code": "EARTH-CSA",
+                "name": "Earth CSA",
+                "group": "construction",
+                "dataType": "text",
+                "unit": "mm2",
+                "sourceFields": [
+                    "xae"
+                ],
+                "reason": "earth_conductor_csa_mm2",
+                "note": null
+            },
+            {
+                "code": "EARTH-INS-OD",
+                "name": "Earth insulation OD",
+                "group": "mechanical",
+                "dataType": "decimal",
+                "unit": "mm",
+                "sourceFields": [
+                    "ode_ins"
+                ],
+                "reason": "earth_insulation_od_mm",
+                "note": null
+            }
+        ]
+    },
+    "units": {
+        "mapped": [
+            {
+                "field": "A30c",
+                "unitCode": "A",
+                "createUnit": false
+            },
+            {
+                "field": "A40c",
+                "unitCode": "A",
+                "createUnit": false
+            },
+            {
+                "field": "A45c",
+                "unitCode": "A",
+                "createUnit": false
+            },
+            {
+                "field": "Af",
+                "unitCode": "A",
+                "createUnit": false
+            },
+            {
+                "field": "br",
+                "unitCode": "MM",
+                "createUnit": false
+            },
+            {
+                "field": "cdia",
+                "unitCode": "MM",
+                "createUnit": false
+            },
+            {
+                "field": "ins",
+                "unitCode": "MM",
+                "createUnit": false
+            },
+            {
+                "field": "od",
+                "unitCode": "MM",
+                "createUnit": false
+            },
+            {
+                "field": "od_arm",
+                "unitCode": "MM",
+                "createUnit": false
+            },
+            {
+                "field": "od_bed",
+                "unitCode": "MM",
+                "createUnit": false
+            },
+            {
+                "field": "od_brd",
+                "unitCode": "MM",
+                "createUnit": false
+            },
+            {
+                "field": "od_ins",
+                "unitCode": "MM",
+                "createUnit": false
+            },
+            {
+                "field": "ode_ins",
+                "unitCode": "MM",
+                "createUnit": false
+            },
+            {
+                "field": "wght",
+                "unitCode": "KG_PER_KM",
+                "createUnit": false
+            },
+            {
+                "field": "xa",
+                "unitCode": "MM2",
+                "createUnit": false
+            },
+            {
+                "field": "xae",
+                "unitCode": "MM2",
+                "createUnit": false
+            }
+        ],
+        "mappedCount": 16,
+        "missing": [],
+        "ambiguous": [
+            {
+                "field": "r",
+                "reason": "unit_ambiguous_or_unknown"
+            },
+            {
+                "field": "tension",
+                "reason": "unit_ambiguous_or_unknown"
+            },
+            {
+                "field": "walu",
+                "reason": "unit_ambiguous_or_unknown"
+            },
+            {
+                "field": "wbnz",
+                "reason": "unit_ambiguous_or_unknown"
+            },
+            {
+                "field": "x50",
+                "reason": "unit_ambiguous_or_unknown"
+            },
+            {
+                "field": "x60",
+                "reason": "unit_ambiguous_or_unknown"
+            }
+        ],
+        "newUnitsRequired": 0,
+        "policy": "Never create units in this phase; reuse existing MM / KG_PER_KM / A / MM2."
+    },
+    "options": {
+        "newOptionsRequired": 0,
+        "note": "Numeric cable_specs fields need no new options in this phase.",
+        "optionAmbiguity": [
+            {
+                "field": "cc",
+                "decision": "REVIEW",
+                "classification": "STANDARD_OR_APPROVAL_REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "note": "c/p/t/a construction codes \u2014 option ambiguity."
+            },
+            {
+                "field": "ct",
+                "decision": "REVIEW",
+                "classification": "STANDARD_OR_APPROVAL_REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "note": "p/a codes \u2014 option ambiguity."
+            },
+            {
+                "field": "mt",
+                "decision": "REVIEW",
+                "classification": "STANDARD_OR_APPROVAL_REVIEW",
+                "reason": "UNKNOWN_SEMANTICS",
+                "note": "Codes 1301/1302 \u2014 option ambiguity."
+            }
+        ]
+    },
+    "reviewReasons": {
+        "counts": {
+            "INSUFFICIENT_VALUES": 5,
+            "TYPE_AMBIGUITY": 1,
+            "UNKNOWN_SEMANTICS": 5
+        }
+    },
+    "specialInvestigations": {
+        "cc": {
+            "field": "cc",
+            "products": 54,
+            "styles": 54,
+            "nonEmpty": 4491,
+            "distinct": 4,
+            "samples": [
+                "c",
+                "p",
+                "t",
+                "a"
+            ],
+            "valueDistribution": [
+                {
+                    "value": "c",
+                    "count": 3027,
+                    "styles": 39
+                },
+                {
+                    "value": "p",
+                    "count": 1177,
+                    "styles": 14
+                },
+                {
+                    "value": "t",
+                    "count": 279,
+                    "styles": 14
+                },
+                {
+                    "value": "a",
+                    "count": 8,
+                    "styles": 1
+                }
+            ],
+            "inferredMeaning": "legacy construction/class code (unconfirmed); possible copper/class/construction flag",
+            "inferredType": "code",
+            "inferredUnit": null,
+            "likelyTarget": null,
+            "confidence": "low",
+            "decision": "REVIEW",
+            "reason": "UNKNOWN_SEMANTICS"
+        },
+        "mt": {
+            "field": "mt",
+            "products": 54,
+            "styles": 54,
+            "nonEmpty": 4491,
+            "distinct": 3,
+            "samples": [
+                "1301",
+                "1302",
+                "0"
+            ],
+            "valueDistribution": [
+                {
+                    "value": "1301",
+                    "count": 2774,
+                    "styles": 41
+                },
+                {
+                    "value": "1302",
+                    "count": 1698,
+                    "styles": 33
+                },
+                {
+                    "value": "0",
+                    "count": 19,
+                    "styles": 1
+                }
+            ],
+            "inferredMeaning": "legacy material/type lookup code (unconfirmed)",
+            "inferredType": "code",
+            "inferredUnit": null,
+            "likelyTarget": null,
+            "confidence": "low",
+            "decision": "REVIEW",
+            "reason": "UNKNOWN_SEMANTICS"
+        },
+        "ct": {
+            "field": "ct",
+            "products": 54,
+            "styles": 54,
+            "nonEmpty": 4491,
+            "distinct": 2,
+            "samples": [
+                "p",
+                "a"
+            ],
+            "valueDistribution": [
+                {
+                    "value": "p",
+                    "count": 4215,
+                    "styles": 54
+                },
+                {
+                    "value": "a",
+                    "count": 276,
+                    "styles": 11
+                }
+            ],
+            "inferredMeaning": "legacy conductor/construction type flag (unconfirmed); p dominates, a minority",
+            "inferredType": "code",
+            "inferredUnit": null,
+            "likelyTarget": null,
+            "confidence": "low",
+            "decision": "REVIEW",
+            "reason": "UNKNOWN_SEMANTICS"
+        }
+    },
+    "readiness": {
+        "CURRENT": {
+            "ACCESSORY_DV_FIELD_MAPPING_READY": 27,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54,
+            "note": "Accessory ACCESSORY_DV / SPEC_FIELD_MAPPING_READY remain 27; cables not included until cable-spec mappings approved. FULL remains 54 (hardcoded baseline)."
+        },
+        "PROJECTED": {
+            "ACCESSORY_DV_FIELD_MAPPING_READY": 27,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54,
+            "note": "Projected SPEC_FIELD_MAPPING_READY stays 27 (accessory unchanged); cables excluded until approved. FULL remains 54."
+        },
+        "products": {
+            "READY": 0,
+            "REVIEW": 54,
+            "BLOCKED": 0,
+            "items": {
+                "READY": [],
+                "REVIEW": [
+                    {
+                        "styleCode": "B1",
+                        "productTitle": "P1 TriCab B1C<br />P1/P8 TriCab B1M",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "BH",
+                        "productTitle": "BFOI BFCI Shipboard Fire Res.",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "BV",
+                        "productTitle": "RI Shipboard",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "C1",
+                        "productTitle": "Flexible",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "DF",
+                        "productTitle": "600V Braid",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "DG",
+                        "productTitle": "1.8kV/3.0kV",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "DV",
+                        "productTitle": "RFOI RFCI Shipboard",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "EA",
+                        "productTitle": "Flexible Rubber",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "EG",
+                        "productTitle": "RFOI (i&c) RFCI (i&c) Shipboard",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "ES",
+                        "productTitle": "BI (c) Shipboard Fire Res.",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "EW",
+                        "productTitle": "RI (i&c) Shipboard",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "FC",
+                        "productTitle": "BI (i&c) Shipboard Fire Res.",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "FE",
+                        "productTitle": "BIOI (i&c) BICI (i&c) Offshore Braid Arm. Fire Res.",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "FJ",
+                        "productTitle": "BFOI (c) BFCI (c) Shipboard Fire Res.",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "FK",
+                        "productTitle": "BIOI (c) BICI (c) Offshore Braid Armour Fire Res.",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "FL",
+                        "productTitle": "BFOI (i&c) BFCI (i&c) Shipboard Fire Res.",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "FZ",
+                        "productTitle": "RIOI (i&c) RICI (i&c) Offshore Braid Armour",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "HT",
+                        "productTitle": "BIOI BICI Offshore Braid Armour Fire Res.",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "KA",
+                        "productTitle": "Flexible Control",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    },
+                    {
+                        "styleCode": "KC",
+                        "productTitle": "Flexible Rubber",
+                        "family": "CABLE",
+                        "status": "REVIEW",
+                        "reason": "POPULATED_FIELDS_NEED_REVIEW_OR_CREATE",
+                        "reviewFields": [
+                            "Af",
+                            "cc",
+                            "ct",
+                            "ins",
+                            "mt",
+                            "ne",
+                            "od_arm",
+                            "od_bed",
+                            "od_brd",
+                            "ode_ins",
+                            "r",
+                            "tension",
+                            "walu",
+                            "wbnz",
+                            "x50",
+                            "x60",
+                            "xae"
+                        ]
+                    }
+                ],
+                "BLOCKED": [],
+                "summaryNote": "Item lists capped at 20 per status for package size."
+            }
+        }
+    },
+    "batchC2Integrity": {
+        "definitions": 55,
+        "styleMappings": 483,
+        "totalMappings": 506,
+        "expected": {
+            "definitions": 55,
+            "styleMappings": 483,
+            "totalMappings": 506
+        },
+        "drift": [],
+        "driftDetected": false,
+        "mappingsModified": 0,
+        "definitionsModified": 0,
+        "outerDiameterPreserved": true,
+        "nomCableOdDistinct": true,
+        "note": "Batch C2 integrity flags preserved (55 / 483 / 506)."
+    },
+    "dryRunTargetPlan": {
+        "writesWouldExecute": false,
+        "definitionsToCreate": 6,
+        "mappingsToInsert": 0,
+        "mappingsToInsertNote": "dry-run only \u2014 no mapping inserts",
+        "unitsToCreate": 0,
+        "optionsToCreate": 0,
+        "specificationValuesToWrite": 0,
+        "guard": "CABLE_SPEC_FIELD_MAPPING_APPLY_NOT_APPROVED"
+    },
+    "artifacts": [
+        "cable-spec-field-inventory.json",
+        "cable-spec-concept-proposals.json",
+        "cable-spec-proposed-field-mappings.json",
+        "cable-spec-review.json",
+        "cable-spec-readiness.json",
+        "cable-spec-final-dry-run-package.json",
+        "cable-spec-special-investigations.json"
+    ],
+    "recommendation": "REVIEW CABLE SPEC FIELD MAPPING PACKAGE \u2014 DO NOT APPLY",
+    "nextAction": "STOP \u2014 WAIT FOR EXPLICIT OPERATOR APPROVAL"
+}

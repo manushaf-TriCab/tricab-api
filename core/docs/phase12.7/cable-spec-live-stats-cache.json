@@ -1,0 +1,1321 @@
+{
+    "cableProductCount": 54,
+    "stylesWithCableSpecs": 54,
+    "stylesWithData": 54,
+    "rowCount": 4491,
+    "columns": [
+        "my_row_id",
+        "cable_style",
+        "nc",
+        "cc",
+        "xa",
+        "ne",
+        "xae",
+        "br",
+        "cdia",
+        "ins",
+        "od_ins",
+        "ode_ins",
+        "od_bed",
+        "od_arm",
+        "od_brd",
+        "od",
+        "height",
+        "width",
+        "wght",
+        "walu",
+        "wbnz",
+        "A15c",
+        "A25c",
+        "A30c",
+        "A40c",
+        "A45c",
+        "Af",
+        "r",
+        "x50",
+        "x60",
+        "cap",
+        "tension",
+        "mt",
+        "ct",
+        "core_con"
+    ],
+    "perStyleRows": [
+        {
+            "cable_style": "B1",
+            "c": 11
+        },
+        {
+            "cable_style": "BH",
+            "c": 158
+        },
+        {
+            "cable_style": "BV",
+            "c": 166
+        },
+        {
+            "cable_style": "C1",
+            "c": 117
+        },
+        {
+            "cable_style": "DF",
+            "c": 34
+        },
+        {
+            "cable_style": "DG",
+            "c": 19
+        },
+        {
+            "cable_style": "DV",
+            "c": 161
+        },
+        {
+            "cable_style": "EA",
+            "c": 15
+        },
+        {
+            "cable_style": "EG",
+            "c": 108
+        },
+        {
+            "cable_style": "ES",
+            "c": 110
+        },
+        {
+            "cable_style": "EW",
+            "c": 110
+        },
+        {
+            "cable_style": "FC",
+            "c": 110
+        },
+        {
+            "cable_style": "FE",
+            "c": 112
+        },
+        {
+            "cable_style": "FJ",
+            "c": 108
+        },
+        {
+            "cable_style": "FK",
+            "c": 114
+        },
+        {
+            "cable_style": "FL",
+            "c": 108
+        },
+        {
+            "cable_style": "FZ",
+            "c": 110
+        },
+        {
+            "cable_style": "HT",
+            "c": 147
+        },
+        {
+            "cable_style": "KA",
+            "c": 88
+        },
+        {
+            "cable_style": "KC",
+            "c": 64
+        },
+        {
+            "cable_style": "KL",
+            "c": 113
+        },
+        {
+            "cable_style": "KN",
+            "c": 111
+        },
+        {
+            "cable_style": "KU",
+            "c": 56
+        },
+        {
+            "cable_style": "LP",
+            "c": 35
+        },
+        {
+            "cable_style": "LS",
+            "c": 37
+        },
+        {
+            "cable_style": "NF",
+            "c": 12
+        },
+        {
+            "cable_style": "NJ",
+            "c": 88
+        },
+        {
+            "cable_style": "NR",
+            "c": 82
+        },
+        {
+            "cable_style": "NT",
+            "c": 88
+        },
+        {
+            "cable_style": "NU",
+            "c": 12
+        },
+        {
+            "cable_style": "NV",
+            "c": 87
+        },
+        {
+            "cable_style": "PJ",
+            "c": 165
+        },
+        {
+            "cable_style": "R1",
+            "c": 68
+        },
+        {
+            "cable_style": "RB",
+            "c": 116
+        },
+        {
+            "cable_style": "RC",
+            "c": 116
+        },
+        {
+            "cable_style": "RE",
+            "c": 66
+        },
+        {
+            "cable_style": "RR",
+            "c": 96
+        },
+        {
+            "cable_style": "RS",
+            "c": 100
+        },
+        {
+            "cable_style": "TG",
+            "c": 79
+        },
+        {
+            "cable_style": "TK",
+            "c": 6
+        },
+        {
+            "cable_style": "TP",
+            "c": 110
+        },
+        {
+            "cable_style": "TR",
+            "c": 110
+        },
+        {
+            "cable_style": "TS",
+            "c": 79
+        },
+        {
+            "cable_style": "TV",
+            "c": 14
+        },
+        {
+            "cable_style": "VP",
+            "c": 110
+        },
+        {
+            "cable_style": "VR",
+            "c": 110
+        },
+        {
+            "cable_style": "VS",
+            "c": 60
+        },
+        {
+            "cable_style": "VUF",
+            "c": 8
+        },
+        {
+            "cable_style": "VV",
+            "c": 14
+        },
+        {
+            "cable_style": "VW",
+            "c": 13
+        },
+        {
+            "cable_style": "XA",
+            "c": 81
+        },
+        {
+            "cable_style": "XL",
+            "c": 112
+        },
+        {
+            "cable_style": "XN",
+            "c": 111
+        },
+        {
+            "cable_style": "XU",
+            "c": 56
+        }
+    ],
+    "stats": {
+        "cable_style": {
+            "populated": 4491,
+            "populatedNonZero": 4491,
+            "distinct": 54,
+            "styles": 54,
+            "samples": [
+                "B1",
+                "BH",
+                "BV",
+                "C1",
+                "DF",
+                "DG",
+                "DV",
+                "EA",
+                "EG",
+                "ES",
+                "EW",
+                "FC"
+            ]
+        },
+        "nc": {
+            "populated": 4491,
+            "populatedNonZero": 4491,
+            "distinct": 39,
+            "styles": 54,
+            "samples": [
+                "1",
+                "10",
+                "100",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+                "16",
+                "18",
+                "19",
+                "2"
+            ]
+        },
+        "cc": {
+            "populated": 4491,
+            "populatedNonZero": 4491,
+            "distinct": 4,
+            "styles": 54,
+            "samples": [
+                "a",
+                "c",
+                "p",
+                "t"
+            ]
+        },
+        "xa": {
+            "populated": 4491,
+            "populatedNonZero": 4491,
+            "distinct": 46,
+            "styles": 54,
+            "samples": [
+                "0.5",
+                "0.75",
+                "1",
+                "1.5",
+                "1/0",
+                "10",
+                "1000",
+                "1111",
+                "12",
+                "120",
+                "14",
+                "14*"
+            ]
+        },
+        "ne": {
+            "populated": 4491,
+            "populatedNonZero": 586,
+            "distinct": 3,
+            "styles": 54,
+            "samples": [
+                "0",
+                "1",
+                "3"
+            ]
+        },
+        "xae": {
+            "populated": 4491,
+            "populatedNonZero": 4491,
+            "distinct": 20,
+            "styles": 54,
+            "samples": [
+                "0.00",
+                "1.50",
+                "10.00",
+                "12.00",
+                "120.00",
+                "14.00",
+                "150.00",
+                "16.00",
+                "185.00",
+                "2.50",
+                "240.00",
+                "25.00"
+            ]
+        },
+        "br": {
+            "populated": 4491,
+            "populatedNonZero": 4491,
+            "distinct": 1348,
+            "styles": 54,
+            "samples": [
+                "0.84",
+                "1.00",
+                "1.02",
+                "1.04",
+                "1.05",
+                "1.07",
+                "1.08",
+                "1.10",
+                "1.11",
+                "1.14",
+                "1.16",
+                "1.17"
+            ]
+        },
+        "cdia": {
+            "populated": 3132,
+            "populatedNonZero": 3132,
+            "distinct": 76,
+            "styles": 41,
+            "samples": [
+                "0.05",
+                "0.06",
+                "0.08",
+                "0.10",
+                "0.12",
+                "0.15",
+                "0.19",
+                "0.20",
+                "0.24",
+                "0.30",
+                "0.34",
+                "0.38"
+            ]
+        },
+        "ins": {
+            "populated": 190,
+            "populatedNonZero": 190,
+            "distinct": 35,
+            "styles": 5,
+            "samples": [
+                "1.000",
+                "1.200",
+                "1.400",
+                "1.600",
+                "1.800",
+                "10.500",
+                "10.800",
+                "12.800",
+                "12.900",
+                "14.500",
+                "14.600",
+                "16.400"
+            ]
+        },
+        "od_ins": {
+            "populated": 759,
+            "populatedNonZero": 759,
+            "distinct": 144,
+            "styles": 18,
+            "samples": [
+                "0.122",
+                "0.138",
+                "0.146",
+                "0.156",
+                "0.162",
+                "0.181",
+                "0.244",
+                "0.284",
+                "0.334",
+                "0.394",
+                "0.451",
+                "0.491"
+            ]
+        },
+        "ode_ins": {
+            "populated": 99,
+            "populatedNonZero": 99,
+            "distinct": 20,
+            "styles": 3,
+            "samples": [
+                "10.500",
+                "12.800",
+                "14.600",
+                "16.600",
+                "18.700",
+                "2.900",
+                "20.700",
+                "23.500",
+                "25.700",
+                "29.200",
+                "3.400",
+                "3.500"
+            ]
+        },
+        "od_bed": {
+            "populated": 1949,
+            "populatedNonZero": 1949,
+            "distinct": 828,
+            "styles": 21,
+            "samples": [
+                "0.196",
+                "0.220",
+                "0.246",
+                "0.250",
+                "0.259",
+                "0.262",
+                "0.268",
+                "0.277",
+                "0.282",
+                "0.286",
+                "0.290",
+                "0.291"
+            ]
+        },
+        "od_arm": {
+            "populated": 184,
+            "populatedNonZero": 184,
+            "distinct": 113,
+            "styles": 3,
+            "samples": [
+                "10.300",
+                "10.500",
+                "11.300",
+                "11.400",
+                "12.100",
+                "12.200",
+                "12.700",
+                "12.900",
+                "13.500",
+                "13.800",
+                "14.000",
+                "14.300"
+            ]
+        },
+        "od_brd": {
+            "populated": 1951,
+            "populatedNonZero": 1951,
+            "distinct": 879,
+            "styles": 21,
+            "samples": [
+                "0.242",
+                "0.266",
+                "0.292",
+                "0.298",
+                "0.305",
+                "0.308",
+                "0.314",
+                "0.323",
+                "0.332",
+                "0.336",
+                "0.337",
+                "0.340"
+            ]
+        },
+        "od": {
+            "populated": 4491,
+            "populatedNonZero": 4491,
+            "distinct": 967,
+            "styles": 54,
+            "samples": [
+                "0.280",
+                "0.285",
+                "0.295",
+                "0.305",
+                "0.320",
+                "0.325",
+                "0.335",
+                "0.340",
+                "0.345",
+                "0.350",
+                "0.355",
+                "0.360"
+            ]
+        },
+        "height": {
+            "populated": 0,
+            "populatedNonZero": 0,
+            "distinct": 0,
+            "styles": 0,
+            "samples": []
+        },
+        "width": {
+            "populated": 0,
+            "populatedNonZero": 0,
+            "distinct": 0,
+            "styles": 0,
+            "samples": []
+        },
+        "wght": {
+            "populated": 4491,
+            "populatedNonZero": 4491,
+            "distinct": 2013,
+            "styles": 54,
+            "samples": [
+                "100",
+                "1000",
+                "1001",
+                "1002",
+                "1003",
+                "1004",
+                "1005",
+                "1007",
+                "1008",
+                "101",
+                "1012",
+                "1013"
+            ]
+        },
+        "walu": {
+            "populated": 766,
+            "populatedNonZero": 766,
+            "distinct": 496,
+            "styles": 14,
+            "samples": [
+                "100",
+                "1002",
+                "1007",
+                "1008",
+                "1013",
+                "1022",
+                "1027",
+                "1029",
+                "1031",
+                "1040",
+                "1043",
+                "1044"
+            ]
+        },
+        "wbnz": {
+            "populated": 766,
+            "populatedNonZero": 766,
+            "distinct": 510,
+            "styles": 14,
+            "samples": [
+                "1009",
+                "1010",
+                "1015",
+                "1024",
+                "1025",
+                "1026",
+                "1027",
+                "1028",
+                "1029",
+                "1034",
+                "1041",
+                "1045"
+            ]
+        },
+        "A15c": {
+            "populated": 0,
+            "populatedNonZero": 0,
+            "distinct": 0,
+            "styles": 0,
+            "samples": []
+        },
+        "A25c": {
+            "populated": 0,
+            "populatedNonZero": 0,
+            "distinct": 0,
+            "styles": 0,
+            "samples": []
+        },
+        "A30c": {
+            "populated": 1513,
+            "populatedNonZero": 1513,
+            "distinct": 221,
+            "styles": 22,
+            "samples": [
+                "10",
+                "100",
+                "104",
+                "1052",
+                "1059",
+                "106",
+                "1069",
+                "11",
+                "110",
+                "112",
+                "114",
+                "115"
+            ]
+        },
+        "A40c": {
+            "populated": 966,
+            "populatedNonZero": 966,
+            "distinct": 169,
+            "styles": 13,
+            "samples": [
+                "10",
+                "102",
+                "103",
+                "106",
+                "108",
+                "109",
+                "11",
+                "111",
+                "1125",
+                "116",
+                "117",
+                "12"
+            ]
+        },
+        "A45c": {
+            "populated": 1492,
+            "populatedNonZero": 1492,
+            "distinct": 115,
+            "styles": 18,
+            "samples": [
+                "10",
+                "101",
+                "105",
+                "108",
+                "11",
+                "110",
+                "111",
+                "118",
+                "12",
+                "127",
+                "13",
+                "130"
+            ]
+        },
+        "Af": {
+            "populated": 11,
+            "populatedNonZero": 11,
+            "distinct": 11,
+            "styles": 1,
+            "samples": [
+                "1.4",
+                "10.0",
+                "13.6",
+                "17.2",
+                "2.3",
+                "21.5",
+                "26.5",
+                "3.6",
+                "34.3",
+                "5.0",
+                "7.2"
+            ]
+        },
+        "r": {
+            "populated": 11,
+            "populatedNonZero": 11,
+            "distinct": 11,
+            "styles": 1,
+            "samples": [
+                "0.105",
+                "0.138",
+                "0.167",
+                "0.208",
+                "0.265",
+                "0.350",
+                "0.496",
+                "0.712",
+                "1.002",
+                "1.554",
+                "2.452"
+            ]
+        },
+        "x50": {
+            "populated": 11,
+            "populatedNonZero": 11,
+            "distinct": 11,
+            "styles": 1,
+            "samples": [
+                "0.073",
+                "0.075",
+                "0.076",
+                "0.077",
+                "0.079",
+                "0.082",
+                "0.085",
+                "0.089",
+                "0.093",
+                "0.099",
+                "0.106"
+            ]
+        },
+        "x60": {
+            "populated": 11,
+            "populatedNonZero": 11,
+            "distinct": 11,
+            "styles": 1,
+            "samples": [
+                "0.088",
+                "0.090",
+                "0.091",
+                "0.093",
+                "0.095",
+                "0.098",
+                "0.102",
+                "0.107",
+                "0.112",
+                "0.119",
+                "0.127"
+            ]
+        },
+        "cap": {
+            "populated": 0,
+            "populatedNonZero": 0,
+            "distinct": 0,
+            "styles": 0,
+            "samples": []
+        },
+        "tension": {
+            "populated": 11,
+            "populatedNonZero": 11,
+            "distinct": 11,
+            "styles": 1,
+            "samples": [
+                "1.9",
+                "12.0",
+                "16.3",
+                "20.3",
+                "25.7",
+                "30.4",
+                "38.3",
+                "5.1",
+                "50.5",
+                "6.9",
+                "8.9"
+            ]
+        },
+        "mt": {
+            "populated": 4491,
+            "populatedNonZero": 4472,
+            "distinct": 3,
+            "styles": 54,
+            "samples": [
+                "0",
+                "1301",
+                "1302"
+            ]
+        },
+        "ct": {
+            "populated": 4491,
+            "populatedNonZero": 4491,
+            "distinct": 2,
+            "styles": 54,
+            "samples": [
+                "a",
+                "p"
+            ]
+        },
+        "core_con": {
+            "populated": 0,
+            "populatedNonZero": 0,
+            "distinct": 0,
+            "styles": 0,
+            "samples": []
+        }
+    },
+    "fieldDistributions": {
+        "cc": [
+            {
+                "value": "c",
+                "count": 3027,
+                "styles": 39
+            },
+            {
+                "value": "p",
+                "count": 1177,
+                "styles": 14
+            },
+            {
+                "value": "t",
+                "count": 279,
+                "styles": 14
+            },
+            {
+                "value": "a",
+                "count": 8,
+                "styles": 1
+            }
+        ],
+        "mt": [
+            {
+                "value": "1301",
+                "count": 2774,
+                "styles": 41
+            },
+            {
+                "value": "1302",
+                "count": 1698,
+                "styles": 33
+            },
+            {
+                "value": "0",
+                "count": 19,
+                "styles": 1
+            }
+        ],
+        "ct": [
+            {
+                "value": "p",
+                "count": 4215,
+                "styles": 54
+            },
+            {
+                "value": "a",
+                "count": 276,
+                "styles": 11
+            }
+        ]
+    },
+    "generatedAtUtc": "2026-08-21T03:59:00+00:00",
+    "definitions": [
+        {
+            "publicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+            "code": "VOLTAGE",
+            "name": "Voltage",
+            "dataTypeCode": "text",
+            "unit": "V",
+            "groupCode": "electrical"
+        },
+        {
+            "publicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+            "code": "CURRENT",
+            "name": "Current Rating",
+            "dataTypeCode": "decimal",
+            "unit": "amp",
+            "groupCode": "electrical"
+        },
+        {
+            "publicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+            "code": "CORES",
+            "name": "Number of cores",
+            "dataTypeCode": "integer",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "BF15E18E-7E90-F111-B336-000D3AE079A8",
+            "code": "CSA",
+            "name": "Conductor CSA",
+            "dataTypeCode": "text",
+            "unit": "mm\u00b2",
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "C015E18E-7E90-F111-B336-000D3AE079A8",
+            "code": "SHEATH",
+            "name": "Sheath material",
+            "dataTypeCode": "text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "C115E18E-7E90-F111-B336-000D3AE079A8",
+            "code": "STANDARD",
+            "name": "Standard",
+            "dataTypeCode": "multi-select",
+            "unit": null,
+            "groupCode": "compliance"
+        },
+        {
+            "publicId": "C215E18E-7E90-F111-B336-000D3AE079A8",
+            "code": "IP-RATING",
+            "name": "IP rating",
+            "dataTypeCode": "text",
+            "unit": null,
+            "groupCode": "compliance"
+        },
+        {
+            "publicId": "B61AD5F0-E991-F111-B337-000D3AE0E28B",
+            "code": "TEMP-RANGE",
+            "name": "Operating temperature range",
+            "dataTypeCode": "range",
+            "unit": "\u00b0C",
+            "groupCode": "thermal"
+        },
+        {
+            "publicId": "B71AD5F0-E991-F111-B337-000D3AE0E28B",
+            "code": "DEFAULT-COLOUR",
+            "name": "Default sheath colour",
+            "dataTypeCode": "single-select",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "05F3FF88-1192-F111-B336-000D3AE07ABC",
+            "code": "CODE_BRAID_SCREEN",
+            "name": "Braid / Armour / Screen",
+            "dataTypeCode": "single-select",
+            "unit": null,
+            "groupCode": null
+        },
+        {
+            "publicId": "06F3FF88-1192-F111-B336-000D3AE07ABC",
+            "code": "CODE_CONDUCTOR",
+            "name": "Conductor",
+            "dataTypeCode": "single-select",
+            "unit": null,
+            "groupCode": null
+        },
+        {
+            "publicId": "07F3FF88-1192-F111-B336-000D3AE07ABC",
+            "code": "CODE_CORE_COLOUR",
+            "name": "Core Colour Configuration",
+            "dataTypeCode": "single-select",
+            "unit": null,
+            "groupCode": null
+        },
+        {
+            "publicId": "08F3FF88-1192-F111-B336-000D3AE07ABC",
+            "code": "CODE_CORE_COUNT",
+            "name": "Number of Conductors",
+            "dataTypeCode": "integer",
+            "unit": null,
+            "groupCode": null
+        },
+        {
+            "publicId": "09F3FF88-1192-F111-B336-000D3AE07ABC",
+            "code": "CODE_CORE_TYPE",
+            "name": "Core Type",
+            "dataTypeCode": "single-select",
+            "unit": null,
+            "groupCode": null
+        },
+        {
+            "publicId": "0AF3FF88-1192-F111-B336-000D3AE07ABC",
+            "code": "CODE_CROSS_SECTION",
+            "name": "Cross Section Area",
+            "dataTypeCode": "single-select",
+            "unit": null,
+            "groupCode": null
+        },
+        {
+            "publicId": "0BF3FF88-1192-F111-B336-000D3AE07ABC",
+            "code": "CODE_JACKET_COLOUR",
+            "name": "Jacket Colour",
+            "dataTypeCode": "single-select",
+            "unit": null,
+            "groupCode": null
+        },
+        {
+            "publicId": "0CF3FF88-1192-F111-B336-000D3AE07ABC",
+            "code": "CODE_JACKET_TYPE",
+            "name": "Jacket Type",
+            "dataTypeCode": "single-select",
+            "unit": null,
+            "groupCode": null
+        },
+        {
+            "publicId": "0DF3FF88-1192-F111-B336-000D3AE07ABC",
+            "code": "CODE_STYLE",
+            "name": "Style Code",
+            "dataTypeCode": "single-select",
+            "unit": null,
+            "groupCode": null
+        },
+        {
+            "publicId": "D69214C5-3F94-F111-9B33-00224815955A",
+            "code": "CORE-COLOURS",
+            "name": "Core Colours",
+            "dataTypeCode": "long-text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "C514D950-4C94-F111-9B33-00224815955A",
+            "code": "CONDUCTORS",
+            "name": "Conductors",
+            "dataTypeCode": "long-text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "C614D950-4C94-F111-9B33-00224815955A",
+            "code": "FLAME-BARRIER",
+            "name": "Flame Barrier",
+            "dataTypeCode": "long-text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "C714D950-4C94-F111-9B33-00224815955A",
+            "code": "CORE-INSULATION",
+            "name": "Core Insulation",
+            "dataTypeCode": "long-text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "C814D950-4C94-F111-9B33-00224815955A",
+            "code": "SEPARATOR",
+            "name": "Separator",
+            "dataTypeCode": "text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "C914D950-4C94-F111-9B33-00224815955A",
+            "code": "BRAID",
+            "name": "Braid",
+            "dataTypeCode": "long-text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "CA14D950-4C94-F111-9B33-00224815955A",
+            "code": "SEPARATOR-OUTER",
+            "name": "Separator",
+            "dataTypeCode": "text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "CB14D950-4C94-F111-9B33-00224815955A",
+            "code": "JACKET",
+            "name": "Jacket",
+            "dataTypeCode": "long-text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "CC14D950-4C94-F111-9B33-00224815955A",
+            "code": "JACKET-OPTION-A",
+            "name": "A Type",
+            "dataTypeCode": "text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "CD14D950-4C94-F111-9B33-00224815955A",
+            "code": "JACKET-OPTION-C",
+            "name": "C Type",
+            "dataTypeCode": "text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "CE14D950-4C94-F111-9B33-00224815955A",
+            "code": "JACKET-OPTION-M",
+            "name": "M Type",
+            "dataTypeCode": "text",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "CF14D950-4C94-F111-9B33-00224815955A",
+            "code": "APPROVALS",
+            "name": "Approvals",
+            "dataTypeCode": "multi-select",
+            "unit": null,
+            "groupCode": "compliance"
+        },
+        {
+            "publicId": "D014D950-4C94-F111-9B33-00224815955A",
+            "code": "APPROVAL-NOTE",
+            "name": "Approval note",
+            "dataTypeCode": "long-text",
+            "unit": null,
+            "groupCode": "compliance"
+        },
+        {
+            "publicId": "9B7FC4CE-5A94-F111-9B33-00224815955A",
+            "code": "SIZE",
+            "name": "Size",
+            "dataTypeCode": "text",
+            "unit": "mm\u00b2",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "9C7FC4CE-5A94-F111-9B33-00224815955A",
+            "code": "MIN-BEND-RADIUS",
+            "name": "Min. Bend",
+            "dataTypeCode": "decimal",
+            "unit": "Radius mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "9D7FC4CE-5A94-F111-9B33-00224815955A",
+            "code": "NOM-COND-OD",
+            "name": "Nom. Cond.",
+            "dataTypeCode": "decimal",
+            "unit": "OD mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "9E7FC4CE-5A94-F111-9B33-00224815955A",
+            "code": "NOM-INS-OD",
+            "name": "Nom. Ins.",
+            "dataTypeCode": "decimal",
+            "unit": "OD mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "9F7FC4CE-5A94-F111-9B33-00224815955A",
+            "code": "NOM-CABLE-OD",
+            "name": "Nom. Cable",
+            "dataTypeCode": "decimal",
+            "unit": "OD mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "A07FC4CE-5A94-F111-9B33-00224815955A",
+            "code": "APPROX-WEIGHT",
+            "name": "Approx. Wt.",
+            "dataTypeCode": "decimal",
+            "unit": "kg/km",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "F697EC16-009D-F111-9B33-000D3AE12DFC",
+            "code": "OPERATING-TEMP",
+            "name": "Operating temperature",
+            "dataTypeCode": "decimal",
+            "unit": "\u00b0C",
+            "groupCode": "thermal"
+        },
+        {
+            "publicId": "F897EC16-009D-F111-9B33-000D3AE12DFC",
+            "code": "HCL-EMISSION",
+            "name": "HCl emission",
+            "dataTypeCode": "text",
+            "unit": null,
+            "groupCode": "compliance"
+        },
+        {
+            "publicId": "FA97EC16-009D-F111-9B33-000D3AE12DFC",
+            "code": "OXYGEN-INDEX",
+            "name": "Oxygen index",
+            "dataTypeCode": "text",
+            "unit": null,
+            "groupCode": "compliance"
+        },
+        {
+            "publicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+            "code": "PIN-COUNT",
+            "name": "Pins",
+            "dataTypeCode": "integer",
+            "unit": null,
+            "groupCode": "construction"
+        },
+        {
+            "publicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+            "code": "THREAD-OD",
+            "name": "Thread OD",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "E95E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "OVERALL-LENGTH",
+            "name": "Overall Length",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "EB5E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "WIDTH",
+            "name": "Width",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "ED5E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "HEIGHT",
+            "name": "Height",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "EF5E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "INNER-DIAMETER",
+            "name": "Inner Diameter",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "F15E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "CABLE-LENGTH",
+            "name": "Cable Length",
+            "dataTypeCode": "decimal",
+            "unit": "m",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "F35E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "BARREL-LENGTH",
+            "name": "Barrel Length",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "F55E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "STUD-OD",
+            "name": "Stud OD",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "F75E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "OUTER-DIAMETER",
+            "name": "Outer Diameter",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "F95E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "THREAD-LENGTH",
+            "name": "Thread Length",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "FB5E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "BARREL-OD",
+            "name": "Barrel OD",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "FD5E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "THICKNESS",
+            "name": "Thickness",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "FF5E9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "DEPTH",
+            "name": "Depth",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        },
+        {
+            "publicId": "015F9BFB-0C9D-F111-9B33-002248D3F937",
+            "code": "PIN-DIAMETER",
+            "name": "Pin Diameter",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "groupCode": "mechanical"
+        }
+    ],
+    "legacyWrites": 0
+}

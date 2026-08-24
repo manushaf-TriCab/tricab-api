@@ -1,0 +1,3957 @@
+[
+    {
+        "rawValues": [
+            "BHA"
+        ],
+        "normalizedApproval": "AS",
+        "normalizedKey": "as",
+        "issuingOrganization": null,
+        "usageCount": 20,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AS",
+            "displayName": "AS"
+        },
+        "aliases": [
+            "BHA"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "UP"
+        ],
+        "normalizedApproval": "UP",
+        "normalizedKey": "up",
+        "issuingOrganization": null,
+        "usageCount": 10,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "UP",
+            "displayName": "UP"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Small<br>Multi-core<br>Fire Test"
+        ],
+        "normalizedApproval": "Fire Test",
+        "normalizedKey": "fire test",
+        "issuingOrganization": null,
+        "usageCount": 7,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FIRE-TEST",
+            "displayName": "Fire Test"
+        },
+        "aliases": [
+            "Small<br>Multi-core<br>Fire Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PJA"
+        ],
+        "normalizedApproval": "PJA",
+        "normalizedKey": "pja",
+        "issuingOrganization": null,
+        "usageCount": 6,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PJA",
+            "displayName": "PJA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC"
+        ],
+        "normalizedApproval": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC",
+        "normalizedKey": "esa fka fkc fja fjc fca fla flc fea fec",
+        "issuingOrganization": null,
+        "usageCount": 5,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ESA-FKA-FKC-FJA-FJC-FCA-FLA-FLC-FEA-FEC",
+            "displayName": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RCA RBA RBC EWA EGA EGC FZA FZC RSA"
+        ],
+        "normalizedApproval": "RCA RBA RBC EWA EGA EGC FZA FZC RSA",
+        "normalizedKey": "rca rba rbc ewa ega egc fza fzc rsa",
+        "issuingOrganization": null,
+        "usageCount": 5,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RCA-RBA-RBC-EWA-EGA-EGC-FZA-FZC-RSA",
+            "displayName": "RCA RBA RBC EWA EGA EGC FZA FZC RSA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RRA"
+        ],
+        "normalizedApproval": "RRA",
+        "normalizedKey": "rra",
+        "issuingOrganization": null,
+        "usageCount": 5,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RRA",
+            "displayName": "RRA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BVA DVA"
+        ],
+        "normalizedApproval": "BVA DVA",
+        "normalizedKey": "bva dva",
+        "issuingOrganization": null,
+        "usageCount": 4,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BVA-DVA",
+            "displayName": "BVA DVA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BHA"
+        ],
+        "normalizedApproval": "BHA",
+        "normalizedKey": "bha",
+        "issuingOrganization": null,
+        "usageCount": 4,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BHA",
+            "displayName": "BHA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FJA"
+        ],
+        "normalizedApproval": "FJA",
+        "normalizedKey": "fja",
+        "issuingOrganization": null,
+        "usageCount": 4,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FJA",
+            "displayName": "FJA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FLA"
+        ],
+        "normalizedApproval": "FLA",
+        "normalizedKey": "fla",
+        "issuingOrganization": null,
+        "usageCount": 4,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FLA",
+            "displayName": "FLA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "HTA"
+        ],
+        "normalizedApproval": "HTA",
+        "normalizedKey": "hta",
+        "issuingOrganization": null,
+        "usageCount": 4,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "HTA",
+            "displayName": "HTA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "MKC"
+        ],
+        "normalizedApproval": "MKC",
+        "normalizedKey": "mkc",
+        "issuingOrganization": null,
+        "usageCount": 4,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MKC",
+            "displayName": "MKC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PJC"
+        ],
+        "normalizedApproval": "PJC",
+        "normalizedKey": "pjc",
+        "issuingOrganization": null,
+        "usageCount": 4,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PJC",
+            "displayName": "PJC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "MKA PJA PJC RRA HTA HTC BHA BHC"
+        ],
+        "normalizedApproval": "MKA PJA PJC RRA HTA HTC BHA BHC",
+        "normalizedKey": "mka pja pjc rra hta htc bha bhc",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MKA-PJA-PJC-RRA-HTA-HTC-BHA-BHC",
+            "displayName": "MKA PJA PJC RRA HTA HTC BHA BHC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ESA FCA"
+        ],
+        "normalizedApproval": "ESA FCA",
+        "normalizedKey": "esa fca",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ESA-FCA",
+            "displayName": "ESA FCA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FKA FEA"
+        ],
+        "normalizedApproval": "FKA FEA",
+        "normalizedKey": "fka fea",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FKA-FEA",
+            "displayName": "FKA FEA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "HTC"
+        ],
+        "normalizedApproval": "HTC",
+        "normalizedKey": "htc",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "HTC",
+            "displayName": "HTC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RCA EWA"
+        ],
+        "normalizedApproval": "RCA EWA",
+        "normalizedKey": "rca ewa",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RCA-EWA",
+            "displayName": "RCA EWA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DFC"
+        ],
+        "normalizedApproval": "DFC",
+        "normalizedKey": "dfc",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DFC",
+            "displayName": "DFC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BVA"
+        ],
+        "normalizedApproval": "BVA",
+        "normalizedKey": "bva",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BVA",
+            "displayName": "BVA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DVA"
+        ],
+        "normalizedApproval": "DVA",
+        "normalizedKey": "dva",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DVA",
+            "displayName": "DVA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "MKA"
+        ],
+        "normalizedApproval": "MKA",
+        "normalizedKey": "mka",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MKA",
+            "displayName": "MKA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PJA PJC RRA HTA HTC BHA BHC"
+        ],
+        "normalizedApproval": "PJA PJC RRA HTA HTC BHA BHC",
+        "normalizedKey": "pja pjc rra hta htc bha bhc",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PJA-PJC-RRA-HTA-HTC-BHA-BHC",
+            "displayName": "PJA PJC RRA HTA HTC BHA BHC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Small<br>Multi-core<br>Fire Test"
+        ],
+        "normalizedApproval": "Multi-core",
+        "normalizedKey": "multi-core",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MULTI-CORE",
+            "displayName": "Multi-core"
+        },
+        "aliases": [
+            "Small<br>Multi-core<br>Fire Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Mech Test"
+        ],
+        "normalizedApproval": "Mech Test",
+        "normalizedKey": "mech test",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MECH-TEST",
+            "displayName": "Mech Test"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Small Multi-core<br>with Earth Fire Test"
+        ],
+        "normalizedApproval": "Small Multi-core",
+        "normalizedKey": "small multi-core",
+        "issuingOrganization": null,
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "SMALL-MULTI-CORE",
+            "displayName": "Small Multi-core"
+        },
+        "aliases": [
+            "Small Multi-core<br>with Earth Fire Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Manufacturing-Assessment"
+        ],
+        "normalizedApproval": "Manufacturing-Assessment",
+        "normalizedKey": "manufacturing-assessment",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MANUFACTURING-ASSESSMENT",
+            "displayName": "Manufacturing-Assessment"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BVA DVA RRA RCA EWA ESA UP"
+        ],
+        "normalizedApproval": "BVA DVA RRA RCA EWA ESA UP",
+        "normalizedKey": "bva dva rra rca ewa esa up",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BVA-DVA-RRA-RCA-EWA-ESA-UP",
+            "displayName": "BVA DVA RRA RCA EWA ESA UP"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DF"
+        ],
+        "normalizedApproval": "DF",
+        "normalizedKey": "df",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DF",
+            "displayName": "DF"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FKC FEC"
+        ],
+        "normalizedApproval": "FKC FEC",
+        "normalizedKey": "fkc fec",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FKC-FEC",
+            "displayName": "FKC FEC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RBA FZA"
+        ],
+        "normalizedApproval": "RBA FZA",
+        "normalizedKey": "rba fza",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RBA-FZA",
+            "displayName": "RBA FZA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RBC FZC"
+        ],
+        "normalizedApproval": "RBC FZC",
+        "normalizedKey": "rbc fzc",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RBC-FZC",
+            "displayName": "RBC FZC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RSA EGA"
+        ],
+        "normalizedApproval": "RSA EGA",
+        "normalizedKey": "rsa ega",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RSA-EGA",
+            "displayName": "RSA EGA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "NTM NTC"
+        ],
+        "normalizedApproval": "NTM NTC",
+        "normalizedKey": "ntm ntc",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "NTM-NTC",
+            "displayName": "NTM NTC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DFM"
+        ],
+        "normalizedApproval": "DFM",
+        "normalizedKey": "dfm",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DFM",
+            "displayName": "DFM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DGC"
+        ],
+        "normalizedApproval": "DGC",
+        "normalizedKey": "dgc",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DGC",
+            "displayName": "DGC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "UPA"
+        ],
+        "normalizedApproval": "UPA",
+        "normalizedKey": "upa",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "UPA",
+            "displayName": "UPA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "UPM"
+        ],
+        "normalizedApproval": "UPM",
+        "normalizedKey": "upm",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "UPM",
+            "displayName": "UPM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BVA DVA DVC DFA DFC"
+        ],
+        "normalizedApproval": "BVA DVA DVC DFA DFC",
+        "normalizedKey": "bva dva dvc dfa dfc",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BVA-DVA-DVC-DFA-DFC",
+            "displayName": "BVA DVA DVC DFA DFC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "NTC NTM"
+        ],
+        "normalizedApproval": "NTC NTM",
+        "normalizedKey": "ntc ntm",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "NTC-NTM",
+            "displayName": "NTC NTM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EGA"
+        ],
+        "normalizedApproval": "EGA",
+        "normalizedKey": "ega",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EGA",
+            "displayName": "EGA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RR"
+        ],
+        "normalizedApproval": "RR",
+        "normalizedKey": "rr",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RR",
+            "displayName": "RR"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BV"
+        ],
+        "normalizedApproval": "BV",
+        "normalizedKey": "bv",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": "BV",
+        "proposedOption": {
+            "code": "BV",
+            "displayName": "BV"
+        },
+        "aliases": [],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_APPROVALS_option"
+    },
+    {
+        "rawValues": [
+            "RSA"
+        ],
+        "normalizedApproval": "RSA",
+        "normalizedKey": "rsa",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RSA",
+            "displayName": "RSA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FE"
+        ],
+        "normalizedApproval": "FE",
+        "normalizedKey": "fe",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FE",
+            "displayName": "FE"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ES"
+        ],
+        "normalizedApproval": "ES",
+        "normalizedKey": "es",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ES",
+            "displayName": "ES"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "X-HF-110<br>HFS-110-TP"
+        ],
+        "normalizedApproval": "X-HF-110",
+        "normalizedKey": "x-hf-110",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "X-HF-110",
+            "displayName": "X-HF-110"
+        },
+        "aliases": [
+            "X-HF-110<br>HFS-110-TP"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Small<br>Multi-core<br>Fire Test"
+        ],
+        "normalizedApproval": "Small",
+        "normalizedKey": "small",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "SMALL",
+            "displayName": "Small"
+        },
+        "aliases": [
+            "Small<br>Multi-core<br>Fire Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Hydrostatic<br>Pressure Test"
+        ],
+        "normalizedApproval": "Hydrostatic",
+        "normalizedKey": "hydrostatic",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "HYDROSTATIC",
+            "displayName": "Hydrostatic"
+        },
+        "aliases": [
+            "Hydrostatic<br>Pressure Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Hydrostatic<br>Pressure Test"
+        ],
+        "normalizedApproval": "Pressure Test",
+        "normalizedKey": "pressure test",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PRESSURE-TEST",
+            "displayName": "Pressure Test"
+        },
+        "aliases": [
+            "Hydrostatic<br>Pressure Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DV"
+        ],
+        "normalizedApproval": "DV",
+        "normalizedKey": "dv",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DV",
+            "displayName": "DV"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ALI-FLEX System<br>Warranty"
+        ],
+        "normalizedApproval": "Warranty",
+        "normalizedKey": "warranty",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "WARRANTY",
+            "displayName": "Warranty"
+        },
+        "aliases": [
+            "ALI-FLEX System<br>Warranty"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "J10 TUV"
+        ],
+        "normalizedApproval": "J10 TUV",
+        "normalizedKey": "j10 tuv",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "J10-TUV",
+            "displayName": "J10 TUV"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RoHS<br>Statement"
+        ],
+        "normalizedApproval": "Statement",
+        "normalizedKey": "statement",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "STATEMENT",
+            "displayName": "Statement"
+        },
+        "aliases": [
+            "RoHS<br>Statement"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ALI-FLEX"
+        ],
+        "normalizedApproval": "ALI-FLEX",
+        "normalizedKey": "ali-flex",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ALI-FLEX",
+            "displayName": "ALI-FLEX"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Fire Penetration Test<br> - Floor"
+        ],
+        "normalizedApproval": "Fire Penetration Test",
+        "normalizedKey": "fire penetration test",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FIRE-PENETRATION-TEST",
+            "displayName": "Fire Penetration Test"
+        },
+        "aliases": [
+            "Fire Penetration Test<br> - Floor"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "110C-Operating-Temperature"
+        ],
+        "normalizedApproval": "110C-Operating-Temperature",
+        "normalizedKey": "110c-operating-temperature",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "110C-OPERATING-TEMPERATURE",
+            "displayName": "110C-Operating-Temperature"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Watertightness"
+        ],
+        "normalizedApproval": "Watertightness",
+        "normalizedKey": "watertightness",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "WATERTIGHTNESS",
+            "displayName": "Watertightness"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ISO-9001 AUS"
+        ],
+        "normalizedApproval": "ISO-9001 AUS",
+        "normalizedKey": "iso-9001 aus",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ISO-9001-AUS",
+            "displayName": "ISO-9001 AUS"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "KK Hydrostatic-Pressure-Test-Cert"
+        ],
+        "normalizedApproval": "KK Hydrostatic-Pressure-Test-Cert",
+        "normalizedKey": "kk hydrostatic-pressure-test-cert",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "KK-HYDROSTATIC-PRESSURE-TEST-CERT",
+            "displayName": "KK Hydrostatic-Pressure-Test-Cert"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "OD Hydrostatic-Pressure-Test-Cert"
+        ],
+        "normalizedApproval": "OD Hydrostatic-Pressure-Test-Cert",
+        "normalizedKey": "od hydrostatic-pressure-test-cert",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "OD-HYDROSTATIC-PRESSURE-TEST-CERT",
+            "displayName": "OD Hydrostatic-Pressure-Test-Cert"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "MKA PJA PJC RRS HTA HTC BHA BHC"
+        ],
+        "normalizedApproval": "MKA PJA PJC RRS HTA HTC BHA BHC",
+        "normalizedKey": "mka pja pjc rrs hta htc bha bhc",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MKA-PJA-PJC-RRS-HTA-HTC-BHA-BHC",
+            "displayName": "MKA PJA PJC RRS HTA HTC BHA BHC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EH 100m"
+        ],
+        "normalizedApproval": "EH 100m",
+        "normalizedKey": "eh 100m",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EH-100M",
+            "displayName": "EH 100m"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EH 500m"
+        ],
+        "normalizedApproval": "EH 500m",
+        "normalizedKey": "eh 500m",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EH-500M",
+            "displayName": "EH 500m"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EH 1000m"
+        ],
+        "normalizedApproval": "EH 1000m",
+        "normalizedKey": "eh 1000m",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EH-1000M",
+            "displayName": "EH 1000m"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EU 100m"
+        ],
+        "normalizedApproval": "EU 100m",
+        "normalizedKey": "eu 100m",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EU-100M",
+            "displayName": "EU 100m"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EU 500m"
+        ],
+        "normalizedApproval": "EU 500m",
+        "normalizedKey": "eu 500m",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EU-500M",
+            "displayName": "EU 500m"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EU 1000m"
+        ],
+        "normalizedApproval": "EU 1000m",
+        "normalizedKey": "eu 1000m",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EU-1000M",
+            "displayName": "EU 1000m"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "MKA BVA DVA"
+        ],
+        "normalizedApproval": "MKA BVA DVA",
+        "normalizedKey": "mka bva dva",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MKA-BVA-DVA",
+            "displayName": "MKA BVA DVA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FEC FKC FEM FKM"
+        ],
+        "normalizedApproval": "FEC FKC FEM FKM",
+        "normalizedKey": "fec fkc fem fkm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FEC-FKC-FEM-FKM",
+            "displayName": "FEC FKC FEM FKM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DGM"
+        ],
+        "normalizedApproval": "DGM",
+        "normalizedKey": "dgm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DGM",
+            "displayName": "DGM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FEM FKM"
+        ],
+        "normalizedApproval": "FEM FKM",
+        "normalizedKey": "fem fkm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FEM-FKM",
+            "displayName": "FEM FKM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "HTM"
+        ],
+        "normalizedApproval": "HTM",
+        "normalizedKey": "htm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "HTM",
+            "displayName": "HTM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "MA"
+        ],
+        "normalizedApproval": "MA",
+        "normalizedKey": "ma",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MA",
+            "displayName": "MA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "UPC"
+        ],
+        "normalizedApproval": "UPC",
+        "normalizedKey": "upc",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "UPC",
+            "displayName": "UPC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PJM"
+        ],
+        "normalizedApproval": "PJM",
+        "normalizedKey": "pjm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PJM",
+            "displayName": "PJM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RBM FZM"
+        ],
+        "normalizedApproval": "RBM FZM",
+        "normalizedKey": "rbm fzm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RBM-FZM",
+            "displayName": "RBM FZM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "NJM NJC"
+        ],
+        "normalizedApproval": "NJM NJC",
+        "normalizedKey": "njm njc",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "NJM-NJC",
+            "displayName": "NJM NJC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RBC RFZ RBM"
+        ],
+        "normalizedApproval": "RBC RFZ RBM",
+        "normalizedKey": "rbc rfz rbm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RBC-RFZ-RBM",
+            "displayName": "RBC RFZ RBM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "TW27"
+        ],
+        "normalizedApproval": "TW27",
+        "normalizedKey": "tw27",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "TW27",
+            "displayName": "TW27"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "US-Coastguard"
+        ],
+        "normalizedApproval": "US-Coastguard",
+        "normalizedKey": "us-coastguard",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "US-COASTGUARD",
+            "displayName": "US-Coastguard"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Water-Tightness"
+        ],
+        "normalizedApproval": "Water-Tightness",
+        "normalizedKey": "water-tightness",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "WATER-TIGHTNESS",
+            "displayName": "Water-Tightness"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BV-Mode-II"
+        ],
+        "normalizedApproval": "BV-Mode-II",
+        "normalizedKey": "bv-mode-ii",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BV-MODE-II",
+            "displayName": "BV-Mode-II"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DVA DVC BVA BVC BV DV"
+        ],
+        "normalizedApproval": "DVA DVC BVA BVC BV DV",
+        "normalizedKey": "dva dvc bva bvc bv dv",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DVA-DVC-BVA-BVC-BV-DV",
+            "displayName": "DVA DVC BVA BVC BV DV"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BV DV"
+        ],
+        "normalizedApproval": "BV DV",
+        "normalizedKey": "bv dv",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BV-DV",
+            "displayName": "BV DV"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ES FK FC FJA FLA"
+        ],
+        "normalizedApproval": "ES FK FC FJA FLA",
+        "normalizedKey": "es fk fc fja fla",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ES-FK-FC-FJA-FLA",
+            "displayName": "ES FK FC FJA FLA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EW RB RC FZ RSA EGA"
+        ],
+        "normalizedApproval": "EW RB RC FZ RSA EGA",
+        "normalizedKey": "ew rb rc fz rsa ega",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EW-RB-RC-FZ-RSA-EGA",
+            "displayName": "EW RB RC FZ RSA EGA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PJA PJB"
+        ],
+        "normalizedApproval": "PJA PJB",
+        "normalizedKey": "pja pjb",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PJA-PJB",
+            "displayName": "PJA PJB"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RR HT BHA"
+        ],
+        "normalizedApproval": "RR HT BHA",
+        "normalizedKey": "rr ht bha",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RR-HT-BHA",
+            "displayName": "RR HT BHA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Certificate of Compliance"
+        ],
+        "normalizedApproval": "Certificate of Compliance",
+        "normalizedKey": "certificate of compliance",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "CERTIFICATE-OF-COMPLIANCE",
+            "displayName": "Certificate of Compliance"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FEC FEM FKC FKM"
+        ],
+        "normalizedApproval": "FEC FEM FKC FKM",
+        "normalizedKey": "fec fem fkc fkm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FEC-FEM-FKC-FKM",
+            "displayName": "FEC FEM FKC FKM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ESA FCA FJA FLA"
+        ],
+        "normalizedApproval": "ESA FCA FJA FLA",
+        "normalizedKey": "esa fca fja fla",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ESA-FCA-FJA-FLA",
+            "displayName": "ESA FCA FJA FLA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "HTA BHA"
+        ],
+        "normalizedApproval": "HTA BHA",
+        "normalizedKey": "hta bha",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "HTA-BHA",
+            "displayName": "HTA BHA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "UPC UPM"
+        ],
+        "normalizedApproval": "UPC UPM",
+        "normalizedKey": "upc upm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "UPC-UPM",
+            "displayName": "UPC UPM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RBA FZA EGA RSA"
+        ],
+        "normalizedApproval": "RBA FZA EGA RSA",
+        "normalizedKey": "rba fza ega rsa",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RBA-FZA-EGA-RSA",
+            "displayName": "RBA FZA EGA RSA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "NJC NJM"
+        ],
+        "normalizedApproval": "NJC NJM",
+        "normalizedKey": "njc njm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "NJC-NJM",
+            "displayName": "NJC NJM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FZC FZM RBC RBM"
+        ],
+        "normalizedApproval": "FZC FZM RBC RBM",
+        "normalizedKey": "fzc fzm rbc rbm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FZC-FZM-RBC-RBM",
+            "displayName": "FZC FZM RBC RBM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "LR UP"
+        ],
+        "normalizedApproval": "LR UP",
+        "normalizedKey": "lr up",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "LR-UP",
+            "displayName": "LR UP"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Transport-Canada-List"
+        ],
+        "normalizedApproval": "Transport-Canada-List",
+        "normalizedKey": "transport-canada-list",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "TRANSPORT-CANADA-LIST",
+            "displayName": "Transport-Canada-List"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BV DV EW RC RR BH PJ FJ"
+        ],
+        "normalizedApproval": "BV DV EW RC RR BH PJ FJ",
+        "normalizedKey": "bv dv ew rc rr bh pj fj",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BV-DV-EW-RC-RR-BH-PJ-FJ",
+            "displayName": "BV DV EW RC RR BH PJ FJ"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ESA"
+        ],
+        "normalizedApproval": "ESA",
+        "normalizedKey": "esa",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ESA",
+            "displayName": "ESA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EWA"
+        ],
+        "normalizedApproval": "EWA",
+        "normalizedKey": "ewa",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EWA",
+            "displayName": "EWA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FEA"
+        ],
+        "normalizedApproval": "FEA",
+        "normalizedKey": "fea",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FEA",
+            "displayName": "FEA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FZA RBA"
+        ],
+        "normalizedApproval": "FZA RBA",
+        "normalizedKey": "fza rba",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FZA-RBA",
+            "displayName": "FZA RBA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FEM FEC"
+        ],
+        "normalizedApproval": "FEM FEC",
+        "normalizedKey": "fem fec",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FEM-FEC",
+            "displayName": "FEM FEC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DG"
+        ],
+        "normalizedApproval": "DG",
+        "normalizedKey": "dg",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DG",
+            "displayName": "DG"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RBC RBM"
+        ],
+        "normalizedApproval": "RBC RBM",
+        "normalizedKey": "rbc rbm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RBC-RBM",
+            "displayName": "RBC RBM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PJB"
+        ],
+        "normalizedApproval": "PJB",
+        "normalizedKey": "pjb",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PJB",
+            "displayName": "PJB"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BHA HTA"
+        ],
+        "normalizedApproval": "BHA HTA",
+        "normalizedKey": "bha hta",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BHA-HTA",
+            "displayName": "BHA HTA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "DFA"
+        ],
+        "normalizedApproval": "DFA",
+        "normalizedKey": "dfa",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "DFA",
+            "displayName": "DFA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EGA RBA FZA RSA"
+        ],
+        "normalizedApproval": "EGA RBA FZA RSA",
+        "normalizedKey": "ega rba fza rsa",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EGA-RBA-FZA-RSA",
+            "displayName": "EGA RBA FZA RSA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EWA RCA"
+        ],
+        "normalizedApproval": "EWA RCA",
+        "normalizedKey": "ewa rca",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EWA-RCA",
+            "displayName": "EWA RCA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FEA FKA"
+        ],
+        "normalizedApproval": "FEA FKA",
+        "normalizedKey": "fea fka",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FEA-FKA",
+            "displayName": "FEA FKA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BH PJ DV FJ"
+        ],
+        "normalizedApproval": "BH PJ DV FJ",
+        "normalizedKey": "bh pj dv fj",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BH-PJ-DV-FJ",
+            "displayName": "BH PJ DV FJ"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BV EW RC"
+        ],
+        "normalizedApproval": "BV EW RC",
+        "normalizedKey": "bv ew rc",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BV-EW-RC",
+            "displayName": "BV EW RC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Green Star<br>Compliance"
+        ],
+        "normalizedApproval": "Green Star",
+        "normalizedKey": "green star",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "GREEN-STAR",
+            "displayName": "Green Star"
+        },
+        "aliases": [
+            "Green Star<br>Compliance"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Green Star<br>Compliance"
+        ],
+        "normalizedApproval": "Compliance",
+        "normalizedKey": "compliance",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "COMPLIANCE",
+            "displayName": "Compliance"
+        },
+        "aliases": [
+            "Green Star<br>Compliance"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Xenon ARC UV Radiation Test Report"
+        ],
+        "normalizedApproval": "Xenon ARC UV Radiation Test Report",
+        "normalizedKey": "xenon arc uv radiation test report",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "XENON-ARC-UV-RADIATION-TEST-REPORT",
+            "displayName": "Xenon ARC UV Radiation Test Report"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E171583-Vol1 Appliance Wiring Material"
+        ],
+        "normalizedApproval": "E171583-Vol1 Appliance Wiring Material",
+        "normalizedKey": "e171583-vol1 appliance wiring material",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E171583-VOL1-APPLIANCE-WIRING-MATERIAL",
+            "displayName": "E171583-Vol1 Appliance Wiring Material"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E171583-Vol3 Appliance Wiring Material"
+        ],
+        "normalizedApproval": "E171583-Vol3 Appliance Wiring Material",
+        "normalizedKey": "e171583-vol3 appliance wiring material",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E171583-VOL3-APPLIANCE-WIRING-MATERIAL",
+            "displayName": "E171583-Vol3 Appliance Wiring Material"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E322536-Vol1 Thermoset-Insulated Wire"
+        ],
+        "normalizedApproval": "E322536-Vol1 Thermoset-Insulated Wire",
+        "normalizedKey": "e322536-vol1 thermoset-insulated wire",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E322536-VOL1-THERMOSET-INSULATED-WIRE",
+            "displayName": "E322536-Vol1 Thermoset-Insulated Wire"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E322537-Vol1 Thermoplastic-Insulated Wire"
+        ],
+        "normalizedApproval": "E322537-Vol1 Thermoplastic-Insulated Wire",
+        "normalizedKey": "e322537-vol1 thermoplastic-insulated wire",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E322537-VOL1-THERMOPLASTIC-INSULATED-WIRE",
+            "displayName": "E322537-Vol1 Thermoplastic-Insulated Wire"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E345384-Vol1 Power and Control Tray Cable"
+        ],
+        "normalizedApproval": "E345384-Vol1 Power and Control Tray Cable",
+        "normalizedKey": "e345384-vol1 power and control tray cable",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E345384-VOL1-POWER-AND-CONTROL-TRAY-CABLE",
+            "displayName": "E345384-Vol1 Power and Control Tray Cable"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E347409-Vol1 Wind Turbine Tray Cable"
+        ],
+        "normalizedApproval": "E347409-Vol1 Wind Turbine Tray Cable",
+        "normalizedKey": "e347409-vol1 wind turbine tray cable",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E347409-VOL1-WIND-TURBINE-TRAY-CABLE",
+            "displayName": "E347409-Vol1 Wind Turbine Tray Cable"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E351344-Vol1 Flexible Motor Supply Cable"
+        ],
+        "normalizedApproval": "E351344-Vol1 Flexible Motor Supply Cable",
+        "normalizedKey": "e351344-vol1 flexible motor supply cable",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E351344-VOL1-FLEXIBLE-MOTOR-SUPPLY-CABLE",
+            "displayName": "E351344-Vol1 Flexible Motor Supply Cable"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E356957-Vol1 Heavy Duty Flexible Power Cable"
+        ],
+        "normalizedApproval": "E356957-Vol1 Heavy Duty Flexible Power Cable",
+        "normalizedKey": "e356957-vol1 heavy duty flexible power cable",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E356957-VOL1-HEAVY-DUTY-FLEXIBLE-POWER-CABLE",
+            "displayName": "E356957-Vol1 Heavy Duty Flexible Power Cable"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E351903-Vol1 Machine-Tool Wire"
+        ],
+        "normalizedApproval": "E351903-Vol1 Machine-Tool Wire",
+        "normalizedKey": "e351903-vol1 machine-tool wire",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E351903-VOL1-MACHINE-TOOL-WIRE",
+            "displayName": "E351903-Vol1 Machine-Tool Wire"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E348922-Vol1 Fixture Wire"
+        ],
+        "normalizedApproval": "E348922-Vol1 Fixture Wire",
+        "normalizedKey": "e348922-vol1 fixture wire",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E348922-VOL1-FIXTURE-WIRE",
+            "displayName": "E348922-Vol1 Fixture Wire"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "2534471 Appliance Wiring Material"
+        ],
+        "normalizedApproval": "2534471 Appliance Wiring Material",
+        "normalizedKey": "2534471 appliance wiring material",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "2534471-APPLIANCE-WIRING-MATERIAL",
+            "displayName": "2534471 Appliance Wiring Material"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E-Rubber<br>S-20 & N-30"
+        ],
+        "normalizedApproval": "E-Rubber",
+        "normalizedKey": "e-rubber",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "E-RUBBER",
+            "displayName": "E-Rubber"
+        },
+        "aliases": [
+            "E-Rubber<br>S-20 & N-30"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "E-Rubber<br>S-20 & N-30"
+        ],
+        "normalizedApproval": "S-20 & N-30",
+        "normalizedKey": "s-20 & n-30",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "S-20-N-30",
+            "displayName": "S-20 & N-30"
+        },
+        "aliases": [
+            "E-Rubber<br>S-20 & N-30"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "X-90 HFS-110-TP"
+        ],
+        "normalizedApproval": "X-90 HFS-110-TP",
+        "normalizedKey": "x-90 hfs-110-tp",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "X-90-HFS-110-TP",
+            "displayName": "X-90 HFS-110-TP"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "X-HF-110<br>HFS-110-TP"
+        ],
+        "normalizedApproval": "HFS-110-TP",
+        "normalizedKey": "hfs-110-tp",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "HFS-110-TP",
+            "displayName": "HFS-110-TP"
+        },
+        "aliases": [
+            "X-HF-110<br>HFS-110-TP"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Small Multi-core Mech Test"
+        ],
+        "normalizedApproval": "Small Multi-core Mech Test",
+        "normalizedKey": "small multi-core mech test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "SMALL-MULTI-CORE-MECH-TEST",
+            "displayName": "Small Multi-core Mech Test"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "SDI Fire Test"
+        ],
+        "normalizedApproval": "SDI Fire Test",
+        "normalizedKey": "sdi fire test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "SDI-FIRE-TEST",
+            "displayName": "SDI Fire Test"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "SDI Mech Test"
+        ],
+        "normalizedApproval": "SDI Mech Test",
+        "normalizedKey": "sdi mech test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "SDI-MECH-TEST",
+            "displayName": "SDI Mech Test"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Large Multi-core Mech Test"
+        ],
+        "normalizedApproval": "Large Multi-core Mech Test",
+        "normalizedKey": "large multi-core mech test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "LARGE-MULTI-CORE-MECH-TEST",
+            "displayName": "Large Multi-core Mech Test"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Small Multi-core<br>with Earth Fire Test"
+        ],
+        "normalizedApproval": "with Earth Fire Test",
+        "normalizedKey": "with earth fire test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "WITH-EARTH-FIRE-TEST",
+            "displayName": "with Earth Fire Test"
+        },
+        "aliases": [
+            "Small Multi-core<br>with Earth Fire Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Cat1 Mech Test"
+        ],
+        "normalizedApproval": "Cat1 Mech Test",
+        "normalizedKey": "cat1 mech test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "CAT1-MECH-TEST",
+            "displayName": "Cat1 Mech Test"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Xenon Arc UV<br>Radiation Test"
+        ],
+        "normalizedApproval": "Xenon Arc UV",
+        "normalizedKey": "xenon arc uv",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "XENON-ARC-UV",
+            "displayName": "Xenon Arc UV"
+        },
+        "aliases": [
+            "Xenon Arc UV<br>Radiation Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Xenon Arc UV<br>Radiation Test"
+        ],
+        "normalizedApproval": "Radiation Test",
+        "normalizedKey": "radiation test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RADIATION-TEST",
+            "displayName": "Radiation Test"
+        },
+        "aliases": [
+            "Xenon Arc UV<br>Radiation Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PA"
+        ],
+        "normalizedApproval": "PA",
+        "normalizedKey": "pa",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PA",
+            "displayName": "PA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PB"
+        ],
+        "normalizedApproval": "PB",
+        "normalizedKey": "pb",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PB",
+            "displayName": "PB"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PD"
+        ],
+        "normalizedApproval": "PD",
+        "normalizedKey": "pd",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PD",
+            "displayName": "PD"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PG"
+        ],
+        "normalizedApproval": "PG",
+        "normalizedKey": "pg",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PG",
+            "displayName": "PG"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PH"
+        ],
+        "normalizedApproval": "PH",
+        "normalizedKey": "ph",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PH",
+            "displayName": "PH"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PK"
+        ],
+        "normalizedApproval": "PK",
+        "normalizedKey": "pk",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PK",
+            "displayName": "PK"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PL"
+        ],
+        "normalizedApproval": "PL",
+        "normalizedKey": "pl",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PL",
+            "displayName": "PL"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PN"
+        ],
+        "normalizedApproval": "PN",
+        "normalizedKey": "pn",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PN",
+            "displayName": "PN"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PS"
+        ],
+        "normalizedApproval": "PS",
+        "normalizedKey": "ps",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PS",
+            "displayName": "PS"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PT"
+        ],
+        "normalizedApproval": "PT",
+        "normalizedKey": "pt",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PT",
+            "displayName": "PT"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PW"
+        ],
+        "normalizedApproval": "PW",
+        "normalizedKey": "pw",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PW",
+            "displayName": "PW"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PX"
+        ],
+        "normalizedApproval": "PX",
+        "normalizedKey": "px",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PX",
+            "displayName": "PX"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PY"
+        ],
+        "normalizedApproval": "PY",
+        "normalizedKey": "py",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PY",
+            "displayName": "PY"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "PZ"
+        ],
+        "normalizedApproval": "PZ",
+        "normalizedKey": "pz",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PZ",
+            "displayName": "PZ"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FJA FLA"
+        ],
+        "normalizedApproval": "FJA FLA",
+        "normalizedKey": "fja fla",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FJA-FLA",
+            "displayName": "FJA FLA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "AUS Water<br>Quality Suitability"
+        ],
+        "normalizedApproval": "AUS Water",
+        "normalizedKey": "aus water",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AUS-WATER",
+            "displayName": "AUS Water"
+        },
+        "aliases": [
+            "AUS Water<br>Quality Suitability"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "AUS Water<br>Quality Suitability"
+        ],
+        "normalizedApproval": "Quality Suitability",
+        "normalizedKey": "quality suitability",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "QUALITY-SUITABILITY",
+            "displayName": "Quality Suitability"
+        },
+        "aliases": [
+            "AUS Water<br>Quality Suitability"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Cat2 Mech Test"
+        ],
+        "normalizedApproval": "Cat2 Mech Test",
+        "normalizedKey": "cat2 mech test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "CAT2-MECH-TEST",
+            "displayName": "Cat2 Mech Test"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Small Multi-core<br>Non Earth Fire Test"
+        ],
+        "normalizedApproval": "Non Earth Fire Test",
+        "normalizedKey": "non earth fire test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "NON-EARTH-FIRE-TEST",
+            "displayName": "Non Earth Fire Test"
+        },
+        "aliases": [
+            "Small Multi-core<br>Non Earth Fire Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Large Multi-core<br>Fire Test"
+        ],
+        "normalizedApproval": "Large Multi-core",
+        "normalizedKey": "large multi-core",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "LARGE-MULTI-CORE",
+            "displayName": "Large Multi-core"
+        },
+        "aliases": [
+            "Large Multi-core<br>Fire Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BC"
+        ],
+        "normalizedApproval": "BC",
+        "normalizedKey": "bc",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BC",
+            "displayName": "BC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "EW"
+        ],
+        "normalizedApproval": "EW",
+        "normalizedKey": "ew",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "EW",
+            "displayName": "EW"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FC"
+        ],
+        "normalizedApproval": "FC",
+        "normalizedKey": "fc",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FC",
+            "displayName": "FC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FK"
+        ],
+        "normalizedApproval": "FK",
+        "normalizedKey": "fk",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FK",
+            "displayName": "FK"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FZ"
+        ],
+        "normalizedApproval": "FZ",
+        "normalizedKey": "fz",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FZ",
+            "displayName": "FZ"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "HT"
+        ],
+        "normalizedApproval": "HT",
+        "normalizedKey": "ht",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "HT",
+            "displayName": "HT"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RB"
+        ],
+        "normalizedApproval": "RB",
+        "normalizedKey": "rb",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RB",
+            "displayName": "RB"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RC"
+        ],
+        "normalizedApproval": "RC",
+        "normalizedKey": "rc",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RC",
+            "displayName": "RC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FCA"
+        ],
+        "normalizedApproval": "FCA",
+        "normalizedKey": "fca",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FCA",
+            "displayName": "FCA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RCA"
+        ],
+        "normalizedApproval": "RCA",
+        "normalizedKey": "rca",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "RCA",
+            "displayName": "RCA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FKA"
+        ],
+        "normalizedApproval": "FKA",
+        "normalizedKey": "fka",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FKA",
+            "displayName": "FKA"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FKC FKM"
+        ],
+        "normalizedApproval": "FKC FKM",
+        "normalizedKey": "fkc fkm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FKC-FKM",
+            "displayName": "FKC FKM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "FZC FZM"
+        ],
+        "normalizedApproval": "FZC FZM",
+        "normalizedKey": "fzc fzm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FZC-FZM",
+            "displayName": "FZC FZM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "B06"
+        ],
+        "normalizedApproval": "B06",
+        "normalizedKey": "b06",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "B06",
+            "displayName": "B06"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "NTC"
+        ],
+        "normalizedApproval": "NTC",
+        "normalizedKey": "ntc",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "NTC",
+            "displayName": "NTC"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "NFC NFM"
+        ],
+        "normalizedApproval": "NFC NFM",
+        "normalizedKey": "nfc nfm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "NFC-NFM",
+            "displayName": "NFC NFM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "B1C B1M"
+        ],
+        "normalizedApproval": "B1C B1M",
+        "normalizedKey": "b1c b1m",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "B1C-B1M",
+            "displayName": "B1C B1M"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "B3M M3M B4M M4M M5M"
+        ],
+        "normalizedApproval": "B3M M3M B4M M4M M5M",
+        "normalizedKey": "b3m m3m b4m m4m m5m",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "B3M-M3M-B4M-M4M-M5M",
+            "displayName": "B3M M3M B4M M4M M5M"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ALI-FLEX System<br>Warranty"
+        ],
+        "normalizedApproval": "ALI-FLEX System",
+        "normalizedKey": "ali-flex system",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ALI-FLEX-SYSTEM",
+            "displayName": "ALI-FLEX System"
+        },
+        "aliases": [
+            "ALI-FLEX System<br>Warranty"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Materials"
+        ],
+        "normalizedApproval": "Materials",
+        "normalizedKey": "materials",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MATERIALS",
+            "displayName": "Materials"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "WS RB FZ DU CR"
+        ],
+        "normalizedApproval": "WS RB FZ DU CR",
+        "normalizedKey": "ws rb fz du cr",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "WS-RB-FZ-DU-CR",
+            "displayName": "WS RB FZ DU CR"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "MK"
+        ],
+        "normalizedApproval": "MK",
+        "normalizedKey": "mk",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "MK",
+            "displayName": "MK"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "J05 TUV"
+        ],
+        "normalizedApproval": "J05 TUV",
+        "normalizedKey": "j05 tuv",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "J05-TUV",
+            "displayName": "J05 TUV"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "J07 TUV"
+        ],
+        "normalizedApproval": "J07 TUV",
+        "normalizedKey": "j07 tuv",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "J07-TUV",
+            "displayName": "J07 TUV"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "J06 TUV"
+        ],
+        "normalizedApproval": "J06 TUV",
+        "normalizedKey": "j06 tuv",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "J06-TUV",
+            "displayName": "J06 TUV"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "J08 TUV"
+        ],
+        "normalizedApproval": "J08 TUV",
+        "normalizedKey": "j08 tuv",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "J08-TUV",
+            "displayName": "J08 TUV"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "J09 TUV"
+        ],
+        "normalizedApproval": "J09 TUV",
+        "normalizedKey": "j09 tuv",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "J09-TUV",
+            "displayName": "J09 TUV"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Current Rating"
+        ],
+        "normalizedApproval": "Current Rating",
+        "normalizedKey": "current rating",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "CURRENT-RATING",
+            "displayName": "Current Rating"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "V-90HT"
+        ],
+        "normalizedApproval": "V-90HT",
+        "normalizedKey": "v-90ht",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "V-90HT",
+            "displayName": "V-90HT"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BB"
+        ],
+        "normalizedApproval": "BB",
+        "normalizedKey": "bb",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BB",
+            "displayName": "BB"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "BY"
+        ],
+        "normalizedApproval": "BY",
+        "normalizedKey": "by",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BY",
+            "displayName": "BY"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Large<br>Multi-core<br>Fire Test"
+        ],
+        "normalizedApproval": "Large",
+        "normalizedKey": "large",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "LARGE",
+            "displayName": "Large"
+        },
+        "aliases": [
+            "Large<br>Multi-core<br>Fire Test"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "ISO-9001 US"
+        ],
+        "normalizedApproval": "ISO-9001 US",
+        "normalizedKey": "iso-9001 us",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ISO-9001-US",
+            "displayName": "ISO-9001 US"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "RoHS<br>Statement"
+        ],
+        "normalizedApproval": "RoHS",
+        "normalizedKey": "rohs",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "ROHS",
+            "displayName": "RoHS"
+        },
+        "aliases": [
+            "RoHS<br>Statement"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "REACH<br>Statement"
+        ],
+        "normalizedApproval": "REACH",
+        "normalizedKey": "reach",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "REACH",
+            "displayName": "REACH"
+        },
+        "aliases": [
+            "REACH<br>Statement"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Pulling Test"
+        ],
+        "normalizedApproval": "Pulling Test",
+        "normalizedKey": "pulling test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "PULLING-TEST",
+            "displayName": "Pulling Test"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Heat Cycling Test"
+        ],
+        "normalizedApproval": "Heat Cycling Test",
+        "normalizedKey": "heat cycling test",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "HEAT-CYCLING-TEST",
+            "displayName": "Heat Cycling Test"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Standard<br>Warranty"
+        ],
+        "normalizedApproval": "Standard",
+        "normalizedKey": "standard",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "STANDARD",
+            "displayName": "Standard"
+        },
+        "aliases": [
+            "Standard<br>Warranty"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "HTC HTM BHC BHM"
+        ],
+        "normalizedApproval": "HTC HTM BHC BHM",
+        "normalizedKey": "htc htm bhc bhm",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "HTC-HTM-BHC-BHM",
+            "displayName": "HTC HTM BHC BHM"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Fire Penetration Test-removed"
+        ],
+        "normalizedApproval": "Fire Penetration Test-removed",
+        "normalizedKey": "fire penetration test-removed",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FIRE-PENETRATION-TEST-REMOVED",
+            "displayName": "Fire Penetration Test-removed"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Fire Penetration Test<br> - Floor"
+        ],
+        "normalizedApproval": "- Floor",
+        "normalizedKey": "- floor",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FLOOR",
+            "displayName": "- Floor"
+        },
+        "aliases": [
+            "Fire Penetration Test<br> - Floor"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Fire Penetration Test<br> - Wall"
+        ],
+        "normalizedApproval": "- Wall",
+        "normalizedKey": "- wall",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "WALL",
+            "displayName": "- Wall"
+        },
+        "aliases": [
+            "Fire Penetration Test<br> - Wall"
+        ],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    },
+    {
+        "rawValues": [
+            "Fire Assessment"
+        ],
+        "normalizedApproval": "Fire Assessment",
+        "normalizedKey": "fire assessment",
+        "issuingOrganization": null,
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "FIRE-ASSESSMENT",
+            "displayName": "Fire Assessment"
+        },
+        "aliases": [],
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "reason": "new_approval_option_proposed_needs_operator_approval"
+    }
+]

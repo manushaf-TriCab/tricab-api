@@ -1,0 +1,1725 @@
+{
+    "proposals": [
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "BK",
+            "legacyAliases": [],
+            "usageCount": 8762,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "OR",
+            "legacyAliases": [],
+            "usageCount": 7019,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "RE",
+            "legacyAliases": [],
+            "usageCount": 1328,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "GY",
+            "legacyAliases": [],
+            "usageCount": 492,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "BL",
+            "legacyAliases": [],
+            "usageCount": 331,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "WH",
+            "legacyAliases": [],
+            "usageCount": 262,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "EA",
+            "legacyAliases": [],
+            "usageCount": 236,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "YE",
+            "legacyAliases": [],
+            "usageCount": 137,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "BR",
+            "legacyAliases": [],
+            "usageCount": 96,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "GR",
+            "legacyAliases": [],
+            "usageCount": 70,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "DB",
+            "legacyAliases": [],
+            "usageCount": 69,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "PU",
+            "legacyAliases": [],
+            "usageCount": 30,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "CL",
+            "legacyAliases": [],
+            "usageCount": 19,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "RB",
+            "legacyAliases": [],
+            "usageCount": 18,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "PI",
+            "legacyAliases": [],
+            "usageCount": 18,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "B",
+            "legacyAliases": [],
+            "usageCount": 16,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "LB",
+            "legacyAliases": [],
+            "usageCount": 12,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "DG",
+            "legacyAliases": [],
+            "usageCount": 4,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "G",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "E",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "R",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "NO",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "W",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "O",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "LG",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "PB",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "MG",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "YB",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "Y",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "MA",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "L",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "colour",
+            "canonicalOption": "FG",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "A",
+            "legacyAliases": [],
+            "usageCount": 4175,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "C",
+            "legacyAliases": [],
+            "usageCount": 581,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "M",
+            "legacyAliases": [],
+            "usageCount": 244,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "B",
+            "legacyAliases": [],
+            "usageCount": 144,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "1",
+            "legacyAliases": [],
+            "usageCount": 128,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "F",
+            "legacyAliases": [],
+            "usageCount": 85,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "E",
+            "legacyAliases": [],
+            "usageCount": 69,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "3",
+            "legacyAliases": [],
+            "usageCount": 48,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "7",
+            "legacyAliases": [],
+            "usageCount": 41,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "T",
+            "legacyAliases": [],
+            "usageCount": 38,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "4",
+            "legacyAliases": [],
+            "usageCount": 35,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "0",
+            "legacyAliases": [],
+            "usageCount": 35,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "6",
+            "legacyAliases": [],
+            "usageCount": 33,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "5",
+            "legacyAliases": [],
+            "usageCount": 33,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "9",
+            "legacyAliases": [],
+            "usageCount": 30,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "8",
+            "legacyAliases": [],
+            "usageCount": 29,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "2",
+            "legacyAliases": [],
+            "usageCount": 20,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "D",
+            "legacyAliases": [],
+            "usageCount": 6,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "Z",
+            "legacyAliases": [],
+            "usageCount": 6,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "X",
+            "legacyAliases": [],
+            "usageCount": 4,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "P",
+            "legacyAliases": [],
+            "usageCount": 4,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "J",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "sheath",
+            "canonicalOption": "L",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "conductor_type",
+            "canonicalOption": "N",
+            "legacyAliases": [],
+            "usageCount": 9852,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "conductor_type",
+            "canonicalOption": "D",
+            "legacyAliases": [],
+            "usageCount": 8258,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "conductor_type",
+            "canonicalOption": "A",
+            "legacyAliases": [],
+            "usageCount": 877,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "conductor_type",
+            "canonicalOption": "K",
+            "legacyAliases": [],
+            "usageCount": 6,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "conductor_type",
+            "canonicalOption": "X",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "X",
+            "legacyAliases": [],
+            "usageCount": 11526,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "T",
+            "legacyAliases": [],
+            "usageCount": 2769,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "S",
+            "legacyAliases": [],
+            "usageCount": 1426,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "G",
+            "legacyAliases": [],
+            "usageCount": 970,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "B",
+            "legacyAliases": [],
+            "usageCount": 518,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "N",
+            "legacyAliases": [],
+            "usageCount": 410,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "Z",
+            "legacyAliases": [],
+            "usageCount": 388,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "E",
+            "legacyAliases": [],
+            "usageCount": 337,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "P",
+            "legacyAliases": [],
+            "usageCount": 199,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "J",
+            "legacyAliases": [],
+            "usageCount": 145,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "R",
+            "legacyAliases": [],
+            "usageCount": 85,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "A",
+            "legacyAliases": [],
+            "usageCount": 83,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "L",
+            "legacyAliases": [],
+            "usageCount": 80,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "W",
+            "legacyAliases": [],
+            "usageCount": 26,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "H",
+            "legacyAliases": [],
+            "usageCount": 13,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "F",
+            "legacyAliases": [],
+            "usageCount": 4,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "K",
+            "legacyAliases": [],
+            "usageCount": 4,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "U",
+            "legacyAliases": [],
+            "usageCount": 4,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "C",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "Y",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "Q",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "armour",
+            "canonicalOption": "M",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PA",
+            "legacyAliases": [],
+            "usageCount": 6125,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CA",
+            "legacyAliases": [],
+            "usageCount": 2421,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DA",
+            "legacyAliases": [],
+            "usageCount": 2103,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DE",
+            "legacyAliases": [],
+            "usageCount": 1506,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "XX",
+            "legacyAliases": [],
+            "usageCount": 1485,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PV",
+            "legacyAliases": [],
+            "usageCount": 969,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PD",
+            "legacyAliases": [],
+            "usageCount": 728,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PF",
+            "legacyAliases": [],
+            "usageCount": 502,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PB",
+            "legacyAliases": [],
+            "usageCount": 494,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CB",
+            "legacyAliases": [],
+            "usageCount": 450,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "P9",
+            "legacyAliases": [],
+            "usageCount": 391,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PJ",
+            "legacyAliases": [],
+            "usageCount": 228,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PH",
+            "legacyAliases": [],
+            "usageCount": 169,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "P8",
+            "legacyAliases": [],
+            "usageCount": 154,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "ML",
+            "legacyAliases": [],
+            "usageCount": 149,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DJ",
+            "legacyAliases": [],
+            "usageCount": 104,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PT",
+            "legacyAliases": [],
+            "usageCount": 81,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PG",
+            "legacyAliases": [],
+            "usageCount": 68,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PL",
+            "legacyAliases": [],
+            "usageCount": 64,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PK",
+            "legacyAliases": [],
+            "usageCount": 57,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "P1",
+            "legacyAliases": [],
+            "usageCount": 55,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DB",
+            "legacyAliases": [],
+            "usageCount": 54,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "P2",
+            "legacyAliases": [],
+            "usageCount": 41,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PM",
+            "legacyAliases": [],
+            "usageCount": 41,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CD",
+            "legacyAliases": [],
+            "usageCount": 36,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PP",
+            "legacyAliases": [],
+            "usageCount": 33,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CE",
+            "legacyAliases": [],
+            "usageCount": 28,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "RK",
+            "legacyAliases": [],
+            "usageCount": 25,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MQ",
+            "legacyAliases": [],
+            "usageCount": 24,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DK",
+            "legacyAliases": [],
+            "usageCount": 24,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PX",
+            "legacyAliases": [],
+            "usageCount": 22,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DF",
+            "legacyAliases": [],
+            "usageCount": 19,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PY",
+            "legacyAliases": [],
+            "usageCount": 18,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "P5",
+            "legacyAliases": [],
+            "usageCount": 16,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "P3",
+            "legacyAliases": [],
+            "usageCount": 15,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CG",
+            "legacyAliases": [],
+            "usageCount": 14,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PE",
+            "legacyAliases": [],
+            "usageCount": 12,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DD",
+            "legacyAliases": [],
+            "usageCount": 12,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DM",
+            "legacyAliases": [],
+            "usageCount": 12,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NZ",
+            "legacyAliases": [],
+            "usageCount": 12,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PW",
+            "legacyAliases": [],
+            "usageCount": 11,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "P6",
+            "legacyAliases": [],
+            "usageCount": 11,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DG",
+            "legacyAliases": [],
+            "usageCount": 11,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MO",
+            "legacyAliases": [],
+            "usageCount": 10,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MI",
+            "legacyAliases": [],
+            "usageCount": 9,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MF",
+            "legacyAliases": [],
+            "usageCount": 9,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "RG",
+            "legacyAliases": [],
+            "usageCount": 9,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CC",
+            "legacyAliases": [],
+            "usageCount": 8,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DL",
+            "legacyAliases": [],
+            "usageCount": 8,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NN",
+            "legacyAliases": [],
+            "usageCount": 7,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CF",
+            "legacyAliases": [],
+            "usageCount": 7,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MT",
+            "legacyAliases": [],
+            "usageCount": 7,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MH",
+            "legacyAliases": [],
+            "usageCount": 7,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DP",
+            "legacyAliases": [],
+            "usageCount": 6,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "ME",
+            "legacyAliases": [],
+            "usageCount": 6,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "DW",
+            "legacyAliases": [],
+            "usageCount": 6,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MJ",
+            "legacyAliases": [],
+            "usageCount": 5,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NT",
+            "legacyAliases": [],
+            "usageCount": 5,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CJ",
+            "legacyAliases": [],
+            "usageCount": 5,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MS",
+            "legacyAliases": [],
+            "usageCount": 5,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "P4",
+            "legacyAliases": [],
+            "usageCount": 4,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "RA",
+            "legacyAliases": [],
+            "usageCount": 4,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NA",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NS",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NO",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MD",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NC",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "TA",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "P7",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MM",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MW",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PN",
+            "legacyAliases": [],
+            "usageCount": 3,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NI",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NP",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NK",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NG",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NB",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NF",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CH",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CK",
+            "legacyAliases": [],
+            "usageCount": 2,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MA",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MB",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MC",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MK",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MX",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MY",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MZ",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NR",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "RB",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "RD",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "RE",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "RJ",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "CM",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NW",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NX",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "RH",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NL",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "VF",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MN",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "SH",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NH",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NJ",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "PC",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MG",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "MP",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "ND",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NE",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "tpro_ext",
+            "sourceColumn": "config_core",
+            "canonicalOption": "NY",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        },
+        {
+            "sourceTable": "cable_specs",
+            "sourceColumn": "core_con",
+            "canonicalOption": "co",
+            "legacyAliases": [],
+            "usageCount": 1,
+            "status": "REVIEW",
+            "autoCreate": false
+        }
+    ],
+    "totalProposed": 191,
+    "note": "No automatic option creation in Phase 12.6."
+}

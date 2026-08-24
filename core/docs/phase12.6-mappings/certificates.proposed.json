@@ -1,0 +1,2910 @@
+{
+    "total": 290,
+    "byClassification": {
+        "SHARED_DOCUMENT": 261,
+        "APPROVAL_EVIDENCE": 20,
+        "UNRESOLVED": 9
+    },
+    "items": [
+        {
+            "postId": 3725,
+            "title": "110C-Operating-Temperature",
+            "categories": "AU|News|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3769,
+            "title": "Manufacturing-Assessment",
+            "categories": "AU|News|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3771,
+            "title": "Watertightness",
+            "categories": "AU|News|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3879,
+            "title": "ISO-9001 AUS",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 7,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3911,
+            "title": "KK Hydrostatic-Pressure-Test-Cert",
+            "categories": "AU|News",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3913,
+            "title": "OD Hydrostatic-Pressure-Test-Cert",
+            "categories": "AU|News",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3917,
+            "title": "BVA DVA",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3919,
+            "title": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3921,
+            "title": "MKA PJA PJC RRA HTA HTC BHA BHC",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3923,
+            "title": "MKA PJA PJC RRS HTA HTC BHA BHC",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3925,
+            "title": "RCA RBA RBC EWA EGA EGC FZA FZC RSA",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3927,
+            "title": "UP",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3929,
+            "title": "EH 100m",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3931,
+            "title": "EH 500m",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3933,
+            "title": "EH 1000m",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3935,
+            "title": "EU 100m",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3937,
+            "title": "EU 500m",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3939,
+            "title": "EU 1000m",
+            "categories": "NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3943,
+            "title": "BHA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3945,
+            "title": "BVA DVA RRA RCA EWA ESA UP",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3947,
+            "title": "DF",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3949,
+            "title": "ESA FCA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3951,
+            "title": "FJA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3953,
+            "title": "FKA FEA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3955,
+            "title": "FKC FEC",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3957,
+            "title": "FLA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3959,
+            "title": "HTA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3961,
+            "title": "HTC",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3963,
+            "title": "MKA BVA DVA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3965,
+            "title": "MKC",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3968,
+            "title": "PJA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3970,
+            "title": "PJC",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3972,
+            "title": "RBA FZA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3975,
+            "title": "RBC FZC",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3977,
+            "title": "RCA EWA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3979,
+            "title": "RRA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3981,
+            "title": "RSA EGA",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3983,
+            "title": "UP",
+            "categories": "AS",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "APPROVAL_EVIDENCE",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3985,
+            "title": "NTM NTC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3987,
+            "title": "FEC FKC FEM FKM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3989,
+            "title": "BHA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3991,
+            "title": "BVA DVA RRA RCA EWA ESA UP",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3993,
+            "title": "DFC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3995,
+            "title": "DFM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3997,
+            "title": "DGC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 3999,
+            "title": "DGM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4001,
+            "title": "ESA FCA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4003,
+            "title": "FEM FKM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4005,
+            "title": "FJA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4007,
+            "title": "FKA FEA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4009,
+            "title": "FKC FEC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4011,
+            "title": "FLA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4013,
+            "title": "HTA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4016,
+            "title": "HTC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4018,
+            "title": "HTM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4020,
+            "title": "MA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4022,
+            "title": "Manufacturing-Assessment",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4024,
+            "title": "BVA DVA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4026,
+            "title": "MKC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4028,
+            "title": "UPC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4030,
+            "title": "PJA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4032,
+            "title": "PJC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4034,
+            "title": "PJM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4036,
+            "title": "RBA FZA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4038,
+            "title": "RBC FZC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4040,
+            "title": "RBM FZM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4042,
+            "title": "RCA EWA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4044,
+            "title": "NJM NJC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4046,
+            "title": "RBC RFZ RBM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4048,
+            "title": "RRA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4050,
+            "title": "RSA EGA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4052,
+            "title": "TW27",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4054,
+            "title": "UPA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4056,
+            "title": "UPM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4058,
+            "title": "US-Coastguard",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4060,
+            "title": "Water-Tightness",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4062,
+            "title": "BV-Mode-II",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4066,
+            "title": "DVA DVC BVA BVC BV DV",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4068,
+            "title": "BV DV",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4070,
+            "title": "ES FK FC FJA FLA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4072,
+            "title": "EW RB RC FZ RSA EGA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4074,
+            "title": "PJA PJB",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4076,
+            "title": "RR HT BHA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4078,
+            "title": "UP",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4080,
+            "title": "UP",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4082,
+            "title": "BVA DVA DVC DFA DFC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4084,
+            "title": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4086,
+            "title": "MKA PJA PJC RRA HTA HTC BHA BHC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4088,
+            "title": "RCA RBA RBC EWA EGA EGC FZA FZC RSA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4090,
+            "title": "UP",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4092,
+            "title": "Certificate of Compliance",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4094,
+            "title": "DGC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4096,
+            "title": "NTC NTM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4098,
+            "title": "FEC FEM FKC FKM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4100,
+            "title": "BVA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4102,
+            "title": "DFC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4104,
+            "title": "DVA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4106,
+            "title": "ESA FCA FJA FLA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4108,
+            "title": "FKA FEA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4110,
+            "title": "HTA BHA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4112,
+            "title": "MKA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4114,
+            "title": "UPC UPM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4116,
+            "title": "PJA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4118,
+            "title": "RBA FZA EGA RSA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4120,
+            "title": "RCA EWA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4122,
+            "title": "NJC NJM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4124,
+            "title": "FZC FZM RBC RBM",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4126,
+            "title": "RRA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4128,
+            "title": "UPA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4132,
+            "title": "BVA DVA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4134,
+            "title": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4136,
+            "title": "MKA PJA PJC RRA HTA HTC BHA BHC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4138,
+            "title": "RCA RBA RBC EWA EGA EGC FZA FZC RSA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4140,
+            "title": "LR UP",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4142,
+            "title": "Transport-Canada-List",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4144,
+            "title": "BV DV EW RC RR BH PJ FJ",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4253,
+            "title": "BHA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4255,
+            "title": "BVA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 4,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4257,
+            "title": "DF",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4261,
+            "title": "EGA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4263,
+            "title": "ESA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 4,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4265,
+            "title": "EWA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4269,
+            "title": "FEA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 4,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4271,
+            "title": "FJA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4275,
+            "title": "FLA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4277,
+            "title": "FZA RBA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4279,
+            "title": "HTA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4281,
+            "title": "MKC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4283,
+            "title": "PJA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4285,
+            "title": "HTA",
+            "categories": "",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "UNRESOLVED",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4290,
+            "title": "RRA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4292,
+            "title": "UP",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4296,
+            "title": "NTM NTC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4300,
+            "title": "FEM FEC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4306,
+            "title": "DFM",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4308,
+            "title": "DG",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4310,
+            "title": "HTC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4312,
+            "title": "UPM",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4314,
+            "title": "PJC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4320,
+            "title": "RBC RBM",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4324,
+            "title": "RR",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4326,
+            "title": "BV",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4330,
+            "title": "RSA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4333,
+            "title": "FE",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4335,
+            "title": "PJB",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4338,
+            "title": "BHA HTA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4341,
+            "title": "BVA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4343,
+            "title": "DFA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4345,
+            "title": "DFC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4347,
+            "title": "DVA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4350,
+            "title": "EGA RBA FZA RSA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4352,
+            "title": "ESA FCA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4354,
+            "title": "EWA RCA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4356,
+            "title": "FEA FKA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4358,
+            "title": "MKA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4360,
+            "title": "PJA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4362,
+            "title": "RRA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4364,
+            "title": "UP",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4368,
+            "title": "NTC NTM",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4392,
+            "title": "PJA PJC RRA HTA HTC BHA BHC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4394,
+            "title": "BVA DVA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4396,
+            "title": "RCA RBA RBC EWA EGA EGC FZA FZC RSA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4398,
+            "title": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4400,
+            "title": "PJA PJC RRA HTA HTC BHA BHC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4402,
+            "title": "UP",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4404,
+            "title": "PJA PJC RRA HTA HTC BHA BHC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4406,
+            "title": "BVA DVA DVC DFA DFC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4408,
+            "title": "RCA RBA RBC EWA EGA EGC FZA FZC RSA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4410,
+            "title": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4412,
+            "title": "UP",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4414,
+            "title": "BV",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4416,
+            "title": "ES",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4418,
+            "title": "RR",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4420,
+            "title": "BH PJ DV FJ",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4422,
+            "title": "BV EW RC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4488,
+            "title": "Green Star<br>Compliance",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 12,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4490,
+            "title": "Xenon ARC UV Radiation Test Report",
+            "categories": "",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "UNRESOLVED",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4492,
+            "title": "E171583-Vol1 Appliance Wiring Material",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4494,
+            "title": "E171583-Vol3 Appliance Wiring Material",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4496,
+            "title": "E322536-Vol1 Thermoset-Insulated Wire",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4498,
+            "title": "E322537-Vol1 Thermoplastic-Insulated Wire",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4500,
+            "title": "E345384-Vol1 Power and Control Tray Cable",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4502,
+            "title": "E347409-Vol1 Wind Turbine Tray Cable",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4504,
+            "title": "E351344-Vol1 Flexible Motor Supply Cable",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4506,
+            "title": "E356957-Vol1 Heavy Duty Flexible Power Cable",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4508,
+            "title": "E351903-Vol1 Machine-Tool Wire",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4510,
+            "title": "E348922-Vol1 Fixture Wire",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4512,
+            "title": "2534471 Appliance Wiring Material",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4514,
+            "title": "E-Rubber<br>S-20 & N-30",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4516,
+            "title": "X-90 HFS-110-TP",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4519,
+            "title": "X-HF-110<br>HFS-110-TP",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4521,
+            "title": "Small<br>Multi-core<br>Fire Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4523,
+            "title": "Mech Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4525,
+            "title": "Small Multi-core Mech Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4527,
+            "title": "SDI Fire Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4529,
+            "title": "SDI Mech Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4531,
+            "title": "Large Multi-core Mech Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4533,
+            "title": "Small Multi-core<br>with Earth Fire Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4535,
+            "title": "Fire Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4537,
+            "title": "Mech Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4539,
+            "title": "Small<br>Multi-core<br>Fire Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4541,
+            "title": "Mech Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4543,
+            "title": "Fire Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4545,
+            "title": "Cat1 Mech Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4547,
+            "title": "Xenon Arc UV<br>Radiation Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4549,
+            "title": "Hydrostatic<br>Pressure Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4551,
+            "title": "Hydrostatic<br>Pressure Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4768,
+            "title": "PA",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4770,
+            "title": "PB",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4772,
+            "title": "PD",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4774,
+            "title": "PG",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4776,
+            "title": "PH",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4778,
+            "title": "PK",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4780,
+            "title": "PL",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4782,
+            "title": "PN",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4784,
+            "title": "PS",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4786,
+            "title": "PT",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4788,
+            "title": "PW",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4791,
+            "title": "PX",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4793,
+            "title": "PY",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4795,
+            "title": "PZ",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 4802,
+            "title": "FJA FLA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5017,
+            "title": "AUS Water<br>Quality Suitability",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5039,
+            "title": "MKA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5042,
+            "title": "MKC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5140,
+            "title": "Cat2 Mech Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5142,
+            "title": "Small Multi-core<br>Non Earth Fire Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5144,
+            "title": "Large Multi-core<br>Fire Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5194,
+            "title": "BC",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5207,
+            "title": "BHA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5210,
+            "title": "DV",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5214,
+            "title": "EGA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5221,
+            "title": "ES",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5224,
+            "title": "EW",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5226,
+            "title": "FC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5229,
+            "title": "FE",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5233,
+            "title": "FJA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5235,
+            "title": "FK",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5238,
+            "title": "FLA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5246,
+            "title": "FZ",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5248,
+            "title": "HT",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5250,
+            "title": "PJA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5252,
+            "title": "RB",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5254,
+            "title": "RC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5270,
+            "title": "DVA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5276,
+            "title": "RSA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5281,
+            "title": "FCA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5284,
+            "title": "RCA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5288,
+            "title": "FKA",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5306,
+            "title": "FKC FKM",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5310,
+            "title": "FZC FZM",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5332,
+            "title": "B06",
+            "categories": "AU|US",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5354,
+            "title": "NTC",
+            "categories": "AU",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5356,
+            "title": "NFC NFM",
+            "categories": "AU",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5358,
+            "title": "B1C B1M",
+            "categories": "AU",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5360,
+            "title": "B3M M3M B4M M4M M5M",
+            "categories": "AU",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5373,
+            "title": "ALI-FLEX System<br>Warranty",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 5,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5401,
+            "title": "Materials",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5403,
+            "title": "WS RB FZ DU CR",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5405,
+            "title": "DV",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5407,
+            "title": "UP",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5409,
+            "title": "MK",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5449,
+            "title": "J05 TUV",
+            "categories": "",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "UNRESOLVED",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5451,
+            "title": "J07 TUV",
+            "categories": "",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "UNRESOLVED",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5465,
+            "title": "J06 TUV",
+            "categories": "",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "UNRESOLVED",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5467,
+            "title": "J08 TUV",
+            "categories": "",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "UNRESOLVED",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5469,
+            "title": "J09 TUV",
+            "categories": "",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "UNRESOLVED",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5471,
+            "title": "J10 TUV",
+            "categories": "",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "UNRESOLVED",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5476,
+            "title": "J10 TUV",
+            "categories": "",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "UNRESOLVED",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5552,
+            "title": "Current Rating",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5554,
+            "title": "X-HF-110",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5556,
+            "title": "V-90HT",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5609,
+            "title": "BB",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5611,
+            "title": "BY",
+            "categories": "US",
+            "styleCodeRaw": "",
+            "attachmentCount": 0,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5901,
+            "title": "Large<br>Multi-core<br>Fire Test",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 5920,
+            "title": "Small Multi-core<br>Fire Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6155,
+            "title": "ISO-9001 US",
+            "categories": "Electrical Contracting Certificates|US",
+            "styleCodeRaw": "",
+            "attachmentCount": 6,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6363,
+            "title": "RoHS<br>Statement",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6366,
+            "title": "REACH<br>Statement",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6372,
+            "title": "ALI-FLEX",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6375,
+            "title": "Pulling Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6379,
+            "title": "Heat Cycling Test",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6411,
+            "title": "Standard<br>Warranty",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6788,
+            "title": "ALI-FLEX",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6808,
+            "title": "PJC",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 6810,
+            "title": "HTC HTM BHC BHM",
+            "categories": "AU|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 7113,
+            "title": "Fire Penetration Test-removed",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 2,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 7420,
+            "title": "Fire Penetration Test<br> - Floor",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 7422,
+            "title": "Fire Penetration Test<br> - Wall",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 1,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        },
+        {
+            "postId": 8092,
+            "title": "Fire Assessment",
+            "categories": "AU|Electrical Contracting Certificates|NZ",
+            "styleCodeRaw": "",
+            "attachmentCount": 3,
+            "classification": "SHARED_DOCUMENT",
+            "status": "EXCLUDED",
+            "note": "Certificate CPT is not a Product. Do not migrate in Phase 12.6."
+        }
+    ]
+}

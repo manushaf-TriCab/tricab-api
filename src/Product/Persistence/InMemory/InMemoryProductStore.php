@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Product\Persistence\InMemory;
 
 use TriCab\Core\Identity\Domain\Service\UuidV4Generator;
+use TriCab\Core\Product\Application\Exception\InvalidPricingUnit;
 use TriCab\Core\Product\Domain\Entity\Product;
 use TriCab\Core\Product\Domain\Entity\ProductVariant;
 use TriCab\Core\Product\Domain\ValueObject\ProductFamilyId;
@@ -112,6 +113,37 @@ final class InMemoryProductStore
 
     /** @var list<array<string, mixed>> */
     private array $prices = [];
+
+    /** @var array<string, string|null> */
+    private array $productPricingUnits = [];
+
+    /** @var array<string, array{publicId: string, code: string, name: string, symbol: string, displayOrder: int, isActive: bool}> */
+    private array $pricingUnitCatalog = [
+        '00000000-0000-0000-0000-0000000000m1' => [
+            'publicId' => '00000000-0000-0000-0000-0000000000m1',
+            'code' => 'M',
+            'name' => 'Metre',
+            'symbol' => 'm',
+            'displayOrder' => 10,
+            'isActive' => true,
+        ],
+        '00000000-0000-0000-0000-0000000000ea' => [
+            'publicId' => '00000000-0000-0000-0000-0000000000ea',
+            'code' => 'EA',
+            'name' => 'Each',
+            'symbol' => 'ea',
+            'displayOrder' => 20,
+            'isActive' => true,
+        ],
+        '00000000-0000-0000-0000-0000000000ft' => [
+            'publicId' => '00000000-0000-0000-0000-0000000000ft',
+            'code' => 'FT',
+            'name' => 'Foot',
+            'symbol' => 'ft',
+            'displayOrder' => 30,
+            'isActive' => true,
+        ],
+    ];
 
     /** @var list<array<string, mixed>> */
     private array $auditEvents = [];
@@ -677,6 +709,11 @@ final class InMemoryProductStore
     public function upsertPrice(array $row): void
     {
         foreach ($this->prices as $index => $existing) {
+            if (($existing['publicId'] ?? '') === ($row['publicId'] ?? '')) {
+                $this->prices[$index] = [...$existing, ...$row];
+
+                return;
+            }
             if (($existing['matchKey'] ?? '') === ($row['matchKey'] ?? '')) {
                 $this->prices[$index] = [...$existing, ...$row];
 
@@ -684,6 +721,35 @@ final class InMemoryProductStore
             }
         }
         $this->prices[] = $row;
+    }
+
+    public function setProductPricingUnitPublicId(string $productPublicId, ?string $unitPublicId): void
+    {
+        if ($unitPublicId !== null && !isset($this->pricingUnitCatalog[$unitPublicId])) {
+            throw InvalidPricingUnit::notFound($unitPublicId);
+        }
+        $this->productPricingUnits[$productPublicId] = $unitPublicId;
+    }
+
+    public function productPricingUnitPublicId(string $productPublicId): ?string
+    {
+        return $this->productPricingUnits[$productPublicId] ?? null;
+    }
+
+    /**
+     * @return list<array{publicId: string, code: string, name: string, symbol: string, displayOrder: int, isActive: bool}>
+     */
+    public function pricingUnitCatalog(): array
+    {
+        return array_values($this->pricingUnitCatalog);
+    }
+
+    /**
+     * @return array{publicId: string, code: string, name: string, symbol: string}|null
+     */
+    public function pricingUnitByPublicId(string $publicId): ?array
+    {
+        return $this->pricingUnitCatalog[$publicId] ?? null;
     }
 
     /** @return list<array<string, mixed>> */

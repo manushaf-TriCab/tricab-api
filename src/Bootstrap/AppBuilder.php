@@ -12,8 +12,9 @@ use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Action\Admin\AddProductDocumentAction;
 use TriCab\Api\Http\Action\Admin\AddProductMediaAction;
 use TriCab\Api\Http\Action\Admin\ProductSeriesAdminAction;
-use TriCab\Api\Http\Action\Admin\ProductCategoriesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductFamiliesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductCategoriesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductPriceListsAdminAction;
 use TriCab\Api\Http\Action\Admin\CatalogueTabsAdminAction;
 use TriCab\Api\Http\Action\Admin\CatalogueNodesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductCataloguePlacementsAdminAction;
@@ -77,6 +78,8 @@ use TriCab\Api\Http\Action\Admin\UpdateProductMediaRoleAction;
 use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
 use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
 use TriCab\Api\Http\Action\Admin\CompareLegacyBaseCostAction;
+use TriCab\Api\Http\Action\Admin\VariantLegacyPricingIdentityAdminAction;
+use TriCab\Api\Http\Action\Admin\SetProductDefaultPricingUnitAction;
 use TriCab\Api\Http\Action\Admin\SetProductPricingActiveAction;
 use TriCab\Api\Http\Action\Admin\GetProductPublicationReadinessAction;
 use TriCab\Api\Http\Action\Admin\GetProductRegionsAction;
@@ -434,11 +437,17 @@ final class AppBuilder
             ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
         $app->put('/api/v1/admin/products/{productPublicId}/seo', UpdateProductSeoAction::class)
             ->add(($require)('PRODUCT.UPDATE'));
+        $app->put('/api/v1/admin/products/{productPublicId}/pricing/default-unit', SetProductDefaultPricingUnitAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
         $app->put('/api/v1/admin/products/{productPublicId}/pricing', UpsertProductPricingAction::class)
             ->add(($require)('PRODUCT.PRICING.MANAGE'));
         $app->get('/api/v1/admin/products/{productPublicId}/pricing/history', GetProductPricingAction::class)
             ->add(($require)('PRODUCT.PRICING.VIEW'));
         $app->get('/api/v1/admin/products/{productPublicId}/pricing/legacy-comparison', CompareLegacyBaseCostAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+        $app->get('/api/v1/admin/products/{productPublicId}/pricing/legacy-identities', VariantLegacyPricingIdentityAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+        $app->post('/api/v1/admin/products/{productPublicId}/pricing/legacy-identity-audit', VariantLegacyPricingIdentityAdminAction::class)
             ->add(($require)('PRODUCT.PRICING.VIEW'));
         $app->post('/api/v1/admin/products/{productPublicId}/pricing/{pricingPublicId}/activate', SetProductPricingActiveAction::class)
             ->add(($require)('PRODUCT.PRICING.MANAGE'));
@@ -451,6 +460,26 @@ final class AppBuilder
         $app->get('/api/v1/admin/products/{productPublicId}/pricing', GetProductPricingAction::class)
             ->add(($require)('PRODUCT.PRICING.VIEW'));
 
+        $app->get('/api/v1/admin/product-price-lists', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+        $app->post('/api/v1/admin/product-price-lists', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->get('/api/v1/admin/product-price-lists/{priceListPublicId}', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+        $app->put('/api/v1/admin/product-price-lists/{priceListPublicId}', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->post('/api/v1/admin/product-price-lists/{priceListPublicId}/activate', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->post('/api/v1/admin/product-price-lists/{priceListPublicId}/deactivate', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->post('/api/v1/admin/product-price-lists/{priceListPublicId}/archive', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->post('/api/v1/admin/product-price-lists/{priceListPublicId}/restore', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->get('/api/v1/admin/product-price-lists/{priceListPublicId}/usage', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+        $app->post('/api/v1/admin/product-price-lists/{priceListPublicId}/verify-legacy', ProductPriceListsAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
 
         $app->get('/api/v1/admin/product-families', ProductFamiliesAdminAction::class)
             ->add(($require)('PRODUCT.READ'));
@@ -663,6 +692,58 @@ final class AppBuilder
             ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
         $app->get('/api/v1/admin/product-migration/inspect', ProductMigrationAdminAction::class)
             ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/master-data-discovery', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/catalogue-mapping-readiness', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/master-data-plan-dry-run', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/batch-a-classification', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batch-a-classification/decisions', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batch-a-classification/bulk-validate', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/batch-b-specification-masters', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batch-b-specification-masters/decisions', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/batch-c-style-field-mappings', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batch-c-style-field-mappings/decisions', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/batch-c1-unresolved-concepts', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batch-c1-unresolved-concepts/decisions', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/batch-c2-final-package', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/batch-c2-final-package/decisions', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/cable-spec-field-mappings', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->post('/api/v1/admin/product-migration/cable-spec-field-mappings/decisions', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/cable-spec-d2-review', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/cable-spec-d2-decisions', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/cable-spec-d3-final', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/cable-spec-d4-apply', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/cable-spec-d5-review', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/cable-spec-d5-1-final', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/pilot-dry-run', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/catalogue-navigation-dry-run', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/pilot-f12-apply', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/pilot-f12-live-sku', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
         $app->get('/api/v1/admin/product-migration/batches', ProductMigrationAdminAction::class)
             ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
         $app->post('/api/v1/admin/product-migration/batches', ProductMigrationAdminAction::class)
@@ -718,6 +799,14 @@ final class AppBuilder
             ->add(($require)('PRODUCT.VARIANTS.MANAGE'));
         $app->put('/api/v1/admin/product-variants/{variantPublicId}/specifications', AssignVariantSpecificationsAction::class)
             ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
+        $app->get('/api/v1/admin/product-variants/{variantPublicId}/pricing/legacy-identity', VariantLegacyPricingIdentityAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+        $app->post('/api/v1/admin/product-variants/{variantPublicId}/pricing/legacy-identity/verify', VariantLegacyPricingIdentityAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.VIEW'));
+        $app->put('/api/v1/admin/product-variants/{variantPublicId}/pricing/legacy-identity', VariantLegacyPricingIdentityAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
+        $app->delete('/api/v1/admin/product-variants/{variantPublicId}/pricing/legacy-identity', VariantLegacyPricingIdentityAdminAction::class)
+            ->add(($require)('PRODUCT.PRICING.MANAGE'));
 
         $app->post('/api/v1/admin/product-media/{mediaPublicId}/set-primary', SetPrimaryProductImageAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));

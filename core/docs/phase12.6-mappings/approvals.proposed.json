@@ -1,0 +1,1871 @@
+{
+    "metaKey": "certificate_cpt_titles_and_categories",
+    "values": [
+        {
+            "rawValue": "110C-Operating-Temperature",
+            "parsedValue": "110C-Operating-Temperature",
+            "canonicalCandidate": "110C-Operating-Temperature",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "110C-Operating-Temperature",
+            "parsedValue": "News",
+            "canonicalCandidate": "News",
+            "usageCount": 5,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Manufacturing-Assessment",
+            "parsedValue": "Manufacturing-Assessment",
+            "canonicalCandidate": "Manufacturing-Assessment",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Watertightness",
+            "parsedValue": "Watertightness",
+            "canonicalCandidate": "Watertightness",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ISO-9001 AUS",
+            "parsedValue": "ISO-9001 AUS",
+            "canonicalCandidate": "ISO-9001 AUS",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ISO-9001 AUS",
+            "parsedValue": "Electrical Contracting Certificates",
+            "canonicalCandidate": "Electrical Contracting Certificates",
+            "usageCount": 32,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "KK Hydrostatic-Pressure-Test-Cert",
+            "parsedValue": "KK Hydrostatic-Pressure-Test-Cert",
+            "canonicalCandidate": "KK Hydrostatic-Pressure-Test-Cert",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "OD Hydrostatic-Pressure-Test-Cert",
+            "parsedValue": "OD Hydrostatic-Pressure-Test-Cert",
+            "canonicalCandidate": "OD Hydrostatic-Pressure-Test-Cert",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BVA DVA",
+            "parsedValue": "BVA DVA",
+            "canonicalCandidate": "BVA DVA",
+            "usageCount": 4,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC",
+            "parsedValue": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC",
+            "canonicalCandidate": "ESA FKA FKC FJA FJC FCA FLA FLC FEA FEC",
+            "usageCount": 5,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "MKA PJA PJC RRA HTA HTC BHA BHC",
+            "parsedValue": "MKA PJA PJC RRA HTA HTC BHA BHC",
+            "canonicalCandidate": "MKA PJA PJC RRA HTA HTC BHA BHC",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "MKA PJA PJC RRS HTA HTC BHA BHC",
+            "parsedValue": "MKA PJA PJC RRS HTA HTC BHA BHC",
+            "canonicalCandidate": "MKA PJA PJC RRS HTA HTC BHA BHC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RCA RBA RBC EWA EGA EGC FZA FZC RSA",
+            "parsedValue": "RCA RBA RBC EWA EGA EGC FZA FZC RSA",
+            "canonicalCandidate": "RCA RBA RBC EWA EGA EGC FZA FZC RSA",
+            "usageCount": 5,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "UP",
+            "parsedValue": "UP",
+            "canonicalCandidate": "UP",
+            "usageCount": 10,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EH 100m",
+            "parsedValue": "EH 100m",
+            "canonicalCandidate": "EH 100m",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EH 500m",
+            "parsedValue": "EH 500m",
+            "canonicalCandidate": "EH 500m",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EH 1000m",
+            "parsedValue": "EH 1000m",
+            "canonicalCandidate": "EH 1000m",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EU 100m",
+            "parsedValue": "EU 100m",
+            "canonicalCandidate": "EU 100m",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EU 500m",
+            "parsedValue": "EU 500m",
+            "canonicalCandidate": "EU 500m",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EU 1000m",
+            "parsedValue": "EU 1000m",
+            "canonicalCandidate": "EU 1000m",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BHA",
+            "parsedValue": "BHA",
+            "canonicalCandidate": "BHA",
+            "usageCount": 4,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BHA",
+            "parsedValue": "AS",
+            "canonicalCandidate": "AS",
+            "usageCount": 20,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BVA DVA RRA RCA EWA ESA UP",
+            "parsedValue": "BVA DVA RRA RCA EWA ESA UP",
+            "canonicalCandidate": "BVA DVA RRA RCA EWA ESA UP",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DF",
+            "parsedValue": "DF",
+            "canonicalCandidate": "DF",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ESA FCA",
+            "parsedValue": "ESA FCA",
+            "canonicalCandidate": "ESA FCA",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FJA",
+            "parsedValue": "FJA",
+            "canonicalCandidate": "FJA",
+            "usageCount": 4,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FKA FEA",
+            "parsedValue": "FKA FEA",
+            "canonicalCandidate": "FKA FEA",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FKC FEC",
+            "parsedValue": "FKC FEC",
+            "canonicalCandidate": "FKC FEC",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FLA",
+            "parsedValue": "FLA",
+            "canonicalCandidate": "FLA",
+            "usageCount": 4,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "HTA",
+            "parsedValue": "HTA",
+            "canonicalCandidate": "HTA",
+            "usageCount": 4,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "HTC",
+            "parsedValue": "HTC",
+            "canonicalCandidate": "HTC",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "MKA BVA DVA",
+            "parsedValue": "MKA BVA DVA",
+            "canonicalCandidate": "MKA BVA DVA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "MKC",
+            "parsedValue": "MKC",
+            "canonicalCandidate": "MKC",
+            "usageCount": 4,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PJA",
+            "parsedValue": "PJA",
+            "canonicalCandidate": "PJA",
+            "usageCount": 6,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PJC",
+            "parsedValue": "PJC",
+            "canonicalCandidate": "PJC",
+            "usageCount": 4,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RBA FZA",
+            "parsedValue": "RBA FZA",
+            "canonicalCandidate": "RBA FZA",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RBC FZC",
+            "parsedValue": "RBC FZC",
+            "canonicalCandidate": "RBC FZC",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RCA EWA",
+            "parsedValue": "RCA EWA",
+            "canonicalCandidate": "RCA EWA",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RRA",
+            "parsedValue": "RRA",
+            "canonicalCandidate": "RRA",
+            "usageCount": 5,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RSA EGA",
+            "parsedValue": "RSA EGA",
+            "canonicalCandidate": "RSA EGA",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NTM NTC",
+            "parsedValue": "NTM NTC",
+            "canonicalCandidate": "NTM NTC",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FEC FKC FEM FKM",
+            "parsedValue": "FEC FKC FEM FKM",
+            "canonicalCandidate": "FEC FKC FEM FKM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DFC",
+            "parsedValue": "DFC",
+            "canonicalCandidate": "DFC",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DFM",
+            "parsedValue": "DFM",
+            "canonicalCandidate": "DFM",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DGC",
+            "parsedValue": "DGC",
+            "canonicalCandidate": "DGC",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DGM",
+            "parsedValue": "DGM",
+            "canonicalCandidate": "DGM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FEM FKM",
+            "parsedValue": "FEM FKM",
+            "canonicalCandidate": "FEM FKM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "HTM",
+            "parsedValue": "HTM",
+            "canonicalCandidate": "HTM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "MA",
+            "parsedValue": "MA",
+            "canonicalCandidate": "MA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "UPC",
+            "parsedValue": "UPC",
+            "canonicalCandidate": "UPC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PJM",
+            "parsedValue": "PJM",
+            "canonicalCandidate": "PJM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RBM FZM",
+            "parsedValue": "RBM FZM",
+            "canonicalCandidate": "RBM FZM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NJM NJC",
+            "parsedValue": "NJM NJC",
+            "canonicalCandidate": "NJM NJC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RBC RFZ RBM",
+            "parsedValue": "RBC RFZ RBM",
+            "canonicalCandidate": "RBC RFZ RBM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "TW27",
+            "parsedValue": "TW27",
+            "canonicalCandidate": "TW27",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "UPA",
+            "parsedValue": "UPA",
+            "canonicalCandidate": "UPA",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "UPM",
+            "parsedValue": "UPM",
+            "canonicalCandidate": "UPM",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "US-Coastguard",
+            "parsedValue": "US-Coastguard",
+            "canonicalCandidate": "US-Coastguard",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Water-Tightness",
+            "parsedValue": "Water-Tightness",
+            "canonicalCandidate": "Water-Tightness",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BV-Mode-II",
+            "parsedValue": "BV-Mode-II",
+            "canonicalCandidate": "BV-Mode-II",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DVA DVC BVA BVC BV DV",
+            "parsedValue": "DVA DVC BVA BVC BV DV",
+            "canonicalCandidate": "DVA DVC BVA BVC BV DV",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BV DV",
+            "parsedValue": "BV DV",
+            "canonicalCandidate": "BV DV",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ES FK FC FJA FLA",
+            "parsedValue": "ES FK FC FJA FLA",
+            "canonicalCandidate": "ES FK FC FJA FLA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EW RB RC FZ RSA EGA",
+            "parsedValue": "EW RB RC FZ RSA EGA",
+            "canonicalCandidate": "EW RB RC FZ RSA EGA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PJA PJB",
+            "parsedValue": "PJA PJB",
+            "canonicalCandidate": "PJA PJB",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RR HT BHA",
+            "parsedValue": "RR HT BHA",
+            "canonicalCandidate": "RR HT BHA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BVA DVA DVC DFA DFC",
+            "parsedValue": "BVA DVA DVC DFA DFC",
+            "canonicalCandidate": "BVA DVA DVC DFA DFC",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Certificate of Compliance",
+            "parsedValue": "Certificate of Compliance",
+            "canonicalCandidate": "Certificate of Compliance",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NTC NTM",
+            "parsedValue": "NTC NTM",
+            "canonicalCandidate": "NTC NTM",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FEC FEM FKC FKM",
+            "parsedValue": "FEC FEM FKC FKM",
+            "canonicalCandidate": "FEC FEM FKC FKM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BVA",
+            "parsedValue": "BVA",
+            "canonicalCandidate": "BVA",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DVA",
+            "parsedValue": "DVA",
+            "canonicalCandidate": "DVA",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ESA FCA FJA FLA",
+            "parsedValue": "ESA FCA FJA FLA",
+            "canonicalCandidate": "ESA FCA FJA FLA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "HTA BHA",
+            "parsedValue": "HTA BHA",
+            "canonicalCandidate": "HTA BHA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "MKA",
+            "parsedValue": "MKA",
+            "canonicalCandidate": "MKA",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "UPC UPM",
+            "parsedValue": "UPC UPM",
+            "canonicalCandidate": "UPC UPM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RBA FZA EGA RSA",
+            "parsedValue": "RBA FZA EGA RSA",
+            "canonicalCandidate": "RBA FZA EGA RSA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NJC NJM",
+            "parsedValue": "NJC NJM",
+            "canonicalCandidate": "NJC NJM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FZC FZM RBC RBM",
+            "parsedValue": "FZC FZM RBC RBM",
+            "canonicalCandidate": "FZC FZM RBC RBM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "LR UP",
+            "parsedValue": "LR UP",
+            "canonicalCandidate": "LR UP",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Transport-Canada-List",
+            "parsedValue": "Transport-Canada-List",
+            "canonicalCandidate": "Transport-Canada-List",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BV DV EW RC RR BH PJ FJ",
+            "parsedValue": "BV DV EW RC RR BH PJ FJ",
+            "canonicalCandidate": "BV DV EW RC RR BH PJ FJ",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EGA",
+            "parsedValue": "EGA",
+            "canonicalCandidate": "EGA",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ESA",
+            "parsedValue": "ESA",
+            "canonicalCandidate": "ESA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EWA",
+            "parsedValue": "EWA",
+            "canonicalCandidate": "EWA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FEA",
+            "parsedValue": "FEA",
+            "canonicalCandidate": "FEA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FZA RBA",
+            "parsedValue": "FZA RBA",
+            "canonicalCandidate": "FZA RBA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FEM FEC",
+            "parsedValue": "FEM FEC",
+            "canonicalCandidate": "FEM FEC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DG",
+            "parsedValue": "DG",
+            "canonicalCandidate": "DG",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RBC RBM",
+            "parsedValue": "RBC RBM",
+            "canonicalCandidate": "RBC RBM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RR",
+            "parsedValue": "RR",
+            "canonicalCandidate": "RR",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BV",
+            "parsedValue": "BV",
+            "canonicalCandidate": "BV",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RSA",
+            "parsedValue": "RSA",
+            "canonicalCandidate": "RSA",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FE",
+            "parsedValue": "FE",
+            "canonicalCandidate": "FE",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PJB",
+            "parsedValue": "PJB",
+            "canonicalCandidate": "PJB",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BHA HTA",
+            "parsedValue": "BHA HTA",
+            "canonicalCandidate": "BHA HTA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DFA",
+            "parsedValue": "DFA",
+            "canonicalCandidate": "DFA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EGA RBA FZA RSA",
+            "parsedValue": "EGA RBA FZA RSA",
+            "canonicalCandidate": "EGA RBA FZA RSA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EWA RCA",
+            "parsedValue": "EWA RCA",
+            "canonicalCandidate": "EWA RCA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FEA FKA",
+            "parsedValue": "FEA FKA",
+            "canonicalCandidate": "FEA FKA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PJA PJC RRA HTA HTC BHA BHC",
+            "parsedValue": "PJA PJC RRA HTA HTC BHA BHC",
+            "canonicalCandidate": "PJA PJC RRA HTA HTC BHA BHC",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ES",
+            "parsedValue": "ES",
+            "canonicalCandidate": "ES",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BH PJ DV FJ",
+            "parsedValue": "BH PJ DV FJ",
+            "canonicalCandidate": "BH PJ DV FJ",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BV EW RC",
+            "parsedValue": "BV EW RC",
+            "canonicalCandidate": "BV EW RC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Green Star<br>Compliance",
+            "parsedValue": "Green Star",
+            "canonicalCandidate": "Green Star",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Green Star<br>Compliance",
+            "parsedValue": "Compliance",
+            "canonicalCandidate": "Compliance",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Xenon ARC UV Radiation Test Report",
+            "parsedValue": "Xenon ARC UV Radiation Test Report",
+            "canonicalCandidate": "Xenon ARC UV Radiation Test Report",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E171583-Vol1 Appliance Wiring Material",
+            "parsedValue": "E171583-Vol1 Appliance Wiring Material",
+            "canonicalCandidate": "E171583-Vol1 Appliance Wiring Material",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E171583-Vol3 Appliance Wiring Material",
+            "parsedValue": "E171583-Vol3 Appliance Wiring Material",
+            "canonicalCandidate": "E171583-Vol3 Appliance Wiring Material",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E322536-Vol1 Thermoset-Insulated Wire",
+            "parsedValue": "E322536-Vol1 Thermoset-Insulated Wire",
+            "canonicalCandidate": "E322536-Vol1 Thermoset-Insulated Wire",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E322537-Vol1 Thermoplastic-Insulated Wire",
+            "parsedValue": "E322537-Vol1 Thermoplastic-Insulated Wire",
+            "canonicalCandidate": "E322537-Vol1 Thermoplastic-Insulated Wire",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E345384-Vol1 Power and Control Tray Cable",
+            "parsedValue": "E345384-Vol1 Power and Control Tray Cable",
+            "canonicalCandidate": "E345384-Vol1 Power and Control Tray Cable",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E347409-Vol1 Wind Turbine Tray Cable",
+            "parsedValue": "E347409-Vol1 Wind Turbine Tray Cable",
+            "canonicalCandidate": "E347409-Vol1 Wind Turbine Tray Cable",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E351344-Vol1 Flexible Motor Supply Cable",
+            "parsedValue": "E351344-Vol1 Flexible Motor Supply Cable",
+            "canonicalCandidate": "E351344-Vol1 Flexible Motor Supply Cable",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E356957-Vol1 Heavy Duty Flexible Power Cable",
+            "parsedValue": "E356957-Vol1 Heavy Duty Flexible Power Cable",
+            "canonicalCandidate": "E356957-Vol1 Heavy Duty Flexible Power Cable",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E351903-Vol1 Machine-Tool Wire",
+            "parsedValue": "E351903-Vol1 Machine-Tool Wire",
+            "canonicalCandidate": "E351903-Vol1 Machine-Tool Wire",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E348922-Vol1 Fixture Wire",
+            "parsedValue": "E348922-Vol1 Fixture Wire",
+            "canonicalCandidate": "E348922-Vol1 Fixture Wire",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "2534471 Appliance Wiring Material",
+            "parsedValue": "2534471 Appliance Wiring Material",
+            "canonicalCandidate": "2534471 Appliance Wiring Material",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E-Rubber<br>S-20 & N-30",
+            "parsedValue": "E-Rubber",
+            "canonicalCandidate": "E-Rubber",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "E-Rubber<br>S-20 & N-30",
+            "parsedValue": "S-20 & N-30",
+            "canonicalCandidate": "S-20 & N-30",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "X-90 HFS-110-TP",
+            "parsedValue": "X-90 HFS-110-TP",
+            "canonicalCandidate": "X-90 HFS-110-TP",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "X-HF-110<br>HFS-110-TP",
+            "parsedValue": "X-HF-110",
+            "canonicalCandidate": "X-HF-110",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "X-HF-110<br>HFS-110-TP",
+            "parsedValue": "HFS-110-TP",
+            "canonicalCandidate": "HFS-110-TP",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Small<br>Multi-core<br>Fire Test",
+            "parsedValue": "Small",
+            "canonicalCandidate": "Small",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Small<br>Multi-core<br>Fire Test",
+            "parsedValue": "Multi-core",
+            "canonicalCandidate": "Multi-core",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Small<br>Multi-core<br>Fire Test",
+            "parsedValue": "Fire Test",
+            "canonicalCandidate": "Fire Test",
+            "usageCount": 7,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Mech Test",
+            "parsedValue": "Mech Test",
+            "canonicalCandidate": "Mech Test",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Small Multi-core Mech Test",
+            "parsedValue": "Small Multi-core Mech Test",
+            "canonicalCandidate": "Small Multi-core Mech Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "SDI Fire Test",
+            "parsedValue": "SDI Fire Test",
+            "canonicalCandidate": "SDI Fire Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "SDI Mech Test",
+            "parsedValue": "SDI Mech Test",
+            "canonicalCandidate": "SDI Mech Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Large Multi-core Mech Test",
+            "parsedValue": "Large Multi-core Mech Test",
+            "canonicalCandidate": "Large Multi-core Mech Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Small Multi-core<br>with Earth Fire Test",
+            "parsedValue": "Small Multi-core",
+            "canonicalCandidate": "Small Multi-core",
+            "usageCount": 3,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Small Multi-core<br>with Earth Fire Test",
+            "parsedValue": "with Earth Fire Test",
+            "canonicalCandidate": "with Earth Fire Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Cat1 Mech Test",
+            "parsedValue": "Cat1 Mech Test",
+            "canonicalCandidate": "Cat1 Mech Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Xenon Arc UV<br>Radiation Test",
+            "parsedValue": "Xenon Arc UV",
+            "canonicalCandidate": "Xenon Arc UV",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Xenon Arc UV<br>Radiation Test",
+            "parsedValue": "Radiation Test",
+            "canonicalCandidate": "Radiation Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Hydrostatic<br>Pressure Test",
+            "parsedValue": "Hydrostatic",
+            "canonicalCandidate": "Hydrostatic",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Hydrostatic<br>Pressure Test",
+            "parsedValue": "Pressure Test",
+            "canonicalCandidate": "Pressure Test",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PA",
+            "parsedValue": "PA",
+            "canonicalCandidate": "PA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PB",
+            "parsedValue": "PB",
+            "canonicalCandidate": "PB",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PD",
+            "parsedValue": "PD",
+            "canonicalCandidate": "PD",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PG",
+            "parsedValue": "PG",
+            "canonicalCandidate": "PG",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PH",
+            "parsedValue": "PH",
+            "canonicalCandidate": "PH",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PK",
+            "parsedValue": "PK",
+            "canonicalCandidate": "PK",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PL",
+            "parsedValue": "PL",
+            "canonicalCandidate": "PL",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PN",
+            "parsedValue": "PN",
+            "canonicalCandidate": "PN",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PS",
+            "parsedValue": "PS",
+            "canonicalCandidate": "PS",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PT",
+            "parsedValue": "PT",
+            "canonicalCandidate": "PT",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PW",
+            "parsedValue": "PW",
+            "canonicalCandidate": "PW",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PX",
+            "parsedValue": "PX",
+            "canonicalCandidate": "PX",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PY",
+            "parsedValue": "PY",
+            "canonicalCandidate": "PY",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "PZ",
+            "parsedValue": "PZ",
+            "canonicalCandidate": "PZ",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FJA FLA",
+            "parsedValue": "FJA FLA",
+            "canonicalCandidate": "FJA FLA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AUS Water<br>Quality Suitability",
+            "parsedValue": "AUS Water",
+            "canonicalCandidate": "AUS Water",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "AUS Water<br>Quality Suitability",
+            "parsedValue": "Quality Suitability",
+            "canonicalCandidate": "Quality Suitability",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Cat2 Mech Test",
+            "parsedValue": "Cat2 Mech Test",
+            "canonicalCandidate": "Cat2 Mech Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Small Multi-core<br>Non Earth Fire Test",
+            "parsedValue": "Non Earth Fire Test",
+            "canonicalCandidate": "Non Earth Fire Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Large Multi-core<br>Fire Test",
+            "parsedValue": "Large Multi-core",
+            "canonicalCandidate": "Large Multi-core",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BC",
+            "parsedValue": "BC",
+            "canonicalCandidate": "BC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "DV",
+            "parsedValue": "DV",
+            "canonicalCandidate": "DV",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "EW",
+            "parsedValue": "EW",
+            "canonicalCandidate": "EW",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FC",
+            "parsedValue": "FC",
+            "canonicalCandidate": "FC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FK",
+            "parsedValue": "FK",
+            "canonicalCandidate": "FK",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FZ",
+            "parsedValue": "FZ",
+            "canonicalCandidate": "FZ",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "HT",
+            "parsedValue": "HT",
+            "canonicalCandidate": "HT",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RB",
+            "parsedValue": "RB",
+            "canonicalCandidate": "RB",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RC",
+            "parsedValue": "RC",
+            "canonicalCandidate": "RC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FCA",
+            "parsedValue": "FCA",
+            "canonicalCandidate": "FCA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RCA",
+            "parsedValue": "RCA",
+            "canonicalCandidate": "RCA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FKA",
+            "parsedValue": "FKA",
+            "canonicalCandidate": "FKA",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FKC FKM",
+            "parsedValue": "FKC FKM",
+            "canonicalCandidate": "FKC FKM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "FZC FZM",
+            "parsedValue": "FZC FZM",
+            "canonicalCandidate": "FZC FZM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "B06",
+            "parsedValue": "B06",
+            "canonicalCandidate": "B06",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NTC",
+            "parsedValue": "NTC",
+            "canonicalCandidate": "NTC",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "NFC NFM",
+            "parsedValue": "NFC NFM",
+            "canonicalCandidate": "NFC NFM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "B1C B1M",
+            "parsedValue": "B1C B1M",
+            "canonicalCandidate": "B1C B1M",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "B3M M3M B4M M4M M5M",
+            "parsedValue": "B3M M3M B4M M4M M5M",
+            "canonicalCandidate": "B3M M3M B4M M4M M5M",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ALI-FLEX System<br>Warranty",
+            "parsedValue": "ALI-FLEX System",
+            "canonicalCandidate": "ALI-FLEX System",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ALI-FLEX System<br>Warranty",
+            "parsedValue": "Warranty",
+            "canonicalCandidate": "Warranty",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Materials",
+            "parsedValue": "Materials",
+            "canonicalCandidate": "Materials",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "WS RB FZ DU CR",
+            "parsedValue": "WS RB FZ DU CR",
+            "canonicalCandidate": "WS RB FZ DU CR",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "MK",
+            "parsedValue": "MK",
+            "canonicalCandidate": "MK",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "J05 TUV",
+            "parsedValue": "J05 TUV",
+            "canonicalCandidate": "J05 TUV",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "J07 TUV",
+            "parsedValue": "J07 TUV",
+            "canonicalCandidate": "J07 TUV",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "J06 TUV",
+            "parsedValue": "J06 TUV",
+            "canonicalCandidate": "J06 TUV",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "J08 TUV",
+            "parsedValue": "J08 TUV",
+            "canonicalCandidate": "J08 TUV",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "J09 TUV",
+            "parsedValue": "J09 TUV",
+            "canonicalCandidate": "J09 TUV",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "J10 TUV",
+            "parsedValue": "J10 TUV",
+            "canonicalCandidate": "J10 TUV",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Current Rating",
+            "parsedValue": "Current Rating",
+            "canonicalCandidate": "Current Rating",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "V-90HT",
+            "parsedValue": "V-90HT",
+            "canonicalCandidate": "V-90HT",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BB",
+            "parsedValue": "BB",
+            "canonicalCandidate": "BB",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "BY",
+            "parsedValue": "BY",
+            "canonicalCandidate": "BY",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Large<br>Multi-core<br>Fire Test",
+            "parsedValue": "Large",
+            "canonicalCandidate": "Large",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ISO-9001 US",
+            "parsedValue": "ISO-9001 US",
+            "canonicalCandidate": "ISO-9001 US",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RoHS<br>Statement",
+            "parsedValue": "RoHS",
+            "canonicalCandidate": "RoHS",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "RoHS<br>Statement",
+            "parsedValue": "Statement",
+            "canonicalCandidate": "Statement",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "REACH<br>Statement",
+            "parsedValue": "REACH",
+            "canonicalCandidate": "REACH",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "ALI-FLEX",
+            "parsedValue": "ALI-FLEX",
+            "canonicalCandidate": "ALI-FLEX",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Pulling Test",
+            "parsedValue": "Pulling Test",
+            "canonicalCandidate": "Pulling Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Heat Cycling Test",
+            "parsedValue": "Heat Cycling Test",
+            "canonicalCandidate": "Heat Cycling Test",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Standard<br>Warranty",
+            "parsedValue": "Standard",
+            "canonicalCandidate": "Standard",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "HTC HTM BHC BHM",
+            "parsedValue": "HTC HTM BHC BHM",
+            "canonicalCandidate": "HTC HTM BHC BHM",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Fire Penetration Test-removed",
+            "parsedValue": "Fire Penetration Test-removed",
+            "canonicalCandidate": "Fire Penetration Test-removed",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Fire Penetration Test<br> - Floor",
+            "parsedValue": "Fire Penetration Test",
+            "canonicalCandidate": "Fire Penetration Test",
+            "usageCount": 2,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Fire Penetration Test<br> - Floor",
+            "parsedValue": "- Floor",
+            "canonicalCandidate": "- Floor",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Fire Penetration Test<br> - Wall",
+            "parsedValue": "- Wall",
+            "canonicalCandidate": "- Wall",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        },
+        {
+            "rawValue": "Fire Assessment",
+            "parsedValue": "Fire Assessment",
+            "canonicalCandidate": "Fire Assessment",
+            "usageCount": 1,
+            "aliasGroup": null,
+            "mappingStatus": "REVIEW",
+            "autoMerge": false
+        }
+    ],
+    "distinctParsed": 207,
+    "rawRows": 290,
+    "note": "No dedicated Product approvals meta key found. Candidates derived from certificate CPT. Do not auto-merge aliases."
+}

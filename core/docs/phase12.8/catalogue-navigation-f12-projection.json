@@ -1,0 +1,18 @@
+{
+    "generatedAtUtc": "2026-08-24T03:24:17+00:00",
+    "f12": {
+        "styleCode": "F12",
+        "legacyCataloguePath": "conduit",
+        "legacyTaxonomy": "category",
+        "targetCatalogueTab": null,
+        "targetCatalogueNode": null,
+        "existingLink": false,
+        "projectedAction": "REVIEW",
+        "decision": "REVIEW_TARGET_NODE_MISSING",
+        "confidence": "NONE",
+        "relationshipProjection": 0,
+        "applyBlockedBySourceDrift": true,
+        "note": "F12 product/variant apply remains blocked on PILOT_SOURCE_DRIFT. This task does not apply F12."
+    },
+    "apply": "NOT_ATTEMPTED"
+}

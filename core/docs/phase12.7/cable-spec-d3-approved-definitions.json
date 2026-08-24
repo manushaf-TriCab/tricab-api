@@ -1,0 +1,110 @@
+[
+    {
+        "field": "A30c",
+        "code": "CURRENT-30C",
+        "name": "Current Rating at 30\u00b0C",
+        "dataType": "decimal",
+        "unit": "A",
+        "group": "electrical",
+        "validationStatus": "valid",
+        "targetDefinitionExists": false,
+        "notes": [],
+        "neverMapTo": "CURRENT"
+    },
+    {
+        "field": "A40c",
+        "code": "CURRENT-40C",
+        "name": "Current Rating at 40\u00b0C",
+        "dataType": "decimal",
+        "unit": "A",
+        "group": "electrical",
+        "validationStatus": "valid",
+        "targetDefinitionExists": false,
+        "notes": [],
+        "neverMapTo": "CURRENT"
+    },
+    {
+        "field": "A45c",
+        "code": "CURRENT-45C",
+        "name": "Current Rating at 45\u00b0C",
+        "dataType": "decimal",
+        "unit": "A",
+        "group": "electrical",
+        "validationStatus": "valid",
+        "targetDefinitionExists": false,
+        "notes": [],
+        "neverMapTo": "CURRENT"
+    },
+    {
+        "field": "ne",
+        "code": "EARTH-CORES",
+        "name": "Earth Cores",
+        "dataType": "integer",
+        "unit": null,
+        "group": "construction",
+        "validationStatus": "valid",
+        "targetDefinitionExists": false,
+        "notes": [],
+        "neverMapTo": null
+    },
+    {
+        "field": "od_arm",
+        "code": "ARMOUR-OD",
+        "name": "Armour OD",
+        "dataType": "decimal",
+        "unit": "mm",
+        "group": "mechanical",
+        "validationStatus": "valid",
+        "targetDefinitionExists": false,
+        "notes": [],
+        "neverMapTo": null
+    },
+    {
+        "field": "od_bed",
+        "code": "BEDDING-OD",
+        "name": "Bedding OD",
+        "dataType": "decimal",
+        "unit": "mm",
+        "group": "mechanical",
+        "validationStatus": "valid",
+        "targetDefinitionExists": false,
+        "notes": [],
+        "neverMapTo": null
+    },
+    {
+        "field": "od_brd",
+        "code": "BRAID-OD",
+        "name": "Braid OD",
+        "dataType": "decimal",
+        "unit": "mm",
+        "group": "mechanical",
+        "validationStatus": "valid",
+        "targetDefinitionExists": false,
+        "notes": [],
+        "neverMapTo": null
+    },
+    {
+        "field": "ode_ins",
+        "code": "EARTH-INS-OD",
+        "name": "Earth Insulation OD",
+        "dataType": "decimal",
+        "unit": "mm",
+        "group": "mechanical",
+        "validationStatus": "valid",
+        "targetDefinitionExists": false,
+        "notes": [],
+        "neverMapTo": null
+    },
+    {
+        "field": "xae",
+        "code": "EARTH-CSA",
+        "name": "Earth CSA",
+        "dataType": "decimal",
+        "unit": "mm\u00b2",
+        "group": "construction",
+        "validationStatus": "valid",
+        "targetDefinitionExists": false,
+        "notes": [],
+        "neverMapTo": null
+    }
+]

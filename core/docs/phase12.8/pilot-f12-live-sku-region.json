@@ -1,0 +1,14 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "region": {
+        "legacyMarketEvidence": "TriCab AU catalogue default for accessory styles",
+        "resolvedRegions": [
+            "AU"
+        ],
+        "status": "RESOLVED_DRAFT_ASSIGNMENT",
+        "blockers": [],
+        "globalPublishFallback": false,
+        "publication": "Draft",
+        "separateCatalogueTreeByRegion": false
+    }
+}

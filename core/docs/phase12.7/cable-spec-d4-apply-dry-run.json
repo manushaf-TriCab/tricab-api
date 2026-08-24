@@ -1,0 +1,50 @@
+{
+    "status": "DRY_RUN",
+    "applied": false,
+    "plan": {
+        "definitionsToCreate": [
+            "EARTH-CORES",
+            "EARTH-CSA",
+            "EARTH-INS-OD",
+            "BEDDING-OD",
+            "ARMOUR-OD",
+            "BRAID-OD",
+            "CURRENT-30C",
+            "CURRENT-40C",
+            "CURRENT-45C"
+        ],
+        "definitionsAlreadyExisting": [
+            "EARTH-CORES",
+            "EARTH-CSA",
+            "EARTH-INS-OD",
+            "BEDDING-OD",
+            "ARMOUR-OD",
+            "BRAID-OD",
+            "CURRENT-30C",
+            "CURRENT-40C",
+            "CURRENT-45C"
+        ],
+        "fieldMappingsRequested": 538,
+        "forbiddenIndLszhFire": true,
+        "odMapsToNomCableOd": true,
+        "odNeverOuterDiameter": true,
+        "ambientNotGenericCurrent": true,
+        "earthCsaDecimal": true
+    },
+    "actualWrites": {
+        "definitionsCreated": 0,
+        "definitionsAlreadyExisting": 0,
+        "mappingsInserted": 0,
+        "mappingsIdenticalExisting": 0,
+        "mappingsUpdated": 0,
+        "specificationValues": 0,
+        "products": 0,
+        "variants": 0,
+        "classification": 0,
+        "catalogue": 0,
+        "pricing": 0,
+        "media": 0,
+        "documents": 0,
+        "legacy": 0
+    }
+}

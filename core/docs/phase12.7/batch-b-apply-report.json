@@ -1,0 +1,342 @@
+{
+    "phase": "12.7-batch-b",
+    "status": "COMPLETED",
+    "timestamp": "2026-08-21T01:31:54+00:00",
+    "completedAtUtc": "2026-08-21T01:32:03+00:00",
+    "target": {
+        "server": "tricab-mel",
+        "database": "tc",
+        "environment": "NON-PRODUCTION"
+    },
+    "preApplyCounts": {
+        "groups": 6,
+        "definitions": 37,
+        "units": 11,
+        "options": 405,
+        "products": 118,
+        "variants": 4178,
+        "categories": 13,
+        "series": 97,
+        "catalogueNodes": 97,
+        "fieldMappings": 7,
+        "optionAliases": 36,
+        "productSpecificationValues": 322,
+        "variantSpecificationValues": 52619
+    },
+    "specMasterReadyValidation": {
+        "productsPreviouslyMarkedReady": 95,
+        "requiredUnresolvedMasterReferencesFound": 4,
+        "deferredDefinitionReview": [
+            {
+                "sourceField": "ind_lszh_fire",
+                "usageCount": 120,
+                "reason": "operator_keep_review_serialized_multi_flag_acf_not_clean_definition"
+            },
+            {
+                "sourceField": "nek_class",
+                "usageCount": 55,
+                "reason": "operator_keep_review_empty_samples_may_feed_standard_options_later"
+            },
+            {
+                "sourceField": "spec_labels:v1",
+                "usageCount": 1,
+                "reason": "operator_keep_review_length_too_generic_across_styles_batch_c"
+            },
+            {
+                "sourceField": "spec_labels:d3",
+                "usageCount": 1,
+                "reason": "operator_keep_review_width_too_generic_across_styles_batch_c"
+            }
+        ],
+        "note": "Pre-apply SPEC_MASTER_READY=95 used CLASSIFICATION_READY as proxy after operator-approved masters. Remaining DEFINITION_REVIEW (ind_lszh_fire, nek_class, LENGTH, WIDTH) are intentionally deferred (Batch C / multi-flag). Unresolved Standard/Approval option REVIEW values are optional inventory, not required masters for this apply. No artificial promotion of unresolved Products.",
+        "readinessCorrectionRequired": true,
+        "correctionType": "SEMANTIC_CLARIFICATION",
+        "correctedSPEC_MASTER_READY": 95
+    },
+    "approvedScope": {
+        "mapExistingDefinitions": 10,
+        "approvedCreateDefinitionSourceRows": 6,
+        "uniqueDefinitionCreates": {
+            "OPERATING-TEMP": {
+                "name": "Operating temperature",
+                "group": "THERMAL",
+                "dataType": "decimal",
+                "unitCode": "C"
+            },
+            "HCL-EMISSION": {
+                "name": "HCl emission",
+                "group": "COMPLIANCE",
+                "dataType": "text",
+                "unitCode": null
+            },
+            "OXYGEN-INDEX": {
+                "name": "Oxygen index",
+                "group": "COMPLIANCE",
+                "dataType": "text",
+                "unitCode": null
+            },
+            "PIN-COUNT": {
+                "name": "Pins",
+                "group": "CONSTRUCTION",
+                "dataType": "integer",
+                "unitCode": null
+            },
+            "THREAD-OD": {
+                "name": "Thread OD",
+                "group": "MECHANICAL",
+                "dataType": "decimal",
+                "unitCode": "MM"
+            }
+        },
+        "definitionMappingsExpected": 16,
+        "standardMapExisting": 23,
+        "standardCreates": 11,
+        "approvalMapExisting": 1,
+        "approvalCreates": 0,
+        "optionMappingsExpected": 35,
+        "safeAliasesExpected": 2
+    },
+    "actualWrites": {
+        "definitionsCreated": 5,
+        "optionsCreated": 11,
+        "definitionMappingsInserted": 16,
+        "optionMappingsInserted": 35,
+        "aliasesInserted": 2,
+        "definitionMappingsSkippedExisting": 0,
+        "optionMappingsSkippedExisting": 0,
+        "aliasesSkippedExisting": 2,
+        "mappingsUpdated": 0,
+        "approvalOptionsCreated": 0,
+        "productSpecificationValueMutations": 0,
+        "productMutations": 0,
+        "variantMutations": 0,
+        "classificationMutations": 0,
+        "catalogueMutations": 0
+    },
+    "newDefinitions": [
+        {
+            "code": "OPERATING-TEMP",
+            "name": "Operating temperature",
+            "group": "THERMAL",
+            "dataType": "decimal",
+            "unit": "\u00b0C",
+            "publicId": "F697EC16-009D-F111-9B33-000D3AE12DFC",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "HCL-EMISSION",
+            "name": "HCl emission",
+            "group": "COMPLIANCE",
+            "dataType": "text",
+            "unit": null,
+            "publicId": "F897EC16-009D-F111-9B33-000D3AE12DFC",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "OXYGEN-INDEX",
+            "name": "Oxygen index",
+            "group": "COMPLIANCE",
+            "dataType": "text",
+            "unit": null,
+            "publicId": "FA97EC16-009D-F111-9B33-000D3AE12DFC",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "PIN-COUNT",
+            "name": "Pins",
+            "group": "CONSTRUCTION",
+            "dataType": "integer",
+            "unit": null,
+            "publicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "THREAD-OD",
+            "name": "Thread OD",
+            "group": "MECHANICAL",
+            "dataType": "decimal",
+            "unit": "mm",
+            "publicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+            "created": true,
+            "reusedExisting": false
+        }
+    ],
+    "newOptions": [
+        {
+            "code": "AS-NZS-5000-1",
+            "name": "AS/NZS 5000.1",
+            "publicId": "0098EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "AS-NZS-3008-1",
+            "name": "AS/NZS 3008.1",
+            "publicId": "0298EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "AS-NZS-1660-5-4",
+            "name": "AS/NZS 1660.5.4",
+            "publicId": "0498EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "AS-NZS-1660-5-5",
+            "name": "AS/NZS 1660.5.5",
+            "publicId": "0698EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "AS-NZS-3013",
+            "name": "AS/NZS 3013",
+            "publicId": "0898EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "BS-EN-50267",
+            "name": "BS EN 50267",
+            "publicId": "0A98EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "BS-EN-61034",
+            "name": "BS EN 61034",
+            "publicId": "0C98EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "AS-NZS-5033",
+            "name": "AS/NZS 5033",
+            "publicId": "0E98EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "IEC-62930",
+            "name": "IEC 62930",
+            "publicId": "1098EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "AS-NZS-5000-3",
+            "name": "AS/NZS 5000.3",
+            "publicId": "1298EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        },
+        {
+            "code": "AS-1670",
+            "name": "AS 1670",
+            "publicId": "1498EC16-009D-F111-9B33-000D3AE12DFC",
+            "definition": "STANDARD",
+            "created": true,
+            "reusedExisting": false
+        }
+    ],
+    "mappingResults": {
+        "definitionMappingsInserted": 16,
+        "optionMappingsInserted": 35,
+        "mappingsUpdated": 0
+    },
+    "aliasResults": {
+        "safeInserted": 2,
+        "skippedExisting": 2
+    },
+    "postApplyCounts": {
+        "groups": 6,
+        "definitions": 42,
+        "units": 11,
+        "options": 416,
+        "products": 118,
+        "variants": 4178,
+        "categories": 13,
+        "series": 97,
+        "catalogueNodes": 97,
+        "fieldMappings": 23,
+        "optionAliases": 71,
+        "productSpecificationValues": 322,
+        "variantSpecificationValues": 52619
+    },
+    "preservationChecks": {
+        "productMutations": 0,
+        "variantMutations": 0,
+        "classificationMutations": 0,
+        "catalogueMutations": 0,
+        "productSpecificationValueMutations": 0,
+        "pricingMutations": 0,
+        "mediaMutations": 0,
+        "documentMutations": 0
+    },
+    "legacySafety": {
+        "wordpressWrites": 0,
+        "tcWrites": 0,
+        "forbiddenWriteAttempts": 0
+    },
+    "idempotency": {
+        "status": "PASS",
+        "secondRunWrites": {
+            "definitionsCreated": 0,
+            "optionsCreated": 0,
+            "definitionMappingsInserted": 0,
+            "optionMappingsInserted": 0,
+            "aliasesInserted": 0,
+            "definitionMappingsSkippedExisting": 16,
+            "optionMappingsSkippedExisting": 35,
+            "aliasesSkippedExisting": 2,
+            "mappingsUpdated": 0,
+            "approvalOptionsCreated": 0,
+            "productSpecificationValueMutations": 0,
+            "productMutations": 0,
+            "variantMutations": 0,
+            "classificationMutations": 0,
+            "catalogueMutations": 0
+        }
+    },
+    "readiness": {
+        "DEFINITION_READY": 16,
+        "DEFINITION_REVIEW": 4,
+        "UNIT_READY": 9,
+        "UNIT_REVIEW": 0,
+        "STANDARD_READY": 34,
+        "STANDARD_REVIEW": 40,
+        "APPROVAL_READY": 1,
+        "APPROVAL_REVIEW": 112,
+        "ALIAS_READY": 2,
+        "ALIAS_REVIEW": 50,
+        "SPEC_MASTER_READY": 95,
+        "SPEC_MASTER_REVIEW": 0,
+        "SPEC_FIELD_MAPPING_READY": 0
+    },
+    "fullProductReadiness": {
+        "CLASSIFICATION_READY": 95,
+        "SPEC_MASTER_READY": 95,
+        "SPEC_FIELD_MAPPING_READY": 0,
+        "ACCESSORY_IDENTITY_BLOCKED": 41,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "FULL_PRODUCT_MIGRATION_BLOCKED": 336
+    },
+    "batchC": "NOT_STARTED",
+    "fullCatalogueMigration": "NOT READY"
+}

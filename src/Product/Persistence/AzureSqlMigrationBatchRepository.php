@@ -794,6 +794,7 @@ SQL,
             <<<'SQL'
 SELECT CONVERT(NVARCHAR(36), [PublicId]) AS [publicId], [SourceSystem] AS [sourceSystem],
     [SourceTable] AS [sourceTable], [SourceField] AS [sourceField],
+    [LegacyStyleCode] AS [legacyStyleCode],
     CONVERT(NVARCHAR(36), [TargetSpecificationDefinitionPublicId]) AS [targetSpecificationDefinitionPublicId],
     [TargetDefinitionCode] AS [targetDefinitionCode], [TargetScopeCode] AS [targetScopeCode],
     [TransformationRule] AS [transformationRule], [SourceUnit] AS [sourceUnit], [TargetUnit] AS [targetUnit],
@@ -822,6 +823,7 @@ SQL,
             ':sourceSystem' => MigrationPayload::string($data['sourceSystem'] ?? 'tc'),
             ':sourceTable' => MigrationPayload::string($data['sourceTable'] ?? 'products'),
             ':sourceField' => MigrationPayload::string($data['sourceField'] ?? ''),
+            ':legacyStyle' => MigrationPayload::stringOrNull($data['legacyStyleCode'] ?? $data['styleCode'] ?? null),
             ':defId' => MigrationPayload::stringOrNull($data['targetSpecificationDefinitionPublicId'] ?? null),
             ':defCode' => MigrationPayload::stringOrNull($data['targetDefinitionCode'] ?? null),
             ':scope' => MigrationPayload::stringOrNull($data['targetScopeCode'] ?? null),
@@ -837,11 +839,11 @@ SQL,
             $this->connection->execute(
                 <<<'SQL'
 INSERT INTO [migration].[SpecificationFieldMappings] (
-    [PublicId], [SourceSystem], [SourceTable], [SourceField], [TargetSpecificationDefinitionPublicId],
+    [PublicId], [SourceSystem], [SourceTable], [SourceField], [LegacyStyleCode], [TargetSpecificationDefinitionPublicId],
     [TargetDefinitionCode], [TargetScopeCode], [TransformationRule], [SourceUnit], [TargetUnit],
     [StatusCode], [Notes], [MappedByUserId], [MappedAtUtc]
 ) VALUES (
-    :publicId, :sourceSystem, :sourceTable, :sourceField, :defId,
+    :publicId, :sourceSystem, :sourceTable, :sourceField, :legacyStyle, :defId,
     :defCode, :scope, :rule, :sourceUnit, :targetUnit, :statusCode, :notes, :mappedBy, SYSUTCDATETIME()
 )
 SQL,
@@ -852,6 +854,7 @@ SQL,
                 <<<'SQL'
 UPDATE [migration].[SpecificationFieldMappings]
 SET [SourceSystem] = :sourceSystem, [SourceTable] = :sourceTable, [SourceField] = :sourceField,
+    [LegacyStyleCode] = :legacyStyle,
     [TargetSpecificationDefinitionPublicId] = :defId, [TargetDefinitionCode] = :defCode,
     [TargetScopeCode] = :scope, [TransformationRule] = :rule, [SourceUnit] = :sourceUnit,
     [TargetUnit] = :targetUnit, [StatusCode] = :statusCode, [Notes] = :notes,

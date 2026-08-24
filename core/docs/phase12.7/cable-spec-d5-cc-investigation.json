@@ -1,0 +1,505 @@
+{
+    "ccByValue": [
+        {
+            "value": "c",
+            "rows": 3027,
+            "styles": 39,
+            "distinctNc": 39,
+            "ncSamples": [
+                "1",
+                "10",
+                "100",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15"
+            ],
+            "xaSamples": [
+                "0.5",
+                "0.75",
+                "1",
+                "1.5",
+                "1/0",
+                "10",
+                "1000",
+                "1111"
+            ],
+            "ctDistribution": {
+                "p": 2751,
+                "a": 276
+            },
+            "mtDistribution": {
+                "1301": 1877,
+                "1302": 1150
+            },
+            "styleSamples": [
+                "B1",
+                "BH",
+                "BV",
+                "C1",
+                "DF",
+                "DG",
+                "DV",
+                "EA",
+                "HT",
+                "KA",
+                "KC",
+                "KL"
+            ]
+        },
+        {
+            "value": "p",
+            "rows": 1177,
+            "styles": 14,
+            "distinctNc": 13,
+            "ncSamples": [
+                "1",
+                "10",
+                "12",
+                "16",
+                "2",
+                "20",
+                "24",
+                "27"
+            ],
+            "xaSamples": [
+                "0.5",
+                "0.75",
+                "1",
+                "1.5",
+                "14",
+                "14*",
+                "16",
+                "16*"
+            ],
+            "ctDistribution": {
+                "p": 1177
+            },
+            "mtDistribution": {
+                "1301": 766,
+                "1302": 396,
+                "0": 15
+            },
+            "styleSamples": [
+                "EG",
+                "ES",
+                "EW",
+                "FC",
+                "FE",
+                "FJ",
+                "FK",
+                "FL",
+                "FZ",
+                "R1",
+                "RB",
+                "RC"
+            ]
+        },
+        {
+            "value": "t",
+            "rows": 279,
+            "styles": 14,
+            "distinctNc": 10,
+            "ncSamples": [
+                "1",
+                "10",
+                "12",
+                "2",
+                "3",
+                "4",
+                "6",
+                "7"
+            ],
+            "xaSamples": [
+                "0.5",
+                "0.75",
+                "1",
+                "1.5",
+                "14",
+                "16",
+                "18",
+                "2.5"
+            ],
+            "ctDistribution": {
+                "p": 279
+            },
+            "mtDistribution": {
+                "1302": 144,
+                "1301": 131,
+                "0": 4
+            },
+            "styleSamples": [
+                "EG",
+                "ES",
+                "EW",
+                "FC",
+                "FE",
+                "FJ",
+                "FK",
+                "FL",
+                "FZ",
+                "R1",
+                "RB",
+                "RC"
+            ]
+        },
+        {
+            "value": "a",
+            "rows": 8,
+            "styles": 1,
+            "distinctNc": 1,
+            "ncSamples": [
+                "3"
+            ],
+            "xaSamples": [
+                "1",
+                "1/0",
+                "2/0",
+                "250",
+                "3/0",
+                "350",
+                "4/0",
+                "500"
+            ],
+            "ctDistribution": {
+                "p": 8
+            },
+            "mtDistribution": {
+                "1302": 8
+            },
+            "styleSamples": [
+                "VUF"
+            ]
+        }
+    ],
+    "ccCrossNcXa": {
+        "matrix": [
+            {
+                "cc": "a",
+                "nc": "3",
+                "rows_cnt": 8
+            },
+            {
+                "cc": "c",
+                "nc": "3",
+                "rows_cnt": 639
+            },
+            {
+                "cc": "c",
+                "nc": "1",
+                "rows_cnt": 539
+            },
+            {
+                "cc": "c",
+                "nc": "4",
+                "rows_cnt": 461
+            },
+            {
+                "cc": "c",
+                "nc": "2",
+                "rows_cnt": 273
+            },
+            {
+                "cc": "c",
+                "nc": "5",
+                "rows_cnt": 234
+            },
+            {
+                "cc": "c",
+                "nc": "7",
+                "rows_cnt": 74
+            },
+            {
+                "cc": "c",
+                "nc": "12",
+                "rows_cnt": 74
+            },
+            {
+                "cc": "c",
+                "nc": "19",
+                "rows_cnt": 74
+            },
+            {
+                "cc": "c",
+                "nc": "37",
+                "rows_cnt": 68
+            },
+            {
+                "cc": "c",
+                "nc": "27",
+                "rows_cnt": 58
+            },
+            {
+                "cc": "c",
+                "nc": "16",
+                "rows_cnt": 53
+            },
+            {
+                "cc": "c",
+                "nc": "33",
+                "rows_cnt": 50
+            },
+            {
+                "cc": "c",
+                "nc": "10",
+                "rows_cnt": 48
+            },
+            {
+                "cc": "c",
+                "nc": "24",
+                "rows_cnt": 45
+            },
+            {
+                "cc": "c",
+                "nc": "14",
+                "rows_cnt": 43
+            },
+            {
+                "cc": "c",
+                "nc": "6",
+                "rows_cnt": 36
+            },
+            {
+                "cc": "c",
+                "nc": "30",
+                "rows_cnt": 32
+            },
+            {
+                "cc": "c",
+                "nc": "9",
+                "rows_cnt": 24
+            },
+            {
+                "cc": "c",
+                "nc": "18",
+                "rows_cnt": 21
+            },
+            {
+                "cc": "c",
+                "nc": "21",
+                "rows_cnt": 18
+            },
+            {
+                "cc": "c",
+                "nc": "25",
+                "rows_cnt": 18
+            },
+            {
+                "cc": "c",
+                "nc": "8",
+                "rows_cnt": 16
+            },
+            {
+                "cc": "c",
+                "nc": "20",
+                "rows_cnt": 13
+            },
+            {
+                "cc": "c",
+                "nc": "40",
+                "rows_cnt": 13
+            },
+            {
+                "cc": "c",
+                "nc": "61",
+                "rows_cnt": 12
+            },
+            {
+                "cc": "c",
+                "nc": "11",
+                "rows_cnt": 9
+            },
+            {
+                "cc": "c",
+                "nc": "23",
+                "rows_cnt": 8
+            },
+            {
+                "cc": "c",
+                "nc": "50",
+                "rows_cnt": 8
+            },
+            {
+                "cc": "c",
+                "nc": "15",
+                "rows_cnt": 8
+            },
+            {
+                "cc": "c",
+                "nc": "36",
+                "rows_cnt": 8
+            },
+            {
+                "cc": "c",
+                "nc": "41",
+                "rows_cnt": 8
+            },
+            {
+                "cc": "c",
+                "nc": "34",
+                "rows_cnt": 8
+            },
+            {
+                "cc": "c",
+                "nc": "26",
+                "rows_cnt": 8
+            },
+            {
+                "cc": "c",
+                "nc": "32",
+                "rows_cnt": 8
+            },
+            {
+                "cc": "c",
+                "nc": "52",
+                "rows_cnt": 5
+            },
+            {
+                "cc": "c",
+                "nc": "100",
+                "rows_cnt": 4
+            },
+            {
+                "cc": "c",
+                "nc": "80",
+                "rows_cnt": 4
+            },
+            {
+                "cc": "c",
+                "nc": "67",
+                "rows_cnt": 4
+            },
+            {
+                "cc": "c",
+                "nc": "13",
+                "rows_cnt": 1
+            }
+        ],
+        "note": "cc \u00d7 nc frequency (top 40)"
+    },
+    "ccValueA": {
+        "rows": 8,
+        "styles": [
+            "VUF"
+        ],
+        "samples": [
+            {
+                "cable_style": "VUF",
+                "cc": "a",
+                "nc": 3,
+                "xa": "1",
+                "ct": "p",
+                "mt": 1302,
+                "od": "1.385",
+                "wght": 1542
+            },
+            {
+                "cable_style": "VUF",
+                "cc": "a",
+                "nc": 3,
+                "xa": "1/0",
+                "ct": "p",
+                "mt": 1302,
+                "od": "1.475",
+                "wght": 1798
+            },
+            {
+                "cable_style": "VUF",
+                "cc": "a",
+                "nc": 3,
+                "xa": "2/0",
+                "ct": "p",
+                "mt": 1302,
+                "od": "1.635",
+                "wght": 2146
+            },
+            {
+                "cable_style": "VUF",
+                "cc": "a",
+                "nc": 3,
+                "xa": "250",
+                "ct": "p",
+                "mt": 1302,
+                "od": "2.165",
+                "wght": 2628
+            },
+            {
+                "cable_style": "VUF",
+                "cc": "a",
+                "nc": 3,
+                "xa": "3/0",
+                "ct": "p",
+                "mt": 1302,
+                "od": "1.910",
+                "wght": 3272
+            },
+            {
+                "cable_style": "VUF",
+                "cc": "a",
+                "nc": 3,
+                "xa": "350",
+                "ct": "p",
+                "mt": 1302,
+                "od": "2.385",
+                "wght": 3857
+            },
+            {
+                "cable_style": "VUF",
+                "cc": "a",
+                "nc": 3,
+                "xa": "4/0",
+                "ct": "p",
+                "mt": 1302,
+                "od": "1.935",
+                "wght": 5200
+            },
+            {
+                "cable_style": "VUF",
+                "cc": "a",
+                "nc": 3,
+                "xa": "500",
+                "ct": "p",
+                "mt": 1302,
+                "od": "2.680",
+                "wght": 6855
+            }
+        ],
+        "awgHypothesis": "LOW \u2014 insufficient evidence for AWG"
+    },
+    "proposal": {
+        "legacyField": "cc",
+        "inferredMeaning": "Core counting / configuration mode (c=cores, p=pairs, t=triples, a=unknown \u2014 AWG hypothesis LOW)",
+        "decision": "REVIEW",
+        "targetDefinition": null,
+        "targetUnit": null,
+        "targetOptions": null,
+        "confidence": "MEDIUM",
+        "evidence": [
+            "Values c/p/t/a across 4491 non-empty rows on 54 styles.",
+            "c dominates; p pairs; t triples; a only VUF (8 rows)",
+            "No direct legacy UI label or spec_labels entry found (codebase scan).",
+            "cc\u00d7nc correlation: c aligns with nc>1 cores; p with pairs; t with triples \u2014 supporting only.",
+            "cc=a on style VUF only \u2014 AWG hypothesis not proven."
+        ],
+        "stylesAffected": 54,
+        "styleSamples": [
+            "BV",
+            "DV",
+            "RR",
+            "BH",
+            "RC",
+            "RS",
+            "ES",
+            "FJ",
+            "EW",
+            "EG",
+            "FC",
+            "FL",
+            "PJ",
+            "HT"
+        ],
+        "rowsAffected": 4491,
+        "productsBlocked": 54
+    }
+}

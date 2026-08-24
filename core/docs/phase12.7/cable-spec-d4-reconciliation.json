@@ -1,0 +1,90 @@
+{
+    "definitionsVerified": [
+        {
+            "code": "EARTH-CORES",
+            "name": "Earth Cores",
+            "groupCode": "construction",
+            "dataTypeCode": "integer",
+            "unit": null,
+            "expectedDataType": "integer",
+            "isActive": "1"
+        },
+        {
+            "code": "EARTH-CSA",
+            "name": "Earth CSA",
+            "groupCode": "construction",
+            "dataTypeCode": "decimal",
+            "unit": "mm\u00b2",
+            "expectedDataType": "decimal",
+            "isActive": "1"
+        },
+        {
+            "code": "EARTH-INS-OD",
+            "name": "Earth Insulation OD",
+            "groupCode": "mechanical",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "expectedDataType": "decimal",
+            "isActive": "1"
+        },
+        {
+            "code": "BEDDING-OD",
+            "name": "Bedding OD",
+            "groupCode": "mechanical",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "expectedDataType": "decimal",
+            "isActive": "1"
+        },
+        {
+            "code": "ARMOUR-OD",
+            "name": "Armour OD",
+            "groupCode": "mechanical",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "expectedDataType": "decimal",
+            "isActive": "1"
+        },
+        {
+            "code": "BRAID-OD",
+            "name": "Braid OD",
+            "groupCode": "mechanical",
+            "dataTypeCode": "decimal",
+            "unit": "mm",
+            "expectedDataType": "decimal",
+            "isActive": "1"
+        },
+        {
+            "code": "CURRENT-30C",
+            "name": "Current Rating at 30\u00b0C",
+            "groupCode": "electrical",
+            "dataTypeCode": "decimal",
+            "unit": "A",
+            "expectedDataType": "decimal",
+            "isActive": "1"
+        },
+        {
+            "code": "CURRENT-40C",
+            "name": "Current Rating at 40\u00b0C",
+            "groupCode": "electrical",
+            "dataTypeCode": "decimal",
+            "unit": "A",
+            "expectedDataType": "decimal",
+            "isActive": "1"
+        },
+        {
+            "code": "CURRENT-45C",
+            "name": "Current Rating at 45\u00b0C",
+            "groupCode": "electrical",
+            "dataTypeCode": "decimal",
+            "unit": "A",
+            "expectedDataType": "decimal",
+            "isActive": "1"
+        }
+    ],
+    "definitionsMissing": [],
+    "mappingsVerified": 538,
+    "mappingsMissing": [],
+    "conflicts": [],
+    "unexpected": []
+}

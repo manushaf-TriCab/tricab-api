@@ -1,0 +1,62 @@
+{
+    "executeInPhase12_6": false,
+    "items": [
+        {
+            "type": "SpecificationUnits",
+            "action": "CREATE_TABLE_AND_SEED",
+            "priority": "MIGRATION_BLOCKER",
+            "detail": "Run IF OBJECT_ID ... CREATE TABLE from create-product-schema.sql SpecificationUnits section; seed canonical units; do not drop existing product data."
+        },
+        {
+            "type": "ProductFamily",
+            "action": "CREATE",
+            "code": "ACCESSORIES",
+            "priority": "REQUIRED",
+            "autoCreate": false
+        },
+        {
+            "type": "ProductCategory",
+            "action": "CREATE_SELECTED",
+            "countProposed": 207,
+            "priority": "REQUIRED",
+            "autoCreate": false,
+            "note": "Do not create one Category per WP term automatically."
+        },
+        {
+            "type": "ProductSeries",
+            "action": "CREATE_SELECTED",
+            "countProposed": 390,
+            "priority": "REQUIRED",
+            "autoCreate": false
+        },
+        {
+            "type": "SpecificationDefinition",
+            "action": "CREATE_SELECTED",
+            "countProposed": 24,
+            "priority": "REQUIRED",
+            "autoCreate": false
+        },
+        {
+            "type": "SpecificationUnit",
+            "action": "SEED",
+            "countProposed": 9,
+            "priority": "MIGRATION_BLOCKER",
+            "autoCreate": false
+        },
+        {
+            "type": "SpecificationOption",
+            "action": "CREATE_SELECTED",
+            "countProposed": 191,
+            "priority": "RECOMMENDED",
+            "autoCreate": false
+        },
+        {
+            "type": "CatalogueNode",
+            "action": "ADD_OR_UPDATE_REVIEW",
+            "countProposed": 2,
+            "priority": "RECOMMENDED",
+            "autoCreate": false
+        }
+    ],
+    "familiesProposed": []
+}

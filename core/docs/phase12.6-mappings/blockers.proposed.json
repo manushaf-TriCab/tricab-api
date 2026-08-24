@@ -1,0 +1,17 @@
+[
+    {
+        "code": "MEDIA_FILES_UNAVAILABLE",
+        "severity": "MIGRATION_BLOCKER",
+        "message": "LEGACY_FILES_ROOT unavailable/waived \u2014 media readiness BLOCKED"
+    },
+    {
+        "code": "DV_FIELD_MAPPINGS_INCOMPLETE",
+        "severity": "MIGRATION_BLOCKER",
+        "message": "d1\u2013d7/v1\u2013v4 style-specific mappings require operator review"
+    },
+    {
+        "code": "WP_TAXONOMY_NOT_CLASSIFICATION",
+        "severity": "REQUIRED",
+        "message": "WordPress category taxonomy is not Family/Category/Series"
+    }
+]

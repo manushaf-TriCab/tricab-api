@@ -74,7 +74,7 @@ final class ApplicationCacheTest extends TestCase
     {
         $directory = sys_get_temp_dir() . '/tricab-app-cache-' . bin2hex(random_bytes(4));
         $first = new FilesystemApplicationCache($directory);
-        $first->set('admin:product-lookups:v1', ['marker' => 'file'], 60);
+        $first->set('admin:product-lookups:v2', ['marker' => 'file'], 60);
         $first->set('catalogue:panel:one', ['n' => 1], 60);
 
         $second = new FilesystemApplicationCache($directory);
@@ -83,7 +83,7 @@ final class ApplicationCacheTest extends TestCase
 
         $reference->invalidateLookups();
         $reference->invalidateCatalogue();
-        self::assertNull($second->get('admin:product-lookups:v1'));
+        self::assertNull($second->get('admin:product-lookups:v2'));
         self::assertNull($second->get('catalogue:panel:one'));
     }
 

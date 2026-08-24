@@ -17,6 +17,11 @@ final readonly class ProductPricingOverview
         public int $scheduledRecordCount,
         public int $expiredRecordCount,
         public int $inactiveRecordCount,
+        public ?string $defaultUnitOfMeasurePublicId = null,
+        public ?string $defaultUnitOfMeasureCode = null,
+        public ?string $defaultUnitOfMeasureSymbol = null,
+        /** @var 'product'|'system-default' */
+        public string $defaultUnitSource = 'system-default',
     ) {
     }
 }

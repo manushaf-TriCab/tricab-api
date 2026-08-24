@@ -1,0 +1,262 @@
+{
+    "count": 10,
+    "items": [
+        {
+            "legacyField": "cc",
+            "inferredMeaning": "Core counting / configuration mode (c=cores, p=pairs, t=triples, a=unknown \u2014 AWG hypothesis LOW)",
+            "decision": "REVIEW",
+            "targetDefinition": null,
+            "targetUnit": null,
+            "targetOptions": null,
+            "confidence": "MEDIUM",
+            "evidence": [
+                "Values c/p/t/a across 4491 non-empty rows on 54 styles.",
+                "c dominates; p pairs; t triples; a only VUF (8 rows)",
+                "No direct legacy UI label or spec_labels entry found (codebase scan).",
+                "cc\u00d7nc correlation: c aligns with nc>1 cores; p with pairs; t with triples \u2014 supporting only.",
+                "cc=a on style VUF only \u2014 AWG hypothesis not proven."
+            ],
+            "stylesAffected": 54,
+            "styleSamples": [
+                "BV",
+                "DV",
+                "RR",
+                "BH",
+                "RC",
+                "RS",
+                "ES",
+                "FJ",
+                "EW",
+                "EG",
+                "FC",
+                "FL",
+                "PJ",
+                "HT"
+            ],
+            "rowsAffected": 4491,
+            "productsBlocked": 54
+        },
+        {
+            "legacyField": "ct",
+            "inferredMeaning": "Conductor material/type encoding (p vs a \u2014 copper vs aluminium hypothesis MEDIUM)",
+            "decision": "REVIEW",
+            "targetDefinition": "CONDUCTORS (long-text \u2014 semantic mismatch risk)",
+            "targetUnit": null,
+            "targetOptions": null,
+            "confidence": "MEDIUM",
+            "evidence": [
+                "Values p (4215 rows) and a (276 rows) on all 54 styles.",
+                "KL ct=a lighter wght + larger OD vs ct=p",
+                "rating.ct uses C/A \u2014 different alphabet from cable_specs.ct p/a.",
+                "Target CONDUCTORS/CODE_CONDUCTOR exist but are not proven equivalents.",
+                "No direct legacy label for cable_specs.ct found."
+            ],
+            "stylesAffected": 54,
+            "styleSamples": [
+                "BV",
+                "DV",
+                "RR",
+                "BH",
+                "RC",
+                "RS",
+                "ES",
+                "FJ",
+                "EW",
+                "EG",
+                "FC",
+                "FL",
+                "PJ",
+                "HT"
+            ],
+            "rowsAffected": 4491,
+            "productsBlocked": 54
+        },
+        {
+            "legacyField": "walu",
+            "inferredMeaning": "Approximate aluminium component weight (imperial rows only)",
+            "decision": "PROPOSED_CREATE_DEFINITION",
+            "targetDefinition": "APPROX-WEIGHT-ALU",
+            "targetUnit": "LB_PER_1000FT (candidate \u2014 not in target Units)",
+            "targetOptions": null,
+            "confidence": "HIGH",
+            "evidence": [
+                "Distinct from wght; non-zero only when mt=1302 (Imperial System).",
+                "Parallel numeric column alongside APPROX-WEIGHT (wght) on imperial styles.",
+                "14 styles populated \u2014 D.2 semantic evidence retained.",
+                "Unit: imperial mass/length likely lb/1000ft \u2014 MEDIUM confidence (no direct label)."
+            ],
+            "stylesAffected": 14,
+            "styleSamples": [
+                "BH",
+                "BV",
+                "DV",
+                "EG",
+                "ES",
+                "EW",
+                "FC",
+                "FJ",
+                "FL",
+                "RC",
+                "RR",
+                "RS",
+                "TG",
+                "TS"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 14,
+            "unitDecision": "PROPOSED_CREATE_UNIT"
+        },
+        {
+            "legacyField": "wbnz",
+            "inferredMeaning": "Approximate bronze component weight (imperial rows only)",
+            "decision": "PROPOSED_CREATE_DEFINITION",
+            "targetDefinition": "APPROX-WEIGHT-BRONZE",
+            "targetUnit": "LB_PER_1000FT (candidate \u2014 not in target Units)",
+            "targetOptions": null,
+            "confidence": "HIGH",
+            "evidence": [
+                "Distinct from wght; non-zero only when mt=1302.",
+                "14 styles \u2014 mirrors walu population pattern.",
+                "Unit: imperial mass/length likely lb/1000ft \u2014 MEDIUM confidence."
+            ],
+            "stylesAffected": 14,
+            "styleSamples": [
+                "BH",
+                "BV",
+                "DV",
+                "EG",
+                "ES",
+                "EW",
+                "FC",
+                "FJ",
+                "FL",
+                "RC",
+                "RR",
+                "RS",
+                "TG",
+                "TS"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 14,
+            "unitDecision": "PROPOSED_CREATE_UNIT"
+        },
+        {
+            "legacyField": "ins",
+            "inferredMeaning": "Insulation dimension \u2014 thickness vs OD ambiguity across styles",
+            "decision": "REVIEW",
+            "targetDefinition": null,
+            "targetUnit": "MM (if thickness) or MM (if OD-like)",
+            "targetOptions": null,
+            "confidence": "MEDIUM",
+            "evidence": [
+                "NR/NV thickness-like; KN/XN OD-like",
+                "Dimensional check: 20/20 rows match ins\u2248(od_ins-cdia)/2",
+                "TYPE_AMBIGUITY \u2014 cannot approve single Definition without style-specific rules."
+            ],
+            "stylesAffected": 5,
+            "styleSamples": [
+                "B1",
+                "KN",
+                "NR",
+                "NV",
+                "XN"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 5
+        },
+        {
+            "legacyField": "Af",
+            "inferredMeaning": "Unknown engineering scalar \u2014 B1 only (not proven current)",
+            "decision": "REVIEW",
+            "targetDefinition": null,
+            "targetUnit": null,
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "Populated only on B1 (11 rows).",
+                "Scales with cable size \u2014 earth-fault/current hypothesis not proven.",
+                ""
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        },
+        {
+            "legacyField": "r",
+            "inferredMeaning": "Unknown \u2014 resistance hypothesis not proven (unit unclear)",
+            "decision": "REVIEW",
+            "targetDefinition": null,
+            "targetUnit": "\u03a9/km or \u03a9/1000ft (unproven)",
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "B1 only; no explicit \u03a9/km legacy label found.",
+                "Correlate with xa/mt/x50/x60 inconclusive for HIGH confidence."
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        },
+        {
+            "legacyField": "x50",
+            "inferredMeaning": "Reactance at 50 Hz hypothesis \u2014 not proven",
+            "decision": "REVIEW",
+            "targetDefinition": "REACTANCE-50HZ (candidate only)",
+            "targetUnit": null,
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "B1 only; no direct 50Hz/reactance label in codebase scan.",
+                "Do not create Definition in D.5."
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        },
+        {
+            "legacyField": "x60",
+            "inferredMeaning": "Reactance at 60 Hz hypothesis \u2014 not proven",
+            "decision": "REVIEW",
+            "targetDefinition": "REACTANCE-60HZ (candidate only)",
+            "targetUnit": null,
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "B1 only; no direct 60Hz/reactance label in codebase scan."
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        },
+        {
+            "legacyField": "tension",
+            "inferredMeaning": "Mechanical/pulling tension hypothesis \u2014 unit and meaning unproven",
+            "decision": "REVIEW",
+            "targetDefinition": null,
+            "targetUnit": "N or kN or lbf (unproven)",
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "B1 only; no installation tension label found in migration codebase scan."
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        }
+    ]
+}

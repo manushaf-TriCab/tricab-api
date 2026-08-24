@@ -1,0 +1,123 @@
+[
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "Flexible Conduit",
+        "legacySlug": "conduit",
+        "productCount": 10,
+        "proposedFamilyName": "Flexible Conduit",
+        "proposedFamilyCode": "FLEXIBLE-CONDUIT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "News",
+        "legacySlug": "news",
+        "productCount": 5,
+        "proposedFamilyName": "News",
+        "proposedFamilyCode": "NEWS",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "Tape",
+        "legacySlug": "tape",
+        "productCount": 3,
+        "proposedFamilyName": "Tape",
+        "proposedFamilyCode": "TAPE",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "Accessories",
+        "legacySlug": "accessories",
+        "productCount": 2,
+        "proposedFamilyName": "Accessories",
+        "proposedFamilyCode": "ACCESSORIES",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "Cables",
+        "legacySlug": "cables",
+        "productCount": 2,
+        "proposedFamilyName": "Cables",
+        "proposedFamilyCode": "CABLES",
+        "status": "EXISTING_MATCH",
+        "existingCode": "CABLE",
+        "confidence": "high"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "Control/Instrument",
+        "legacySlug": "control-instrumentation",
+        "productCount": 2,
+        "proposedFamilyName": "Control/Instrument",
+        "proposedFamilyCode": "CONTROL-INSTRUMENT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "Shipboard / Offshore",
+        "legacySlug": "shipboard-offshore",
+        "productCount": 2,
+        "proposedFamilyName": "Shipboard / Offshore",
+        "proposedFamilyCode": "SHIPBOARD-OFFSHORE",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "Slotted Ducts",
+        "legacySlug": "slotted-ducts",
+        "productCount": 2,
+        "proposedFamilyName": "Slotted Ducts",
+        "proposedFamilyCode": "SLOTTED-DUCTS",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "ANDERSON Connectors",
+        "legacySlug": "anderson-connectors",
+        "productCount": 1,
+        "proposedFamilyName": "ANDERSON Connectors",
+        "proposedFamilyCode": "ANDERSON-CONNECTORS",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "Conductive Grease",
+        "legacySlug": "conductive_grease",
+        "productCount": 1,
+        "proposedFamilyName": "Conductive Grease",
+        "proposedFamilyCode": "CONDUCTIVE-GREASE",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    },
+    {
+        "legacySource": "wordpress:category",
+        "legacyValue": "Kennards Store",
+        "legacySlug": "kennards-store",
+        "productCount": 1,
+        "proposedFamilyName": "Kennards Store",
+        "proposedFamilyCode": "KENNARDS-STORE",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "confidence": "medium"
+    }
+]

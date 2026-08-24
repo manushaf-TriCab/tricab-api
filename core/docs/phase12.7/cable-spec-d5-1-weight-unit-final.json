@@ -1,0 +1,740 @@
+{
+    "walu": {
+        "meaning": "Approximate aluminium component weight (distinct from total wght)",
+        "meaningEvidenceClass": "DIRECT_EVIDENCE",
+        "meaningConfidence": "HIGH",
+        "resolution": "PROVEN_CREATE_DEFINITION",
+        "unit": "LB_PER_1000FT",
+        "unitEvidenceClass": "STRONG_CORRELATION",
+        "unitConfidence": "MEDIUM",
+        "unitEvidence": [
+            "Only populated when mt=1302 (Imperial)",
+            "wght/walu mean ~0.91517 \u2014 component not total weight",
+            "No lb/1000ft string in scanned repo",
+            "Hypothesis LB_PER_1000FT \u2014 STRONG_CORRELATION not DIRECT_EVIDENCE"
+        ],
+        "targetDefinition": "APPROX-WEIGHT-ALU",
+        "targetUnit": "LB_PER_1000FT",
+        "unitResolution": "PROVEN_CREATE_UNIT",
+        "productsBlocked": 14
+    },
+    "wbnz": {
+        "meaning": "Approximate bronze component weight (distinct from total wght)",
+        "meaningEvidenceClass": "DIRECT_EVIDENCE",
+        "meaningConfidence": "HIGH",
+        "resolution": "PROVEN_CREATE_DEFINITION",
+        "unit": "LB_PER_1000FT",
+        "unitEvidenceClass": "STRONG_CORRELATION",
+        "unitConfidence": "MEDIUM",
+        "unitEvidence": [
+            "Only populated when mt=1302 (Imperial)",
+            "wght/walu mean ~0.91517 \u2014 component not total weight",
+            "No lb/1000ft string in scanned repo",
+            "Hypothesis LB_PER_1000FT \u2014 STRONG_CORRELATION not DIRECT_EVIDENCE"
+        ],
+        "targetDefinition": "APPROX-WEIGHT-BRONZE",
+        "targetUnit": "LB_PER_1000FT",
+        "unitResolution": "PROVEN_CREATE_UNIT",
+        "productsBlocked": 14
+    },
+    "unitProof": {
+        "imperialRatioSamples": [
+            {
+                "cable_style": "BH",
+                "xa": "1",
+                "mt": 1302,
+                "wght": 1651,
+                "walu": 1723,
+                "wbnz": 1888,
+                "wght_per_walu": "0.9582"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "1",
+                "mt": 1302,
+                "wght": 442,
+                "walu": 478,
+                "wbnz": 560,
+                "wght_per_walu": "0.9247"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "1",
+                "mt": 1302,
+                "wght": 1320,
+                "walu": 1386,
+                "wbnz": 1537,
+                "wght_per_walu": "0.9524"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "1",
+                "mt": 1302,
+                "wght": 2019,
+                "walu": 2098,
+                "wbnz": 2280,
+                "wght_per_walu": "0.9623"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "1/0",
+                "mt": 1302,
+                "wght": 523,
+                "walu": 561,
+                "wbnz": 647,
+                "wght_per_walu": "0.9323"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "1/0",
+                "mt": 1302,
+                "wght": 1982,
+                "walu": 2059,
+                "wbnz": 2235,
+                "wght_per_walu": "0.9626"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "1/0",
+                "mt": 1302,
+                "wght": 1577,
+                "walu": 1647,
+                "wbnz": 1809,
+                "wght_per_walu": "0.9575"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1302,
+                "wght": 279,
+                "walu": 313,
+                "wbnz": 391,
+                "wght_per_walu": "0.8914"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1302,
+                "wght": 334,
+                "walu": 371,
+                "wbnz": 455,
+                "wght_per_walu": "0.9003"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1302,
+                "wght": 238,
+                "walu": 270,
+                "wbnz": 345,
+                "wght_per_walu": "0.8815"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1302,
+                "wght": 397,
+                "walu": 437,
+                "wbnz": 528,
+                "wght_per_walu": "0.9085"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1302,
+                "wght": 104,
+                "walu": 124,
+                "wbnz": 171,
+                "wght_per_walu": "0.8387"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "12",
+                "mt": 1302,
+                "wght": 220,
+                "walu": 251,
+                "wbnz": 323,
+                "wght_per_walu": "0.8765"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "12",
+                "mt": 1302,
+                "wght": 192,
+                "walu": 222,
+                "wbnz": 290,
+                "wght_per_walu": "0.8649"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "12",
+                "mt": 1302,
+                "wght": 306,
+                "walu": 342,
+                "wbnz": 426,
+                "wght_per_walu": "0.8947"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "12",
+                "mt": 1302,
+                "wght": 259,
+                "walu": 293,
+                "wbnz": 369,
+                "wght_per_walu": "0.8840"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 292,
+                "walu": 328,
+                "wbnz": 412,
+                "wght_per_walu": "0.8902"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 670,
+                "walu": 725,
+                "wbnz": 852,
+                "wght_per_walu": "0.9241"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 165,
+                "walu": 193,
+                "wbnz": 256,
+                "wght_per_walu": "0.8549"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 248,
+                "walu": 282,
+                "wbnz": 359,
+                "wght_per_walu": "0.8794"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 1146,
+                "walu": 1218,
+                "wbnz": 1382,
+                "wght_per_walu": "0.9409"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 1066,
+                "walu": 1135,
+                "wbnz": 1294,
+                "wght_per_walu": "0.9392"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 212,
+                "walu": 243,
+                "wbnz": 315,
+                "wght_per_walu": "0.8724"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 146,
+                "walu": 172,
+                "wbnz": 233,
+                "wght_per_walu": "0.8488"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 895,
+                "walu": 958,
+                "wbnz": 1104,
+                "wght_per_walu": "0.9342"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 920,
+                "walu": 985,
+                "wbnz": 1133,
+                "wght_per_walu": "0.9340"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "14",
+                "mt": 1302,
+                "wght": 501,
+                "walu": 549,
+                "wbnz": 659,
+                "wght_per_walu": "0.9126"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 160,
+                "walu": 188,
+                "wbnz": 251,
+                "wght_per_walu": "0.8511"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 238,
+                "walu": 272,
+                "wbnz": 349,
+                "wght_per_walu": "0.8750"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 708,
+                "walu": 766,
+                "wbnz": 901,
+                "wght_per_walu": "0.9243"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 723,
+                "walu": 783,
+                "wbnz": 919,
+                "wght_per_walu": "0.9234"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 831,
+                "walu": 895,
+                "wbnz": 1041,
+                "wght_per_walu": "0.9285"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 889,
+                "walu": 955,
+                "wbnz": 1106,
+                "wght_per_walu": "0.9309"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 370,
+                "walu": 412,
+                "wbnz": 510,
+                "wght_per_walu": "0.8981"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 138,
+                "walu": 164,
+                "wbnz": 223,
+                "wght_per_walu": "0.8415"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 124,
+                "walu": 149,
+                "wbnz": 205,
+                "wght_per_walu": "0.8322"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 532,
+                "walu": 583,
+                "wbnz": 700,
+                "wght_per_walu": "0.9125"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "mt": 1302,
+                "wght": 205,
+                "walu": 237,
+                "wbnz": 309,
+                "wght_per_walu": "0.8650"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "2",
+                "mt": 1302,
+                "wght": 1636,
+                "walu": 1707,
+                "wbnz": 1871,
+                "wght_per_walu": "0.9584"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "2",
+                "mt": 1302,
+                "wght": 1342,
+                "walu": 1407,
+                "wbnz": 1556,
+                "wght_per_walu": "0.9538"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "2",
+                "mt": 1302,
+                "wght": 859,
+                "walu": 916,
+                "wbnz": 1045,
+                "wght_per_walu": "0.9378"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "2",
+                "mt": 1302,
+                "wght": 364,
+                "walu": 397,
+                "wbnz": 472,
+                "wght_per_walu": "0.9169"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "2",
+                "mt": 1302,
+                "wght": 1077,
+                "walu": 1137,
+                "wbnz": 1274,
+                "wght_per_walu": "0.9472"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "2/0",
+                "mt": 1302,
+                "wght": 626,
+                "walu": 666,
+                "wbnz": 759,
+                "wght_per_walu": "0.9399"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "2/0",
+                "mt": 1302,
+                "wght": 2397,
+                "walu": 2480,
+                "wbnz": 2670,
+                "wght_per_walu": "0.9665"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "2/0",
+                "mt": 1302,
+                "wght": 1899,
+                "walu": 1975,
+                "wbnz": 2149,
+                "wght_per_walu": "0.9615"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "262",
+                "mt": 1302,
+                "wght": 1152,
+                "walu": 1206,
+                "wbnz": 1329,
+                "wght_per_walu": "0.9552"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "262",
+                "mt": 1302,
+                "wght": 4511,
+                "walu": 4624,
+                "wbnz": 4883,
+                "wght_per_walu": "0.9756"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "262",
+                "mt": 1302,
+                "wght": 3559,
+                "walu": 3662,
+                "wbnz": 3898,
+                "wght_per_walu": "0.9719"
+            },
+            {
+                "cable_style": "BH",
+                "xa": "3/0",
+                "mt": 1302,
+                "wght": 3014,
+                "walu": 3107,
+                "wbnz": 3319,
+                "wght_per_walu": "0.9701"
+            }
+        ],
+        "metricImperialPairs": [
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 104,
+                "wght_metric": 190,
+                "walu": 124,
+                "wbnz": 171
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 104,
+                "wght_metric": 473,
+                "walu": 124,
+                "wbnz": 171
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 104,
+                "wght_metric": 556,
+                "walu": 124,
+                "wbnz": 171
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 104,
+                "wght_metric": 678,
+                "walu": 124,
+                "wbnz": 171
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 104,
+                "wght_metric": 813,
+                "walu": 124,
+                "wbnz": 171
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 238,
+                "wght_metric": 190,
+                "walu": 270,
+                "wbnz": 345
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 238,
+                "wght_metric": 473,
+                "walu": 270,
+                "wbnz": 345
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 238,
+                "wght_metric": 556,
+                "walu": 270,
+                "wbnz": 345
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 238,
+                "wght_metric": 678,
+                "walu": 270,
+                "wbnz": 345
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 238,
+                "wght_metric": 813,
+                "walu": 270,
+                "wbnz": 345
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 279,
+                "wght_metric": 190,
+                "walu": 313,
+                "wbnz": 391
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 279,
+                "wght_metric": 473,
+                "walu": 313,
+                "wbnz": 391
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 279,
+                "wght_metric": 556,
+                "walu": 313,
+                "wbnz": 391
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 279,
+                "wght_metric": 678,
+                "walu": 313,
+                "wbnz": 391
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 279,
+                "wght_metric": 813,
+                "walu": 313,
+                "wbnz": 391
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 334,
+                "wght_metric": 190,
+                "walu": 371,
+                "wbnz": 455
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 334,
+                "wght_metric": 473,
+                "walu": 371,
+                "wbnz": 455
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 334,
+                "wght_metric": 556,
+                "walu": 371,
+                "wbnz": 455
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 334,
+                "wght_metric": 678,
+                "walu": 371,
+                "wbnz": 455
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 334,
+                "wght_metric": 813,
+                "walu": 371,
+                "wbnz": 455
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 397,
+                "wght_metric": 190,
+                "walu": 437,
+                "wbnz": 528
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 397,
+                "wght_metric": 473,
+                "walu": 437,
+                "wbnz": 528
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 397,
+                "wght_metric": 556,
+                "walu": 437,
+                "wbnz": 528
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 397,
+                "wght_metric": 678,
+                "walu": 437,
+                "wbnz": 528
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "wght_imperial": 397,
+                "wght_metric": 813,
+                "walu": 437,
+                "wbnz": 528
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "wght_imperial": 124,
+                "wght_metric": 252,
+                "walu": 149,
+                "wbnz": 205
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "wght_imperial": 124,
+                "wght_metric": 627,
+                "walu": 149,
+                "wbnz": 205
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "wght_imperial": 124,
+                "wght_metric": 763,
+                "walu": 149,
+                "wbnz": 205
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "wght_imperial": 124,
+                "wght_metric": 931,
+                "walu": 149,
+                "wbnz": 205
+            },
+            {
+                "cable_style": "BH",
+                "xa": "16",
+                "wght_imperial": 124,
+                "wght_metric": 1135,
+                "walu": 149,
+                "wbnz": 205
+            }
+        ],
+        "wghtPerWaluMean": 0.9151700000000003,
+        "conversionFactorKgKmPerLb1000ft": 1.48816,
+        "note": "walu is aluminium component weight \u2014 not interchangeable with total wght for unit proof",
+        "hypothesisUnit": "LB_PER_1000FT"
+    }
+}

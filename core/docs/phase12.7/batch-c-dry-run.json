@@ -1,0 +1,35 @@
+{
+    "mode": "DRY_RUN_ONLY",
+    "writesWouldExecute": false,
+    "batchCApplyGuard": "BATCH_C_APPLY_NOT_APPROVED",
+    "targetValidated": true,
+    "approvedMappingsToInsert": 124,
+    "existingIdenticalMappings": 0,
+    "mappingsToUpdate": 0,
+    "conflicts": 0,
+    "productSpecificationValuesToWrite": 0,
+    "variantSpecificationValuesToWrite": 0,
+    "productMutations": 0,
+    "variantMutations": 0,
+    "classificationMutations": 0,
+    "specificationMasterMutations": 0,
+    "catalogueMutations": 0,
+    "pricingMutations": 0,
+    "mediaMutations": 0,
+    "documentMutations": 0,
+    "legacyWrites": 0,
+    "idempotencyProjection": {
+        "secondRunMappingsInserted": 0,
+        "secondRunMappingsUpdated": 0,
+        "duplicateMappings": 0,
+        "specificationValues": 0
+    },
+    "futureApplyOrder": [
+        "validateTarget",
+        "validateDefinitionsExist",
+        "detectExistingConflicts",
+        "insertApprovedStyleFieldMappings",
+        "verifyUniqueness",
+        "recalculateReadiness"
+    ]
+}

@@ -13,9 +13,11 @@ use TriCab\Core\Product\Application\DTO\ProductBaseCostHistoryEntry;
 use TriCab\Core\Product\Application\DTO\ProductPricingMatrixRow;
 use TriCab\Core\Product\Application\DTO\ProductPricingOverview;
 use TriCab\Core\Product\Application\DTO\ProductPricingSummary;
+use TriCab\Core\Product\Application\Exception\InvalidPricingUnit;
 use TriCab\Core\Product\Application\Exception\OverlappingBaseCostRecord;
 use TriCab\Core\Product\Application\Exception\ProductPricingConcurrencyConflict;
 use TriCab\Core\Product\Contract\ProductPricingRepository;
+use TriCab\Core\Product\Domain\ValueObject\PricingUnitDefaults;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 use TriCab\Core\Product\Support\PricingRecordStatus;
@@ -26,9 +28,6 @@ use TriCab\Core\Product\Support\PricingRecordStatus;
 final class AzureSqlProductPricingRepository implements ProductPricingRepository
 {
     use AzureSqlTransaction;
-
-    private const DEFAULT_UOM_CODE = 'M';
-    private const DEFAULT_UOM_SYMBOL = 'm';
 
     public function __construct(
         private readonly SqlConnection $connection,
@@ -88,6 +87,8 @@ final class AzureSqlProductPricingRepository implements ProductPricingRepository
             }
         }
 
+        $defaultUnit = $this->loadProductDefaultUnitContext($productPublicId);
+
         return new ProductPricingOverview(
             variantCount: $variantCount,
             variantsWithPricing: $withPricing,
@@ -96,6 +97,44 @@ final class AzureSqlProductPricingRepository implements ProductPricingRepository
             scheduledRecordCount: $scheduled,
             expiredRecordCount: $expired,
             inactiveRecordCount: $inactive,
+            defaultUnitOfMeasurePublicId: $defaultUnit['defaultUnitOfMeasurePublicId'],
+            defaultUnitOfMeasureCode: $defaultUnit['defaultUnitOfMeasureCode'],
+            defaultUnitOfMeasureSymbol: $defaultUnit['defaultUnitOfMeasureSymbol'],
+            defaultUnitSource: $defaultUnit['defaultUnitSource'],
+        );
+    }
+
+    public function setProductDefaultPricingUnit(
+        ProductPublicId $productPublicId,
+        ?string $pricingUnitPublicId,
+        UserId $actorUserId,
+    ): ProductPricingOverview {
+        return $this->runInTransaction(
+            $this->connection,
+            function () use ($productPublicId, $pricingUnitPublicId, $actorUserId): ProductPricingOverview {
+                $unitId = $this->resolveOptionalSpecificationUnitId($pricingUnitPublicId);
+                $rows = $this->connection->fetchAll(
+                    <<<'SQL'
+UPDATE [product].[Products]
+SET [PricingUnitId] = :pricingUnitId,
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+OUTPUT INSERTED.[PublicId]
+WHERE [PublicId] = :productPublicId
+  AND [DeletedAtUtc] IS NULL
+SQL,
+                    [
+                        ':pricingUnitId' => $unitId,
+                        ':updatedByUserId' => $actorUserId->toInt(),
+                        ':productPublicId' => $productPublicId->toString(),
+                    ],
+                );
+                if ($rows === []) {
+                    throw ProductPersistenceException::productNotFound($productPublicId->toString());
+                }
+
+                return $this->getOverview($productPublicId);
+            },
         );
     }
 
@@ -118,7 +157,9 @@ SELECT
     CONVERT(VARCHAR(33), cp.[EffectiveFromUtc], 127) AS [EffectiveFromUtc],
     CONVERT(VARCHAR(33), cp.[EffectiveToUtc], 127) AS [EffectiveToUtc],
     cp.[IsActive],
-    cp.[RowVersion]
+    cp.[RowVersion],
+    COALESCE(pu_price.[UnitCode], pu_variant.[UnitCode], pu_product.[UnitCode], N'M') AS [UnitOfMeasureCode],
+    COALESCE(pu_price.[Symbol], pu_variant.[Symbol], pu_product.[Symbol], N'm') AS [UnitOfMeasureSymbol]
 FROM [product].[ProductVariants] v
 INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
 OUTER APPLY (
@@ -130,6 +171,7 @@ OUTER APPLY (
         vp.[IsActive],
         vp.[RowVersion],
         vp.[ErpSourceReference],
+        vp.[SpecificationUnitId],
         c.[CurrencyCode],
         pl.[PriceListCode]
     FROM [product].[ProductVariantPrices] vp
@@ -142,6 +184,9 @@ OUTER APPLY (
         COALESCE(vp.[EffectiveFromUtc], '1900-01-01') DESC,
         vp.[ProductVariantPriceId] DESC
 ) cp
+LEFT JOIN [product].[SpecificationUnits] pu_price ON pu_price.[SpecificationUnitId] = cp.[SpecificationUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_variant ON pu_variant.[SpecificationUnitId] = v.[PricingUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_product ON pu_product.[SpecificationUnitId] = p.[PricingUnitId]
 LEFT JOIN [migration].[LegacyProductMappings] lm
     ON lm.[ProductVariantId] = v.[ProductVariantId]
    AND lm.[SourceSystemCode] = N'tc'
@@ -172,8 +217,8 @@ SQL,
                 currentPricingPublicId: $pricingPublicId,
                 currencyCode: AzureSqlValueMapper::nullableString($row['CurrencyCode'] ?? null),
                 baseCost: $row['BaseCost'] !== null ? ProductDecimalMapper::requireString($row['BaseCost'], 'BaseCost') : null,
-                unitOfMeasureCode: self::DEFAULT_UOM_CODE,
-                unitOfMeasureSymbol: self::DEFAULT_UOM_SYMBOL,
+                unitOfMeasureCode: AzureSqlValueMapper::nullableString($row['UnitOfMeasureCode'] ?? null) ?? PricingUnitDefaults::CODE,
+                unitOfMeasureSymbol: AzureSqlValueMapper::nullableString($row['UnitOfMeasureSymbol'] ?? null) ?? PricingUnitDefaults::SYMBOL,
                 priceListCode: AzureSqlValueMapper::nullableString($row['PriceListCode'] ?? null),
                 priceSourceCode: PricingSourceCodec::decode(AzureSqlValueMapper::nullableString($row['ErpSourceReference'] ?? null)),
                 effectiveFromUtc: $effectiveFrom,
@@ -213,12 +258,17 @@ SELECT
     CONVERT(VARCHAR(33), vp.[EffectiveFromUtc], 127) AS [EffectiveFromUtc],
     CONVERT(VARCHAR(33), vp.[EffectiveToUtc], 127) AS [EffectiveToUtc],
     vp.[IsActive],
-    vp.[RowVersion]
+    vp.[RowVersion],
+    COALESCE(pu_price.[UnitCode], pu_variant.[UnitCode], pu_product.[UnitCode], N'M') AS [UnitOfMeasureCode],
+    COALESCE(pu_price.[Symbol], pu_variant.[Symbol], pu_product.[Symbol], N'm') AS [UnitOfMeasureSymbol]
 FROM [product].[ProductVariantPrices] vp
 INNER JOIN [product].[ProductVariants] v ON v.[ProductVariantId] = vp.[ProductVariantId]
 INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
 INNER JOIN [product].[Currencies] c ON c.[CurrencyId] = vp.[CurrencyId]
 LEFT JOIN [product].[PriceLists] pl ON pl.[PriceListId] = vp.[PriceListId]
+LEFT JOIN [product].[SpecificationUnits] pu_price ON pu_price.[SpecificationUnitId] = vp.[SpecificationUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_variant ON pu_variant.[SpecificationUnitId] = v.[PricingUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_product ON pu_product.[SpecificationUnitId] = p.[PricingUnitId]
 WHERE p.[PublicId] = :productPublicId
   AND vp.[ProductVariantId] = :variantId
   AND vp.[DeletedAtUtc] IS NULL
@@ -246,11 +296,15 @@ SELECT
     CONVERT(VARCHAR(33), pp.[EffectiveFromUtc], 127) AS [EffectiveFromUtc],
     CONVERT(VARCHAR(33), pp.[EffectiveToUtc], 127) AS [EffectiveToUtc],
     pp.[IsActive],
-    pp.[RowVersion]
+    pp.[RowVersion],
+    COALESCE(pu_price.[UnitCode], pu_product.[UnitCode], N'M') AS [UnitOfMeasureCode],
+    COALESCE(pu_price.[Symbol], pu_product.[Symbol], N'm') AS [UnitOfMeasureSymbol]
 FROM [product].[ProductPrices] pp
 INNER JOIN [product].[Products] p ON p.[ProductId] = pp.[ProductId]
 INNER JOIN [product].[Currencies] c ON c.[CurrencyId] = pp.[CurrencyId]
 LEFT JOIN [product].[PriceLists] pl ON pl.[PriceListId] = pp.[PriceListId]
+LEFT JOIN [product].[SpecificationUnits] pu_price ON pu_price.[SpecificationUnitId] = pp.[SpecificationUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_product ON pu_product.[SpecificationUnitId] = p.[PricingUnitId]
 WHERE p.[PublicId] = :productPublicId
   AND pp.[DeletedAtUtc] IS NULL
   AND (:priceListId IS NULL OR pp.[PriceListId] = :priceListId)
@@ -275,7 +329,7 @@ SQL,
                 variantName: AzureSqlValueMapper::nullableString($row['VariantName'] ?? null),
                 currencyCode: AzureSqlValueMapper::stringValue($row['CurrencyCode'] ?? ''),
                 baseCost: ProductDecimalMapper::requireString($row['BaseCost'] ?? null, 'BaseCost'),
-                unitOfMeasureCode: self::DEFAULT_UOM_CODE,
+                unitOfMeasureCode: AzureSqlValueMapper::nullableString($row['UnitOfMeasureCode'] ?? null) ?? PricingUnitDefaults::CODE,
                 priceListCode: AzureSqlValueMapper::nullableString($row['PriceListCode'] ?? null),
                 priceSourceCode: PricingSourceCodec::decode(AzureSqlValueMapper::nullableString($row['ErpSourceReference'] ?? null)),
                 effectiveFromUtc: $effectiveFrom,
@@ -398,13 +452,18 @@ SELECT
     CONVERT(VARCHAR(33), pp.[EffectiveToUtc], 127) AS [EffectiveToUtc],
     pp.[IsActive],
     pp.[RowVersion],
-    NULL AS [LegacyItemCode]
+    NULL AS [LegacyItemCode],
+    COALESCE(pu_price.[UnitCode], pu_product.[UnitCode], N'M') AS [UnitOfMeasureCode],
+    COALESCE(pu_price.[Symbol], pu_product.[Symbol], N'm') AS [UnitOfMeasureSymbol],
+    CONVERT(NVARCHAR(36), COALESCE(pu_price.[PublicId], pu_product.[PublicId])) AS [UnitOfMeasurePublicId]
 FROM [product].[ProductPrices] pp
 INNER JOIN [product].[Products] p ON p.[ProductId] = pp.[ProductId]
 INNER JOIN [product].[Currencies] c ON c.[CurrencyId] = pp.[CurrencyId]
 LEFT JOIN [product].[PriceLists] pl ON pl.[PriceListId] = pp.[PriceListId]
 LEFT JOIN [product].[Regions] r ON r.[RegionId] = pp.[RegionId]
 LEFT JOIN [product].[Markets] m ON m.[MarketId] = pp.[MarketId]
+LEFT JOIN [product].[SpecificationUnits] pu_price ON pu_price.[SpecificationUnitId] = pp.[SpecificationUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_product ON pu_product.[SpecificationUnitId] = p.[PricingUnitId]
 WHERE p.[PublicId] = :productPublicId
   AND pp.[DeletedAtUtc] IS NULL
 ORDER BY COALESCE(pp.[EffectiveFromUtc], pp.[CreatedAtUtc]) DESC
@@ -440,7 +499,10 @@ SELECT
     CONVERT(VARCHAR(33), vp.[EffectiveToUtc], 127) AS [EffectiveToUtc],
     vp.[IsActive],
     vp.[RowVersion],
-    lm.[SourceProductKey] AS [LegacyItemCode]
+    lm.[SourceProductKey] AS [LegacyItemCode],
+    COALESCE(pu_price.[UnitCode], pu_variant.[UnitCode], pu_product.[UnitCode], N'M') AS [UnitOfMeasureCode],
+    COALESCE(pu_price.[Symbol], pu_variant.[Symbol], pu_product.[Symbol], N'm') AS [UnitOfMeasureSymbol],
+    CONVERT(NVARCHAR(36), COALESCE(pu_price.[PublicId], pu_variant.[PublicId], pu_product.[PublicId])) AS [UnitOfMeasurePublicId]
 FROM [product].[ProductVariantPrices] vp
 INNER JOIN [product].[ProductVariants] v ON v.[ProductVariantId] = vp.[ProductVariantId]
 INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
@@ -448,6 +510,9 @@ INNER JOIN [product].[Currencies] c ON c.[CurrencyId] = vp.[CurrencyId]
 LEFT JOIN [product].[PriceLists] pl ON pl.[PriceListId] = vp.[PriceListId]
 LEFT JOIN [product].[Regions] r ON r.[RegionId] = vp.[RegionId]
 LEFT JOIN [product].[Markets] m ON m.[MarketId] = vp.[MarketId]
+LEFT JOIN [product].[SpecificationUnits] pu_price ON pu_price.[SpecificationUnitId] = vp.[SpecificationUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_variant ON pu_variant.[SpecificationUnitId] = v.[PricingUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_product ON pu_product.[SpecificationUnitId] = p.[PricingUnitId]
 LEFT JOIN [migration].[LegacyProductMappings] lm
     ON lm.[ProductVariantId] = v.[ProductVariantId]
    AND lm.[SourceSystemCode] = N'tc'
@@ -480,14 +545,14 @@ SQL,
 INSERT INTO [product].[ProductPrices] (
     [ProductId], [PriceListId], [CurrencyId], [RegionId], [MarketId],
     [MinimumQuantity], [UnitPrice], [DiscountPercent], [TaxInclusive],
-    [EffectiveFromUtc], [EffectiveToUtc], [ErpSourceReference],
+    [EffectiveFromUtc], [EffectiveToUtc], [ErpSourceReference], [SpecificationUnitId],
     [CreatedByUserId], [UpdatedByUserId]
 )
 OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
 VALUES (
     :productId, :priceListId, :currencyId, :regionId, :marketId,
     :minimumQuantity, :baseCost, :discountPercent, :taxInclusive,
-    :effectiveFromUtc, :effectiveToUtc, :erpSourceReference,
+    :effectiveFromUtc, :effectiveToUtc, :erpSourceReference, :specificationUnitId,
     :createdByUserId, :updatedByUserId
 )
 SQL,
@@ -524,14 +589,14 @@ SQL,
 INSERT INTO [product].[ProductVariantPrices] (
     [ProductVariantId], [PriceListId], [CurrencyId], [RegionId], [MarketId],
     [MinimumQuantity], [UnitPrice], [DiscountPercent], [TaxInclusive],
-    [EffectiveFromUtc], [EffectiveToUtc], [ErpSourceReference],
+    [EffectiveFromUtc], [EffectiveToUtc], [ErpSourceReference], [SpecificationUnitId],
     [CreatedByUserId], [UpdatedByUserId]
 )
 OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
 VALUES (
     :variantId, :priceListId, :currencyId, :regionId, :marketId,
     :minimumQuantity, :baseCost, :discountPercent, :taxInclusive,
-    :effectiveFromUtc, :effectiveToUtc, :erpSourceReference,
+    :effectiveFromUtc, :effectiveToUtc, :erpSourceReference, :specificationUnitId,
     :createdByUserId, :updatedByUserId
 )
 SQL,
@@ -622,6 +687,12 @@ SQL,
             ':updatedByUserId' => $actorUserId->toInt(),
         ];
 
+        $unitClause = '';
+        if (array_key_exists('unitOfMeasurePublicId', $data)) {
+            $unitClause = ', [SpecificationUnitId] = :specificationUnitId';
+            $params[':specificationUnitId'] = $this->resolveOptionalSpecificationUnitId($data['unitOfMeasurePublicId']);
+        }
+
         $versionClause = '';
         if ($expected !== null) {
             $versionClause = ' AND [RowVersion] = :expectedRowVersion';
@@ -637,7 +708,7 @@ SET
     [TaxInclusive] = :taxInclusive,
     [EffectiveFromUtc] = :effectiveFromUtc,
     [EffectiveToUtc] = :effectiveToUtc,
-    [ErpSourceReference] = :erpSourceReference,
+    [ErpSourceReference] = :erpSourceReference{$unitClause},
     [UpdatedAtUtc] = SYSUTCDATETIME(),
     [UpdatedByUserId] = :updatedByUserId
 OUTPUT INSERTED.[PublicId]
@@ -674,6 +745,7 @@ SQL,
             ':effectiveFromUtc' => $data['effectiveFromUtc'] ?? null,
             ':effectiveToUtc' => $data['effectiveToUtc'] ?? null,
             ':erpSourceReference' => PricingSourceCodec::encode($data['priceSourceCode'] ?? 'manual'),
+            ':specificationUnitId' => $this->resolveOptionalSpecificationUnitId($data['unitOfMeasurePublicId'] ?? null),
             ':createdByUserId' => $actorUserId->toInt(),
             ':updatedByUserId' => $actorUserId->toInt(),
         ];
@@ -693,11 +765,22 @@ SQL,
      */
     private function resolvePriceContext(array $data): array
     {
-        $currencyId = $this->requireCurrencyId($data['currencyCode']);
         $priceListId = null;
+        $priceListCurrencyCode = null;
         if (($data['priceListPublicId'] ?? null) !== null) {
             $priceListId = $this->requirePriceListId($data['priceListPublicId']);
+            $priceListCurrencyCode = $this->requirePriceListCurrencyCode($data['priceListPublicId']);
         }
+
+        $currencyCode = (string) ($data['currencyCode'] ?? '');
+        if ($priceListCurrencyCode !== null && strtoupper($currencyCode) !== strtoupper($priceListCurrencyCode)) {
+            throw \TriCab\Core\Product\Application\Exception\InvalidPriceListCurrency::mismatch(
+                $priceListCurrencyCode,
+                $currencyCode,
+            );
+        }
+
+        $currencyId = $this->requireCurrencyId($currencyCode !== '' ? $currencyCode : $priceListCurrencyCode);
         $regionId = null;
         if (($data['regionPublicId'] ?? null) !== null) {
             $regionId = $this->requireRegionId($data['regionPublicId']);
@@ -906,12 +989,18 @@ SELECT
     CONVERT(VARCHAR(33), pp.[EffectiveToUtc], 127) AS [EffectiveToUtc],
     pp.[IsActive],
     pp.[RowVersion],
-    NULL AS [LegacyItemCode]
+    NULL AS [LegacyItemCode],
+    COALESCE(pu_price.[UnitCode], pu_product.[UnitCode], N'M') AS [UnitOfMeasureCode],
+    COALESCE(pu_price.[Symbol], pu_product.[Symbol], N'm') AS [UnitOfMeasureSymbol],
+    CONVERT(NVARCHAR(36), COALESCE(pu_price.[PublicId], pu_product.[PublicId])) AS [UnitOfMeasurePublicId]
 FROM [product].[ProductPrices] pp
 INNER JOIN [product].[Currencies] c ON c.[CurrencyId] = pp.[CurrencyId]
 LEFT JOIN [product].[PriceLists] pl ON pl.[PriceListId] = pp.[PriceListId]
 LEFT JOIN [product].[Regions] r ON r.[RegionId] = pp.[RegionId]
 LEFT JOIN [product].[Markets] m ON m.[MarketId] = pp.[MarketId]
+INNER JOIN [product].[Products] p ON p.[ProductId] = pp.[ProductId]
+LEFT JOIN [product].[SpecificationUnits] pu_price ON pu_price.[SpecificationUnitId] = pp.[SpecificationUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_product ON pu_product.[SpecificationUnitId] = p.[PricingUnitId]
 WHERE pp.[PublicId] = :publicId
   AND pp.[DeletedAtUtc] IS NULL
 SQL,
@@ -948,13 +1037,20 @@ SELECT
     CONVERT(VARCHAR(33), vp.[EffectiveToUtc], 127) AS [EffectiveToUtc],
     vp.[IsActive],
     vp.[RowVersion],
-    lm.[SourceProductKey] AS [LegacyItemCode]
+    lm.[SourceProductKey] AS [LegacyItemCode],
+    COALESCE(pu_price.[UnitCode], pu_variant.[UnitCode], pu_product.[UnitCode], N'M') AS [UnitOfMeasureCode],
+    COALESCE(pu_price.[Symbol], pu_variant.[Symbol], pu_product.[Symbol], N'm') AS [UnitOfMeasureSymbol],
+    CONVERT(NVARCHAR(36), COALESCE(pu_price.[PublicId], pu_variant.[PublicId], pu_product.[PublicId])) AS [UnitOfMeasurePublicId]
 FROM [product].[ProductVariantPrices] vp
 INNER JOIN [product].[ProductVariants] v ON v.[ProductVariantId] = vp.[ProductVariantId]
+INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
 INNER JOIN [product].[Currencies] c ON c.[CurrencyId] = vp.[CurrencyId]
 LEFT JOIN [product].[PriceLists] pl ON pl.[PriceListId] = vp.[PriceListId]
 LEFT JOIN [product].[Regions] r ON r.[RegionId] = vp.[RegionId]
 LEFT JOIN [product].[Markets] m ON m.[MarketId] = vp.[MarketId]
+LEFT JOIN [product].[SpecificationUnits] pu_price ON pu_price.[SpecificationUnitId] = vp.[SpecificationUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_variant ON pu_variant.[SpecificationUnitId] = v.[PricingUnitId]
+LEFT JOIN [product].[SpecificationUnits] pu_product ON pu_product.[SpecificationUnitId] = p.[PricingUnitId]
 LEFT JOIN [migration].[LegacyProductMappings] lm
     ON lm.[ProductVariantId] = v.[ProductVariantId]
    AND lm.[SourceSystemCode] = N'tc'
@@ -990,7 +1086,9 @@ SQL,
             priceListPublicId: AzureSqlValueMapper::nullableString($row['PriceListPublicId'] ?? null),
             regionPublicId: AzureSqlValueMapper::nullableString($row['RegionPublicId'] ?? null),
             marketPublicId: AzureSqlValueMapper::nullableString($row['MarketPublicId'] ?? null),
-            unitOfMeasureCode: self::DEFAULT_UOM_CODE,
+            unitOfMeasureCode: AzureSqlValueMapper::nullableString($row['UnitOfMeasureCode'] ?? null) ?? PricingUnitDefaults::CODE,
+            unitOfMeasureSymbol: AzureSqlValueMapper::nullableString($row['UnitOfMeasureSymbol'] ?? null) ?? PricingUnitDefaults::SYMBOL,
+            unitOfMeasurePublicId: AzureSqlValueMapper::nullableString($row['UnitOfMeasurePublicId'] ?? null),
             priceSourceCode: PricingSourceCodec::decode($erpRef),
             effectiveFromUtc: $effectiveFrom,
             effectiveToUtc: $effectiveTo,
@@ -1070,6 +1168,24 @@ SQL,
         return AzureSqlValueMapper::intValue($rows[0]['PriceListId'] ?? 0);
     }
 
+    private function requirePriceListCurrencyCode(string $publicId): string
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT cur.[CurrencyCode] AS [CurrencyCode]
+FROM [product].[PriceLists] pl
+INNER JOIN [product].[Currencies] cur ON cur.[CurrencyId] = pl.[CurrencyId]
+WHERE pl.[PublicId] = :publicId AND pl.[DeletedAtUtc] IS NULL
+SQL,
+            [':publicId' => $publicId],
+        );
+        if ($rows === []) {
+            throw ProductPersistenceException::referenceNotFound('Price list', $publicId);
+        }
+
+        return AzureSqlValueMapper::stringValue($rows[0]['CurrencyCode'] ?? '');
+    }
+
     private function requireRegionId(string $publicId): int
     {
         $rows = $this->connection->fetchAll(
@@ -1094,5 +1210,74 @@ SQL,
         }
 
         return AzureSqlValueMapper::intValue($rows[0]['MarketId'] ?? 0);
+    }
+
+    private function resolveOptionalSpecificationUnitId(?string $publicId): ?int
+    {
+        if ($publicId === null || $publicId === '') {
+            return null;
+        }
+
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT [SpecificationUnitId]
+FROM [product].[SpecificationUnits]
+WHERE [PublicId] = :publicId
+  AND [DeletedAtUtc] IS NULL
+  AND [IsActive] = 1
+SQL,
+            [':publicId' => $publicId],
+        );
+        if ($rows === []) {
+            throw InvalidPricingUnit::notFound($publicId);
+        }
+
+        return AzureSqlValueMapper::intValue($rows[0]['SpecificationUnitId'] ?? 0);
+    }
+
+    /**
+     * @return array{
+     *   defaultUnitOfMeasurePublicId: ?string,
+     *   defaultUnitOfMeasureCode: string,
+     *   defaultUnitOfMeasureSymbol: string,
+     *   defaultUnitSource: 'product'|'system-default'
+     * }
+     */
+    private function loadProductDefaultUnitContext(ProductPublicId $productPublicId): array
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT
+    CONVERT(NVARCHAR(36), su.[PublicId]) AS [PublicId],
+    su.[UnitCode],
+    su.[Symbol]
+FROM [product].[Products] p
+LEFT JOIN [product].[SpecificationUnits] su ON su.[SpecificationUnitId] = p.[PricingUnitId]
+WHERE p.[PublicId] = :productPublicId
+  AND p.[DeletedAtUtc] IS NULL
+SQL,
+            [':productPublicId' => $productPublicId->toString()],
+        );
+        if ($rows === []) {
+            throw ProductPersistenceException::productNotFound($productPublicId->toString());
+        }
+
+        $row = $rows[0];
+        $publicId = AzureSqlValueMapper::nullableString($row['PublicId'] ?? null);
+        if ($publicId === null) {
+            return [
+                'defaultUnitOfMeasurePublicId' => null,
+                'defaultUnitOfMeasureCode' => PricingUnitDefaults::CODE,
+                'defaultUnitOfMeasureSymbol' => PricingUnitDefaults::SYMBOL,
+                'defaultUnitSource' => 'system-default',
+            ];
+        }
+
+        return [
+            'defaultUnitOfMeasurePublicId' => $publicId,
+            'defaultUnitOfMeasureCode' => AzureSqlValueMapper::stringValue($row['UnitCode'] ?? PricingUnitDefaults::CODE),
+            'defaultUnitOfMeasureSymbol' => AzureSqlValueMapper::stringValue($row['Symbol'] ?? PricingUnitDefaults::SYMBOL),
+            'defaultUnitSource' => 'product',
+        ];
     }
 }

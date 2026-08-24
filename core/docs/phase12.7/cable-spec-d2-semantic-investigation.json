@@ -1,0 +1,527 @@
+{
+    "criticalFindings": {
+        "cc": {
+            "meaning": "Inferred core-configuration / counting mode (cores/pairs/triples/AWG-like) \u2014 not fully proven",
+            "values": [
+                "c",
+                "p",
+                "t",
+                "a"
+            ],
+            "decision": "REVIEW",
+            "confidence": "MEDIUM",
+            "evidence": [
+                "Values c/p/t/a.",
+                "c=cores; p=pairs; t=triples; a=AWG-like",
+                "Inferred core-configuration / counting mode \u2014 not fully proven.",
+                "Do not auto-create options."
+            ]
+        },
+        "mt": {
+            "meaning": "Measurement-system metadata for interpreting units of other fields \u2014 NOT a product specification Definition",
+            "1301": "Metric System (code M, desc_type 13)",
+            "1302": "Imperial System (code I)",
+            "0": "unset/null",
+            "descriptLookup": [
+                {
+                    "desc_id": 1301,
+                    "code": "M",
+                    "title": "Metric System",
+                    "desc_type": 13
+                },
+                {
+                    "desc_id": 1302,
+                    "code": "I",
+                    "title": "Imperial System",
+                    "desc_type": 13
+                },
+                {
+                    "desc_id": 0,
+                    "code": null,
+                    "title": "unset/null",
+                    "desc_type": null
+                }
+            ],
+            "decision": "NOT_A_SPECIFICATION_CANDIDATE",
+            "confidence": "HIGH",
+            "evidence": [
+                "descript.desc_id 1301 \u2192 Metric System (code M, desc_type 13)",
+                "descript.desc_id 1302 \u2192 Imperial System (code I)",
+                "0 \u2192 unset/null",
+                "BH xa=10 mt=1301 od\u224810.2mm vs mt=1302 od\u22480.37in",
+                "walu/wbnz only non-zero when mt=1302",
+                "Do NOT migrate raw IDs as specification values."
+            ]
+        },
+        "ct": {
+            "meaning": "Inferred conductor type (copper vs aluminium-ish) \u2014 not fully proven; do not auto-create options",
+            "p": "Likely copper / default conductor type",
+            "a": "Likely aluminium conductor type",
+            "decision": "REVIEW",
+            "confidence": "MEDIUM",
+            "evidence": [
+                "Values p/a.",
+                "KL ct=a lighter + larger OD vs ct=p",
+                "Consistent with aluminium vs copper; rating tables use C/A (different alphabet).",
+                "Do not auto-create options."
+            ]
+        }
+    },
+    "schemaInvestigation": {
+        "selectOnly": true,
+        "queriesWereSelectOnly": true,
+        "notes": {
+            "selectOnly": true,
+            "informationSchemaHits": [
+                {
+                    "TABLE_NAME": "cable_specs",
+                    "COLUMN_NAME": "cc"
+                },
+                {
+                    "TABLE_NAME": "cable_specs",
+                    "COLUMN_NAME": "ct"
+                },
+                {
+                    "TABLE_NAME": "cable_specs",
+                    "COLUMN_NAME": "mt"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_backup",
+                    "COLUMN_NAME": "cc"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_backup",
+                    "COLUMN_NAME": "ct"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_backup",
+                    "COLUMN_NAME": "mt"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_backup2",
+                    "COLUMN_NAME": "cc"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_backup2",
+                    "COLUMN_NAME": "ct"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_backup2",
+                    "COLUMN_NAME": "mt"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_dev",
+                    "COLUMN_NAME": "cc"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_dev",
+                    "COLUMN_NAME": "ct"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_dev",
+                    "COLUMN_NAME": "mt"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_test",
+                    "COLUMN_NAME": "cc"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_test",
+                    "COLUMN_NAME": "ct"
+                },
+                {
+                    "TABLE_NAME": "cable_specs_test",
+                    "COLUMN_NAME": "mt"
+                },
+                {
+                    "TABLE_NAME": "descript",
+                    "COLUMN_NAME": "desc_id"
+                },
+                {
+                    "TABLE_NAME": "rating",
+                    "COLUMN_NAME": "ct"
+                },
+                {
+                    "TABLE_NAME": "rating",
+                    "COLUMN_NAME": "mt"
+                },
+                {
+                    "TABLE_NAME": "rating_bk_29062026",
+                    "COLUMN_NAME": "ct"
+                },
+                {
+                    "TABLE_NAME": "rating_bk_29062026",
+                    "COLUMN_NAME": "mt"
+                },
+                {
+                    "TABLE_NAME": "temp_acc_style",
+                    "COLUMN_NAME": "desc_id"
+                },
+                {
+                    "TABLE_NAME": "tmktm",
+                    "COLUMN_NAME": "ct"
+                },
+                {
+                    "TABLE_NAME": "tmktm_bak_240523",
+                    "COLUMN_NAME": "ct"
+                },
+                {
+                    "TABLE_NAME": "tmktm_dev",
+                    "COLUMN_NAME": "ct"
+                }
+            ],
+            "mt_joins_descript": "cable_specs.mt values 1301/1302 match descript.desc_id"
+        }
+    },
+    "ambientCurrentInvestigation": {
+        "collisionDetected": true,
+        "collisionReason": "AMBIENT_CURRENT_SEMANTIC_COLLISION",
+        "recommendation": "Return A30c/A40c/A45c to REVIEW until operator chooses separate CURRENT-30C/40C/45C Definitions or a structured ambient model. Do not keep as map-existing candidates. Af is separate from ambient columns.",
+        "singleCurrentDefinitionSufficient": false,
+        "fields": {
+            "A15c": {
+                "decisionCandidate": "NOT_A_SPECIFICATION_CANDIDATE",
+                "confidence": "HIGH",
+                "reason": "unused_in_cable_population",
+                "populated": 0,
+                "styles": 0,
+                "d1Decision": "NOT_A_SPECIFICATION"
+            },
+            "A25c": {
+                "decisionCandidate": "NOT_A_SPECIFICATION_CANDIDATE",
+                "confidence": "HIGH",
+                "reason": "unused_in_cable_population",
+                "populated": 0,
+                "styles": 0,
+                "d1Decision": "NOT_A_SPECIFICATION"
+            },
+            "A30c": {
+                "decisionCandidate": "REVIEW",
+                "confidence": "HIGH",
+                "reason": "AMBIENT_CURRENT_SEMANTIC_COLLISION",
+                "populated": 1513,
+                "styles": 22,
+                "d1Decision": "PROPOSED_MAP_EXISTING"
+            },
+            "A40c": {
+                "decisionCandidate": "REVIEW",
+                "confidence": "HIGH",
+                "reason": "AMBIENT_CURRENT_SEMANTIC_COLLISION",
+                "populated": 966,
+                "styles": 13,
+                "d1Decision": "PROPOSED_MAP_EXISTING"
+            },
+            "A45c": {
+                "decisionCandidate": "REVIEW",
+                "confidence": "HIGH",
+                "reason": "AMBIENT_CURRENT_SEMANTIC_COLLISION",
+                "populated": 1492,
+                "styles": 18,
+                "d1Decision": "PROPOSED_MAP_EXISTING"
+            },
+            "Af": {
+                "decisionCandidate": "REVIEW",
+                "confidence": "LOW",
+                "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE",
+                "populated": 11,
+                "styles": 1,
+                "d1Decision": "REVIEW"
+            }
+        }
+    },
+    "earthCsaTypeValidation": {
+        "field": "xae",
+        "code": "EARTH-CSA",
+        "d1DataType": "text",
+        "typeRecommendation": "decimal",
+        "populated": 4491,
+        "numericCompatible": 4491,
+        "decisionCandidate": "APPROVED_CREATE_CANDIDATE",
+        "confidence": "HIGH",
+        "note": "All meaningful xae values are numeric \u2014 recommend decimal (not text)."
+    },
+    "investigationEvidenceMode": "LIVE_SELECT_ONLY",
+    "sampleInvestigations": {
+        "bhMtOdSamples": [
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1301,
+                "od": "10.200",
+                "walu": null,
+                "wbnz": null,
+                "wght": 190
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1302,
+                "od": "0.370",
+                "walu": 124,
+                "wbnz": 171,
+                "wght": 104
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1301,
+                "od": "17.000",
+                "walu": null,
+                "wbnz": null,
+                "wght": 473
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1302,
+                "od": "0.610",
+                "walu": 270,
+                "wbnz": 345,
+                "wght": 238
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1301,
+                "od": "18.000",
+                "walu": null,
+                "wbnz": null,
+                "wght": 556
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1302,
+                "od": "0.640",
+                "walu": 313,
+                "wbnz": 391,
+                "wght": 279
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1301,
+                "od": "19.800",
+                "walu": null,
+                "wbnz": null,
+                "wght": 678
+            },
+            {
+                "cable_style": "BH",
+                "xa": "10",
+                "mt": 1302,
+                "od": "0.690",
+                "walu": 371,
+                "wbnz": 455,
+                "wght": 334
+            }
+        ],
+        "klCtSamples": [
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "23.800",
+                "wght": 717
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "16.100",
+                "wght": 309
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "24.700",
+                "wght": 791
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "11.800",
+                "wght": 180
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "12.800",
+                "wght": 200
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "10.900",
+                "wght": 152
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "22.100",
+                "wght": 605
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "18.700",
+                "wght": 446
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "21.500",
+                "wght": 551
+            },
+            {
+                "cable_style": "KL",
+                "xa": "1.5",
+                "ct": "p",
+                "od": "10.200",
+                "wght": 139
+            },
+            {
+                "cable_style": "KL",
+                "xa": "10",
+                "ct": "p",
+                "od": "15.900",
+                "wght": 465
+            },
+            {
+                "cable_style": "KL",
+                "xa": "10",
+                "ct": "p",
+                "od": "14.900",
+                "wght": 365
+            }
+        ],
+        "b1EngineeringSamples": [
+            {
+                "cable_style": "B1",
+                "Af": "1.4",
+                "r": "2.452",
+                "x50": "0.106",
+                "x60": "0.127",
+                "tension": "1.9",
+                "xa": "10"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "17.2",
+                "r": "0.208",
+                "x50": "0.077",
+                "x60": "0.093",
+                "tension": "25.7",
+                "xa": "120"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "21.5",
+                "r": "0.167",
+                "x50": "0.076",
+                "x60": "0.091",
+                "tension": "30.4",
+                "xa": "150"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "2.3",
+                "r": "1.554",
+                "x50": "0.099",
+                "x60": "0.119",
+                "tension": "5.1",
+                "xa": "16"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "26.5",
+                "r": "0.138",
+                "x50": "0.075",
+                "x60": "0.090",
+                "tension": "38.3",
+                "xa": "185"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "34.3",
+                "r": "0.105",
+                "x50": "0.073",
+                "x60": "0.088",
+                "tension": "50.5",
+                "xa": "240"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "3.6",
+                "r": "1.002",
+                "x50": "0.093",
+                "x60": "0.112",
+                "tension": "6.9",
+                "xa": "25"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "5.0",
+                "r": "0.712",
+                "x50": "0.089",
+                "x60": "0.107",
+                "tension": "8.9",
+                "xa": "35"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "7.2",
+                "r": "0.496",
+                "x50": "0.085",
+                "x60": "0.102",
+                "tension": "12.0",
+                "xa": "50"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "10.0",
+                "r": "0.350",
+                "x50": "0.082",
+                "x60": "0.098",
+                "tension": "16.3",
+                "xa": "70"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "13.6",
+                "r": "0.265",
+                "x50": "0.079",
+                "x60": "0.095",
+                "tension": "20.3",
+                "xa": "95"
+            }
+        ]
+    },
+    "descriptLookup": [
+        {
+            "desc_id": 1301,
+            "code": "M",
+            "title": "Metric System",
+            "desc_type": 13
+        },
+        {
+            "desc_id": 1302,
+            "code": "I",
+            "title": "Imperial System",
+            "desc_type": 13
+        },
+        {
+            "desc_id": 0,
+            "code": null,
+            "title": "unset/null",
+            "desc_type": null
+        }
+    ]
+}

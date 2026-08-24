@@ -6,8 +6,12 @@ namespace TriCab\Core\Product\Application\Service;
 
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
 use TriCab\Core\Product\Application\Command\CompareLegacyBaseCostCommand;
+use TriCab\Core\Product\Application\Command\ResolveLegacyVariantPricingIdentityCommand;
 use TriCab\Core\Product\Application\DTO\LegacyBaseCostComparison;
+use TriCab\Core\Product\Application\Exception\PriceListNotFound;
+use TriCab\Core\Product\Contract\PriceListRepository;
 use TriCab\Core\Product\Contract\ProductPricingRepository;
+use TriCab\Core\Product\Domain\ValueObject\PriceListLegacyContext;
 use TriCab\Core\Product\Migration\Contract\LegacyTcRepository;
 
 final class CompareLegacyBaseCostService
@@ -15,6 +19,8 @@ final class CompareLegacyBaseCostService
     public function __construct(
         private readonly ProductPricingRepository $pricing,
         private readonly LegacyTcRepository $legacyTc,
+        private readonly PriceListRepository $priceLists,
+        private readonly ResolveLegacyVariantPricingIdentityService $identityResolver,
         private readonly ProductAuditRecorder $audit,
     ) {
     }
@@ -31,13 +37,22 @@ final class CompareLegacyBaseCostService
             }
         }
 
-        $legacyItemCode = $row?->legacyItemCode ?? $row?->variantCode;
-        if ($legacyItemCode !== null && str_contains($legacyItemCode, ':')) {
-            $legacyItemCode = substr($legacyItemCode, strrpos($legacyItemCode, ':') + 1);
+        $priceListPublicId = $command->priceListPublicId;
+        if ($priceListPublicId === null || $priceListPublicId === '') {
+            throw new \InvalidArgumentException('priceListPublicId is required.');
         }
 
-        $legacyPrice = $legacyItemCode !== null && $legacyItemCode !== ''
-            ? $this->legacyTc->findLatestBaseCost($legacyItemCode, $command->legacyDebtorCompanyCode)
+        $identity = $this->identityResolver->execute(new ResolveLegacyVariantPricingIdentityCommand(
+            variantPublicId: $command->variantPublicId,
+            priceListPublicId: $priceListPublicId,
+        ));
+
+        $dbco = $identity->legacyDbco;
+        $legacyCurrency = $dbco !== null ? $this->debtorCurrency($dbco) : null;
+        $legacyPriceCode = $identity->legacyPriceCode;
+
+        $legacyPrice = $legacyPriceCode !== null && $dbco !== null
+            ? $this->legacyTc->findLatestBaseCost($legacyPriceCode, $dbco)
             : null;
 
         $difference = null;
@@ -52,32 +67,44 @@ final class CompareLegacyBaseCostService
             $difference = rtrim(rtrim($difference, '0'), '.');
         }
 
+        $message = null;
+        if ($legacyPriceCode === null) {
+            $message = 'Legacy pricing identity could not be resolved for this variant.';
+        } elseif ($legacyPrice === null) {
+            $message = 'Legacy tc.price row not available for resolved pricing code.';
+        }
+
         $comparison = new LegacyBaseCostComparison(
             variantPublicId: $command->variantPublicId,
             variantName: $row?->variantName,
-            legacyItemCode: $legacyItemCode,
-            legacyPriceCode: $legacyItemCode,
+            legacyItemCode: $legacyPriceCode,
+            legacyPriceCode: $legacyPriceCode,
             newBaseCost: $row?->baseCost,
             newCurrencyCode: $row?->currencyCode,
             newPriceSourceCode: $row?->priceSourceCode,
             legacyBaseCost: isset($legacyPrice['cost']) ? (string) $legacyPrice['cost'] : null,
-            legacyCurrencyCode: $this->debtorCurrency($command->legacyDebtorCompanyCode),
-            legacyDebtorCompanyCode: $command->legacyDebtorCompanyCode,
+            legacyCurrencyCode: $legacyCurrency,
+            legacyDebtorCompanyCode: $dbco,
             legacyLastUpdatedUtc: isset($legacyPrice['lastUpdatedUtc']) ? (string) $legacyPrice['lastUpdatedUtc'] : null,
             differenceAmount: $difference,
             legacyAvailable: $legacyPrice !== null,
-            message: $legacyPrice === null ? 'Legacy tc.price row not available for this item code.' : null,
+            message: $message,
+            resolutionStatus: $identity->resolutionStatus,
+            resolutionSource: $identity->resolutionSource,
+            priceDataStatus: $identity->priceDataStatus,
         );
 
         $this->audit->record(
             actor: $actor,
-            productPublicId: \TriCab\Core\Product\Domain\ValueObject\ProductPublicId::fromString($command->productPublicId),
+            productPublicId: $productPublicId,
             entityTypeCode: 'product-pricing',
             entityId: null,
             actionCode: 'legacy-comparison-viewed',
             newValues: [
                 'variantPublicId' => $command->variantPublicId,
-                'legacyDebtorCompanyCode' => (string) $command->legacyDebtorCompanyCode,
+                'legacyDebtorCompanyCode' => $dbco !== null ? (string) $dbco : null,
+                'priceListPublicId' => $command->priceListPublicId,
+                'resolutionStatus' => $identity->resolutionStatus,
                 'legacyAvailable' => $comparison->legacyAvailable ? 'true' : 'false',
             ],
         );

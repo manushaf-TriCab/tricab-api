@@ -1,0 +1,69 @@
+{
+    "phase": "12.8-f12-single-product-pilot-apply",
+    "status": "BLOCKED",
+    "banner": "PHASE 12.8 F12 SINGLE PRODUCT PILOT APPLY: BLOCKED / FAILED",
+    "reason": "PILOT_SOURCE_DRIFT: no live F12 row matches package samples 12/15/10/3/2/4.30 (observed 2 F12 rows)",
+    "legacySource": {
+        "style_code": "F12",
+        "name": "Inspection Tee",
+        "specValues": {
+            "d1": "12.00",
+            "d2": "15.00",
+            "d3": "10.00",
+            "d4": "3.00",
+            "d5": "2.00",
+            "d6": "4.30"
+        },
+        "source": "package-fallback",
+        "wordpressWrites": 0,
+        "tcWrites": 0,
+        "forbiddenWriteAttempts": 0
+    },
+    "preflight": {
+        "server": "tricab-mel",
+        "database": "tc",
+        "environmentLabel": "NON-PRODUCTION",
+        "liveValidation": "AVAILABLE",
+        "operatorApprovalRecognised": true,
+        "definitionCount": 64,
+        "fieldMappingCount": 1044,
+        "cableFieldMappingCount": 538,
+        "f12CollisionType": "NONE",
+        "f12Presence": {
+            "products": 0,
+            "variants": 0,
+            "slugs": 0,
+            "mappings": 0
+        },
+        "countsBefore": {
+            "definitions": 64,
+            "units": 11,
+            "options": 416,
+            "products": 118,
+            "variants": 4178,
+            "productSpecificationValues": 322,
+            "variantSpecificationValues": 52619,
+            "productRegions": 42,
+            "families": 3,
+            "categories": 13,
+            "series": 97,
+            "fieldMappings": 1044,
+            "cableFieldMappings": 538,
+            "pricing": 0,
+            "media": 17,
+            "documents": 11
+        },
+        "expectedBaseline": {
+            "definitions": 64,
+            "totalFieldMappings": 1044,
+            "cableFieldMappings": 538
+        },
+        "generatedAtUtc": "2026-08-24T02:31:11+00:00"
+    },
+    "stops": [
+        "DO NOT APPLY WITH SILENT PACKAGE REGENERATION",
+        "DO NOT MIGRATE ANOTHER PRODUCT",
+        "WAIT FOR EXPLICIT OPERATOR REVIEW OF SOURCE DRIFT"
+    ],
+    "generatedAtUtc": "2026-08-24T02:31:11+00:00"
+}

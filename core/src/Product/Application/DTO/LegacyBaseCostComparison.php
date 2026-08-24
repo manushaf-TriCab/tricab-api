@@ -24,6 +24,9 @@ final readonly class LegacyBaseCostComparison
         public ?string $differenceAmount,
         public bool $legacyAvailable,
         public ?string $message,
+        public ?string $resolutionStatus = null,
+        public ?string $resolutionSource = null,
+        public ?string $priceDataStatus = null,
     ) {
     }
 }

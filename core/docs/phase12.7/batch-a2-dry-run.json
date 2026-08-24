@@ -1,0 +1,444 @@
+{
+    "phase": "12.7-batch-a.2",
+    "mode": "FINAL_LIVE_DRY_RUN_PLAN",
+    "targetLiveValidation": "AVAILABLE",
+    "applied": false,
+    "batchAApplyGuard": "BATCH_A_APPLY_NOT_APPROVED",
+    "referentialOrder": [
+        "1. Validate Families",
+        "2. Map existing Categories",
+        "3. Create approved Categories",
+        "4. Validate Category IDs",
+        "5. Map existing Series",
+        "6. Create approved Series",
+        "7. Write migration mappings",
+        "8. Verify"
+    ],
+    "plan": {
+        "categories": {
+            "mapExisting": 27,
+            "create": 0,
+            "proposedCreateAwaitingOperator": 7
+        },
+        "series": {
+            "mapExisting": 0,
+            "create": 0,
+            "proposedCreateAwaitingOperator": 54
+        },
+        "mappingRows": {
+            "insert": 27,
+            "update": 0
+        },
+        "productMutations": 0,
+        "variantMutations": 0,
+        "catalogueMutations": 0,
+        "specificationMutations": 0,
+        "pricingMutations": 0,
+        "mediaMutations": 0,
+        "legacyWrites": 0
+    },
+    "vfd": {
+        "sourceMappingCount": 6,
+        "targetCategoryCount": 1,
+        "targetCategoryCode": "VFD",
+        "mappings": [
+            {
+                "sourceTermId": 373,
+                "termId": 373,
+                "rawName": "VFD/VSD",
+                "decodedName": "VFD/VSD",
+                "normalizedName": "vfd vsd",
+                "taxonomy": "category",
+                "parentTermId": 329,
+                "postCount": 3,
+                "sampleProducts": [
+                    {
+                        "postId": 3248,
+                        "title": "P1 TriCab B1C<br />P1/P8 TriCab B1M",
+                        "postType": "cable",
+                        "style_code": "B1"
+                    },
+                    {
+                        "postId": 3251,
+                        "title": "P2 TriCab B3C<br />P2/P9 TriCab B3M",
+                        "postType": "cable",
+                        "style_code": "B3C, B3M"
+                    },
+                    {
+                        "postId": 3254,
+                        "title": "P3 TriCab B4C<br />P3/P10 TriCab B4M",
+                        "postType": "cable",
+                        "style_code": "B4C, B4M"
+                    }
+                ],
+                "styleCodes": [
+                    "B1",
+                    "B3C, B3M",
+                    "B4C, B4M"
+                ],
+                "proposedFamily": "CABLE",
+                "semanticType": "PRODUCT_CATEGORY",
+                "existingTargetCandidate": null,
+                "decision": "APPROVED_MAP_EXISTING",
+                "proposedCategoryCode": "VFD-VSD",
+                "proposedCategoryName": "VFD/VSD",
+                "targetCategoryCode": "VFD",
+                "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+                "confidence": "high",
+                "evidenceScore": "HIGH",
+                "evidence": {
+                    "wpProducts": [
+                        {
+                            "postId": 3248,
+                            "title": "P1 TriCab B1C<br />P1/P8 TriCab B1M",
+                            "postType": "cable",
+                            "style_code": "B1"
+                        },
+                        {
+                            "postId": 3251,
+                            "title": "P2 TriCab B3C<br />P2/P9 TriCab B3M",
+                            "postType": "cable",
+                            "style_code": "B3C, B3M"
+                        },
+                        {
+                            "postId": 3254,
+                            "title": "P3 TriCab B4C<br />P3/P10 TriCab B4M",
+                            "postType": "cable",
+                            "style_code": "B4C, B4M"
+                        }
+                    ],
+                    "overlapNotes": null,
+                    "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                    "autoApprovedCreate": false
+                },
+                "reason": "exact_normalized_name_match_existing_category",
+                "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                "operatorOverride": false,
+                "conflict": false,
+                "finalApprovalQueue": true
+            },
+            {
+                "sourceTermId": 503,
+                "termId": 503,
+                "rawName": "VFD",
+                "decodedName": "VFD",
+                "normalizedName": "vfd",
+                "taxonomy": "category",
+                "parentTermId": 498,
+                "postCount": 3,
+                "sampleProducts": [
+                    {
+                        "postId": 4199,
+                        "title": "Industrial VFD",
+                        "postType": "cable",
+                        "style_code": "VV"
+                    },
+                    {
+                        "postId": 4201,
+                        "title": "Industrial VFD",
+                        "postType": "cable",
+                        "style_code": "VW"
+                    },
+                    {
+                        "postId": 7801,
+                        "title": "VFD Uninsulated Grounds",
+                        "postType": "cable",
+                        "style_code": "VUF"
+                    }
+                ],
+                "styleCodes": [
+                    "VV",
+                    "VW",
+                    "VUF"
+                ],
+                "proposedFamily": "CABLE",
+                "semanticType": "PRODUCT_CATEGORY",
+                "existingTargetCandidate": {
+                    "status": "SUGGESTED",
+                    "code": "VFD",
+                    "name": null,
+                    "note": "Semantic suggestion only \u2014 operator Map Existing required"
+                },
+                "decision": "APPROVED_MAP_EXISTING",
+                "proposedCategoryCode": null,
+                "proposedCategoryName": "VFD",
+                "targetCategoryCode": "VFD",
+                "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+                "confidence": "high",
+                "evidenceScore": "HIGH",
+                "evidence": {
+                    "wpProducts": [
+                        {
+                            "postId": 4199,
+                            "title": "Industrial VFD",
+                            "postType": "cable",
+                            "style_code": "VV"
+                        },
+                        {
+                            "postId": 4201,
+                            "title": "Industrial VFD",
+                            "postType": "cable",
+                            "style_code": "VW"
+                        },
+                        {
+                            "postId": 7801,
+                            "title": "VFD Uninsulated Grounds",
+                            "postType": "cable",
+                            "style_code": "VUF"
+                        }
+                    ],
+                    "overlapNotes": null,
+                    "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                    "autoApprovedCreate": false
+                },
+                "reason": "vfd_short_or_alias_maps_to_existing_vfd",
+                "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                "operatorOverride": false,
+                "conflict": false,
+                "finalApprovalQueue": true
+            },
+            {
+                "sourceTermId": 500,
+                "termId": 500,
+                "rawName": "VFD",
+                "decodedName": "VFD",
+                "normalizedName": "vfd",
+                "taxonomy": "category",
+                "parentTermId": 497,
+                "postCount": 2,
+                "sampleProducts": [
+                    {
+                        "postId": 4180,
+                        "title": "Industrial VFD",
+                        "postType": "cable",
+                        "style_code": "TV"
+                    },
+                    {
+                        "postId": 4183,
+                        "title": "Industrial VFD",
+                        "postType": "cable",
+                        "style_code": "TK"
+                    }
+                ],
+                "styleCodes": [
+                    "TV",
+                    "TK"
+                ],
+                "proposedFamily": "CABLE",
+                "semanticType": "PRODUCT_CATEGORY",
+                "existingTargetCandidate": {
+                    "status": "SUGGESTED",
+                    "code": "VFD",
+                    "name": null,
+                    "note": "Semantic suggestion only \u2014 operator Map Existing required"
+                },
+                "decision": "APPROVED_MAP_EXISTING",
+                "proposedCategoryCode": null,
+                "proposedCategoryName": "VFD",
+                "targetCategoryCode": "VFD",
+                "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+                "confidence": "high",
+                "evidenceScore": "HIGH",
+                "evidence": {
+                    "wpProducts": [
+                        {
+                            "postId": 4180,
+                            "title": "Industrial VFD",
+                            "postType": "cable",
+                            "style_code": "TV"
+                        },
+                        {
+                            "postId": 4183,
+                            "title": "Industrial VFD",
+                            "postType": "cable",
+                            "style_code": "TK"
+                        }
+                    ],
+                    "overlapNotes": null,
+                    "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                    "autoApprovedCreate": false
+                },
+                "reason": "vfd_short_or_alias_maps_to_existing_vfd",
+                "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                "operatorOverride": false,
+                "conflict": false,
+                "finalApprovalQueue": true
+            },
+            {
+                "sourceTermId": 324,
+                "termId": 324,
+                "rawName": "VFD/VSD",
+                "decodedName": "VFD/VSD",
+                "normalizedName": "vfd vsd",
+                "taxonomy": "category",
+                "parentTermId": 315,
+                "postCount": 2,
+                "sampleProducts": [
+                    {
+                        "postId": 3132,
+                        "title": "600V Braid",
+                        "postType": "cable",
+                        "style_code": "DF"
+                    },
+                    {
+                        "postId": 3135,
+                        "title": "1.8kV/3.0kV",
+                        "postType": "cable",
+                        "style_code": "DG"
+                    }
+                ],
+                "styleCodes": [
+                    "DF",
+                    "DG"
+                ],
+                "proposedFamily": "CABLE",
+                "semanticType": "PRODUCT_CATEGORY",
+                "existingTargetCandidate": null,
+                "decision": "APPROVED_MAP_EXISTING",
+                "proposedCategoryCode": null,
+                "proposedCategoryName": "VFD/VSD",
+                "targetCategoryCode": "VFD",
+                "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+                "confidence": "high",
+                "evidenceScore": "HIGH",
+                "evidence": {
+                    "wpProducts": [
+                        {
+                            "postId": 3132,
+                            "title": "600V Braid",
+                            "postType": "cable",
+                            "style_code": "DF"
+                        },
+                        {
+                            "postId": 3135,
+                            "title": "1.8kV/3.0kV",
+                            "postType": "cable",
+                            "style_code": "DG"
+                        }
+                    ],
+                    "overlapNotes": null,
+                    "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                    "autoApprovedCreate": false
+                },
+                "reason": "exact_normalized_name_match_existing_category",
+                "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                "operatorOverride": false,
+                "conflict": false,
+                "finalApprovalQueue": true
+            },
+            {
+                "sourceTermId": 336,
+                "termId": 336,
+                "rawName": "VFD/VSD",
+                "decodedName": "VFD/VSD",
+                "normalizedName": "vfd vsd",
+                "taxonomy": "category",
+                "parentTermId": 331,
+                "postCount": 2,
+                "sampleProducts": [
+                    {
+                        "postId": 3224,
+                        "title": "P1 TriCab NUC<br />P1/P8 TriCab NUM",
+                        "postType": "cable",
+                        "style_code": "NU"
+                    },
+                    {
+                        "postId": 5350,
+                        "title": "P5 TriCab NFC <br />P5/P12 TriCab NFM",
+                        "postType": "cable",
+                        "style_code": "NF"
+                    }
+                ],
+                "styleCodes": [
+                    "NU",
+                    "NF"
+                ],
+                "proposedFamily": "CABLE",
+                "semanticType": "PRODUCT_CATEGORY",
+                "existingTargetCandidate": null,
+                "decision": "APPROVED_MAP_EXISTING",
+                "proposedCategoryCode": null,
+                "proposedCategoryName": "VFD/VSD",
+                "targetCategoryCode": "VFD",
+                "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+                "confidence": "high",
+                "evidenceScore": "HIGH",
+                "evidence": {
+                    "wpProducts": [
+                        {
+                            "postId": 3224,
+                            "title": "P1 TriCab NUC<br />P1/P8 TriCab NUM",
+                            "postType": "cable",
+                            "style_code": "NU"
+                        },
+                        {
+                            "postId": 5350,
+                            "title": "P5 TriCab NFC <br />P5/P12 TriCab NFM",
+                            "postType": "cable",
+                            "style_code": "NF"
+                        }
+                    ],
+                    "overlapNotes": null,
+                    "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                    "autoApprovedCreate": false
+                },
+                "reason": "exact_normalized_name_match_existing_category",
+                "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                "operatorOverride": false,
+                "conflict": false,
+                "finalApprovalQueue": true
+            },
+            {
+                "sourceTermId": 311,
+                "termId": 311,
+                "rawName": "VFD / VSD",
+                "decodedName": "VFD / VSD",
+                "normalizedName": "vfd vsd",
+                "taxonomy": "category",
+                "parentTermId": 304,
+                "postCount": 1,
+                "sampleProducts": [
+                    {
+                        "postId": 3163,
+                        "title": "RFOI-VFD Shipboard",
+                        "postType": "cable",
+                        "style_code": "DF"
+                    }
+                ],
+                "styleCodes": [
+                    "DF"
+                ],
+                "proposedFamily": "CABLE",
+                "semanticType": "PRODUCT_CATEGORY",
+                "existingTargetCandidate": null,
+                "decision": "APPROVED_MAP_EXISTING",
+                "proposedCategoryCode": null,
+                "proposedCategoryName": "VFD / VSD",
+                "targetCategoryCode": "VFD",
+                "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+                "confidence": "high",
+                "evidenceScore": "HIGH",
+                "evidence": {
+                    "wpProducts": [
+                        {
+                            "postId": 3163,
+                            "title": "RFOI-VFD Shipboard",
+                            "postType": "cable",
+                            "style_code": "DF"
+                        }
+                    ],
+                    "overlapNotes": null,
+                    "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                    "autoApprovedCreate": false
+                },
+                "reason": "exact_normalized_name_match_existing_category",
+                "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+                "operatorOverride": false,
+                "conflict": false,
+                "finalApprovalQueue": true
+            }
+        ],
+        "applied": false
+    },
+    "recommendation": "CONTINUE CLASSIFICATION REVIEW"
+}

@@ -1,0 +1,106 @@
+{
+    "generatedAtUtc": "2026-08-21T00:14:06+00:00",
+    "targetLiveValidation": "AVAILABLE",
+    "plan": {
+        "order": [
+            "1. Validate Families",
+            "2. Validate existing target Categories",
+            "3. Insert APPROVED_CREATE Categories",
+            "4. Resolve new Category IDs",
+            "5. Insert Category mapping rows",
+            "6. Validate existing target Series",
+            "7. Insert APPROVED_CREATE Series",
+            "8. Resolve Series IDs",
+            "9. Insert Series mapping rows",
+            "10. Verify mappings",
+            "11. Recalculate readiness"
+        ],
+        "categories": {
+            "mapExisting": 27,
+            "create": 6,
+            "createRows": [
+                {
+                    "code": "CONDUITS-FITTINGS",
+                    "name": "Conduits & Fittings",
+                    "family": "ACCESSORIES",
+                    "productCount": 11
+                },
+                {
+                    "code": "TECHNO-CONNECTORS",
+                    "name": "Techno Connectors",
+                    "family": "PLUG",
+                    "productCount": 8
+                },
+                {
+                    "code": "TERMINALS",
+                    "name": "Terminals",
+                    "family": "ACCESSORIES",
+                    "productCount": 6
+                },
+                {
+                    "code": "GLANDS",
+                    "name": "Glands",
+                    "family": "ACCESSORIES",
+                    "productCount": 5
+                },
+                {
+                    "code": "LINKS",
+                    "name": "Links",
+                    "family": "ACCESSORIES",
+                    "productCount": 4
+                },
+                {
+                    "code": "PLUG-SOCKET-LEADS",
+                    "name": "Plug-Socket Leads",
+                    "family": "ACCESSORIES",
+                    "productCount": 4
+                }
+            ]
+        },
+        "series": {
+            "mapExisting": 95,
+            "create": 0
+        },
+        "mappings": {
+            "categoryInsert": 34,
+            "seriesInsert": 95,
+            "insert": 129,
+            "update": 0
+        },
+        "mutations": {
+            "products": 0,
+            "variants": 0,
+            "catalogue": 0,
+            "specifications": 0,
+            "pricing": 0,
+            "media": 0,
+            "documents": 0,
+            "legacy": 0
+        },
+        "idempotency": {
+            "secondRunCategoryCreates": 0,
+            "secondRunSeriesCreates": 0,
+            "secondRunMappingInserts": 0,
+            "note": "Stable keys; second identical apply projects zero creates/inserts when rows already exist."
+        },
+        "validationOk": false,
+        "validationErrors": [
+            "category_code_collision_existing:CONDUITS-FITTINGS",
+            "category_code_collision_existing:TECHNO-CONNECTORS",
+            "category_code_collision_existing:TERMINALS",
+            "category_code_collision_existing:GLANDS",
+            "category_code_collision_existing:LINKS",
+            "category_code_collision_existing:PLUG-SOCKET-LEADS",
+            "category_code_collision_existing:GLANDS"
+        ],
+        "productAssignment": "NOT IN SCOPE \u2014 Products.FamilyId/CategoryId/SeriesId unchanged by Batch A apply"
+    },
+    "approvalBoundary": {
+        "applyStatus": "NOT RUN",
+        "batchAApplyGuard": "BATCH_A_APPLY_NOT_APPROVED",
+        "finalApplyPackage": "BLOCKED_APPROVED_SET_VALIDATION",
+        "recommendation": "CONTINUE REVIEW",
+        "nextAction": "WAIT FOR EXPLICIT OPERATOR APPROVAL",
+        "fullCatalogueMigration": "NOT READY"
+    }
+}

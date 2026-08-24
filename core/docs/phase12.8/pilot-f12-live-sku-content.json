@@ -1,0 +1,49 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "wordpressIdentity": {
+        "postId": 5877,
+        "postType": "accessory",
+        "title": "Inspection Tee",
+        "slug": "inspection-tees",
+        "status": "publish",
+        "styleCode": "F12"
+    },
+    "wordpressConnected": true,
+    "wordpressError": null,
+    "content": {
+        "name": {
+            "source": "Inspection Tee",
+            "target": "Inspection Tee"
+        },
+        "shortDescription": {
+            "source": "Inspection Tee",
+            "target": "Inspection Tee",
+            "status": "PROJECTED"
+        },
+        "longDescription": {
+            "source": null,
+            "target": null,
+            "status": "ABSENT"
+        },
+        "technicalDescription": {
+            "source": null,
+            "target": null,
+            "status": "ABSENT"
+        },
+        "features": {
+            "source": [],
+            "target": []
+        },
+        "seoTitle": {
+            "source": null,
+            "target": null,
+            "status": "ABSENT"
+        },
+        "seoDescription": {
+            "source": null,
+            "target": null,
+            "status": "ABSENT"
+        },
+        "note": "Unsupported WordPress metadata is not migrated. Absent fields are not fabricated."
+    }
+}

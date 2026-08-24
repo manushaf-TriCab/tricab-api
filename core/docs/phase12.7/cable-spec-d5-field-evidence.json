@@ -1,0 +1,96 @@
+{
+    "codebaseEvidence": {
+        "confidenceRule": "HIGH requires direct legacy label/documentation/calculation \u2014 not variable-name inference",
+        "ccCtLegacySourceScan": {
+            "tricabApiMigrationCode": "No explicit cable_specs.cc / cable_specs.ct UI labels in migration codebase",
+            "operatorReconsiderationAvailable": false,
+            "ratingCtEncoding": "rating.ct uses C/A alphabet \u2014 differs from cable_specs.ct p/a",
+            "cable3dMapping": "Conductor material resolved via CODE_CONDUCTOR / CONDUCTORS \u2014 not ct field"
+        },
+        "waluWbnzLabels": {
+            "directUnitTextFound": false,
+            "note": "No lb/1000ft or kg/km label strings tied to walu/wbnz in scanned migration services"
+        },
+        "insLabels": {
+            "directThicknessLabelFound": false,
+            "dimensionalFormula": "ins \u2248 (od_ins - cdia)/2 tested in D.5 collector for NR/NV rows only"
+        },
+        "b1Engineering": {
+            "fields": [
+                "Af",
+                "r",
+                "x50",
+                "x60",
+                "tension"
+            ],
+            "style": "B1",
+            "directLabelsFound": false
+        }
+    },
+    "targetMasterScan": {
+        "definitionCount": 64,
+        "unitCount": 11,
+        "conductorDefinitionMatches": {
+            "CODE_CONDUCTOR": {
+                "code": "CODE_CONDUCTOR",
+                "name": "Conductor",
+                "dataTypeCode": "single-select",
+                "unit": null
+            },
+            "CONDUCTORS": {
+                "code": "CONDUCTORS",
+                "name": "Conductors",
+                "dataTypeCode": "long-text",
+                "unit": null
+            }
+        },
+        "conductorsLongTextNote": "CONDUCTORS exists as long-text construction descriptor \u2014 not ct p/a encoding",
+        "codeConductorNote": "CODE_CONDUCTOR exists \u2014 option-based conductor code, not cable_specs.ct",
+        "units": {
+            "KG_PER_KM": true,
+            "imperialMassPerLength": [],
+            "existingUnitCodes": [
+                "M",
+                "EA",
+                "FT",
+                "PK",
+                "MM",
+                "MM2",
+                "KG",
+                "KG_PER_KM",
+                "A",
+                "V",
+                "C"
+            ]
+        }
+    },
+    "investigationEvidenceMode": "LIVE_SELECT_ONLY",
+    "d4Integrity": {
+        "status": "D4_INTEGRITY_OK",
+        "definitions": 64,
+        "expectedDefinitions": 64,
+        "totalFieldMappings": 1044,
+        "expectedTotalFieldMappings": 1044,
+        "cableFieldMappings": 538,
+        "expectedCableFieldMappings": 538,
+        "styleFieldMappings": 1021,
+        "d4DefinitionCodesPresent": [
+            "EARTH-CORES",
+            "EARTH-CSA",
+            "EARTH-INS-OD",
+            "BEDDING-OD",
+            "ARMOUR-OD",
+            "BRAID-OD",
+            "CURRENT-30C",
+            "CURRENT-40C",
+            "CURRENT-45C"
+        ],
+        "d4DefinitionCodesMissing": [],
+        "driftDetected": false,
+        "drift": {
+            "definitions": 0,
+            "totalFieldMappings": 0,
+            "cableFieldMappings": 0
+        }
+    }
+}

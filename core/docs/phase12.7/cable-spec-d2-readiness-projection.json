@@ -1,0 +1,72 @@
+{
+    "current": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "ACCESSORY_DV_FIELD_MAPPING_READY": 27,
+        "note": "No operator approvals applied yet \u2014 all REVIEW fields remain unresolved."
+    },
+    "highConfidence": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "A30c": 22,
+            "A45c": 18,
+            "A40c": 13,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "tension": 1,
+            "x50": 1,
+            "x60": 1
+        }
+    },
+    "allCandidates": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "A30c": 22,
+            "A45c": 18,
+            "A40c": 13,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "tension": 1,
+            "x50": 1,
+            "x60": 1
+        }
+    },
+    "ifCcMtCtResolved": {
+        "READY": 14,
+        "REVIEW": 40,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 14,
+        "stillBlockingConcepts": {
+            "A30c": 22,
+            "A45c": 18,
+            "A40c": 13,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "tension": 1,
+            "x50": 1,
+            "x60": 1
+        },
+        "note": "Hypothetical: treat cc+mt+ct as resolved and HIGH APPROVED_*/NOT_A_SPEC as approved. Ambient A30c/A40c/A45c remain REVIEW blockers where populated."
+    },
+    "projected": {
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27
+    },
+    "blockerNote": "HIGH projection READY remains 0 while cc/ct stay REVIEW (always populated)."
+}

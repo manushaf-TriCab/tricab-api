@@ -1,0 +1,30 @@
+{
+    "targetValidated": true,
+    "mode": "DRY_RUN_ONLY",
+    "writesWouldExecute": false,
+    "definitionsMappedExisting": 7,
+    "definitionsToCreate": 0,
+    "definitionsProposedPendingApproval": 11,
+    "optionsMappedExisting": 17,
+    "optionsToCreate": 0,
+    "optionsProposedPendingApproval": 266,
+    "definitionMappingsToInsert": 7,
+    "optionMappingsToInsert": 17,
+    "aliasesToInsert": 0,
+    "unitsMapped": 9,
+    "productSpecificationValues": 0,
+    "productMutations": 0,
+    "variantMutations": 0,
+    "classificationMutations": 0,
+    "catalogueMutations": 0,
+    "pricingMutations": 0,
+    "mediaMutations": 0,
+    "documentMutations": 0,
+    "legacyWrites": 0,
+    "idempotencyPlan": {
+        "secondApplyDefinitionsCreated": 0,
+        "secondApplyOptionsCreated": 0,
+        "secondApplyMappingsInserted": 0,
+        "secondApplyAliasesInserted": 0
+    }
+}

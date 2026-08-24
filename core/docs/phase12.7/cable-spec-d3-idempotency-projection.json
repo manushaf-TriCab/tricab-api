@@ -1,0 +1,11 @@
+{
+    "secondRun": {
+        "definitionsToCreate": 0,
+        "mappingsToInsert": 0,
+        "mappingsToUpdate": 0,
+        "conflicts": 0,
+        "definitionsIdenticalExisting": 9,
+        "mappingsIdenticalExisting": 538
+    },
+    "passed": true
+}

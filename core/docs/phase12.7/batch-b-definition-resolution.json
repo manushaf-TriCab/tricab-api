@@ -1,0 +1,1714 @@
+[
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "standards",
+        "sourceLabel": "standards",
+        "semanticConcept": "STANDARD",
+        "fieldClass": "STANDARD",
+        "usageCount": 490,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "UPM"
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": "STANDARD",
+        "proposedDefinitionCode": "STANDARD",
+        "proposedDefinitionName": "Standard",
+        "dataType": "multi-select",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "STANDARDS"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "small_desc",
+        "sourceLabel": "small_desc",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 440,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "Y Screw Mount"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "PRODUCT_DESCRIPTION"
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "style_code",
+        "sourceLabel": "style_code",
+        "semanticConcept": "CLASSIFICATION",
+        "fieldClass": "CLASSIFICATION",
+        "usageCount": 440,
+        "sampleProducts": [],
+        "sampleValues": [
+            "A01",
+            "Z41"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "SERIES_OR_IDENTITY"
+        },
+        "reason": "semantic_class_classification"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "sub_title",
+        "sourceLabel": "sub_title",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 440,
+        "sampleProducts": [],
+        "sampleValues": [
+            " ",
+            "XHHW-2/XHHW/XHH/R90/RW90/SIS/FFH-2"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "search_keywords",
+        "sourceLabel": "search_keywords",
+        "semanticConcept": "SEO",
+        "fieldClass": "SEO",
+        "usageCount": 391,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "Two-Hole Aluminium Lug"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_seo"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "certificate_upload",
+        "sourceLabel": "certificate_upload",
+        "semanticConcept": "DOCUMENT",
+        "fieldClass": "DOCUMENT",
+        "usageCount": 287,
+        "sampleProducts": [],
+        "sampleValues": [
+            "3726",
+            "8099"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "DOCUMENT"
+        },
+        "reason": "semantic_class_document"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "issuing_organisation",
+        "sourceLabel": "issuing_organisation",
+        "semanticConcept": "APPROVAL",
+        "fieldClass": "APPROVAL",
+        "usageCount": 287,
+        "sampleProducts": [],
+        "sampleValues": [
+            " ",
+            "WI"
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": "APPROVALS",
+        "proposedDefinitionCode": "APPROVALS",
+        "proposedDefinitionName": "Approvals",
+        "dataType": "multi-select",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "styles",
+        "sourceLabel": "styles",
+        "semanticConcept": "CLASSIFICATION",
+        "fieldClass": "CLASSIFICATION",
+        "usageCount": 287,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "XL"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_classification"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "industrial_or_shipboard",
+        "sourceLabel": "industrial_or_shipboard",
+        "semanticConcept": "CLASSIFICATION",
+        "fieldClass": "CLASSIFICATION",
+        "usageCount": 265,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "a:2:{i:0;s:3:\"IND\";i:1;s:3:\"SBO\";}"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_classification"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "compound_code",
+        "sourceLabel": "compound_code",
+        "semanticConcept": "UNKNOWN",
+        "fieldClass": "UNKNOWN",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "XLPO-105"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "OUTER_DIAMETER"
+        },
+        "reason": "ambiguous_legacy_field"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "control_core_1",
+        "sourceLabel": "control_core_1",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "7195"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "control_core_2",
+        "sourceLabel": "control_core_2",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "7222"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "ind_or_sbo",
+        "sourceLabel": "ind_or_sbo",
+        "semanticConcept": "CLASSIFICATION",
+        "fieldClass": "CLASSIFICATION",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "industrial",
+            "shipboard-offshore"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_classification"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "industry_code",
+        "sourceLabel": "industry_code",
+        "semanticConcept": "UNKNOWN",
+        "fieldClass": "UNKNOWN",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "UX"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "OUTER_DIAMETER"
+        },
+        "reason": "ambiguous_legacy_field"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "multi_core_1",
+        "sourceLabel": "multi_core_1",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "7730"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "multi_core_2",
+        "sourceLabel": "multi_core_2",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "7731"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "single_core_1",
+        "sourceLabel": "single_core_1",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "7691"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "single_core_2",
+        "sourceLabel": "single_core_2",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "7784"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "al-control-image-1",
+        "sourceLabel": "al-control-image-1",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "al-control-image-2",
+        "sourceLabel": "al-control-image-2",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "al-multi-image-1",
+        "sourceLabel": "al-multi-image-1",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "al-multi-image-2",
+        "sourceLabel": "al-multi-image-2",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "al-single-image-1",
+        "sourceLabel": "al-single-image-1",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "6528"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "al-single-image-2",
+        "sourceLabel": "al-single-image-2",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "7786"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "cu-al-control-image-1",
+        "sourceLabel": "cu-al-control-image-1",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "cu-al-control-image-2",
+        "sourceLabel": "cu-al-control-image-2",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "cu-al-multi-image-1",
+        "sourceLabel": "cu-al-multi-image-1",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "cu-al-multi-image-2",
+        "sourceLabel": "cu-al-multi-image-2",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "cu-al-single-image-1",
+        "sourceLabel": "cu-al-single-image-1",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "5003"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "cu-al-single-image-2",
+        "sourceLabel": "cu-al-single-image-2",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 213,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "7124"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "media_attachment_meta"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "section_1",
+        "sourceLabel": "section_1",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 210,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "section_2",
+        "sourceLabel": "section_2",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 210,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "al_single_core_category",
+        "sourceLabel": "al_single_core_category",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 204,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "6527"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "cu_single_core_category",
+        "sourceLabel": "cu_single_core_category",
+        "semanticConcept": "CORE_COLOUR",
+        "fieldClass": "CORE_COLOUR",
+        "usageCount": 204,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "8026"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "core_colour_matrix_helper_not_standalone_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "display_order",
+        "sourceLabel": "display_order",
+        "semanticConcept": "INTERNAL_METADATA",
+        "fieldClass": "INTERNAL_METADATA",
+        "usageCount": 204,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "SDI, Battery/DC"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_internal_metadata"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "small_desc_cat_page",
+        "sourceLabel": "small_desc_cat_page",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 204,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "acc_display_order",
+        "sourceLabel": "acc_display_order",
+        "semanticConcept": "INTERNAL_METADATA",
+        "fieldClass": "INTERNAL_METADATA",
+        "usageCount": 178,
+        "sampleProducts": [],
+        "sampleValues": [
+            "1",
+            "9"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_internal_metadata"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "acc_display_order_group",
+        "sourceLabel": "acc_display_order_group",
+        "semanticConcept": "INTERNAL_METADATA",
+        "fieldClass": "INTERNAL_METADATA",
+        "usageCount": 178,
+        "sampleProducts": [],
+        "sampleValues": [
+            "1",
+            "2"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_internal_metadata"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "ind_degrees",
+        "sourceLabel": "ind_degrees",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 150,
+        "sampleProducts": [],
+        "sampleValues": [
+            "105",
+            "Dry 90\u00b0C and Wet 75"
+        ],
+        "proposedGroup": "thermal",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "IND-DEGREES",
+        "proposedDefinitionName": "Ind Degrees",
+        "dataType": "decimal",
+        "unit": "C",
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "specification_candidate_proposed_create"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "ind_kilovolts",
+        "sourceLabel": "ind_kilovolts",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 150,
+        "sampleProducts": [],
+        "sampleValues": [
+            ".6/1kV",
+            "900/1500V dc-600/1000V ac"
+        ],
+        "proposedGroup": "electrical",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "IND-KILOVOLTS",
+        "proposedDefinitionName": "Ind Kilovolts",
+        "dataType": "decimal",
+        "unit": "V",
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "specification_candidate_proposed_create"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "amour_braid_screen",
+        "sourceLabel": "amour_braid_screen",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 120,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "screen"
+        ],
+        "proposedGroup": "construction",
+        "existingTargetDefinition": "BRAID",
+        "proposedDefinitionCode": "BRAID",
+        "proposedDefinitionName": "Braid",
+        "dataType": "long-text",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "EXISTING_DEFINITION",
+            "candidateDefinition": "BRAID"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "ind_lszh_fire",
+        "sourceLabel": "ind_lszh_fire",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 120,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "a:2:{i:0;s:4:\"lszh\";i:1;s:4:\"fire\";}"
+        ],
+        "proposedGroup": "construction",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "IND-LSZH-FIRE",
+        "proposedDefinitionName": "Ind Lszh Fire",
+        "dataType": "text",
+        "unit": null,
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "specification_candidate_proposed_create"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "certificate_thumbnail",
+        "sourceLabel": "certificate_thumbnail",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 117,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "8098"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "MEDIA"
+        },
+        "reason": "semantic_class_media"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "conductor_type",
+        "sourceLabel": "conductor_type",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 117,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "a:2:{i:0;s:2:\"Cu\";i:1;s:2:\"Al\";}"
+        ],
+        "proposedGroup": "construction",
+        "existingTargetDefinition": "CONDUCTORS",
+        "proposedDefinitionCode": "CONDUCTORS",
+        "proposedDefinitionName": "Conductors",
+        "dataType": "long-text",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "CONDUCTOR"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "degrees",
+        "sourceLabel": "degrees",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 90,
+        "sampleProducts": [],
+        "sampleValues": [
+            "105",
+            "90"
+        ],
+        "proposedGroup": "thermal",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "DEGREES",
+        "proposedDefinitionName": "Degrees",
+        "dataType": "decimal",
+        "unit": "C",
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "specification_candidate_proposed_create"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "hcl_emission",
+        "sourceLabel": "hcl_emission",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 90,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ">0.5%"
+        ],
+        "proposedGroup": "electrical",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "HCL-EMISSION",
+        "proposedDefinitionName": "Hcl Emission",
+        "dataType": "decimal",
+        "unit": null,
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "specification_candidate_proposed_create"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "kilovolts",
+        "sourceLabel": "kilovolts",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 90,
+        "sampleProducts": [],
+        "sampleValues": [
+            "0.6.1kV",
+            "8.7/15kV"
+        ],
+        "proposedGroup": "electrical",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "KILOVOLTS",
+        "proposedDefinitionName": "Kilovolts",
+        "dataType": "decimal",
+        "unit": "V",
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "specification_candidate_proposed_create"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "oxygen_index",
+        "sourceLabel": "oxygen_index",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 90,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ">32."
+        ],
+        "proposedGroup": "electrical",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "OXYGEN-INDEX",
+        "proposedDefinitionName": "Oxygen Index",
+        "dataType": "decimal",
+        "unit": null,
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "specification_candidate_proposed_create"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "lzsh_braid_fire",
+        "sourceLabel": "lzsh_braid_fire",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 84,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "a:3:{i:0;s:4:\"lszh\";i:1;s:5:\"braid\";i:2;s:4:\"Fire\";}"
+        ],
+        "proposedGroup": "construction",
+        "existingTargetDefinition": "BRAID",
+        "proposedDefinitionCode": "BRAID",
+        "proposedDefinitionName": "Braid",
+        "dataType": "long-text",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "EXISTING_DEFINITION",
+            "candidateDefinition": "BRAID"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "al_display_order",
+        "sourceLabel": "al_display_order",
+        "semanticConcept": "INTERNAL_METADATA",
+        "fieldClass": "INTERNAL_METADATA",
+        "usageCount": 55,
+        "sampleProducts": [],
+        "sampleValues": [
+            "1",
+            "1"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_internal_metadata"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "cu_display_order",
+        "sourceLabel": "cu_display_order",
+        "semanticConcept": "INTERNAL_METADATA",
+        "fieldClass": "INTERNAL_METADATA",
+        "usageCount": 55,
+        "sampleProducts": [],
+        "sampleValues": [
+            "1",
+            "1"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_internal_metadata"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "nek_class",
+        "sourceLabel": "nek_class",
+        "semanticConcept": "STANDARD",
+        "fieldClass": "STANDARD",
+        "usageCount": 55,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "ambiguous_or_incomplete_evidence"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "row_desc",
+        "sourceLabel": "row_desc",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 55,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ""
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "compliance_content",
+        "sourceLabel": "compliance_content",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 53,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "ISO:/wp-content/uploads/2015/06/ISO.png\r\nRoHS Compliance:/wp-content/uploads/2019/07/rohs.png\r\nREACH:/wp-content/uploads/2019/07/reach.png"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "construction_content",
+        "sourceLabel": "construction_content",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 53,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "Construction: Fine wire plain or tinned annealed copper to IEC 60228 and AS/NZS 1125.\r\nInsulation:LSFLEX\u00ae X-125 (X-HF-110), Cross-Linked, Thermoset, Elastomeric, Low Smoke Zero Halogen. 125\u00b0C max operating temperature conforms to UL1581.\r\nJacket:Low-Friction LSFLEX\u00ae T-10 (HFS-110-TP) Flame Retardant, Thermoplastic, Elastomeric, Low Smoke Zero Halogen. Splash resistant to oil, skydrol, petrol, acid and sea water. Resists ozone and UV. Excellent abrasion resistance. Anti-Termite/Rodent Jacket is Available."
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "CONSTRUCTION"
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "operation_content",
+        "sourceLabel": "operation_content",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 53,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "Operating Temp:-70\u00b0C to +90\u00b0C\r\nVoltage Rating:600/1000 Volts\r\nCore Colour:Default colours or to customer specification\r\nJacket Colour:Black or to customer specification"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "standards_content",
+        "sourceLabel": "standards_content",
+        "semanticConcept": "STANDARD",
+        "fieldClass": "STANDARD",
+        "usageCount": 53,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "VDE 0207/20\r\nVDE 0250/602\r\nUL 1581\r\nAS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": "STANDARD",
+        "proposedDefinitionCode": "STANDARD",
+        "proposedDefinitionName": "Standard",
+        "dataType": "multi-select",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "STANDARDS"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "compliance_content_al",
+        "sourceLabel": "compliance_content_al",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 39,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "ISO:/wp-content/uploads/2015/06/ISO.png\r\nRoHS Compliance:/wp-content/uploads/2019/07/rohs.png\r\nREACH:/wp-content/uploads/2019/07/reach.png"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "construction_content_al",
+        "sourceLabel": "construction_content_al",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 39,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "Conductors:Fine Wire EC1350 Aluminium to AS/NZS 1125, IEC 60228\r\nInsulation:LSFLEX R-125(X-HF-110), Flame Retardant, Cross-Linked, Thermoset, Elastomeric, Low Smoke Zero Halogen. 125\u00b0C max operating temperature conforms to UL1581. Splash resistant to oil, skydrol, petrol, acid and sea water. Resists ozone and UV. Anti-Termite/Rodent Jacket is Available."
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "CONSTRUCTION"
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "img_overwrite",
+        "sourceLabel": "img_overwrite",
+        "semanticConcept": "MEDIA",
+        "fieldClass": "MEDIA",
+        "usageCount": 39,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "XL-CT"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_media"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "operation_content_al",
+        "sourceLabel": "operation_content_al",
+        "semanticConcept": "MARKETING_CONTENT",
+        "fieldClass": "MARKETING_CONTENT",
+        "usageCount": 39,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "Operating Temperature:-15\u00b0C to 90\u00b0C\r\nVoltage Rating:600/1000Volts\r\nCore Identification:To customer specification\r\nJacket Colour:To customer specification"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": null,
+        "proposedDefinitionName": null,
+        "dataType": null,
+        "unit": null,
+        "decision": "NOT_A_SPECIFICATION",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "semantic_class_marketing_content"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "standards_content_al",
+        "sourceLabel": "standards_content_al",
+        "semanticConcept": "STANDARD",
+        "fieldClass": "STANDARD",
+        "usageCount": 39,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": "STANDARD",
+        "proposedDefinitionCode": "STANDARD",
+        "proposedDefinitionName": "Standard",
+        "dataType": "multi-select",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "STANDARDS"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "tc",
+        "sourceField": "spec_labels:d1",
+        "sourceLabel": "Pins \u00a0",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 14,
+        "sampleProducts": [],
+        "sampleValues": [
+            "Pins \u00a0"
+        ],
+        "proposedGroup": "construction",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "PIN-COUNT",
+        "proposedDefinitionName": "Pins",
+        "dataType": "integer",
+        "unit": "MM",
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "from": "accessory_spec_labels",
+            "dimension": "d1"
+        },
+        "reason": "shared_dv_concept_proposed_create_not_batch_c_row"
+    },
+    {
+        "sourceSystem": "tc",
+        "sourceField": "spec_labels:v1",
+        "sourceLabel": "Lengthsm",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 1,
+        "sampleProducts": [],
+        "sampleValues": [
+            "Lengthsm"
+        ],
+        "proposedGroup": "mechanical",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "LENGTH",
+        "proposedDefinitionName": "Length",
+        "dataType": "decimal",
+        "unit": "MM",
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "from": "accessory_spec_labels",
+            "dimension": "v1"
+        },
+        "reason": "shared_dv_concept_proposed_create_not_batch_c_row"
+    },
+    {
+        "sourceSystem": "tc",
+        "sourceField": "spec_labels:d3",
+        "sourceLabel": "Sleeve Width mm",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 1,
+        "sampleProducts": [],
+        "sampleValues": [
+            "Sleeve Width mm"
+        ],
+        "proposedGroup": "mechanical",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "WIDTH",
+        "proposedDefinitionName": "Width",
+        "dataType": "decimal",
+        "unit": "MM",
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "from": "accessory_spec_labels",
+            "dimension": "d3"
+        },
+        "reason": "shared_dv_concept_proposed_create_not_batch_c_row"
+    },
+    {
+        "sourceSystem": "tc",
+        "sourceField": "spec_labels:d1",
+        "sourceLabel": "Thread OD mm",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 16,
+        "sampleProducts": [],
+        "sampleValues": [
+            "Thread OD mm"
+        ],
+        "proposedGroup": "mechanical",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "THREAD-OD",
+        "proposedDefinitionName": "Thread OD",
+        "dataType": "decimal",
+        "unit": "MM",
+        "decision": "PROPOSED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "from": "accessory_spec_labels",
+            "dimension": "d1"
+        },
+        "reason": "shared_dv_concept_proposed_create_not_batch_c_row"
+    }
+]

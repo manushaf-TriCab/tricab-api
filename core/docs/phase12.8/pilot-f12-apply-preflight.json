@@ -1,0 +1,41 @@
+{
+    "server": "tricab-mel",
+    "database": "tc",
+    "environmentLabel": "NON-PRODUCTION",
+    "liveValidation": "AVAILABLE",
+    "operatorApprovalRecognised": true,
+    "definitionCount": 64,
+    "fieldMappingCount": 1044,
+    "cableFieldMappingCount": 538,
+    "f12CollisionType": "NONE",
+    "f12Presence": {
+        "products": 0,
+        "variants": 0,
+        "slugs": 0,
+        "mappings": 0
+    },
+    "countsBefore": {
+        "definitions": 64,
+        "units": 11,
+        "options": 416,
+        "products": 118,
+        "variants": 4178,
+        "productSpecificationValues": 322,
+        "variantSpecificationValues": 52619,
+        "productRegions": 42,
+        "families": 3,
+        "categories": 13,
+        "series": 97,
+        "fieldMappings": 1044,
+        "cableFieldMappings": 538,
+        "pricing": 0,
+        "media": 17,
+        "documents": 11
+    },
+    "expectedBaseline": {
+        "definitions": 64,
+        "totalFieldMappings": 1044,
+        "cableFieldMappings": 538
+    },
+    "generatedAtUtc": "2026-08-24T02:31:11+00:00"
+}

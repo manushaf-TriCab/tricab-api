@@ -1,0 +1,226 @@
+{
+    "b1FieldSamples": {
+        "aggregate": {
+            "af_min": "1.4",
+            "af_max": "34.3",
+            "r_min": "0.105",
+            "r_max": "2.452",
+            "x50_min": "0.073",
+            "x50_max": "0.106",
+            "x60_min": "0.088",
+            "x60_max": "0.127",
+            "tension_min": "1.9",
+            "tension_max": "50.5",
+            "rows_cnt": 11
+        },
+        "samples": [
+            {
+                "cable_style": "B1",
+                "Af": "1.4",
+                "r": "2.452",
+                "x50": "0.106",
+                "x60": "0.127",
+                "tension": "1.9",
+                "xa": "10",
+                "od": "25.500"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "17.2",
+                "r": "0.208",
+                "x50": "0.077",
+                "x60": "0.093",
+                "tension": "25.7",
+                "xa": "120",
+                "od": "48.500"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "21.5",
+                "r": "0.167",
+                "x50": "0.076",
+                "x60": "0.091",
+                "tension": "30.4",
+                "xa": "150",
+                "od": "51.200"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "2.3",
+                "r": "1.554",
+                "x50": "0.099",
+                "x60": "0.119",
+                "tension": "5.1",
+                "xa": "16",
+                "od": "26.700"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "26.5",
+                "r": "0.138",
+                "x50": "0.075",
+                "x60": "0.090",
+                "tension": "38.3",
+                "xa": "185",
+                "od": "56.000"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "34.3",
+                "r": "0.105",
+                "x50": "0.073",
+                "x60": "0.088",
+                "tension": "50.5",
+                "xa": "240",
+                "od": "60.500"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "3.6",
+                "r": "1.002",
+                "x50": "0.093",
+                "x60": "0.112",
+                "tension": "6.9",
+                "xa": "25",
+                "od": "29.500"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "5.0",
+                "r": "0.712",
+                "x50": "0.089",
+                "x60": "0.107",
+                "tension": "8.9",
+                "xa": "35",
+                "od": "32.100"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "7.2",
+                "r": "0.496",
+                "x50": "0.085",
+                "x60": "0.102",
+                "tension": "12.0",
+                "xa": "50",
+                "od": "35.600"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "10.0",
+                "r": "0.350",
+                "x50": "0.082",
+                "x60": "0.098",
+                "tension": "16.3",
+                "xa": "70",
+                "od": "40.400"
+            },
+            {
+                "cable_style": "B1",
+                "Af": "13.6",
+                "r": "0.265",
+                "x50": "0.079",
+                "x60": "0.095",
+                "tension": "20.3",
+                "xa": "95",
+                "od": "44.200"
+            }
+        ],
+        "style": "B1"
+    },
+    "proposals": [
+        {
+            "legacyField": "Af",
+            "inferredMeaning": "Unknown engineering scalar \u2014 B1 only (not proven current)",
+            "decision": "REVIEW",
+            "targetDefinition": null,
+            "targetUnit": null,
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "Populated only on B1 (11 rows).",
+                "Scales with cable size \u2014 earth-fault/current hypothesis not proven.",
+                ""
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        },
+        {
+            "legacyField": "r",
+            "inferredMeaning": "Unknown \u2014 resistance hypothesis not proven (unit unclear)",
+            "decision": "REVIEW",
+            "targetDefinition": null,
+            "targetUnit": "\u03a9/km or \u03a9/1000ft (unproven)",
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "B1 only; no explicit \u03a9/km legacy label found.",
+                "Correlate with xa/mt/x50/x60 inconclusive for HIGH confidence."
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        },
+        {
+            "legacyField": "x50",
+            "inferredMeaning": "Reactance at 50 Hz hypothesis \u2014 not proven",
+            "decision": "REVIEW",
+            "targetDefinition": "REACTANCE-50HZ (candidate only)",
+            "targetUnit": null,
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "B1 only; no direct 50Hz/reactance label in codebase scan.",
+                "Do not create Definition in D.5."
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        },
+        {
+            "legacyField": "x60",
+            "inferredMeaning": "Reactance at 60 Hz hypothesis \u2014 not proven",
+            "decision": "REVIEW",
+            "targetDefinition": "REACTANCE-60HZ (candidate only)",
+            "targetUnit": null,
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "B1 only; no direct 60Hz/reactance label in codebase scan."
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        },
+        {
+            "legacyField": "tension",
+            "inferredMeaning": "Mechanical/pulling tension hypothesis \u2014 unit and meaning unproven",
+            "decision": "REVIEW",
+            "targetDefinition": null,
+            "targetUnit": "N or kN or lbf (unproven)",
+            "targetOptions": null,
+            "confidence": "LOW",
+            "evidence": [
+                "B1 only; no installation tension label found in migration codebase scan."
+            ],
+            "stylesAffected": 1,
+            "styleSamples": [
+                "B1"
+            ],
+            "rowsAffected": null,
+            "productsBlocked": 1
+        }
+    ]
+}

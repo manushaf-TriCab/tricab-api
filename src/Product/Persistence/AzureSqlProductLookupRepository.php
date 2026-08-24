@@ -7,7 +7,9 @@ namespace TriCab\Api\Product\Persistence;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Product\Application\DTO\ProductLookupItem;
+use TriCab\Core\Product\Application\DTO\PricingUnitLookupItem;
 use TriCab\Core\Product\Contract\ProductLookupRepository;
+use TriCab\Core\Product\Contract\PriceListRepository;
 
 /**
  * Lightweight admin lookup DTOs. Active-only by default.
@@ -16,6 +18,7 @@ final class AzureSqlProductLookupRepository implements ProductLookupRepository
 {
     public function __construct(
         private readonly SqlConnection $connection,
+        private readonly PriceListRepository $priceLists,
     ) {
     }
 
@@ -111,7 +114,29 @@ WHERE [DeletedAtUtc] IS NULL AND [IsActive] = 1
 ORDER BY [RuleSetName]
 SQL
             ),
+            'priceLists' => $this->priceLists->listActiveLookups(),
+            'pricingUnits' => $this->listPricingUnits(),
         ];
+    }
+
+    /** @return list<PricingUnitLookupItem> */
+    public function listPricingUnits(): array
+    {
+        return $this->listPricingUnitLookup(
+            <<<'SQL'
+SELECT
+    CONVERT(NVARCHAR(36), [PublicId]) AS [PublicId],
+    [UnitCode] AS [Code],
+    [UnitName] AS [Name],
+    [Symbol],
+    [DisplayOrder],
+    [IsActive]
+FROM [product].[SpecificationUnits]
+WHERE [DeletedAtUtc] IS NULL
+  AND [IsActive] = 1
+ORDER BY [DisplayOrder], [UnitName]
+SQL
+        );
     }
 
     public function listStatuses(): array
@@ -191,6 +216,23 @@ SQL
             code: AzureSqlValueMapper::stringValue($row['Code'] ?? ''),
             name: AzureSqlValueMapper::stringValue($row['Name'] ?? ''),
             parentPublicId: AzureSqlValueMapper::nullableString($row['ParentPublicId'] ?? null),
+            displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+            isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
+        ), $rows);
+    }
+
+    /**
+     * @return list<PricingUnitLookupItem>
+     */
+    private function listPricingUnitLookup(string $sql): array
+    {
+        $rows = $this->connection->fetchAll($sql);
+
+        return array_map(static fn (array $row): PricingUnitLookupItem => new PricingUnitLookupItem(
+            publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
+            code: AzureSqlValueMapper::stringValue($row['Code'] ?? ''),
+            name: AzureSqlValueMapper::stringValue($row['Name'] ?? ''),
+            symbol: AzureSqlValueMapper::stringValue($row['Symbol'] ?? ''),
             displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
             isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
         ), $rows);

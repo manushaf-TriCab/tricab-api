@@ -1,0 +1,26 @@
+{
+    "product": {
+        "action": "CREATE",
+        "code": "F12",
+        "name": "Inspection Tee",
+        "style_code": "F12",
+        "publicationStatus": "Draft"
+    },
+    "variants": [
+        {
+            "action": "CREATE",
+            "variantKey": "F12-01",
+            "variantCode": "F12-01",
+            "legacyRows": [
+                "accessory_specs:F12"
+            ],
+            "confidence": "HIGH"
+        }
+    ],
+    "productsCreate": 1,
+    "productsUpdate": 0,
+    "variantsCreate": 1,
+    "variantsUpdate": 0,
+    "classificationConfidence": "HIGH",
+    "note": "No invented variants; single accessory style projects one default variant when legacy variant rows are absent."
+}

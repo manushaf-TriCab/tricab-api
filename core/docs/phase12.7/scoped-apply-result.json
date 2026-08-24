@@ -1,0 +1,55 @@
+{
+    "appliedAtUtc": "2026-08-20T21:46:49Z",
+    "failed": null,
+    "applied": [
+        "SKIP product.SpecificationUnits (already present)",
+        "SKIP unit M",
+        "SKIP unit EA",
+        "SKIP unit FT",
+        "SKIP unit PK",
+        "SKIP unit MM",
+        "SKIP unit MM2",
+        "SKIP unit KG",
+        "SKIP unit KG_PER_KM",
+        "SKIP unit A",
+        "SKIP unit V",
+        "SKIP unit C",
+        "SKIP ProductFamily ACCESSORIES (MAP_EXISTING)",
+        "SKIP LegacyStyleCode column",
+        "SKIP style unique index"
+    ],
+    "legacyWrites": 0,
+    "countsAfter": {
+        "products": 118,
+        "variants": 4178,
+        "catalogueNodes": 97,
+        "productPrices": 0,
+        "productVariantPrices": 0
+    },
+    "countsBefore": {
+        "products": 118,
+        "variants": 4178,
+        "catalogueNodes": 97,
+        "productPrices": 0,
+        "productVariantPrices": 0
+    },
+    "units": [
+        "A",
+        "C",
+        "EA",
+        "FT",
+        "KG",
+        "KG_PER_KM",
+        "M",
+        "MM",
+        "MM2",
+        "PK",
+        "V"
+    ],
+    "accessoriesFamily": {
+        "code": "ACCESSORIES",
+        "name": "Accessories"
+    },
+    "specificationUnitsPresent": true,
+    "legacyStyleCodePresent": true
+}

@@ -1,0 +1,360 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "authoritativeMappings": [
+        {
+            "legacyField": "d1",
+            "targetDefinition": "INNER-DIAMETER",
+            "targetUnit": "MM",
+            "status": "APPROVED_MAP",
+            "mappingSource": "concept_approved_map_existing_INNER_DIAMETER_MM",
+            "approvalStatus": "APPROVED_MAP",
+            "sampleValuesEvidenceOnly": [
+                "12.00"
+            ]
+        },
+        {
+            "legacyField": "d2",
+            "targetDefinition": "OUTER-DIAMETER",
+            "targetUnit": "MM",
+            "status": "APPROVED_MAP",
+            "mappingSource": "concept_approved_map_existing_OUTER_DIAMETER_MM",
+            "approvalStatus": "APPROVED_MAP",
+            "sampleValuesEvidenceOnly": [
+                "15.00"
+            ]
+        },
+        {
+            "legacyField": "d3",
+            "targetDefinition": "DEPTH",
+            "targetUnit": "MM",
+            "status": "APPROVED_MAP",
+            "mappingSource": "concept_approved_map_existing_DEPTH_MM",
+            "approvalStatus": "APPROVED_MAP",
+            "sampleValuesEvidenceOnly": [
+                "10.00"
+            ]
+        },
+        {
+            "legacyField": "d4",
+            "targetDefinition": "OVERALL-LENGTH",
+            "targetUnit": "MM",
+            "status": "APPROVED_MAP",
+            "mappingSource": "concept_approved_map_existing_OVERALL_LENGTH_MM",
+            "approvalStatus": "APPROVED_MAP",
+            "sampleValuesEvidenceOnly": [
+                "3.00"
+            ]
+        },
+        {
+            "legacyField": "d5",
+            "targetDefinition": "WIDTH",
+            "targetUnit": "MM",
+            "status": "APPROVED_MAP",
+            "mappingSource": "concept_approved_map_existing_WIDTH_MM",
+            "approvalStatus": "APPROVED_MAP",
+            "sampleValuesEvidenceOnly": [
+                "2.00"
+            ]
+        },
+        {
+            "legacyField": "d6",
+            "targetDefinition": "HEIGHT",
+            "targetUnit": "MM",
+            "status": "APPROVED_MAP",
+            "mappingSource": "concept_approved_map_existing_HEIGHT_MM",
+            "approvalStatus": "APPROVED_MAP",
+            "sampleValuesEvidenceOnly": [
+                "4.30"
+            ]
+        }
+    ],
+    "specifications": {
+        "skuRows": 2,
+        "populatedDimensionalValues": 12,
+        "mappedValues": 12,
+        "parseFailures": [],
+        "typeFailures": [],
+        "unitFailures": [],
+        "reviewFields": [],
+        "rejectFields": [],
+        "unmappedFields": [],
+        "requiredUnresolved": 0,
+        "invariantViolations": [],
+        "scopeByDefinition": [
+            {
+                "definition": "INNER-DIAMETER",
+                "identicalAcrossSkus": false,
+                "distinctValues": [
+                    "20.00",
+                    "25.00"
+                ],
+                "scope": "VARIANT"
+            },
+            {
+                "definition": "OUTER-DIAMETER",
+                "identicalAcrossSkus": false,
+                "distinctValues": [
+                    "24.00",
+                    "29.00"
+                ],
+                "scope": "VARIANT"
+            },
+            {
+                "definition": "DEPTH",
+                "identicalAcrossSkus": false,
+                "distinctValues": [
+                    "22.00",
+                    "25.00"
+                ],
+                "scope": "VARIANT"
+            },
+            {
+                "definition": "OVERALL-LENGTH",
+                "identicalAcrossSkus": false,
+                "distinctValues": [
+                    "92.00",
+                    "108.00"
+                ],
+                "scope": "VARIANT"
+            },
+            {
+                "definition": "WIDTH",
+                "identicalAcrossSkus": false,
+                "distinctValues": [
+                    "55.00",
+                    "69.00"
+                ],
+                "scope": "VARIANT"
+            },
+            {
+                "definition": "HEIGHT",
+                "identicalAcrossSkus": false,
+                "distinctValues": [
+                    "29.00",
+                    "37.00"
+                ],
+                "scope": "VARIANT"
+            }
+        ],
+        "projectedProductSpecificationValues": [],
+        "projectedVariantSpecificationValues": [
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD20GY",
+                "legacyProductCode": "F12-AHXX/XD20GY",
+                "legacyField": "d1",
+                "rawValue": "20.00",
+                "normalizedValue": "20.00",
+                "targetDefinitionCode": "INNER-DIAMETER",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_INNER_DIAMETER_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD20GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD20GY",
+                "legacyProductCode": "F12-AHXX/XD20GY",
+                "legacyField": "d2",
+                "rawValue": "24.00",
+                "normalizedValue": "24.00",
+                "targetDefinitionCode": "OUTER-DIAMETER",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_OUTER_DIAMETER_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD20GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD20GY",
+                "legacyProductCode": "F12-AHXX/XD20GY",
+                "legacyField": "d3",
+                "rawValue": "22.00",
+                "normalizedValue": "22.00",
+                "targetDefinitionCode": "DEPTH",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_DEPTH_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD20GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD20GY",
+                "legacyProductCode": "F12-AHXX/XD20GY",
+                "legacyField": "d4",
+                "rawValue": "92.00",
+                "normalizedValue": "92.00",
+                "targetDefinitionCode": "OVERALL-LENGTH",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_OVERALL_LENGTH_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD20GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD20GY",
+                "legacyProductCode": "F12-AHXX/XD20GY",
+                "legacyField": "d5",
+                "rawValue": "55.00",
+                "normalizedValue": "55.00",
+                "targetDefinitionCode": "WIDTH",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_WIDTH_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD20GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD20GY",
+                "legacyProductCode": "F12-AHXX/XD20GY",
+                "legacyField": "d6",
+                "rawValue": "29.00",
+                "normalizedValue": "29.00",
+                "targetDefinitionCode": "HEIGHT",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_HEIGHT_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD20GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD25GY",
+                "legacyProductCode": "F12-AHXX/XD25GY",
+                "legacyField": "d1",
+                "rawValue": "25.00",
+                "normalizedValue": "25.00",
+                "targetDefinitionCode": "INNER-DIAMETER",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_INNER_DIAMETER_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD25GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD25GY",
+                "legacyProductCode": "F12-AHXX/XD25GY",
+                "legacyField": "d2",
+                "rawValue": "29.00",
+                "normalizedValue": "29.00",
+                "targetDefinitionCode": "OUTER-DIAMETER",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_OUTER_DIAMETER_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD25GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD25GY",
+                "legacyProductCode": "F12-AHXX/XD25GY",
+                "legacyField": "d3",
+                "rawValue": "25.00",
+                "normalizedValue": "25.00",
+                "targetDefinitionCode": "DEPTH",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_DEPTH_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD25GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD25GY",
+                "legacyProductCode": "F12-AHXX/XD25GY",
+                "legacyField": "d4",
+                "rawValue": "108.00",
+                "normalizedValue": "108.00",
+                "targetDefinitionCode": "OVERALL-LENGTH",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_OVERALL_LENGTH_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD25GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD25GY",
+                "legacyProductCode": "F12-AHXX/XD25GY",
+                "legacyField": "d5",
+                "rawValue": "69.00",
+                "normalizedValue": "69.00",
+                "targetDefinitionCode": "WIDTH",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_WIDTH_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD25GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            },
+            {
+                "legacyDatabase": "tc",
+                "legacyTable": "accessory_specs",
+                "legacyRowId": "F12-AHXX/XD25GY",
+                "legacyProductCode": "F12-AHXX/XD25GY",
+                "legacyField": "d6",
+                "rawValue": "37.00",
+                "normalizedValue": "37.00",
+                "targetDefinitionCode": "HEIGHT",
+                "targetUnitCode": "MM",
+                "mappingProvenance": "concept_approved_map_existing_HEIGHT_MM",
+                "mappingApproval": "APPROVED_MAP",
+                "valueSource": "live_legacy_row",
+                "scope": "VARIANT",
+                "target": "VARIANT:F12-AHXX/XD25GY",
+                "product": "F12",
+                "usedSampleValuesAsPayload": false
+            }
+        ],
+        "cableNomCableOdApplied": false
+    }
+}

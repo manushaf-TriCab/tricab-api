@@ -1,0 +1,25 @@
+{
+    "tproRows": 92620,
+    "tproExtRows": 18995,
+    "joinedRows": 11383,
+    "tproOnlyRows": 81247,
+    "classificationRules": [
+        {
+            "rule": "HAS_TPRO_EXT",
+            "intent": "candidate ProductVariant",
+            "defaultStatus": "REVIEW"
+        },
+        {
+            "rule": "TPRO_ONLY_NO_EXT",
+            "intent": "commerce/historical/stock item \u2014 not auto ProductVariant",
+            "defaultStatus": "EXCLUDED"
+        },
+        {
+            "rule": "LEFT(tpro.ida,3) PREFIX",
+            "intent": "FORBIDDEN as Product identity",
+            "defaultStatus": "INVALID"
+        }
+    ],
+    "excludedCandidateCount": 81247,
+    "reviewCandidateCount": 11383
+}

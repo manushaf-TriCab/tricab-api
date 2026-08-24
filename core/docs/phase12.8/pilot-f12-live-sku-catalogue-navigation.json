@@ -1,0 +1,1272 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "azureConnected": true,
+    "azureError": null,
+    "snapshotUsed": false,
+    "catalogueNavigation": {
+        "banner": "ADDITIVE ONLY \u2014 EXISTING NAVIGATION PROTECTED",
+        "targetLiveConnected": true,
+        "targetLiveError": null,
+        "usedSnapshot": false,
+        "tabs": [
+            {
+                "publicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabCode": "PRODUCTS",
+                "tabName": "Products",
+                "slug": "products",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "B4558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabCode": "SPECIAL-APPLICATIONS",
+                "tabName": "Special Applications",
+                "slug": "special-applications",
+                "displayOrder": "20",
+                "isActive": "1"
+            }
+        ],
+        "nodes": [
+            {
+                "publicId": "CC558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-LUGS-LINKS",
+                "nodeName": "Lugs & Links",
+                "slug": "lugs-links",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B7558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-FLEXIBLE-CABLES",
+                "nodeName": "Flexible Cables",
+                "slug": "flexible-cables",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F8558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F7558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-SK-1-5-1-5KV-SDI-90C",
+                "nodeName": "SK 1.5/1.5kV SDI 90C",
+                "slug": "sk-1-5-1-5kv-sdi-90c",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EC558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-XL-SINGLE-MULTICORE-90C",
+                "nodeName": "XL-Single multicore 90c",
+                "slug": "xl-single-multicore-90c",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "DF558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-PLUG-FLAT-PIN",
+                "nodeName": "Plug Flat Pin",
+                "slug": "plug-flat-pin",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "0069B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "FF68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-FZ",
+                "nodeName": "FZ 110C Braid Armoured, Flame Retardant",
+                "slug": "marine-offshore-fz",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "FA68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F968B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-PJ",
+                "nodeName": "PJ 110C Braid Armoured, Flame Retardant",
+                "slug": "marine-offshore-pj",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F968B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F868B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-POWER-AND-CONTROL",
+                "nodeName": "Power and Control",
+                "slug": "marine-offshore-power-and-control",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "FD68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "FC68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-RB",
+                "nodeName": "RB 110C Braid Armoured, Flame Retardant",
+                "slug": "marine-offshore-rb",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E668B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "C1558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "MARINE-SHIPBOARD",
+                "nodeName": "Shipboard",
+                "slug": "marine-shipboard",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E868B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "E768B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-BV",
+                "nodeName": "BV 110C Flame Retardant",
+                "slug": "marine-shipboard-bv",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F268B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F168B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-EW",
+                "nodeName": "EW 110C Flame Retardant",
+                "slug": "marine-shipboard-ew",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E768B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "E668B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-POWER-AND-CONTROL",
+                "nodeName": "Power and Control",
+                "slug": "marine-shipboard-power-and-control",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "ED68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EC68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-RC",
+                "nodeName": "RC 110C Flame Retardant",
+                "slug": "marine-shipboard-rc",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-ACCESSORIES",
+                "nodeName": "Accessories",
+                "slug": "accessories",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "D0558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "PS-INDUSTRIAL",
+                "nodeName": "Industrial",
+                "slug": "industrial",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C6558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B4558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "SPEC-FOOD-BEVERAGE",
+                "nodeName": "Food & Beverage",
+                "slug": "food-beverage",
+                "displayOrder": "10",
+                "isActive": "1"
+            },
+            {
+                "publicId": "CD558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-TERMINALS",
+                "nodeName": "Terminals",
+                "slug": "terminals",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "ED558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-KL-SINGLE-MULTICORE-110C",
+                "nodeName": "KL-Single multicore 110c",
+                "slug": "kl-single-multicore-110c",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F9558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F7558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-SK-1-5-1-5KV-SDI-110C",
+                "nodeName": "SK 1.5/1.5kV SDI 110C",
+                "slug": "sk-1-5-1-5kv-sdi-110c",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F7558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B7558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-SOLAR",
+                "nodeName": "Solar",
+                "slug": "solar",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E0558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-PLUG-ROUND-PIN",
+                "nodeName": "Plug Round Pin",
+                "slug": "plug-round-pin",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F868B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "C1558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "MARINE-OFFSHORE",
+                "nodeName": "Offshore",
+                "slug": "marine-offshore",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "0169B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "FF68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-FE",
+                "nodeName": "FE 110C Braid Armoured, Fire Resistant",
+                "slug": "marine-offshore-fe",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "FE68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "FC68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-FK",
+                "nodeName": "FK 110C Braid Armoured, Fire Resistant",
+                "slug": "marine-offshore-fk",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "FB68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F968B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-HT",
+                "nodeName": "HT 110C Braid Armoured, Fire Resistant",
+                "slug": "marine-offshore-ht",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "FC68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F868B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-INSTRUMENTATION-COLLECTIVE",
+                "nodeName": "Instrumentation - Collective",
+                "slug": "marine-offshore-instrumentation-collective",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E968B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "E768B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-DV",
+                "nodeName": "DV 110C Braid, Flame Retardant",
+                "slug": "marine-shipboard-dv",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F368B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F168B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-EG",
+                "nodeName": "EG 110C Braid, Flame Retardant",
+                "slug": "marine-shipboard-eg",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EC68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "E668B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-INSTRUMENTATION-COLLECTIVE",
+                "nodeName": "Instrumentation - Collective",
+                "slug": "marine-shipboard-instrumentation-collective",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EE68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EC68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-RS",
+                "nodeName": "RS 110C Braid, Flame Retardant",
+                "slug": "marine-shipboard-rs",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "B6558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-SOLAR",
+                "nodeName": "Solar",
+                "slug": "solar",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "DB558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "D0558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "PS-CEEFORM",
+                "nodeName": "CeeForm",
+                "slug": "ceeform",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C7558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B4558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "SPEC-SHORE-POWER",
+                "nodeName": "Shore Power",
+                "slug": "shore-power",
+                "displayOrder": "20",
+                "isActive": "1"
+            },
+            {
+                "publicId": "CE558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-HEAT-SHRINK",
+                "nodeName": "Heat Shrink",
+                "slug": "heat-shrink",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EE558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-LC-PVC-EARTH-105C",
+                "nodeName": "LC PVC Earth 105c",
+                "slug": "lc-pvc-earth-105c",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E1558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-ANGLE-PLUG-ROUND-PIN",
+                "nodeName": "Angle Plug Round Pin",
+                "slug": "angle-plug-round-pin",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "FF68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F868B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-INSTRUMENTATION-INDIVIDUAL-AND-COLLECTIVE",
+                "nodeName": "Instrumentation - Individual and Collective",
+                "slug": "marine-offshore-instrumentation-individual-and-collective",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EF68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EC68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-ES",
+                "nodeName": "ES 110C Fire Resistant",
+                "slug": "marine-shipboard-es",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F468B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F168B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-FC",
+                "nodeName": "FC 110C Fire Resistant",
+                "slug": "marine-shipboard-fc",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F168B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "E668B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-INSTRUMENTATION-INDIVIDUAL-AND-COLLECTIVE",
+                "nodeName": "Instrumentation - Individual and Collective",
+                "slug": "marine-shipboard-instrumentation-individual-and-collective",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EA68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "E768B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-RR",
+                "nodeName": "RR 110C Fire Resistant",
+                "slug": "marine-shipboard-rr",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "B7558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-ALI-FLEX-SYSTEMS",
+                "nodeName": "ALI-FLEX Systems",
+                "slug": "ali-flex-systems",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "DC558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "D0558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "PS-POWERSURE",
+                "nodeName": "PowerSure",
+                "slug": "powersure",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C8558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B4558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "SPEC-INDUSTRIAL-MARINE-SWITCHBOARD-WIRE",
+                "nodeName": "Industrial & Marine Switchboard Wire",
+                "slug": "industrial-marine-switchboard-wire",
+                "displayOrder": "30",
+                "isActive": "1"
+            },
+            {
+                "publicId": "CF558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-GLANDS",
+                "nodeName": "Glands",
+                "slug": "glands",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EF558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-LC-LSZH-EARTH-125C",
+                "nodeName": "LC LSZH Earth 125c",
+                "slug": "lc-lszh-earth-125c",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E2558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-SOCKET-FLAT-PIN",
+                "nodeName": "Socket Flat Pin",
+                "slug": "socket-flat-pin",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EB68B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "E768B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-BH",
+                "nodeName": "BH 110C Braid, Fire Resistant",
+                "slug": "marine-shipboard-bh",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F068B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EC68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-FJ",
+                "nodeName": "FJ 110C Braid, Fire Resistant",
+                "slug": "marine-shipboard-fj",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F568B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "F168B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-FL",
+                "nodeName": "FL 110C Braid, Fire Resistant",
+                "slug": "marine-shipboard-fl",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F668B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "E668B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-SWITCHBOARD-PANEL-WIRE",
+                "nodeName": "Switchboard/Panel Wire",
+                "slug": "marine-shipboard-switchboard-panel-wire",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "B8558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-STEEL-ALUM-ARMOUR",
+                "nodeName": "Steel / Alum Armour",
+                "slug": "steel-alum-armour",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "DD558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "D0558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "PS-TECHNO-CONNECTORS",
+                "nodeName": "Techno Connectors",
+                "slug": "techno-connectors",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C9558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B4558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "SPEC-TEMPORARY-POWER",
+                "nodeName": "Temporary Power",
+                "slug": "temporary-power",
+                "displayOrder": "40",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D0558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-PLUGS-SOCKETS",
+                "nodeName": "Plugs & Sockets",
+                "slug": "plugs-sockets",
+                "displayOrder": "50",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F0558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-XU-SDI-MULTI-COLL-SCR-BRAID-90C",
+                "nodeName": "XU SDI, Multi, Coll. Scr. & Braid 90c",
+                "slug": "xu-sdi-multi-coll-scr-braid-90c",
+                "displayOrder": "50",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E3558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-SOCKET-ROUND-PIN",
+                "nodeName": "Socket Round Pin",
+                "slug": "socket-round-pin",
+                "displayOrder": "50",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F768B253-3795-F111-9B33-6045BD3D788C",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "E668B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-VFD-VSD",
+                "nodeName": "VFD / VSD",
+                "slug": "marine-shipboard-vfd-vsd",
+                "displayOrder": "50",
+                "isActive": "1"
+            },
+            {
+                "publicId": "B9558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-CONTROL",
+                "nodeName": "Control",
+                "slug": "control",
+                "displayOrder": "50",
+                "isActive": "1"
+            },
+            {
+                "publicId": "DE558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "D0558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "PS-CONNECTORS",
+                "nodeName": "Connectors",
+                "slug": "connectors",
+                "displayOrder": "50",
+                "isActive": "1"
+            },
+            {
+                "publicId": "CA558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B4558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "SPEC-SHIP-LOADERS-CRANES",
+                "nodeName": "Ship Loaders & Cranes",
+                "slug": "ship-loaders-cranes",
+                "displayOrder": "50",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D1558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-CABLE-MANAGEMENT",
+                "nodeName": "Cable Management",
+                "slug": "cable-management",
+                "displayOrder": "60",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F1558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-KU-SDI-MULTI-COLL-SCR-BRAID-110C",
+                "nodeName": "KU SDI, Multi, Coll. Scr. & Braid 110C",
+                "slug": "ku-sdi-multi-coll-scr-braid-110c",
+                "displayOrder": "60",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E4558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-OUTLET-FLAT-PIN",
+                "nodeName": "Outlet Flat Pin",
+                "slug": "outlet-flat-pin",
+                "displayOrder": "60",
+                "isActive": "1"
+            },
+            {
+                "publicId": "BA558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-SUBMERSIBLE-PORTABLE",
+                "nodeName": "Submersible / Portable",
+                "slug": "submersible-portable",
+                "displayOrder": "60",
+                "isActive": "1"
+            },
+            {
+                "publicId": "CB558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B4558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "SPEC-WATER-TREATMENT",
+                "nodeName": "Water Treatment",
+                "slug": "water-treatment",
+                "displayOrder": "60",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D2558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-CABLE-TIES",
+                "nodeName": "Cable Ties",
+                "slug": "cable-ties",
+                "displayOrder": "70",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F2558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-XA-SDI-MULTI-CONTROL-90C",
+                "nodeName": "XA SDI, Multi, Control 90C",
+                "slug": "xa-sdi-multi-control-90c",
+                "displayOrder": "70",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E5558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-OUTLET-ROUND-PIN",
+                "nodeName": "Outlet Round Pin",
+                "slug": "outlet-round-pin",
+                "displayOrder": "70",
+                "isActive": "1"
+            },
+            {
+                "publicId": "BB558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-ELECTRICAL-CONTRACTING",
+                "nodeName": "Electrical Contracting",
+                "slug": "electrical-contracting",
+                "displayOrder": "70",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D3558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-SWITCHBOARD",
+                "nodeName": "Switchboard",
+                "slug": "switchboard",
+                "displayOrder": "80",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F3558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-KA-SDI-MULTI-CONTROL-110C",
+                "nodeName": "KA SDI, Multi, Control 110C",
+                "slug": "ka-sdi-multi-control-110c",
+                "displayOrder": "80",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E6558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-SWITCH-OUTLET-FLAT-PIN",
+                "nodeName": "Switch-Outlet Flat-Pin",
+                "slug": "switch-outlet-flat-pin",
+                "displayOrder": "80",
+                "isActive": "1"
+            },
+            {
+                "publicId": "BC558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-SWITCH-BOARD-PANEL",
+                "nodeName": "Switch board & Panel",
+                "slug": "switch-board-panel",
+                "displayOrder": "80",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D4558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-SWITCHES",
+                "nodeName": "Switches",
+                "slug": "switches",
+                "displayOrder": "90",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F4558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-XN-TERMITE-RESISTANT-90C",
+                "nodeName": "XN Termite Resistant 90C",
+                "slug": "xn-termite-resistant-90c",
+                "displayOrder": "90",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E7558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-SWITCHED-OUTLET-ROUND-PIN",
+                "nodeName": "Switched-Outlet Round Pin",
+                "slug": "switched-outlet-round-pin",
+                "displayOrder": "90",
+                "isActive": "1"
+            },
+            {
+                "publicId": "BD558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-FIRE-RESISTANT",
+                "nodeName": "Fire Resistant",
+                "slug": "fire-resistant",
+                "displayOrder": "90",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D5558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-SOLAR",
+                "nodeName": "Solar",
+                "slug": "solar",
+                "displayOrder": "100",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F5558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-KN-TERMITE-RESISTANT-110C",
+                "nodeName": "KN Termite Resistant 110C",
+                "slug": "kn-termite-resistant-110c",
+                "displayOrder": "100",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E8558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-APPLIANCE-INLET",
+                "nodeName": "Appliance Inlet",
+                "slug": "appliance-inlet",
+                "displayOrder": "100",
+                "isActive": "1"
+            },
+            {
+                "publicId": "BE558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-TELECOMS",
+                "nodeName": "Telecoms",
+                "slug": "telecoms",
+                "displayOrder": "100",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D6558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-TOOLS-DIES",
+                "nodeName": "Tools & Dies",
+                "slug": "tools-dies",
+                "displayOrder": "110",
+                "isActive": "1"
+            },
+            {
+                "publicId": "F6558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "EB558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ALI-ITEM-EA-BRAID-VFD-VSD-110C",
+                "nodeName": "EA Braid VFD/VSD 110C",
+                "slug": "ea-braid-vfd-vsd-110c",
+                "displayOrder": "110",
+                "isActive": "1"
+            },
+            {
+                "publicId": "E9558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-ENCLOSURES",
+                "nodeName": "Enclosures",
+                "slug": "enclosures",
+                "displayOrder": "110",
+                "isActive": "1"
+            },
+            {
+                "publicId": "BF558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-INSTRUMENTATION",
+                "nodeName": "Instrumentation",
+                "slug": "instrumentation",
+                "displayOrder": "110",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D7558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-SAFETY",
+                "nodeName": "Safety",
+                "slug": "safety",
+                "displayOrder": "120",
+                "isActive": "1"
+            },
+            {
+                "publicId": "EA558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "DA558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "IND-ROTARY-SWITCH",
+                "nodeName": "Rotary Switch",
+                "slug": "rotary-switch",
+                "displayOrder": "120",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C0558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-TERMITE-RES-NYLON",
+                "nodeName": "Termite Res/Nylon",
+                "slug": "termite-res-nylon",
+                "displayOrder": "120",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D8558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-LEAD",
+                "nodeName": "Lead",
+                "slug": "lead",
+                "displayOrder": "130",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C1558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-MARINE-IEC-LSZH",
+                "nodeName": "Marine IEC LSZH",
+                "slug": "marine-iec-lszh",
+                "displayOrder": "130",
+                "isActive": "1"
+            },
+            {
+                "publicId": "D9558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": "B5558A7B-2595-F111-9B33-000D3AE1438B",
+                "nodeCode": "ACC-CERTIFICATES",
+                "nodeName": "Certificates",
+                "slug": "certificates",
+                "displayOrder": "140",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C2558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-VFD-VSD",
+                "nodeName": "VFD/VSD",
+                "slug": "vfd-vsd",
+                "displayOrder": "140",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C3558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-MARINE-NEK-606",
+                "nodeName": "Marine NEK 606",
+                "slug": "marine-nek-606",
+                "displayOrder": "150",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C4558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-WELDING-BATTERY",
+                "nodeName": "Welding/Battery",
+                "slug": "welding-battery",
+                "displayOrder": "160",
+                "isActive": "1"
+            },
+            {
+                "publicId": "C5558A7B-2595-F111-9B33-000D3AE1438B",
+                "tabPublicId": "B3558A7B-2595-F111-9B33-000D3AE1438B",
+                "parentPublicId": null,
+                "nodeCode": "PROD-MEDIUM-VOLTAGE",
+                "nodeName": "Medium Voltage",
+                "slug": "medium-voltage",
+                "displayOrder": "170",
+                "isActive": "1"
+            }
+        ],
+        "existingProtectedLinks": [
+            {
+                "productPublicId": "9870E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "BHA",
+                "catalogueNodePublicId": "EB68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-BH",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:9870E6F0-F091-F111-B337-000D3AE094E4:EB68B253-3795-F111-9B33-6045BD3D788C:0",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "9970E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "BVA",
+                "catalogueNodePublicId": "E868B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-BV",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:9970E6F0-F091-F111-B337-000D3AE094E4:E868B253-3795-F111-9B33-6045BD3D788C:1",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "9B70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "DVA",
+                "catalogueNodePublicId": "E968B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-DV",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:9B70E6F0-F091-F111-B337-000D3AE094E4:E968B253-3795-F111-9B33-6045BD3D788C:2",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "9C70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "EGA",
+                "catalogueNodePublicId": "F368B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-EG",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:9C70E6F0-F091-F111-B337-000D3AE094E4:F368B253-3795-F111-9B33-6045BD3D788C:3",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "9D70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "ESA",
+                "catalogueNodePublicId": "EF68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-ES",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:9D70E6F0-F091-F111-B337-000D3AE094E4:EF68B253-3795-F111-9B33-6045BD3D788C:4",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "9E70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "EWA",
+                "catalogueNodePublicId": "F268B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-EW",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:9E70E6F0-F091-F111-B337-000D3AE094E4:F268B253-3795-F111-9B33-6045BD3D788C:5",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "9F70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "FCA",
+                "catalogueNodePublicId": "F468B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-FC",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:9F70E6F0-F091-F111-B337-000D3AE094E4:F468B253-3795-F111-9B33-6045BD3D788C:6",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "A070E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "FEA",
+                "catalogueNodePublicId": "0169B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-FE",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:A070E6F0-F091-F111-B337-000D3AE094E4:0169B253-3795-F111-9B33-6045BD3D788C:7",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "A170E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "FJA",
+                "catalogueNodePublicId": "F068B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-FJ",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:A170E6F0-F091-F111-B337-000D3AE094E4:F068B253-3795-F111-9B33-6045BD3D788C:8",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "A270E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "FKA",
+                "catalogueNodePublicId": "FE68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-FK",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:A270E6F0-F091-F111-B337-000D3AE094E4:FE68B253-3795-F111-9B33-6045BD3D788C:9",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "A370E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "FLA",
+                "catalogueNodePublicId": "F568B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-FL",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:A370E6F0-F091-F111-B337-000D3AE094E4:F568B253-3795-F111-9B33-6045BD3D788C:10",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "A470E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "FZA",
+                "catalogueNodePublicId": "0069B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-FZ",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:A470E6F0-F091-F111-B337-000D3AE094E4:0069B253-3795-F111-9B33-6045BD3D788C:11",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "A570E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "HTA",
+                "catalogueNodePublicId": "FB68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-HT",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:A570E6F0-F091-F111-B337-000D3AE094E4:FB68B253-3795-F111-9B33-6045BD3D788C:12",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "AB70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "PJA",
+                "catalogueNodePublicId": "FA68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-PJ",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:AB70E6F0-F091-F111-B337-000D3AE094E4:FA68B253-3795-F111-9B33-6045BD3D788C:13",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "AC70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "RBA",
+                "catalogueNodePublicId": "FD68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-offshore-RB",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:AC70E6F0-F091-F111-B337-000D3AE094E4:FD68B253-3795-F111-9B33-6045BD3D788C:14",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "AD70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "RCA",
+                "catalogueNodePublicId": "ED68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-RC",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:AD70E6F0-F091-F111-B337-000D3AE094E4:ED68B253-3795-F111-9B33-6045BD3D788C:15",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "AE70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "RRA",
+                "catalogueNodePublicId": "EA68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-RR",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:AE70E6F0-F091-F111-B337-000D3AE094E4:EA68B253-3795-F111-9B33-6045BD3D788C:16",
+                "rollbackEligible": false
+            },
+            {
+                "productPublicId": "AF70E6F0-F091-F111-B337-000D3AE094E4",
+                "styleCode": "RSA",
+                "catalogueNodePublicId": "EE68B253-3795-F111-9B33-6045BD3D788C",
+                "nodeCode": "MARINE-shipboard-RS",
+                "displayOrder": "0",
+                "isActive": "1",
+                "protection": "PRE_EXISTING_PROTECTED",
+                "ownership": "PRE_EXISTING_PROTECTED",
+                "relationshipKey": "pre-existing:AF70E6F0-F091-F111-B337-000D3AE094E4:EE68B253-3795-F111-9B33-6045BD3D788C:17",
+                "rollbackEligible": false
+            }
+        ],
+        "legacyPlacements": [
+            {
+                "styleCode": "F12",
+                "wordpressPostId": 5877,
+                "postType": "accessory",
+                "postTitle": "Inspection Tee",
+                "postSlug": "inspection-tees",
+                "postStatus": "publish",
+                "terms": [
+                    {
+                        "termId": 538,
+                        "slug": "conduit",
+                        "name": "Flexible Conduit",
+                        "taxonomy": "category",
+                        "parentTermId": 0,
+                        "path": "conduit"
+                    },
+                    {
+                        "termId": 614,
+                        "slug": "conduits-and-fittings",
+                        "name": "Conduits &amp; Fittings",
+                        "taxonomy": "category",
+                        "parentTermId": 525,
+                        "path": "conduits-and-fittings"
+                    }
+                ],
+                "navMenus": []
+            }
+        ],
+        "f12": {
+            "styleCode": "F12",
+            "legacyCataloguePath": "conduit",
+            "legacyTaxonomy": "category",
+            "targetCatalogueTab": null,
+            "targetCatalogueNode": null,
+            "existingLink": false,
+            "projectedAction": "REVIEW",
+            "decision": "REVIEW_TARGET_NODE_MISSING",
+            "confidence": "NONE",
+            "relationshipProjection": 0,
+            "applyBlockedBySourceDrift": false,
+            "note": "Catalogue Navigation remains REVIEW: no proven target CatalogueNode for F12 WordPress placements. No Product\u2192CatalogueNode link will be created. Previous F12 apply was PILOT_SOURCE_DRIFT and is superseded by this live-SKU package. This task does not apply F12.",
+            "previousApplyBlockedBySourceDrift": true
+        },
+        "decision": "REVIEW_TARGET_NODE_MISSING",
+        "projectedLinks": 0,
+        "catalogueNavigationReady": false,
+        "draftPilotException": "NON_BLOCKING_FOR_DRAFT_PILOT",
+        "noLinkWillBeCreatedThisTask": true,
+        "tabWrites": 0,
+        "nodeWrites": 0,
+        "linkWrites": 0
+    }
+}

@@ -1,0 +1,64 @@
+{
+    "status": "DRY_RUN",
+    "applied": false,
+    "plan": {
+        "mapExistingDefinitions": 10,
+        "approvedCreateDefinitionSourceRows": 6,
+        "uniqueDefinitionCreates": {
+            "OPERATING-TEMP": {
+                "name": "Operating temperature",
+                "group": "THERMAL",
+                "dataType": "decimal",
+                "unitCode": "C"
+            },
+            "HCL-EMISSION": {
+                "name": "HCl emission",
+                "group": "COMPLIANCE",
+                "dataType": "text",
+                "unitCode": null
+            },
+            "OXYGEN-INDEX": {
+                "name": "Oxygen index",
+                "group": "COMPLIANCE",
+                "dataType": "text",
+                "unitCode": null
+            },
+            "PIN-COUNT": {
+                "name": "Pins",
+                "group": "CONSTRUCTION",
+                "dataType": "integer",
+                "unitCode": null
+            },
+            "THREAD-OD": {
+                "name": "Thread OD",
+                "group": "MECHANICAL",
+                "dataType": "decimal",
+                "unitCode": "MM"
+            }
+        },
+        "definitionMappingsExpected": 16,
+        "standardMapExisting": 23,
+        "standardCreates": 11,
+        "approvalMapExisting": 1,
+        "approvalCreates": 0,
+        "optionMappingsExpected": 35,
+        "safeAliasesExpected": 2
+    },
+    "actualWrites": {
+        "definitionsCreated": 0,
+        "optionsCreated": 0,
+        "definitionMappingsInserted": 0,
+        "optionMappingsInserted": 0,
+        "aliasesInserted": 0,
+        "definitionMappingsSkippedExisting": 0,
+        "optionMappingsSkippedExisting": 0,
+        "aliasesSkippedExisting": 0,
+        "mappingsUpdated": 0,
+        "approvalOptionsCreated": 0,
+        "productSpecificationValueMutations": 0,
+        "productMutations": 0,
+        "variantMutations": 0,
+        "classificationMutations": 0,
+        "catalogueMutations": 0
+    }
+}

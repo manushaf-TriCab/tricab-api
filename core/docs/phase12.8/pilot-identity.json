@@ -1,0 +1,16 @@
+{
+    "primaryJoinKey": "style_code",
+    "style_code": "F12",
+    "legacyIdentities": {
+        "style_code": "F12",
+        "family": "ACCESSORIES",
+        "title": "Inspection Tee"
+    },
+    "targetIdentities": {
+        "existingProductId": null
+    },
+    "ambiguities": [],
+    "confidence": "HIGH",
+    "decision": "CREATE_NEW_DRAFT",
+    "nameOnlyMatching": false
+}

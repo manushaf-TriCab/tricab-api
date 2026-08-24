@@ -1,0 +1,58 @@
+{
+    "productIdentity": {
+        "percent": 5.4,
+        "status": "NOT_READY"
+    },
+    "classification": {
+        "percent": 100,
+        "categoriesProposed": 207,
+        "status": "NOT_READY"
+    },
+    "series": {
+        "percent": 0,
+        "proposed": 390,
+        "status": "NOT_READY"
+    },
+    "productSpecifications": {
+        "percent": 0,
+        "status": "NOT_READY"
+    },
+    "variantIdentity": {
+        "percent": 0,
+        "status": "NOT_READY"
+    },
+    "variantSpecifications": {
+        "percent": 99.3,
+        "status": "NOT_READY"
+    },
+    "units": {
+        "percent": 100,
+        "status": "OK",
+        "detail": null
+    },
+    "options": {
+        "percent": 0,
+        "proposed": 191,
+        "status": "NOT_READY"
+    },
+    "cataloguePlacement": {
+        "percent": 0,
+        "existingKept": 97,
+        "status": "NOT_READY"
+    },
+    "media": {
+        "percent": 0,
+        "status": "BLOCKED",
+        "detail": "files unavailable"
+    },
+    "documents": {
+        "percent": 0,
+        "status": "BLOCKED"
+    },
+    "existingTargetCollision": {
+        "matchExisting": 24,
+        "createNew": 424,
+        "reviewCollision": 0,
+        "status": "REVIEW"
+    }
+}

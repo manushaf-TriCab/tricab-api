@@ -38,4 +38,69 @@ final class UnavailableLegacyWordPressRepository implements LegacyWordPressRepos
         return ['tables' => [], 'columns' => [], 'productCounts' => []];
     }
 
+    public function discoverPostTypeCounts(): array
+    {
+        return [];
+    }
+
+    public function discoverProductTaxonomies(array $postTypes): array
+    {
+        unset($postTypes);
+
+        return [];
+    }
+
+    public function discoverProductMetaKeys(array $postTypes): array
+    {
+        unset($postTypes);
+
+        return [];
+    }
+
+    public function discoverStyleCodes(array $postTypes): array
+    {
+        unset($postTypes);
+
+        return [];
+    }
+
+    public function discoverNavMenus(): array
+    {
+        return [];
+    }
+
+    public function discoverCataloguePlacements(array $styleCodes, array $postTypes = ['cable', 'accessory']): array
+    {
+        unset($styleCodes, $postTypes);
+
+        return [];
+    }
+
+    public function discoverProductAttachments(array $postTypes): array
+    {
+        unset($postTypes);
+
+        return [];
+    }
+
+    public function discoverProductIdentityRows(array $postTypes): array
+    {
+        unset($postTypes);
+
+        return [];
+    }
+
+    public function discoverMetaValueCounts(array $postTypes, string $metaKey, int $limit = 500): array
+    {
+        unset($postTypes, $metaKey, $limit);
+
+        return [];
+    }
+
+    public function discoverCertificates(int $limit = 500): array
+    {
+        unset($limit);
+
+        return [];
+    }
 }

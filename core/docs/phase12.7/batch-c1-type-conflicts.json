@@ -1,0 +1,161 @@
+{
+    "before": 11,
+    "resolvedByC1Recommendation": 11,
+    "remaining": 0,
+    "items": [
+        {
+            "style": "J50",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J52",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J54",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J55",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J56",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J57",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J58",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J59",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J60",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J61",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        },
+        {
+            "style": "J64",
+            "sourceField": "v1",
+            "legacyLabel": "Phase<br>&nbsp;",
+            "sampleValues": [
+                "BLACK"
+            ],
+            "candidateDefinition": "CORES",
+            "candidateType": "integer",
+            "observedSourceType": "text_colour_token",
+            "reason": "type_incompatible_with_CORES",
+            "recommendedResolution": "MAP_EXISTING",
+            "recommendedTarget": "CORE-COLOURS"
+        }
+    ]
+}

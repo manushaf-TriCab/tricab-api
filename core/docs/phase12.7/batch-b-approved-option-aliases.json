@@ -1,0 +1,22 @@
+[
+    {
+        "rawValue": "AIEC 60332-1",
+        "normalizedValue": "AIEC 60332-1",
+        "targetOption": "IEC 60332-1",
+        "source": "batch-b1-operator",
+        "usageCount": 0,
+        "decision": "SAFE_ALIAS",
+        "confidence": "high",
+        "reason": "typo_prefix_A_deterministic_to_IEC_60332-1"
+    },
+    {
+        "rawValue": "AS/NZS IEC60754 - Halogen",
+        "normalizedValue": "AS/NZS IEC60754 - Halogen",
+        "targetOption": "IEC 60754-2",
+        "source": "batch-b1-operator",
+        "usageCount": 0,
+        "decision": "SAFE_ALIAS",
+        "confidence": "high",
+        "reason": "formatting_variant_maps_existing_halogen_standard"
+    }
+]

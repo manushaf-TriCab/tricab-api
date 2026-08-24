@@ -1,0 +1,1210 @@
+{
+    "phase": "12.7-batch-d5-cable-spec-review-investigation",
+    "mode": "READ_INVESTIGATE_PROPOSE_DRY_RUN_ONLY",
+    "packageStatus": "READY_FOR_OPERATOR_DECISIONS",
+    "investigationBanner": "D.5 INVESTIGATION ONLY \u2014 NOTHING APPLIED",
+    "cableSpecApply": "NOT_AVAILABLE",
+    "approvalBoundary": {
+        "cableSpecD5ApplyGuard": "CABLE_SPEC_D5_APPLY_NOT_AVAILABLE",
+        "operatorDecisionsRequired": true
+    },
+    "legacySafety": {
+        "wordpressWrites": 0,
+        "tcWrites": 0,
+        "forbiddenWriteAttempts": 0
+    },
+    "targetSafety": {
+        "definitionWrites": 0,
+        "optionWrites": 0,
+        "unitWrites": 0,
+        "fieldMappingWrites": 0,
+        "productSpecValueWrites": 0,
+        "variantSpecValueWrites": 0,
+        "totalWrites": 0
+    },
+    "d4Integrity": {
+        "status": "D4_INTEGRITY_OK",
+        "definitions": 64,
+        "expectedDefinitions": 64,
+        "totalFieldMappings": 1044,
+        "expectedTotalFieldMappings": 1044,
+        "cableFieldMappings": 538,
+        "expectedCableFieldMappings": 538,
+        "styleFieldMappings": 1021,
+        "d4DefinitionCodesPresent": [
+            "EARTH-CORES",
+            "EARTH-CSA",
+            "EARTH-INS-OD",
+            "BEDDING-OD",
+            "ARMOUR-OD",
+            "BRAID-OD",
+            "CURRENT-30C",
+            "CURRENT-40C",
+            "CURRENT-45C"
+        ],
+        "d4DefinitionCodesMissing": [],
+        "driftDetected": false,
+        "drift": {
+            "definitions": 0,
+            "totalFieldMappings": 0,
+            "cableFieldMappings": 0
+        }
+    },
+    "targetMasterScan": {
+        "definitionCount": 64,
+        "unitCount": 11,
+        "conductorDefinitionMatches": {
+            "CODE_CONDUCTOR": {
+                "code": "CODE_CONDUCTOR",
+                "name": "Conductor",
+                "dataTypeCode": "single-select",
+                "unit": null
+            },
+            "CONDUCTORS": {
+                "code": "CONDUCTORS",
+                "name": "Conductors",
+                "dataTypeCode": "long-text",
+                "unit": null
+            }
+        },
+        "conductorsLongTextNote": "CONDUCTORS exists as long-text construction descriptor \u2014 not ct p/a encoding",
+        "codeConductorNote": "CODE_CONDUCTOR exists \u2014 option-based conductor code, not cable_specs.ct",
+        "units": {
+            "KG_PER_KM": true,
+            "imperialMassPerLength": [],
+            "existingUnitCodes": [
+                "M",
+                "EA",
+                "FT",
+                "PK",
+                "MM",
+                "MM2",
+                "KG",
+                "KG_PER_KM",
+                "A",
+                "V",
+                "C"
+            ]
+        }
+    },
+    "codebaseEvidence": {
+        "confidenceRule": "HIGH requires direct legacy label/documentation/calculation \u2014 not variable-name inference",
+        "ccCtLegacySourceScan": {
+            "tricabApiMigrationCode": "No explicit cable_specs.cc / cable_specs.ct UI labels in migration codebase",
+            "operatorReconsiderationAvailable": false,
+            "ratingCtEncoding": "rating.ct uses C/A alphabet \u2014 differs from cable_specs.ct p/a",
+            "cable3dMapping": "Conductor material resolved via CODE_CONDUCTOR / CONDUCTORS \u2014 not ct field"
+        },
+        "waluWbnzLabels": {
+            "directUnitTextFound": false,
+            "note": "No lb/1000ft or kg/km label strings tied to walu/wbnz in scanned migration services"
+        },
+        "insLabels": {
+            "directThicknessLabelFound": false,
+            "dimensionalFormula": "ins \u2248 (od_ins - cdia)/2 tested in D.5 collector for NR/NV rows only"
+        },
+        "b1Engineering": {
+            "fields": [
+                "Af",
+                "r",
+                "x50",
+                "x60",
+                "tension"
+            ],
+            "style": "B1",
+            "directLabelsFound": false
+        }
+    },
+    "investigationEvidenceMode": "LIVE_SELECT_ONLY",
+    "proposals": {
+        "count": 10,
+        "items": [
+            {
+                "legacyField": "cc",
+                "inferredMeaning": "Core counting / configuration mode (c=cores, p=pairs, t=triples, a=unknown \u2014 AWG hypothesis LOW)",
+                "decision": "REVIEW",
+                "targetDefinition": null,
+                "targetUnit": null,
+                "targetOptions": null,
+                "confidence": "MEDIUM",
+                "evidence": [
+                    "Values c/p/t/a across 4491 non-empty rows on 54 styles.",
+                    "c dominates; p pairs; t triples; a only VUF (8 rows)",
+                    "No direct legacy UI label or spec_labels entry found (codebase scan).",
+                    "cc\u00d7nc correlation: c aligns with nc>1 cores; p with pairs; t with triples \u2014 supporting only.",
+                    "cc=a on style VUF only \u2014 AWG hypothesis not proven."
+                ],
+                "stylesAffected": 54,
+                "styleSamples": [
+                    "BV",
+                    "DV",
+                    "RR",
+                    "BH",
+                    "RC",
+                    "RS",
+                    "ES",
+                    "FJ",
+                    "EW",
+                    "EG",
+                    "FC",
+                    "FL",
+                    "PJ",
+                    "HT"
+                ],
+                "rowsAffected": 4491,
+                "productsBlocked": 54
+            },
+            {
+                "legacyField": "ct",
+                "inferredMeaning": "Conductor material/type encoding (p vs a \u2014 copper vs aluminium hypothesis MEDIUM)",
+                "decision": "REVIEW",
+                "targetDefinition": "CONDUCTORS (long-text \u2014 semantic mismatch risk)",
+                "targetUnit": null,
+                "targetOptions": null,
+                "confidence": "MEDIUM",
+                "evidence": [
+                    "Values p (4215 rows) and a (276 rows) on all 54 styles.",
+                    "KL ct=a lighter wght + larger OD vs ct=p",
+                    "rating.ct uses C/A \u2014 different alphabet from cable_specs.ct p/a.",
+                    "Target CONDUCTORS/CODE_CONDUCTOR exist but are not proven equivalents.",
+                    "No direct legacy label for cable_specs.ct found."
+                ],
+                "stylesAffected": 54,
+                "styleSamples": [
+                    "BV",
+                    "DV",
+                    "RR",
+                    "BH",
+                    "RC",
+                    "RS",
+                    "ES",
+                    "FJ",
+                    "EW",
+                    "EG",
+                    "FC",
+                    "FL",
+                    "PJ",
+                    "HT"
+                ],
+                "rowsAffected": 4491,
+                "productsBlocked": 54
+            },
+            {
+                "legacyField": "walu",
+                "inferredMeaning": "Approximate aluminium component weight (imperial rows only)",
+                "decision": "PROPOSED_CREATE_DEFINITION",
+                "targetDefinition": "APPROX-WEIGHT-ALU",
+                "targetUnit": "LB_PER_1000FT (candidate \u2014 not in target Units)",
+                "targetOptions": null,
+                "confidence": "HIGH",
+                "evidence": [
+                    "Distinct from wght; non-zero only when mt=1302 (Imperial System).",
+                    "Parallel numeric column alongside APPROX-WEIGHT (wght) on imperial styles.",
+                    "14 styles populated \u2014 D.2 semantic evidence retained.",
+                    "Unit: imperial mass/length likely lb/1000ft \u2014 MEDIUM confidence (no direct label)."
+                ],
+                "stylesAffected": 14,
+                "styleSamples": [
+                    "BH",
+                    "BV",
+                    "DV",
+                    "EG",
+                    "ES",
+                    "EW",
+                    "FC",
+                    "FJ",
+                    "FL",
+                    "RC",
+                    "RR",
+                    "RS",
+                    "TG",
+                    "TS"
+                ],
+                "rowsAffected": null,
+                "productsBlocked": 14,
+                "unitDecision": "PROPOSED_CREATE_UNIT"
+            },
+            {
+                "legacyField": "wbnz",
+                "inferredMeaning": "Approximate bronze component weight (imperial rows only)",
+                "decision": "PROPOSED_CREATE_DEFINITION",
+                "targetDefinition": "APPROX-WEIGHT-BRONZE",
+                "targetUnit": "LB_PER_1000FT (candidate \u2014 not in target Units)",
+                "targetOptions": null,
+                "confidence": "HIGH",
+                "evidence": [
+                    "Distinct from wght; non-zero only when mt=1302.",
+                    "14 styles \u2014 mirrors walu population pattern.",
+                    "Unit: imperial mass/length likely lb/1000ft \u2014 MEDIUM confidence."
+                ],
+                "stylesAffected": 14,
+                "styleSamples": [
+                    "BH",
+                    "BV",
+                    "DV",
+                    "EG",
+                    "ES",
+                    "EW",
+                    "FC",
+                    "FJ",
+                    "FL",
+                    "RC",
+                    "RR",
+                    "RS",
+                    "TG",
+                    "TS"
+                ],
+                "rowsAffected": null,
+                "productsBlocked": 14,
+                "unitDecision": "PROPOSED_CREATE_UNIT"
+            },
+            {
+                "legacyField": "ins",
+                "inferredMeaning": "Insulation dimension \u2014 thickness vs OD ambiguity across styles",
+                "decision": "REVIEW",
+                "targetDefinition": null,
+                "targetUnit": "MM (if thickness) or MM (if OD-like)",
+                "targetOptions": null,
+                "confidence": "MEDIUM",
+                "evidence": [
+                    "NR/NV thickness-like; KN/XN OD-like",
+                    "Dimensional check: 20/20 rows match ins\u2248(od_ins-cdia)/2",
+                    "TYPE_AMBIGUITY \u2014 cannot approve single Definition without style-specific rules."
+                ],
+                "stylesAffected": 5,
+                "styleSamples": [
+                    "B1",
+                    "KN",
+                    "NR",
+                    "NV",
+                    "XN"
+                ],
+                "rowsAffected": null,
+                "productsBlocked": 5
+            },
+            {
+                "legacyField": "Af",
+                "inferredMeaning": "Unknown engineering scalar \u2014 B1 only (not proven current)",
+                "decision": "REVIEW",
+                "targetDefinition": null,
+                "targetUnit": null,
+                "targetOptions": null,
+                "confidence": "LOW",
+                "evidence": [
+                    "Populated only on B1 (11 rows).",
+                    "Scales with cable size \u2014 earth-fault/current hypothesis not proven.",
+                    ""
+                ],
+                "stylesAffected": 1,
+                "styleSamples": [
+                    "B1"
+                ],
+                "rowsAffected": null,
+                "productsBlocked": 1
+            },
+            {
+                "legacyField": "r",
+                "inferredMeaning": "Unknown \u2014 resistance hypothesis not proven (unit unclear)",
+                "decision": "REVIEW",
+                "targetDefinition": null,
+                "targetUnit": "\u03a9/km or \u03a9/1000ft (unproven)",
+                "targetOptions": null,
+                "confidence": "LOW",
+                "evidence": [
+                    "B1 only; no explicit \u03a9/km legacy label found.",
+                    "Correlate with xa/mt/x50/x60 inconclusive for HIGH confidence."
+                ],
+                "stylesAffected": 1,
+                "styleSamples": [
+                    "B1"
+                ],
+                "rowsAffected": null,
+                "productsBlocked": 1
+            },
+            {
+                "legacyField": "x50",
+                "inferredMeaning": "Reactance at 50 Hz hypothesis \u2014 not proven",
+                "decision": "REVIEW",
+                "targetDefinition": "REACTANCE-50HZ (candidate only)",
+                "targetUnit": null,
+                "targetOptions": null,
+                "confidence": "LOW",
+                "evidence": [
+                    "B1 only; no direct 50Hz/reactance label in codebase scan.",
+                    "Do not create Definition in D.5."
+                ],
+                "stylesAffected": 1,
+                "styleSamples": [
+                    "B1"
+                ],
+                "rowsAffected": null,
+                "productsBlocked": 1
+            },
+            {
+                "legacyField": "x60",
+                "inferredMeaning": "Reactance at 60 Hz hypothesis \u2014 not proven",
+                "decision": "REVIEW",
+                "targetDefinition": "REACTANCE-60HZ (candidate only)",
+                "targetUnit": null,
+                "targetOptions": null,
+                "confidence": "LOW",
+                "evidence": [
+                    "B1 only; no direct 60Hz/reactance label in codebase scan."
+                ],
+                "stylesAffected": 1,
+                "styleSamples": [
+                    "B1"
+                ],
+                "rowsAffected": null,
+                "productsBlocked": 1
+            },
+            {
+                "legacyField": "tension",
+                "inferredMeaning": "Mechanical/pulling tension hypothesis \u2014 unit and meaning unproven",
+                "decision": "REVIEW",
+                "targetDefinition": null,
+                "targetUnit": "N or kN or lbf (unproven)",
+                "targetOptions": null,
+                "confidence": "LOW",
+                "evidence": [
+                    "B1 only; no installation tension label found in migration codebase scan."
+                ],
+                "stylesAffected": 1,
+                "styleSamples": [
+                    "B1"
+                ],
+                "rowsAffected": null,
+                "productsBlocked": 1
+            }
+        ]
+    },
+    "blockerMatrix": {
+        "products": [
+            {
+                "styleCode": "BV",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "DV",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "RR",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "BH",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "RC",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "RS",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "ES",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "FJ",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "EW",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "EG",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "FC",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "FL",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "PJ",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "HT",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "RB",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "FK",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "FZ",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "FE",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "DF",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "DG",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "NV",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "ins"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "NR",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "ins"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "NJ",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "NT",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "NU",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "B1",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "ins",
+                    "Af",
+                    "r",
+                    "x50",
+                    "x60",
+                    "tension"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "KL",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "LS",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "LP",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "KA",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "XL",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "KC",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "C1",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "RE",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "R1",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "KN",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "ins"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "XN",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "ins"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "KU",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "XU",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "EA",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "XA",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "TP",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "TR",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "TV",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "TK",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "VP",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "VR",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "VS",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "VV",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "VW",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "NF",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "TS",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "TG",
+                "blockers": [
+                    "cc",
+                    "ct",
+                    "walu",
+                    "wbnz"
+                ],
+                "status": "REVIEW"
+            },
+            {
+                "styleCode": "VUF",
+                "blockers": [
+                    "cc",
+                    "ct"
+                ],
+                "status": "REVIEW"
+            }
+        ],
+        "conceptSummary": [
+            {
+                "concept": "cc",
+                "productsBlocked": 54,
+                "confidence": "MEDIUM",
+                "decision": "REVIEW"
+            },
+            {
+                "concept": "ct",
+                "productsBlocked": 54,
+                "confidence": "MEDIUM",
+                "decision": "REVIEW"
+            },
+            {
+                "concept": "walu",
+                "productsBlocked": 14,
+                "confidence": "HIGH",
+                "decision": "PROPOSED_CREATE_DEFINITION"
+            },
+            {
+                "concept": "wbnz",
+                "productsBlocked": 14,
+                "confidence": "HIGH",
+                "decision": "PROPOSED_CREATE_DEFINITION"
+            },
+            {
+                "concept": "ins",
+                "productsBlocked": 5,
+                "confidence": "MEDIUM",
+                "decision": "REVIEW"
+            },
+            {
+                "concept": "Af",
+                "productsBlocked": 1,
+                "confidence": "LOW",
+                "decision": "REVIEW"
+            },
+            {
+                "concept": "r",
+                "productsBlocked": 1,
+                "confidence": "LOW",
+                "decision": "REVIEW"
+            },
+            {
+                "concept": "x50",
+                "productsBlocked": 1,
+                "confidence": "LOW",
+                "decision": "REVIEW"
+            },
+            {
+                "concept": "x60",
+                "productsBlocked": 1,
+                "confidence": "LOW",
+                "decision": "REVIEW"
+            },
+            {
+                "concept": "tension",
+                "productsBlocked": 1,
+                "confidence": "LOW",
+                "decision": "REVIEW"
+            }
+        ],
+        "criticalCodeBlockers": {
+            "cc": 54,
+            "ct": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        }
+    },
+    "readinessScenarios": {
+        "current": {
+            "READY": 0,
+            "REVIEW": 54,
+            "BLOCKED": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "ct": 54,
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            },
+            "note": "Projection only \u2014 D.5 does not mutate target readiness."
+        },
+        "highConfidenceOnly": {
+            "READY": 0,
+            "REVIEW": 54,
+            "BLOCKED": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "ct": 54,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            },
+            "note": "Projection only \u2014 D.5 does not mutate target readiness."
+        },
+        "ccOnly": {
+            "READY": 0,
+            "REVIEW": 54,
+            "BLOCKED": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54,
+            "stillBlockingConcepts": {
+                "ct": 54,
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            },
+            "note": "Projection only \u2014 D.5 does not mutate target readiness."
+        },
+        "ctOnly": {
+            "READY": 0,
+            "REVIEW": 54,
+            "BLOCKED": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            },
+            "note": "Projection only \u2014 D.5 does not mutate target readiness."
+        },
+        "ccAndCt": {
+            "READY": 35,
+            "REVIEW": 19,
+            "BLOCKED": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 35,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54,
+            "stillBlockingConcepts": {
+                "walu": 14,
+                "wbnz": 14,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            },
+            "note": "Projection only \u2014 D.5 does not mutate target readiness."
+        },
+        "allHighConfidenceBlockersResolved": {
+            "READY": 0,
+            "REVIEW": 54,
+            "BLOCKED": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "ct": 54,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            },
+            "note": "Projection only \u2014 D.5 does not mutate target readiness."
+        },
+        "allProposedCandidatesResolved": {
+            "READY": 0,
+            "REVIEW": 54,
+            "BLOCKED": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54,
+            "stillBlockingConcepts": {
+                "cc": 54,
+                "ct": 54,
+                "ins": 5,
+                "Af": 1,
+                "r": 1,
+                "x50": 1,
+                "x60": 1,
+                "tension": 1
+            },
+            "note": "Projection only \u2014 D.5 does not mutate target readiness."
+        }
+    },
+    "masterDataRequirements": {
+        "existingDefinitionsToMap": [],
+        "newDefinitionsProposed": {
+            "walu": "APPROX-WEIGHT-ALU",
+            "wbnz": "APPROX-WEIGHT-BRONZE"
+        },
+        "existingUnitsToReuse": [
+            "KG_PER_KM"
+        ],
+        "newUnitsProposed": {
+            "walu": {
+                "code": "LB_PER_1000FT",
+                "name": "Pound per 1000 feet",
+                "symbol": "lb/1000ft",
+                "dimension": "linear_density",
+                "confidence": "MEDIUM",
+                "evidence": "walu/wbnz imperial-only; ratio vs wght (kg/km) \u2014 no conversion factor invented"
+            },
+            "wbnz": {
+                "code": "LB_PER_1000FT",
+                "name": "Pound per 1000 feet",
+                "symbol": "lb/1000ft",
+                "dimension": "linear_density",
+                "confidence": "MEDIUM",
+                "evidence": "walu/wbnz imperial-only; ratio vs wght (kg/km) \u2014 no conversion factor invented"
+            }
+        },
+        "newOptionsProposed": [],
+        "noMutationsInD5": true
+    },
+    "remainingBlockers": [
+        {
+            "concept": "cc",
+            "productsBlocked": 54,
+            "confidence": "MEDIUM",
+            "decision": "REVIEW"
+        },
+        {
+            "concept": "ct",
+            "productsBlocked": 54,
+            "confidence": "MEDIUM",
+            "decision": "REVIEW"
+        },
+        {
+            "concept": "walu",
+            "productsBlocked": 14,
+            "confidence": "HIGH",
+            "decision": "PROPOSED_CREATE_DEFINITION"
+        },
+        {
+            "concept": "wbnz",
+            "productsBlocked": 14,
+            "confidence": "HIGH",
+            "decision": "PROPOSED_CREATE_DEFINITION"
+        },
+        {
+            "concept": "ins",
+            "productsBlocked": 5,
+            "confidence": "MEDIUM",
+            "decision": "REVIEW"
+        },
+        {
+            "concept": "Af",
+            "productsBlocked": 1,
+            "confidence": "LOW",
+            "decision": "REVIEW"
+        },
+        {
+            "concept": "r",
+            "productsBlocked": 1,
+            "confidence": "LOW",
+            "decision": "REVIEW"
+        },
+        {
+            "concept": "x50",
+            "productsBlocked": 1,
+            "confidence": "LOW",
+            "decision": "REVIEW"
+        },
+        {
+            "concept": "x60",
+            "productsBlocked": 1,
+            "confidence": "LOW",
+            "decision": "REVIEW"
+        },
+        {
+            "concept": "tension",
+            "productsBlocked": 1,
+            "confidence": "LOW",
+            "decision": "REVIEW"
+        }
+    ],
+    "nextGate": {
+        "gate": "CABLE_SPEC_FIELD_MAPPING_READY",
+        "currentValue": 0,
+        "requiredForGate": 54,
+        "conceptsPreventingFullGate": {
+            "cc": 54,
+            "ct": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        },
+        "priority": [
+            "cc",
+            "ct",
+            "walu",
+            "wbnz",
+            "ins",
+            "Af",
+            "r",
+            "x50",
+            "x60",
+            "tension"
+        ],
+        "note": "cc and ct block all 54 until resolved; walu/wbnz block 14; ins blocks 5; B1 fields block 1."
+    },
+    "semanticGuards": {
+        "noRawCcCtOptions": true,
+        "noSpeculativeDefinitionCreation": true,
+        "noIndLszhFire": true,
+        "odNomCableOdGuardPreserved": true,
+        "d4MappingsUnchanged": true,
+        "highConfidenceRequiresDirectEvidence": true
+    },
+    "artifacts": [
+        "cable-spec-d5-field-evidence.json",
+        "cable-spec-d5-cc-investigation.json",
+        "cable-spec-d5-ct-investigation.json",
+        "cable-spec-d5-weight-investigation.json",
+        "cable-spec-d5-ins-investigation.json",
+        "cable-spec-d5-b1-investigation.json",
+        "cable-spec-d5-proposals.json",
+        "cable-spec-d5-readiness-scenarios.json",
+        "cable-spec-d5-final-review-package.json"
+    ],
+    "generatedAtUtc": "2026-08-24T00:29:27+00:00"
+}

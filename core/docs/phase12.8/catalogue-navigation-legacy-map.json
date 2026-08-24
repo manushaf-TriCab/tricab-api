@@ -1,0 +1,55 @@
+{
+    "generatedAtUtc": "2026-08-24T03:24:17+00:00",
+    "wordpressConnected": true,
+    "wordpressError": null,
+    "taxonomySources": [
+        "wp_terms / wp_term_taxonomy / wp_term_relationships",
+        "wp_postmeta style_code",
+        "wp_posts nav_menu_item + nav_menu taxonomy"
+    ],
+    "placements": [
+        {
+            "styleCode": "F12",
+            "wordpressPostId": 5877,
+            "postType": "accessory",
+            "postTitle": "Inspection Tee",
+            "postSlug": "inspection-tees",
+            "postStatus": "publish",
+            "terms": [
+                {
+                    "termId": 538,
+                    "slug": "conduit",
+                    "name": "Flexible Conduit",
+                    "taxonomy": "category",
+                    "parentTermId": 0,
+                    "path": "conduit"
+                },
+                {
+                    "termId": 614,
+                    "slug": "conduits-and-fittings",
+                    "name": "Conduits &amp; Fittings",
+                    "taxonomy": "category",
+                    "parentTermId": 525,
+                    "path": "conduits-and-fittings"
+                }
+            ],
+            "navMenus": []
+        }
+    ],
+    "f12Identity": {
+        "wordpressPostId": 5877,
+        "postType": "accessory",
+        "title": "Inspection Tee",
+        "styleCodeRaw": "F12",
+        "styleCodeNormalized": "F12",
+        "tcSourceMatch": false,
+        "matchMethod": "NO_MATCH",
+        "targetProductIdentity": null,
+        "status": "SOURCE_ONLY",
+        "issues": [
+            "no_tc_style_match"
+        ]
+    },
+    "wordpressWrites": 0,
+    "tcWrites": 0
+}

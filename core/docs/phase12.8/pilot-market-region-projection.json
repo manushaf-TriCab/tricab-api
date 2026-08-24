@@ -1,0 +1,10 @@
+{
+    "legacyMarketEvidence": "TriCab AU catalogue default for accessory styles",
+    "resolvedRegions": [
+        "AU"
+    ],
+    "status": "RESOLVED_DRAFT_ASSIGNMENT",
+    "blockers": [],
+    "globalPublishFallback": false,
+    "note": "Pilot remains Draft regardless of region readiness."
+}

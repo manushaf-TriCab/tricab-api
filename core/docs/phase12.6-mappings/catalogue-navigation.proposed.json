@@ -1,0 +1,717 @@
+{
+    "existingNodes": [
+        {
+            "code": "PROD-ACCESSORIES",
+            "name": "Accessories",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-SOLAR",
+            "name": "Solar",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-ALI-FLEX-SYSTEMS",
+            "name": "ALI-FLEX Systems",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-STEEL-ALUM-ARMOUR",
+            "name": "Steel / Alum Armour",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-CONTROL",
+            "name": "Control",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-SUBMERSIBLE-PORTABLE",
+            "name": "Submersible / Portable",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-ELECTRICAL-CONTRACTING",
+            "name": "Electrical Contracting",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-SWITCH-BOARD-PANEL",
+            "name": "Switch board & Panel",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-FIRE-RESISTANT",
+            "name": "Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-TELECOMS",
+            "name": "Telecoms",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-INSTRUMENTATION",
+            "name": "Instrumentation",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-TERMITE-RES-NYLON",
+            "name": "Termite Res/Nylon",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-MARINE-IEC-LSZH",
+            "name": "Marine IEC LSZH",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-VFD-VSD",
+            "name": "VFD/VSD",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-MARINE-NEK-606",
+            "name": "Marine NEK 606",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-WELDING-BATTERY",
+            "name": "Welding/Battery",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PROD-MEDIUM-VOLTAGE",
+            "name": "Medium Voltage",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "SPEC-FOOD-BEVERAGE",
+            "name": "Food & Beverage",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "SPEC-SHORE-POWER",
+            "name": "Shore Power",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "SPEC-INDUSTRIAL-MARINE-SWITCHBOARD-WIRE",
+            "name": "Industrial & Marine Switchboard Wire",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "SPEC-TEMPORARY-POWER",
+            "name": "Temporary Power",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "SPEC-SHIP-LOADERS-CRANES",
+            "name": "Ship Loaders & Cranes",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "SPEC-WATER-TREATMENT",
+            "name": "Water Treatment",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-LUGS-LINKS",
+            "name": "Lugs & Links",
+            "imageUrl": "/assets/lugs.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-TERMINALS",
+            "name": "Terminals",
+            "imageUrl": "/assets/terminals.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-HEAT-SHRINK",
+            "name": "Heat Shrink",
+            "imageUrl": "/assets/Heat-Shrink.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-GLANDS",
+            "name": "Glands",
+            "imageUrl": "/assets/glands.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-PLUGS-SOCKETS",
+            "name": "Plugs & Sockets",
+            "imageUrl": "/assets/plugs.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-CABLE-MANAGEMENT",
+            "name": "Cable Management",
+            "imageUrl": "/assets/cable-care.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-CABLE-TIES",
+            "name": "Cable Ties",
+            "imageUrl": "/assets/ties.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-SWITCHBOARD",
+            "name": "Switchboard",
+            "imageUrl": "/assets/switchboard.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-SWITCHES",
+            "name": "Switches",
+            "imageUrl": "/assets/J18-sm.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-SOLAR",
+            "name": "Solar",
+            "imageUrl": "/assets/solar.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-TOOLS-DIES",
+            "name": "Tools & Dies",
+            "imageUrl": "/assets/tools.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-SAFETY",
+            "name": "Safety",
+            "imageUrl": "/assets/S01-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-LEAD",
+            "name": "Lead",
+            "imageUrl": "/assets/Extension-Leads.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ACC-CERTIFICATES",
+            "name": "Certificates",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PS-INDUSTRIAL",
+            "name": "Industrial",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PS-CEEFORM",
+            "name": "CeeForm",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PS-POWERSURE",
+            "name": "PowerSure",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PS-TECHNO-CONNECTORS",
+            "name": "Techno Connectors",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "PS-CONNECTORS",
+            "name": "Connectors",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-PLUG-FLAT-PIN",
+            "name": "Plug Flat Pin",
+            "imageUrl": "/assets/J09-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-PLUG-ROUND-PIN",
+            "name": "Plug Round Pin",
+            "imageUrl": "/assets/J01-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-ANGLE-PLUG-ROUND-PIN",
+            "name": "Angle Plug Round Pin",
+            "imageUrl": "/assets/J02-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-SOCKET-FLAT-PIN",
+            "name": "Socket Flat Pin",
+            "imageUrl": "/assets/J10-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-SOCKET-ROUND-PIN",
+            "name": "Socket Round Pin",
+            "imageUrl": "/assets/J03-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-OUTLET-FLAT-PIN",
+            "name": "Outlet Flat Pin",
+            "imageUrl": "/assets/J06-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-OUTLET-ROUND-PIN",
+            "name": "Outlet Round Pin",
+            "imageUrl": "/assets/J05-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-SWITCH-OUTLET-FLAT-PIN",
+            "name": "Switch-Outlet Flat-Pin",
+            "imageUrl": "/assets/J08-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-SWITCHED-OUTLET-ROUND-PIN",
+            "name": "Switched-Outlet Round Pin",
+            "imageUrl": "/assets/J07-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-APPLIANCE-INLET",
+            "name": "Appliance Inlet",
+            "imageUrl": "/assets/J19-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-ENCLOSURES",
+            "name": "Enclosures",
+            "imageUrl": "/assets/J12-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "IND-ROTARY-SWITCH",
+            "name": "Rotary Switch",
+            "imageUrl": "/assets/J11-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-FLEXIBLE-CABLES",
+            "name": "Flexible Cables",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-XL-SINGLE-MULTICORE-90C",
+            "name": "XL-Single multicore 90c",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-KL-SINGLE-MULTICORE-110C",
+            "name": "KL-Single multicore 110c",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-LC-PVC-EARTH-105C",
+            "name": "LC PVC Earth 105c",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-LC-LSZH-EARTH-125C",
+            "name": "LC LSZH Earth 125c",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-XU-SDI-MULTI-COLL-SCR-BRAID-90C",
+            "name": "XU SDI, Multi, Coll. Scr. & Braid 90c",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-KU-SDI-MULTI-COLL-SCR-BRAID-110C",
+            "name": "KU SDI, Multi, Coll. Scr. & Braid 110C",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-XA-SDI-MULTI-CONTROL-90C",
+            "name": "XA SDI, Multi, Control 90C",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-KA-SDI-MULTI-CONTROL-110C",
+            "name": "KA SDI, Multi, Control 110C",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-XN-TERMITE-RESISTANT-90C",
+            "name": "XN Termite Resistant 90C",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-KN-TERMITE-RESISTANT-110C",
+            "name": "KN Termite Resistant 110C",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-EA-BRAID-VFD-VSD-110C",
+            "name": "EA Braid VFD/VSD 110C",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-SOLAR",
+            "name": "Solar",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-SK-1-5-1-5KV-SDI-90C",
+            "name": "SK 1.5/1.5kV SDI 90C",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-ITEM-SK-1-5-1-5KV-SDI-110C",
+            "name": "SK 1.5/1.5kV SDI 110C",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-SHIPBOARD",
+            "name": "Shipboard",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-POWER-AND-CONTROL",
+            "name": "Power and Control",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-BV",
+            "name": "BV 110C Flame Retardant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-DV",
+            "name": "DV 110C Braid, Flame Retardant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-RR",
+            "name": "RR 110C Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-BH",
+            "name": "BH 110C Braid, Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-INSTRUMENTATION-COLLECTIVE",
+            "name": "Instrumentation - Collective",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-RC",
+            "name": "RC 110C Flame Retardant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-RS",
+            "name": "RS 110C Braid, Flame Retardant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-ES",
+            "name": "ES 110C Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-FJ",
+            "name": "FJ 110C Braid, Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-INSTRUMENTATION-INDIVIDUAL-AND-COLLECTIVE",
+            "name": "Instrumentation - Individual and Collective",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-EW",
+            "name": "EW 110C Flame Retardant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-EG",
+            "name": "EG 110C Braid, Flame Retardant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-FC",
+            "name": "FC 110C Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-FL",
+            "name": "FL 110C Braid, Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-SWITCHBOARD-PANEL-WIRE",
+            "name": "Switchboard/Panel Wire",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-shipboard-VFD-VSD",
+            "name": "VFD / VSD",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-OFFSHORE",
+            "name": "Offshore",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-offshore-POWER-AND-CONTROL",
+            "name": "Power and Control",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-offshore-PJ",
+            "name": "PJ 110C Braid Armoured, Flame Retardant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-offshore-HT",
+            "name": "HT 110C Braid Armoured, Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-offshore-INSTRUMENTATION-COLLECTIVE",
+            "name": "Instrumentation - Collective",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-offshore-RB",
+            "name": "RB 110C Braid Armoured, Flame Retardant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-offshore-FK",
+            "name": "FK 110C Braid Armoured, Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-offshore-INSTRUMENTATION-INDIVIDUAL-AND-COLLECTIVE",
+            "name": "Instrumentation - Individual and Collective",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-offshore-FZ",
+            "name": "FZ 110C Braid Armoured, Flame Retardant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "MARINE-offshore-FE",
+            "name": "FE 110C Braid Armoured, Fire Resistant",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        }
+    ],
+    "proposedNodes": [
+        {
+            "name": "Products",
+            "classification": "ADD",
+            "status": "REVIEW",
+            "source": "frontend legacy panel config"
+        },
+        {
+            "name": "Special Applications",
+            "classification": "ADD",
+            "status": "REVIEW",
+            "source": "frontend legacy panel config"
+        }
+    ],
+    "legacyMenus": [
+        {
+            "term_id": 2,
+            "name": "Primary",
+            "slug": "primary",
+            "item_count": 5
+        },
+        {
+            "term_id": 522,
+            "name": "share",
+            "slug": "share",
+            "item_count": 126
+        }
+    ],
+    "policy": "Do not transform WP taxonomy into Catalogue Navigation automatically.",
+    "counts": {
+        "kept": 97,
+        "proposedAdd": 2,
+        "review": 2
+    }
+}

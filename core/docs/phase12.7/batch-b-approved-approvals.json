@@ -1,0 +1,21 @@
+[
+    {
+        "rawValues": [
+            "BV"
+        ],
+        "normalizedApproval": "BV",
+        "normalizedKey": "bv",
+        "issuingOrganization": null,
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": "BV",
+        "proposedOption": {
+            "code": "BV",
+            "displayName": "BV"
+        },
+        "aliases": [],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_APPROVALS_option"
+    }
+]

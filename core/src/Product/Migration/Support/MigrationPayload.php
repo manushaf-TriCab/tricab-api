@@ -36,6 +36,12 @@ final class MigrationPayload
         return is_bool($value) ? $value : $default;
     }
 
+    /** @param mixed $value */
+    public static function int(mixed $value, int $default = 0): int
+    {
+        return is_int($value) ? $value : $default;
+    }
+
     /**
      * @param mixed $value
      * @return array<string, mixed>
@@ -47,6 +53,25 @@ final class MigrationPayload
         }
 
         return self::stringKeyed($value);
+    }
+
+    /**
+     * @param mixed $value
+     * @return list<array<string, mixed>>
+     */
+    public static function assocList(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+        $out = [];
+        foreach ($value as $row) {
+            if (is_array($row)) {
+                $out[] = self::stringKeyed($row);
+            }
+        }
+
+        return $out;
     }
 
     /**
