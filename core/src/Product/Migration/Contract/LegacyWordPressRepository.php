@@ -73,6 +73,15 @@ interface LegacyWordPressRepository
     public function discoverNavMenus(): array;
 
     /**
+     * Read-only catalogue/navigation placements for style codes.
+     *
+     * @param list<string> $styleCodes
+     * @param list<string> $postTypes
+     * @return list<array<string, mixed>>
+     */
+    public function discoverCataloguePlacements(array $styleCodes, array $postTypes = ['cable', 'accessory']): array;
+
+    /**
      * @param list<string> $postTypes
      * @return list<array<string, mixed>>
      */

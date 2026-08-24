@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Http;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Core\Product\Migration\Support\MigrationPayload;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
@@ -76,6 +77,47 @@ final class ProductMigrationEndpointsTest extends TestCase
         self::assertFalse($data['allowsFullCatalogueMigration']);
         self::assertArrayNotHasKey('wordpressPassword', $data['sourceConfig'] ?? []);
         self::assertArrayNotHasKey('tcPassword', $data['sourceConfig'] ?? []);
+    }
+
+    public function test_catalogue_navigation_dry_run_is_read_only(): void
+    {
+        $app = TestAppFactory::create([]);
+        $response = $app->handle(TestAppFactory::request('GET', '/api/v1/admin/product-migration/catalogue-navigation-dry-run'));
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+        $data = MigrationPayload::assoc(TestAppFactory::json($response)['data'] ?? []);
+        $payload = MigrationPayload::assoc($data['payload'] ?? []);
+        $safety = MigrationPayload::assoc($payload['safety'] ?? []);
+        self::assertSame(0, MigrationPayload::int($data['wordpressWrites'] ?? $safety['wordpressWrites'] ?? 1));
+        self::assertSame(0, MigrationPayload::int($data['tcWrites'] ?? $safety['tcWrites'] ?? 1));
+        self::assertSame(0, MigrationPayload::int($data['catalogueTabWrites'] ?? $safety['catalogueTabWrites'] ?? 1));
+        self::assertSame(0, MigrationPayload::int($data['catalogueNodeWrites'] ?? $safety['catalogueNodeWrites'] ?? 1));
+        self::assertSame(0, MigrationPayload::int($data['productNodeWrites'] ?? $safety['productNodeWrites'] ?? 1));
+        self::assertFalse(MigrationPayload::bool($data['applied'] ?? true, true));
+        self::assertStringContainsString(
+            'ADDITIVE ONLY',
+            MigrationPayload::string($data['banner'] ?? $payload['banner'] ?? ''),
+        );
+    }
+
+
+    public function test_f12_live_sku_pilot_endpoint_is_read_only(): void
+    {
+        $app = TestAppFactory::create([]);
+        $response = $app->handle(TestAppFactory::request('GET', '/api/v1/admin/product-migration/pilot-f12-live-sku'));
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+        $data = MigrationPayload::assoc(TestAppFactory::json($response)['data'] ?? []);
+        $payload = MigrationPayload::assoc($data['payload'] ?? []);
+        self::assertFalse(MigrationPayload::bool($data['applied'] ?? $payload['applied'] ?? true, true));
+        self::assertSame(0, MigrationPayload::int($data['wordpressWrites'] ?? $payload['safety']['wordpressWrites'] ?? 1));
+        self::assertSame(0, MigrationPayload::int($data['tcWrites'] ?? $payload['safety']['tcWrites'] ?? 1));
+        self::assertSame(0, MigrationPayload::int($data['targetWrites'] ?? $payload['safety']['targetWrites'] ?? $payload['mutationPlan']['actualTargetWrites'] ?? 1));
+        self::assertSame(0, MigrationPayload::int($data['blobWrites'] ?? $payload['safety']['blobWrites'] ?? 1));
+        self::assertSame(0, MigrationPayload::int($data['pricingWrites'] ?? $payload['safety']['pricingWrites'] ?? 1));
+        $banner = MigrationPayload::string($data['banner'] ?? $payload['banner'] ?? '');
+        self::assertTrue(
+            str_contains($banner, 'F12') || str_contains(MigrationPayload::string($data['phase'] ?? $payload['phase'] ?? ''), 'live-sku'),
+            $banner,
+        );
     }
 
     public function test_manage_requires_migration_permission(): void

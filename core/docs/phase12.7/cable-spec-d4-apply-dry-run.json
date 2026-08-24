@@ -13,7 +13,17 @@
             "CURRENT-40C",
             "CURRENT-45C"
         ],
-        "definitionsAlreadyExisting": [],
+        "definitionsAlreadyExisting": [
+            "EARTH-CORES",
+            "EARTH-CSA",
+            "EARTH-INS-OD",
+            "BEDDING-OD",
+            "ARMOUR-OD",
+            "BRAID-OD",
+            "CURRENT-30C",
+            "CURRENT-40C",
+            "CURRENT-45C"
+        ],
         "fieldMappingsRequested": 538,
         "forbiddenIndLszhFire": true,
         "odMapsToNomCableOd": true,

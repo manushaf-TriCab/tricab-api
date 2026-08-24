@@ -1,0 +1,17 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "azureConnected": true,
+    "azureError": null,
+    "definitionCount": 64,
+    "fieldMappingCount": 1044,
+    "cableFieldMappingCount": 538,
+    "targetCollision": {
+        "liveTargetValidated": true,
+        "status": "CLEAR",
+        "productCodeCollision": false,
+        "styleIdentityCollision": false,
+        "slugCollision": false,
+        "variantCodeCollisions": [],
+        "autoSuffix": false
+    }
+}

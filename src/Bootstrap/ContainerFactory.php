@@ -1367,6 +1367,7 @@ final class ContainerFactory
             \TriCab\Core\Product\Migration\Application\Service\InvestigateCableSpecBatchD5ReviewService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\InvestigateCableSpecBatchD5ReviewService::class),
             \TriCab\Core\Product\Migration\Application\Service\InvestigateCableSpecBatchD51FinalResolutionService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\InvestigateCableSpecBatchD51FinalResolutionService::class),
             \TriCab\Core\Product\Migration\Application\Service\ResolveProductMigrationPilotDryRunService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveProductMigrationPilotDryRunService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ApplyProductMigrationPilotF12Service::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ApplyProductMigrationPilotF12Service::class),
             \TriCab\Core\Product\Migration\Classification\LegacyTermSemanticClassifier::class => \DI\autowire(\TriCab\Core\Product\Migration\Classification\LegacyTermSemanticClassifier::class),
             \TriCab\Core\Product\Migration\Classification\ClassificationNameNormalizer::class => \DI\autowire(\TriCab\Core\Product\Migration\Classification\ClassificationNameNormalizer::class),
             MigrationSchemaProbe::class => \DI\autowire(MemoryMigrationSchemaProbe::class),

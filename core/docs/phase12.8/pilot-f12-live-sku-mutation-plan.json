@@ -1,0 +1,26 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "mutationPlan": {
+        "productCreate": 1,
+        "productUpdate": 0,
+        "variantsCreate": 2,
+        "variantsUpdate": 0,
+        "productSpecValuesInsert": 0,
+        "variantSpecValuesInsert": 12,
+        "auRegionAssignments": 1,
+        "catalogueRelationshipInserts": 0,
+        "catalogueRelationshipReviews": 1,
+        "definitionCreates": 0,
+        "unitCreates": 0,
+        "optionCreates": 0,
+        "fieldMappingCreates": 0,
+        "classificationCreates": 0,
+        "pricingWrites": 0,
+        "mediaWrites": 0,
+        "documentWrites": 0,
+        "blobWrites": 0,
+        "publication": "Draft",
+        "actualTargetWrites": 0
+    },
+    "actualTargetWrites": 0
+}

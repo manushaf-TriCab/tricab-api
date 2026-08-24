@@ -1,0 +1,24 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "supersession": {
+        "previousPackage": "core/docs/phase12.8/pilot-final-dry-run-package.json",
+        "previousStatus": "SUPERSEDED_BY_LIVE_SKU_RECONCILIATION",
+        "reasonSuperseded": "PILOT_SOURCE_DRIFT",
+        "previousApply": {
+            "status": "PILOT_SOURCE_DRIFT",
+            "productWrites": 0,
+            "variantWrites": 0,
+            "specWrites": 0,
+            "catalogueWrites": 0,
+            "rolledBackSuccessfulMigration": false,
+            "stoppedBeforeCommit": true
+        },
+        "replacementPackage": "core/docs/phase12.8/pilot-f12-live-sku-final-package.json",
+        "historicalEvidencePreserved": true
+    },
+    "preservedHistoricalArtifacts": [
+        "core/docs/phase12.8/pilot-final-dry-run-package.json",
+        "core/docs/phase12.8/pilot-f12-apply-result.json",
+        "core/docs/phase12.8/pilot-f12-apply-preflight.json"
+    ]
+}

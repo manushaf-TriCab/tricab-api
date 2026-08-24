@@ -1,0 +1,36 @@
+{
+    "status": "PILOT_SOURCE_DRIFT",
+    "reason": "Live F12 accessory_specs rows do not match approved dry-run sample values",
+    "approvedPackageValues": {
+        "d1": "12.00",
+        "d2": "15.00",
+        "d3": "10.00",
+        "d4": "3.00",
+        "d5": "2.00",
+        "d6": "4.30"
+    },
+    "observedLiveRows": [
+        {
+            "product_code": "F12-AHXX/XD20GY",
+            "style_code": null,
+            "d1": "20.00",
+            "d2": "24.00",
+            "d3": "22.00",
+            "d4": "92.00",
+            "d5": "55.00",
+            "d6": "29.00"
+        },
+        {
+            "product_code": "F12-AHXX/XD25GY",
+            "style_code": null,
+            "d1": "25.00",
+            "d2": "29.00",
+            "d3": "25.00",
+            "d4": "108.00",
+            "d5": "69.00",
+            "d6": "37.00"
+        }
+    ],
+    "note": "Dry-run package used Batch C.2 sampleValues; live F12 SKUs currently differ. Do not silently regenerate package.",
+    "generatedAtUtc": "2026-08-24T02:31:11+00:00"
+}

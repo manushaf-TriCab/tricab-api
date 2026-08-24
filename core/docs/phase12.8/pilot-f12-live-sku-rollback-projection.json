@@ -1,0 +1,19 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "rollbackProjection": {
+        "executed": false,
+        "migrationOwned": {
+            "product": "F12",
+            "variants": [
+                "F12-AHXX/XD20GY",
+                "F12-AHXX/XD25GY"
+            ],
+            "specValues": 12,
+            "auAssignment": true,
+            "catalogueLinks": 0
+        },
+        "catalogueRollbackRows": 0,
+        "preExistingProtected": "NEVER_DELETE",
+        "note": "Rollback projection only. Catalogue REVIEW yields zero catalogue rollback rows."
+    }
+}

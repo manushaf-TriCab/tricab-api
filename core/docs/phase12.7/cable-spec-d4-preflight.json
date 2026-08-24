@@ -7,12 +7,12 @@
     },
     "liveValidation": "AVAILABLE",
     "countsBefore": {
-        "definitions": 55,
+        "definitions": 64,
         "units": 11,
         "options": 416,
-        "styleFieldMappings": 483,
-        "totalFieldMappings": 506,
-        "cableFieldMappings": 0
+        "styleFieldMappings": 1021,
+        "totalFieldMappings": 1044,
+        "cableFieldMappings": 538
     },
     "expectedBaseline": {
         "definitions": 55,
@@ -23,16 +23,16 @@
     },
     "driftDetected": false,
     "drift": {
-        "definitions": 0,
+        "definitions": 9,
         "units": 0,
         "options": 0,
-        "styleFieldMappings": 0,
-        "totalFieldMappings": 0
+        "styleFieldMappings": 538,
+        "totalFieldMappings": 538
     },
     "artifactsValid": true,
     "d3PackageValid": true,
     "d3PackageStatus": "READY_FOR_EXPLICIT_D4_APPLY_APPROVAL",
     "mappingPackageCount": 538,
     "operatorApprovalRecognised": true,
-    "generatedAtUtc": "2026-08-23T23:18:52+00:00"
+    "generatedAtUtc": "2026-08-24T02:28:01+00:00"
 }

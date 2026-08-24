@@ -372,6 +372,185 @@ SQL;
         return $this->connection->query($sql, [], self::REPO, 'discoverNavMenus');
     }
 
+    public function discoverCataloguePlacements(array $styleCodes, array $postTypes = ['cable', 'accessory']): array
+    {
+        $codes = [];
+        foreach ($styleCodes as $code) {
+            $normalized = strtoupper(trim((string) $code));
+            if ($normalized !== '') {
+                $codes[] = $normalized;
+            }
+        }
+        $codes = array_values(array_unique($codes));
+        if ($codes === []) {
+            return [];
+        }
+        $types = $this->sanitizeTypes($postTypes);
+        $posts = $this->t('posts');
+        $meta = $this->t('postmeta');
+        $typeParams = [];
+        $typeIn = $this->namedInStrings($types, 'type', $typeParams);
+        $codeParams = [];
+        $codeIn = $this->namedInStrings($codes, 'style', $codeParams);
+        $params = array_merge($typeParams, $codeParams);
+        $sql = <<<SQL
+SELECT
+    p.ID AS post_id,
+    p.post_type,
+    p.post_title,
+    p.post_name AS post_slug,
+    p.post_status,
+    UPPER(sm.meta_value) AS style_code
+FROM {$posts} p
+INNER JOIN {$meta} sm ON sm.post_id = p.ID AND sm.meta_key = 'style_code'
+WHERE p.post_type IN ({$typeIn})
+  AND p.post_status IN ('publish', 'draft', 'private', 'pending')
+  AND UPPER(sm.meta_value) IN ({$codeIn})
+ORDER BY p.ID ASC
+SQL;
+        $products = $this->connection->query($sql, $params, self::REPO, 'discoverCataloguePlacements.products');
+        $postIds = [];
+        foreach ($products as $row) {
+            $postIds[] = (int) ($row['post_id'] ?? 0);
+        }
+        $postIds = array_values(array_filter($postIds, static fn (int $id): bool => $id > 0));
+        $termsByPost = $this->catalogueTermsByPost($postIds);
+        $menusByPost = $this->catalogueMenusByPost($postIds);
+        $out = [];
+        foreach ($products as $row) {
+            $postId = (int) ($row['post_id'] ?? 0);
+            $out[] = [
+                'styleCode' => (string) ($row['style_code'] ?? ''),
+                'wordpressPostId' => $postId,
+                'postType' => (string) ($row['post_type'] ?? ''),
+                'postTitle' => (string) ($row['post_title'] ?? ''),
+                'postSlug' => (string) ($row['post_slug'] ?? ''),
+                'postStatus' => (string) ($row['post_status'] ?? ''),
+                'terms' => $termsByPost[$postId] ?? [],
+                'navMenus' => $menusByPost[$postId] ?? [],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<int> $postIds
+     * @return array<int, list<array<string, mixed>>>
+     */
+    private function catalogueTermsByPost(array $postIds): array
+    {
+        if ($postIds === []) {
+            return [];
+        }
+        $tr = $this->t('term_relationships');
+        $tt = $this->t('term_taxonomy');
+        $terms = $this->t('terms');
+        $params = [];
+        $in = $this->namedIn($postIds, 'pid', $params);
+        $sql = <<<SQL
+SELECT
+    tr.object_id AS post_id,
+    t.term_id,
+    t.slug,
+    t.name,
+    tt.taxonomy,
+    tt.parent
+FROM {$tr} tr
+INNER JOIN {$tt} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id
+INNER JOIN {$terms} t ON t.term_id = tt.term_id
+WHERE tr.object_id IN ({$in})
+ORDER BY tr.object_id ASC, t.slug ASC
+SQL;
+        $rows = $this->connection->query($sql, $params, self::REPO, 'discoverCataloguePlacements.terms');
+        $byId = [];
+        foreach ($rows as $row) {
+            $byId[(int) ($row['term_id'] ?? 0)] = $row;
+        }
+        $grouped = [];
+        foreach ($rows as $row) {
+            $postId = (int) ($row['post_id'] ?? 0);
+            $path = $this->termPath($row, $byId);
+            $grouped[$postId][] = [
+                'termId' => (int) ($row['term_id'] ?? 0),
+                'slug' => (string) ($row['slug'] ?? ''),
+                'name' => (string) ($row['name'] ?? ''),
+                'taxonomy' => (string) ($row['taxonomy'] ?? ''),
+                'parentTermId' => (int) ($row['parent'] ?? 0),
+                'path' => $path,
+            ];
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * @param array<string, mixed> $term
+     * @param array<int, array<string, mixed>> $byId
+     */
+    private function termPath(array $term, array $byId): string
+    {
+        $parts = [];
+        $current = $term;
+        $guard = 0;
+        while ($current !== null && $guard < 20) {
+            array_unshift($parts, (string) ($current['slug'] ?? ''));
+            $parentId = (int) ($current['parent'] ?? 0);
+            $current = $parentId > 0 && isset($byId[$parentId]) ? $byId[$parentId] : null;
+            $guard++;
+        }
+
+        return implode('/', array_filter($parts, static fn (string $p): bool => $p !== ''));
+    }
+
+    /**
+     * @param list<int> $postIds
+     * @return array<int, list<array<string, mixed>>>
+     */
+    private function catalogueMenusByPost(array $postIds): array
+    {
+        if ($postIds === []) {
+            return [];
+        }
+        $posts = $this->t('posts');
+        $meta = $this->t('postmeta');
+        $tr = $this->t('term_relationships');
+        $tt = $this->t('term_taxonomy');
+        $terms = $this->t('terms');
+        $params = [];
+        $in = $this->namedIn($postIds, 'oid', $params);
+        $sql = <<<SQL
+SELECT
+    CAST(oid.meta_value AS UNSIGNED) AS post_id,
+    p.ID AS menu_item_id,
+    p.post_title AS menu_item_title,
+    t.term_id AS menu_term_id,
+    t.name AS menu_name,
+    t.slug AS menu_slug
+FROM {$posts} p
+INNER JOIN {$meta} oid ON oid.post_id = p.ID AND oid.meta_key = '_menu_item_object_id'
+INNER JOIN {$tr} tr ON tr.object_id = p.ID
+INNER JOIN {$tt} tt ON tt.term_taxonomy_id = tr.term_taxonomy_id AND tt.taxonomy = 'nav_menu'
+INNER JOIN {$terms} t ON t.term_id = tt.term_id
+WHERE p.post_type = 'nav_menu_item'
+  AND CAST(oid.meta_value AS UNSIGNED) IN ({$in})
+ORDER BY t.name ASC, p.ID ASC
+SQL;
+        $rows = $this->connection->query($sql, $params, self::REPO, 'discoverCataloguePlacements.menus');
+        $grouped = [];
+        foreach ($rows as $row) {
+            $postId = (int) ($row['post_id'] ?? 0);
+            $grouped[$postId][] = [
+                'menuTermId' => (int) ($row['menu_term_id'] ?? 0),
+                'menuName' => (string) ($row['menu_name'] ?? ''),
+                'menuSlug' => (string) ($row['menu_slug'] ?? ''),
+                'menuItemTitle' => (string) ($row['menu_item_title'] ?? ''),
+            ];
+        }
+
+        return $grouped;
+    }
+
     public function discoverProductAttachments(array $postTypes): array
     {
         $types = $this->sanitizeTypes($postTypes);

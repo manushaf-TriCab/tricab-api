@@ -69,6 +69,13 @@ final class UnavailableLegacyWordPressRepository implements LegacyWordPressRepos
         return [];
     }
 
+    public function discoverCataloguePlacements(array $styleCodes, array $postTypes = ['cable', 'accessory']): array
+    {
+        unset($styleCodes, $postTypes);
+
+        return [];
+    }
+
     public function discoverProductAttachments(array $postTypes): array
     {
         unset($postTypes);

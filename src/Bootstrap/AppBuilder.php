@@ -738,6 +738,12 @@ final class AppBuilder
             ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
         $app->get('/api/v1/admin/product-migration/pilot-dry-run', ProductMigrationAdminAction::class)
             ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/catalogue-navigation-dry-run', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/pilot-f12-apply', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
+        $app->get('/api/v1/admin/product-migration/pilot-f12-live-sku', ProductMigrationAdminAction::class)
+            ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
         $app->get('/api/v1/admin/product-migration/batches', ProductMigrationAdminAction::class)
             ->add(($require)('PRODUCT.MIGRATION.MANAGE'));
         $app->post('/api/v1/admin/product-migration/batches', ProductMigrationAdminAction::class)

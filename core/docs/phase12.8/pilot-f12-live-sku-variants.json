@@ -1,0 +1,50 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "productClassifier": {
+        "decision": "product",
+        "reason": "WordPress CPT accessory is a marketing Product; tc rows sharing style_code become variants"
+    },
+    "variantClassifiers": [
+        {
+            "legacyProductCode": "F12-AHXX/XD20GY",
+            "classification": {
+                "decision": "product-variant",
+                "reason": "Legacy tc row shares style_code F12 \u2192 ProductVariant under parent Product"
+            }
+        },
+        {
+            "legacyProductCode": "F12-AHXX/XD25GY",
+            "classification": {
+                "decision": "product-variant",
+                "reason": "Legacy tc row shares style_code F12 \u2192 ProductVariant under parent Product"
+            }
+        }
+    ],
+    "variants": {
+        "projected": [
+            {
+                "legacyRowId": "F12-AHXX/XD20GY",
+                "legacyProductCode": "F12-AHXX/XD20GY",
+                "proposedVariantCode": "F12-AHXX/XD20GY",
+                "product": "F12",
+                "sourceEvidence": "accessory_specs.F12-AHXX/XD20GY",
+                "identityDecision": "CREATE",
+                "reason": "Live accessory_specs product_code is the Variant identity"
+            },
+            {
+                "legacyRowId": "F12-AHXX/XD25GY",
+                "legacyProductCode": "F12-AHXX/XD25GY",
+                "proposedVariantCode": "F12-AHXX/XD25GY",
+                "product": "F12",
+                "sourceEvidence": "accessory_specs.F12-AHXX/XD25GY",
+                "identityDecision": "CREATE",
+                "reason": "Live accessory_specs product_code is the Variant identity"
+            }
+        ],
+        "blocked": [],
+        "ambiguous": [],
+        "variantsProjected": 2,
+        "variantsBlocked": 0,
+        "syntheticF1201Used": false
+    }
+}

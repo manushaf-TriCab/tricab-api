@@ -148,6 +148,15 @@ final class ProductMigrationAdminAction
             if ($op === 'pilot-dry-run') {
                 return $this->responder->success($this->loadPilotDryRunPackage());
             }
+            if ($op === 'catalogue-navigation-dry-run') {
+                return $this->responder->success($this->loadCatalogueNavigationDryRunPackage());
+            }
+            if ($op === 'pilot-f12-apply') {
+                return $this->responder->success($this->loadPilotF12ApplyReport());
+            }
+            if ($op === 'pilot-f12-live-sku') {
+                return $this->responder->success($this->loadPilotF12LiveSkuPackage());
+            }
             if ($op === 'cable-spec-decision') {
                 $body = JsonRequestBody::requireObject($request);
                 return $this->responder->success($this->recordCableSpecDecision($body));
@@ -423,6 +432,15 @@ final class ProductMigrationAdminAction
         }
         if (str_ends_with($path, '/product-migration/pilot-dry-run')) {
             return 'pilot-dry-run';
+        }
+        if (str_ends_with($path, '/product-migration/catalogue-navigation-dry-run')) {
+            return 'catalogue-navigation-dry-run';
+        }
+        if (str_ends_with($path, '/product-migration/pilot-f12-apply')) {
+            return 'pilot-f12-apply';
+        }
+        if (str_ends_with($path, '/product-migration/pilot-f12-live-sku')) {
+            return 'pilot-f12-live-sku';
         }
         if (str_contains($path, '/product-migration/review')) {
             if ($method === 'POST' && str_contains($path, '/resolve')) {
@@ -1073,6 +1091,60 @@ final class ProductMigrationAdminAction
     /**
      * @return array<string, mixed>
      */
+    /**
+     * @return array<string, mixed>
+     */
+    private function loadCatalogueNavigationDryRunPackage(): array
+    {
+        $path = dirname(__DIR__, 5) . '/core/docs/phase12.8/catalogue-navigation-final-dry-run.json';
+        if (!is_file($path)) {
+            return [
+                'phase' => '12.8-catalogue-navigation-additive-mapping',
+                'status' => 'NOT_RUN',
+                'banner' => 'CATALOGUE NAVIGATION — ADDITIVE ONLY. EXISTING STRUCTURE AND RELATIONSHIPS ARE PROTECTED.',
+                'message' => 'Run php bin/resolve-catalogue-navigation-dry-run.php --dry-run --confirm-non-production first.',
+                'applied' => false,
+                'wordpressWrites' => 0,
+                'tcWrites' => 0,
+                'forbiddenWriteAttempts' => 0,
+                'targetWrites' => 0,
+                'catalogueTabWrites' => 0,
+                'catalogueNodeWrites' => 0,
+                'productNodeWrites' => 0,
+            ];
+        }
+        $decoded = json_decode((string) file_get_contents($path), true);
+
+        return is_array($decoded) ? $decoded : ['status' => 'INVALID_ARTIFACT'];
+    }
+
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function loadPilotF12LiveSkuPackage(): array
+    {
+        $path = dirname(__DIR__, 5) . '/core/docs/phase12.8/pilot-f12-live-sku-final-package.json';
+        if (!is_file($path)) {
+            return [
+                'phase' => '12.8-f12-corrected-live-sku-pilot-dry-run',
+                'status' => 'NOT_RUN',
+                'message' => 'Run php bin/run-f12-live-sku-pilot-dry-run.php --style=F12 --confirm-non-production --verify-deterministic first.',
+                'banner' => 'F12 — Inspection Tee. PREVIOUS PILOT PACKAGE: SUPERSEDED — SOURCE DRIFT. CORRECTED SOURCE: LIVE accessory_specs SKU ROWS.',
+                'applied' => false,
+                'wordpressWrites' => 0,
+                'tcWrites' => 0,
+                'targetWrites' => 0,
+                'blobWrites' => 0,
+                'pricingWrites' => 0,
+                'approvalBoundary' => ['pilotApplyGuard' => 'PILOT_APPLY_NOT_APPROVED'],
+            ];
+        }
+        $decoded = json_decode((string) file_get_contents($path), true);
+
+        return is_array($decoded) ? $decoded : ['status' => 'INVALID_ARTIFACT'];
+    }
+
     private function loadPilotDryRunPackage(): array
     {
         $path = dirname(__DIR__, 5) . '/core/docs/phase12.8/pilot-final-dry-run-package.json';
@@ -1088,6 +1160,47 @@ final class ProductMigrationAdminAction
         $decoded = json_decode((string) file_get_contents($path), true);
 
         return is_array($decoded) ? $decoded : ['status' => 'INVALID_ARTIFACT'];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function loadPilotF12ApplyReport(): array
+    {
+        $dir = dirname(__DIR__, 5) . '/core/docs/phase12.8';
+        $final = $dir . '/pilot-f12-final-report.json';
+        if (!is_file($final)) {
+            return [
+                'phase' => '12.8-f12-single-product-pilot-apply',
+                'status' => 'NOT_APPLIED',
+                'message' => 'Run php bin/apply-product-migration-pilot.php --apply --pilot --style=F12 --confirm-non-production --pilot-apply-approved first.',
+                'banner' => 'PILOT PRODUCT: F12 — Inspection Tee | TARGET: NON-PRODUCTION | STATUS: DRAFT',
+                'approvalBoundary' => ['pilotApplyGuard' => 'PILOT_APPLY_NOT_APPROVED'],
+                'artifacts' => [],
+            ];
+        }
+        $decoded = json_decode((string) file_get_contents($final), true);
+        if (!is_array($decoded)) {
+            return ['status' => 'INVALID_ARTIFACT'];
+        }
+        $load = static function (string $path): ?array {
+            if (!is_file($path)) {
+                return null;
+            }
+            $json = json_decode((string) file_get_contents($path), true);
+
+            return is_array($json) ? $json : null;
+        };
+        $decoded['artifacts'] = [
+            'preflight' => $load($dir . '/pilot-f12-apply-preflight.json'),
+            'applyResult' => $load($dir . '/pilot-f12-apply-result.json'),
+            'reconciliation' => $load($dir . '/pilot-f12-reconciliation.json'),
+            'idempotency' => $load($dir . '/pilot-f12-idempotency.json'),
+            'publicationCheck' => $load($dir . '/pilot-f12-publication-check.json'),
+            'rollbackPackage' => $load($dir . '/pilot-f12-rollback-package.json'),
+        ];
+
+        return $decoded;
     }
 
     /**

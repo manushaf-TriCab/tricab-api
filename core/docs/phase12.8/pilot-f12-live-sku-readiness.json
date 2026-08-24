@@ -1,0 +1,20 @@
+{
+    "generatedAtUtc": "2026-08-24T04:23:44+00:00",
+    "readiness": {
+        "SOURCE_POPULATION_READY": true,
+        "IDENTITY_READY": true,
+        "VARIANT_STRUCTURE_READY": true,
+        "CLASSIFICATION_READY": true,
+        "SPECIFICATION_MAPPING_READY": true,
+        "REGION_READY": true,
+        "TARGET_COLLISION_READY": true,
+        "CATALOGUE_NAVIGATION_READY": false,
+        "ROLLBACK_READY": true,
+        "IDEMPOTENCY_READY": true,
+        "PRODUCT_DATA_PILOT_READY": true,
+        "OVERALL_DRAFT_PILOT_READY": "YES_WITH_CATALOGUE_NAVIGATION_REVIEW",
+        "TARGET_LIVE_REVALIDATION_REQUIRED": false,
+        "publication": "Draft",
+        "catalogueLinkWritesThisTask": 0
+    }
+}
