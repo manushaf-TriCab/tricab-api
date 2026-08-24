@@ -27,6 +27,7 @@ final readonly class UpsertPricingRequest
         public bool $createRevision,
         public ?string $pricingPublicId,
         public ?string $expectedRowVersion,
+        public ?string $unitOfMeasurePublicId,
     ) {
     }
 
@@ -54,6 +55,7 @@ final readonly class UpsertPricingRequest
             createRevision: RequestFields::boolOrDefault($body, 'createRevision', false),
             pricingPublicId: RequestFields::stringOrNull($body, 'pricingPublicId'),
             expectedRowVersion: RequestFields::stringOrNull($body, 'expectedRowVersion'),
+            unitOfMeasurePublicId: RequestFields::stringOrNull($body, 'unitOfMeasurePublicId'),
         );
     }
 }

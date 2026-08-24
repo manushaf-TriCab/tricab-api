@@ -24,7 +24,9 @@ use TriCab\Core\Product\Application\DTO\ProductLookupItem;
  *   documentTypes: list<ProductLookupItem>,
  *   currencies: list<ProductLookupItem>,
  *   specificationDefinitions: list<ProductLookupItem>,
- *   codeRuleSets: list<ProductLookupItem>
+ *   codeRuleSets: list<ProductLookupItem>,
+ *   priceLists: list<PriceListLookupItem>,
+ *   pricingUnits: list<PricingUnitLookupItem>
  * }
  */
 interface ProductLookupRepository

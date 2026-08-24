@@ -1,0 +1,38 @@
+{
+    "status": "PASSED",
+    "target": {
+        "server": "tricab-mel",
+        "database": "tc",
+        "environment": "NON-PRODUCTION"
+    },
+    "liveValidation": "AVAILABLE",
+    "countsBefore": {
+        "definitions": 55,
+        "units": 11,
+        "options": 416,
+        "styleFieldMappings": 483,
+        "totalFieldMappings": 506,
+        "cableFieldMappings": 0
+    },
+    "expectedBaseline": {
+        "definitions": 55,
+        "units": 11,
+        "options": 416,
+        "styleFieldMappings": 483,
+        "totalFieldMappings": 506
+    },
+    "driftDetected": false,
+    "drift": {
+        "definitions": 0,
+        "units": 0,
+        "options": 0,
+        "styleFieldMappings": 0,
+        "totalFieldMappings": 0
+    },
+    "artifactsValid": true,
+    "d3PackageValid": true,
+    "d3PackageStatus": "READY_FOR_EXPLICIT_D4_APPLY_APPROVAL",
+    "mappingPackageCount": 538,
+    "operatorApprovalRecognised": true,
+    "generatedAtUtc": "2026-08-23T23:18:52+00:00"
+}

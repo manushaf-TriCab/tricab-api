@@ -1,0 +1,425 @@
+[
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "standards",
+        "sourceLabel": "standards",
+        "semanticConcept": "STANDARD",
+        "fieldClass": "STANDARD",
+        "usageCount": 490,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "UPM"
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": "STANDARD",
+        "proposedDefinitionCode": "STANDARD",
+        "proposedDefinitionName": "Standard",
+        "dataType": "multi-select",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "STANDARDS"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "issuing_organisation",
+        "sourceLabel": "issuing_organisation",
+        "semanticConcept": "APPROVAL",
+        "fieldClass": "APPROVAL",
+        "usageCount": 287,
+        "sampleProducts": [],
+        "sampleValues": [
+            " ",
+            "WI"
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": "APPROVALS",
+        "proposedDefinitionCode": "APPROVALS",
+        "proposedDefinitionName": "Approvals",
+        "dataType": "multi-select",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "compound_code",
+        "sourceLabel": "compound_code",
+        "semanticConcept": "UNKNOWN",
+        "fieldClass": "UNKNOWN",
+        "usageCount": 230,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "XLPO-105"
+        ],
+        "proposedGroup": null,
+        "existingTargetDefinition": "SHEATH",
+        "proposedDefinitionCode": "SHEATH",
+        "proposedDefinitionName": "Sheath material",
+        "dataType": null,
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "low",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "OUTER_DIAMETER"
+        },
+        "reason": "operator_map_compound_code_xlpo_samples_to_SHEATH",
+        "operatorResolved": true
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "ind_degrees",
+        "sourceLabel": "ind_degrees",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 150,
+        "sampleProducts": [],
+        "sampleValues": [
+            "105",
+            "Dry 90\u00b0C and Wet 75"
+        ],
+        "proposedGroup": "thermal",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "OPERATING-TEMP",
+        "proposedDefinitionName": "Operating temperature",
+        "dataType": "decimal",
+        "unit": "C",
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "operator_same_concept_as_degrees_single_target_create",
+        "operatorResolved": true
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "ind_kilovolts",
+        "sourceLabel": "ind_kilovolts",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 150,
+        "sampleProducts": [],
+        "sampleValues": [
+            ".6/1kV",
+            "900/1500V dc-600/1000V ac"
+        ],
+        "proposedGroup": "electrical",
+        "existingTargetDefinition": "VOLTAGE",
+        "proposedDefinitionCode": "VOLTAGE",
+        "proposedDefinitionName": "Voltage",
+        "dataType": "decimal",
+        "unit": "V",
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "operator_map_ind_kilovolts_to_existing_VOLTAGE",
+        "operatorResolved": true
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "amour_braid_screen",
+        "sourceLabel": "amour_braid_screen",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 120,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "screen"
+        ],
+        "proposedGroup": "construction",
+        "existingTargetDefinition": "BRAID",
+        "proposedDefinitionCode": "BRAID",
+        "proposedDefinitionName": "Braid",
+        "dataType": "long-text",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "EXISTING_DEFINITION",
+            "candidateDefinition": "BRAID"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "conductor_type",
+        "sourceLabel": "conductor_type",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 117,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "a:2:{i:0;s:2:\"Cu\";i:1;s:2:\"Al\";}"
+        ],
+        "proposedGroup": "construction",
+        "existingTargetDefinition": "CONDUCTORS",
+        "proposedDefinitionCode": "CONDUCTORS",
+        "proposedDefinitionName": "Conductors",
+        "dataType": "long-text",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "CONDUCTOR"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "degrees",
+        "sourceLabel": "degrees",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 90,
+        "sampleProducts": [],
+        "sampleValues": [
+            "105",
+            "90"
+        ],
+        "proposedGroup": "thermal",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "OPERATING-TEMP",
+        "proposedDefinitionName": "Operating temperature",
+        "dataType": "decimal",
+        "unit": "C",
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "operator_approved_create_operating_temp_from_degrees_evidence",
+        "operatorResolved": true
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "hcl_emission",
+        "sourceLabel": "hcl_emission",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 90,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ">0.5%"
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "HCL-EMISSION",
+        "proposedDefinitionName": "HCl emission",
+        "dataType": "text",
+        "unit": null,
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "operator_approved_create_fire_performance_hcl",
+        "operatorResolved": true
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "kilovolts",
+        "sourceLabel": "kilovolts",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 90,
+        "sampleProducts": [],
+        "sampleValues": [
+            "0.6.1kV",
+            "8.7/15kV"
+        ],
+        "proposedGroup": "electrical",
+        "existingTargetDefinition": "VOLTAGE",
+        "proposedDefinitionCode": "VOLTAGE",
+        "proposedDefinitionName": "Voltage",
+        "dataType": "decimal",
+        "unit": "V",
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "operator_map_kilovolts_to_existing_VOLTAGE",
+        "operatorResolved": true
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "oxygen_index",
+        "sourceLabel": "oxygen_index",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 90,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            ">32."
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "OXYGEN-INDEX",
+        "proposedDefinitionName": "Oxygen index",
+        "dataType": "text",
+        "unit": null,
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "discoveryStatus": "AMBIGUOUS",
+            "candidateDefinition": ""
+        },
+        "reason": "operator_approved_create_loi_oxygen_index",
+        "operatorResolved": true
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "lzsh_braid_fire",
+        "sourceLabel": "lzsh_braid_fire",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 84,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "a:3:{i:0;s:4:\"lszh\";i:1;s:5:\"braid\";i:2;s:4:\"Fire\";}"
+        ],
+        "proposedGroup": "construction",
+        "existingTargetDefinition": "BRAID",
+        "proposedDefinitionCode": "BRAID",
+        "proposedDefinitionName": "Braid",
+        "dataType": "long-text",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "EXISTING_DEFINITION",
+            "candidateDefinition": "BRAID"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "standards_content",
+        "sourceLabel": "standards_content",
+        "semanticConcept": "STANDARD",
+        "fieldClass": "STANDARD",
+        "usageCount": 53,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "VDE 0207/20\r\nVDE 0250/602\r\nUL 1581\r\nAS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": "STANDARD",
+        "proposedDefinitionCode": "STANDARD",
+        "proposedDefinitionName": "Standard",
+        "dataType": "multi-select",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "STANDARDS"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "wordpress",
+        "sourceField": "standards_content_al",
+        "sourceLabel": "standards_content_al",
+        "semanticConcept": "STANDARD",
+        "fieldClass": "STANDARD",
+        "usageCount": 39,
+        "sampleProducts": [],
+        "sampleValues": [
+            "",
+            "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "proposedGroup": "compliance",
+        "existingTargetDefinition": "STANDARD",
+        "proposedDefinitionCode": "STANDARD",
+        "proposedDefinitionName": "Standard",
+        "dataType": "multi-select",
+        "unit": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "evidence": {
+            "discoveryStatus": "NEW_DEFINITION_REQUIRED",
+            "candidateDefinition": "STANDARDS"
+        },
+        "reason": "evidence_matched_existing_definition"
+    },
+    {
+        "sourceSystem": "tc",
+        "sourceField": "spec_labels:d1",
+        "sourceLabel": "Pins \u00a0",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 14,
+        "sampleProducts": [],
+        "sampleValues": [
+            "Pins \u00a0"
+        ],
+        "proposedGroup": "construction",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "PIN-COUNT",
+        "proposedDefinitionName": "Pins",
+        "dataType": "integer",
+        "unit": null,
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "from": "accessory_spec_labels",
+            "dimension": "d1"
+        },
+        "reason": "operator_approved_create_pin_count_concept_not_d1_field",
+        "operatorResolved": true
+    },
+    {
+        "sourceSystem": "tc",
+        "sourceField": "spec_labels:d1",
+        "sourceLabel": "Thread OD mm",
+        "semanticConcept": "SPECIFICATION",
+        "fieldClass": "SPECIFICATION",
+        "usageCount": 16,
+        "sampleProducts": [],
+        "sampleValues": [
+            "Thread OD mm"
+        ],
+        "proposedGroup": "mechanical",
+        "existingTargetDefinition": null,
+        "proposedDefinitionCode": "THREAD-OD",
+        "proposedDefinitionName": "Thread OD",
+        "dataType": "decimal",
+        "unit": "MM",
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "evidence": {
+            "from": "accessory_spec_labels",
+            "dimension": "d1"
+        },
+        "reason": "operator_approved_create_thread_od_concept_not_d1_field",
+        "operatorResolved": true
+    }
+]

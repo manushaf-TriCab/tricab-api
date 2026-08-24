@@ -1,0 +1,1062 @@
+[
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.6 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "IEC 60228",
+        "source": "wordpress.standards",
+        "usageCount": 52,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.6 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "AS/NZS 1125",
+        "source": "wordpress.standards",
+        "usageCount": 51,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.6 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "AS/NZS 3808",
+        "source": "wordpress.standards",
+        "usageCount": 45,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.6 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "IEC 60332-1",
+        "source": "wordpress.standards",
+        "usageCount": 36,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.6 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "AS/NZS 5000.1",
+        "source": "wordpress.standards",
+        "usageCount": 34,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.6 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "AS/NZS 1660.5.1",
+        "source": "wordpress.standards",
+        "usageCount": 32,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.6 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "AS/NZS 1660.5.6",
+        "source": "wordpress.standards",
+        "usageCount": 32,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "AS/NZS 3008.1",
+        "source": "wordpress.standards",
+        "usageCount": 27,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 5033 IEC 62930 IEC 60228 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "IEC 60332-3-22",
+        "source": "wordpress.standards",
+        "usageCount": 16,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 5033 IEC 62930 IEC 60228 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "IEC 60754-2",
+        "source": "wordpress.standards",
+        "usageCount": 16,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 5033 IEC 62930 IEC 60228 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "IEC 61034-1&2",
+        "source": "wordpress.standards",
+        "usageCount": 14,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 5033 IEC 62930 IEC 60228 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "AS/NZS 1660.5.2",
+        "source": "wordpress.standards",
+        "usageCount": 11,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 5033 IEC 62930 IEC 60228 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "AS/NZS 1660.5.4",
+        "source": "wordpress.standards",
+        "usageCount": 11,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+        "targetOption": "AS/NZS IEC 60332-1 \u2013 Flame Test",
+        "source": "wordpress.standards",
+        "usageCount": 10,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+        "targetOption": "AS/NZS IEC 60754 - Halogen",
+        "source": "wordpress.standards",
+        "usageCount": 8,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+        "targetOption": "NEK TS 606 \u2013 Oil & Mud",
+        "source": "wordpress.standards",
+        "usageCount": 8,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 3808 AS/NZS 1429.1 IEC 60228 AIEC 60332-1",
+        "targetOption": "AS/NZS 1429.1",
+        "source": "wordpress.standards",
+        "usageCount": 7,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034",
+        "targetOption": "AS/NZS 1660.5.5",
+        "source": "wordpress.standards",
+        "usageCount": 5,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034",
+        "targetOption": "AS/NZS 3013",
+        "source": "wordpress.standards",
+        "usageCount": 5,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034",
+        "targetOption": "IEC 60331",
+        "source": "wordpress.standards",
+        "usageCount": 5,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 3808 AS/NZS 1429.1 IEC 60228 AIEC 60332-1",
+        "targetOption": "AIEC 60332-1",
+        "source": "wordpress.standards",
+        "usageCount": 3,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034",
+        "targetOption": "BS 6387 (C",
+        "source": "wordpress.standards",
+        "usageCount": 3,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034",
+        "targetOption": "W",
+        "source": "wordpress.standards",
+        "usageCount": 3,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034",
+        "targetOption": "Z)",
+        "source": "wordpress.standards",
+        "usageCount": 3,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034",
+        "targetOption": "BS EN 50267",
+        "source": "wordpress.standards",
+        "usageCount": 3,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034",
+        "targetOption": "BS EN 61034",
+        "source": "wordpress.standards",
+        "usageCount": 3,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3008\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 3008 AS/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "AS/NZS 3008",
+        "source": "wordpress.standards",
+        "usageCount": 3,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 5033 IEC 62930 IEC 60228 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "AS/NZS 5033",
+        "source": "wordpress.standards",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 5033 IEC 62930 IEC 60228 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "IEC 62930",
+        "source": "wordpress.standards",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+        "targetOption": "AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+        "source": "wordpress.standards",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nCat A\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 3008.1 AS/NZS 3808 AS/NZS 5000.1 IEC 60228 IEC 60332-1 IEC 60332-3-22 Cat A IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "Cat A",
+        "source": "wordpress.standards",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.3\r\nAS 1670\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.3 AS 1670 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "AS/NZS 5000.3",
+        "source": "wordpress.standards",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.3\r\nAS 1670\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.5 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 3013 AS/NZS 3808 AS/NZS 5000.3 AS 1670 BS 6387 (C,W, Z) BS EN 50267 BS EN 61034 IEC 60228 IEC 60331 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "AS 1670",
+        "source": "wordpress.standards",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC60754 - Halogen",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 3808 AS/NZS 1429.1 IEC 60228 AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC60754 - Halogen",
+        "targetOption": "AS/NZS IEC60754 - Halogen",
+        "source": "wordpress.standards",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "FEC, FEM",
+        "normalizedValue": "FEC, FEM",
+        "targetOption": "FEC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "FEC, FEM",
+        "normalizedValue": "FEC, FEM",
+        "targetOption": "FEM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NTC, NTM",
+        "normalizedValue": "NTC, NTM",
+        "targetOption": "NTC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NTC, NTM",
+        "normalizedValue": "NTC, NTM",
+        "targetOption": "NTM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "FZC, FZM",
+        "normalizedValue": "FZC, FZM",
+        "targetOption": "FZC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "FZC, FZM",
+        "normalizedValue": "FZC, FZM",
+        "targetOption": "FZM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NFC, NFM",
+        "normalizedValue": "NFC, NFM",
+        "targetOption": "NFC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NFC, NFM",
+        "normalizedValue": "NFC, NFM",
+        "targetOption": "NFM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NJC, NJM",
+        "normalizedValue": "NJC, NJM",
+        "targetOption": "NJC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NJC, NJM",
+        "normalizedValue": "NJC, NJM",
+        "targetOption": "NJM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NVC, NVM",
+        "normalizedValue": "NVC, NVM",
+        "targetOption": "NVC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NVC, NVM",
+        "normalizedValue": "NVC, NVM",
+        "targetOption": "NVM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "RBC, RBM",
+        "normalizedValue": "RBC, RBM",
+        "targetOption": "RBC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "RBC, RBM",
+        "normalizedValue": "RBC, RBM",
+        "targetOption": "RBM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NRC, NRM",
+        "normalizedValue": "NRC, NRM",
+        "targetOption": "NRC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NRC, NRM",
+        "normalizedValue": "NRC, NRM",
+        "targetOption": "NRM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "FKC, FKM",
+        "normalizedValue": "FKC, FKM",
+        "targetOption": "FKC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "FKC, FKM",
+        "normalizedValue": "FKC, FKM",
+        "targetOption": "FKM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NUC, NUM",
+        "normalizedValue": "NUC, NUM",
+        "targetOption": "NUC",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "NUC, NUM",
+        "normalizedValue": "NUC, NUM",
+        "targetOption": "NUM",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3808\r\nAS/NZS 5000.2\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 1660.5.1 AS/NZS 1660.5.2 AS/NZS 1660.5.4 AS/NZS 1660.5.6 AS/NZS 3008.1 AS/NZS 3808 AS/NZS 5000.2 IEC 60228 IEC 60332-1 IEC 60332-3-22 IEC 60754-2 IEC 61034-1&2",
+        "targetOption": "AS/NZS 5000.2",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "VDE 0207/20\r\nVDE 0250/602\r\nUL 1581\r\nAS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "VDE 0207/20 VDE 0250/602 UL 1581 AS/NZS 1125 AS/NZS 3008.1 AS/NZS 1660.5.1 AS/NZS 1660.5.6 IEC 60228 IEC 60332-1",
+        "targetOption": "VDE 0207/20",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "VDE 0207/20\r\nVDE 0250/602\r\nUL 1581\r\nAS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "VDE 0207/20 VDE 0250/602 UL 1581 AS/NZS 1125 AS/NZS 3008.1 AS/NZS 1660.5.1 AS/NZS 1660.5.6 IEC 60228 IEC 60332-1",
+        "targetOption": "VDE 0250/602",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "VDE 0207/20\r\nVDE 0250/602\r\nUL 1581\r\nAS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "VDE 0207/20 VDE 0250/602 UL 1581 AS/NZS 1125 AS/NZS 3008.1 AS/NZS 1660.5.1 AS/NZS 1660.5.6 IEC 60228 IEC 60332-1",
+        "targetOption": "UL 1581",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Operating Temp:-15\u00b0C to +90\u00b0C\r\nVoltage Rating:12700/22000 Volts\r\nCore Colour:Black (with colour strip)\r\nJacket Colour:Black or to customer specification",
+        "normalizedValue": "Operating Temp:-15\u00b0C to +90\u00b0C Voltage Rating:12700/22000 Volts Core Colour:Black (with colour strip) Jacket Colour:Black or to customer specification",
+        "targetOption": "Operating Temp:-15\u00b0C to +90\u00b0C",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Operating Temp:-15\u00b0C to +90\u00b0C\r\nVoltage Rating:12700/22000 Volts\r\nCore Colour:Black (with colour strip)\r\nJacket Colour:Black or to customer specification",
+        "normalizedValue": "Operating Temp:-15\u00b0C to +90\u00b0C Voltage Rating:12700/22000 Volts Core Colour:Black (with colour strip) Jacket Colour:Black or to customer specification",
+        "targetOption": "Voltage Rating:12700/22000 Volts",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Operating Temp:-15\u00b0C to +90\u00b0C\r\nVoltage Rating:12700/22000 Volts\r\nCore Colour:Black (with colour strip)\r\nJacket Colour:Black or to customer specification",
+        "normalizedValue": "Operating Temp:-15\u00b0C to +90\u00b0C Voltage Rating:12700/22000 Volts Core Colour:Black (with colour strip) Jacket Colour:Black or to customer specification",
+        "targetOption": "Core Colour:Black (with colour strip)",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Operating Temp:-15\u00b0C to +90\u00b0C\r\nVoltage Rating:12700/22000 Volts\r\nCore Colour:Black (with colour strip)\r\nJacket Colour:Black or to customer specification",
+        "normalizedValue": "Operating Temp:-15\u00b0C to +90\u00b0C Voltage Rating:12700/22000 Volts Core Colour:Black (with colour strip) Jacket Colour:Black or to customer specification",
+        "targetOption": "Jacket Colour:Black or to customer specification",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC60754 - Halogen\r\nNEK TS 606 \u2013Oil & Mud",
+        "normalizedValue": "AS/NZS 1125 AS/NZS 3808 AS/NZS 1429.1 IEC 60228 AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC60754 - Halogen NEK TS 606 \u2013Oil & Mud",
+        "targetOption": "NEK TS 606 \u2013Oil & Mud",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+        "normalizedValue": "IEC 60228 IEC 60092-350 IEC 60092-353 IEC 60092-360 IEC 60332-1 IEC 60754-2 IEEE 45 IEEE 1580 IEEE 1202 NEK TS 606 AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1",
+        "targetOption": "IEC 60092-350",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+        "normalizedValue": "IEC 60228 IEC 60092-350 IEC 60092-353 IEC 60092-360 IEC 60332-1 IEC 60754-2 IEEE 45 IEEE 1580 IEEE 1202 NEK TS 606 AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1",
+        "targetOption": "IEC 60092-353",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+        "normalizedValue": "IEC 60228 IEC 60092-350 IEC 60092-353 IEC 60092-360 IEC 60332-1 IEC 60754-2 IEEE 45 IEEE 1580 IEEE 1202 NEK TS 606 AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1",
+        "targetOption": "IEC 60092-360",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+        "normalizedValue": "IEC 60228 IEC 60092-350 IEC 60092-353 IEC 60092-360 IEC 60332-1 IEC 60754-2 IEEE 45 IEEE 1580 IEEE 1202 NEK TS 606 AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1",
+        "targetOption": "IEEE 45",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+        "normalizedValue": "IEC 60228 IEC 60092-350 IEC 60092-353 IEC 60092-360 IEC 60332-1 IEC 60754-2 IEEE 45 IEEE 1580 IEEE 1202 NEK TS 606 AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1",
+        "targetOption": "IEEE 1580",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+        "normalizedValue": "IEC 60228 IEC 60092-350 IEC 60092-353 IEC 60092-360 IEC 60332-1 IEC 60754-2 IEEE 45 IEEE 1580 IEEE 1202 NEK TS 606 AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1",
+        "targetOption": "IEEE 1202",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1",
+        "normalizedValue": "IEC 60228 IEC 60092-350 IEC 60092-353 IEC 60092-360 IEC 60332-1 IEC 60754-2 IEEE 45 IEEE 1580 IEEE 1202 NEK TS 606 AS/NZS 1125 AS/NZS 3808 AS/NZS 5000.1",
+        "targetOption": "NEK TS 606",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "ASN/NZS 1125 ASN/NZS 1660.5.1 ASN/NZS 1660.5.6 ASN/NZS 3008.1 ASN/NZS 3808 ASN/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "ASN/NZS 1125",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "ASN/NZS 1125 ASN/NZS 1660.5.1 ASN/NZS 1660.5.6 ASN/NZS 3008.1 ASN/NZS 3808 ASN/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "ASN/NZS 1660.5.1",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "ASN/NZS 1125 ASN/NZS 1660.5.1 ASN/NZS 1660.5.6 ASN/NZS 3008.1 ASN/NZS 3808 ASN/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "ASN/NZS 1660.5.6",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "ASN/NZS 1125 ASN/NZS 1660.5.1 ASN/NZS 1660.5.6 ASN/NZS 3008.1 ASN/NZS 3808 ASN/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "ASN/NZS 3008.1",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "ASN/NZS 1125 ASN/NZS 1660.5.1 ASN/NZS 1660.5.6 ASN/NZS 3008.1 ASN/NZS 3808 ASN/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "ASN/NZS 3808",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1",
+        "normalizedValue": "ASN/NZS 1125 ASN/NZS 1660.5.1 ASN/NZS 1660.5.6 ASN/NZS 3008.1 ASN/NZS 3808 ASN/NZS 5000.1 IEC 60228 IEC 60332-1",
+        "targetOption": "ASN/NZS 5000.1",
+        "source": "wordpress.standards",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "standards_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "BHA",
+        "normalizedValue": "BHA",
+        "targetOption": "AS",
+        "source": "wordpress.approvals",
+        "usageCount": 20,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Small<br>Multi-core<br>Fire Test",
+        "normalizedValue": "SmallMulti-coreFire Test",
+        "targetOption": "Fire Test",
+        "source": "wordpress.approvals",
+        "usageCount": 7,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Small<br>Multi-core<br>Fire Test",
+        "normalizedValue": "SmallMulti-coreFire Test",
+        "targetOption": "Multi-core",
+        "source": "wordpress.approvals",
+        "usageCount": 3,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Small Multi-core<br>with Earth Fire Test",
+        "normalizedValue": "Small Multi-corewith Earth Fire Test",
+        "targetOption": "Small Multi-core",
+        "source": "wordpress.approvals",
+        "usageCount": 3,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "X-HF-110<br>HFS-110-TP",
+        "normalizedValue": "X-HF-110HFS-110-TP",
+        "targetOption": "X-HF-110",
+        "source": "wordpress.approvals",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Small<br>Multi-core<br>Fire Test",
+        "normalizedValue": "SmallMulti-coreFire Test",
+        "targetOption": "Small",
+        "source": "wordpress.approvals",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Hydrostatic<br>Pressure Test",
+        "normalizedValue": "HydrostaticPressure Test",
+        "targetOption": "Hydrostatic",
+        "source": "wordpress.approvals",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Hydrostatic<br>Pressure Test",
+        "normalizedValue": "HydrostaticPressure Test",
+        "targetOption": "Pressure Test",
+        "source": "wordpress.approvals",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "ALI-FLEX System<br>Warranty",
+        "normalizedValue": "ALI-FLEX SystemWarranty",
+        "targetOption": "Warranty",
+        "source": "wordpress.approvals",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "RoHS<br>Statement",
+        "normalizedValue": "RoHSStatement",
+        "targetOption": "Statement",
+        "source": "wordpress.approvals",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Fire Penetration Test<br> - Floor",
+        "normalizedValue": "Fire Penetration Test - Floor",
+        "targetOption": "Fire Penetration Test",
+        "source": "wordpress.approvals",
+        "usageCount": 2,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Green Star<br>Compliance",
+        "normalizedValue": "Green StarCompliance",
+        "targetOption": "Green Star",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Green Star<br>Compliance",
+        "normalizedValue": "Green StarCompliance",
+        "targetOption": "Compliance",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "E-Rubber<br>S-20 & N-30",
+        "normalizedValue": "E-RubberS-20 & N-30",
+        "targetOption": "E-Rubber",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "E-Rubber<br>S-20 & N-30",
+        "normalizedValue": "E-RubberS-20 & N-30",
+        "targetOption": "S-20 & N-30",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "X-HF-110<br>HFS-110-TP",
+        "normalizedValue": "X-HF-110HFS-110-TP",
+        "targetOption": "HFS-110-TP",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Small Multi-core<br>with Earth Fire Test",
+        "normalizedValue": "Small Multi-corewith Earth Fire Test",
+        "targetOption": "with Earth Fire Test",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Xenon Arc UV<br>Radiation Test",
+        "normalizedValue": "Xenon Arc UVRadiation Test",
+        "targetOption": "Xenon Arc UV",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Xenon Arc UV<br>Radiation Test",
+        "normalizedValue": "Xenon Arc UVRadiation Test",
+        "targetOption": "Radiation Test",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AUS Water<br>Quality Suitability",
+        "normalizedValue": "AUS WaterQuality Suitability",
+        "targetOption": "AUS Water",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "AUS Water<br>Quality Suitability",
+        "normalizedValue": "AUS WaterQuality Suitability",
+        "targetOption": "Quality Suitability",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Small Multi-core<br>Non Earth Fire Test",
+        "normalizedValue": "Small Multi-coreNon Earth Fire Test",
+        "targetOption": "Non Earth Fire Test",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Large Multi-core<br>Fire Test",
+        "normalizedValue": "Large Multi-coreFire Test",
+        "targetOption": "Large Multi-core",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "ALI-FLEX System<br>Warranty",
+        "normalizedValue": "ALI-FLEX SystemWarranty",
+        "targetOption": "ALI-FLEX System",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Large<br>Multi-core<br>Fire Test",
+        "normalizedValue": "LargeMulti-coreFire Test",
+        "targetOption": "Large",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "RoHS<br>Statement",
+        "normalizedValue": "RoHSStatement",
+        "targetOption": "RoHS",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "REACH<br>Statement",
+        "normalizedValue": "REACHStatement",
+        "targetOption": "REACH",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Standard<br>Warranty",
+        "normalizedValue": "StandardWarranty",
+        "targetOption": "Standard",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Fire Penetration Test<br> - Floor",
+        "normalizedValue": "Fire Penetration Test - Floor",
+        "targetOption": "- Floor",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    },
+    {
+        "rawValue": "Fire Penetration Test<br> - Wall",
+        "normalizedValue": "Fire Penetration Test - Wall",
+        "targetOption": "- Wall",
+        "source": "wordpress.approvals",
+        "usageCount": 1,
+        "decision": "REVIEW",
+        "confidence": "low",
+        "reason": "approvals_raw_variant_semantic_review"
+    }
+]

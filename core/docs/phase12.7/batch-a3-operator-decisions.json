@@ -1,0 +1,48 @@
+{
+    "generatedAtUtc": "2026-08-21T00:14:06+00:00",
+    "note": "Explicit Batch A.3 operator decision package. Not confidence auto-approve. Apply still blocked.",
+    "decisions": {
+        "technoFamily": "PLUG",
+        "approveCreateCodes": {
+            "CONDUITS-FITTINGS": {
+                "name": "Conduits & Fittings",
+                "family": "ACCESSORIES",
+                "reason": "operator_approved_create_after_overlap_review_keep_conduits_fittings_only",
+                "confidence": "high"
+            },
+            "TECHNO-CONNECTORS": {
+                "name": "Techno Connectors",
+                "family": "PLUG",
+                "reason": "operator_approved_create_family_plug_j90_j97_plug_socket_junction",
+                "confidence": "high"
+            },
+            "TERMINALS": {
+                "name": "Terminals",
+                "family": "ACCESSORIES",
+                "reason": "operator_approved_create_terminals_bootlace_remains_series_review",
+                "confidence": "high"
+            },
+            "GLANDS": {
+                "name": "Glands",
+                "family": "ACCESSORIES",
+                "reason": "operator_approved_create_glands_distinct_from_conduit_glands",
+                "confidence": "high"
+            },
+            "LINKS": {
+                "name": "Links",
+                "family": "ACCESSORIES",
+                "reason": "operator_approved_create_metallic_links_medium_evidence_reviewed",
+                "confidence": "medium"
+            },
+            "PLUG-SOCKET-LEADS": {
+                "name": "Plug-Socket Leads",
+                "family": "ACCESSORIES",
+                "reason": "operator_approved_create_preassembled_leads_medium_evidence_reviewed",
+                "confidence": "medium"
+            }
+        },
+        "series": {
+            "__approveAllEligibleProposed": true
+        }
+    }
+}

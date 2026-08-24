@@ -1,0 +1,159 @@
+{
+    "definitions": {
+        "degrees": {
+            "decision": "APPROVED_CREATE",
+            "proposedDefinitionCode": "OPERATING-TEMP",
+            "proposedDefinitionName": "Operating temperature",
+            "proposedGroup": "thermal",
+            "dataType": "decimal",
+            "unit": "C",
+            "reason": "operator_approved_create_operating_temp_from_degrees_evidence"
+        },
+        "ind_degrees": {
+            "decision": "APPROVED_CREATE",
+            "proposedDefinitionCode": "OPERATING-TEMP",
+            "proposedDefinitionName": "Operating temperature",
+            "proposedGroup": "thermal",
+            "dataType": "decimal",
+            "unit": "C",
+            "reason": "operator_same_concept_as_degrees_single_target_create"
+        },
+        "kilovolts": {
+            "decision": "APPROVED_MAP_EXISTING",
+            "existingTargetDefinition": "VOLTAGE",
+            "reason": "operator_map_kilovolts_to_existing_VOLTAGE"
+        },
+        "ind_kilovolts": {
+            "decision": "APPROVED_MAP_EXISTING",
+            "existingTargetDefinition": "VOLTAGE",
+            "reason": "operator_map_ind_kilovolts_to_existing_VOLTAGE"
+        },
+        "hcl_emission": {
+            "decision": "APPROVED_CREATE",
+            "proposedDefinitionCode": "HCL-EMISSION",
+            "proposedDefinitionName": "HCl emission",
+            "proposedGroup": "compliance",
+            "dataType": "text",
+            "unit": null,
+            "reason": "operator_approved_create_fire_performance_hcl"
+        },
+        "oxygen_index": {
+            "decision": "APPROVED_CREATE",
+            "proposedDefinitionCode": "OXYGEN-INDEX",
+            "proposedDefinitionName": "Oxygen index",
+            "proposedGroup": "compliance",
+            "dataType": "text",
+            "unit": null,
+            "reason": "operator_approved_create_loi_oxygen_index"
+        },
+        "ind_lszh_fire": {
+            "decision": "REVIEW",
+            "reason": "operator_keep_review_serialized_multi_flag_acf_not_clean_definition"
+        },
+        "spec_labels:d1|PIN-COUNT": {
+            "decision": "APPROVED_CREATE",
+            "proposedDefinitionCode": "PIN-COUNT",
+            "proposedDefinitionName": "Pins",
+            "proposedGroup": "construction",
+            "dataType": "integer",
+            "unit": null,
+            "reason": "operator_approved_create_pin_count_concept_not_d1_field"
+        },
+        "spec_labels:d1|THREAD-OD": {
+            "decision": "APPROVED_CREATE",
+            "proposedDefinitionCode": "THREAD-OD",
+            "proposedDefinitionName": "Thread OD",
+            "proposedGroup": "mechanical",
+            "dataType": "decimal",
+            "unit": "MM",
+            "reason": "operator_approved_create_thread_od_concept_not_d1_field"
+        },
+        "spec_labels:v1|LENGTH": {
+            "decision": "REVIEW",
+            "reason": "operator_keep_review_length_too_generic_across_styles_batch_c"
+        },
+        "spec_labels:d3|WIDTH": {
+            "decision": "REVIEW",
+            "reason": "operator_keep_review_width_too_generic_across_styles_batch_c"
+        },
+        "compound_code": {
+            "decision": "APPROVED_MAP_EXISTING",
+            "existingTargetDefinition": "SHEATH",
+            "reason": "operator_map_compound_code_xlpo_samples_to_SHEATH"
+        },
+        "industry_code": {
+            "decision": "NOT_A_SPECIFICATION",
+            "reason": "operator_industry_code_is_coding_attribute_not_specification"
+        },
+        "nek_class": {
+            "decision": "REVIEW",
+            "reason": "operator_keep_review_empty_samples_may_feed_standard_options_later"
+        }
+    },
+    "standards": {
+        "__approveGenuineStandards": true,
+        "__rejectParseFragments": true,
+        "mapExisting": {
+            "IEC 61034-1&2": "IEC-61034-1_2",
+            "AS/NZS IEC 60332-1 \u2013 Flame Test": "IEC-60332-1",
+            "AS/NZS IEC 60754 - Halogen": "IEC-60754-2",
+            "AS/NZS IEC60754 - Halogen": "IEC-60754-2",
+            "NEK TS 606 \u2013 Oil & Mud": "NEK-TS606-ED6",
+            "IEC 60331": "IEC-60331-1",
+            "AIEC 60332-1": "IEC-60332-1"
+        },
+        "approveCreate": [
+            "AS/NZS 5000.1",
+            "AS/NZS 3008.1",
+            "AS/NZS 1660.5.4",
+            "AS/NZS 1660.5.5",
+            "AS/NZS 3013",
+            "AS/NZS 5033",
+            "AS/NZS 5000.3",
+            "AS 1670",
+            "IEC 62930",
+            "BS EN 50267",
+            "BS EN 61034",
+            "BS 6387 (C,W, Z)"
+        ],
+        "reject": [
+            "W",
+            "Z)",
+            "Cat A",
+            "UPM"
+        ],
+        "review": [
+            "AS/NZS 3008",
+            "AS/NZS IEC 60332-1 \u2013 Flame Test AS/NZS IEC 60754 - Halogen NEK TS 606 \u2013 Oil & Mud",
+            "BS 6387 (C"
+        ]
+    },
+    "approvals": {
+        "__rejectStyleCodes": true,
+        "__rejectProductTypes": true,
+        "__rejectDocumentTitles": true,
+        "__rejectTestMethodLabels": true,
+        "keepReviewIssuingOrgAbbreviations": [
+            "AS",
+            "UP",
+            "WI"
+        ],
+        "approveCreate": [],
+        "mapExisting": []
+    },
+    "aliases": {
+        "safe": [
+            {
+                "raw": "AIEC 60332-1",
+                "target": "IEC 60332-1",
+                "reason": "typo_prefix_A_deterministic_to_IEC_60332-1"
+            },
+            {
+                "raw": "AS/NZS IEC60754 - Halogen",
+                "target": "IEC 60754-2",
+                "reason": "formatting_variant_maps_existing_halogen_standard"
+            }
+        ],
+        "rejectMultilineBlobs": true
+    }
+}

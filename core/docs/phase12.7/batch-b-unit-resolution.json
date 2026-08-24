@@ -1,0 +1,74 @@
+[
+    {
+        "rawUnit": "mm",
+        "normalizedUnit": "mm",
+        "targetUnit": "MM",
+        "usageCount": 0,
+        "decision": "APPROVED_MAP_EXISTING",
+        "reason": "mapped_to_seeded_specification_unit"
+    },
+    {
+        "rawUnit": "mm\u00b2",
+        "normalizedUnit": "mm2",
+        "targetUnit": "MM2",
+        "usageCount": 0,
+        "decision": "APPROVED_MAP_EXISTING",
+        "reason": "mapped_to_seeded_specification_unit"
+    },
+    {
+        "rawUnit": "mm2",
+        "normalizedUnit": "mm2",
+        "targetUnit": "MM2",
+        "usageCount": 0,
+        "decision": "APPROVED_MAP_EXISTING",
+        "reason": "mapped_to_seeded_specification_unit"
+    },
+    {
+        "rawUnit": "kg",
+        "normalizedUnit": "kg",
+        "targetUnit": "KG",
+        "usageCount": 0,
+        "decision": "APPROVED_MAP_EXISTING",
+        "reason": "mapped_to_seeded_specification_unit"
+    },
+    {
+        "rawUnit": "kg/km",
+        "normalizedUnit": "kg/km",
+        "targetUnit": "KG_PER_KM",
+        "usageCount": 0,
+        "decision": "APPROVED_MAP_EXISTING",
+        "reason": "mapped_to_seeded_specification_unit"
+    },
+    {
+        "rawUnit": "A",
+        "normalizedUnit": "a",
+        "targetUnit": "A",
+        "usageCount": 0,
+        "decision": "APPROVED_MAP_EXISTING",
+        "reason": "mapped_to_seeded_specification_unit"
+    },
+    {
+        "rawUnit": "V",
+        "normalizedUnit": "v",
+        "targetUnit": "V",
+        "usageCount": 0,
+        "decision": "APPROVED_MAP_EXISTING",
+        "reason": "mapped_to_seeded_specification_unit"
+    },
+    {
+        "rawUnit": "\u00b0C",
+        "normalizedUnit": "c",
+        "targetUnit": "C",
+        "usageCount": 0,
+        "decision": "APPROVED_MAP_EXISTING",
+        "reason": "mapped_to_seeded_specification_unit"
+    },
+    {
+        "rawUnit": "m",
+        "normalizedUnit": "m",
+        "targetUnit": "M",
+        "usageCount": 0,
+        "decision": "APPROVED_MAP_EXISTING",
+        "reason": "mapped_to_seeded_specification_unit"
+    }
+]

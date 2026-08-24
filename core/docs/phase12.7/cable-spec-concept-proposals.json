@@ -1,0 +1,290 @@
+{
+    "counts": {
+        "NOT_A_SPECIFICATION": 8,
+        "PROPOSED_MAP_EXISTING": 10,
+        "REVIEW": 11,
+        "PROPOSED_CREATE": 6
+    },
+    "items": [
+        {
+            "field": "A15c",
+            "concept": "UNUSED",
+            "decision": "NOT_A_SPECIFICATION",
+            "reason": "unused_in_cable_population",
+            "targetDefinitionCode": null,
+            "note": null
+        },
+        {
+            "field": "A25c",
+            "concept": "UNUSED",
+            "decision": "NOT_A_SPECIFICATION",
+            "reason": "unused_in_cable_population",
+            "targetDefinitionCode": null,
+            "note": null
+        },
+        {
+            "field": "A30c",
+            "concept": "CURRENT",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "current_rating_ambient_30c",
+            "targetDefinitionCode": "CURRENT",
+            "note": "Ambient 30\u00b0C current rating; shares CURRENT Definition with ambient note."
+        },
+        {
+            "field": "A40c",
+            "concept": "CURRENT",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "current_rating_ambient_40c",
+            "targetDefinitionCode": "CURRENT",
+            "note": "Ambient 40\u00b0C current rating; shares CURRENT Definition with ambient note."
+        },
+        {
+            "field": "A45c",
+            "concept": "CURRENT",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "current_rating_ambient_45c",
+            "targetDefinitionCode": "CURRENT",
+            "note": "Ambient 45\u00b0C current rating; shares CURRENT Definition with ambient note."
+        },
+        {
+            "field": "Af",
+            "concept": "CURRENT_AF",
+            "decision": "REVIEW",
+            "reason": "INSUFFICIENT_VALUES",
+            "targetDefinitionCode": null,
+            "note": "Only 1 style populated."
+        },
+        {
+            "field": "br",
+            "concept": "MIN_BEND_RADIUS",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "min_bend_radius",
+            "targetDefinitionCode": "MIN-BEND-RADIUS",
+            "note": null
+        },
+        {
+            "field": "cable_style",
+            "concept": "IDENTITY",
+            "decision": "NOT_A_SPECIFICATION",
+            "reason": "identity_style_key",
+            "targetDefinitionCode": null,
+            "note": null
+        },
+        {
+            "field": "cap",
+            "concept": "UNUSED",
+            "decision": "NOT_A_SPECIFICATION",
+            "reason": "unused_in_cable_population",
+            "targetDefinitionCode": null,
+            "note": null
+        },
+        {
+            "field": "cc",
+            "concept": "CONSTRUCTION_CODE",
+            "decision": "REVIEW",
+            "reason": "UNKNOWN_SEMANTICS",
+            "targetDefinitionCode": null,
+            "note": "c/p/t/a construction codes \u2014 option ambiguity."
+        },
+        {
+            "field": "cdia",
+            "concept": "NOM_COND_OD",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "conductor_od_mm",
+            "targetDefinitionCode": "NOM-COND-OD",
+            "note": null
+        },
+        {
+            "field": "core_con",
+            "concept": "UNUSED",
+            "decision": "NOT_A_SPECIFICATION",
+            "reason": "unused_in_cable_population",
+            "targetDefinitionCode": null,
+            "note": null
+        },
+        {
+            "field": "ct",
+            "concept": "CONDUCTOR_TYPE",
+            "decision": "REVIEW",
+            "reason": "UNKNOWN_SEMANTICS",
+            "targetDefinitionCode": null,
+            "note": "p/a codes \u2014 option ambiguity."
+        },
+        {
+            "field": "height",
+            "concept": "UNUSED",
+            "decision": "NOT_A_SPECIFICATION",
+            "reason": "unused_in_cable_population",
+            "targetDefinitionCode": null,
+            "note": null
+        },
+        {
+            "field": "ins",
+            "concept": "INSULATION",
+            "decision": "REVIEW",
+            "reason": "TYPE_AMBIGUITY",
+            "targetDefinitionCode": null,
+            "note": "Sparse; values may be thickness or OD."
+        },
+        {
+            "field": "mt",
+            "concept": "MATERIAL_TYPE",
+            "decision": "REVIEW",
+            "reason": "UNKNOWN_SEMANTICS",
+            "targetDefinitionCode": null,
+            "note": "Codes 1301/1302 \u2014 option ambiguity."
+        },
+        {
+            "field": "my_row_id",
+            "concept": "IDENTITY",
+            "decision": "NOT_A_SPECIFICATION",
+            "reason": "surrogate_primary_key",
+            "targetDefinitionCode": null,
+            "note": null
+        },
+        {
+            "field": "nc",
+            "concept": "CORES",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "integer_cores",
+            "targetDefinitionCode": "CORES",
+            "note": "Integer core count (nc)."
+        },
+        {
+            "field": "ne",
+            "concept": "EARTH_CORES",
+            "decision": "PROPOSED_CREATE",
+            "reason": "earth_core_count_mechanical_construction",
+            "targetDefinitionCode": "EARTH-CORES",
+            "note": null
+        },
+        {
+            "field": "od",
+            "concept": "NOM_CABLE_OD",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "cable_od_mm_maps_to_nom_cable_od",
+            "targetDefinitionCode": "NOM-CABLE-OD",
+            "note": "Cable OD mm \u2192 NOM-CABLE-OD. Accessory OUTER-DIAMETER is distinct and must never be aliased here."
+        },
+        {
+            "field": "od_arm",
+            "concept": "ARMOUR_OD",
+            "decision": "PROPOSED_CREATE",
+            "reason": "armour_od_mm",
+            "targetDefinitionCode": "ARMOUR-OD",
+            "note": null
+        },
+        {
+            "field": "od_bed",
+            "concept": "BEDDING_OD",
+            "decision": "PROPOSED_CREATE",
+            "reason": "bedding_od_mm",
+            "targetDefinitionCode": "BEDDING-OD",
+            "note": null
+        },
+        {
+            "field": "od_brd",
+            "concept": "BRAID_OD",
+            "decision": "PROPOSED_CREATE",
+            "reason": "braid_od_mm",
+            "targetDefinitionCode": "BRAID-OD",
+            "note": null
+        },
+        {
+            "field": "od_ins",
+            "concept": "NOM_INS_OD",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "insulation_od_mm",
+            "targetDefinitionCode": "NOM-INS-OD",
+            "note": null
+        },
+        {
+            "field": "ode_ins",
+            "concept": "EARTH_INS_OD",
+            "decision": "PROPOSED_CREATE",
+            "reason": "earth_insulation_od_mm",
+            "targetDefinitionCode": "EARTH-INS-OD",
+            "note": null
+        },
+        {
+            "field": "r",
+            "concept": "RESISTANCE",
+            "decision": "REVIEW",
+            "reason": "INSUFFICIENT_VALUES",
+            "targetDefinitionCode": null,
+            "note": "Only 1 style populated."
+        },
+        {
+            "field": "tension",
+            "concept": "TENSION",
+            "decision": "REVIEW",
+            "reason": "INSUFFICIENT_VALUES",
+            "targetDefinitionCode": null,
+            "note": "Only 1 style populated."
+        },
+        {
+            "field": "walu",
+            "concept": "ALUMINIUM_WEIGHT",
+            "decision": "REVIEW",
+            "reason": "UNKNOWN_SEMANTICS",
+            "targetDefinitionCode": null,
+            "note": "Aluminium weight \u2014 semantics unclear."
+        },
+        {
+            "field": "wbnz",
+            "concept": "BRONZE_WEIGHT",
+            "decision": "REVIEW",
+            "reason": "UNKNOWN_SEMANTICS",
+            "targetDefinitionCode": null,
+            "note": "Bronze weight \u2014 semantics unclear."
+        },
+        {
+            "field": "wght",
+            "concept": "APPROX_WEIGHT",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "approx_weight_kg_per_km",
+            "targetDefinitionCode": "APPROX-WEIGHT",
+            "note": null
+        },
+        {
+            "field": "width",
+            "concept": "UNUSED",
+            "decision": "NOT_A_SPECIFICATION",
+            "reason": "unused_in_cable_population",
+            "targetDefinitionCode": null,
+            "note": null
+        },
+        {
+            "field": "x50",
+            "concept": "REACTANCE_50",
+            "decision": "REVIEW",
+            "reason": "INSUFFICIENT_VALUES",
+            "targetDefinitionCode": null,
+            "note": "Only 1 style populated."
+        },
+        {
+            "field": "x60",
+            "concept": "REACTANCE_60",
+            "decision": "REVIEW",
+            "reason": "INSUFFICIENT_VALUES",
+            "targetDefinitionCode": null,
+            "note": "Only 1 style populated."
+        },
+        {
+            "field": "xa",
+            "concept": "CSA",
+            "decision": "PROPOSED_MAP_EXISTING",
+            "reason": "conductor_csa_mm2",
+            "targetDefinitionCode": "CSA",
+            "note": "Conductor CSA (mm\u00b2)."
+        },
+        {
+            "field": "xae",
+            "concept": "EARTH_CSA",
+            "decision": "PROPOSED_CREATE",
+            "reason": "earth_conductor_csa_mm2",
+            "targetDefinitionCode": "EARTH-CSA",
+            "note": null
+        }
+    ]
+}

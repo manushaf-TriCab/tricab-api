@@ -51,6 +51,6 @@ final class ReferenceDataCacheTest extends TestCase
 
     public function test_lookups_key_is_versioned_admin_namespace(): void
     {
-        self::assertSame('admin:product-lookups:v1', ReferenceDataCache::LOOKUPS_KEY);
+        self::assertSame('admin:product-lookups:v2', ReferenceDataCache::LOOKUPS_KEY);
     }
 }

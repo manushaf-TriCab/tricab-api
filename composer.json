@@ -34,7 +34,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "TriCab\\Api\\Tests\\": "tests/"
+            "TriCab\\Api\\Tests\\": "tests/",
+            "TriCab\\Core\\Tests\\": "core/tests/"
         }
     },
     "scripts": {

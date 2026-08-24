@@ -1,0 +1,123 @@
+[
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "OVERALL-LENGTH",
+        "name": "Overall Length",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "WIDTH",
+        "name": "Width",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "HEIGHT",
+        "name": "Height",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "INNER-DIAMETER",
+        "name": "Inner Diameter",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "CABLE-LENGTH",
+        "name": "Cable Length",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "m"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "BARREL-LENGTH",
+        "name": "Barrel Length",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "STUD-OD",
+        "name": "Stud OD",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "OUTER-DIAMETER",
+        "name": "Outer Diameter",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "THREAD-LENGTH",
+        "name": "Thread Length",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "BARREL-OD",
+        "name": "Barrel OD",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "THICKNESS",
+        "name": "Thickness",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "DEPTH",
+        "name": "Depth",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_CREATE",
+        "code": "PIN-DIAMETER",
+        "name": "Pin Diameter",
+        "group": "mechanical",
+        "dataType": "decimal",
+        "unit": "mm"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "code": "CORE-COLOURS"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "code": "CORE-COLOURS",
+        "concept": "PHASE_COLOUR"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "code": "CORES"
+    },
+    {
+        "decision": "APPROVED_MAP_EXISTING",
+        "code": "PIN-COUNT"
+    }
+]

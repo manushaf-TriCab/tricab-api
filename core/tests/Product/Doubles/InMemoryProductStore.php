@@ -1835,7 +1835,20 @@ final class InMemoryFakeProductPricingRepository implements ProductPricingReposi
             scheduledRecordCount: 0,
             expiredRecordCount: 0,
             inactiveRecordCount: 0,
+            defaultUnitOfMeasureCode: 'M',
+            defaultUnitOfMeasureSymbol: 'm',
+            defaultUnitSource: 'system-default',
         );
+    }
+
+    public function setProductDefaultPricingUnit(
+        ProductPublicId $productPublicId,
+        ?string $pricingUnitPublicId,
+        UserId $actorUserId,
+    ): \TriCab\Core\Product\Application\DTO\ProductPricingOverview {
+        unset($pricingUnitPublicId, $actorUserId);
+
+        return $this->getOverview($productPublicId);
     }
 
     public function listMatrixByProduct(ProductPublicId $productPublicId): array
@@ -1875,6 +1888,8 @@ final class InMemoryFakeProductPricingRepository implements ProductPricingReposi
             regionPublicId: $data['regionPublicId'] ?? null,
             marketPublicId: $data['marketPublicId'] ?? null,
             unitOfMeasureCode: 'M',
+            unitOfMeasureSymbol: 'm',
+            unitOfMeasurePublicId: null,
             priceSourceCode: $data['priceSourceCode'] ?? 'manual',
             effectiveFromUtc: $data['effectiveFromUtc'] ?? null,
             effectiveToUtc: $data['effectiveToUtc'] ?? null,

@@ -1,0 +1,81 @@
+{
+    "dimensions": [
+        "cc",
+        "mt",
+        "ct"
+    ],
+    "interpretation": "Three related but not identical dimensions (config mode \u00d7 unit system \u00d7 conductor type-ish). Do not create 3 Definitions automatically.",
+    "matrix": [
+        {
+            "cc": "c",
+            "mt": "1301",
+            "ct": "p",
+            "rows": 1601,
+            "styles": 27
+        },
+        {
+            "cc": "c",
+            "mt": "1302",
+            "ct": "p",
+            "rows": 1150,
+            "styles": 20
+        },
+        {
+            "cc": "p",
+            "mt": "1301",
+            "ct": "p",
+            "rows": 766,
+            "styles": 14
+        },
+        {
+            "cc": "p",
+            "mt": "1302",
+            "ct": "p",
+            "rows": 396,
+            "styles": 12
+        },
+        {
+            "cc": "c",
+            "mt": "1301",
+            "ct": "a",
+            "rows": 276,
+            "styles": 11
+        },
+        {
+            "cc": "t",
+            "mt": "1302",
+            "ct": "p",
+            "rows": 144,
+            "styles": 12
+        },
+        {
+            "cc": "t",
+            "mt": "1301",
+            "ct": "p",
+            "rows": 131,
+            "styles": 13
+        },
+        {
+            "cc": "p",
+            "mt": "0",
+            "ct": "p",
+            "rows": 15,
+            "styles": 1
+        },
+        {
+            "cc": "a",
+            "mt": "1302",
+            "ct": "p",
+            "rows": 8,
+            "styles": 1
+        },
+        {
+            "cc": "t",
+            "mt": "0",
+            "ct": "p",
+            "rows": 4,
+            "styles": 1
+        }
+    ],
+    "combinationCount": 10
+}

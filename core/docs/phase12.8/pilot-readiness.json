@@ -1,0 +1,20 @@
+{
+    "status": "PILOT_READY_FOR_EXPLICIT_APPLY_APPROVAL",
+    "blockers": [],
+    "checks": {
+        "identitySafe": true,
+        "classificationResolved": true,
+        "specMappingsComplete": true,
+        "zeroRequiredReviewFields": true,
+        "zeroRequiredUnmappedFields": true,
+        "zeroTargetConflicts": true,
+        "regionMarketValid": true,
+        "codeValid": true,
+        "slugValid": true,
+        "draftPublication": true,
+        "rollbackProjectionValid": true,
+        "idempotencyProjectionValid": true,
+        "legacySafetyVerified": true
+    },
+    "selectedStyle": "F12"
+}

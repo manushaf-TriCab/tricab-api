@@ -1,0 +1,3566 @@
+[
+    {
+        "legacySeries": "EZ",
+        "productCount": 4,
+        "exampleStyleCodes": "EZ",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "CF",
+        "productCount": 3,
+        "exampleStyleCodes": "CF",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FE",
+        "productCount": 3,
+        "exampleStyleCodes": "FE",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FK",
+        "productCount": 3,
+        "exampleStyleCodes": "FK",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FZ",
+        "productCount": 3,
+        "exampleStyleCodes": "FZ",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KL",
+        "productCount": 3,
+        "exampleStyleCodes": "KL",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RB",
+        "productCount": 3,
+        "exampleStyleCodes": "RB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "UP",
+        "productCount": 3,
+        "exampleStyleCodes": "UP",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "BH",
+        "productCount": 2,
+        "exampleStyleCodes": "BH",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "BV",
+        "productCount": 2,
+        "exampleStyleCodes": "BV",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "CA",
+        "productCount": 2,
+        "exampleStyleCodes": "CA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "CC",
+        "productCount": 2,
+        "exampleStyleCodes": "CC",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "DF",
+        "productCount": 2,
+        "exampleStyleCodes": "DF",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "DP",
+        "productCount": 2,
+        "exampleStyleCodes": "DP",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "DV",
+        "productCount": 2,
+        "exampleStyleCodes": "DV",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "EG",
+        "productCount": 2,
+        "exampleStyleCodes": "EG",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "ES",
+        "productCount": 2,
+        "exampleStyleCodes": "ES",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "EW",
+        "productCount": 2,
+        "exampleStyleCodes": "EW",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FC",
+        "productCount": 2,
+        "exampleStyleCodes": "FC",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FJ",
+        "productCount": 2,
+        "exampleStyleCodes": "FJ",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FL",
+        "productCount": 2,
+        "exampleStyleCodes": "FL",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FR",
+        "productCount": 2,
+        "exampleStyleCodes": "FR",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FW",
+        "productCount": 2,
+        "exampleStyleCodes": "FW",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "HT",
+        "productCount": 2,
+        "exampleStyleCodes": "HT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KA",
+        "productCount": 2,
+        "exampleStyleCodes": "KA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "LP",
+        "productCount": 2,
+        "exampleStyleCodes": "LP",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "LS",
+        "productCount": 2,
+        "exampleStyleCodes": "LS",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PJ",
+        "productCount": 2,
+        "exampleStyleCodes": "PJ",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RC",
+        "productCount": 2,
+        "exampleStyleCodes": "RC",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RR",
+        "productCount": 2,
+        "exampleStyleCodes": "RR",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RS",
+        "productCount": 2,
+        "exampleStyleCodes": "RS",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "SC",
+        "productCount": 2,
+        "exampleStyleCodes": "SC",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "W02",
+        "productCount": 2,
+        "exampleStyleCodes": "W02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "W04",
+        "productCount": 2,
+        "exampleStyleCodes": "W04",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "XL",
+        "productCount": 2,
+        "exampleStyleCodes": "XL",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A01",
+        "productCount": 1,
+        "exampleStyleCodes": "A01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A02",
+        "productCount": 1,
+        "exampleStyleCodes": "A02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A03",
+        "productCount": 1,
+        "exampleStyleCodes": "A03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A05",
+        "productCount": 1,
+        "exampleStyleCodes": "A05",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A06",
+        "productCount": 1,
+        "exampleStyleCodes": "A06",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A07",
+        "productCount": 1,
+        "exampleStyleCodes": "A07",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A08",
+        "productCount": 1,
+        "exampleStyleCodes": "A08",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A09",
+        "productCount": 1,
+        "exampleStyleCodes": "A09",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A10",
+        "productCount": 1,
+        "exampleStyleCodes": "A10",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A11",
+        "productCount": 1,
+        "exampleStyleCodes": "A11",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A12",
+        "productCount": 1,
+        "exampleStyleCodes": "A12",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A20",
+        "productCount": 1,
+        "exampleStyleCodes": "A20",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A21",
+        "productCount": 1,
+        "exampleStyleCodes": "A21",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A25",
+        "productCount": 1,
+        "exampleStyleCodes": "A25",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A27",
+        "productCount": 1,
+        "exampleStyleCodes": "A27",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A29",
+        "productCount": 1,
+        "exampleStyleCodes": "A29",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A30",
+        "productCount": 1,
+        "exampleStyleCodes": "A30",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A31",
+        "productCount": 1,
+        "exampleStyleCodes": "A31",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A32",
+        "productCount": 1,
+        "exampleStyleCodes": "A32",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A33",
+        "productCount": 1,
+        "exampleStyleCodes": "A33",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A34",
+        "productCount": 1,
+        "exampleStyleCodes": "A34",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A35",
+        "productCount": 1,
+        "exampleStyleCodes": "A35",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A36",
+        "productCount": 1,
+        "exampleStyleCodes": "A36",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A37",
+        "productCount": 1,
+        "exampleStyleCodes": "A37",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A38",
+        "productCount": 1,
+        "exampleStyleCodes": "A38",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A40",
+        "productCount": 1,
+        "exampleStyleCodes": "A40",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A47",
+        "productCount": 1,
+        "exampleStyleCodes": "A47",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A48",
+        "productCount": 1,
+        "exampleStyleCodes": "A48",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A51",
+        "productCount": 1,
+        "exampleStyleCodes": "A51",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "A52",
+        "productCount": 1,
+        "exampleStyleCodes": "A52",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "AR",
+        "productCount": 1,
+        "exampleStyleCodes": "AR",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B01",
+        "productCount": 1,
+        "exampleStyleCodes": "B01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B05",
+        "productCount": 1,
+        "exampleStyleCodes": "B05",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B06",
+        "productCount": 1,
+        "exampleStyleCodes": "B06",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B07",
+        "productCount": 1,
+        "exampleStyleCodes": "B07",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B1",
+        "productCount": 1,
+        "exampleStyleCodes": "B1",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B10",
+        "productCount": 1,
+        "exampleStyleCodes": "B10",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B12",
+        "productCount": 1,
+        "exampleStyleCodes": "B12",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B20",
+        "productCount": 1,
+        "exampleStyleCodes": "B20",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B21",
+        "productCount": 1,
+        "exampleStyleCodes": "B21",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B22",
+        "productCount": 1,
+        "exampleStyleCodes": "B22",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B23",
+        "productCount": 1,
+        "exampleStyleCodes": "B23",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B24",
+        "productCount": 1,
+        "exampleStyleCodes": "B24",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B27",
+        "productCount": 1,
+        "exampleStyleCodes": "B27",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B36",
+        "productCount": 1,
+        "exampleStyleCodes": "B36",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B37",
+        "productCount": 1,
+        "exampleStyleCodes": "B37",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B38",
+        "productCount": 1,
+        "exampleStyleCodes": "B38",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B3C, B3M",
+        "productCount": 1,
+        "exampleStyleCodes": "B3C, B3M",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "B4C, B4M",
+        "productCount": 1,
+        "exampleStyleCodes": "B4C, B4M",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "BB",
+        "productCount": 1,
+        "exampleStyleCodes": "BB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "BW",
+        "productCount": 1,
+        "exampleStyleCodes": "BW",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "BY",
+        "productCount": 1,
+        "exampleStyleCodes": "BY",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "C1",
+        "productCount": 1,
+        "exampleStyleCodes": "C1",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "C2",
+        "productCount": 1,
+        "exampleStyleCodes": "C2",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "C3",
+        "productCount": 1,
+        "exampleStyleCodes": "C3",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "C4",
+        "productCount": 1,
+        "exampleStyleCodes": "C4",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "C5",
+        "productCount": 1,
+        "exampleStyleCodes": "C5",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "C6",
+        "productCount": 1,
+        "exampleStyleCodes": "C6",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "CB",
+        "productCount": 1,
+        "exampleStyleCodes": "CB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "CDT",
+        "productCount": 1,
+        "exampleStyleCodes": "CDT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "CN",
+        "productCount": 1,
+        "exampleStyleCodes": "CN",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D01",
+        "productCount": 1,
+        "exampleStyleCodes": "D01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D02",
+        "productCount": 1,
+        "exampleStyleCodes": "D02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D03",
+        "productCount": 1,
+        "exampleStyleCodes": "D03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D04",
+        "productCount": 1,
+        "exampleStyleCodes": "D04",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D05",
+        "productCount": 1,
+        "exampleStyleCodes": "D05",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D06",
+        "productCount": 1,
+        "exampleStyleCodes": "D06",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D07",
+        "productCount": 1,
+        "exampleStyleCodes": "D07",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D08",
+        "productCount": 1,
+        "exampleStyleCodes": "D08",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D09",
+        "productCount": 1,
+        "exampleStyleCodes": "D09",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D10",
+        "productCount": 1,
+        "exampleStyleCodes": "D10",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D11",
+        "productCount": 1,
+        "exampleStyleCodes": "D11",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D12",
+        "productCount": 1,
+        "exampleStyleCodes": "D12",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D13",
+        "productCount": 1,
+        "exampleStyleCodes": "D13",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D14",
+        "productCount": 1,
+        "exampleStyleCodes": "D14",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D15",
+        "productCount": 1,
+        "exampleStyleCodes": "D15",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D19",
+        "productCount": 1,
+        "exampleStyleCodes": "D19",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D20",
+        "productCount": 1,
+        "exampleStyleCodes": "D20",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D21",
+        "productCount": 1,
+        "exampleStyleCodes": "D21",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D22",
+        "productCount": 1,
+        "exampleStyleCodes": "D22",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D24",
+        "productCount": 1,
+        "exampleStyleCodes": "D24",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "D29",
+        "productCount": 1,
+        "exampleStyleCodes": "D29",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "DA",
+        "productCount": 1,
+        "exampleStyleCodes": "DA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "DC",
+        "productCount": 1,
+        "exampleStyleCodes": "DC",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "DG",
+        "productCount": 1,
+        "exampleStyleCodes": "DG",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "DL",
+        "productCount": 1,
+        "exampleStyleCodes": "DL",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "DW",
+        "productCount": 1,
+        "exampleStyleCodes": "DW",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E01",
+        "productCount": 1,
+        "exampleStyleCodes": "E01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E02",
+        "productCount": 1,
+        "exampleStyleCodes": "E02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E03",
+        "productCount": 1,
+        "exampleStyleCodes": "E03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E04",
+        "productCount": 1,
+        "exampleStyleCodes": "E04",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E1",
+        "productCount": 1,
+        "exampleStyleCodes": "E1",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E2",
+        "productCount": 1,
+        "exampleStyleCodes": "E2",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E3",
+        "productCount": 1,
+        "exampleStyleCodes": "E3",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E4",
+        "productCount": 1,
+        "exampleStyleCodes": "E4",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E6",
+        "productCount": 1,
+        "exampleStyleCodes": "E6",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "E7",
+        "productCount": 1,
+        "exampleStyleCodes": "E7",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "EA",
+        "productCount": 1,
+        "exampleStyleCodes": "EA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "EBL",
+        "productCount": 1,
+        "exampleStyleCodes": "EBL",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "EH",
+        "productCount": 1,
+        "exampleStyleCodes": "EH",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "ET",
+        "productCount": 1,
+        "exampleStyleCodes": "ET",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "EU",
+        "productCount": 1,
+        "exampleStyleCodes": "EU",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "EX",
+        "productCount": 1,
+        "exampleStyleCodes": "EX",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "EY",
+        "productCount": 1,
+        "exampleStyleCodes": "EY",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F01",
+        "productCount": 1,
+        "exampleStyleCodes": "F01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F02",
+        "productCount": 1,
+        "exampleStyleCodes": "F02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F03",
+        "productCount": 1,
+        "exampleStyleCodes": "F03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F04",
+        "productCount": 1,
+        "exampleStyleCodes": "F04",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F07",
+        "productCount": 1,
+        "exampleStyleCodes": "F07",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F08",
+        "productCount": 1,
+        "exampleStyleCodes": "F08",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F09",
+        "productCount": 1,
+        "exampleStyleCodes": "F09",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F1",
+        "productCount": 1,
+        "exampleStyleCodes": "F1",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F10",
+        "productCount": 1,
+        "exampleStyleCodes": "F10",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F12",
+        "productCount": 1,
+        "exampleStyleCodes": "F12",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F14",
+        "productCount": 1,
+        "exampleStyleCodes": "F14",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F20",
+        "productCount": 1,
+        "exampleStyleCodes": "F20",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F21",
+        "productCount": 1,
+        "exampleStyleCodes": "F21",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F22",
+        "productCount": 1,
+        "exampleStyleCodes": "F22",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "F25",
+        "productCount": 1,
+        "exampleStyleCodes": "F25",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FB",
+        "productCount": 1,
+        "exampleStyleCodes": "FB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FD",
+        "productCount": 1,
+        "exampleStyleCodes": "FD",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FH",
+        "productCount": 1,
+        "exampleStyleCodes": "FH",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FP",
+        "productCount": 1,
+        "exampleStyleCodes": "FP",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "FV",
+        "productCount": 1,
+        "exampleStyleCodes": "FV",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G01",
+        "productCount": 1,
+        "exampleStyleCodes": "G01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G02",
+        "productCount": 1,
+        "exampleStyleCodes": "G02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G03",
+        "productCount": 1,
+        "exampleStyleCodes": "G03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G04",
+        "productCount": 1,
+        "exampleStyleCodes": "G04",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G06",
+        "productCount": 1,
+        "exampleStyleCodes": "G06",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G07",
+        "productCount": 1,
+        "exampleStyleCodes": "G07",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G08",
+        "productCount": 1,
+        "exampleStyleCodes": "G08",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G10",
+        "productCount": 1,
+        "exampleStyleCodes": "G10",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G11",
+        "productCount": 1,
+        "exampleStyleCodes": "G11",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G12",
+        "productCount": 1,
+        "exampleStyleCodes": "G12",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "G15",
+        "productCount": 1,
+        "exampleStyleCodes": "G15",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "H01",
+        "productCount": 1,
+        "exampleStyleCodes": "H01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "H02",
+        "productCount": 1,
+        "exampleStyleCodes": "H02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "H06",
+        "productCount": 1,
+        "exampleStyleCodes": "H06",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "H7",
+        "productCount": 1,
+        "exampleStyleCodes": "H7",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "HB",
+        "productCount": 1,
+        "exampleStyleCodes": "HB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "IA",
+        "productCount": 1,
+        "exampleStyleCodes": "IA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J01",
+        "productCount": 1,
+        "exampleStyleCodes": "J01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J02",
+        "productCount": 1,
+        "exampleStyleCodes": "J02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J03",
+        "productCount": 1,
+        "exampleStyleCodes": "J03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J05",
+        "productCount": 1,
+        "exampleStyleCodes": "J05",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J06",
+        "productCount": 1,
+        "exampleStyleCodes": "J06",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J07",
+        "productCount": 1,
+        "exampleStyleCodes": "J07",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J08",
+        "productCount": 1,
+        "exampleStyleCodes": "J08",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J09",
+        "productCount": 1,
+        "exampleStyleCodes": "J09",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J10",
+        "productCount": 1,
+        "exampleStyleCodes": "J10",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J11",
+        "productCount": 1,
+        "exampleStyleCodes": "J11",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J12",
+        "productCount": 1,
+        "exampleStyleCodes": "J12",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J16",
+        "productCount": 1,
+        "exampleStyleCodes": "J16",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J17",
+        "productCount": 1,
+        "exampleStyleCodes": "J17",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J18",
+        "productCount": 1,
+        "exampleStyleCodes": "J18",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J19",
+        "productCount": 1,
+        "exampleStyleCodes": "J19",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J30",
+        "productCount": 1,
+        "exampleStyleCodes": "J30",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J31",
+        "productCount": 1,
+        "exampleStyleCodes": "J31",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J32",
+        "productCount": 1,
+        "exampleStyleCodes": "J32",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J33",
+        "productCount": 1,
+        "exampleStyleCodes": "J33",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J34",
+        "productCount": 1,
+        "exampleStyleCodes": "J34",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J40",
+        "productCount": 1,
+        "exampleStyleCodes": "J40",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J42",
+        "productCount": 1,
+        "exampleStyleCodes": "J42",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J50",
+        "productCount": 1,
+        "exampleStyleCodes": "J50",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J51",
+        "productCount": 1,
+        "exampleStyleCodes": "J51",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J52",
+        "productCount": 1,
+        "exampleStyleCodes": "J52",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J53",
+        "productCount": 1,
+        "exampleStyleCodes": "J53",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J54",
+        "productCount": 1,
+        "exampleStyleCodes": "J54",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J55",
+        "productCount": 1,
+        "exampleStyleCodes": "J55",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J56",
+        "productCount": 1,
+        "exampleStyleCodes": "J56",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J57",
+        "productCount": 1,
+        "exampleStyleCodes": "J57",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J58",
+        "productCount": 1,
+        "exampleStyleCodes": "J58",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J59",
+        "productCount": 1,
+        "exampleStyleCodes": "J59",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J60",
+        "productCount": 1,
+        "exampleStyleCodes": "J60",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J61",
+        "productCount": 1,
+        "exampleStyleCodes": "J61",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J62",
+        "productCount": 1,
+        "exampleStyleCodes": "J62",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J64",
+        "productCount": 1,
+        "exampleStyleCodes": "J64",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J65",
+        "productCount": 1,
+        "exampleStyleCodes": "J65",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J66",
+        "productCount": 1,
+        "exampleStyleCodes": "J66",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J70",
+        "productCount": 1,
+        "exampleStyleCodes": "J70",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J84",
+        "productCount": 1,
+        "exampleStyleCodes": "J84",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J90",
+        "productCount": 1,
+        "exampleStyleCodes": "J90",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J91",
+        "productCount": 1,
+        "exampleStyleCodes": "J91",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J92",
+        "productCount": 1,
+        "exampleStyleCodes": "J92",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J93",
+        "productCount": 1,
+        "exampleStyleCodes": "J93",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J94",
+        "productCount": 1,
+        "exampleStyleCodes": "J94",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J95",
+        "productCount": 1,
+        "exampleStyleCodes": "J95",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J96",
+        "productCount": 1,
+        "exampleStyleCodes": "J96",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "J97",
+        "productCount": 1,
+        "exampleStyleCodes": "J97",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "JD",
+        "productCount": 1,
+        "exampleStyleCodes": "JD",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "JL",
+        "productCount": 1,
+        "exampleStyleCodes": "JL",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KB",
+        "productCount": 1,
+        "exampleStyleCodes": "KB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KC",
+        "productCount": 1,
+        "exampleStyleCodes": "KC",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KDT",
+        "productCount": 1,
+        "exampleStyleCodes": "KDT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KE",
+        "productCount": 1,
+        "exampleStyleCodes": "KE",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KF",
+        "productCount": 1,
+        "exampleStyleCodes": "KF",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KG",
+        "productCount": 1,
+        "exampleStyleCodes": "KG",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KH",
+        "productCount": 1,
+        "exampleStyleCodes": "KH",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KK",
+        "productCount": 1,
+        "exampleStyleCodes": "KK",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KN",
+        "productCount": 1,
+        "exampleStyleCodes": "KN",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KP",
+        "productCount": 1,
+        "exampleStyleCodes": "KP",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "KU",
+        "productCount": 1,
+        "exampleStyleCodes": "KU",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "LKEN",
+        "productCount": 1,
+        "exampleStyleCodes": "LKEN",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "LL1E",
+        "productCount": 1,
+        "exampleStyleCodes": "LL1E",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "LLA1",
+        "productCount": 1,
+        "exampleStyleCodes": "LLA1",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "LN",
+        "productCount": 1,
+        "exampleStyleCodes": "LN",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "M01",
+        "productCount": 1,
+        "exampleStyleCodes": "M01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "M3C, M3M",
+        "productCount": 1,
+        "exampleStyleCodes": "M3C, M3M",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "M4C, M4M",
+        "productCount": 1,
+        "exampleStyleCodes": "M4C, M4M",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "M5C, M5M",
+        "productCount": 1,
+        "exampleStyleCodes": "M5C, M5M",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "M6C, M6M",
+        "productCount": 1,
+        "exampleStyleCodes": "M6C, M6M",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "N2",
+        "productCount": 1,
+        "exampleStyleCodes": "N2",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "N3",
+        "productCount": 1,
+        "exampleStyleCodes": "N3",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "N4",
+        "productCount": 1,
+        "exampleStyleCodes": "N4",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "N6",
+        "productCount": 1,
+        "exampleStyleCodes": "N6",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "N7",
+        "productCount": 1,
+        "exampleStyleCodes": "N7",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "NB",
+        "productCount": 1,
+        "exampleStyleCodes": "NB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "NC",
+        "productCount": 1,
+        "exampleStyleCodes": "NC",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "NF",
+        "productCount": 1,
+        "exampleStyleCodes": "NF",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "NJ",
+        "productCount": 1,
+        "exampleStyleCodes": "NJ",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "NR",
+        "productCount": 1,
+        "exampleStyleCodes": "NR",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "NT",
+        "productCount": 1,
+        "exampleStyleCodes": "NT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "NU",
+        "productCount": 1,
+        "exampleStyleCodes": "NU",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "NV",
+        "productCount": 1,
+        "exampleStyleCodes": "NV",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "OD",
+        "productCount": 1,
+        "exampleStyleCodes": "OD",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "OT",
+        "productCount": 1,
+        "exampleStyleCodes": "OT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "P3",
+        "productCount": 1,
+        "exampleStyleCodes": "P3",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "P4",
+        "productCount": 1,
+        "exampleStyleCodes": "P4",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PA",
+        "productCount": 1,
+        "exampleStyleCodes": "PA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PB",
+        "productCount": 1,
+        "exampleStyleCodes": "PB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PC1",
+        "productCount": 1,
+        "exampleStyleCodes": "PC1",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PD",
+        "productCount": 1,
+        "exampleStyleCodes": "PD",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PG",
+        "productCount": 1,
+        "exampleStyleCodes": "PG",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PH",
+        "productCount": 1,
+        "exampleStyleCodes": "PH",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PK",
+        "productCount": 1,
+        "exampleStyleCodes": "PK",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PL",
+        "productCount": 1,
+        "exampleStyleCodes": "PL",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PN",
+        "productCount": 1,
+        "exampleStyleCodes": "PN",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PS",
+        "productCount": 1,
+        "exampleStyleCodes": "PS",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PS1A",
+        "productCount": 1,
+        "exampleStyleCodes": "PS1A",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PS1B",
+        "productCount": 1,
+        "exampleStyleCodes": "PS1B",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PS1C",
+        "productCount": 1,
+        "exampleStyleCodes": "PS1C",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PS1D",
+        "productCount": 1,
+        "exampleStyleCodes": "PS1D",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PS3C",
+        "productCount": 1,
+        "exampleStyleCodes": "PS3C",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PS6",
+        "productCount": 1,
+        "exampleStyleCodes": "PS6",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PSKH1C",
+        "productCount": 1,
+        "exampleStyleCodes": "PSKH1C",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PSKH2A",
+        "productCount": 1,
+        "exampleStyleCodes": "PSKH2A",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PSKH3E",
+        "productCount": 1,
+        "exampleStyleCodes": "PSKH3E",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PSXA",
+        "productCount": 1,
+        "exampleStyleCodes": "PSXA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PT",
+        "productCount": 1,
+        "exampleStyleCodes": "PT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PW",
+        "productCount": 1,
+        "exampleStyleCodes": "PW",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PX",
+        "productCount": 1,
+        "exampleStyleCodes": "PX",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PY",
+        "productCount": 1,
+        "exampleStyleCodes": "PY",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "PZ",
+        "productCount": 1,
+        "exampleStyleCodes": "PZ",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "R1",
+        "productCount": 1,
+        "exampleStyleCodes": "R1",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "R2",
+        "productCount": 1,
+        "exampleStyleCodes": "R2",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "R3",
+        "productCount": 1,
+        "exampleStyleCodes": "R3",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "R4",
+        "productCount": 1,
+        "exampleStyleCodes": "R4",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "R5",
+        "productCount": 1,
+        "exampleStyleCodes": "R5",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "R6",
+        "productCount": 1,
+        "exampleStyleCodes": "R6",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "R7",
+        "productCount": 1,
+        "exampleStyleCodes": "R7",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "R8",
+        "productCount": 1,
+        "exampleStyleCodes": "R8",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "R9",
+        "productCount": 1,
+        "exampleStyleCodes": "R9",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RA",
+        "productCount": 1,
+        "exampleStyleCodes": "RA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RD",
+        "productCount": 1,
+        "exampleStyleCodes": "RD",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RE",
+        "productCount": 1,
+        "exampleStyleCodes": "RE",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RF",
+        "productCount": 1,
+        "exampleStyleCodes": "RF",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RG",
+        "productCount": 1,
+        "exampleStyleCodes": "RG",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RH",
+        "productCount": 1,
+        "exampleStyleCodes": "RH",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RL",
+        "productCount": 1,
+        "exampleStyleCodes": "RL",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "RW",
+        "productCount": 1,
+        "exampleStyleCodes": "RW",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "S01",
+        "productCount": 1,
+        "exampleStyleCodes": "S01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "S02",
+        "productCount": 1,
+        "exampleStyleCodes": "S02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "S03",
+        "productCount": 1,
+        "exampleStyleCodes": "S03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "S04",
+        "productCount": 1,
+        "exampleStyleCodes": "S04",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "S2",
+        "productCount": 1,
+        "exampleStyleCodes": "S2",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "S3",
+        "productCount": 1,
+        "exampleStyleCodes": "S3",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "S4",
+        "productCount": 1,
+        "exampleStyleCodes": "S4",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "S6",
+        "productCount": 1,
+        "exampleStyleCodes": "S6",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "SH",
+        "productCount": 1,
+        "exampleStyleCodes": "SH",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "SJ",
+        "productCount": 1,
+        "exampleStyleCodes": "SJ",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "SK",
+        "productCount": 1,
+        "exampleStyleCodes": "SK",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "SX",
+        "productCount": 1,
+        "exampleStyleCodes": "SX",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "SY",
+        "productCount": 1,
+        "exampleStyleCodes": "SY",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "T01",
+        "productCount": 1,
+        "exampleStyleCodes": "T01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "T02",
+        "productCount": 1,
+        "exampleStyleCodes": "T02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "T03",
+        "productCount": 1,
+        "exampleStyleCodes": "T03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "T3",
+        "productCount": 1,
+        "exampleStyleCodes": "T3",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "T4",
+        "productCount": 1,
+        "exampleStyleCodes": "T4",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TB",
+        "productCount": 1,
+        "exampleStyleCodes": "TB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TC12",
+        "productCount": 1,
+        "exampleStyleCodes": "TC12",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TF",
+        "productCount": 1,
+        "exampleStyleCodes": "TF",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TG",
+        "productCount": 1,
+        "exampleStyleCodes": "TG",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TK",
+        "productCount": 1,
+        "exampleStyleCodes": "TK",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TN",
+        "productCount": 1,
+        "exampleStyleCodes": "TN",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TP",
+        "productCount": 1,
+        "exampleStyleCodes": "TP",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TR",
+        "productCount": 1,
+        "exampleStyleCodes": "TR",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TS",
+        "productCount": 1,
+        "exampleStyleCodes": "TS",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TV",
+        "productCount": 1,
+        "exampleStyleCodes": "TV",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "TX",
+        "productCount": 1,
+        "exampleStyleCodes": "TX",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "U01",
+        "productCount": 1,
+        "exampleStyleCodes": "U01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "UPA",
+        "productCount": 1,
+        "exampleStyleCodes": "UPA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "V1",
+        "productCount": 1,
+        "exampleStyleCodes": "V1",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "V2",
+        "productCount": 1,
+        "exampleStyleCodes": "V2",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "V3",
+        "productCount": 1,
+        "exampleStyleCodes": "V3",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "V4",
+        "productCount": 1,
+        "exampleStyleCodes": "V4",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "V6",
+        "productCount": 1,
+        "exampleStyleCodes": "V6",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "V7",
+        "productCount": 1,
+        "exampleStyleCodes": "V7",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "VA",
+        "productCount": 1,
+        "exampleStyleCodes": "VA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "VN",
+        "productCount": 1,
+        "exampleStyleCodes": "VN",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "VP",
+        "productCount": 1,
+        "exampleStyleCodes": "VP",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "VR",
+        "productCount": 1,
+        "exampleStyleCodes": "VR",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "VS",
+        "productCount": 1,
+        "exampleStyleCodes": "VS",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "VUF",
+        "productCount": 1,
+        "exampleStyleCodes": "VUF",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "VV",
+        "productCount": 1,
+        "exampleStyleCodes": "VV",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "VW",
+        "productCount": 1,
+        "exampleStyleCodes": "VW",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "VX",
+        "productCount": 1,
+        "exampleStyleCodes": "VX",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "W01",
+        "productCount": 1,
+        "exampleStyleCodes": "W01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "W05",
+        "productCount": 1,
+        "exampleStyleCodes": "W05",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "W06",
+        "productCount": 1,
+        "exampleStyleCodes": "W06",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "WA",
+        "productCount": 1,
+        "exampleStyleCodes": "WA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "WB",
+        "productCount": 1,
+        "exampleStyleCodes": "WB",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "WG",
+        "productCount": 1,
+        "exampleStyleCodes": "WG",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "WH",
+        "productCount": 1,
+        "exampleStyleCodes": "WH",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "WT",
+        "productCount": 1,
+        "exampleStyleCodes": "WT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X01",
+        "productCount": 1,
+        "exampleStyleCodes": "X01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X02",
+        "productCount": 1,
+        "exampleStyleCodes": "X02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X03",
+        "productCount": 1,
+        "exampleStyleCodes": "X03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X04",
+        "productCount": 1,
+        "exampleStyleCodes": "X04",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X07",
+        "productCount": 1,
+        "exampleStyleCodes": "X07",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X08",
+        "productCount": 1,
+        "exampleStyleCodes": "X08",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X09",
+        "productCount": 1,
+        "exampleStyleCodes": "X09",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X12",
+        "productCount": 1,
+        "exampleStyleCodes": "X12",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X13",
+        "productCount": 1,
+        "exampleStyleCodes": "X13",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "X17",
+        "productCount": 1,
+        "exampleStyleCodes": "X17",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "XA",
+        "productCount": 1,
+        "exampleStyleCodes": "XA",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "XDT",
+        "productCount": 1,
+        "exampleStyleCodes": "XDT",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "XN",
+        "productCount": 1,
+        "exampleStyleCodes": "XN",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "XU",
+        "productCount": 1,
+        "exampleStyleCodes": "XU",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Y01",
+        "productCount": 1,
+        "exampleStyleCodes": "Y01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Y02",
+        "productCount": 1,
+        "exampleStyleCodes": "Y02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Y03",
+        "productCount": 1,
+        "exampleStyleCodes": "Y03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z01",
+        "productCount": 1,
+        "exampleStyleCodes": "Z01",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z02",
+        "productCount": 1,
+        "exampleStyleCodes": "Z02",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z03",
+        "productCount": 1,
+        "exampleStyleCodes": "Z03",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z04",
+        "productCount": 1,
+        "exampleStyleCodes": "Z04",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z05",
+        "productCount": 1,
+        "exampleStyleCodes": "Z05",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z12",
+        "productCount": 1,
+        "exampleStyleCodes": "Z12",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z14",
+        "productCount": 1,
+        "exampleStyleCodes": "Z14",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z15",
+        "productCount": 1,
+        "exampleStyleCodes": "Z15",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z24",
+        "productCount": 1,
+        "exampleStyleCodes": "Z24",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z28",
+        "productCount": 1,
+        "exampleStyleCodes": "Z28",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z29",
+        "productCount": 1,
+        "exampleStyleCodes": "Z29",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z30",
+        "productCount": 1,
+        "exampleStyleCodes": "Z30",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z33",
+        "productCount": 1,
+        "exampleStyleCodes": "Z33",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z34",
+        "productCount": 1,
+        "exampleStyleCodes": "Z34",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z35",
+        "productCount": 1,
+        "exampleStyleCodes": "Z35",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z36",
+        "productCount": 1,
+        "exampleStyleCodes": "Z36",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z37",
+        "productCount": 1,
+        "exampleStyleCodes": "Z37",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z38",
+        "productCount": 1,
+        "exampleStyleCodes": "Z38",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z40",
+        "productCount": 1,
+        "exampleStyleCodes": "Z40",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    },
+    {
+        "legacySeries": "Z41",
+        "productCount": 1,
+        "exampleStyleCodes": "Z41",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "recommendedMapping": "Treat WordPress style_code as Product Series candidate pending operator review.",
+        "confidence": "medium"
+    }
+]

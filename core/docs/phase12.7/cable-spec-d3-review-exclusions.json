@@ -1,0 +1,28 @@
+{
+    "reviewConceptMappingsGenerated": 0,
+    "notSpecMappingsGenerated": 0,
+    "reviewFields": [
+        "cc",
+        "ct",
+        "ins",
+        "walu",
+        "wbnz",
+        "Af",
+        "r",
+        "x50",
+        "x60",
+        "tension"
+    ],
+    "notSpecificationFields": [
+        "cable_style",
+        "my_row_id",
+        "height",
+        "width",
+        "A15c",
+        "A25c",
+        "cap",
+        "core_con",
+        "mt"
+    ],
+    "passed": true
+}

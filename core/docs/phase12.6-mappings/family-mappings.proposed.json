@@ -1,0 +1,32 @@
+[
+    {
+        "sourceRule": "wordpress post_type = cable",
+        "affectedProductCount": 232,
+        "existingTarget": "CABLE",
+        "proposedTarget": "CABLE",
+        "proposedName": "Cables",
+        "status": "READY",
+        "confidence": "high",
+        "autoCreate": false
+    },
+    {
+        "sourceRule": "wordpress post_type = accessory",
+        "affectedProductCount": 216,
+        "existingTarget": "ACCESSORIES",
+        "proposedTarget": "ACCESSORIES",
+        "proposedName": "Accessories",
+        "status": "READY",
+        "confidence": "high",
+        "autoCreate": false,
+        "note": "Do not create Accessories Family until operator approval (Phase 12.7)."
+    },
+    {
+        "sourceRule": "wordpress post_type = certificate",
+        "affectedProductCount": 290,
+        "existingTarget": null,
+        "proposedTarget": null,
+        "status": "EXCLUDED",
+        "confidence": "high",
+        "note": "Certificates are documents, not Products."
+    }
+]

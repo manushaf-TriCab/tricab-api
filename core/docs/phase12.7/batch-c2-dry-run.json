@@ -1,0 +1,39 @@
+{
+    "mode": "DRY_RUN_ONLY",
+    "writesWouldExecute": false,
+    "batchC2ApplyGuard": "BATCH_C2_APPLY_NOT_APPROVED",
+    "targetValidated": true,
+    "masterData": {
+        "definitionsMappedExisting": 17,
+        "definitionsToCreate": 0
+    },
+    "migrationMappings": {
+        "styleFieldMappingsToInsert": 359,
+        "existingIdenticalMappings": 0,
+        "preservedApprovedMaps": 124,
+        "mappingsToUpdate": 0,
+        "conflicts": 0,
+        "reviewExcluded": 276
+    },
+    "specificationValues": {
+        "productValues": 0,
+        "variantValues": 0
+    },
+    "otherMutations": {
+        "products": 0,
+        "variants": 0,
+        "classification": 0,
+        "catalogue": 0,
+        "pricing": 0,
+        "media": 0,
+        "documents": 0,
+        "legacy": 0
+    },
+    "idempotencyProjection": {
+        "definitionsCreatedOnSecondRun": 0,
+        "mappingsInsertedOnSecondRun": 0,
+        "mappingsUpdated": 0,
+        "duplicateMappings": 0,
+        "specificationValues": 0
+    }
+}

@@ -1,0 +1,48 @@
+{
+    "status": "DRY_RUN",
+    "applied": false,
+    "plan": {
+        "definitionsToCreate": [
+            "OVERALL-LENGTH",
+            "WIDTH",
+            "HEIGHT",
+            "INNER-DIAMETER",
+            "CABLE-LENGTH",
+            "BARREL-LENGTH",
+            "STUD-OD",
+            "OUTER-DIAMETER",
+            "THREAD-LENGTH",
+            "BARREL-OD",
+            "THICKNESS",
+            "DEPTH",
+            "PIN-DIAMETER"
+        ],
+        "definitionsMappedExisting": [
+            "CORE-COLOURS",
+            "CORES",
+            "PIN-COUNT"
+        ],
+        "fieldMappingsRequested": 483,
+        "approvedMapCount": 177,
+        "approvedPendingDefinitionCount": 306,
+        "forbiddenIndLszhFire": true,
+        "forbiddenNekClassCreate": true,
+        "outerDiameterMustNotBeNomCableOd": true
+    },
+    "actualWrites": {
+        "definitionsCreated": 0,
+        "definitionsAlreadyExisting": 0,
+        "mappingsInserted": 0,
+        "mappingsIdenticalExisting": 0,
+        "mappingsUpdated": 0,
+        "specificationValues": 0,
+        "products": 0,
+        "variants": 0,
+        "classification": 0,
+        "catalogue": 0,
+        "pricing": 0,
+        "media": 0,
+        "documents": 0,
+        "legacy": 0
+    }
+}

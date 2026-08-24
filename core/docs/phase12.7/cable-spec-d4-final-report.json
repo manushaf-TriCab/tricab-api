@@ -1,0 +1,326 @@
+{
+    "status": "PHASE 12.7 BATCH D.4 CABLE SPEC TARGET APPLY: SUCCESS",
+    "preflight": {
+        "status": "PASSED",
+        "target": {
+            "server": "tricab-mel",
+            "database": "tc",
+            "environment": "NON-PRODUCTION"
+        },
+        "liveValidation": "AVAILABLE",
+        "countsBefore": {
+            "definitions": 55,
+            "units": 11,
+            "options": 416,
+            "styleFieldMappings": 483,
+            "totalFieldMappings": 506,
+            "cableFieldMappings": 0
+        },
+        "expectedBaseline": {
+            "definitions": 55,
+            "units": 11,
+            "options": 416,
+            "styleFieldMappings": 483,
+            "totalFieldMappings": 506
+        },
+        "driftDetected": false,
+        "drift": {
+            "definitions": 0,
+            "units": 0,
+            "options": 0,
+            "styleFieldMappings": 0,
+            "totalFieldMappings": 0
+        },
+        "artifactsValid": true,
+        "d3PackageValid": true,
+        "d3PackageStatus": "READY_FOR_EXPLICIT_D4_APPLY_APPROVAL",
+        "mappingPackageCount": 538,
+        "operatorApprovalRecognised": true,
+        "generatedAtUtc": "2026-08-23T23:18:52+00:00"
+    },
+    "applyResult": {
+        "status": "APPLIED",
+        "phase": "12.7-batch-d4-cable-spec-target-apply",
+        "timestamp": "2026-08-23T23:18:52+00:00",
+        "finishedAt": "2026-08-23T23:25:51+00:00",
+        "target": {
+            "server": "tricab-mel",
+            "database": "tc",
+            "environment": "NON-PRODUCTION"
+        },
+        "operatorApproval": {
+            "recognised": true,
+            "flags": [
+                "--apply",
+                "--batch-d4",
+                "--confirm-non-production",
+                "--cable-spec-d4-apply-approved"
+            ]
+        },
+        "definitions": {
+            "requested": 9,
+            "created": 9,
+            "alreadyExisting": 0,
+            "conflicts": 0,
+            "createdCodes": [
+                "EARTH-CORES",
+                "EARTH-CSA",
+                "EARTH-INS-OD",
+                "BEDDING-OD",
+                "ARMOUR-OD",
+                "BRAID-OD",
+                "CURRENT-30C",
+                "CURRENT-40C",
+                "CURRENT-45C"
+            ]
+        },
+        "fieldMappings": {
+            "requested": 538,
+            "inserted": 538,
+            "identicalExisting": 0,
+            "updated": 0,
+            "conflicts": 0
+        },
+        "specificationValues": {
+            "productValuesWritten": 0,
+            "variantValuesWritten": 0
+        },
+        "otherMutations": {
+            "products": 0,
+            "variants": 0,
+            "units": 0,
+            "options": 0
+        },
+        "legacySafety": {
+            "wordpressWrites": 0,
+            "tcWrites": 0,
+            "forbiddenWriteAttempts": 0
+        },
+        "postApplyCounts": {
+            "definitions": 64,
+            "totalFieldMappings": 1044,
+            "styleFieldMappings": 1021,
+            "cableFieldMappings": 538
+        },
+        "actualWrites": {
+            "definitionsCreated": 9,
+            "definitionsAlreadyExisting": 0,
+            "mappingsInserted": 538,
+            "mappingsIdenticalExisting": 0,
+            "mappingsUpdated": 0,
+            "specificationValues": 0,
+            "products": 0,
+            "variants": 0,
+            "classification": 0,
+            "catalogue": 0,
+            "pricing": 0,
+            "media": 0,
+            "documents": 0,
+            "legacy": 0
+        },
+        "idempotency": {
+            "definitionsCreated": 0,
+            "definitionsIdenticalExisting": 9,
+            "mappingsInserted": 0,
+            "mappingsIdenticalExisting": 538,
+            "mappingsUpdated": 0,
+            "conflicts": 0,
+            "passed": true
+        }
+    },
+    "reconciliation": {
+        "definitionsVerified": [
+            {
+                "code": "EARTH-CORES",
+                "name": "Earth Cores",
+                "groupCode": "construction",
+                "dataTypeCode": "integer",
+                "unit": null,
+                "expectedDataType": "integer",
+                "isActive": "1"
+            },
+            {
+                "code": "EARTH-CSA",
+                "name": "Earth CSA",
+                "groupCode": "construction",
+                "dataTypeCode": "decimal",
+                "unit": "mm\u00b2",
+                "expectedDataType": "decimal",
+                "isActive": "1"
+            },
+            {
+                "code": "EARTH-INS-OD",
+                "name": "Earth Insulation OD",
+                "groupCode": "mechanical",
+                "dataTypeCode": "decimal",
+                "unit": "mm",
+                "expectedDataType": "decimal",
+                "isActive": "1"
+            },
+            {
+                "code": "BEDDING-OD",
+                "name": "Bedding OD",
+                "groupCode": "mechanical",
+                "dataTypeCode": "decimal",
+                "unit": "mm",
+                "expectedDataType": "decimal",
+                "isActive": "1"
+            },
+            {
+                "code": "ARMOUR-OD",
+                "name": "Armour OD",
+                "groupCode": "mechanical",
+                "dataTypeCode": "decimal",
+                "unit": "mm",
+                "expectedDataType": "decimal",
+                "isActive": "1"
+            },
+            {
+                "code": "BRAID-OD",
+                "name": "Braid OD",
+                "groupCode": "mechanical",
+                "dataTypeCode": "decimal",
+                "unit": "mm",
+                "expectedDataType": "decimal",
+                "isActive": "1"
+            },
+            {
+                "code": "CURRENT-30C",
+                "name": "Current Rating at 30\u00b0C",
+                "groupCode": "electrical",
+                "dataTypeCode": "decimal",
+                "unit": "A",
+                "expectedDataType": "decimal",
+                "isActive": "1"
+            },
+            {
+                "code": "CURRENT-40C",
+                "name": "Current Rating at 40\u00b0C",
+                "groupCode": "electrical",
+                "dataTypeCode": "decimal",
+                "unit": "A",
+                "expectedDataType": "decimal",
+                "isActive": "1"
+            },
+            {
+                "code": "CURRENT-45C",
+                "name": "Current Rating at 45\u00b0C",
+                "groupCode": "electrical",
+                "dataTypeCode": "decimal",
+                "unit": "A",
+                "expectedDataType": "decimal",
+                "isActive": "1"
+            }
+        ],
+        "definitionsMissing": [],
+        "mappingsVerified": 538,
+        "mappingsMissing": [],
+        "conflicts": [],
+        "unexpected": []
+    },
+    "idempotency": {
+        "definitionsCreated": 0,
+        "definitionsIdenticalExisting": 9,
+        "mappingsInserted": 0,
+        "mappingsIdenticalExisting": 538,
+        "mappingsUpdated": 0,
+        "conflicts": 0,
+        "passed": true
+    },
+    "readiness": {
+        "Cable READY": 0,
+        "Cable REVIEW": 54,
+        "Cable BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "ACCESSORY_DV_FIELD_MAPPING_READY": 27,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "note": "FULL_PRODUCT_MIGRATION_READY does not authorize migration.",
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "tension": 1,
+            "x50": 1,
+            "x60": 1
+        },
+        "blockerConceptSummary": [
+            {
+                "concept": "cc",
+                "productsBlocked": 54,
+                "confidence": "MEDIUM",
+                "reason": "UNKNOWN_SEMANTICS"
+            },
+            {
+                "concept": "ct",
+                "productsBlocked": 54,
+                "confidence": "MEDIUM",
+                "reason": "UNKNOWN_SEMANTICS"
+            },
+            {
+                "concept": "walu",
+                "productsBlocked": 14,
+                "confidence": "MEDIUM",
+                "reason": "UNIT_AMBIGUITY"
+            },
+            {
+                "concept": "wbnz",
+                "productsBlocked": 14,
+                "confidence": "MEDIUM",
+                "reason": "UNIT_AMBIGUITY"
+            },
+            {
+                "concept": "ins",
+                "productsBlocked": 5,
+                "confidence": "MEDIUM",
+                "reason": "TYPE_AMBIGUITY"
+            },
+            {
+                "concept": "Af",
+                "productsBlocked": 1,
+                "confidence": "LOW",
+                "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+            },
+            {
+                "concept": "r",
+                "productsBlocked": 1,
+                "confidence": "MEDIUM",
+                "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+            },
+            {
+                "concept": "tension",
+                "productsBlocked": 1,
+                "confidence": "MEDIUM",
+                "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+            },
+            {
+                "concept": "x50",
+                "productsBlocked": 1,
+                "confidence": "MEDIUM",
+                "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+            },
+            {
+                "concept": "x60",
+                "productsBlocked": 1,
+                "confidence": "MEDIUM",
+                "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+            }
+        ]
+    },
+    "artifacts": [
+        "cable-spec-d4-preflight.json",
+        "cable-spec-d4-apply-result.json",
+        "cable-spec-d4-reconciliation.json",
+        "cable-spec-d4-idempotency.json",
+        "cable-spec-d4-readiness.json",
+        "cable-spec-d4-final-report.json"
+    ],
+    "nextWork": "Resolve remaining Cable Spec REVIEW concepts before Cable Specification Value Migration.",
+    "doNotMigrateValues": true,
+    "doNotStartFullMigration": true,
+    "generatedAtUtc": "2026-08-23T23:25:51+00:00"
+}

@@ -1,0 +1,202 @@
+{
+    "phase": "12.7-batch-a",
+    "status": "COMPLETED",
+    "timestamp": "2026-08-21T00:12:38+00:00",
+    "completedAtUtc": "2026-08-21T00:13:19+00:00",
+    "target": {
+        "server": "tricab-mel",
+        "database": "tc",
+        "environment": "NON-PRODUCTION"
+    },
+    "preApplyCounts": {
+        "families": 3,
+        "categories": 7,
+        "series": 2,
+        "products": 118,
+        "variants": 4178,
+        "catalogueNodes": 97
+    },
+    "approvedScope": {
+        "mapExistingCategories": 27,
+        "approvedCreateCategorySourceRows": 7,
+        "uniqueCategoryCreates": {
+            "CONDUITS-FITTINGS": {
+                "name": "Conduits & Fittings",
+                "family": "ACCESSORIES"
+            },
+            "TECHNO-CONNECTORS": {
+                "name": "Techno Connectors",
+                "family": "PLUG"
+            },
+            "TERMINALS": {
+                "name": "Terminals",
+                "family": "ACCESSORIES"
+            },
+            "GLANDS": {
+                "name": "Glands",
+                "family": "ACCESSORIES"
+            },
+            "LINKS": {
+                "name": "Links",
+                "family": "ACCESSORIES"
+            },
+            "PLUG-SOCKET-LEADS": {
+                "name": "Plug-Socket Leads",
+                "family": "ACCESSORIES"
+            }
+        },
+        "seriesCreates": 95,
+        "categoryMappingRows": 34,
+        "seriesMappingRows": 95
+    },
+    "actualWrites": {
+        "categoriesCreated": 6,
+        "seriesCreated": 95,
+        "categoryMappingsInserted": 34,
+        "seriesMappingsInserted": 95,
+        "mappingsUpdated": 0,
+        "categoryMappingsSkippedExisting": 0,
+        "seriesMappingsSkippedExisting": 0
+    },
+    "postApplyCounts": {
+        "families": 3,
+        "categories": 13,
+        "series": 97,
+        "products": 118,
+        "variants": 4178,
+        "catalogueNodes": 97
+    },
+    "categoryVerification": {
+        "requiredCodesPresent": true,
+        "familyRelationships": {
+            "CONDUITS-FITTINGS": "ACCESSORIES",
+            "TECHNO-CONNECTORS": "PLUG",
+            "TERMINALS": "ACCESSORIES",
+            "GLANDS": "ACCESSORIES",
+            "LINKS": "ACCESSORIES",
+            "PLUG-SOCKET-LEADS": "ACCESSORIES"
+        },
+        "created": [
+            {
+                "code": "CONDUITS-FITTINGS",
+                "name": "Conduits & Fittings",
+                "family": "ACCESSORIES",
+                "publicId": "20768904-F59C-F111-9B33-000D3AE12DFC",
+                "created": true,
+                "reusedExisting": false
+            },
+            {
+                "code": "TECHNO-CONNECTORS",
+                "name": "Techno Connectors",
+                "family": "PLUG",
+                "publicId": "22768904-F59C-F111-9B33-000D3AE12DFC",
+                "created": true,
+                "reusedExisting": false
+            },
+            {
+                "code": "TERMINALS",
+                "name": "Terminals",
+                "family": "ACCESSORIES",
+                "publicId": "24768904-F59C-F111-9B33-000D3AE12DFC",
+                "created": true,
+                "reusedExisting": false
+            },
+            {
+                "code": "GLANDS",
+                "name": "Glands",
+                "family": "ACCESSORIES",
+                "publicId": "26768904-F59C-F111-9B33-000D3AE12DFC",
+                "created": true,
+                "reusedExisting": false
+            },
+            {
+                "code": "LINKS",
+                "name": "Links",
+                "family": "ACCESSORIES",
+                "publicId": "28768904-F59C-F111-9B33-000D3AE12DFC",
+                "created": true,
+                "reusedExisting": false
+            },
+            {
+                "code": "PLUG-SOCKET-LEADS",
+                "name": "Plug-Socket Leads",
+                "family": "ACCESSORIES",
+                "publicId": "2A768904-F59C-F111-9B33-000D3AE12DFC",
+                "created": true,
+                "reusedExisting": false
+            }
+        ]
+    },
+    "seriesVerification": {
+        "expected": 95,
+        "created": 95,
+        "totalSeriesAfter": 97
+    },
+    "mappingVerification": {
+        "categoryMappingsInserted": 34,
+        "seriesMappingsInserted": 95,
+        "mappingsUpdated": 0
+    },
+    "preservationChecks": {
+        "productMutations": 0,
+        "variantMutations": 0,
+        "catalogueMutations": 0,
+        "specificationMutations": 0,
+        "pricingMutations": 0,
+        "mediaMutations": 0,
+        "documentMutations": 0
+    },
+    "legacyWriteChecks": {
+        "wordpressWrites": 0,
+        "tcWrites": 0,
+        "forbiddenWriteAttempts": 0
+    },
+    "idempotency": {
+        "status": "PASS",
+        "secondRunWrites": {
+            "categoriesCreated": 0,
+            "seriesCreated": 0,
+            "categoryMappingsInserted": 0,
+            "seriesMappingsInserted": 0,
+            "mappingsUpdated": 0,
+            "categoryMappingsSkippedExisting": 34,
+            "seriesMappingsSkippedExisting": 95
+        }
+    },
+    "postApplyReadiness": {
+        "CATEGORY_READY": 95,
+        "SERIES_READY": 95,
+        "CLASSIFICATION_READY": 95,
+        "CLASSIFICATION_REVIEW": 295,
+        "CLASSIFICATION_INVALID": 0,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "FULL_PRODUCT_MIGRATION_BLOCKED": 336,
+        "mainBlockers": {
+            "CATEGORY_UNRESOLVED": 295,
+            "ACCESSORY_IDENTITY": 41
+        }
+    },
+    "classificationReadyCount": 95,
+    "classificationReviewCount": 295,
+    "postApplyLiveCounts": {
+        "families": 3,
+        "categories": 13,
+        "series": 97,
+        "products": 118,
+        "variants": 4178,
+        "catalogueNodes": 97
+    },
+    "fullProductMigrationReadyCount": 54,
+    "associatedLegacyVariantCountAnalysisOnly": 7901,
+    "accessoryIdentityBlockers": 41,
+    "batchB": "NOT_STARTED",
+    "fullCatalogueMigration": "NOT_READY",
+    "mappingSpotChecks": {
+        "FLEX-POWER": 1,
+        "INSTRUMENTATION": 13,
+        "CTRL-MULTI": 7,
+        "VFD": 6,
+        "categoryMappings": 34,
+        "seriesMappings": 95
+    }
+}

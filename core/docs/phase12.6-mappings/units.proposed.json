@@ -1,0 +1,78 @@
+{
+    "mappings": [
+        {
+            "legacyRepresentation": "mm",
+            "canonicalUnitCode": "MM",
+            "symbol": "mm",
+            "quantityType": "length",
+            "existingSpecificationUnit": "MM",
+            "status": "READY"
+        },
+        {
+            "legacyRepresentation": "mm\u00b2",
+            "canonicalUnitCode": "MM2",
+            "symbol": "mm\u00b2",
+            "quantityType": "area",
+            "existingSpecificationUnit": "MM2",
+            "status": "READY"
+        },
+        {
+            "legacyRepresentation": "mm2",
+            "canonicalUnitCode": "MM2",
+            "symbol": "mm\u00b2",
+            "quantityType": "area",
+            "existingSpecificationUnit": "MM2",
+            "status": "READY"
+        },
+        {
+            "legacyRepresentation": "kg",
+            "canonicalUnitCode": "KG",
+            "symbol": "kg",
+            "quantityType": "mass",
+            "existingSpecificationUnit": "KG",
+            "status": "READY"
+        },
+        {
+            "legacyRepresentation": "kg/km",
+            "canonicalUnitCode": "KG_PER_KM",
+            "symbol": "kg/km",
+            "quantityType": "linear_density",
+            "existingSpecificationUnit": "KG_PER_KM",
+            "status": "READY"
+        },
+        {
+            "legacyRepresentation": "A",
+            "canonicalUnitCode": "A",
+            "symbol": "A",
+            "quantityType": "current",
+            "existingSpecificationUnit": "A",
+            "status": "READY"
+        },
+        {
+            "legacyRepresentation": "V",
+            "canonicalUnitCode": "V",
+            "symbol": "V",
+            "quantityType": "voltage",
+            "existingSpecificationUnit": "V",
+            "status": "READY"
+        },
+        {
+            "legacyRepresentation": "\u00b0C",
+            "canonicalUnitCode": "C",
+            "symbol": "\u00b0C",
+            "quantityType": "temperature",
+            "existingSpecificationUnit": "C",
+            "status": "READY"
+        },
+        {
+            "legacyRepresentation": "m",
+            "canonicalUnitCode": "M",
+            "symbol": "m",
+            "quantityType": "length",
+            "existingSpecificationUnit": "M",
+            "status": "READY"
+        }
+    ],
+    "missingTable": false,
+    "notPricingUom": true
+}

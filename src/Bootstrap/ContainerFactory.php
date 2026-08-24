@@ -114,6 +114,7 @@ use TriCab\Api\Http\Action\Admin\UpdateProductSeoAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
 use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
 use TriCab\Api\Http\Action\Admin\CompareLegacyBaseCostAction;
+use TriCab\Api\Http\Action\Admin\VariantLegacyPricingIdentityAdminAction;
 use TriCab\Api\Http\Action\Admin\SetProductPricingActiveAction;
 use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductBySlugAction;
@@ -183,6 +184,8 @@ use TriCab\Api\Product\Storage\DisabledProductBlobStore;
 use TriCab\Api\Product\Storage\InMemoryProductBlobStore;
 use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Api\Http\Action\Dev\DevProductFileDeliveryAction;
+use TriCab\Api\Product\Persistence\AzureSqlPriceListRepository;
+use TriCab\Api\Product\Persistence\AzureSqlVariantLegacyPricingIdentityRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductPricingRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductCustomerViewRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductPublicQueryRepository;
@@ -208,6 +211,8 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct360Repository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductArModelRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct3DAssetRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct3DModelRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryPriceListRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryVariantLegacyPricingIdentityRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPricingRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCustomerViewRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPublicQueryRepository;
@@ -350,8 +355,9 @@ use TriCab\Core\Identity\Domain\Service\Sha256SessionTokenHasher;
 use TriCab\Core\Product\Application\Service\AddProductDocumentService;
 use TriCab\Core\Product\Application\Service\AddProductMediaService;
 use TriCab\Api\Http\Action\Admin\ProductSeriesAdminAction;
-use TriCab\Api\Http\Action\Admin\ProductCategoriesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductFamiliesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductCategoriesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductPriceListsAdminAction;
 use TriCab\Api\Http\Action\Admin\CatalogueTabsAdminAction;
 use TriCab\Api\Http\Action\Admin\CatalogueNodesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductCataloguePlacementsAdminAction;
@@ -359,7 +365,8 @@ use TriCab\Api\Http\Action\PublicProduct\GetPublicCataloguePanelAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabTreeAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueNodeAction;
-use TriCab\Core\Product\Application\Service\ManageProductClassificationService;
+use TriCab\Core\Product\Application\Service\ManagePriceListService;
+use TriCab\Core\Product\Application\Service\VerifyLegacyPriceContextService;
 use TriCab\Core\Product\Application\Service\ManageCatalogueNavigationService;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 use TriCab\Core\Product\Application\Service\SpecificationDefinitionService;
@@ -429,6 +436,9 @@ use TriCab\Api\Product\Migration\MysqlLegacyWordPressRepository;
 use TriCab\Api\Product\Migration\MysqlLiveInventoryProbe;
 use TriCab\Api\Product\Migration\ReadOnlyMysqlConnectionFactory;
 use TriCab\Core\Product\Migration\Application\Service\InspectLegacyCatalogueService;
+use TriCab\Core\Product\Migration\Application\Service\DiscoverLegacyMasterDataService;
+use TriCab\Core\Product\Migration\Application\Service\BuildCatalogueMappingReadinessService;
+use TriCab\Core\Product\Migration\Readiness\StyleCodeNormalizer;
 use TriCab\Core\Product\Migration\Contract\LegacyTcRepository;
 use TriCab\Core\Product\Migration\Contract\LegacyWordPressRepository;
 use TriCab\Core\Product\Migration\Live\AzureSqlMigrationSchemaProbe;
@@ -471,6 +481,11 @@ use TriCab\Core\Product\Application\Service\GetProductPricingOverviewService;
 use TriCab\Core\Product\Application\Service\GetProductPricingMatrixService;
 use TriCab\Core\Product\Application\Service\GetProductBaseCostHistoryService;
 use TriCab\Core\Product\Application\Service\CompareLegacyBaseCostService;
+use TriCab\Core\Product\Application\Service\ResolveLegacyVariantPricingIdentityService;
+use TriCab\Core\Product\Application\Service\ManageVariantLegacyPricingIdentityService;
+use TriCab\Core\Product\Application\Service\AuditLegacyVariantPricingIdentityService;
+use TriCab\Core\Product\Domain\Service\LegacyPricingMaskGenerator;
+use TriCab\Core\Product\Application\Service\SetProductDefaultPricingUnitService;
 use TriCab\Core\Product\Application\Service\SetProductPricingActiveService;
 use TriCab\Core\Product\Application\Service\GetProductPublishReadinessService;
 use TriCab\Core\Product\Application\Service\GetProductRegionsService;
@@ -503,12 +518,14 @@ use TriCab\Core\Product\Application\Service\WithdrawProductDocumentService;
 use TriCab\Core\Product\Contract\LegacyProductMappingRepository;
 use TriCab\Core\Product\Contract\ProductAdminQueryRepository;
 use TriCab\Core\Product\Contract\ProductAuditRepository;
-use TriCab\Core\Product\Contract\ProductClassificationRepository;
+use TriCab\Core\Product\Contract\PriceListRepository;
+use TriCab\Core\Product\Contract\VariantLegacyPricingIdentityRepository;
 use TriCab\Core\Product\Contract\CatalogueNavigationRepository;
 use TriCab\Core\Product\Contract\ProductCodeRuleRepository;
 use TriCab\Core\Product\Contract\ProductDocumentRepository;
 use TriCab\Core\Product\Contract\ProductIntegrationRepository;
 use TriCab\Core\Product\Contract\ProductLookupRepository;
+use TriCab\Core\Product\Contract\ProductClassificationRepository;
 use TriCab\Core\Product\Contract\ProductMarketRepository;
 use TriCab\Core\Product\Contract\ProductBlobStore;
 use TriCab\Core\Product\Contract\ProductFilePathBuilder;
@@ -844,6 +861,8 @@ final class ContainerFactory
             ChangeProductSlugAction::class => \DI\autowire(ChangeProductSlugAction::class),
             GetProductPricingAction::class => \DI\autowire(GetProductPricingAction::class),
             CompareLegacyBaseCostAction::class => \DI\autowire(CompareLegacyBaseCostAction::class),
+            VariantLegacyPricingIdentityAdminAction::class => \DI\autowire(VariantLegacyPricingIdentityAdminAction::class),
+            ProductPriceListsAdminAction::class => \DI\autowire(ProductPriceListsAdminAction::class),
             SetProductPricingActiveAction::class => \DI\autowire(SetProductPricingActiveAction::class),
             UpsertProductPricingAction::class => \DI\autowire(UpsertProductPricingAction::class),
             GetPublicProductBySlugAction::class => \DI\autowire(GetPublicProductBySlugAction::class),
@@ -975,6 +994,11 @@ final class ContainerFactory
             GetProductPricingMatrixService::class => \DI\autowire(GetProductPricingMatrixService::class),
             GetProductBaseCostHistoryService::class => \DI\autowire(GetProductBaseCostHistoryService::class),
             CompareLegacyBaseCostService::class => \DI\autowire(CompareLegacyBaseCostService::class),
+            ResolveLegacyVariantPricingIdentityService::class => \DI\autowire(ResolveLegacyVariantPricingIdentityService::class),
+            ManageVariantLegacyPricingIdentityService::class => \DI\autowire(ManageVariantLegacyPricingIdentityService::class),
+            AuditLegacyVariantPricingIdentityService::class => \DI\autowire(AuditLegacyVariantPricingIdentityService::class),
+            LegacyPricingMaskGenerator::class => \DI\autowire(LegacyPricingMaskGenerator::class),
+            SetProductDefaultPricingUnitService::class => \DI\autowire(SetProductDefaultPricingUnitService::class),
             SetProductPricingActiveService::class => \DI\autowire(SetProductPricingActiveService::class),
             ListAdminProductsService::class => \DI\autowire(ListAdminProductsService::class),
             GetAdminProductService::class => \DI\autowire(GetAdminProductService::class),
@@ -983,6 +1007,8 @@ final class ContainerFactory
             SearchProductsService::class => \DI\autowire(SearchProductsService::class),
 
             ManageProductClassificationService::class => \DI\autowire(ManageProductClassificationService::class),
+            ManagePriceListService::class => \DI\autowire(ManagePriceListService::class),
+            VerifyLegacyPriceContextService::class => \DI\autowire(VerifyLegacyPriceContextService::class),
             ManageCatalogueNavigationService::class => \DI\autowire(ManageCatalogueNavigationService::class),
             GetPublicCatalogueService::class => \DI\autowire(GetPublicCatalogueService::class),
             SpecificationGroupService::class => \DI\autowire(SpecificationGroupService::class),
@@ -1317,6 +1343,32 @@ final class ContainerFactory
                 );
             },
             InspectLegacyCatalogueService::class => \DI\autowire(InspectLegacyCatalogueService::class),
+            DiscoverLegacyMasterDataService::class => \DI\autowire(DiscoverLegacyMasterDataService::class),
+            StyleCodeNormalizer::class => \DI\autowire(StyleCodeNormalizer::class),
+            BuildCatalogueMappingReadinessService::class => \DI\autowire(BuildCatalogueMappingReadinessService::class),
+            \TriCab\Core\Product\Migration\Application\Service\PlanProductMigrationMasterDataService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\PlanProductMigrationMasterDataService::class),
+            \TriCab\Core\Product\Migration\Application\Service\PlanBatchAClassificationService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\PlanBatchAClassificationService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveBatchA1CategoryService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveBatchA1CategoryService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveBatchA2ClassificationService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveBatchA2ClassificationService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveBatchA3OperatorApprovalService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveBatchA3OperatorApprovalService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ApplyBatchAClassificationService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ApplyBatchAClassificationService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveBatchBSpecificationMasterService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveBatchBSpecificationMasterService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveBatchB1OperatorApprovalService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveBatchB1OperatorApprovalService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ApplyBatchBSpecificationMasterService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ApplyBatchBSpecificationMasterService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveBatchCStyleSpecificationMappingService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveBatchCStyleSpecificationMappingService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveBatchC1UnresolvedConceptsService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveBatchC1UnresolvedConceptsService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveBatchC2OperatorApprovalService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveBatchC2OperatorApprovalService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ApplyBatchC2StyleFieldMappingService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ApplyBatchC2StyleFieldMappingService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ApplyCableSpecBatchD4TargetApplyService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ApplyCableSpecBatchD4TargetApplyService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveCableSpecFieldMappingService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveCableSpecFieldMappingService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveCableSpecBatchD2OperatorReviewService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveCableSpecBatchD2OperatorReviewService::class),
+            \TriCab\Core\Product\Migration\Application\Service\RecordCableSpecBatchD2OperatorDecisionsService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\RecordCableSpecBatchD2OperatorDecisionsService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveCableSpecBatchD3FinalDryRunService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveCableSpecBatchD3FinalDryRunService::class),
+            \TriCab\Core\Product\Migration\Application\Service\InvestigateCableSpecBatchD5ReviewService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\InvestigateCableSpecBatchD5ReviewService::class),
+            \TriCab\Core\Product\Migration\Application\Service\InvestigateCableSpecBatchD51FinalResolutionService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\InvestigateCableSpecBatchD51FinalResolutionService::class),
+            \TriCab\Core\Product\Migration\Application\Service\ResolveProductMigrationPilotDryRunService::class => \DI\autowire(\TriCab\Core\Product\Migration\Application\Service\ResolveProductMigrationPilotDryRunService::class),
+            \TriCab\Core\Product\Migration\Classification\LegacyTermSemanticClassifier::class => \DI\autowire(\TriCab\Core\Product\Migration\Classification\LegacyTermSemanticClassifier::class),
+            \TriCab\Core\Product\Migration\Classification\ClassificationNameNormalizer::class => \DI\autowire(\TriCab\Core\Product\Migration\Classification\ClassificationNameNormalizer::class),
             MigrationSchemaProbe::class => \DI\autowire(MemoryMigrationSchemaProbe::class),
             ProductIdentityMatcher::class => \DI\autowire(ProductIdentityMatcher::class),
             ProductVariantClassifier::class => \DI\autowire(ProductVariantClassifier::class),
@@ -1399,6 +1451,8 @@ final class ContainerFactory
             $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(AzureSqlProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(AzureSqlProductClassificationRepository::class);
+            $definitions[PriceListRepository::class] = \DI\autowire(AzureSqlPriceListRepository::class);
+            $definitions[VariantLegacyPricingIdentityRepository::class] = \DI\autowire(AzureSqlVariantLegacyPricingIdentityRepository::class);
             $definitions[CatalogueNavigationRepository::class] = \DI\autowire(AzureSqlCatalogueNavigationRepository::class);
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(AzureSqlProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(AzureSqlProductMediaRepository::class);
@@ -1540,6 +1594,8 @@ SQL,
             $definitions[SiteConfigurationRepository::class] = \DI\autowire(InMemorySiteConfigurationRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(InMemoryProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(InMemoryProductPricingRepository::class);
+            $definitions[PriceListRepository::class] = \DI\autowire(InMemoryPriceListRepository::class);
+            $definitions[VariantLegacyPricingIdentityRepository::class] = \DI\autowire(InMemoryVariantLegacyPricingIdentityRepository::class);
             $definitions[ProductAuditRepository::class] = \DI\autowire(InMemoryProductAuditRepository::class);
             $definitions[AdminDashboardQueryRepository::class] = \DI\autowire(InMemoryAdminDashboardQueryRepository::class);
             $definitions[ProductIntegrationRepository::class] = \DI\autowire(InMemoryProductIntegrationRepository::class);

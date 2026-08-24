@@ -1,0 +1,111 @@
+{
+    "status": "APPLIED",
+    "phase": "12.7-batch-c2-target-apply",
+    "finalStatus": "BATCH C.2 TARGET APPLY: SUCCESS",
+    "timestamp": "2026-08-21T03:04:11+00:00",
+    "finishedAt": "2026-08-21T03:06:18+00:00",
+    "idempotencyVerifiedAt": "2026-08-21T03:06:28+00:00",
+    "target": {
+        "server": "tricab-mel",
+        "database": "tc",
+        "environment": "NON-PRODUCTION"
+    },
+    "preflight": {
+        "liveValidation": "AVAILABLE",
+        "definitions": 42,
+        "units": 11,
+        "options": 416,
+        "originalBatchCApprovalsValid": 124,
+        "revalidationConflicts": 0,
+        "mappingConflicts": 0,
+        "artifactsValid": true,
+        "operatorApprovalRecognised": true
+    },
+    "definitions": {
+        "requested": 13,
+        "created": 13,
+        "alreadyExisting": 0,
+        "conflicts": 0,
+        "createdCodes": [
+            "OVERALL-LENGTH",
+            "WIDTH",
+            "HEIGHT",
+            "INNER-DIAMETER",
+            "CABLE-LENGTH",
+            "BARREL-LENGTH",
+            "STUD-OD",
+            "OUTER-DIAMETER",
+            "THREAD-LENGTH",
+            "BARREL-OD",
+            "THICKNESS",
+            "DEPTH",
+            "PIN-DIAMETER"
+        ]
+    },
+    "fieldMappings": {
+        "requested": 483,
+        "note": "Authoritative artifact had 483 eligible mappings (124 preserved Batch C + 53 new APPROVED_MAP + 306 PENDING). Dry-run insert counter listed 359 excluding the 124 preserved that were never previously applied.",
+        "inserted": 483,
+        "identicalExistingFirstRun": 0,
+        "updated": 0,
+        "conflicts": 0,
+        "reviewExcluded": 276,
+        "rejectExcluded": 5,
+        "preservedBatchC": 124,
+        "newApprovedMap": 53,
+        "approvedPendingDefinition": 306
+    },
+    "specificationValues": {
+        "productValuesWritten": 0,
+        "variantValuesWritten": 0,
+        "productValuesTotal": 322,
+        "variantValuesTotal": 52619
+    },
+    "legacySafety": {
+        "wordpressWrites": 0,
+        "tcWrites": 0,
+        "forbiddenWriteAttempts": 0
+    },
+    "otherMutations": {
+        "products": 0,
+        "variants": 0,
+        "classification": 0,
+        "catalogue": 0,
+        "pricing": 0,
+        "media": 0,
+        "documents": 0
+    },
+    "idempotency": {
+        "definitionsCreated": 0,
+        "mappingsInserted": 0,
+        "mappingsUpdated": 0,
+        "mappingsIdenticalExisting": 483,
+        "conflicts": 0,
+        "status": "IDEMPOTENT"
+    },
+    "readiness": {
+        "before": {
+            "ACCESSORY_DV_FIELD_MAPPING_READY": 0,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 0,
+            "FULL_PRODUCT_MIGRATION_READY": 54
+        },
+        "after": {
+            "ACCESSORY_DV_FIELD_MAPPING_READY": 27,
+            "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+            "SPEC_FIELD_MAPPING_READY": 27,
+            "FULL_PRODUCT_MIGRATION_READY": 54
+        }
+    },
+    "liveVerification": {
+        "definitions": 55,
+        "styleFieldMappings": 483,
+        "fieldMappingsTotal": 506,
+        "products": 118,
+        "variants": 4178,
+        "indLszhFireCreated": false,
+        "outerDiameterMappedToNomCableOd": 0
+    },
+    "nextPhase": "PHASE 12.7 \u2014 CABLE SPECIFICATION FIELD MAPPING (proposed only; await explicit instruction)",
+    "stop": "STOP. DO NOT START FULL PRODUCT MIGRATION."
+}

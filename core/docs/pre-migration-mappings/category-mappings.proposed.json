@@ -1,0 +1,1766 @@
+[
+    {
+        "legacyCategory": "NZ",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 147,
+        "legacySlug": "nz",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "NZ"
+    },
+    {
+        "legacyCategory": "AU",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 142,
+        "legacySlug": "au",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "AU"
+    },
+    {
+        "legacyCategory": "US",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 108,
+        "legacySlug": "us",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "US"
+    },
+    {
+        "legacyCategory": "Electrical Contracting Certificates",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 32,
+        "legacySlug": "electrical-contracting-certificates",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Electrical Contracting Certificates"
+    },
+    {
+        "legacyCategory": "AS",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 20,
+        "legacySlug": "as",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "AS"
+    },
+    {
+        "legacyCategory": "PowerSure",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 16,
+        "legacySlug": "power-sure",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "PowerSure"
+    },
+    {
+        "legacyCategory": "Industrial",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 12,
+        "legacySlug": "industrial-plug-socket",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Industrial"
+    },
+    {
+        "legacyCategory": "Cable Ties",
+        "parentFamily": "Accessories",
+        "usageCount": 11,
+        "legacySlug": "ties",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Cable Ties"
+    },
+    {
+        "legacyCategory": "Conduits &amp; Fittings",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 11,
+        "legacySlug": "conduits-and-fittings",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Conduits &amp; Fittings"
+    },
+    {
+        "legacyCategory": "Crimpers &amp; Dies",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 11,
+        "legacySlug": "crimpers-and-dies",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Crimpers &amp; Dies"
+    },
+    {
+        "legacyCategory": "Flexible Cables",
+        "parentFamily": "ALI-FLEX System",
+        "usageCount": 11,
+        "legacySlug": "flexible-ali-flex",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "ALI-FLEX System / Flexible Cables"
+    },
+    {
+        "legacyCategory": "Lugs",
+        "parentFamily": "Lugs &amp; Links",
+        "usageCount": 10,
+        "legacySlug": "lugs",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Lugs &amp; Links / Lugs"
+    },
+    {
+        "legacyCategory": "110V",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 9,
+        "legacySlug": "110v-instrumentation",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "110V"
+    },
+    {
+        "legacyCategory": "450/750V",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 9,
+        "legacySlug": "450750v-control-instrumentation",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "450/750V"
+    },
+    {
+        "legacyCategory": "0.6/1kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 8,
+        "legacySlug": "0-61kv-control",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "0.6/1kV"
+    },
+    {
+        "legacyCategory": "Brass",
+        "parentFamily": "Glands",
+        "usageCount": 8,
+        "legacySlug": "brass",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Glands / Brass"
+    },
+    {
+        "legacyCategory": "Copper",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 8,
+        "legacySlug": "copper",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Copper"
+    },
+    {
+        "legacyCategory": "Techno Connectors",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 8,
+        "legacySlug": "techno-connectors",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Techno Connectors"
+    },
+    {
+        "legacyCategory": "Construction/Building",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 7,
+        "legacySlug": "construction-building",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Construction/Building"
+    },
+    {
+        "legacyCategory": "Heat Shrink",
+        "parentFamily": "Heat Shrink &amp; Cold Shrink",
+        "usageCount": 7,
+        "legacySlug": "heat-shrink",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Heat Shrink &amp; Cold Shrink / Heat Shrink"
+    },
+    {
+        "legacyCategory": "Low Voltage",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 7,
+        "legacySlug": "0-61kv-termite-resistant-nylon",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Low Voltage"
+    },
+    {
+        "legacyCategory": "Quick Connect",
+        "parentFamily": "Terminals",
+        "usageCount": 7,
+        "legacySlug": "quick-connect",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Terminals / Quick Connect"
+    },
+    {
+        "legacyCategory": "110V",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 6,
+        "legacySlug": "110v",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "110V"
+    },
+    {
+        "legacyCategory": "Accessories &amp; Wiring",
+        "parentFamily": "Solar Components",
+        "usageCount": 6,
+        "legacySlug": "accessories-wiring",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Solar Components / Accessories &amp; Wiring"
+    },
+    {
+        "legacyCategory": "Cable Protection / Installation Kits",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 6,
+        "legacySlug": "cable-installation",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Cable Protection / Installation Kits"
+    },
+    {
+        "legacyCategory": "Hardware &amp; Fittings",
+        "parentFamily": "Switchboard Components",
+        "usageCount": 6,
+        "legacySlug": "hardware-fittings",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Switchboard Components / Hardware &amp; Fittings"
+    },
+    {
+        "legacyCategory": "Power and Control",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 6,
+        "legacySlug": "power-and-control-iec-shipboard-ieee-451580-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power and Control"
+    },
+    {
+        "legacyCategory": "Ring &amp; Fork",
+        "parentFamily": "Terminals",
+        "usageCount": 6,
+        "legacySlug": "ring-and-fork",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Terminals / Ring &amp; Fork"
+    },
+    {
+        "legacyCategory": "Terminals",
+        "parentFamily": "Accessories",
+        "usageCount": 6,
+        "legacySlug": "terminals",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Terminals"
+    },
+    {
+        "legacyCategory": "0.6/1kV Switchboard",
+        "parentFamily": "Switchboard &amp; Panel",
+        "usageCount": 5,
+        "legacySlug": "0-61kv-switchboard-panel",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Switchboard &amp; Panel / 0.6/1kV Switchboard"
+    },
+    {
+        "legacyCategory": "Bootlace / Ferrule",
+        "parentFamily": "Terminals",
+        "usageCount": 5,
+        "legacySlug": "bootlace-ferrule",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Terminals / Bootlace / Ferrule"
+    },
+    {
+        "legacyCategory": "Cable Preparation",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 5,
+        "legacySlug": "cable-cutters-and-strippers",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Cable Preparation"
+    },
+    {
+        "legacyCategory": "CeeForm",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 5,
+        "legacySlug": "ceeform",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "CeeForm"
+    },
+    {
+        "legacyCategory": "Fire Resistant",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 5,
+        "legacySlug": "fire-resistant-industrial-thai",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Fire Resistant"
+    },
+    {
+        "legacyCategory": "Glands",
+        "parentFamily": "Accessories",
+        "usageCount": 5,
+        "legacySlug": "glands",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Glands"
+    },
+    {
+        "legacyCategory": "Medium Voltage",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 5,
+        "legacySlug": "medium-voltage-construction-installation",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Medium Voltage"
+    },
+    {
+        "legacyCategory": "Other Tools",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 5,
+        "legacySlug": "other-tools",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Other Tools"
+    },
+    {
+        "legacyCategory": "Power",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 5,
+        "legacySlug": "0-61kv-temp-power-entertaiment",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power"
+    },
+    {
+        "legacyCategory": "Power &amp; Control",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 5,
+        "legacySlug": "power-control-thermoset-xlpe-insulated",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power &amp; Control"
+    },
+    {
+        "legacyCategory": "Ship Loaders &amp; Cranes",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 5,
+        "legacySlug": "ship-loaders-cranes",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Ship Loaders &amp; Cranes"
+    },
+    {
+        "legacyCategory": "Split Earth | 0.6/1kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 5,
+        "legacySlug": "0-61kv-submersible-potable-vfdvsd-split-earth",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Split Earth | 0.6/1kV"
+    },
+    {
+        "legacyCategory": "Voltage Rating",
+        "parentFamily": "Medium Voltage",
+        "usageCount": 5,
+        "legacySlug": "voltage-rating",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Medium Voltage / Voltage Rating"
+    },
+    {
+        "legacyCategory": "0.6/1kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "0-61kv-submersible-potable",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "0.6/1kV"
+    },
+    {
+        "legacyCategory": "0.6/1kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "0-61kv-submersible-potable-vfdvsd-split-earth-steel-aluminium-armour",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "0.6/1kV"
+    },
+    {
+        "legacyCategory": "Aluminium",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "aluminium",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Aluminium"
+    },
+    {
+        "legacyCategory": "Battery",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "battery-ind",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Battery"
+    },
+    {
+        "legacyCategory": "Conduit Glands",
+        "parentFamily": "Accessories",
+        "usageCount": 4,
+        "legacySlug": "conduit-glands",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Conduit Glands"
+    },
+    {
+        "legacyCategory": "Control &amp; Instrumentation",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "control-instrumentation-temporary-power",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Control &amp; Instrumentation"
+    },
+    {
+        "legacyCategory": "Fire Resistant",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "fire-resistant",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Fire Resistant"
+    },
+    {
+        "legacyCategory": "Instrumentation - Collective",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "instrumentation-collective-screened",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Collective"
+    },
+    {
+        "legacyCategory": "Instrumentation - Collective",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "instrumentation-collective-screened-iec-shipboard-ieee-451580-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Collective"
+    },
+    {
+        "legacyCategory": "Instrumentation - Individual and Collective",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "instrumentation-individual-and-collective-screened",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Individual and Collective"
+    },
+    {
+        "legacyCategory": "Instrumentation - Individual and Collective",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "instrumentation-individual-and-collective-screened-iec-shipboard-ieee-451580-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Individual and Collective"
+    },
+    {
+        "legacyCategory": "Links",
+        "parentFamily": "Lugs &amp; Links",
+        "usageCount": 4,
+        "legacySlug": "links",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Lugs &amp; Links / Links"
+    },
+    {
+        "legacyCategory": "Lockout &amp; Tagout",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "lockout-tagout",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Lockout &amp; Tagout"
+    },
+    {
+        "legacyCategory": "Medium Voltage",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "mv-rating-termite-resistant-nylon",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Medium Voltage"
+    },
+    {
+        "legacyCategory": "Pin &amp; Blade",
+        "parentFamily": "Terminals",
+        "usageCount": 4,
+        "legacySlug": "pin-and-blade",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Terminals / Pin &amp; Blade"
+    },
+    {
+        "legacyCategory": "Plug-Socket Leads",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "plug-socket-leads",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Plug-Socket Leads"
+    },
+    {
+        "legacyCategory": "Power",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "power",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power"
+    },
+    {
+        "legacyCategory": "Power &amp; Control - 0.6/1kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "power-control-0-61kv",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power &amp; Control - 0.6/1kV"
+    },
+    {
+        "legacyCategory": "Power and Control",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "power-and-control",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power and Control"
+    },
+    {
+        "legacyCategory": "Power and Control",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "power-and-control-0-61kv",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power and Control"
+    },
+    {
+        "legacyCategory": "Telecoms",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "telecom",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Telecoms"
+    },
+    {
+        "legacyCategory": "Ties",
+        "parentFamily": "Accessories",
+        "usageCount": 4,
+        "legacySlug": "ties-us",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Ties"
+    },
+    {
+        "legacyCategory": "Wire Management",
+        "parentFamily": "Switchboard Components",
+        "usageCount": 4,
+        "legacySlug": "wire-management",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Switchboard Components / Wire Management"
+    },
+    {
+        "legacyCategory": "1.9/3.3kV",
+        "parentFamily": "Voltage Rating",
+        "usageCount": 3,
+        "legacySlug": "1-93-3kv-construction-installation",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Voltage Rating / 1.9/3.3kV"
+    },
+    {
+        "legacyCategory": "12.7/22kV",
+        "parentFamily": "Voltage Rating",
+        "usageCount": 3,
+        "legacySlug": "12-722kv",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Voltage Rating / 12.7/22kV"
+    },
+    {
+        "legacyCategory": "19/33kV",
+        "parentFamily": "Voltage Rating",
+        "usageCount": 3,
+        "legacySlug": "1933kv",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Voltage Rating / 19/33kV"
+    },
+    {
+        "legacyCategory": "3.8/6.6kV",
+        "parentFamily": "Voltage Rating",
+        "usageCount": 3,
+        "legacySlug": "3-86-6kv",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Voltage Rating / 3.8/6.6kV"
+    },
+    {
+        "legacyCategory": "450/750V",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "450750v-control",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "450/750V"
+    },
+    {
+        "legacyCategory": "6.35/11kV",
+        "parentFamily": "Voltage Rating",
+        "usageCount": 3,
+        "legacySlug": "6-3511kv",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Voltage Rating / 6.35/11kV"
+    },
+    {
+        "legacyCategory": "Ducts",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "ducts",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Ducts"
+    },
+    {
+        "legacyCategory": "Flexible Cord",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "flexible-cord",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Flexible Cord"
+    },
+    {
+        "legacyCategory": "Food &amp; Beverage",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "food-beverage",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Food &amp; Beverage"
+    },
+    {
+        "legacyCategory": "Glands",
+        "parentFamily": "Accessories",
+        "usageCount": 3,
+        "legacySlug": "glands-us",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Glands"
+    },
+    {
+        "legacyCategory": "Hook-Up Wire",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "hook-up-wire",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Hook-Up Wire"
+    },
+    {
+        "legacyCategory": "Lug Leads",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "lug-leads",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Lug Leads"
+    },
+    {
+        "legacyCategory": "Nylon",
+        "parentFamily": "Glands",
+        "usageCount": 3,
+        "legacySlug": "nylon",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Glands / Nylon"
+    },
+    {
+        "legacyCategory": "Power - 2kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "power-2kv",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power - 2kV"
+    },
+    {
+        "legacyCategory": "Power - 2kV Heavy Duty",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "power-2kv-heavy-duty",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power - 2kV Heavy Duty"
+    },
+    {
+        "legacyCategory": "Shorepower",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "shorepower-shipboard-offshore",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Shorepower"
+    },
+    {
+        "legacyCategory": "Single Earth | 0.6/1kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "single-earth-0-61kv",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Single Earth | 0.6/1kV"
+    },
+    {
+        "legacyCategory": "Tapes",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "tapes",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Tapes"
+    },
+    {
+        "legacyCategory": "Temporary Power",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "temporary-power-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Temporary Power"
+    },
+    {
+        "legacyCategory": "Thermoset",
+        "parentFamily": "Hook-Up Wire",
+        "usageCount": 3,
+        "legacySlug": "thermoset",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Hook-Up Wire / Thermoset"
+    },
+    {
+        "legacyCategory": "VFD",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "vfd-thermoset-xlpe-insulated",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "VFD"
+    },
+    {
+        "legacyCategory": "VFD/VSD",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 3,
+        "legacySlug": "vfdvsd-0-61kv-nek-606-lszh-medium-voltage-nek-606-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "VFD/VSD"
+    },
+    {
+        "legacyCategory": "0.6/1kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "0-61kv-instrumentation",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "0.6/1kV"
+    },
+    {
+        "legacyCategory": "0.6/1kV",
+        "parentFamily": "Fire Resistant",
+        "usageCount": 2,
+        "legacySlug": "0-61kv-fire-resistant",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Fire Resistant / 0.6/1kV"
+    },
+    {
+        "legacyCategory": "110V",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "110v-steel-aluminium-armour",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "110V"
+    },
+    {
+        "legacyCategory": "450/750V",
+        "parentFamily": "Fire Resistant",
+        "usageCount": 2,
+        "legacySlug": "450750v-control-instrumentation-fire-resistant",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Fire Resistant / 450/750V"
+    },
+    {
+        "legacyCategory": "Aluminium",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "aluminium-solar",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Aluminium"
+    },
+    {
+        "legacyCategory": "Battery",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "battery",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Battery"
+    },
+    {
+        "legacyCategory": "Ceeform Leads",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "ceeform-leads",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Ceeform Leads"
+    },
+    {
+        "legacyCategory": "Circuit Protection",
+        "parentFamily": "Switchboard Components",
+        "usageCount": 2,
+        "legacySlug": "circuit-protection",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Switchboard Components / Circuit Protection"
+    },
+    {
+        "legacyCategory": "Connectors",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "connectors",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Connectors"
+    },
+    {
+        "legacyCategory": "Copper",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "copper-solar",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Copper"
+    },
+    {
+        "legacyCategory": "DC Power",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "dc-power-thai",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "DC Power"
+    },
+    {
+        "legacyCategory": "Heat Shrink &amp; Cold Shrink",
+        "parentFamily": "Accessories",
+        "usageCount": 2,
+        "legacySlug": "heat-shrink-and-cold-shrink",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Heat Shrink &amp; Cold Shrink"
+    },
+    {
+        "legacyCategory": "Industrial &amp; Marine Switchboard Wire",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "switchboard-wire",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Industrial &amp; Marine Switchboard Wire"
+    },
+    {
+        "legacyCategory": "Industrial Shielded Instrumentation",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "industrial-shielded-instrumentation",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Industrial Shielded Instrumentation"
+    },
+    {
+        "legacyCategory": "Instrumentation - Collective",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "instrumentation-collective-screened-iec-offshore",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Collective"
+    },
+    {
+        "legacyCategory": "Instrumentation - Collective",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "instrumentation-collective-screened-iec-offshore-ieee-451580-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Collective"
+    },
+    {
+        "legacyCategory": "Instrumentation - Collective",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "instrumentation-collective-screened-0-61kv-nek-606-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Collective"
+    },
+    {
+        "legacyCategory": "Instrumentation - Individual",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "instrumentation-individual-screened",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Individual"
+    },
+    {
+        "legacyCategory": "Instrumentation - Individual and Collective",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "instrumentation-individual-and-collective-screened-iec-offshore",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Individual and Collective"
+    },
+    {
+        "legacyCategory": "Instrumentation - Individual and Collective",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "instrumentation-individual-and-collective-screened-iec-offshore-ieee-451580-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation - Individual and Collective"
+    },
+    {
+        "legacyCategory": "Power and Control",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "power-and-control-iec-offshore",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power and Control"
+    },
+    {
+        "legacyCategory": "Power and Control",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "power-and-control-iec-offshore-ieee-451580-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power and Control"
+    },
+    {
+        "legacyCategory": "Signal - 600V Individual &amp; Collective Screened",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "signal-600v-individual-collective-screened",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Signal - 600V Individual &amp; Collective Screened"
+    },
+    {
+        "legacyCategory": "Solar",
+        "parentFamily": "ALI-FLEX System",
+        "usageCount": 2,
+        "legacySlug": "solar-ali-flex",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "ALI-FLEX System / Solar"
+    },
+    {
+        "legacyCategory": "Stainless Steel",
+        "parentFamily": "Glands",
+        "usageCount": 2,
+        "legacySlug": "stainless-steel",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Glands / Stainless Steel"
+    },
+    {
+        "legacyCategory": "Submersible/Pump",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "submersible-pump-thai",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Submersible/Pump"
+    },
+    {
+        "legacyCategory": "Switchboard/Panel",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "switchboard-panel-industrial-thai",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Switchboard/Panel"
+    },
+    {
+        "legacyCategory": "Termite Resistant Nylon",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "termite-resistant-nylon-industrial-thai",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Termite Resistant Nylon"
+    },
+    {
+        "legacyCategory": "Thermocouple Cable",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "thermocouple-cable",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Thermocouple Cable"
+    },
+    {
+        "legacyCategory": "UL1426 ABYC Boat Cable",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "ul1426-boat-cable",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "UL1426 ABYC Boat Cable"
+    },
+    {
+        "legacyCategory": "Variable Drive",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "variable-drive-thai",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Variable Drive"
+    },
+    {
+        "legacyCategory": "VFD",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "vfd",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "VFD"
+    },
+    {
+        "legacyCategory": "VFD - 2kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "variable-frequency-drive-2kv",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "VFD - 2kV"
+    },
+    {
+        "legacyCategory": "VFD/VSD",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "vfdvsd",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "VFD/VSD"
+    },
+    {
+        "legacyCategory": "VFD/VSD",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "vfdvsd-0-61kv-nek-606-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "VFD/VSD"
+    },
+    {
+        "legacyCategory": "Water Treatment",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "water-treatment",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Water Treatment"
+    },
+    {
+        "legacyCategory": "Weatherproof",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "weatherproof",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Weatherproof"
+    },
+    {
+        "legacyCategory": "Welding",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 2,
+        "legacySlug": "welding-welding-battery",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Welding"
+    },
+    {
+        "legacyCategory": "1.9/3.3kV",
+        "parentFamily": "Medium Voltage",
+        "usageCount": 1,
+        "legacySlug": "1-93-3kv-construction-installation-termite-resistant-nylon",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Medium Voltage / 1.9/3.3kV"
+    },
+    {
+        "legacyCategory": "1.9/3.3kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "1-93-3kv-construction-installation-steel-aluminium-armour",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "1.9/3.3kV"
+    },
+    {
+        "legacyCategory": "12.7/22kV",
+        "parentFamily": "Medium Voltage",
+        "usageCount": 1,
+        "legacySlug": "12-722kv-termite-resistant-nylon",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Medium Voltage / 12.7/22kV"
+    },
+    {
+        "legacyCategory": "12.7/22kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "12-722kv-steel-aluminium-armour",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "12.7/22kV"
+    },
+    {
+        "legacyCategory": "19/33kV",
+        "parentFamily": "Medium Voltage",
+        "usageCount": 1,
+        "legacySlug": "1933kv-termite-resistant-nylon",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Medium Voltage / 19/33kV"
+    },
+    {
+        "legacyCategory": "3.8/6.6kV",
+        "parentFamily": "Medium Voltage",
+        "usageCount": 1,
+        "legacySlug": "3-86-6kv-termite-resistant-nylon",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Medium Voltage / 3.8/6.6kV"
+    },
+    {
+        "legacyCategory": "3.8/6.6kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "3-86-6kv-steel-aluminium-armour",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "3.8/6.6kV"
+    },
+    {
+        "legacyCategory": "6.35/11kV",
+        "parentFamily": "Medium Voltage",
+        "usageCount": 1,
+        "legacySlug": "6-3511kv-termite-resistant-nylon",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Medium Voltage / 6.35/11kV"
+    },
+    {
+        "legacyCategory": "6.35/11kV",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "6-3511kv-steel-aluminium-armour",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "6.35/11kV"
+    },
+    {
+        "legacyCategory": "ALI-FLEX System",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "aluminium-au",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "ALI-FLEX System"
+    },
+    {
+        "legacyCategory": "Aliflex Lug leads(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "aliflex-lug-leads-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Aliflex Lug leads(new)"
+    },
+    {
+        "legacyCategory": "Aluminium Lugs(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "aluminium-lugs-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Aluminium Lugs(new)"
+    },
+    {
+        "legacyCategory": "Aluminium Stalk Lugs(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "aluminium-stalk-lugs-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Aluminium Stalk Lugs(new)"
+    },
+    {
+        "legacyCategory": "ANDERSON Plug leads(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "anderson-plug-lead-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "ANDERSON Plug leads(new)"
+    },
+    {
+        "legacyCategory": "Appliance Inlet(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "appliance-inlet-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Appliance Inlet(new)"
+    },
+    {
+        "legacyCategory": "Blank lugs(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "blank-lugs-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Blank lugs(new)"
+    },
+    {
+        "legacyCategory": "Bootlace Reels(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "bootlace-reels-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Bootlace Reels(new)"
+    },
+    {
+        "legacyCategory": "Bootlace/ Ferrule Crimper(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "bootlace-ferrule-crimper-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Bootlace/ Ferrule Crimper(new)"
+    },
+    {
+        "legacyCategory": "braided sleeve(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "braided-sleeve-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "braided sleeve(new)"
+    },
+    {
+        "legacyCategory": "Brass Nickel Plated Cable Gland(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "brass-nickel-plated-gland-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Brass Nickel Plated Cable Gland(new)"
+    },
+    {
+        "legacyCategory": "CEEFORM Switched Outlet(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "ceeform-switched-outlet-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "CEEFORM Switched Outlet(new)"
+    },
+    {
+        "legacyCategory": "Clamps",
+        "parentFamily": "Accessories",
+        "usageCount": 1,
+        "legacySlug": "clamps",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Clamps"
+    },
+    {
+        "legacyCategory": "Cold Shrink",
+        "parentFamily": "Heat Shrink &amp; Cold Shrink",
+        "usageCount": 1,
+        "legacySlug": "cold-shrink",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Heat Shrink &amp; Cold Shrink / Cold Shrink"
+    },
+    {
+        "legacyCategory": "Copper Reducing Link(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "copper-reducing-link-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Copper Reducing Link(new)"
+    },
+    {
+        "legacyCategory": "DIN Rail Cutter(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "din-rail-cutter-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "DIN Rail Cutter(new)"
+    },
+    {
+        "legacyCategory": "Earth Bars(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "earth-bars-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Earth Bars(new)"
+    },
+    {
+        "legacyCategory": "Earth Bonding Leads(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "earth-bonding-leads-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Earth Bonding Leads(new)"
+    },
+    {
+        "legacyCategory": "Earth Leads(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "earth-leads-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Earth Leads(new)"
+    },
+    {
+        "legacyCategory": "Earthing &amp; Bonding",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "earthing-bonding",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Earthing &amp; Bonding"
+    },
+    {
+        "legacyCategory": "Earthing &amp; Bonding Leads",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "earthing-and-bonding-leads",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Earthing &amp; Bonding Leads"
+    },
+    {
+        "legacyCategory": "EPDM Cold Shrink Tube(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "epdm-cold-shrink-tube-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "EPDM Cold Shrink Tube(new)"
+    },
+    {
+        "legacyCategory": "Fabric Heat Shrink(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "fabric-heat-shrink-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Fabric Heat Shrink(new)"
+    },
+    {
+        "legacyCategory": "H7 Flexible Power",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "heavy-duty",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "H7 Flexible Power"
+    },
+    {
+        "legacyCategory": "Heatshrink Breakouts(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "heatshrink-breakouts-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Heatshrink Breakouts(new)"
+    },
+    {
+        "legacyCategory": "Heavy Duty Connector(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "heavy-duty-connector-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Heavy Duty Connector(new)"
+    },
+    {
+        "legacyCategory": "Lugs &amp; Links",
+        "parentFamily": "Accessories",
+        "usageCount": 1,
+        "legacySlug": "lugs-and-links",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Lugs &amp; Links"
+    },
+    {
+        "legacyCategory": "Marine Switchboard Panel Wire",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "marine-switchboard",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Marine Switchboard Panel Wire"
+    },
+    {
+        "legacyCategory": "Metal Detectable Cable Ties(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "metal-detectable-cable-ties-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Metal Detectable Cable Ties(new)"
+    },
+    {
+        "legacyCategory": "Mounting Enclosure(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "mounting-enclosure-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Mounting Enclosure(new)"
+    },
+    {
+        "legacyCategory": "Narrow Ducts(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "narrow-ducts",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Narrow Ducts(new)"
+    },
+    {
+        "legacyCategory": "Offset Eye Cable Stocking(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "offset-eye-cable-stocking-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Offset Eye Cable Stocking(new)"
+    },
+    {
+        "legacyCategory": "Pre-assembled Leads(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "pre-assembled-leads-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Pre-assembled Leads(new)"
+    },
+    {
+        "legacyCategory": "Push Button",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "push-button",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Push Button"
+    },
+    {
+        "legacyCategory": "Push Button Switch(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "push-button-switch-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Push Button Switch(new)"
+    },
+    {
+        "legacyCategory": "Rotary",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "rotary",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Rotary"
+    },
+    {
+        "legacyCategory": "Serrated Detectable Cable Ties(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "serrated-detectable-cable-ties-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Serrated Detectable Cable Ties(new)"
+    },
+    {
+        "legacyCategory": "Shore Power",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "shore-power",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Shore Power"
+    },
+    {
+        "legacyCategory": "Single Compartment Ducts(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "single-compartment-ducts-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Single Compartment Ducts(new)"
+    },
+    {
+        "legacyCategory": "Single Eye Cable Stocking(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "single-eye-cable-stocking-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Single Eye Cable Stocking(new)"
+    },
+    {
+        "legacyCategory": "Site Safety",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "site-safety",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Site Safety"
+    },
+    {
+        "legacyCategory": "Slotted Ducts(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "slotted-ducts-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Slotted Ducts(new)"
+    },
+    {
+        "legacyCategory": "Solar",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "solar-thai",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Solar"
+    },
+    {
+        "legacyCategory": "Solar Components",
+        "parentFamily": "Accessories",
+        "usageCount": 1,
+        "legacySlug": "solar-components",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Solar Components"
+    },
+    {
+        "legacyCategory": "Solar Conduit(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "solar-conduit-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Solar Conduit(new)"
+    },
+    {
+        "legacyCategory": "Switchboard &amp; Panel",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "switchboard-panel",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Switchboard &amp; Panel"
+    },
+    {
+        "legacyCategory": "Switchboard Components",
+        "parentFamily": "Accessories",
+        "usageCount": 1,
+        "legacySlug": "insulators",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Accessories / Switchboard Components"
+    },
+    {
+        "legacyCategory": "Switchboard/Panel Wire",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "switchboard-panel-wire",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Switchboard/Panel Wire"
+    },
+    {
+        "legacyCategory": "Switchboard/Panel Wire",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "switchboard-panel-wire-iec-shipboard-ieee-451580-lszh",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Switchboard/Panel Wire"
+    },
+    {
+        "legacyCategory": "Temp",
+        "parentFamily": "Ship Loaders &amp; Cranes",
+        "usageCount": 1,
+        "legacySlug": "ship-loaders-cranes-temp",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Ship Loaders &amp; Cranes / Temp"
+    },
+    {
+        "legacyCategory": "Twilight Switch(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "twilight-switch-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Twilight Switch(new)"
+    },
+    {
+        "legacyCategory": "Twisted Cable(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "twisted-cable-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Twisted Cable(new)"
+    },
+    {
+        "legacyCategory": "VFD / VSD",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "vfd-vsd",
+        "status": "EXISTING_MATCH",
+        "existingCode": "VFD",
+        "proposedMapping": "VFD / VSD"
+    },
+    {
+        "legacyCategory": "VUF Uninsulated Grounds Braid/Copper",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "vuf",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "VUF Uninsulated Grounds Braid/Copper"
+    },
+    {
+        "legacyCategory": "Weatherproof Isolator(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "weatherproof-isolator-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Weatherproof Isolator(new)"
+    },
+    {
+        "legacyCategory": "Weatherproof Switch(new)",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "weatherproof-switch-new",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Weatherproof Switch(new)"
+    },
+    {
+        "legacyCategory": "Welding",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "welding",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Welding"
+    },
+    {
+        "legacyCategory": "Welding",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "welding-industrial-thai",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Welding"
+    },
+    {
+        "legacyCategory": "Welding/Battery",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 1,
+        "legacySlug": "welding-battery-us",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Welding/Battery"
+    },
+    {
+        "legacyCategory": "Instrumentation \u2013 Collective Screened",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "instrumentation-collective-screened",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation \u2013 Collective Screened"
+    },
+    {
+        "legacyCategory": "Instrumentation \u2013 Individual and Collective Screened",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "instrumentation-individual-and-collective-screened",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Instrumentation \u2013 Individual and Collective Screened"
+    },
+    {
+        "legacyCategory": "Power &amp; Control",
+        "parentFamily": "UNMAPPED",
+        "usageCount": 4,
+        "legacySlug": "power-control",
+        "status": "NEW_REQUIRED",
+        "existingCode": null,
+        "proposedMapping": "Power &amp; Control"
+    }
+]

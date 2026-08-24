@@ -1,0 +1,1075 @@
+{
+    "items": [
+        {
+            "productPublicId": "02E1E84A-7F90-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Accessory caa550",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "D8AA6BD6-7F90-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Accessory b2e485",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "02C38E34-8090-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Dbg Markets",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEBUG",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "2921BD7D-8090-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Accessory 13967c",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "04DE2188-8090-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Dbg Slug",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEBUG",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "56B472C4-8090-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Dbg Slug2",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEBUG",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "E8EF3CF4-8090-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Accessory b47e6e",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "8CDF7DBD-8190-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Flex Cable b7f2ea Updated",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "5BD35CC9-8190-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Dbg Spec",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEBUG",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "DA10FCD5-8190-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Dbg Var",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEBUG",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "B2972630-8290-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Flex Cable 037599 Updated",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "8F36FB76-8290-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Flex Cable 84c00ad22bc5 Updated",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "2A13CD97-8290-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Dbg VarSku",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEBUG",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "7A4127C4-8290-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Flex Cable 7242dbc723d4 Updated",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "327CA7E8-8290-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Dbg Media",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEBUG",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "6AA61933-8390-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Flex Cable 3512f7f5fa5b Updated",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "1D9C08C4-8390-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Draft 8fcff399b1cd",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "2BE8AB00-8490-F111-B336-000D3AE079A8",
+            "productCode": "",
+            "name": "Phase85 Sample Cable Gland",
+            "legacyProductId": null,
+            "mappingCount": 0,
+            "classification": "DEVELOPMENT_SAMPLE",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "9870E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "BHA",
+            "name": "BFOI BFCI Shipboard Fire Res. Braid Power & Control",
+            "legacyProductId": "BHA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "9970E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "BVA",
+            "name": "Flexible Control LSZH",
+            "legacyProductId": "BVA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "9A70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "DFA",
+            "name": "Multi Core VSD/VFD Braided",
+            "legacyProductId": "DFA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "9B70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "DVA",
+            "name": "Flexible Braided EMC",
+            "legacyProductId": "DVA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "9C70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "EGA",
+            "name": "Flexible Instrumentation Ind & Coll. Scr Braided",
+            "legacyProductId": "EGA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "9D70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "ESA",
+            "name": "Flexible Instrumentation Coll. Scr Fire Rated",
+            "legacyProductId": "ESA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "9E70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "EWA",
+            "name": "Flexible Instrumentation Ind & Coll. Screen",
+            "legacyProductId": "EWA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "9F70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "FCA",
+            "name": "Flexible Instrumentation Ind & Coll. Scr fire resistant",
+            "legacyProductId": "FCA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A070E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "FEA",
+            "name": "Flexible Instrumentation Ind & Coll. Screen",
+            "legacyProductId": "FEA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A170E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "FJA",
+            "name": "Flexible Instrumentation Coll. Scr braided Fire resistant",
+            "legacyProductId": "FJA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A270E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "FKA",
+            "name": "Flexible Instrumentation Coll. Scr braided Fire resistant",
+            "legacyProductId": "FKA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A370E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "FLA",
+            "name": "Flexible Instrumentation Ind & Coll. Scr braided fire resistant",
+            "legacyProductId": "FLA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A470E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "FZA",
+            "name": "Flexible Instrumentation Ind & Coll. Scr Braided",
+            "legacyProductId": "FZA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A570E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "HTA",
+            "name": "Flexible Braided with Bedding",
+            "legacyProductId": "HTA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A670E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "NJC",
+            "name": "Flexible Braided with Bedding",
+            "legacyProductId": "NJC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A770E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "NRC",
+            "name": "Multi Core",
+            "legacyProductId": "NRC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A870E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "NTC",
+            "name": "Flexible Braided with Bedding",
+            "legacyProductId": "NTC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "A970E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "NUC",
+            "name": "Multi Core VSD/VFD Braided",
+            "legacyProductId": "NUC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "AA70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "NVC",
+            "name": "Multi Core",
+            "legacyProductId": "NVC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "AB70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "PJA",
+            "name": "Flexible Braided with Bedding",
+            "legacyProductId": "PJA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "AC70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "RBA",
+            "name": "Flexible Instrumentation Coll. Scr Braided",
+            "legacyProductId": "RBA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "AD70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "RCA",
+            "name": "Flexible Instrumentation Coll. Scr",
+            "legacyProductId": "RCA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "AE70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "RRA",
+            "name": "BI Shipboard Fire Res. Power & Control",
+            "legacyProductId": "RRA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "AF70E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "RSA",
+            "name": "Flexible Instrumentation Coll. Scr Braided",
+            "legacyProductId": "RSA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "B070E6F0-F091-F111-B337-000D3AE094E4",
+            "productCode": "UPA",
+            "name": "Single Insulated Power",
+            "legacyProductId": "UPA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "B2FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "BHC",
+            "name": "Shipboard Fire Res.Braid Power & Control",
+            "legacyProductId": "BHC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "B3FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "BHX",
+            "name": "Shipboard Fire Res.Braid Power & Control",
+            "legacyProductId": "BHX",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "B5FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "BVC",
+            "name": "Shipboard Power & Control",
+            "legacyProductId": "BVC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "B6FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "BVM",
+            "name": "Shipboard Power & Control",
+            "legacyProductId": "BVM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "B7FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "BVP",
+            "name": "Shipboard Power & Control",
+            "legacyProductId": "BVP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "B8FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "C1",
+            "name": "Flexible Control",
+            "legacyProductId": "C1",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "B9FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "C2",
+            "name": "Flexible Control Braid",
+            "legacyProductId": "C2",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "BAFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "C3",
+            "name": "Flexible Control SWA",
+            "legacyProductId": "C3",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "BBFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "C4",
+            "name": "Flexible LSZH Control",
+            "legacyProductId": "C4",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "BCFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "C5",
+            "name": "Flexible LSZH Control Braid",
+            "legacyProductId": "C5",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "BDFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "C6",
+            "name": "Flexible LSZH Control SWA",
+            "legacyProductId": "C6",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "BFFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "DFC",
+            "name": "Shipboard Braid VFD/VSD",
+            "legacyProductId": "DFC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C0FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "DFP",
+            "name": "Shipboard Braid VFD/VSD",
+            "legacyProductId": "DFP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C2FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "DVC",
+            "name": "Shipboard Braid Power & Control",
+            "legacyProductId": "DVC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C3FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "DVM",
+            "name": "Shipboard Braid Power & Control",
+            "legacyProductId": "DVM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C4FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "DVP",
+            "name": "Shipboard Braid Power & Control",
+            "legacyProductId": "DVP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C5FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "DVX",
+            "name": "Shipboard Braid Power & Control",
+            "legacyProductId": "DVX",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C7FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "EGC",
+            "name": "Shipboard Braid Individual & Coll. Scr. Instrumentation",
+            "legacyProductId": "EGC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C9FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "ESC",
+            "name": "Shipboard Fire Res.Coll. Scr. Instrumentation",
+            "legacyProductId": "ESC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "CAFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "ESX",
+            "name": "Shipboard Fire Res.Coll. Scr. Instrumentation",
+            "legacyProductId": "ESX",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "CCFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "EWC",
+            "name": "Shipboard Individual & Coll. Scr. Instrumentation",
+            "legacyProductId": "EWC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "CDFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "EWP",
+            "name": "Shipboard Individual & Coll. Scr. Instrumentation",
+            "legacyProductId": "EWP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "CFFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FCC",
+            "name": "Shipboard Fire Res.Individual & Coll. Scr. Instr.",
+            "legacyProductId": "FCC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "D0FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FCP",
+            "name": "Shipboard Fire Res.Individual & Coll. Scr. Instr.",
+            "legacyProductId": "FCP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "D2FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FEC",
+            "name": "Offshore Braid Arm. Fire Res.Individual & Coll. Scr. Instrumentation",
+            "legacyProductId": "FEC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "D3FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FEM",
+            "name": "Offshore Braid Arm. Fire Res.Individual & Coll. Scr. Instrumentation",
+            "legacyProductId": "FEM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "D4FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FEP",
+            "name": "Offshore Braid Arm. Fire Res.Individual & Coll. Scr. Instrumentation",
+            "legacyProductId": "FEP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "D6FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FJC",
+            "name": "Shipboard Fire Res.Braid Coll. Scr. Instrumentation",
+            "legacyProductId": "FJC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "D8FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FKC",
+            "name": "Offshore Braid Armour Fire Res.Coll. Scr. Instrumentation",
+            "legacyProductId": "FKC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "D9FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FKM",
+            "name": "Offshore Braid Armour Fire Res.Coll. Scr. Instrumentation",
+            "legacyProductId": "FKM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "DAFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FKP",
+            "name": "Offshore Braid Armour Fire Res.Coll. Scr. Instrumentation",
+            "legacyProductId": "FKP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "DDFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FZC",
+            "name": "Offshore Braid Armour Individual & Coll. Scr. Instrumentation",
+            "legacyProductId": "FZC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "DEFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "FZM",
+            "name": "Offshore Braid Armour Individual & Coll. Scr. Instrumentation",
+            "legacyProductId": "FZM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "E0FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "HTC",
+            "name": "Offshore Braid Armour Fire Res.Power & Control",
+            "legacyProductId": "HTC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "E1FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "HTM",
+            "name": "Offshore Braid Armour Fire Res.Power & Control",
+            "legacyProductId": "HTM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "E2FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "HTP",
+            "name": "Offshore Braid Armour Fire Res.Power & Control",
+            "legacyProductId": "HTP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "E4FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "NJM",
+            "name": "P1/P8 Braid Armoured Power & Control",
+            "legacyProductId": "NJM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "E5FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "NJP",
+            "name": "P1/P8 Braid Armoured Power & Control",
+            "legacyProductId": "NJP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "E8FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "NTM",
+            "name": "P5/P12 Braid Armoured Fire Res. Power & Control",
+            "legacyProductId": "NTM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "E9FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "NUA",
+            "name": "P1/P8 Braid Armoured VFD/VSD",
+            "legacyProductId": "NUA",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "EDFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "PJC",
+            "name": "Offshore Braid Armour Power & Control",
+            "legacyProductId": "PJC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "EEFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "PJM",
+            "name": "Offshore Braid Armour Power & Control",
+            "legacyProductId": "PJM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "EFFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "PJP",
+            "name": "Offshore Braid Armour Power & Control",
+            "legacyProductId": "PJP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F0FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "PJT",
+            "name": "Offshore Braid Armour Power & Control",
+            "legacyProductId": "PJT",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F1FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "PJX",
+            "name": "Offshore Braid Armour Power & Control",
+            "legacyProductId": "PJX",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F2FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R1",
+            "name": "Flexible Instrumentation Coll. Scr.",
+            "legacyProductId": "R1",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F3FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R1T",
+            "name": "Flexible Instrumentation Coll. Scr.",
+            "legacyProductId": "R1T",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F4FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R2",
+            "name": "Flexible Instrumentation SWA Coll. Scr.",
+            "legacyProductId": "R2",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F5FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R3",
+            "name": "Flexible Instrumentation Individual & Coll. Scr.",
+            "legacyProductId": "R3",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F6FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R3T",
+            "name": "Flexible Instrumentation Individual & Coll. Scr.",
+            "legacyProductId": "R3T",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F7FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R4",
+            "name": "Flexible Instrumentation SWA Individual & Coll. Scr.",
+            "legacyProductId": "R4",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F8FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R5",
+            "name": "Flexible LSZH Instrumentation Coll. Scr.",
+            "legacyProductId": "R5",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F9FCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R5T",
+            "name": "Flexible LSZH Instrumentation Coll. Scr.",
+            "legacyProductId": "R5T",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "FAFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R6",
+            "name": "Flexible LSZH Instrumentation SWA Coll. Scr.",
+            "legacyProductId": "R6",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "FBFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R7",
+            "name": "Flexible LSZH Instrumentation Individual & Coll. Scr.",
+            "legacyProductId": "R7",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "FCFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "R8",
+            "name": "Flexible LSZH Instrumentation SWA Individual & Coll. Scr.",
+            "legacyProductId": "R8",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "FEFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RBC",
+            "name": "Offshore Braid Armour Coll. Scr. Instrumentation",
+            "legacyProductId": "RBC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "FFFCDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RBM",
+            "name": "Offshore Braid Armour Coll. Scr. Instrumentation",
+            "legacyProductId": "RBM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "00FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RBP",
+            "name": "Offshore Braid Armour Coll. Scr. Instrumentation",
+            "legacyProductId": "RBP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "02FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RCC",
+            "name": "Shipboard Coll. Scr. Instrumentation",
+            "legacyProductId": "RCC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "03FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RCM",
+            "name": "Shipboard Coll. Scr. Instrumentation",
+            "legacyProductId": "RCM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "04FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RCP",
+            "name": "Shipboard Coll. Scr. Instrumentation",
+            "legacyProductId": "RCP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "05FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RD",
+            "name": "Collective Screened Instrumentation",
+            "legacyProductId": "RD",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "06FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RF",
+            "name": "Flexible LSZH Instrumentation Coll. Scr.",
+            "legacyProductId": "RF",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "07FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RG",
+            "name": "Flexible LSZH Instrumentation Individual & Coll. Scr.",
+            "legacyProductId": "RG",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "08FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RGT",
+            "name": "Flexible LSZH Instrumentation Individual & Coll. Scr.",
+            "legacyProductId": "RGT",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "0AFDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RRC",
+            "name": "Shipboard Fire Res.Power & Control",
+            "legacyProductId": "RRC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "0CFDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RSC",
+            "name": "Shipboard Braid Coll. Scr. Instrumentation",
+            "legacyProductId": "RSC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "0DFDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "RSP",
+            "name": "Shipboard Braid Coll. Scr. Instrumentation",
+            "legacyProductId": "RSP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "0EFDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "UP",
+            "name": "Shipboard & Offshore Switchboard/Panel Wire",
+            "legacyProductId": "UP",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "10FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "UPC",
+            "name": "Shipboard & Offshore Switchboard/Panel Wire",
+            "legacyProductId": "UPC",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "11FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "UPM",
+            "name": "Shipboard & Offshore Switchboard/Panel Wire",
+            "legacyProductId": "UPM",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "12FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "V2",
+            "name": "Flexible Rubber MV Power",
+            "legacyProductId": "V2",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "13FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "V3",
+            "name": "Flexible Rubber Single-core, Multi-core",
+            "legacyProductId": "V3",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "14FDDED9-F691-F111-B337-000D3AE094E4",
+            "productCode": "V4",
+            "name": "Flexible Rubber MV Power",
+            "legacyProductId": "V4",
+            "mappingCount": 1,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        }
+    ],
+    "counts": {
+        "REAL_OR_MIGRATED": 100,
+        "DEVELOPMENT_SAMPLE": 11,
+        "DEBUG": 7,
+        "MANUAL_REAL": 0,
+        "UNKNOWN": 0,
+        "DELETED": 0
+    },
+    "deleted": 0
+}

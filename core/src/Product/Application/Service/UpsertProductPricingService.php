@@ -53,6 +53,7 @@ final class UpsertProductPricingService
                     'createRevision' => $command->createRevision,
                     'pricingPublicId' => $command->pricingPublicId,
                     'expectedRowVersion' => $command->expectedRowVersion,
+                    'unitOfMeasurePublicId' => $command->unitOfMeasurePublicId,
                 ],
                 $actorUserId,
             );
@@ -69,6 +70,7 @@ final class UpsertProductPricingService
                     'minimumQuantity' => $saved->minimumQuantity,
                     'variantPublicId' => $saved->variantPublicId,
                     'priceSourceCode' => $saved->priceSourceCode,
+                    'unitOfMeasureCode' => $saved->unitOfMeasureCode,
                 ],
             );
 

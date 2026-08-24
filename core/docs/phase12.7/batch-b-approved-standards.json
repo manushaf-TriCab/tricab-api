@@ -1,0 +1,682 @@
+[
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "normalizedStandard": "IEC 60228",
+        "normalizedKey": "iec 60228",
+        "usageCount": 52,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60228",
+        "proposedOption": {
+            "code": "IEC-60228",
+            "displayName": "IEC 60228"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "normalizedStandard": "AS/NZS 1125",
+        "normalizedKey": "as/nzs 1125",
+        "usageCount": 51,
+        "sampleProducts": [],
+        "existingTargetOption": "AS-NZS-1125",
+        "proposedOption": {
+            "code": "AS-NZS-1125",
+            "displayName": "AS/NZS 1125"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "normalizedStandard": "AS/NZS 3808",
+        "normalizedKey": "as/nzs 3808",
+        "usageCount": 45,
+        "sampleProducts": [],
+        "existingTargetOption": "AS-NZS-3808",
+        "proposedOption": {
+            "code": "AS-NZS-3808",
+            "displayName": "AS/NZS 3808"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "normalizedStandard": "IEC 60332-1",
+        "normalizedKey": "iec 60332-1",
+        "usageCount": 36,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60332-1",
+        "proposedOption": {
+            "code": "IEC-60332-1",
+            "displayName": "IEC 60332-1"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "normalizedStandard": "AS/NZS 5000.1",
+        "normalizedKey": "as/nzs 5000.1",
+        "usageCount": 34,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AS-NZS-5000-1",
+            "displayName": "AS/NZS 5000.1"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "normalizedStandard": "AS/NZS 1660.5.1",
+        "normalizedKey": "as/nzs 1660.5.1",
+        "usageCount": 32,
+        "sampleProducts": [],
+        "existingTargetOption": "AS-NZS-1660-5-1",
+        "proposedOption": {
+            "code": "AS-NZS-1660-5-1",
+            "displayName": "AS/NZS 1660.5.1"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "normalizedStandard": "AS/NZS 1660.5.6",
+        "normalizedKey": "as/nzs 1660.5.6",
+        "usageCount": 32,
+        "sampleProducts": [],
+        "existingTargetOption": "AS-NZS-1660-5-6",
+        "proposedOption": {
+            "code": "AS-NZS-1660-5-6",
+            "displayName": "AS/NZS 1660.5.6"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "normalizedStandard": "AS/NZS 3008.1",
+        "normalizedKey": "as/nzs 3008.1",
+        "usageCount": 27,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AS-NZS-3008-1",
+            "displayName": "AS/NZS 3008.1"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "normalizedStandard": "IEC 60332-3-22",
+        "normalizedKey": "iec 60332-3-22",
+        "usageCount": 16,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60332-3-22",
+        "proposedOption": {
+            "code": "IEC-60332-3-22",
+            "displayName": "IEC 60332-3-22"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "normalizedStandard": "IEC 60754-2",
+        "normalizedKey": "iec 60754-2",
+        "usageCount": 16,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60754-2",
+        "proposedOption": {
+            "code": "IEC-60754-2",
+            "displayName": "IEC 60754-2"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "normalizedStandard": "IEC 61034-1&2",
+        "normalizedKey": "iec 61034-1&2",
+        "usageCount": 14,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-61034-1_2",
+        "proposedOption": {
+            "code": "IEC-61034-1-2",
+            "displayName": "IEC 61034-1&2"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "medium",
+        "reason": "operator_map_to_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "normalizedStandard": "AS/NZS 1660.5.2",
+        "normalizedKey": "as/nzs 1660.5.2",
+        "usageCount": 11,
+        "sampleProducts": [],
+        "existingTargetOption": "AS-NZS-1660-5-2",
+        "proposedOption": {
+            "code": "AS-NZS-1660-5-2",
+            "displayName": "AS/NZS 1660.5.2"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "normalizedStandard": "AS/NZS 1660.5.4",
+        "normalizedKey": "as/nzs 1660.5.4",
+        "usageCount": 11,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AS-NZS-1660-5-4",
+            "displayName": "AS/NZS 1660.5.4"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud"
+        ],
+        "normalizedStandard": "AS/NZS IEC 60332-1 \u2013 Flame Test",
+        "normalizedKey": "as/nzs iec 60332-1 \u2013 flame test",
+        "usageCount": 10,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60332-1",
+        "proposedOption": {
+            "code": "AS-NZS-IEC-60332-1-FLAME-TEST",
+            "displayName": "AS/NZS IEC 60332-1 \u2013 Flame Test"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "medium",
+        "reason": "operator_map_to_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud"
+        ],
+        "normalizedStandard": "AS/NZS IEC 60754 - Halogen",
+        "normalizedKey": "as/nzs iec 60754 - halogen",
+        "usageCount": 8,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60754-2",
+        "proposedOption": {
+            "code": "AS-NZS-IEC-60754-HALOGEN",
+            "displayName": "AS/NZS IEC 60754 - Halogen"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "medium",
+        "reason": "operator_map_to_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud"
+        ],
+        "normalizedStandard": "NEK TS 606 \u2013 Oil & Mud",
+        "normalizedKey": "nek ts 606 \u2013 oil & mud",
+        "usageCount": 8,
+        "sampleProducts": [],
+        "existingTargetOption": "NEK-TS606-ED6",
+        "proposedOption": {
+            "code": "NEK-TS-606-OIL-MUD",
+            "displayName": "NEK TS 606 \u2013 Oil & Mud"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC 60754 - Halogen\r\nNEK TS 606 \u2013 Oil & Mud"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "medium",
+        "reason": "operator_map_to_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAIEC 60332-1"
+        ],
+        "normalizedStandard": "AS/NZS 1429.1",
+        "normalizedKey": "as/nzs 1429.1",
+        "usageCount": 7,
+        "sampleProducts": [],
+        "existingTargetOption": "AS-NZS-1429-1",
+        "proposedOption": {
+            "code": "AS-NZS-1429-1",
+            "displayName": "AS/NZS 1429.1"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAIEC 60332-1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "normalizedStandard": "AS/NZS 1660.5.5",
+        "normalizedKey": "as/nzs 1660.5.5",
+        "usageCount": 5,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AS-NZS-1660-5-5",
+            "displayName": "AS/NZS 1660.5.5"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "normalizedStandard": "AS/NZS 3013",
+        "normalizedKey": "as/nzs 3013",
+        "usageCount": 5,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AS-NZS-3013",
+            "displayName": "AS/NZS 3013"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "normalizedStandard": "IEC 60331",
+        "normalizedKey": "iec 60331",
+        "usageCount": 5,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60331-1",
+        "proposedOption": {
+            "code": "IEC-60331",
+            "displayName": "IEC 60331"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "medium",
+        "reason": "operator_map_to_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAIEC 60332-1"
+        ],
+        "normalizedStandard": "AIEC 60332-1",
+        "normalizedKey": "aiec 60332-1",
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60332-1",
+        "proposedOption": {
+            "code": "AIEC-60332-1",
+            "displayName": "AIEC 60332-1"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAIEC 60332-1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "medium",
+        "reason": "operator_map_to_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "normalizedStandard": "BS EN 50267",
+        "normalizedKey": "bs en 50267",
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BS-EN-50267",
+            "displayName": "BS EN 50267"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "normalizedStandard": "BS EN 61034",
+        "normalizedKey": "bs en 61034",
+        "usageCount": 3,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "BS-EN-61034",
+            "displayName": "BS EN 61034"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.1\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "normalizedStandard": "AS/NZS 5033",
+        "normalizedKey": "as/nzs 5033",
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AS-NZS-5033",
+            "displayName": "AS/NZS 5033"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "normalizedStandard": "IEC 62930",
+        "normalizedKey": "iec 62930",
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "IEC-62930",
+            "displayName": "IEC 62930"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 5033\r\nIEC 62930\r\nIEC 60228\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.3\r\nAS 1670\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "normalizedStandard": "AS/NZS 5000.3",
+        "normalizedKey": "as/nzs 5000.3",
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AS-NZS-5000-3",
+            "displayName": "AS/NZS 5000.3"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.3\r\nAS 1670\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.3\r\nAS 1670\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "normalizedStandard": "AS 1670",
+        "normalizedKey": "as 1670",
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": null,
+        "proposedOption": {
+            "code": "AS-1670",
+            "displayName": "AS 1670"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.2\r\nAS/NZS 1660.5.4\r\nAS/NZS 1660.5.5\r\nAS/NZS 1660.5.6\r\nAS/NZS 3008.1\r\nAS/NZS 3013\r\nAS/NZS 3808\r\nAS/NZS 5000.3\r\nAS 1670\r\nBS 6387 (C,W, Z)\r\nBS EN 50267\r\nBS EN 61034\r\nIEC 60228\r\nIEC 60331\r\nIEC 60332-1\r\nIEC 60332-3-22\r\nIEC 60754-2\r\nIEC 61034-1&2"
+        ],
+        "decision": "APPROVED_CREATE",
+        "confidence": "medium",
+        "reason": "operator_approved_create_genuine_standard"
+    },
+    {
+        "rawValues": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC60754 - Halogen"
+        ],
+        "normalizedStandard": "AS/NZS IEC60754 - Halogen",
+        "normalizedKey": "as/nzs iec60754 - halogen",
+        "usageCount": 2,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60754-2",
+        "proposedOption": {
+            "code": "AS-NZS-IEC60754-HALOGEN",
+            "displayName": "AS/NZS IEC60754 - Halogen"
+        },
+        "aliases": [
+            "AS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 1429.1\r\nIEC 60228\r\nAS/NZS IEC 60332-1 \u2013 Flame Test\r\nAS/NZS IEC60754 - Halogen"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "medium",
+        "reason": "operator_map_to_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "normalizedStandard": "IEC 60092-350",
+        "normalizedKey": "iec 60092-350",
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60092-350",
+        "proposedOption": {
+            "code": "IEC-60092-350",
+            "displayName": "IEC 60092-350"
+        },
+        "aliases": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "normalizedStandard": "IEC 60092-353",
+        "normalizedKey": "iec 60092-353",
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60092-353",
+        "proposedOption": {
+            "code": "IEC-60092-353",
+            "displayName": "IEC 60092-353"
+        },
+        "aliases": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "normalizedStandard": "IEC 60092-360",
+        "normalizedKey": "iec 60092-360",
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": "IEC-60092-360",
+        "proposedOption": {
+            "code": "IEC-60092-360",
+            "displayName": "IEC 60092-360"
+        },
+        "aliases": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "normalizedStandard": "IEEE 45",
+        "normalizedKey": "ieee 45",
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": "IEEE-45",
+        "proposedOption": {
+            "code": "IEEE-45",
+            "displayName": "IEEE 45"
+        },
+        "aliases": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "normalizedStandard": "IEEE 1580",
+        "normalizedKey": "ieee 1580",
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": "IEEE-1580",
+        "proposedOption": {
+            "code": "IEEE-1580",
+            "displayName": "IEEE 1580"
+        },
+        "aliases": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    },
+    {
+        "rawValues": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "normalizedStandard": "IEEE 1202",
+        "normalizedKey": "ieee 1202",
+        "usageCount": 1,
+        "sampleProducts": [],
+        "existingTargetOption": "IEEE-1202",
+        "proposedOption": {
+            "code": "IEEE-1202",
+            "displayName": "IEEE 1202"
+        },
+        "aliases": [
+            "IEC 60228\r\nIEC 60092-350\r\nIEC 60092-353\r\nIEC 60092-360\r\nIEC 60332-1\r\nIEC 60754-2\r\nIEEE 45\r\nIEEE 1580\r\nIEEE 1202\r\nNEK TS 606\r\nAS/NZS 1125\r\nAS/NZS 3808\r\nAS/NZS 5000.1"
+        ],
+        "decision": "APPROVED_MAP_EXISTING",
+        "confidence": "high",
+        "reason": "matched_existing_STANDARD_option"
+    }
+]

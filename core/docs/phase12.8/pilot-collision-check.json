@@ -1,0 +1,12 @@
+{
+    "collisions": [],
+    "productIdentityCollision": false,
+    "variantIdentityCollision": false,
+    "productCodeCollision": false,
+    "variantCodeCollision": false,
+    "slugCollision": false,
+    "specificationConflict": false,
+    "relationshipConflict": false,
+    "status": "CLEAR",
+    "autoFix": false
+}

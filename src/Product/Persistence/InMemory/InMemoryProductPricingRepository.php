@@ -11,9 +11,11 @@ use TriCab\Core\Product\Application\DTO\ProductBaseCostHistoryEntry;
 use TriCab\Core\Product\Application\DTO\ProductPricingMatrixRow;
 use TriCab\Core\Product\Application\DTO\ProductPricingOverview;
 use TriCab\Core\Product\Application\DTO\ProductPricingSummary;
+use TriCab\Core\Product\Application\Exception\InvalidPricingUnit;
 use TriCab\Core\Product\Application\Exception\OverlappingBaseCostRecord;
 use TriCab\Core\Product\Application\Exception\ProductPricingConcurrencyConflict;
 use TriCab\Core\Product\Contract\ProductPricingRepository;
+use TriCab\Core\Product\Domain\ValueObject\PricingUnitDefaults;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 use TriCab\Core\Product\Support\PricingRecordStatus;
@@ -59,6 +61,8 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
             };
         }
 
+        $defaultUnit = $this->loadProductDefaultUnitContext($productPublicId);
+
         return new ProductPricingOverview(
             variantCount: count($matrix),
             variantsWithPricing: $withPricing,
@@ -67,7 +71,25 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
             scheduledRecordCount: $scheduled,
             expiredRecordCount: $expired,
             inactiveRecordCount: $inactive,
+            defaultUnitOfMeasurePublicId: $defaultUnit['defaultUnitOfMeasurePublicId'],
+            defaultUnitOfMeasureCode: $defaultUnit['defaultUnitOfMeasureCode'],
+            defaultUnitOfMeasureSymbol: $defaultUnit['defaultUnitOfMeasureSymbol'],
+            defaultUnitSource: $defaultUnit['defaultUnitSource'],
         );
+    }
+
+    public function setProductDefaultPricingUnit(
+        ProductPublicId $productPublicId,
+        ?string $pricingUnitPublicId,
+        UserId $actorUserId,
+    ): ProductPricingOverview {
+        unset($actorUserId);
+        if ($pricingUnitPublicId !== null && $this->store->pricingUnitByPublicId($pricingUnitPublicId) === null) {
+            throw InvalidPricingUnit::notFound($pricingUnitPublicId);
+        }
+        $this->store->setProductPricingUnitPublicId($productPublicId->toString(), $pricingUnitPublicId);
+
+        return $this->getOverview($productPublicId);
     }
 
     public function listMatrixByProduct(ProductPublicId $productPublicId): array
@@ -91,6 +113,7 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
         foreach ($variants as $variant) {
             $current = $this->currentVariantPrice($productPublicId->toString(), $variant['publicId']);
             $status = $current === null ? PricingRecordStatus::MISSING : $current['status'];
+            $unit = $this->resolveUnit($productPublicId->toString(), $current);
             $rows[] = new ProductPricingMatrixRow(
                 variantPublicId: AzureSqlValueMapper::stringValue($variant['publicId'] ?? ''),
                 variantName: AzureSqlValueMapper::stringValue($variant['variantName'] ?? ''),
@@ -101,8 +124,8 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
                 currentPricingPublicId: $current['publicId'] ?? null,
                 currencyCode: $current['currencyCode'] ?? null,
                 baseCost: $current['baseCost'] ?? null,
-                unitOfMeasureCode: 'M',
-                unitOfMeasureSymbol: 'm',
+                unitOfMeasureCode: $unit['code'],
+                unitOfMeasureSymbol: $unit['symbol'],
                 priceListCode: $current['priceListCode'] ?? null,
                 priceSourceCode: $current['priceSourceCode'] ?? null,
                 effectiveFromUtc: $current['effectiveFromUtc'] ?? null,
@@ -129,6 +152,7 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
             if ($priceListPublicId !== null && ($row['priceListPublicId'] ?? null) !== $priceListPublicId) {
                 continue;
             }
+            $unit = $this->resolveUnit($productPublicId->toString(), $row);
             $entries[] = new ProductBaseCostHistoryEntry(
                 publicId: AzureSqlValueMapper::stringValue($row['publicId'] ?? ''),
                 recordType: AzureSqlValueMapper::stringValue($row['recordType'] ?? 'product'),
@@ -136,7 +160,7 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
                 variantName: AzureSqlValueMapper::nullableString($row['variantName'] ?? null),
                 currencyCode: AzureSqlValueMapper::stringValue($row['currencyCode'] ?? ''),
                 baseCost: AzureSqlValueMapper::stringValue($row['baseCost'] ?? ''),
-                unitOfMeasureCode: 'M',
+                unitOfMeasureCode: $unit['code'],
                 priceListCode: AzureSqlValueMapper::nullableString($row['priceListCode'] ?? null),
                 priceSourceCode: AzureSqlValueMapper::nullableString($row['priceSourceCode'] ?? 'manual'),
                 effectiveFromUtc: AzureSqlValueMapper::nullableString($row['effectiveFromUtc'] ?? null),
@@ -168,6 +192,10 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
     ): ProductPricingSummary {
         unset($actorUserId);
         $baseCost = $data['baseCost'] ?? $data['unitPrice'] ?? '';
+        if (($data['unitOfMeasurePublicId'] ?? null) !== null
+            && $this->store->pricingUnitByPublicId((string) $data['unitOfMeasurePublicId']) === null) {
+            throw InvalidPricingUnit::notFound((string) $data['unitOfMeasurePublicId']);
+        }
         if (($data['pricingPublicId'] ?? null) !== null) {
             return $this->updateRow((string) $data['pricingPublicId'], $data, $baseCost);
         }
@@ -199,6 +227,7 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
             'minimumQuantity' => $data['minimumQuantity'],
             'priceListCode' => $data['priceListPublicId'] ?? null,
             'priceListPublicId' => $data['priceListPublicId'] ?? null,
+            'unitOfMeasurePublicId' => $data['unitOfMeasurePublicId'] ?? null,
             'priceSourceCode' => $data['priceSourceCode'] ?? 'manual',
             'effectiveFromUtc' => $data['effectiveFromUtc'] ?? null,
             'effectiveToUtc' => $data['effectiveToUtc'] ?? null,
@@ -285,6 +314,13 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
             $row['effectiveFromUtc'] = $data['effectiveFromUtc'] ?? null;
             $row['effectiveToUtc'] = $data['effectiveToUtc'] ?? null;
             $row['priceSourceCode'] = $data['priceSourceCode'] ?? 'manual';
+            if (array_key_exists('unitOfMeasurePublicId', $data)) {
+                $unitPublicId = $data['unitOfMeasurePublicId'];
+                if ($unitPublicId !== null && $this->store->pricingUnitByPublicId($unitPublicId) === null) {
+                    throw InvalidPricingUnit::notFound($unitPublicId);
+                }
+                $row['unitOfMeasurePublicId'] = $unitPublicId;
+            }
             $row['rowVersion'] = RowVersionToken::fromBinary(random_bytes(8))->toBase64();
             $row['status'] = PricingRecordStatus::resolve((bool) ($row['isActive'] ?? true), $row['effectiveFromUtc'], $row['effectiveToUtc']);
             $this->store->upsertPrice($row);
@@ -316,6 +352,8 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
      */
     private function toSummary(array $row): ProductPricingSummary
     {
+        $unit = $this->resolveUnit((string) ($row['productPublicId'] ?? ''), $row);
+
         return new ProductPricingSummary(
             publicId: AzureSqlValueMapper::stringValue($row['publicId'] ?? ''),
             recordType: AzureSqlValueMapper::stringValue($row['recordType'] ?? 'product'),
@@ -329,7 +367,9 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
             priceListPublicId: AzureSqlValueMapper::nullableString($row['priceListPublicId'] ?? null),
             regionPublicId: AzureSqlValueMapper::nullableString($row['regionPublicId'] ?? null),
             marketPublicId: AzureSqlValueMapper::nullableString($row['marketPublicId'] ?? null),
-            unitOfMeasureCode: 'M',
+            unitOfMeasureCode: $unit['code'],
+            unitOfMeasureSymbol: $unit['symbol'],
+            unitOfMeasurePublicId: $unit['publicId'],
             priceSourceCode: AzureSqlValueMapper::nullableString($row['priceSourceCode'] ?? 'manual'),
             effectiveFromUtc: AzureSqlValueMapper::nullableString($row['effectiveFromUtc'] ?? null),
             effectiveToUtc: AzureSqlValueMapper::nullableString($row['effectiveToUtc'] ?? null),
@@ -340,5 +380,73 @@ final class InMemoryProductPricingRepository implements ProductPricingRepository
             erpSourceReference: null,
             lastSourceUpdatedAtUtc: null,
         );
+    }
+
+    /**
+     * @param array<string, mixed>|null $row
+     *
+     * @return array{publicId: ?string, code: string, symbol: string}
+     */
+    private function resolveUnit(string $productPublicId, ?array $row): array
+    {
+        $unitPublicId = $row['unitOfMeasurePublicId'] ?? null;
+        if (is_string($unitPublicId) && $unitPublicId !== '') {
+            $unit = $this->store->pricingUnitByPublicId($unitPublicId);
+            if ($unit !== null) {
+                return ['publicId' => $unit['publicId'], 'code' => $unit['code'], 'symbol' => $unit['symbol']];
+            }
+        }
+
+        $productUnitPublicId = $this->store->productPricingUnitPublicId($productPublicId);
+        if ($productUnitPublicId !== null) {
+            $unit = $this->store->pricingUnitByPublicId($productUnitPublicId);
+            if ($unit !== null) {
+                return ['publicId' => $unit['publicId'], 'code' => $unit['code'], 'symbol' => $unit['symbol']];
+            }
+        }
+
+        return [
+            'publicId' => null,
+            'code' => PricingUnitDefaults::CODE,
+            'symbol' => PricingUnitDefaults::SYMBOL,
+        ];
+    }
+
+    /**
+     * @return array{
+     *   defaultUnitOfMeasurePublicId: ?string,
+     *   defaultUnitOfMeasureCode: string,
+     *   defaultUnitOfMeasureSymbol: string,
+     *   defaultUnitSource: 'product'|'system-default'
+     * }
+     */
+    private function loadProductDefaultUnitContext(ProductPublicId $productPublicId): array
+    {
+        $publicId = $this->store->productPricingUnitPublicId($productPublicId->toString());
+        if ($publicId === null) {
+            return [
+                'defaultUnitOfMeasurePublicId' => null,
+                'defaultUnitOfMeasureCode' => PricingUnitDefaults::CODE,
+                'defaultUnitOfMeasureSymbol' => PricingUnitDefaults::SYMBOL,
+                'defaultUnitSource' => 'system-default',
+            ];
+        }
+
+        $unit = $this->store->pricingUnitByPublicId($publicId);
+        if ($unit === null) {
+            return [
+                'defaultUnitOfMeasurePublicId' => null,
+                'defaultUnitOfMeasureCode' => PricingUnitDefaults::CODE,
+                'defaultUnitOfMeasureSymbol' => PricingUnitDefaults::SYMBOL,
+                'defaultUnitSource' => 'system-default',
+            ];
+        }
+
+        return [
+            'defaultUnitOfMeasurePublicId' => $unit['publicId'],
+            'defaultUnitOfMeasureCode' => $unit['code'],
+            'defaultUnitOfMeasureSymbol' => $unit['symbol'],
+            'defaultUnitSource' => 'product',
+        ];
     }
 }

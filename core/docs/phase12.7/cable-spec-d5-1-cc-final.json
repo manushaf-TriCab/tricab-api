@@ -1,0 +1,117 @@
+{
+    "meaning": "Core-configuration / nc interpretation mode \u2014 not a standalone customer dimension",
+    "evidenceClass": "STRONG_CORRELATION",
+    "confidence": "MEDIUM",
+    "resolution": "EXPLICITLY_UNRESOLVED",
+    "isCustomerSpecification": false,
+    "safeTargetRepresentation": "CORE-CONFIGURATION (candidate) or derive nc interpretation at migration \u2014 not proven HIGH",
+    "safeExclusion": false,
+    "operatorExclusionNotRecommended": true,
+    "exclusionRisks": [
+        "May misinterpret nc (cores vs pairs vs triples)",
+        "cc=a VUF AWG rows would lose encoding",
+        "All 54 products populated"
+    ],
+    "valueBreakdown": [
+        {
+            "code": "c",
+            "meaning": "cores counting mode \u2014 nc counts individual cores",
+            "rows": 3027,
+            "styles": 39,
+            "styleSamples": [
+                "B1",
+                "BH",
+                "BV",
+                "C1",
+                "DF",
+                "DG",
+                "DV",
+                "EA",
+                "HT",
+                "KA",
+                "KC",
+                "KL",
+                "KN",
+                "KU",
+                "LP",
+                "LS",
+                "NF",
+                "NJ",
+                "NR",
+                "NT"
+            ],
+            "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+            "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+            "confidence": "MEDIUM",
+            "evidenceClass": "STRONG_CORRELATION"
+        },
+        {
+            "code": "p",
+            "meaning": "pairs counting mode \u2014 nc counts pairs",
+            "rows": 1177,
+            "styles": 14,
+            "styleSamples": [
+                "EG",
+                "ES",
+                "EW",
+                "FC",
+                "FE",
+                "FJ",
+                "FK",
+                "FL",
+                "FZ",
+                "R1",
+                "RB",
+                "RC",
+                "RE",
+                "RS"
+            ],
+            "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+            "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+            "confidence": "MEDIUM",
+            "evidenceClass": "STRONG_CORRELATION"
+        },
+        {
+            "code": "t",
+            "meaning": "triples/triads counting mode",
+            "rows": 279,
+            "styles": 14,
+            "styleSamples": [
+                "EG",
+                "ES",
+                "EW",
+                "FC",
+                "FE",
+                "FJ",
+                "FK",
+                "FL",
+                "FZ",
+                "R1",
+                "RB",
+                "RC",
+                "RE",
+                "RS"
+            ],
+            "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+            "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+            "confidence": "MEDIUM",
+            "evidenceClass": "STRONG_CORRELATION"
+        },
+        {
+            "code": "a",
+            "meaning": "VUF-only AWG-style xa mode (1/0, 250, 500) \u2014 exception not global cores",
+            "rows": 8,
+            "styles": 1,
+            "styleSamples": [
+                "VUF"
+            ],
+            "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+            "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
+            "confidence": "MEDIUM",
+            "evidenceClass": "STRONG_CORRELATION"
+        }
+    ],
+    "splitExceptionStrategy": "Treat cc=a as VUF-specific AWG mode; c/p/t as nc interpretation metadata",
+    "productsBlocked": 54,
+    "stylesAffected": 54
+}

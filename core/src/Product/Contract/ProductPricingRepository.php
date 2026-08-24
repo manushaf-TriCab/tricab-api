@@ -57,7 +57,8 @@ interface ProductPricingRepository
      *   priceSourceCode?: ?string,
      *   createRevision?: bool,
      *   pricingPublicId?: ?string,
-     *   expectedRowVersion?: ?string
+     *   expectedRowVersion?: ?string,
+     *   unitOfMeasurePublicId?: ?string
      * } $data
      */
     public function upsert(
@@ -65,6 +66,12 @@ interface ProductPricingRepository
         array $data,
         UserId $actorUserId,
     ): ProductPricingSummary;
+
+    public function setProductDefaultPricingUnit(
+        ProductPublicId $productPublicId,
+        ?string $pricingUnitPublicId,
+        UserId $actorUserId,
+    ): ProductPricingOverview;
 
     public function setActive(
         string $pricingPublicId,

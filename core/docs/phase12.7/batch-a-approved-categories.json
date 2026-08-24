@@ -1,0 +1,3037 @@
+[
+    {
+        "sourceTermId": 646,
+        "termId": 646,
+        "rawName": "Flexible Cables",
+        "decodedName": "Flexible Cables",
+        "normalizedName": "flexible cables",
+        "taxonomy": "category",
+        "parentTermId": 543,
+        "postCount": 11,
+        "sampleProducts": [
+            {
+                "postId": 3327,
+                "title": "Flexible LSZH Rubber",
+                "postType": "cable",
+                "style_code": "LS"
+            },
+            {
+                "postId": 3332,
+                "title": "Flexible Rubber",
+                "postType": "cable",
+                "style_code": "LP"
+            },
+            {
+                "postId": 3344,
+                "title": "Flexible Rubber",
+                "postType": "cable",
+                "style_code": "KL"
+            },
+            {
+                "postId": 3543,
+                "title": "Flexible Nylon Extruded",
+                "postType": "cable",
+                "style_code": "KN"
+            },
+            {
+                "postId": 3547,
+                "title": "Flexible Nylon Extruded",
+                "postType": "cable",
+                "style_code": "XN"
+            },
+            {
+                "postId": 3588,
+                "title": "Flexible Rubber",
+                "postType": "cable",
+                "style_code": "KU"
+            },
+            {
+                "postId": 3593,
+                "title": "Flexible Rubber",
+                "postType": "cable",
+                "style_code": "XU"
+            },
+            {
+                "postId": 3604,
+                "title": "Flexible Rubber",
+                "postType": "cable",
+                "style_code": "EA"
+            },
+            {
+                "postId": 3620,
+                "title": "Flexible Rubber",
+                "postType": "cable",
+                "style_code": "KA"
+            },
+            {
+                "postId": 3627,
+                "title": "Flexible Rubber",
+                "postType": "cable",
+                "style_code": "XA"
+            },
+            {
+                "postId": 4998,
+                "title": "Flexible Rubber",
+                "postType": "cable",
+                "style_code": "XL"
+            }
+        ],
+        "styleCodes": [
+            "LS",
+            "LP",
+            "KL",
+            "KN",
+            "XN",
+            "KU",
+            "XU",
+            "EA",
+            "KA",
+            "XA",
+            "XL"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": "FLEXIBLE-CABLES",
+        "proposedCategoryName": "Flexible Cables",
+        "targetCategoryCode": "FLEX-POWER",
+        "targetCategoryPublicId": "B015E18E-7E90-F111-B336-000D3AE079A8",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3327,
+                    "title": "Flexible LSZH Rubber",
+                    "postType": "cable",
+                    "style_code": "LS"
+                },
+                {
+                    "postId": 3332,
+                    "title": "Flexible Rubber",
+                    "postType": "cable",
+                    "style_code": "LP"
+                },
+                {
+                    "postId": 3344,
+                    "title": "Flexible Rubber",
+                    "postType": "cable",
+                    "style_code": "KL"
+                },
+                {
+                    "postId": 3543,
+                    "title": "Flexible Nylon Extruded",
+                    "postType": "cable",
+                    "style_code": "KN"
+                },
+                {
+                    "postId": 3547,
+                    "title": "Flexible Nylon Extruded",
+                    "postType": "cable",
+                    "style_code": "XN"
+                },
+                {
+                    "postId": 3588,
+                    "title": "Flexible Rubber",
+                    "postType": "cable",
+                    "style_code": "KU"
+                },
+                {
+                    "postId": 3593,
+                    "title": "Flexible Rubber",
+                    "postType": "cable",
+                    "style_code": "XU"
+                },
+                {
+                    "postId": 3604,
+                    "title": "Flexible Rubber",
+                    "postType": "cable",
+                    "style_code": "EA"
+                },
+                {
+                    "postId": 3620,
+                    "title": "Flexible Rubber",
+                    "postType": "cable",
+                    "style_code": "KA"
+                },
+                {
+                    "postId": 3627,
+                    "title": "Flexible Rubber",
+                    "postType": "cable",
+                    "style_code": "XA"
+                },
+                {
+                    "postId": 4998,
+                    "title": "Flexible Rubber",
+                    "postType": "cable",
+                    "style_code": "XL"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_FLEX_POWER",
+            "autoApprovedCreate": false
+        },
+        "reason": "flexible_cable_products_match_existing_flex_power",
+        "operatorRecommendation": "MAP_EXISTING_FLEX_POWER",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 373,
+        "termId": 373,
+        "rawName": "VFD/VSD",
+        "decodedName": "VFD/VSD",
+        "normalizedName": "vfd vsd",
+        "taxonomy": "category",
+        "parentTermId": 329,
+        "postCount": 3,
+        "sampleProducts": [
+            {
+                "postId": 3248,
+                "title": "P1 TriCab B1C<br />P1/P8 TriCab B1M",
+                "postType": "cable",
+                "style_code": "B1"
+            },
+            {
+                "postId": 3251,
+                "title": "P2 TriCab B3C<br />P2/P9 TriCab B3M",
+                "postType": "cable",
+                "style_code": "B3C, B3M"
+            },
+            {
+                "postId": 3254,
+                "title": "P3 TriCab B4C<br />P3/P10 TriCab B4M",
+                "postType": "cable",
+                "style_code": "B4C, B4M"
+            }
+        ],
+        "styleCodes": [
+            "B1",
+            "B3C, B3M",
+            "B4C, B4M"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": "VFD-VSD",
+        "proposedCategoryName": "VFD/VSD",
+        "targetCategoryCode": "VFD",
+        "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3248,
+                    "title": "P1 TriCab B1C<br />P1/P8 TriCab B1M",
+                    "postType": "cable",
+                    "style_code": "B1"
+                },
+                {
+                    "postId": 3251,
+                    "title": "P2 TriCab B3C<br />P2/P9 TriCab B3M",
+                    "postType": "cable",
+                    "style_code": "B3C, B3M"
+                },
+                {
+                    "postId": 3254,
+                    "title": "P3 TriCab B4C<br />P3/P10 TriCab B4M",
+                    "postType": "cable",
+                    "style_code": "B4C, B4M"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+            "autoApprovedCreate": false
+        },
+        "reason": "exact_normalized_name_match_existing_category",
+        "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 295,
+        "termId": 295,
+        "rawName": "Instrumentation \u2013 Collective Screened",
+        "decodedName": "Instrumentation \u2013 Collective Screened",
+        "normalizedName": "instrumentation collective screened",
+        "taxonomy": "contexts",
+        "parentTermId": 280,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3038,
+                "title": "RI (c) Shipboard",
+                "postType": "cable",
+                "style_code": "RC"
+            },
+            {
+                "postId": 3039,
+                "title": "RFOI (c) RFCI (c) Shipboard",
+                "postType": "cable",
+                "style_code": "RS"
+            },
+            {
+                "postId": 3040,
+                "title": "BI (c) Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "ES"
+            },
+            {
+                "postId": 3041,
+                "title": "BFOI (c) BFCI (c) Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "FJ"
+            }
+        ],
+        "styleCodes": [
+            "RC",
+            "RS",
+            "ES",
+            "FJ"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": "INSTRUMENTATION-COLLECTIVE-SCREENED",
+        "proposedCategoryName": "Instrumentation \u2013 Collective Screened",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3038,
+                    "title": "RI (c) Shipboard",
+                    "postType": "cable",
+                    "style_code": "RC"
+                },
+                {
+                    "postId": 3039,
+                    "title": "RFOI (c) RFCI (c) Shipboard",
+                    "postType": "cable",
+                    "style_code": "RS"
+                },
+                {
+                    "postId": 3040,
+                    "title": "BI (c) Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "ES"
+                },
+                {
+                    "postId": 3041,
+                    "title": "BFOI (c) BFCI (c) Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "FJ"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 294,
+        "termId": 294,
+        "rawName": "Instrumentation \u2013 Individual and Collective Screened",
+        "decodedName": "Instrumentation \u2013 Individual and Collective Screened",
+        "normalizedName": "instrumentation individual and collective screened",
+        "taxonomy": "contexts",
+        "parentTermId": 280,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3042,
+                "title": "RI (i&c) Shipboard",
+                "postType": "cable",
+                "style_code": "EW"
+            },
+            {
+                "postId": 3043,
+                "title": "RFOI (i&c) RFCI (i&c) Shipboard",
+                "postType": "cable",
+                "style_code": "EG"
+            },
+            {
+                "postId": 3045,
+                "title": "BI (i&c) Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "FC"
+            },
+            {
+                "postId": 3046,
+                "title": "BFOI (i&c) BFCI (i&c) Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "FL"
+            }
+        ],
+        "styleCodes": [
+            "EW",
+            "EG",
+            "FC",
+            "FL"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation \u2013 Individual and Collective Screened",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3042,
+                    "title": "RI (i&c) Shipboard",
+                    "postType": "cable",
+                    "style_code": "EW"
+                },
+                {
+                    "postId": 3043,
+                    "title": "RFOI (i&c) RFCI (i&c) Shipboard",
+                    "postType": "cable",
+                    "style_code": "EG"
+                },
+                {
+                    "postId": 3045,
+                    "title": "BI (i&c) Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "FC"
+                },
+                {
+                    "postId": 3046,
+                    "title": "BFOI (i&c) BFCI (i&c) Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "FL"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 614,
+        "termId": 614,
+        "rawName": "Conduits &amp; Fittings",
+        "decodedName": "Conduits & Fittings",
+        "normalizedName": "conduits and fittings",
+        "taxonomy": "category",
+        "parentTermId": 525,
+        "postCount": 11,
+        "sampleProducts": [
+            {
+                "postId": 5372,
+                "title": "Bushings",
+                "postType": "accessory",
+                "style_code": "X04"
+            },
+            {
+                "postId": 5671,
+                "title": "Split Loom",
+                "postType": "accessory",
+                "style_code": "F20"
+            },
+            {
+                "postId": 5672,
+                "title": "Nylon Split Loom",
+                "postType": "accessory",
+                "style_code": "F21"
+            },
+            {
+                "postId": 5873,
+                "title": "Medium Duty",
+                "postType": "accessory",
+                "style_code": "F07"
+            },
+            {
+                "postId": 5875,
+                "title": "Heavy Duty",
+                "postType": "accessory",
+                "style_code": "F22"
+            },
+            {
+                "postId": 5876,
+                "title": "Conduit",
+                "postType": "accessory",
+                "style_code": "F08"
+            },
+            {
+                "postId": 5877,
+                "title": "Inspection Tee",
+                "postType": "accessory",
+                "style_code": "F12"
+            },
+            {
+                "postId": 5878,
+                "title": "Coupling",
+                "postType": "accessory",
+                "style_code": "F09"
+            },
+            {
+                "postId": 5879,
+                "title": "Conduit Gland",
+                "postType": "accessory",
+                "style_code": "F14"
+            },
+            {
+                "postId": 5881,
+                "title": "Conduit",
+                "postType": "accessory",
+                "style_code": "F10"
+            },
+            {
+                "postId": 7345,
+                "title": "Solar Conduit Heavy Duty",
+                "postType": "accessory",
+                "style_code": "F25"
+            }
+        ],
+        "styleCodes": [
+            "X04",
+            "F20",
+            "F21",
+            "F07",
+            "F22",
+            "F08",
+            "F12",
+            "F09",
+            "F14",
+            "F10",
+            "F25"
+        ],
+        "proposedFamily": "ACCESSORIES",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_CREATE",
+        "proposedCategoryCode": "CONDUITS-FITTINGS",
+        "proposedCategoryName": "Conduits & Fittings",
+        "targetCategoryCode": null,
+        "targetCategoryPublicId": null,
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 5372,
+                    "title": "Bushings",
+                    "postType": "accessory",
+                    "style_code": "X04"
+                },
+                {
+                    "postId": 5671,
+                    "title": "Split Loom",
+                    "postType": "accessory",
+                    "style_code": "F20"
+                },
+                {
+                    "postId": 5672,
+                    "title": "Nylon Split Loom",
+                    "postType": "accessory",
+                    "style_code": "F21"
+                },
+                {
+                    "postId": 5873,
+                    "title": "Medium Duty",
+                    "postType": "accessory",
+                    "style_code": "F07"
+                },
+                {
+                    "postId": 5875,
+                    "title": "Heavy Duty",
+                    "postType": "accessory",
+                    "style_code": "F22"
+                },
+                {
+                    "postId": 5876,
+                    "title": "Conduit",
+                    "postType": "accessory",
+                    "style_code": "F08"
+                },
+                {
+                    "postId": 5877,
+                    "title": "Inspection Tee",
+                    "postType": "accessory",
+                    "style_code": "F12"
+                },
+                {
+                    "postId": 5878,
+                    "title": "Coupling",
+                    "postType": "accessory",
+                    "style_code": "F09"
+                },
+                {
+                    "postId": 5879,
+                    "title": "Conduit Gland",
+                    "postType": "accessory",
+                    "style_code": "F14"
+                },
+                {
+                    "postId": 5881,
+                    "title": "Conduit",
+                    "postType": "accessory",
+                    "style_code": "F10"
+                },
+                {
+                    "postId": 7345,
+                    "title": "Solar Conduit Heavy Duty",
+                    "postType": "accessory",
+                    "style_code": "F25"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE",
+            "autoApprovedCreate": false
+        },
+        "reason": "operator_approved_create_after_overlap_review_keep_conduits_fittings_only",
+        "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE",
+        "operatorOverride": true,
+        "conflict": false,
+        "finalApprovalQueue": false
+    },
+    {
+        "sourceTermId": 584,
+        "termId": 584,
+        "rawName": "Techno Connectors",
+        "decodedName": "Techno Connectors",
+        "normalizedName": "techno connectors",
+        "taxonomy": "category",
+        "parentTermId": 533,
+        "postCount": 8,
+        "sampleProducts": [
+            {
+                "postId": 7459,
+                "title": "TECHNO Junction",
+                "postType": "accessory",
+                "style_code": "J90"
+            },
+            {
+                "postId": 7460,
+                "title": "TECHNO",
+                "postType": "accessory",
+                "style_code": "J91"
+            },
+            {
+                "postId": 7461,
+                "title": "TECHNO",
+                "postType": "accessory",
+                "style_code": "J92"
+            },
+            {
+                "postId": 7462,
+                "title": "TECHNO Plug",
+                "postType": "accessory",
+                "style_code": "J93"
+            },
+            {
+                "postId": 7464,
+                "title": "TECHNO Socket",
+                "postType": "accessory",
+                "style_code": "J94"
+            },
+            {
+                "postId": 7466,
+                "title": "TECHNO Plug",
+                "postType": "accessory",
+                "style_code": "J95"
+            },
+            {
+                "postId": 7467,
+                "title": "TECHNO Socket",
+                "postType": "accessory",
+                "style_code": "J96"
+            },
+            {
+                "postId": 7469,
+                "title": "TECHNO",
+                "postType": "accessory",
+                "style_code": "J97"
+            }
+        ],
+        "styleCodes": [
+            "J90",
+            "J91",
+            "J92",
+            "J93",
+            "J94",
+            "J95",
+            "J96",
+            "J97"
+        ],
+        "proposedFamily": "PLUG",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_CREATE",
+        "proposedCategoryCode": "TECHNO-CONNECTORS",
+        "proposedCategoryName": "Techno Connectors",
+        "targetCategoryCode": null,
+        "targetCategoryPublicId": null,
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 7459,
+                    "title": "TECHNO Junction",
+                    "postType": "accessory",
+                    "style_code": "J90"
+                },
+                {
+                    "postId": 7460,
+                    "title": "TECHNO",
+                    "postType": "accessory",
+                    "style_code": "J91"
+                },
+                {
+                    "postId": 7461,
+                    "title": "TECHNO",
+                    "postType": "accessory",
+                    "style_code": "J92"
+                },
+                {
+                    "postId": 7462,
+                    "title": "TECHNO Plug",
+                    "postType": "accessory",
+                    "style_code": "J93"
+                },
+                {
+                    "postId": 7464,
+                    "title": "TECHNO Socket",
+                    "postType": "accessory",
+                    "style_code": "J94"
+                },
+                {
+                    "postId": 7466,
+                    "title": "TECHNO Plug",
+                    "postType": "accessory",
+                    "style_code": "J95"
+                },
+                {
+                    "postId": 7467,
+                    "title": "TECHNO Socket",
+                    "postType": "accessory",
+                    "style_code": "J96"
+                },
+                {
+                    "postId": 7469,
+                    "title": "TECHNO",
+                    "postType": "accessory",
+                    "style_code": "J97"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE_FAMILY_PLUG",
+            "autoApprovedCreate": false
+        },
+        "reason": "operator_approved_create_family_plug_j90_j97_plug_socket_junction",
+        "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE_FAMILY_PLUG",
+        "operatorOverride": true,
+        "conflict": false,
+        "finalApprovalQueue": false
+    },
+    {
+        "sourceTermId": 319,
+        "termId": 319,
+        "rawName": "Power and Control",
+        "decodedName": "Power and Control",
+        "normalizedName": "power and control",
+        "taxonomy": "category",
+        "parentTermId": 315,
+        "postCount": 6,
+        "sampleProducts": [
+            {
+                "postId": 3090,
+                "title": "Shipboard Power & Control",
+                "postType": "cable",
+                "style_code": "BV"
+            },
+            {
+                "postId": 3093,
+                "title": "Shipboard Braid Power & Control",
+                "postType": "cable",
+                "style_code": "DV"
+            },
+            {
+                "postId": 3096,
+                "title": "Shipboard Fire Res. Power & Control",
+                "postType": "cable",
+                "style_code": "RR"
+            },
+            {
+                "postId": 3099,
+                "title": "Shipboard Fire Res. Braid Power & Control",
+                "postType": "cable",
+                "style_code": "BH"
+            },
+            {
+                "postId": 6187,
+                "title": "Shipboard Braid",
+                "postType": "cable",
+                "style_code": "TS"
+            },
+            {
+                "postId": 6188,
+                "title": "Shipboard",
+                "postType": "cable",
+                "style_code": "TG"
+            }
+        ],
+        "styleCodes": [
+            "BV",
+            "DV",
+            "RR",
+            "BH",
+            "TS",
+            "TG"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "CTRL-MULTI",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Power and Control",
+        "targetCategoryCode": "CTRL-MULTI",
+        "targetCategoryPublicId": "B115E18E-7E90-F111-B336-000D3AE079A8",
+        "confidence": "medium",
+        "evidenceScore": "MEDIUM",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3090,
+                    "title": "Shipboard Power & Control",
+                    "postType": "cable",
+                    "style_code": "BV"
+                },
+                {
+                    "postId": 3093,
+                    "title": "Shipboard Braid Power & Control",
+                    "postType": "cable",
+                    "style_code": "DV"
+                },
+                {
+                    "postId": 3096,
+                    "title": "Shipboard Fire Res. Power & Control",
+                    "postType": "cable",
+                    "style_code": "RR"
+                },
+                {
+                    "postId": 3099,
+                    "title": "Shipboard Fire Res. Braid Power & Control",
+                    "postType": "cable",
+                    "style_code": "BH"
+                },
+                {
+                    "postId": 6187,
+                    "title": "Shipboard Braid",
+                    "postType": "cable",
+                    "style_code": "TS"
+                },
+                {
+                    "postId": 6188,
+                    "title": "Shipboard",
+                    "postType": "cable",
+                    "style_code": "TG"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+            "autoApprovedCreate": false
+        },
+        "reason": "power_and_control_products_map_to_existing_ctrl_multi",
+        "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 512,
+        "termId": 512,
+        "rawName": "Terminals",
+        "decodedName": "Terminals",
+        "normalizedName": "terminals",
+        "taxonomy": "category",
+        "parentTermId": 508,
+        "postCount": 6,
+        "sampleProducts": [
+            {
+                "postId": 4866,
+                "title": "Female\u00a0Bullet Quick Disconnect",
+                "postType": "accessory",
+                "style_code": "A35"
+            },
+            {
+                "postId": 4870,
+                "title": "Male\u00a0Bullet Quick Disconnect",
+                "postType": "accessory",
+                "style_code": "A36"
+            },
+            {
+                "postId": 4915,
+                "title": "Pin Terminals",
+                "postType": "accessory",
+                "style_code": "A10"
+            },
+            {
+                "postId": 4917,
+                "title": "Blade Terminal",
+                "postType": "accessory",
+                "style_code": "A12"
+            },
+            {
+                "postId": 4918,
+                "title": "Ring Terminal",
+                "postType": "accessory",
+                "style_code": "A47"
+            },
+            {
+                "postId": 4919,
+                "title": "Fork Terminal",
+                "postType": "accessory",
+                "style_code": "A48"
+            }
+        ],
+        "styleCodes": [
+            "A35",
+            "A36",
+            "A10",
+            "A12",
+            "A47",
+            "A48"
+        ],
+        "proposedFamily": "ACCESSORIES",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_CREATE",
+        "proposedCategoryCode": "TERMINALS",
+        "proposedCategoryName": "Terminals",
+        "targetCategoryCode": null,
+        "targetCategoryPublicId": null,
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 4866,
+                    "title": "Female\u00a0Bullet Quick Disconnect",
+                    "postType": "accessory",
+                    "style_code": "A35"
+                },
+                {
+                    "postId": 4870,
+                    "title": "Male\u00a0Bullet Quick Disconnect",
+                    "postType": "accessory",
+                    "style_code": "A36"
+                },
+                {
+                    "postId": 4915,
+                    "title": "Pin Terminals",
+                    "postType": "accessory",
+                    "style_code": "A10"
+                },
+                {
+                    "postId": 4917,
+                    "title": "Blade Terminal",
+                    "postType": "accessory",
+                    "style_code": "A12"
+                },
+                {
+                    "postId": 4918,
+                    "title": "Ring Terminal",
+                    "postType": "accessory",
+                    "style_code": "A47"
+                },
+                {
+                    "postId": 4919,
+                    "title": "Fork Terminal",
+                    "postType": "accessory",
+                    "style_code": "A48"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE",
+            "autoApprovedCreate": false
+        },
+        "reason": "operator_approved_create_terminals_bootlace_remains_series_review",
+        "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE",
+        "operatorOverride": true,
+        "conflict": false,
+        "finalApprovalQueue": false
+    },
+    {
+        "sourceTermId": 514,
+        "termId": 514,
+        "rawName": "Glands",
+        "decodedName": "Glands",
+        "normalizedName": "glands",
+        "taxonomy": "category",
+        "parentTermId": 508,
+        "postCount": 5,
+        "sampleProducts": [
+            {
+                "postId": 4903,
+                "title": "Long Thread Straight Spiral Top",
+                "postType": "accessory",
+                "style_code": "D04"
+            },
+            {
+                "postId": 4904,
+                "title": "90\u00b0 Watertight",
+                "postType": "accessory",
+                "style_code": "D05"
+            },
+            {
+                "postId": 4906,
+                "title": "Premium Nylon",
+                "postType": "accessory",
+                "style_code": "D07"
+            },
+            {
+                "postId": 4908,
+                "title": "90\u00b0 Spiral Top",
+                "postType": "accessory",
+                "style_code": "D09"
+            },
+            {
+                "postId": 4909,
+                "title": "Straight Spiral Top",
+                "postType": "accessory",
+                "style_code": "D10"
+            }
+        ],
+        "styleCodes": [
+            "D04",
+            "D05",
+            "D07",
+            "D09",
+            "D10"
+        ],
+        "proposedFamily": "ACCESSORIES",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_CREATE",
+        "proposedCategoryCode": "GLANDS",
+        "proposedCategoryName": "Glands",
+        "targetCategoryCode": null,
+        "targetCategoryPublicId": null,
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 4903,
+                    "title": "Long Thread Straight Spiral Top",
+                    "postType": "accessory",
+                    "style_code": "D04"
+                },
+                {
+                    "postId": 4904,
+                    "title": "90\u00b0 Watertight",
+                    "postType": "accessory",
+                    "style_code": "D05"
+                },
+                {
+                    "postId": 4906,
+                    "title": "Premium Nylon",
+                    "postType": "accessory",
+                    "style_code": "D07"
+                },
+                {
+                    "postId": 4908,
+                    "title": "90\u00b0 Spiral Top",
+                    "postType": "accessory",
+                    "style_code": "D09"
+                },
+                {
+                    "postId": 4909,
+                    "title": "Straight Spiral Top",
+                    "postType": "accessory",
+                    "style_code": "D10"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE",
+            "autoApprovedCreate": false
+        },
+        "reason": "operator_approved_create_glands_distinct_from_conduit_glands",
+        "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE",
+        "operatorOverride": true,
+        "conflict": false,
+        "finalApprovalQueue": false
+    },
+    {
+        "sourceTermId": 502,
+        "termId": 502,
+        "rawName": "Power &amp; Control",
+        "decodedName": "Power & Control",
+        "normalizedName": "power and control",
+        "taxonomy": "category",
+        "parentTermId": 498,
+        "postCount": 5,
+        "sampleProducts": [
+            {
+                "postId": 4174,
+                "title": "Industrial Power & Control Tray Cable",
+                "postType": "cable",
+                "style_code": "TP"
+            },
+            {
+                "postId": 4177,
+                "title": "Industrial Power & Control Tray Cable, Shielded",
+                "postType": "cable",
+                "style_code": "TR"
+            },
+            {
+                "postId": 4192,
+                "title": "Industrial Power & Control",
+                "postType": "cable",
+                "style_code": "VP"
+            },
+            {
+                "postId": 4194,
+                "title": "Industrial Power & Control, Shielded",
+                "postType": "cable",
+                "style_code": "VR"
+            },
+            {
+                "postId": 4197,
+                "title": "Industrial Power & Control",
+                "postType": "cable",
+                "style_code": "VS"
+            }
+        ],
+        "styleCodes": [
+            "TP",
+            "TR",
+            "VP",
+            "VR",
+            "VS"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "CTRL-MULTI",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Power & Control",
+        "targetCategoryCode": "CTRL-MULTI",
+        "targetCategoryPublicId": "B115E18E-7E90-F111-B336-000D3AE079A8",
+        "confidence": "medium",
+        "evidenceScore": "MEDIUM",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 4174,
+                    "title": "Industrial Power & Control Tray Cable",
+                    "postType": "cable",
+                    "style_code": "TP"
+                },
+                {
+                    "postId": 4177,
+                    "title": "Industrial Power & Control Tray Cable, Shielded",
+                    "postType": "cable",
+                    "style_code": "TR"
+                },
+                {
+                    "postId": 4192,
+                    "title": "Industrial Power & Control",
+                    "postType": "cable",
+                    "style_code": "VP"
+                },
+                {
+                    "postId": 4194,
+                    "title": "Industrial Power & Control, Shielded",
+                    "postType": "cable",
+                    "style_code": "VR"
+                },
+                {
+                    "postId": 4197,
+                    "title": "Industrial Power & Control",
+                    "postType": "cable",
+                    "style_code": "VS"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+            "autoApprovedCreate": false
+        },
+        "reason": "power_and_control_products_map_to_existing_ctrl_multi",
+        "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 539,
+        "termId": 539,
+        "rawName": "Control &amp; Instrumentation",
+        "decodedName": "Control & Instrumentation",
+        "normalizedName": "control and instrumentation",
+        "taxonomy": "category",
+        "parentTermId": 378,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3453,
+                "title": "Flexible Rubber",
+                "postType": "cable",
+                "style_code": "KC"
+            },
+            {
+                "postId": 3471,
+                "title": "Flexible",
+                "postType": "cable",
+                "style_code": "C1"
+            },
+            {
+                "postId": 3497,
+                "title": "Flexible Rubber Instrumentation",
+                "postType": "cable",
+                "style_code": "RE"
+            },
+            {
+                "postId": 3520,
+                "title": "Flexible Instrumentation",
+                "postType": "cable",
+                "style_code": "R1"
+            }
+        ],
+        "styleCodes": [
+            "KC",
+            "C1",
+            "RE",
+            "R1"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Control & Instrumentation",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3453,
+                    "title": "Flexible Rubber",
+                    "postType": "cable",
+                    "style_code": "KC"
+                },
+                {
+                    "postId": 3471,
+                    "title": "Flexible",
+                    "postType": "cable",
+                    "style_code": "C1"
+                },
+                {
+                    "postId": 3497,
+                    "title": "Flexible Rubber Instrumentation",
+                    "postType": "cable",
+                    "style_code": "RE"
+                },
+                {
+                    "postId": 3520,
+                    "title": "Flexible Instrumentation",
+                    "postType": "cable",
+                    "style_code": "R1"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 307,
+        "termId": 307,
+        "rawName": "Instrumentation - Collective",
+        "decodedName": "Instrumentation - Collective",
+        "normalizedName": "instrumentation collective",
+        "taxonomy": "category",
+        "parentTermId": 304,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3038,
+                "title": "RI (c) Shipboard",
+                "postType": "cable",
+                "style_code": "RC"
+            },
+            {
+                "postId": 3039,
+                "title": "RFOI (c) RFCI (c) Shipboard",
+                "postType": "cable",
+                "style_code": "RS"
+            },
+            {
+                "postId": 3040,
+                "title": "BI (c) Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "ES"
+            },
+            {
+                "postId": 3041,
+                "title": "BFOI (c) BFCI (c) Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "FJ"
+            }
+        ],
+        "styleCodes": [
+            "RC",
+            "RS",
+            "ES",
+            "FJ"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Collective",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3038,
+                    "title": "RI (c) Shipboard",
+                    "postType": "cable",
+                    "style_code": "RC"
+                },
+                {
+                    "postId": 3039,
+                    "title": "RFOI (c) RFCI (c) Shipboard",
+                    "postType": "cable",
+                    "style_code": "RS"
+                },
+                {
+                    "postId": 3040,
+                    "title": "BI (c) Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "ES"
+                },
+                {
+                    "postId": 3041,
+                    "title": "BFOI (c) BFCI (c) Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "FJ"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 320,
+        "termId": 320,
+        "rawName": "Instrumentation - Collective",
+        "decodedName": "Instrumentation - Collective",
+        "normalizedName": "instrumentation collective",
+        "taxonomy": "category",
+        "parentTermId": 315,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3102,
+                "title": "Shipboard Coll. Scr.",
+                "postType": "cable",
+                "style_code": "RC"
+            },
+            {
+                "postId": 3105,
+                "title": "Shipboard Braid Coll. Scr.",
+                "postType": "cable",
+                "style_code": "RS"
+            },
+            {
+                "postId": 3108,
+                "title": "Shipboard Fire Res. Coll. Scr.",
+                "postType": "cable",
+                "style_code": "ES"
+            },
+            {
+                "postId": 3111,
+                "title": "Shipboard Fire Res. Braid Coll. Scr.",
+                "postType": "cable",
+                "style_code": "FJ"
+            }
+        ],
+        "styleCodes": [
+            "RC",
+            "RS",
+            "ES",
+            "FJ"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Collective",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3102,
+                    "title": "Shipboard Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "RC"
+                },
+                {
+                    "postId": 3105,
+                    "title": "Shipboard Braid Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "RS"
+                },
+                {
+                    "postId": 3108,
+                    "title": "Shipboard Fire Res. Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "ES"
+                },
+                {
+                    "postId": 3111,
+                    "title": "Shipboard Fire Res. Braid Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "FJ"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 308,
+        "termId": 308,
+        "rawName": "Instrumentation - Individual and Collective",
+        "decodedName": "Instrumentation - Individual and Collective",
+        "normalizedName": "instrumentation individual and collective",
+        "taxonomy": "category",
+        "parentTermId": 304,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3042,
+                "title": "RI (i&c) Shipboard",
+                "postType": "cable",
+                "style_code": "EW"
+            },
+            {
+                "postId": 3043,
+                "title": "RFOI (i&c) RFCI (i&c) Shipboard",
+                "postType": "cable",
+                "style_code": "EG"
+            },
+            {
+                "postId": 3045,
+                "title": "BI (i&c) Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "FC"
+            },
+            {
+                "postId": 3046,
+                "title": "BFOI (i&c) BFCI (i&c) Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "FL"
+            }
+        ],
+        "styleCodes": [
+            "EW",
+            "EG",
+            "FC",
+            "FL"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Individual and Collective",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3042,
+                    "title": "RI (i&c) Shipboard",
+                    "postType": "cable",
+                    "style_code": "EW"
+                },
+                {
+                    "postId": 3043,
+                    "title": "RFOI (i&c) RFCI (i&c) Shipboard",
+                    "postType": "cable",
+                    "style_code": "EG"
+                },
+                {
+                    "postId": 3045,
+                    "title": "BI (i&c) Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "FC"
+                },
+                {
+                    "postId": 3046,
+                    "title": "BFOI (i&c) BFCI (i&c) Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "FL"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 321,
+        "termId": 321,
+        "rawName": "Instrumentation - Individual and Collective",
+        "decodedName": "Instrumentation - Individual and Collective",
+        "normalizedName": "instrumentation individual and collective",
+        "taxonomy": "category",
+        "parentTermId": 315,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3114,
+                "title": "Shipboard Ind. & Coll. Scr.",
+                "postType": "cable",
+                "style_code": "EW"
+            },
+            {
+                "postId": 3117,
+                "title": "Shipboard Braid Ind. & Coll. Scr.",
+                "postType": "cable",
+                "style_code": "EG"
+            },
+            {
+                "postId": 3120,
+                "title": "Shipboard Fire Res. Ind. & Coll. Scr.",
+                "postType": "cable",
+                "style_code": "FC"
+            },
+            {
+                "postId": 3123,
+                "title": "Shipboard Fire Res. Braid Ind. & Coll. Scr.",
+                "postType": "cable",
+                "style_code": "FL"
+            }
+        ],
+        "styleCodes": [
+            "EW",
+            "EG",
+            "FC",
+            "FL"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Individual and Collective",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3114,
+                    "title": "Shipboard Ind. & Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "EW"
+                },
+                {
+                    "postId": 3117,
+                    "title": "Shipboard Braid Ind. & Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "EG"
+                },
+                {
+                    "postId": 3120,
+                    "title": "Shipboard Fire Res. Ind. & Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "FC"
+                },
+                {
+                    "postId": 3123,
+                    "title": "Shipboard Fire Res. Braid Ind. & Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "FL"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 600,
+        "termId": 600,
+        "rawName": "Links",
+        "decodedName": "Links",
+        "normalizedName": "links",
+        "taxonomy": "category",
+        "parentTermId": 513,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 6136,
+                "title": "Bi-Metallic Reducing",
+                "postType": "accessory",
+                "style_code": "B21"
+            },
+            {
+                "postId": 6340,
+                "title": "Aluminium",
+                "postType": "accessory",
+                "style_code": "B24"
+            },
+            {
+                "postId": 7080,
+                "title": "Copper",
+                "postType": "accessory",
+                "style_code": "B07"
+            },
+            {
+                "postId": 7427,
+                "title": "Tin Plated Copper",
+                "postType": "accessory",
+                "style_code": "B36"
+            }
+        ],
+        "styleCodes": [
+            "B21",
+            "B24",
+            "B07",
+            "B36"
+        ],
+        "proposedFamily": "ACCESSORIES",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_CREATE",
+        "proposedCategoryCode": "LINKS",
+        "proposedCategoryName": "Links",
+        "targetCategoryCode": null,
+        "targetCategoryPublicId": null,
+        "confidence": "medium",
+        "evidenceScore": "MEDIUM",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 6136,
+                    "title": "Bi-Metallic Reducing",
+                    "postType": "accessory",
+                    "style_code": "B21"
+                },
+                {
+                    "postId": 6340,
+                    "title": "Aluminium",
+                    "postType": "accessory",
+                    "style_code": "B24"
+                },
+                {
+                    "postId": 7080,
+                    "title": "Copper",
+                    "postType": "accessory",
+                    "style_code": "B07"
+                },
+                {
+                    "postId": 7427,
+                    "title": "Tin Plated Copper",
+                    "postType": "accessory",
+                    "style_code": "B36"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "OPERATOR_REVIEW_MEDIUM",
+            "autoApprovedCreate": false
+        },
+        "reason": "operator_approved_create_metallic_links_medium_evidence_reviewed",
+        "operatorRecommendation": "OPERATOR_REVIEW_MEDIUM",
+        "operatorOverride": true,
+        "conflict": false,
+        "finalApprovalQueue": false
+    },
+    {
+        "sourceTermId": 630,
+        "termId": 630,
+        "rawName": "Plug-Socket Leads",
+        "decodedName": "Plug-Socket Leads",
+        "normalizedName": "plugsocket leads",
+        "taxonomy": "category",
+        "parentTermId": 548,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 7266,
+                "title": "INDUSTRIAL PLUG-SOCKET",
+                "postType": "accessory",
+                "style_code": "PS1A"
+            },
+            {
+                "postId": 7267,
+                "title": "INDUSTRIAL PLUG-SOCKET",
+                "postType": "accessory",
+                "style_code": "PS1B"
+            },
+            {
+                "postId": 7268,
+                "title": "INDUSTRIAL PLUG-SOCKET",
+                "postType": "accessory",
+                "style_code": "PS1C"
+            },
+            {
+                "postId": 7269,
+                "title": "INDUSTRIAL PLUG-SOCKET",
+                "postType": "accessory",
+                "style_code": "PS1D"
+            }
+        ],
+        "styleCodes": [
+            "PS1A",
+            "PS1B",
+            "PS1C",
+            "PS1D"
+        ],
+        "proposedFamily": "ACCESSORIES",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_CREATE",
+        "proposedCategoryCode": "PLUG-SOCKET-LEADS",
+        "proposedCategoryName": "Plug-Socket Leads",
+        "targetCategoryCode": null,
+        "targetCategoryPublicId": null,
+        "confidence": "medium",
+        "evidenceScore": "MEDIUM",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 7266,
+                    "title": "INDUSTRIAL PLUG-SOCKET",
+                    "postType": "accessory",
+                    "style_code": "PS1A"
+                },
+                {
+                    "postId": 7267,
+                    "title": "INDUSTRIAL PLUG-SOCKET",
+                    "postType": "accessory",
+                    "style_code": "PS1B"
+                },
+                {
+                    "postId": 7268,
+                    "title": "INDUSTRIAL PLUG-SOCKET",
+                    "postType": "accessory",
+                    "style_code": "PS1C"
+                },
+                {
+                    "postId": 7269,
+                    "title": "INDUSTRIAL PLUG-SOCKET",
+                    "postType": "accessory",
+                    "style_code": "PS1D"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "OPERATOR_REVIEW_MEDIUM",
+            "autoApprovedCreate": false
+        },
+        "reason": "operator_approved_create_preassembled_leads_medium_evidence_reviewed",
+        "operatorRecommendation": "OPERATOR_REVIEW_MEDIUM",
+        "operatorOverride": true,
+        "conflict": false,
+        "finalApprovalQueue": false
+    },
+    {
+        "sourceTermId": 306,
+        "termId": 306,
+        "rawName": "Power and Control",
+        "decodedName": "Power and Control",
+        "normalizedName": "power and control",
+        "taxonomy": "category",
+        "parentTermId": 304,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3034,
+                "title": "RI Shipboard",
+                "postType": "cable",
+                "style_code": "BV"
+            },
+            {
+                "postId": 3035,
+                "title": "RFOI RFCI Shipboard",
+                "postType": "cable",
+                "style_code": "DV"
+            },
+            {
+                "postId": 3036,
+                "title": "BI Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "RR"
+            },
+            {
+                "postId": 3037,
+                "title": "BFOI BFCI Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "BH"
+            }
+        ],
+        "styleCodes": [
+            "BV",
+            "DV",
+            "RR",
+            "BH"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "CTRL-MULTI",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Power and Control",
+        "targetCategoryCode": "CTRL-MULTI",
+        "targetCategoryPublicId": "B115E18E-7E90-F111-B336-000D3AE079A8",
+        "confidence": "medium",
+        "evidenceScore": "MEDIUM",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3034,
+                    "title": "RI Shipboard",
+                    "postType": "cable",
+                    "style_code": "BV"
+                },
+                {
+                    "postId": 3035,
+                    "title": "RFOI RFCI Shipboard",
+                    "postType": "cable",
+                    "style_code": "DV"
+                },
+                {
+                    "postId": 3036,
+                    "title": "BI Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "RR"
+                },
+                {
+                    "postId": 3037,
+                    "title": "BFOI BFCI Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "BH"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+            "autoApprovedCreate": false
+        },
+        "reason": "power_and_control_products_map_to_existing_ctrl_multi",
+        "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 332,
+        "termId": 332,
+        "rawName": "Power and Control",
+        "decodedName": "Power and Control",
+        "normalizedName": "power and control",
+        "taxonomy": "category",
+        "parentTermId": 331,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3199,
+                "title": "RU P18 TriCab NVC",
+                "postType": "cable",
+                "style_code": "NV"
+            },
+            {
+                "postId": 3202,
+                "title": "BU P17 TriCab NRC",
+                "postType": "cable",
+                "style_code": "NR"
+            },
+            {
+                "postId": 3205,
+                "title": "P1 TriCab NJC <br /> P1/P8 TriCab NJM",
+                "postType": "cable",
+                "style_code": "NJ"
+            },
+            {
+                "postId": 3208,
+                "title": "P5 TriCab NTC <br />P5/P12 TriCab NTM",
+                "postType": "cable",
+                "style_code": "NT"
+            }
+        ],
+        "styleCodes": [
+            "NV",
+            "NR",
+            "NJ",
+            "NT"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "CTRL-MULTI",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Power and Control",
+        "targetCategoryCode": "CTRL-MULTI",
+        "targetCategoryPublicId": "B115E18E-7E90-F111-B336-000D3AE079A8",
+        "confidence": "medium",
+        "evidenceScore": "MEDIUM",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3199,
+                    "title": "RU P18 TriCab NVC",
+                    "postType": "cable",
+                    "style_code": "NV"
+                },
+                {
+                    "postId": 3202,
+                    "title": "BU P17 TriCab NRC",
+                    "postType": "cable",
+                    "style_code": "NR"
+                },
+                {
+                    "postId": 3205,
+                    "title": "P1 TriCab NJC <br /> P1/P8 TriCab NJM",
+                    "postType": "cable",
+                    "style_code": "NJ"
+                },
+                {
+                    "postId": 3208,
+                    "title": "P5 TriCab NTC <br />P5/P12 TriCab NTM",
+                    "postType": "cable",
+                    "style_code": "NT"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+            "autoApprovedCreate": false
+        },
+        "reason": "power_and_control_products_map_to_existing_ctrl_multi",
+        "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 542,
+        "termId": 542,
+        "rawName": "Glands",
+        "decodedName": "Glands",
+        "normalizedName": "glands",
+        "taxonomy": "category",
+        "parentTermId": 508,
+        "postCount": 3,
+        "sampleProducts": [
+            {
+                "postId": 5906,
+                "title": "Standard PG threaded Nylon",
+                "postType": "accessory",
+                "style_code": "D21"
+            },
+            {
+                "postId": 5907,
+                "title": "Standard Nylon",
+                "postType": "accessory",
+                "style_code": "D20"
+            },
+            {
+                "postId": 5908,
+                "title": "Standard NPT threaded Nylon",
+                "postType": "accessory",
+                "style_code": "D22"
+            }
+        ],
+        "styleCodes": [
+            "D21",
+            "D20",
+            "D22"
+        ],
+        "proposedFamily": "ACCESSORIES",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_CREATE",
+        "proposedCategoryCode": "GLANDS",
+        "proposedCategoryName": "Glands",
+        "targetCategoryCode": null,
+        "targetCategoryPublicId": null,
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 5906,
+                    "title": "Standard PG threaded Nylon",
+                    "postType": "accessory",
+                    "style_code": "D21"
+                },
+                {
+                    "postId": 5907,
+                    "title": "Standard Nylon",
+                    "postType": "accessory",
+                    "style_code": "D20"
+                },
+                {
+                    "postId": 5908,
+                    "title": "Standard NPT threaded Nylon",
+                    "postType": "accessory",
+                    "style_code": "D22"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE",
+            "autoApprovedCreate": false
+        },
+        "reason": "operator_approved_create_glands_distinct_from_conduit_glands",
+        "operatorRecommendation": "OPERATOR_APPROVE_CREATE_CANDIDATE",
+        "operatorOverride": true,
+        "conflict": false,
+        "finalApprovalQueue": false
+    },
+    {
+        "sourceTermId": 503,
+        "termId": 503,
+        "rawName": "VFD",
+        "decodedName": "VFD",
+        "normalizedName": "vfd",
+        "taxonomy": "category",
+        "parentTermId": 498,
+        "postCount": 3,
+        "sampleProducts": [
+            {
+                "postId": 4199,
+                "title": "Industrial VFD",
+                "postType": "cable",
+                "style_code": "VV"
+            },
+            {
+                "postId": 4201,
+                "title": "Industrial VFD",
+                "postType": "cable",
+                "style_code": "VW"
+            },
+            {
+                "postId": 7801,
+                "title": "VFD Uninsulated Grounds",
+                "postType": "cable",
+                "style_code": "VUF"
+            }
+        ],
+        "styleCodes": [
+            "VV",
+            "VW",
+            "VUF"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "VFD",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "VFD",
+        "targetCategoryCode": "VFD",
+        "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 4199,
+                    "title": "Industrial VFD",
+                    "postType": "cable",
+                    "style_code": "VV"
+                },
+                {
+                    "postId": 4201,
+                    "title": "Industrial VFD",
+                    "postType": "cable",
+                    "style_code": "VW"
+                },
+                {
+                    "postId": 7801,
+                    "title": "VFD Uninsulated Grounds",
+                    "postType": "cable",
+                    "style_code": "VUF"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+            "autoApprovedCreate": false
+        },
+        "reason": "vfd_short_or_alias_maps_to_existing_vfd",
+        "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 313,
+        "termId": 313,
+        "rawName": "Instrumentation - Collective",
+        "decodedName": "Instrumentation - Collective",
+        "normalizedName": "instrumentation collective",
+        "taxonomy": "category",
+        "parentTermId": 305,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3078,
+                "title": "RIOI (c) RICI (c) Offshore Braid Armour",
+                "postType": "cable",
+                "style_code": "RB"
+            },
+            {
+                "postId": 3081,
+                "title": "BIOI (c) BICI (c) Offshore Braid Armour Fire Res.",
+                "postType": "cable",
+                "style_code": "FK"
+            }
+        ],
+        "styleCodes": [
+            "RB",
+            "FK"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Collective",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3078,
+                    "title": "RIOI (c) RICI (c) Offshore Braid Armour",
+                    "postType": "cable",
+                    "style_code": "RB"
+                },
+                {
+                    "postId": 3081,
+                    "title": "BIOI (c) BICI (c) Offshore Braid Armour Fire Res.",
+                    "postType": "cable",
+                    "style_code": "FK"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 325,
+        "termId": 325,
+        "rawName": "Instrumentation - Collective",
+        "decodedName": "Instrumentation - Collective",
+        "normalizedName": "instrumentation collective",
+        "taxonomy": "category",
+        "parentTermId": 316,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3144,
+                "title": "Offshore Braid Armour Coll. Scr.",
+                "postType": "cable",
+                "style_code": "RB"
+            },
+            {
+                "postId": 3147,
+                "title": "Offshore Braid Armour Fire Res. Coll. Scr.",
+                "postType": "cable",
+                "style_code": "FK"
+            }
+        ],
+        "styleCodes": [
+            "RB",
+            "FK"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Collective",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3144,
+                    "title": "Offshore Braid Armour Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "RB"
+                },
+                {
+                    "postId": 3147,
+                    "title": "Offshore Braid Armour Fire Res. Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "FK"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 333,
+        "termId": 333,
+        "rawName": "Instrumentation - Collective",
+        "decodedName": "Instrumentation - Collective",
+        "normalizedName": "instrumentation collective",
+        "taxonomy": "category",
+        "parentTermId": 331,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3211,
+                "title": "S2 TriCab RBC<br />S2/S6 TriCab RBM",
+                "postType": "cable",
+                "style_code": "RB"
+            },
+            {
+                "postId": 3214,
+                "title": "S4 TriCab FKC<br />S4/S8 TriCab FKM",
+                "postType": "cable",
+                "style_code": "FK"
+            }
+        ],
+        "styleCodes": [
+            "RB",
+            "FK"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Collective",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3211,
+                    "title": "S2 TriCab RBC<br />S2/S6 TriCab RBM",
+                    "postType": "cable",
+                    "style_code": "RB"
+                },
+                {
+                    "postId": 3214,
+                    "title": "S4 TriCab FKC<br />S4/S8 TriCab FKM",
+                    "postType": "cable",
+                    "style_code": "FK"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 334,
+        "termId": 334,
+        "rawName": "Instrumentation - Individual",
+        "decodedName": "Instrumentation - Individual",
+        "normalizedName": "instrumentation individual",
+        "taxonomy": "category",
+        "parentTermId": 331,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3217,
+                "title": "S1 TriCab FZC<br />S1/S5 TriCab FZM",
+                "postType": "cable",
+                "style_code": "FZ"
+            },
+            {
+                "postId": 3220,
+                "title": "S3 TriCab FEC <br />S3/S7 TriCab FEM",
+                "postType": "cable",
+                "style_code": "FE"
+            }
+        ],
+        "styleCodes": [
+            "FZ",
+            "FE"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Individual",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3217,
+                    "title": "S1 TriCab FZC<br />S1/S5 TriCab FZM",
+                    "postType": "cable",
+                    "style_code": "FZ"
+                },
+                {
+                    "postId": 3220,
+                    "title": "S3 TriCab FEC <br />S3/S7 TriCab FEM",
+                    "postType": "cable",
+                    "style_code": "FE"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 314,
+        "termId": 314,
+        "rawName": "Instrumentation - Individual and Collective",
+        "decodedName": "Instrumentation - Individual and Collective",
+        "normalizedName": "instrumentation individual and collective",
+        "taxonomy": "category",
+        "parentTermId": 305,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3084,
+                "title": "RIOI (i&c) RICI (i&c) Offshore Braid Armour",
+                "postType": "cable",
+                "style_code": "FZ"
+            },
+            {
+                "postId": 3087,
+                "title": "BIOI (i&c) BICI (i&c) Offshore Braid Arm. Fire Res.",
+                "postType": "cable",
+                "style_code": "FE"
+            }
+        ],
+        "styleCodes": [
+            "FZ",
+            "FE"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Individual and Collective",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3084,
+                    "title": "RIOI (i&c) RICI (i&c) Offshore Braid Armour",
+                    "postType": "cable",
+                    "style_code": "FZ"
+                },
+                {
+                    "postId": 3087,
+                    "title": "BIOI (i&c) BICI (i&c) Offshore Braid Arm. Fire Res.",
+                    "postType": "cable",
+                    "style_code": "FE"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 326,
+        "termId": 326,
+        "rawName": "Instrumentation - Individual and Collective",
+        "decodedName": "Instrumentation - Individual and Collective",
+        "normalizedName": "instrumentation individual and collective",
+        "taxonomy": "category",
+        "parentTermId": 316,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3150,
+                "title": "Offshore Braid Armour Ind. & Coll. Scr.",
+                "postType": "cable",
+                "style_code": "FZ"
+            },
+            {
+                "postId": 3153,
+                "title": "Offshore Braid Arm. Fire Res. Ind. & Coll. Scr.",
+                "postType": "cable",
+                "style_code": "FE"
+            }
+        ],
+        "styleCodes": [
+            "FZ",
+            "FE"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "INSTRUMENTATION",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Instrumentation - Individual and Collective",
+        "targetCategoryCode": "INSTRUMENTATION",
+        "targetCategoryPublicId": "D41AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3150,
+                    "title": "Offshore Braid Armour Ind. & Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "FZ"
+                },
+                {
+                    "postId": 3153,
+                    "title": "Offshore Braid Arm. Fire Res. Ind. & Coll. Scr.",
+                    "postType": "cable",
+                    "style_code": "FE"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+            "autoApprovedCreate": false
+        },
+        "reason": "instrumentation_cable_products_map_to_existing_instrumentation",
+        "operatorRecommendation": "MAP_EXISTING_INSTRUMENTATION",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 312,
+        "termId": 312,
+        "rawName": "Power and Control",
+        "decodedName": "Power and Control",
+        "normalizedName": "power and control",
+        "taxonomy": "category",
+        "parentTermId": 305,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3072,
+                "title": "RIOI RICI Offshore Braid Armour",
+                "postType": "cable",
+                "style_code": "PJ"
+            },
+            {
+                "postId": 3075,
+                "title": "BIOI BICI Offshore Braid Armour Fire Res.",
+                "postType": "cable",
+                "style_code": "HT"
+            }
+        ],
+        "styleCodes": [
+            "PJ",
+            "HT"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "CTRL-MULTI",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Power and Control",
+        "targetCategoryCode": "CTRL-MULTI",
+        "targetCategoryPublicId": "B115E18E-7E90-F111-B336-000D3AE079A8",
+        "confidence": "medium",
+        "evidenceScore": "MEDIUM",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3072,
+                    "title": "RIOI RICI Offshore Braid Armour",
+                    "postType": "cable",
+                    "style_code": "PJ"
+                },
+                {
+                    "postId": 3075,
+                    "title": "BIOI BICI Offshore Braid Armour Fire Res.",
+                    "postType": "cable",
+                    "style_code": "HT"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+            "autoApprovedCreate": false
+        },
+        "reason": "power_and_control_products_map_to_existing_ctrl_multi",
+        "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 317,
+        "termId": 317,
+        "rawName": "Power and Control",
+        "decodedName": "Power and Control",
+        "normalizedName": "power and control",
+        "taxonomy": "category",
+        "parentTermId": 316,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3138,
+                "title": "Offshore Braid Armour",
+                "postType": "cable",
+                "style_code": "PJ"
+            },
+            {
+                "postId": 3141,
+                "title": "Offshore Braid Armour Fire Res.",
+                "postType": "cable",
+                "style_code": "HT"
+            }
+        ],
+        "styleCodes": [
+            "PJ",
+            "HT"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "CTRL-MULTI",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Power and Control",
+        "targetCategoryCode": "CTRL-MULTI",
+        "targetCategoryPublicId": "B115E18E-7E90-F111-B336-000D3AE079A8",
+        "confidence": "medium",
+        "evidenceScore": "MEDIUM",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3138,
+                    "title": "Offshore Braid Armour",
+                    "postType": "cable",
+                    "style_code": "PJ"
+                },
+                {
+                    "postId": 3141,
+                    "title": "Offshore Braid Armour Fire Res.",
+                    "postType": "cable",
+                    "style_code": "HT"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+            "autoApprovedCreate": false
+        },
+        "reason": "power_and_control_products_map_to_existing_ctrl_multi",
+        "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 500,
+        "termId": 500,
+        "rawName": "VFD",
+        "decodedName": "VFD",
+        "normalizedName": "vfd",
+        "taxonomy": "category",
+        "parentTermId": 497,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 4180,
+                "title": "Industrial VFD",
+                "postType": "cable",
+                "style_code": "TV"
+            },
+            {
+                "postId": 4183,
+                "title": "Industrial VFD",
+                "postType": "cable",
+                "style_code": "TK"
+            }
+        ],
+        "styleCodes": [
+            "TV",
+            "TK"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "VFD",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "VFD",
+        "targetCategoryCode": "VFD",
+        "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 4180,
+                    "title": "Industrial VFD",
+                    "postType": "cable",
+                    "style_code": "TV"
+                },
+                {
+                    "postId": 4183,
+                    "title": "Industrial VFD",
+                    "postType": "cable",
+                    "style_code": "TK"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+            "autoApprovedCreate": false
+        },
+        "reason": "vfd_short_or_alias_maps_to_existing_vfd",
+        "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 324,
+        "termId": 324,
+        "rawName": "VFD/VSD",
+        "decodedName": "VFD/VSD",
+        "normalizedName": "vfd vsd",
+        "taxonomy": "category",
+        "parentTermId": 315,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3132,
+                "title": "600V Braid",
+                "postType": "cable",
+                "style_code": "DF"
+            },
+            {
+                "postId": 3135,
+                "title": "1.8kV/3.0kV",
+                "postType": "cable",
+                "style_code": "DG"
+            }
+        ],
+        "styleCodes": [
+            "DF",
+            "DG"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "VFD/VSD",
+        "targetCategoryCode": "VFD",
+        "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3132,
+                    "title": "600V Braid",
+                    "postType": "cable",
+                    "style_code": "DF"
+                },
+                {
+                    "postId": 3135,
+                    "title": "1.8kV/3.0kV",
+                    "postType": "cable",
+                    "style_code": "DG"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+            "autoApprovedCreate": false
+        },
+        "reason": "exact_normalized_name_match_existing_category",
+        "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 336,
+        "termId": 336,
+        "rawName": "VFD/VSD",
+        "decodedName": "VFD/VSD",
+        "normalizedName": "vfd vsd",
+        "taxonomy": "category",
+        "parentTermId": 331,
+        "postCount": 2,
+        "sampleProducts": [
+            {
+                "postId": 3224,
+                "title": "P1 TriCab NUC<br />P1/P8 TriCab NUM",
+                "postType": "cable",
+                "style_code": "NU"
+            },
+            {
+                "postId": 5350,
+                "title": "P5 TriCab NFC <br />P5/P12 TriCab NFM",
+                "postType": "cable",
+                "style_code": "NF"
+            }
+        ],
+        "styleCodes": [
+            "NU",
+            "NF"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "VFD/VSD",
+        "targetCategoryCode": "VFD",
+        "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3224,
+                    "title": "P1 TriCab NUC<br />P1/P8 TriCab NUM",
+                    "postType": "cable",
+                    "style_code": "NU"
+                },
+                {
+                    "postId": 5350,
+                    "title": "P5 TriCab NFC <br />P5/P12 TriCab NFM",
+                    "postType": "cable",
+                    "style_code": "NF"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+            "autoApprovedCreate": false
+        },
+        "reason": "exact_normalized_name_match_existing_category",
+        "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 311,
+        "termId": 311,
+        "rawName": "VFD / VSD",
+        "decodedName": "VFD / VSD",
+        "normalizedName": "vfd vsd",
+        "taxonomy": "category",
+        "parentTermId": 304,
+        "postCount": 1,
+        "sampleProducts": [
+            {
+                "postId": 3163,
+                "title": "RFOI-VFD Shipboard",
+                "postType": "cable",
+                "style_code": "DF"
+            }
+        ],
+        "styleCodes": [
+            "DF"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": null,
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "VFD / VSD",
+        "targetCategoryCode": "VFD",
+        "targetCategoryPublicId": "D51AD5F0-E991-F111-B337-000D3AE0E28B",
+        "confidence": "high",
+        "evidenceScore": "HIGH",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3163,
+                    "title": "RFOI-VFD Shipboard",
+                    "postType": "cable",
+                    "style_code": "DF"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+            "autoApprovedCreate": false
+        },
+        "reason": "exact_normalized_name_match_existing_category",
+        "operatorRecommendation": "RETAIN_VFD_MAP_NOT_APPLIED",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    },
+    {
+        "sourceTermId": 293,
+        "termId": 293,
+        "rawName": "Power &amp; Control",
+        "decodedName": "Power & Control",
+        "normalizedName": "power and control",
+        "taxonomy": "contexts",
+        "parentTermId": 280,
+        "postCount": 4,
+        "sampleProducts": [
+            {
+                "postId": 3034,
+                "title": "RI Shipboard",
+                "postType": "cable",
+                "style_code": "BV"
+            },
+            {
+                "postId": 3035,
+                "title": "RFOI RFCI Shipboard",
+                "postType": "cable",
+                "style_code": "DV"
+            },
+            {
+                "postId": 3036,
+                "title": "BI Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "RR"
+            },
+            {
+                "postId": 3037,
+                "title": "BFOI BFCI Shipboard Fire Res.",
+                "postType": "cable",
+                "style_code": "BH"
+            }
+        ],
+        "styleCodes": [
+            "BV",
+            "DV",
+            "RR",
+            "BH"
+        ],
+        "proposedFamily": "CABLE",
+        "semanticType": "PRODUCT_CATEGORY",
+        "existingTargetCandidate": {
+            "status": "SUGGESTED",
+            "code": "CTRL-MULTI",
+            "name": null,
+            "note": "Semantic suggestion only \u2014 operator Map Existing required"
+        },
+        "decision": "APPROVED_MAP_EXISTING",
+        "proposedCategoryCode": null,
+        "proposedCategoryName": "Power & Control",
+        "targetCategoryCode": "CTRL-MULTI",
+        "targetCategoryPublicId": "B115E18E-7E90-F111-B336-000D3AE079A8",
+        "confidence": "medium",
+        "evidenceScore": "MEDIUM",
+        "evidence": {
+            "wpProducts": [
+                {
+                    "postId": 3034,
+                    "title": "RI Shipboard",
+                    "postType": "cable",
+                    "style_code": "BV"
+                },
+                {
+                    "postId": 3035,
+                    "title": "RFOI RFCI Shipboard",
+                    "postType": "cable",
+                    "style_code": "DV"
+                },
+                {
+                    "postId": 3036,
+                    "title": "BI Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "RR"
+                },
+                {
+                    "postId": 3037,
+                    "title": "BFOI BFCI Shipboard Fire Res.",
+                    "postType": "cable",
+                    "style_code": "BH"
+                }
+            ],
+            "overlapNotes": null,
+            "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+            "autoApprovedCreate": false
+        },
+        "reason": "power_and_control_products_map_to_existing_ctrl_multi",
+        "operatorRecommendation": "MAP_EXISTING_CTRL_MULTI",
+        "operatorOverride": false,
+        "conflict": false,
+        "finalApprovalQueue": true
+    }
+]

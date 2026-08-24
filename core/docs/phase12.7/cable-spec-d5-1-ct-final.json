@@ -1,0 +1,302 @@
+{
+    "meaning": "Conductor material encoding \u2014 p\u2248copper default, a\u2248aluminium (hypothesis)",
+    "evidenceClass": "STRONG_CORRELATION",
+    "confidence": "MEDIUM",
+    "resolution": "EXPLICITLY_UNRESOLVED",
+    "directEvidence": "'directEvidence' => ($labels['ct'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['ct'] : null,",
+    "correlationEvidence": "KL ct=a lower wght + larger OD vs ct=p; rating.ct uses C/A not p/a",
+    "physicalComparisons": {
+        "klXa1": [],
+        "styleAverages": [
+            {
+                "cable_style": "B1",
+                "ct": "p",
+                "avg_wght": "3864.27272727",
+                "avg_od": "40.92727273",
+                "rows_cnt": 11
+            },
+            {
+                "cable_style": "BH",
+                "ct": "p",
+                "avg_wght": "1347.71518987",
+                "avg_od": "13.80693038",
+                "rows_cnt": 158
+            },
+            {
+                "cable_style": "BV",
+                "ct": "p",
+                "avg_wght": "1362.56024096",
+                "avg_od": "12.68828313",
+                "rows_cnt": 166
+            },
+            {
+                "cable_style": "C1",
+                "ct": "p",
+                "avg_wght": "384.93162393",
+                "avg_od": "14.45555556",
+                "rows_cnt": 117
+            },
+            {
+                "cable_style": "DF",
+                "ct": "p",
+                "avg_wght": "2988.17647059",
+                "avg_od": "14.84264706",
+                "rows_cnt": 34
+            },
+            {
+                "cable_style": "DG",
+                "ct": "p",
+                "avg_wght": "2988.94736842",
+                "avg_od": "1.60631579",
+                "rows_cnt": 19
+            },
+            {
+                "cable_style": "DV",
+                "ct": "p",
+                "avg_wght": "1306.07453416",
+                "avg_od": "12.46658385",
+                "rows_cnt": 161
+            },
+            {
+                "cable_style": "EA",
+                "ct": "a",
+                "avg_wght": "2892.40000000",
+                "avg_od": "42.62000000",
+                "rows_cnt": 5
+            },
+            {
+                "cable_style": "EA",
+                "ct": "p",
+                "avg_wght": "2020.10000000",
+                "avg_od": "28.79000000",
+                "rows_cnt": 10
+            },
+            {
+                "cable_style": "EG",
+                "ct": "p",
+                "avg_wght": "792.89814815",
+                "avg_od": "14.04240741",
+                "rows_cnt": 108
+            },
+            {
+                "cable_style": "ES",
+                "ct": "p",
+                "avg_wght": "694.09090909",
+                "avg_od": "15.86722727",
+                "rows_cnt": 110
+            },
+            {
+                "cable_style": "EW",
+                "ct": "p",
+                "avg_wght": "642.05454545",
+                "avg_od": "13.41463636",
+                "rows_cnt": 110
+            },
+            {
+                "cable_style": "FC",
+                "ct": "p",
+                "avg_wght": "809.92727273",
+                "avg_od": "16.46204545",
+                "rows_cnt": 110
+            },
+            {
+                "cable_style": "FE",
+                "ct": "p",
+                "avg_wght": "1122.88392857",
+                "avg_od": "19.12808036",
+                "rows_cnt": 112
+            },
+            {
+                "cable_style": "FJ",
+                "ct": "p",
+                "avg_wght": "817.58333333",
+                "avg_od": "16.04745370",
+                "rows_cnt": 108
+            },
+            {
+                "cable_style": "FK",
+                "ct": "p",
+                "avg_wght": "994.16666667",
+                "avg_od": "18.59061404",
+                "rows_cnt": 114
+            },
+            {
+                "cable_style": "FL",
+                "ct": "p",
+                "avg_wght": "961.05555556",
+                "avg_od": "16.94689815",
+                "rows_cnt": 108
+            },
+            {
+                "cable_style": "FZ",
+                "ct": "p",
+                "avg_wght": "894.07272727",
+                "avg_od": "15.86118182",
+                "rows_cnt": 110
+            },
+            {
+                "cable_style": "HT",
+                "ct": "p",
+                "avg_wght": "1673.29931973",
+                "avg_od": "15.50656463",
+                "rows_cnt": 147
+            },
+            {
+                "cable_style": "KA",
+                "ct": "a",
+                "avg_wght": "2125.76923077",
+                "avg_od": "37.70769231",
+                "rows_cnt": 13
+            },
+            {
+                "cable_style": "KA",
+                "ct": "p",
+                "avg_wght": "1731.40000000",
+                "avg_od": "26.55600000",
+                "rows_cnt": 75
+            },
+            {
+                "cable_style": "KC",
+                "ct": "p",
+                "avg_wght": "392.76562500",
+                "avg_od": "17.38593750",
+                "rows_cnt": 64
+            },
+            {
+                "cable_style": "KL",
+                "ct": "a",
+                "avg_wght": "1532.90697674",
+                "avg_od": "39.56279070",
+                "rows_cnt": 43
+            },
+            {
+                "cable_style": "KL",
+                "ct": "p",
+                "avg_wght": "1936.58571429",
+                "avg_od": "25.11000000",
+                "rows_cnt": 70
+            },
+            {
+                "cable_style": "KN",
+                "ct": "a",
+                "avg_wght": "1689.51162791",
+                "avg_od": "41.66744186",
+                "rows_cnt": 43
+            },
+            {
+                "cable_style": "KN",
+                "ct": "p",
+                "avg_wght": "1776.51470588",
+                "avg_od": "27.10294118",
+                "rows_cnt": 68
+            },
+            {
+                "cable_style": "KU",
+                "ct": "a",
+                "avg_wght": "1662.50000000",
+                "avg_od": "36.41250000",
+                "rows_cnt": 24
+            },
+            {
+                "cable_style": "KU",
+                "ct": "p",
+                "avg_wght": "2468.81250000",
+                "avg_od": "27.55500000",
+                "rows_cnt": 32
+            },
+            {
+                "cable_style": "LP",
+                "ct": "a",
+                "avg_wght": "810.53846154",
+                "avg_od": "24.13076923",
+                "rows_cnt": 13
+            },
+            {
+                "cable_style": "LP",
+                "ct": "p",
+                "avg_wght": "1229.86363636",
+                "avg_od": "14.28181818",
+                "rows_cnt": 22
+            },
+            {
+                "cable_style": "LS",
+                "ct": "a",
+                "avg_wght": "1090.46666667",
+                "avg_od": "27.02666667",
+                "rows_cnt": 15
+            },
+            {
+                "cable_style": "LS",
+                "ct": "p",
+                "avg_wght": "1174.00000000",
+                "avg_od": "13.56818182",
+                "rows_cnt": 22
+            },
+            {
+                "cable_style": "NF",
+                "ct": "p",
+                "avg_wght": "4467.50000000",
+                "avg_od": "42.66750000",
+                "rows_cnt": 12
+            },
+            {
+                "cable_style": "NJ",
+                "ct": "p",
+                "avg_wght": "2079.61363636",
+                "avg_od": "29.58750000",
+                "rows_cnt": 88
+            },
+            {
+                "cable_style": "NR",
+                "ct": "p",
+                "avg_wght": "1576.07317073",
+                "avg_od": "25.84390244",
+                "rows_cnt": 82
+            },
+            {
+                "cable_style": "NT",
+                "ct": "p",
+                "avg_wght": "2211.45454545",
+                "avg_od": "31.72613636",
+                "rows_cnt": 88
+            },
+            {
+                "cable_style": "NU",
+                "ct": "p",
+                "avg_wght": "4308.25000000",
+                "avg_od": "41.09166667",
+                "rows_cnt": 12
+            },
+            {
+                "cable_style": "NV",
+                "ct": "p",
+                "avg_wght": "1777.91954023",
+                "avg_od": "25.50689655",
+                "rows_cnt": 87
+            },
+            {
+                "cable_style": "PJ",
+                "ct": "p",
+                "avg_wght": "1668.30303030",
+                "avg_od": "15.12657576",
+                "rows_cnt": 165
+            },
+            {
+                "cable_style": "R1",
+                "ct": "p",
+                "avg_wght": "456.26470588",
+                "avg_od": "16.34117647",
+                "rows_cnt": 68
+            }
+        ]
+    },
+    "targetConductorModels": [],
+    "safeTargetRepresentation": "CONDUCTOR-MATERIAL with COPPER/ALUMINIUM options \u2014 requires operator approval at MEDIUM",
+    "safeExclusion": false,
+    "operatorExclusionNotRecommended": true,
+    "exclusionRisks": [
+        "Loses conductor material on all 54 products",
+        "May mislabel aluminium vs copper cables"
+    ],
+    "productsBlocked": 54
+}

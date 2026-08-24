@@ -25,6 +25,8 @@ final readonly class ProductPricingSummary
         public ?string $regionPublicId,
         public ?string $marketPublicId,
         public ?string $unitOfMeasureCode,
+        public ?string $unitOfMeasureSymbol,
+        public ?string $unitOfMeasurePublicId,
         public ?string $priceSourceCode,
         public ?string $effectiveFromUtc,
         public ?string $effectiveToUtc,

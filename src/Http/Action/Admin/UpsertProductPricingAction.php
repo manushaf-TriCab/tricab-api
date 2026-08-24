@@ -55,6 +55,7 @@ final class UpsertProductPricingAction
                     createRevision: $input->createRevision,
                     pricingPublicId: $input->pricingPublicId,
                     expectedRowVersion: $input->expectedRowVersion,
+                    unitOfMeasurePublicId: $input->unitOfMeasurePublicId,
                 ),
             ));
 

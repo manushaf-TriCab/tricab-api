@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Product\Persistence\InMemory;
 
 use TriCab\Core\Product\Application\DTO\ProductLookupItem;
+use TriCab\Core\Product\Application\DTO\PricingUnitLookupItem;
 use TriCab\Core\Product\Contract\ProductLookupRepository;
 
 final class InMemoryProductLookupRepository implements ProductLookupRepository
@@ -31,7 +32,25 @@ final class InMemoryProductLookupRepository implements ProductLookupRepository
             'currencies' => $this->listCurrencies(),
             'specificationDefinitions' => $this->mapLookup($this->store->specDefinitions()),
             'codeRuleSets' => $this->mapLookup($this->store->ruleSets()),
+            'priceLists' => [],
+            'pricingUnits' => $this->listPricingUnits(),
         ];
+    }
+
+    /** @return list<PricingUnitLookupItem> */
+    public function listPricingUnits(): array
+    {
+        return array_map(
+            static fn (array $row): PricingUnitLookupItem => new PricingUnitLookupItem(
+                publicId: (string) $row['publicId'],
+                code: (string) $row['code'],
+                name: (string) $row['name'],
+                symbol: (string) $row['symbol'],
+                displayOrder: (int) $row['displayOrder'],
+                isActive: (bool) $row['isActive'],
+            ),
+            $this->store->pricingUnitCatalog(),
+        );
     }
 
     public function listStatuses(): array

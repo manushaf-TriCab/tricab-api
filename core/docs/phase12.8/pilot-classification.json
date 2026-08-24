@@ -1,0 +1,22 @@
+{
+    "family": {
+        "source": "ACCESSORIES",
+        "target": "ACCESSORIES",
+        "mappingSource": "batch-a-approved",
+        "status": "RESOLVED"
+    },
+    "category": {
+        "source": "CONDUITS-FITTINGS",
+        "target": "CONDUITS-FITTINGS",
+        "mappingSource": "batch-a-approved",
+        "status": "RESOLVED"
+    },
+    "series": {
+        "source": "F12",
+        "target": "F12",
+        "mappingSource": "batch-a-approved",
+        "status": "RESOLVED"
+    },
+    "autoCreateClassification": false,
+    "status": "RESOLVED"
+}

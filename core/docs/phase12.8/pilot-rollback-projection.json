@@ -1,0 +1,23 @@
+{
+    "batchOwnedRecords": {
+        "products": [
+            "style_code=F12",
+            "migrationBatchOwned=true"
+        ],
+        "variants": [
+            "variantCode=F12-01"
+        ],
+        "productSpecValues": "migration-batch-owned only",
+        "variantSpecValues": "migration-batch-owned only",
+        "media": "migration-batch-owned only",
+        "documents": "migration-batch-owned only"
+    },
+    "preservedRecords": {
+        "preExistingProducts": "NEVER_DELETE",
+        "manualEdits": "PROTECTED_BY_ROWVERSION"
+    },
+    "manualEditProtection": true,
+    "rowVersionStrategy": "Optimistic concurrency \u2014 refuse overwrite on RowVersion mismatch",
+    "executed": false,
+    "note": "Rollback plan only; nothing written in dry-run."
+}

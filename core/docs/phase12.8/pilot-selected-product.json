@@ -1,0 +1,30 @@
+{
+    "recommended": {
+        "style_code": "F12",
+        "legacyProductName": "Inspection Tee",
+        "family": "ACCESSORIES",
+        "category": "CONDUITS-FITTINGS",
+        "series": "F12",
+        "identityStatus": "CREATE_NEW_DRAFT",
+        "variantCount": 1,
+        "mappedSpecificationCount": 6,
+        "unresolvedSpecificationCount": 0,
+        "mediaCount": 0,
+        "documentCount": 0,
+        "relationshipCount": 0,
+        "marketRegionStatus": "DEFAULT_DRAFT_REGION_PENDING",
+        "codeStatus": "AVAILABLE",
+        "slugStatus": "AVAILABLE",
+        "targetExistingMatch": null,
+        "migrationBlockers": [],
+        "classificationStatus": "CLASSIFICATION_READY",
+        "fullProductMigrationReady": false,
+        "riskScore": 910,
+        "pilotSuitability": "SUITABLE",
+        "suitabilityScore": 1090,
+        "rank": 1,
+        "selectionReason": "RECOMMENDED_PILOT_PRODUCT F12 (CONDUITS-FITTINGS): 6 approved d/v mappings, zero REVIEW rows, classification ready, identity CREATE_NEW_DRAFT, code/slug available. Prefer meaningful mapping coverage over minimal-field candidates.",
+        "recommended": true
+    },
+    "selectionReason": "RECOMMENDED_PILOT_PRODUCT F12 (CONDUITS-FITTINGS): 6 approved d/v mappings, zero REVIEW rows, classification ready, identity CREATE_NEW_DRAFT, code/slug available. Prefer meaningful mapping coverage over minimal-field candidates."
+}

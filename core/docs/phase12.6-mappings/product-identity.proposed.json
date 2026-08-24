@@ -1,0 +1,5851 @@
+{
+    "products": [
+        {
+            "wordpressPostId": 3034,
+            "postType": "cable",
+            "title": "RI Shipboard",
+            "styleCodeRaw": "BV",
+            "styleCodeNormalized": "BV",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:BV",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3035,
+            "postType": "cable",
+            "title": "RFOI RFCI Shipboard",
+            "styleCodeRaw": "DV",
+            "styleCodeNormalized": "DV",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DV",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3036,
+            "postType": "cable",
+            "title": "BI Shipboard Fire Res.",
+            "styleCodeRaw": "RR",
+            "styleCodeNormalized": "RR",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RR",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3037,
+            "postType": "cable",
+            "title": "BFOI BFCI Shipboard Fire Res.",
+            "styleCodeRaw": "BH",
+            "styleCodeNormalized": "BH",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:BH",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3038,
+            "postType": "cable",
+            "title": "RI (c) Shipboard",
+            "styleCodeRaw": "RC",
+            "styleCodeNormalized": "RC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3039,
+            "postType": "cable",
+            "title": "RFOI (c) RFCI (c) Shipboard",
+            "styleCodeRaw": "RS",
+            "styleCodeNormalized": "RS",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RS",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3040,
+            "postType": "cable",
+            "title": "BI (c) Shipboard Fire Res.",
+            "styleCodeRaw": "ES",
+            "styleCodeNormalized": "ES",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:ES",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3041,
+            "postType": "cable",
+            "title": "BFOI (c) BFCI (c) Shipboard Fire Res.",
+            "styleCodeRaw": "FJ",
+            "styleCodeNormalized": "FJ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FJ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3042,
+            "postType": "cable",
+            "title": "RI (i&c) Shipboard",
+            "styleCodeRaw": "EW",
+            "styleCodeNormalized": "EW",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EW",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3043,
+            "postType": "cable",
+            "title": "RFOI (i&c) RFCI (i&c) Shipboard",
+            "styleCodeRaw": "EG",
+            "styleCodeNormalized": "EG",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EG",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3045,
+            "postType": "cable",
+            "title": "BI (i&c) Shipboard Fire Res.",
+            "styleCodeRaw": "FC",
+            "styleCodeNormalized": "FC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3046,
+            "postType": "cable",
+            "title": "BFOI (i&c) BFCI (i&c) Shipboard Fire Res.",
+            "styleCodeRaw": "FL",
+            "styleCodeNormalized": "FL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3072,
+            "postType": "cable",
+            "title": "RIOI RICI Offshore Braid Armour",
+            "styleCodeRaw": "PJ",
+            "styleCodeNormalized": "PJ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PJ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3075,
+            "postType": "cable",
+            "title": "BIOI BICI Offshore Braid Armour Fire Res.",
+            "styleCodeRaw": "HT",
+            "styleCodeNormalized": "HT",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:HT",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3078,
+            "postType": "cable",
+            "title": "RIOI (c) RICI (c) Offshore Braid Armour",
+            "styleCodeRaw": "RB",
+            "styleCodeNormalized": "RB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3081,
+            "postType": "cable",
+            "title": "BIOI (c) BICI (c) Offshore Braid Armour Fire Res.",
+            "styleCodeRaw": "FK",
+            "styleCodeNormalized": "FK",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FK",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3084,
+            "postType": "cable",
+            "title": "RIOI (i&c) RICI (i&c) Offshore Braid Armour",
+            "styleCodeRaw": "FZ",
+            "styleCodeNormalized": "FZ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FZ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3087,
+            "postType": "cable",
+            "title": "BIOI (i&c) BICI (i&c) Offshore Braid Arm. Fire Res.",
+            "styleCodeRaw": "FE",
+            "styleCodeNormalized": "FE",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FE",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3090,
+            "postType": "cable",
+            "title": "Shipboard Power & Control",
+            "styleCodeRaw": "BV",
+            "styleCodeNormalized": "BV",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:BV",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3093,
+            "postType": "cable",
+            "title": "Shipboard Braid Power & Control",
+            "styleCodeRaw": "DV",
+            "styleCodeNormalized": "DV",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DV",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3096,
+            "postType": "cable",
+            "title": "Shipboard Fire Res. Power & Control",
+            "styleCodeRaw": "RR",
+            "styleCodeNormalized": "RR",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RR",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3099,
+            "postType": "cable",
+            "title": "Shipboard Fire Res. Braid Power & Control",
+            "styleCodeRaw": "BH",
+            "styleCodeNormalized": "BH",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:BH",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3102,
+            "postType": "cable",
+            "title": "Shipboard Coll. Scr.",
+            "styleCodeRaw": "RC",
+            "styleCodeNormalized": "RC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3105,
+            "postType": "cable",
+            "title": "Shipboard Braid Coll. Scr.",
+            "styleCodeRaw": "RS",
+            "styleCodeNormalized": "RS",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RS",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3108,
+            "postType": "cable",
+            "title": "Shipboard Fire Res. Coll. Scr.",
+            "styleCodeRaw": "ES",
+            "styleCodeNormalized": "ES",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:ES",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3111,
+            "postType": "cable",
+            "title": "Shipboard Fire Res. Braid Coll. Scr.",
+            "styleCodeRaw": "FJ",
+            "styleCodeNormalized": "FJ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FJ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3114,
+            "postType": "cable",
+            "title": "Shipboard Ind. & Coll. Scr.",
+            "styleCodeRaw": "EW",
+            "styleCodeNormalized": "EW",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EW",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3117,
+            "postType": "cable",
+            "title": "Shipboard Braid Ind. & Coll. Scr.",
+            "styleCodeRaw": "EG",
+            "styleCodeNormalized": "EG",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EG",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3120,
+            "postType": "cable",
+            "title": "Shipboard Fire Res. Ind. & Coll. Scr.",
+            "styleCodeRaw": "FC",
+            "styleCodeNormalized": "FC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3123,
+            "postType": "cable",
+            "title": "Shipboard Fire Res. Braid Ind. & Coll. Scr.",
+            "styleCodeRaw": "FL",
+            "styleCodeNormalized": "FL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3126,
+            "postType": "cable",
+            "title": "Switchboard / Panel Wire",
+            "styleCodeRaw": "UP",
+            "styleCodeNormalized": "UP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "0EFDDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3129,
+            "postType": "cable",
+            "title": "Shipboard",
+            "styleCodeRaw": "EZ",
+            "styleCodeNormalized": "EZ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EZ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3132,
+            "postType": "cable",
+            "title": "600V Braid",
+            "styleCodeRaw": "DF",
+            "styleCodeNormalized": "DF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DF",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3135,
+            "postType": "cable",
+            "title": "1.8kV/3.0kV",
+            "styleCodeRaw": "DG",
+            "styleCodeNormalized": "DG",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DG",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3138,
+            "postType": "cable",
+            "title": "Offshore Braid Armour",
+            "styleCodeRaw": "PJ",
+            "styleCodeNormalized": "PJ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PJ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3141,
+            "postType": "cable",
+            "title": "Offshore Braid Armour Fire Res.",
+            "styleCodeRaw": "HT",
+            "styleCodeNormalized": "HT",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:HT",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3144,
+            "postType": "cable",
+            "title": "Offshore Braid Armour Coll. Scr.",
+            "styleCodeRaw": "RB",
+            "styleCodeNormalized": "RB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3147,
+            "postType": "cable",
+            "title": "Offshore Braid Armour Fire Res. Coll. Scr.",
+            "styleCodeRaw": "FK",
+            "styleCodeNormalized": "FK",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FK",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3150,
+            "postType": "cable",
+            "title": "Offshore Braid Armour Ind. & Coll. Scr.",
+            "styleCodeRaw": "FZ",
+            "styleCodeNormalized": "FZ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FZ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3153,
+            "postType": "cable",
+            "title": "Offshore Braid Arm. Fire Res. Ind. & Coll. Scr.",
+            "styleCodeRaw": "FE",
+            "styleCodeNormalized": "FE",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FE",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3156,
+            "postType": "cable",
+            "title": "IX Shipboard & Offshore",
+            "styleCodeRaw": "UP",
+            "styleCodeNormalized": "UP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "0EFDDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3159,
+            "postType": "cable",
+            "title": "Shipboard",
+            "styleCodeRaw": "EZ",
+            "styleCodeNormalized": "EZ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EZ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3163,
+            "postType": "cable",
+            "title": "RFOI-VFD Shipboard",
+            "styleCodeRaw": "DF",
+            "styleCodeNormalized": "DF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DF",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3199,
+            "postType": "cable",
+            "title": "RU P18 TriCab NVC",
+            "styleCodeRaw": "NV",
+            "styleCodeNormalized": "NV",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:NV",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3202,
+            "postType": "cable",
+            "title": "BU P17 TriCab NRC",
+            "styleCodeRaw": "NR",
+            "styleCodeNormalized": "NR",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:NR",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3205,
+            "postType": "cable",
+            "title": "P1 TriCab NJC <br /> P1/P8 TriCab NJM",
+            "styleCodeRaw": "NJ",
+            "styleCodeNormalized": "NJ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:NJ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3208,
+            "postType": "cable",
+            "title": "P5 TriCab NTC <br />P5/P12 TriCab NTM",
+            "styleCodeRaw": "NT",
+            "styleCodeNormalized": "NT",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:NT",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3211,
+            "postType": "cable",
+            "title": "S2 TriCab RBC<br />S2/S6 TriCab RBM",
+            "styleCodeRaw": "RB",
+            "styleCodeNormalized": "RB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3214,
+            "postType": "cable",
+            "title": "S4 TriCab FKC<br />S4/S8 TriCab FKM",
+            "styleCodeRaw": "FK",
+            "styleCodeNormalized": "FK",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FK",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3217,
+            "postType": "cable",
+            "title": "S1 TriCab FZC<br />S1/S5 TriCab FZM",
+            "styleCodeRaw": "FZ",
+            "styleCodeNormalized": "FZ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FZ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3220,
+            "postType": "cable",
+            "title": "S3 TriCab FEC <br />S3/S7 TriCab FEM",
+            "styleCodeRaw": "FE",
+            "styleCodeNormalized": "FE",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FE",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3221,
+            "postType": "cable",
+            "title": "P15 UX UPC UPM",
+            "styleCodeRaw": "UP",
+            "styleCodeNormalized": "UP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "0EFDDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3224,
+            "postType": "cable",
+            "title": "P1 TriCab NUC<br />P1/P8 TriCab NUM",
+            "styleCodeRaw": "NU",
+            "styleCodeNormalized": "NU",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:NU",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3227,
+            "postType": "cable",
+            "title": "P2 TriCab M3C<br />P2/P9 TriCab M3M",
+            "styleCodeRaw": "M3C, M3M",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "REVIEW",
+            "issues": [
+                "comma_or_multi_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 3233,
+            "postType": "cable",
+            "title": "P3 TriCab M4C<br />P3/P10 TriCab M4M",
+            "styleCodeRaw": "M4C, M4M",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "REVIEW",
+            "issues": [
+                "comma_or_multi_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 3238,
+            "postType": "cable",
+            "title": "P4 TriCab M5C<br />P4/P11 TriCab M5M",
+            "styleCodeRaw": "M5C, M5M",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "REVIEW",
+            "issues": [
+                "comma_or_multi_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 3243,
+            "postType": "cable",
+            "title": "P19 TriCab M6C<br />P19/P21 TriCab M6M",
+            "styleCodeRaw": "M6C, M6M",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "REVIEW",
+            "issues": [
+                "comma_or_multi_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 3248,
+            "postType": "cable",
+            "title": "P1 TriCab B1C<br />P1/P8 TriCab B1M",
+            "styleCodeRaw": "B1",
+            "styleCodeNormalized": "B1",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:B1",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3251,
+            "postType": "cable",
+            "title": "P2 TriCab B3C<br />P2/P9 TriCab B3M",
+            "styleCodeRaw": "B3C, B3M",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "REVIEW",
+            "issues": [
+                "comma_or_multi_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 3254,
+            "postType": "cable",
+            "title": "P3 TriCab B4C<br />P3/P10 TriCab B4M",
+            "styleCodeRaw": "B4C, B4M",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "REVIEW",
+            "issues": [
+                "comma_or_multi_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 3296,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber Tri-Rated",
+            "styleCodeRaw": "JL",
+            "styleCodeNormalized": "JL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:JL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3299,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber SDI",
+            "styleCodeRaw": "EH",
+            "styleCodeNormalized": "EH",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EH",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3303,
+            "postType": "cable",
+            "title": "Flexible Rubber SDI",
+            "styleCodeRaw": "KL",
+            "styleCodeNormalized": "KL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3306,
+            "postType": "cable",
+            "title": "Flexible LSZH",
+            "styleCodeRaw": "LS",
+            "styleCodeNormalized": "LS",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:LS",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3309,
+            "postType": "cable",
+            "title": "Unscreened SDI single power",
+            "styleCodeRaw": "V1",
+            "styleCodeNormalized": "V1",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:V1",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3318,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "FD",
+            "styleCodeNormalized": "FD",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FD",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3321,
+            "postType": "cable",
+            "title": "Flexible Rubber Neutral Screened",
+            "styleCodeRaw": "NC",
+            "styleCodeNormalized": "NC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:NC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3324,
+            "postType": "cable",
+            "title": "Flexible Rubber Neutral Screened",
+            "styleCodeRaw": "NB",
+            "styleCodeNormalized": "NB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:NB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3327,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "LS",
+            "styleCodeNormalized": "LS",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:LS",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3332,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "LP",
+            "styleCodeNormalized": "LP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:LP",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3341,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "CC",
+            "styleCodeNormalized": "CC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3344,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "KL",
+            "styleCodeNormalized": "KL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3347,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "RW",
+            "styleCodeNormalized": "RW",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RW",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3350,
+            "postType": "cable",
+            "title": "Flexible Rubber Single and Multicore Power",
+            "styleCodeRaw": "V2",
+            "styleCodeNormalized": "V2",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "12FDDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3355,
+            "postType": "cable",
+            "title": "Flexible Rubber Single and Multicore Power",
+            "styleCodeRaw": "V3",
+            "styleCodeNormalized": "V3",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "13FDDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3360,
+            "postType": "cable",
+            "title": "Flexible Rubber Single and Multicore Power",
+            "styleCodeRaw": "V4",
+            "styleCodeNormalized": "V4",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "14FDDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3366,
+            "postType": "cable",
+            "title": "Flexible Rubber Single and Multicore Power",
+            "styleCodeRaw": "V6",
+            "styleCodeNormalized": "V6",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:V6",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3371,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "V7",
+            "styleCodeNormalized": "V7",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:V7",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3376,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "E2",
+            "styleCodeNormalized": "E2",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:E2",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3381,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "E3",
+            "styleCodeNormalized": "E3",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:E3",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3384,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "E4",
+            "styleCodeNormalized": "E4",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:E4",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3387,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "E6",
+            "styleCodeNormalized": "E6",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:E6",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3391,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "E7",
+            "styleCodeNormalized": "E7",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:E7",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3394,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "N2",
+            "styleCodeNormalized": "N2",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:N2",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3399,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "N3",
+            "styleCodeNormalized": "N3",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:N3",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3402,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "N4",
+            "styleCodeNormalized": "N4",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:N4",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3405,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "N6",
+            "styleCodeNormalized": "N6",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:N6",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3408,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "N7",
+            "styleCodeNormalized": "N7",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:N7",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3411,
+            "postType": "cable",
+            "title": "Flexible Rubber Multi",
+            "styleCodeRaw": "S2",
+            "styleCodeNormalized": "S2",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:S2",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3414,
+            "postType": "cable",
+            "title": "Flexible Rubber Multi",
+            "styleCodeRaw": "S3",
+            "styleCodeNormalized": "S3",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:S3",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3417,
+            "postType": "cable",
+            "title": "Flexible Rubber Multi",
+            "styleCodeRaw": "S4",
+            "styleCodeNormalized": "S4",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:S4",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3419,
+            "postType": "cable",
+            "title": "Flexible Rubber Multi",
+            "styleCodeRaw": "S6",
+            "styleCodeNormalized": "S6",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:S6",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3425,
+            "postType": "cable",
+            "title": "Flexible LSZH",
+            "styleCodeRaw": "FR",
+            "styleCodeNormalized": "FR",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FR",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3432,
+            "postType": "cable",
+            "title": "Flexible Rubber Control",
+            "styleCodeRaw": "CA",
+            "styleCodeNormalized": "CA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3435,
+            "postType": "cable",
+            "title": "Flexible Control",
+            "styleCodeRaw": "KA",
+            "styleCodeNormalized": "KA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3438,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "EZ",
+            "styleCodeNormalized": "EZ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EZ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3442,
+            "postType": "cable",
+            "title": "Flexible Rubber Control",
+            "styleCodeRaw": "KL",
+            "styleCodeNormalized": "KL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3447,
+            "postType": "cable",
+            "title": "Flexible Rubber Control",
+            "styleCodeRaw": "XL",
+            "styleCodeNormalized": "XL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:XL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3450,
+            "postType": "cable",
+            "title": "Flexible Alarm/Signal",
+            "styleCodeRaw": "WG",
+            "styleCodeNormalized": "WG",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:WG",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3453,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "KC",
+            "styleCodeNormalized": "KC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3456,
+            "postType": "cable",
+            "title": "Flexible LSZH Control",
+            "styleCodeRaw": "C6",
+            "styleCodeNormalized": "C6",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "BDFCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3459,
+            "postType": "cable",
+            "title": "Flexible LSZH Control",
+            "styleCodeRaw": "C5",
+            "styleCodeNormalized": "C5",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "BCFCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3462,
+            "postType": "cable",
+            "title": "Flexible LSZH Control",
+            "styleCodeRaw": "C4",
+            "styleCodeNormalized": "C4",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "BBFCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3465,
+            "postType": "cable",
+            "title": "Flexible Control",
+            "styleCodeRaw": "C3",
+            "styleCodeNormalized": "C3",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "BAFCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3468,
+            "postType": "cable",
+            "title": "Flexible Control",
+            "styleCodeRaw": "C2",
+            "styleCodeNormalized": "C2",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "B9FCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3471,
+            "postType": "cable",
+            "title": "Flexible",
+            "styleCodeRaw": "C1",
+            "styleCodeNormalized": "C1",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "B8FCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3473,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "RG",
+            "styleCodeNormalized": "RG",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "07FDDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3476,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "RF",
+            "styleCodeNormalized": "RF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "06FDDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3479,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "WH",
+            "styleCodeNormalized": "WH",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:WH",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3482,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "IA",
+            "styleCodeNormalized": "IA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:IA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3485,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "KH",
+            "styleCodeNormalized": "KH",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KH",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3488,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "RH",
+            "styleCodeNormalized": "RH",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RH",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3491,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "RA",
+            "styleCodeNormalized": "RA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3494,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "KE",
+            "styleCodeNormalized": "KE",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KE",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3497,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "RE",
+            "styleCodeNormalized": "RE",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RE",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3500,
+            "postType": "cable",
+            "title": "Flexible LSZH Instrumentation",
+            "styleCodeRaw": "R9",
+            "styleCodeNormalized": "R9",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:R9",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3503,
+            "postType": "cable",
+            "title": "Flexible LSZH Instrumentation",
+            "styleCodeRaw": "R8",
+            "styleCodeNormalized": "R8",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "FCFCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3506,
+            "postType": "cable",
+            "title": "Flexible LSZH Instrumentation",
+            "styleCodeRaw": "R7",
+            "styleCodeNormalized": "R7",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "FBFCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3509,
+            "postType": "cable",
+            "title": "Flexible LSZH Instrumentation",
+            "styleCodeRaw": "R6",
+            "styleCodeNormalized": "R6",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "FAFCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3512,
+            "postType": "cable",
+            "title": "Flexible LSZH Instrumentation",
+            "styleCodeRaw": "R5",
+            "styleCodeNormalized": "R5",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "F8FCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3514,
+            "postType": "cable",
+            "title": "Flexible Instrumentation",
+            "styleCodeRaw": "R4",
+            "styleCodeNormalized": "R4",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "F7FCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3516,
+            "postType": "cable",
+            "title": "Flexible Instrumentation",
+            "styleCodeRaw": "R3",
+            "styleCodeNormalized": "R3",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "F5FCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3518,
+            "postType": "cable",
+            "title": "Flexible Instrumentation",
+            "styleCodeRaw": "R2",
+            "styleCodeNormalized": "R2",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "F4FCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3520,
+            "postType": "cable",
+            "title": "Flexible Instrumentation",
+            "styleCodeRaw": "R1",
+            "styleCodeNormalized": "R1",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "F2FCDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3527,
+            "postType": "cable",
+            "title": "Flexible LSZH Fire Res.",
+            "styleCodeRaw": "FH",
+            "styleCodeNormalized": "FH",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FH",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3532,
+            "postType": "cable",
+            "title": "Flexible LSZH Nylon",
+            "styleCodeRaw": "CDT",
+            "styleCodeNormalized": "CDT",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CDT",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3535,
+            "postType": "cable",
+            "title": "Flexible Nylon",
+            "styleCodeRaw": "KDT",
+            "styleCodeNormalized": "KDT",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KDT",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3537,
+            "postType": "cable",
+            "title": "Flexible Nylon",
+            "styleCodeRaw": "XDT",
+            "styleCodeNormalized": "XDT",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:XDT",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3540,
+            "postType": "cable",
+            "title": "Flexible LSZH Nylon Extruded",
+            "styleCodeRaw": "CN",
+            "styleCodeNormalized": "CN",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CN",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3543,
+            "postType": "cable",
+            "title": "Flexible Nylon Extruded",
+            "styleCodeRaw": "KN",
+            "styleCodeNormalized": "KN",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KN",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3547,
+            "postType": "cable",
+            "title": "Flexible Nylon Extruded",
+            "styleCodeRaw": "XN",
+            "styleCodeNormalized": "XN",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:XN",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3549,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "KF",
+            "styleCodeNormalized": "KF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KF",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3552,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "KK",
+            "styleCodeNormalized": "KK",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KK",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3557,
+            "postType": "cable",
+            "title": "Flexible Rubber Braid",
+            "styleCodeRaw": "OD",
+            "styleCodeNormalized": "OD",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:OD",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3560,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "SY",
+            "styleCodeNormalized": "SY",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:SY",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3563,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "SJ",
+            "styleCodeNormalized": "SJ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:SJ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3566,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "FP",
+            "styleCodeNormalized": "FP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FP",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3569,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "KB",
+            "styleCodeNormalized": "KB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3573,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "HB",
+            "styleCodeNormalized": "HB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:HB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3575,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "DP",
+            "styleCodeNormalized": "DP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DP",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3580,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "KG",
+            "styleCodeNormalized": "KG",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KG",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3583,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "EU",
+            "styleCodeNormalized": "EU",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EU",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3588,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "KU",
+            "styleCodeNormalized": "KU",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KU",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3593,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "XU",
+            "styleCodeNormalized": "XU",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:XU",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3604,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "EA",
+            "styleCodeNormalized": "EA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3608,
+            "postType": "cable",
+            "title": "Flexible Rubber SWA",
+            "styleCodeRaw": "DA",
+            "styleCodeNormalized": "DA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3613,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "CA",
+            "styleCodeNormalized": "CA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3620,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "KA",
+            "styleCodeNormalized": "KA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3627,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "XA",
+            "styleCodeNormalized": "XA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:XA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3657,
+            "postType": "cable",
+            "title": "Flexible Nylon Extruded",
+            "styleCodeRaw": "LN",
+            "styleCodeNormalized": "LN",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:LN",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3675,
+            "postType": "cable",
+            "title": "Single",
+            "styleCodeRaw": "PA",
+            "styleCodeNormalized": "PA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3678,
+            "postType": "cable",
+            "title": "Braid Armoured",
+            "styleCodeRaw": "PZ",
+            "styleCodeNormalized": "PZ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PZ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3681,
+            "postType": "cable",
+            "title": "Multi Conductor",
+            "styleCodeRaw": "PB",
+            "styleCodeNormalized": "PB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3684,
+            "postType": "cable",
+            "title": "Braid Armour Multi Conductor",
+            "styleCodeRaw": "PG",
+            "styleCodeNormalized": "PG",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PG",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3687,
+            "postType": "cable",
+            "title": "Single Conductor",
+            "styleCodeRaw": "PS",
+            "styleCodeNormalized": "PS",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PS",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3690,
+            "postType": "cable",
+            "title": "Jacketed Single",
+            "styleCodeRaw": "PN",
+            "styleCodeNormalized": "PN",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PN",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3693,
+            "postType": "cable",
+            "title": "Braid Armour",
+            "styleCodeRaw": "PX",
+            "styleCodeNormalized": "PX",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PX",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3696,
+            "postType": "cable",
+            "title": "Single",
+            "styleCodeRaw": "PT",
+            "styleCodeNormalized": "PT",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PT",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3699,
+            "postType": "cable",
+            "title": "Jacketed Single",
+            "styleCodeRaw": "PW",
+            "styleCodeNormalized": "PW",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PW",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3702,
+            "postType": "cable",
+            "title": "Braid Armour",
+            "styleCodeRaw": "PY",
+            "styleCodeNormalized": "PY",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PY",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3705,
+            "postType": "cable",
+            "title": "Multi Pair/Triad",
+            "styleCodeRaw": "PD",
+            "styleCodeNormalized": "PD",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PD",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3708,
+            "postType": "cable",
+            "title": "Braid Armour",
+            "styleCodeRaw": "PH",
+            "styleCodeNormalized": "PH",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PH",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3711,
+            "postType": "cable",
+            "title": "VFD",
+            "styleCodeRaw": "PK",
+            "styleCodeNormalized": "PK",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PK",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3714,
+            "postType": "cable",
+            "title": "Braid Armour",
+            "styleCodeRaw": "PL",
+            "styleCodeNormalized": "PL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:PL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3717,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "CC",
+            "styleCodeNormalized": "CC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 3719,
+            "postType": "cable",
+            "title": "Flexible LSZH",
+            "styleCodeRaw": "FR",
+            "styleCodeNormalized": "FR",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FR",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4157,
+            "postType": "cable",
+            "title": "Flexible Rubber Hook-Up Wire",
+            "styleCodeRaw": "JD",
+            "styleCodeNormalized": "JD",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:JD",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4161,
+            "postType": "cable",
+            "title": "Thermoplastic-Insulated Wire",
+            "styleCodeRaw": "TN",
+            "styleCodeNormalized": "TN",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TN",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4164,
+            "postType": "cable",
+            "title": "Machine-Tool Wire",
+            "styleCodeRaw": "TX",
+            "styleCodeNormalized": "TX",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TX",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4167,
+            "postType": "cable",
+            "title": "Thermoset-Insulated Wire",
+            "styleCodeRaw": "VX",
+            "styleCodeNormalized": "VX",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:VX",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4170,
+            "postType": "cable",
+            "title": "Thermoset-Insulated Wire",
+            "styleCodeRaw": "VN",
+            "styleCodeNormalized": "VN",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:VN",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4172,
+            "postType": "cable",
+            "title": "Thermoset-Insulated Wire",
+            "styleCodeRaw": "VA",
+            "styleCodeNormalized": "VA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:VA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4174,
+            "postType": "cable",
+            "title": "Industrial Power & Control Tray Cable",
+            "styleCodeRaw": "TP",
+            "styleCodeNormalized": "TP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TP",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4177,
+            "postType": "cable",
+            "title": "Industrial Power & Control Tray Cable, Shielded",
+            "styleCodeRaw": "TR",
+            "styleCodeNormalized": "TR",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TR",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4180,
+            "postType": "cable",
+            "title": "Industrial VFD",
+            "styleCodeRaw": "TV",
+            "styleCodeNormalized": "TV",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TV",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4183,
+            "postType": "cable",
+            "title": "Industrial VFD",
+            "styleCodeRaw": "TK",
+            "styleCodeNormalized": "TK",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TK",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4186,
+            "postType": "cable",
+            "title": "Industrial Over. Shielded",
+            "styleCodeRaw": "TB",
+            "styleCodeNormalized": "TB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4189,
+            "postType": "cable",
+            "title": "Industrial Individual & Over. Shielded",
+            "styleCodeRaw": "TF",
+            "styleCodeNormalized": "TF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TF",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4192,
+            "postType": "cable",
+            "title": "Industrial Power & Control",
+            "styleCodeRaw": "VP",
+            "styleCodeNormalized": "VP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:VP",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4194,
+            "postType": "cable",
+            "title": "Industrial Power & Control, Shielded",
+            "styleCodeRaw": "VR",
+            "styleCodeNormalized": "VR",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:VR",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4197,
+            "postType": "cable",
+            "title": "Industrial Power & Control",
+            "styleCodeRaw": "VS",
+            "styleCodeNormalized": "VS",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:VS",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4199,
+            "postType": "cable",
+            "title": "Industrial VFD",
+            "styleCodeRaw": "VV",
+            "styleCodeNormalized": "VV",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:VV",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4201,
+            "postType": "cable",
+            "title": "Industrial VFD",
+            "styleCodeRaw": "VW",
+            "styleCodeNormalized": "VW",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:VW",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4203,
+            "postType": "cable",
+            "title": "Flexible Individual & Collective Screened",
+            "styleCodeRaw": "WB",
+            "styleCodeNormalized": "WB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:WB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4206,
+            "postType": "cable",
+            "title": "Flexible Individual & Collective Screened",
+            "styleCodeRaw": "WA",
+            "styleCodeNormalized": "WA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:WA",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4210,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "FW",
+            "styleCodeNormalized": "FW",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FW",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4216,
+            "postType": "cable",
+            "title": "Flexible Rubber Control",
+            "styleCodeRaw": "CF",
+            "styleCodeNormalized": "CF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CF",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4219,
+            "postType": "cable",
+            "title": "Flexible Fire Res. Braid",
+            "styleCodeRaw": "PC1",
+            "styleCodeNormalized": "PC1",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4222,
+            "postType": "cable",
+            "title": "Flexible Rubber Power for Solar Applications",
+            "styleCodeRaw": "SC",
+            "styleCodeNormalized": "SC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:SC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4225,
+            "postType": "cable",
+            "title": "Flexible Rubber Figure 8",
+            "styleCodeRaw": "CB",
+            "styleCodeNormalized": "CB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4228,
+            "postType": "cable",
+            "title": "Premium Welding Cable",
+            "styleCodeRaw": "FW",
+            "styleCodeNormalized": "FW",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FW",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4230,
+            "postType": "cable",
+            "title": "Collective Screened",
+            "styleCodeRaw": "RD",
+            "styleCodeNormalized": "RD",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "05FDDED9-F691-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4233,
+            "postType": "cable",
+            "title": "Flexible Rubber Power Multi",
+            "styleCodeRaw": "CF",
+            "styleCodeNormalized": "CF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CF",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4435,
+            "postType": "cable",
+            "title": "Flexible Cord",
+            "styleCodeRaw": "EY",
+            "styleCodeNormalized": "EY",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EY",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4818,
+            "postType": "accessory",
+            "title": "Stand-Off / Bus Bar",
+            "styleCodeRaw": "T01",
+            "styleCodeNormalized": "T01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4824,
+            "postType": "accessory",
+            "title": "Bootlace / Ferrule",
+            "styleCodeRaw": "A01",
+            "styleCodeNormalized": "A01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4830,
+            "postType": "accessory",
+            "title": "Bootlace / Ferrule",
+            "styleCodeRaw": "A02",
+            "styleCodeNormalized": "A02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4834,
+            "postType": "accessory",
+            "title": "Bootlace / Ferrule",
+            "styleCodeRaw": "A03",
+            "styleCodeNormalized": "A03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4838,
+            "postType": "accessory",
+            "title": "Quick Connect Vinyl Insulated, Male Spade",
+            "styleCodeRaw": "A30",
+            "styleCodeNormalized": "A30",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4850,
+            "postType": "accessory",
+            "title": "Quick Connect Vinyl Insulated, Female Spade",
+            "styleCodeRaw": "A31",
+            "styleCodeNormalized": "A31",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4854,
+            "postType": "accessory",
+            "title": "Quick Connect Nylon Insulated, Female Spade",
+            "styleCodeRaw": "A32",
+            "styleCodeNormalized": "A32",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4858,
+            "postType": "accessory",
+            "title": "Quick Connect Nylon Insulated, Male Spade",
+            "styleCodeRaw": "A33",
+            "styleCodeNormalized": "A33",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4862,
+            "postType": "accessory",
+            "title": "Quick Connect Uninsulated, Female Spade",
+            "styleCodeRaw": "A34",
+            "styleCodeNormalized": "A34",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4866,
+            "postType": "accessory",
+            "title": "Female\u00a0Bullet Quick Disconnect",
+            "styleCodeRaw": "A35",
+            "styleCodeNormalized": "A35",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4870,
+            "postType": "accessory",
+            "title": "Male\u00a0Bullet Quick Disconnect",
+            "styleCodeRaw": "A36",
+            "styleCodeNormalized": "A36",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4874,
+            "postType": "accessory",
+            "title": "Splice Connectors",
+            "styleCodeRaw": "A37",
+            "styleCodeNormalized": "A37",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4878,
+            "postType": "accessory",
+            "title": "Brass Nickel Plated",
+            "styleCodeRaw": "D01",
+            "styleCodeNormalized": "D01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4901,
+            "postType": "accessory",
+            "title": "Stainless Steel",
+            "styleCodeRaw": "D02",
+            "styleCodeNormalized": "D02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4902,
+            "postType": "accessory",
+            "title": "Standard Long Thread",
+            "styleCodeRaw": "D03",
+            "styleCodeNormalized": "D03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4903,
+            "postType": "accessory",
+            "title": "Long Thread Straight Spiral Top",
+            "styleCodeRaw": "D04",
+            "styleCodeNormalized": "D04",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4904,
+            "postType": "accessory",
+            "title": "90\u00b0 Watertight",
+            "styleCodeRaw": "D05",
+            "styleCodeNormalized": "D05",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4905,
+            "postType": "accessory",
+            "title": "Long Thread",
+            "styleCodeRaw": "D06",
+            "styleCodeNormalized": "D06",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4906,
+            "postType": "accessory",
+            "title": "Premium Nylon",
+            "styleCodeRaw": "D07",
+            "styleCodeNormalized": "D07",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4907,
+            "postType": "accessory",
+            "title": "Standard Nylon",
+            "styleCodeRaw": "D08",
+            "styleCodeNormalized": "D08",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4908,
+            "postType": "accessory",
+            "title": "90\u00b0 Spiral Top",
+            "styleCodeRaw": "D09",
+            "styleCodeNormalized": "D09",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4909,
+            "postType": "accessory",
+            "title": "Straight Spiral Top",
+            "styleCodeRaw": "D10",
+            "styleCodeNormalized": "D10",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4910,
+            "postType": "accessory",
+            "title": "Ring Terminal",
+            "styleCodeRaw": "A05",
+            "styleCodeNormalized": "A05",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4911,
+            "postType": "accessory",
+            "title": "Ring Terminal",
+            "styleCodeRaw": "A06",
+            "styleCodeNormalized": "A06",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4912,
+            "postType": "accessory",
+            "title": "Fork Terminal",
+            "styleCodeRaw": "A07",
+            "styleCodeNormalized": "A07",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4913,
+            "postType": "accessory",
+            "title": "Fork Terminal",
+            "styleCodeRaw": "A08",
+            "styleCodeNormalized": "A08",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4914,
+            "postType": "accessory",
+            "title": "Pin Terminal",
+            "styleCodeRaw": "A09",
+            "styleCodeNormalized": "A09",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4915,
+            "postType": "accessory",
+            "title": "Pin Terminals",
+            "styleCodeRaw": "A10",
+            "styleCodeNormalized": "A10",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4916,
+            "postType": "accessory",
+            "title": "Blade Terminal",
+            "styleCodeRaw": "A11",
+            "styleCodeNormalized": "A11",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4917,
+            "postType": "accessory",
+            "title": "Blade Terminal",
+            "styleCodeRaw": "A12",
+            "styleCodeNormalized": "A12",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4918,
+            "postType": "accessory",
+            "title": "Ring Terminal",
+            "styleCodeRaw": "A47",
+            "styleCodeNormalized": "A47",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4919,
+            "postType": "accessory",
+            "title": "Fork Terminal",
+            "styleCodeRaw": "A48",
+            "styleCodeNormalized": "A48",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4920,
+            "postType": "accessory",
+            "title": "150&deg;C LV Flexible Thin Wall",
+            "styleCodeRaw": "G02",
+            "styleCodeNormalized": "G02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4921,
+            "postType": "accessory",
+            "title": "125&deg;C LV Flexible",
+            "styleCodeRaw": "G01",
+            "styleCodeNormalized": "G01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4922,
+            "postType": "accessory",
+            "title": "Fast Install",
+            "styleCodeRaw": "M01",
+            "styleCodeNormalized": "M01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4941,
+            "postType": "accessory",
+            "title": "Straight Barrel",
+            "styleCodeRaw": "B01",
+            "styleCodeNormalized": "B01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4950,
+            "postType": "accessory",
+            "title": "Nylon",
+            "styleCodeRaw": "W01",
+            "styleCodeNormalized": "W01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4967,
+            "postType": "accessory",
+            "title": "Straight Connector Waterproof",
+            "styleCodeRaw": "F01",
+            "styleCodeNormalized": "F01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4968,
+            "postType": "accessory",
+            "title": "Straight Connector",
+            "styleCodeRaw": "F02",
+            "styleCodeNormalized": "F02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4969,
+            "postType": "accessory",
+            "title": "Straight Quick Connector",
+            "styleCodeRaw": "F03",
+            "styleCodeNormalized": "F03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4970,
+            "postType": "accessory",
+            "title": "90\u00b0 Quick Connector",
+            "styleCodeRaw": "F04",
+            "styleCodeNormalized": "F04",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 4987,
+            "postType": "cable",
+            "title": "Flexible LSZH Rubber",
+            "styleCodeRaw": "DC",
+            "styleCodeNormalized": "DC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 4998,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "XL",
+            "styleCodeNormalized": "XL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:XL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 5012,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "BW",
+            "styleCodeNormalized": "BW",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:BW",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 5067,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "LP",
+            "styleCodeNormalized": "LP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:LP",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 5074,
+            "postType": "accessory",
+            "title": "Stainless Steel",
+            "styleCodeRaw": "W02",
+            "styleCodeNormalized": "W02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5121,
+            "postType": "cable",
+            "title": "Flexible",
+            "styleCodeRaw": "BB",
+            "styleCodeNormalized": "BB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:BB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 5128,
+            "postType": "accessory",
+            "title": "Bell Mouth Half Moon",
+            "styleCodeRaw": "B06",
+            "styleCodeNormalized": "B06",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5136,
+            "postType": "accessory",
+            "title": "Bootlace Crimping Tool",
+            "styleCodeRaw": "Z01",
+            "styleCodeNormalized": "Z01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5154,
+            "postType": "cable",
+            "title": "Flexible",
+            "styleCodeRaw": "BY",
+            "styleCodeNormalized": "BY",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:BY",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 5199,
+            "postType": "accessory",
+            "title": "Self-Adhesive",
+            "styleCodeRaw": "X01",
+            "styleCodeNormalized": "X01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5205,
+            "postType": "accessory",
+            "title": "Screw",
+            "styleCodeRaw": "X02",
+            "styleCodeNormalized": "X02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5206,
+            "postType": "accessory",
+            "title": "Y-Style",
+            "styleCodeRaw": "X03",
+            "styleCodeNormalized": "X03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5218,
+            "postType": "accessory",
+            "title": "PVC",
+            "styleCodeRaw": "Y01",
+            "styleCodeNormalized": "Y01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5335,
+            "postType": "accessory",
+            "title": "EMC Brass Nickel Plated",
+            "styleCodeRaw": "D11",
+            "styleCodeNormalized": "D11",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5345,
+            "postType": "accessory",
+            "title": "Shear Bolt",
+            "styleCodeRaw": "B10",
+            "styleCodeNormalized": "B10",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5350,
+            "postType": "cable",
+            "title": "P5 TriCab NFC <br />P5/P12 TriCab NFM",
+            "styleCodeRaw": "NF",
+            "styleCodeNormalized": "NF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:NF",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 5372,
+            "postType": "accessory",
+            "title": "Bushings",
+            "styleCodeRaw": "X04",
+            "styleCodeNormalized": "X04",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5380,
+            "postType": "accessory",
+            "title": "Straight Plug",
+            "styleCodeRaw": "J01",
+            "styleCodeNormalized": "J01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5381,
+            "postType": "accessory",
+            "title": "Straight  Extension Socket",
+            "styleCodeRaw": "J03",
+            "styleCodeNormalized": "J03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5382,
+            "postType": "accessory",
+            "title": "Outlet Round Pin",
+            "styleCodeRaw": "J05",
+            "styleCodeNormalized": "J05",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5383,
+            "postType": "accessory",
+            "title": "Switched Outlet Socket",
+            "styleCodeRaw": "J07",
+            "styleCodeNormalized": "J07",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5385,
+            "postType": "accessory",
+            "title": "Dual Wall Glue-lined",
+            "styleCodeRaw": "G03",
+            "styleCodeNormalized": "G03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5388,
+            "postType": "accessory",
+            "title": "Automatic",
+            "styleCodeRaw": "Z02",
+            "styleCodeNormalized": "Z02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5389,
+            "postType": "accessory",
+            "title": "Multi-function",
+            "styleCodeRaw": "Z03",
+            "styleCodeNormalized": "Z03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5390,
+            "postType": "accessory",
+            "title": "Swivel",
+            "styleCodeRaw": "Z04",
+            "styleCodeNormalized": "Z04",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5396,
+            "postType": "accessory",
+            "title": "Circuit Breaker",
+            "styleCodeRaw": "B12",
+            "styleCodeNormalized": "B12",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5412,
+            "postType": "accessory",
+            "title": "Double Grip Ring",
+            "styleCodeRaw": "A25",
+            "styleCodeNormalized": "A25",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5413,
+            "postType": "accessory",
+            "title": "Double Grip Fork",
+            "styleCodeRaw": "A27",
+            "styleCodeNormalized": "A27",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5472,
+            "postType": "accessory",
+            "title": "Outlet Socket Flat",
+            "styleCodeRaw": "J06",
+            "styleCodeNormalized": "J06",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5473,
+            "postType": "accessory",
+            "title": "Switched Outlet Socket",
+            "styleCodeRaw": "J08",
+            "styleCodeNormalized": "J08",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5474,
+            "postType": "accessory",
+            "title": "Straight Plug Flat",
+            "styleCodeRaw": "J09",
+            "styleCodeNormalized": "J09",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5505,
+            "postType": "accessory",
+            "title": "DIN Rail",
+            "styleCodeRaw": "T02",
+            "styleCodeNormalized": "T02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5577,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "DL",
+            "styleCodeNormalized": "DL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 5580,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "RL",
+            "styleCodeNormalized": "RL",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:RL",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 5593,
+            "postType": "accessory",
+            "title": "Double Grip Pin Terminal TPE Insulated",
+            "styleCodeRaw": "A29",
+            "styleCodeNormalized": "A29",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5594,
+            "postType": "accessory",
+            "title": "Double Grip Blade Terminal TPE Insulated",
+            "styleCodeRaw": "A21",
+            "styleCodeNormalized": "A21",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5595,
+            "postType": "accessory",
+            "title": "Angle Plug Round Pin",
+            "styleCodeRaw": "J02",
+            "styleCodeNormalized": "J02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5596,
+            "postType": "accessory",
+            "title": "Surface Switch",
+            "styleCodeRaw": "J11",
+            "styleCodeNormalized": "J11",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5601,
+            "postType": "accessory",
+            "title": "Dual Wall",
+            "styleCodeRaw": "G04",
+            "styleCodeNormalized": "G04",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5602,
+            "postType": "accessory",
+            "title": "Shear Bolt",
+            "styleCodeRaw": "Z12",
+            "styleCodeNormalized": "Z12",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5605,
+            "postType": "accessory",
+            "title": "Cable Guard",
+            "styleCodeRaw": "X07",
+            "styleCodeNormalized": "X07",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5606,
+            "postType": "accessory",
+            "title": "Cable Guard",
+            "styleCodeRaw": "X08",
+            "styleCodeNormalized": "X08",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5621,
+            "postType": "accessory",
+            "title": "Ceeform",
+            "styleCodeRaw": "J30",
+            "styleCodeNormalized": "J30",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5622,
+            "postType": "accessory",
+            "title": "Ceeform",
+            "styleCodeRaw": "J31",
+            "styleCodeNormalized": "J31",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5623,
+            "postType": "accessory",
+            "title": "Ceeform",
+            "styleCodeRaw": "J32",
+            "styleCodeNormalized": "J32",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5625,
+            "postType": "accessory",
+            "title": "Ceeform",
+            "styleCodeRaw": "J33",
+            "styleCodeNormalized": "J33",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5626,
+            "postType": "accessory",
+            "title": "MC4 Style Connector",
+            "styleCodeRaw": "J40",
+            "styleCodeNormalized": "J40",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5628,
+            "postType": "accessory",
+            "title": "MC4 Type Spanner",
+            "styleCodeRaw": "Z14",
+            "styleCodeNormalized": "Z14",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5629,
+            "postType": "accessory",
+            "title": "Multi Hole Gland",
+            "styleCodeRaw": "D12",
+            "styleCodeNormalized": "D12",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5630,
+            "postType": "accessory",
+            "title": "Solar Cable Clip",
+            "styleCodeRaw": "X17",
+            "styleCodeNormalized": "X17",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5633,
+            "postType": "accessory",
+            "title": "S/S 316 Polyester",
+            "styleCodeRaw": "W04",
+            "styleCodeNormalized": "W04",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5671,
+            "postType": "accessory",
+            "title": "Split Loom",
+            "styleCodeRaw": "F20",
+            "styleCodeNormalized": "F20",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5672,
+            "postType": "accessory",
+            "title": "Nylon Split Loom",
+            "styleCodeRaw": "F21",
+            "styleCodeNormalized": "F21",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5873,
+            "postType": "accessory",
+            "title": "Medium Duty",
+            "styleCodeRaw": "F07",
+            "styleCodeNormalized": "F07",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5875,
+            "postType": "accessory",
+            "title": "Heavy Duty",
+            "styleCodeRaw": "F22",
+            "styleCodeNormalized": "F22",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5876,
+            "postType": "accessory",
+            "title": "Conduit",
+            "styleCodeRaw": "F08",
+            "styleCodeNormalized": "F08",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5877,
+            "postType": "accessory",
+            "title": "Inspection Tee",
+            "styleCodeRaw": "F12",
+            "styleCodeNormalized": "F12",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5878,
+            "postType": "accessory",
+            "title": "Coupling",
+            "styleCodeRaw": "F09",
+            "styleCodeNormalized": "F09",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5879,
+            "postType": "accessory",
+            "title": "Conduit Gland",
+            "styleCodeRaw": "F14",
+            "styleCodeNormalized": "F14",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5881,
+            "postType": "accessory",
+            "title": "Conduit",
+            "styleCodeRaw": "F10",
+            "styleCodeNormalized": "F10",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5882,
+            "postType": "accessory",
+            "title": "Bi-Metallic Circuit Breaker",
+            "styleCodeRaw": "B20",
+            "styleCodeNormalized": "B20",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5894,
+            "postType": "accessory",
+            "title": "Aluminium",
+            "styleCodeRaw": "T03",
+            "styleCodeNormalized": "T03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5906,
+            "postType": "accessory",
+            "title": "Standard PG threaded Nylon",
+            "styleCodeRaw": "D21",
+            "styleCodeNormalized": "D21",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5907,
+            "postType": "accessory",
+            "title": "Standard Nylon",
+            "styleCodeRaw": "D20",
+            "styleCodeNormalized": "D20",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5908,
+            "postType": "accessory",
+            "title": "Standard NPT threaded Nylon",
+            "styleCodeRaw": "D22",
+            "styleCodeNormalized": "D22",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 5941,
+            "postType": "accessory",
+            "title": "Digital Vernier",
+            "styleCodeRaw": "",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "INVALID",
+            "issues": [
+                "blank_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 5942,
+            "postType": "accessory",
+            "title": "Digital Vernier",
+            "styleCodeRaw": "Z15",
+            "styleCodeNormalized": "Z15",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6023,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "EZ",
+            "styleCodeNormalized": "EZ",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EZ",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 6102,
+            "postType": "accessory",
+            "title": "125&deg;C LV Flexible Thin Wall 2:1 Rainbow Pack Heat shrink Tube",
+            "styleCodeRaw": "G06",
+            "styleCodeNormalized": "G06",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6136,
+            "postType": "accessory",
+            "title": "Bi-Metallic Reducing",
+            "styleCodeRaw": "B21",
+            "styleCodeNormalized": "B21",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6171,
+            "postType": "accessory",
+            "title": "12 Tonne",
+            "styleCodeRaw": "Z24",
+            "styleCodeNormalized": "Z24",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6172,
+            "postType": "accessory",
+            "title": "Aluminium",
+            "styleCodeRaw": "Z29",
+            "styleCodeNormalized": "Z29",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6187,
+            "postType": "cable",
+            "title": "Shipboard Braid",
+            "styleCodeRaw": "TS",
+            "styleCodeNormalized": "TS",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TS",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 6188,
+            "postType": "cable",
+            "title": "Shipboard",
+            "styleCodeRaw": "TG",
+            "styleCodeNormalized": "TG",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:TG",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 6195,
+            "postType": "accessory",
+            "title": "Gland Reducer",
+            "styleCodeRaw": "D13",
+            "styleCodeNormalized": "D13",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6196,
+            "postType": "accessory",
+            "title": "Gland Enlarger",
+            "styleCodeRaw": "D14",
+            "styleCodeNormalized": "D14",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6201,
+            "postType": "cable",
+            "title": "Shipboard",
+            "styleCodeRaw": "EX",
+            "styleCodeNormalized": "EX",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:EX",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 6263,
+            "postType": "accessory",
+            "title": "Bi-Metallic Stalk",
+            "styleCodeRaw": "B22",
+            "styleCodeNormalized": "B22",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6272,
+            "postType": "accessory",
+            "title": "Stainless Steel",
+            "styleCodeRaw": "Z28",
+            "styleCodeNormalized": "Z28",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6276,
+            "postType": "cable",
+            "title": "Two-Hole",
+            "styleCodeRaw": "",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "INVALID",
+            "issues": [
+                "blank_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 6277,
+            "postType": "accessory",
+            "title": "Two-Hole",
+            "styleCodeRaw": "B23",
+            "styleCodeNormalized": "B23",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6340,
+            "postType": "accessory",
+            "title": "Aluminium",
+            "styleCodeRaw": "B24",
+            "styleCodeNormalized": "B24",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6361,
+            "postType": "accessory",
+            "title": "Z33",
+            "styleCodeRaw": "",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "INVALID",
+            "issues": [
+                "blank_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 6362,
+            "postType": "accessory",
+            "title": "Aluminium 60 Tonne",
+            "styleCodeRaw": "Z33",
+            "styleCodeNormalized": "Z33",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6383,
+            "postType": "accessory",
+            "title": "Straight Extension Socket",
+            "styleCodeRaw": "J10",
+            "styleCodeNormalized": "J10",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6390,
+            "postType": "accessory",
+            "title": "Heat Shrink",
+            "styleCodeRaw": "G07",
+            "styleCodeNormalized": "G07",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6393,
+            "postType": "cable",
+            "title": "Aluminium Flexible Rubber",
+            "styleCodeRaw": "SK",
+            "styleCodeNormalized": "SK",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:SK",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 6397,
+            "postType": "cable",
+            "title": "Aluminium Flexible Rubber",
+            "styleCodeRaw": "SX",
+            "styleCodeNormalized": "SX",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:SX",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 6406,
+            "postType": "accessory",
+            "title": "Dual Wall Glue-lined Heat Shrink",
+            "styleCodeRaw": "G08",
+            "styleCodeNormalized": "G08",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6407,
+            "postType": "accessory",
+            "title": "Conductive",
+            "styleCodeRaw": "U01",
+            "styleCodeNormalized": "U01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6414,
+            "postType": "accessory",
+            "title": "12 Tonne",
+            "styleCodeRaw": "Z30",
+            "styleCodeNormalized": "Z30",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6424,
+            "postType": "cable",
+            "title": "release",
+            "styleCodeRaw": "",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "INVALID",
+            "issues": [
+                "blank_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 6560,
+            "postType": "accessory",
+            "title": "PowerSure Panel",
+            "styleCodeRaw": "J50",
+            "styleCodeNormalized": "J50",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6561,
+            "postType": "accessory",
+            "title": "PowerSure Panel",
+            "styleCodeRaw": "J52",
+            "styleCodeNormalized": "J52",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6562,
+            "postType": "accessory",
+            "title": "PowerSure Line",
+            "styleCodeRaw": "J54",
+            "styleCodeNormalized": "J54",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6563,
+            "postType": "accessory",
+            "title": "PowerSure Quick",
+            "styleCodeRaw": "J55",
+            "styleCodeNormalized": "J55",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6564,
+            "postType": "accessory",
+            "title": "PowerSure Line",
+            "styleCodeRaw": "J56",
+            "styleCodeNormalized": "J56",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6565,
+            "postType": "accessory",
+            "title": "PowerSure XL Line",
+            "styleCodeRaw": "J57",
+            "styleCodeNormalized": "J57",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6566,
+            "postType": "accessory",
+            "title": "PowerSure XL Line",
+            "styleCodeRaw": "J58",
+            "styleCodeNormalized": "J58",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6567,
+            "postType": "accessory",
+            "title": "PowerSure Lug",
+            "styleCodeRaw": "J59",
+            "styleCodeNormalized": "J59",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6568,
+            "postType": "accessory",
+            "title": "PowerSure Lug",
+            "styleCodeRaw": "J60",
+            "styleCodeNormalized": "J60",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6569,
+            "postType": "accessory",
+            "title": "PowerSure Quick Release",
+            "styleCodeRaw": "J61",
+            "styleCodeNormalized": "J61",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6570,
+            "postType": "accessory",
+            "title": "PowerSure",
+            "styleCodeRaw": "J62",
+            "styleCodeNormalized": "J62",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6571,
+            "postType": "accessory",
+            "title": "PowerSure",
+            "styleCodeRaw": "J64",
+            "styleCodeNormalized": "J64",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6833,
+            "postType": "accessory",
+            "title": "Copper 12 Tonne",
+            "styleCodeRaw": "Z36",
+            "styleCodeNormalized": "Z36",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6854,
+            "postType": "accessory",
+            "title": "Tinned Straight Flexible Copper",
+            "styleCodeRaw": "B05",
+            "styleCodeNormalized": "B05",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6855,
+            "postType": "accessory",
+            "title": "Copper 60 Tonne",
+            "styleCodeRaw": "Z35",
+            "styleCodeNormalized": "Z35",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6879,
+            "postType": "accessory",
+            "title": "PowerSure Reduction",
+            "styleCodeRaw": "J51",
+            "styleCodeNormalized": "J51",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6880,
+            "postType": "accessory",
+            "title": "PowerSure Quick",
+            "styleCodeRaw": "J53",
+            "styleCodeNormalized": "J53",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6881,
+            "postType": "accessory",
+            "title": "PowerSure",
+            "styleCodeRaw": "J65",
+            "styleCodeNormalized": "J65",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6882,
+            "postType": "accessory",
+            "title": "PowerSure",
+            "styleCodeRaw": "J66",
+            "styleCodeNormalized": "J66",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6915,
+            "postType": "accessory",
+            "title": "60T Hydraulic",
+            "styleCodeRaw": "Z34",
+            "styleCodeNormalized": "Z34",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6916,
+            "postType": "accessory",
+            "title": "60T Hydraulic",
+            "styleCodeRaw": "Z37",
+            "styleCodeNormalized": "Z37",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6917,
+            "postType": "accessory",
+            "title": "60T Hydraulic",
+            "styleCodeRaw": "Z38",
+            "styleCodeNormalized": "Z38",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6920,
+            "postType": "accessory",
+            "title": "MC4 Style",
+            "styleCodeRaw": "J42",
+            "styleCodeNormalized": "J42",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 6945,
+            "postType": "accessory",
+            "title": "Brass Armoured",
+            "styleCodeRaw": "D15",
+            "styleCodeNormalized": "D15",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7050,
+            "postType": "accessory",
+            "title": "Bootlace/ Ferrule",
+            "styleCodeRaw": "Z05",
+            "styleCodeNormalized": "Z05",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7070,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "KP",
+            "styleCodeNormalized": "KP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:KP",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7080,
+            "postType": "accessory",
+            "title": "Copper",
+            "styleCodeRaw": "B07",
+            "styleCodeNormalized": "B07",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7090,
+            "postType": "accessory",
+            "title": "Earth/ Neutral",
+            "styleCodeRaw": "A51",
+            "styleCodeNormalized": "A51",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7091,
+            "postType": "accessory",
+            "title": "Mounting",
+            "styleCodeRaw": "J12",
+            "styleCodeNormalized": "J12",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7095,
+            "postType": "cable",
+            "title": "Flexible Rubber Control",
+            "styleCodeRaw": "DP",
+            "styleCodeNormalized": "DP",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DP",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7105,
+            "postType": "accessory",
+            "title": "Stainless Steel",
+            "styleCodeRaw": "D19",
+            "styleCodeNormalized": "D19",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7188,
+            "postType": "accessory",
+            "title": "Stainless Steel",
+            "styleCodeRaw": "W02",
+            "styleCodeNormalized": "W02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7191,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "DW",
+            "styleCodeNormalized": "DW",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:DW",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7194,
+            "postType": "cable",
+            "title": "Flexible Rubber Control",
+            "styleCodeRaw": "CF",
+            "styleCodeNormalized": "CF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:CF",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7246,
+            "postType": "accessory",
+            "title": "Insulated Bootlace",
+            "styleCodeRaw": "A20",
+            "styleCodeNormalized": "A20",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7248,
+            "postType": "accessory",
+            "title": "Trefoil",
+            "styleCodeRaw": "X09",
+            "styleCodeNormalized": "X09",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7251,
+            "postType": "accessory",
+            "title": "Stainless Steel Polyester",
+            "styleCodeRaw": "W04",
+            "styleCodeNormalized": "W04",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7252,
+            "postType": "accessory",
+            "title": "Digital Timer",
+            "styleCodeRaw": "E01",
+            "styleCodeNormalized": "E01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7266,
+            "postType": "accessory",
+            "title": "INDUSTRIAL PLUG-SOCKET",
+            "styleCodeRaw": "PS1A",
+            "styleCodeNormalized": "PS1A",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7267,
+            "postType": "accessory",
+            "title": "INDUSTRIAL PLUG-SOCKET",
+            "styleCodeRaw": "PS1B",
+            "styleCodeNormalized": "PS1B",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7268,
+            "postType": "accessory",
+            "title": "INDUSTRIAL PLUG-SOCKET",
+            "styleCodeRaw": "PS1C",
+            "styleCodeNormalized": "PS1C",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7269,
+            "postType": "accessory",
+            "title": "INDUSTRIAL PLUG-SOCKET",
+            "styleCodeRaw": "PS1D",
+            "styleCodeNormalized": "PS1D",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7271,
+            "postType": "accessory",
+            "title": "Hydraulic Battery",
+            "styleCodeRaw": "",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "INVALID",
+            "issues": [
+                "blank_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 7272,
+            "postType": "accessory",
+            "title": "Hydraulic Battery",
+            "styleCodeRaw": "Z40",
+            "styleCodeNormalized": "Z40",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7283,
+            "postType": "accessory",
+            "title": "Adjustable Cable",
+            "styleCodeRaw": "S01",
+            "styleCodeNormalized": "S01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7284,
+            "postType": "accessory",
+            "title": "Economic",
+            "styleCodeRaw": "S02",
+            "styleCodeNormalized": "S02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7285,
+            "postType": "accessory",
+            "title": "Wheel Type",
+            "styleCodeRaw": "S03",
+            "styleCodeNormalized": "S03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7286,
+            "postType": "accessory",
+            "title": "Simple Cable",
+            "styleCodeRaw": "S04",
+            "styleCodeNormalized": "S04",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7287,
+            "postType": "accessory",
+            "title": "Heat Shrink",
+            "styleCodeRaw": "G10",
+            "styleCodeNormalized": "G10",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7290,
+            "postType": "accessory",
+            "title": "Single Insulated",
+            "styleCodeRaw": "A40",
+            "styleCodeNormalized": "A40",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7292,
+            "postType": "accessory",
+            "title": "Hazard",
+            "styleCodeRaw": "Y02",
+            "styleCodeNormalized": "Y02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7293,
+            "postType": "accessory",
+            "title": "Clear",
+            "styleCodeRaw": "Y03",
+            "styleCodeNormalized": "Y03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7295,
+            "postType": "accessory",
+            "title": "Heat Shrink",
+            "styleCodeRaw": "A38",
+            "styleCodeNormalized": "A38",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7298,
+            "postType": "accessory",
+            "title": "Slotted",
+            "styleCodeRaw": "H01",
+            "styleCodeNormalized": "H01",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7301,
+            "postType": "accessory",
+            "title": "Push Button",
+            "styleCodeRaw": "J18",
+            "styleCodeNormalized": "J18",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7302,
+            "postType": "accessory",
+            "title": "Weatherproof",
+            "styleCodeRaw": "J17",
+            "styleCodeNormalized": "J17",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7303,
+            "postType": "accessory",
+            "title": "Weatherproof",
+            "styleCodeRaw": "J16",
+            "styleCodeNormalized": "J16",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7305,
+            "postType": "accessory",
+            "title": "Long Palm",
+            "styleCodeRaw": "B27",
+            "styleCodeNormalized": "B27",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7307,
+            "postType": "accessory",
+            "title": "Insulator",
+            "styleCodeRaw": "A52",
+            "styleCodeNormalized": "A52",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7312,
+            "postType": "accessory",
+            "title": "EMC Spring",
+            "styleCodeRaw": "D24",
+            "styleCodeNormalized": "D24",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7313,
+            "postType": "accessory",
+            "title": "Appliance",
+            "styleCodeRaw": "J19",
+            "styleCodeNormalized": "J19",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7318,
+            "postType": "accessory",
+            "title": "C19 CONNECTOR",
+            "styleCodeRaw": "PSXA",
+            "styleCodeNormalized": "PSXA",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7323,
+            "postType": "accessory",
+            "title": "CEEFORM",
+            "styleCodeRaw": "J34",
+            "styleCodeNormalized": "J34",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7332,
+            "postType": "accessory",
+            "title": "ANDERSON",
+            "styleCodeRaw": "PS6",
+            "styleCodeNormalized": "PS6",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7340,
+            "postType": "accessory",
+            "title": "EARTH",
+            "styleCodeRaw": "",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "INVALID",
+            "issues": [
+                "blank_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 7342,
+            "postType": "accessory",
+            "title": "EARTH",
+            "styleCodeRaw": "LL1E",
+            "styleCodeNormalized": "LL1E",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7343,
+            "postType": "accessory",
+            "title": "Heavy Duty",
+            "styleCodeRaw": "",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "INVALID",
+            "issues": [
+                "blank_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 7345,
+            "postType": "accessory",
+            "title": "Solar Conduit Heavy Duty",
+            "styleCodeRaw": "F25",
+            "styleCodeNormalized": "F25",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7348,
+            "postType": "accessory",
+            "title": "DIN Rail",
+            "styleCodeRaw": "Z41",
+            "styleCodeNormalized": "Z41",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7356,
+            "postType": "accessory",
+            "title": "PRE-ASSEMBLED",
+            "styleCodeRaw": "LKEN",
+            "styleCodeNormalized": "LKEN",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7407,
+            "postType": "accessory",
+            "title": "TWISTED",
+            "styleCodeRaw": "",
+            "styleCodeNormalized": null,
+            "tcSourceMatch": false,
+            "matchMethod": "INVALID",
+            "targetProductIdentity": null,
+            "status": "INVALID",
+            "issues": [
+                "blank_style_code"
+            ]
+        },
+        {
+            "wordpressPostId": 7410,
+            "postType": "accessory",
+            "title": "TWISTED",
+            "styleCodeRaw": "TC12",
+            "styleCodeNormalized": "TC12",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7412,
+            "postType": "accessory",
+            "title": "KENNARDS HIRE INDUSTRIAL",
+            "styleCodeRaw": "PSKH1C",
+            "styleCodeNormalized": "PSKH1C",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7413,
+            "postType": "accessory",
+            "title": "KENNARDS HIRE POWER",
+            "styleCodeRaw": "PSKH2A",
+            "styleCodeNormalized": "PSKH2A",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7414,
+            "postType": "accessory",
+            "title": "KENNARDS HIRE CEEFORM",
+            "styleCodeRaw": "PSKH3E",
+            "styleCodeNormalized": "PSKH3E",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7427,
+            "postType": "accessory",
+            "title": "Tin Plated Copper",
+            "styleCodeRaw": "B36",
+            "styleCodeNormalized": "B36",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7436,
+            "postType": "accessory",
+            "title": "Twilight",
+            "styleCodeRaw": "E02",
+            "styleCodeNormalized": "E02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7439,
+            "postType": "accessory",
+            "title": "Braided",
+            "styleCodeRaw": "G11",
+            "styleCodeNormalized": "G11",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7443,
+            "postType": "accessory",
+            "title": "ALIFLEX\u00ae",
+            "styleCodeRaw": "LLA1",
+            "styleCodeNormalized": "LLA1",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7445,
+            "postType": "accessory",
+            "title": "EPDM",
+            "styleCodeRaw": "G12",
+            "styleCodeNormalized": "G12",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7451,
+            "postType": "accessory",
+            "title": "Single Compartment",
+            "styleCodeRaw": "H02",
+            "styleCodeNormalized": "H02",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7454,
+            "postType": "accessory",
+            "title": "Single Eye",
+            "styleCodeRaw": "X12",
+            "styleCodeNormalized": "X12",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7456,
+            "postType": "accessory",
+            "title": "Offset Eye",
+            "styleCodeRaw": "X13",
+            "styleCodeNormalized": "X13",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7459,
+            "postType": "accessory",
+            "title": "TECHNO Junction",
+            "styleCodeRaw": "J90",
+            "styleCodeNormalized": "J90",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7460,
+            "postType": "accessory",
+            "title": "TECHNO",
+            "styleCodeRaw": "J91",
+            "styleCodeNormalized": "J91",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7461,
+            "postType": "accessory",
+            "title": "TECHNO",
+            "styleCodeRaw": "J92",
+            "styleCodeNormalized": "J92",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7462,
+            "postType": "accessory",
+            "title": "TECHNO Plug",
+            "styleCodeRaw": "J93",
+            "styleCodeNormalized": "J93",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7464,
+            "postType": "accessory",
+            "title": "TECHNO Socket",
+            "styleCodeRaw": "J94",
+            "styleCodeNormalized": "J94",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7466,
+            "postType": "accessory",
+            "title": "TECHNO Plug",
+            "styleCodeRaw": "J95",
+            "styleCodeNormalized": "J95",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7467,
+            "postType": "accessory",
+            "title": "TECHNO Socket",
+            "styleCodeRaw": "J96",
+            "styleCodeNormalized": "J96",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7469,
+            "postType": "accessory",
+            "title": "TECHNO",
+            "styleCodeRaw": "J97",
+            "styleCodeNormalized": "J97",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7472,
+            "postType": "accessory",
+            "title": "Aluminium",
+            "styleCodeRaw": "B37",
+            "styleCodeNormalized": "B37",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7474,
+            "postType": "accessory",
+            "title": "Heavy-Duty",
+            "styleCodeRaw": "J70",
+            "styleCodeNormalized": "J70",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7489,
+            "postType": "accessory",
+            "title": "Brass Nickel Plated",
+            "styleCodeRaw": "D29",
+            "styleCodeNormalized": "D29",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7492,
+            "postType": "accessory",
+            "title": "Aluminium Stalk Lug",
+            "styleCodeRaw": "B38",
+            "styleCodeNormalized": "B38",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7512,
+            "postType": "accessory",
+            "title": "FABRIC HEAT",
+            "styleCodeRaw": "G15",
+            "styleCodeNormalized": "G15",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7514,
+            "postType": "accessory",
+            "title": "Earth Bonding Leads",
+            "styleCodeRaw": "EBL",
+            "styleCodeNormalized": "EBL",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7516,
+            "postType": "accessory",
+            "title": "Barb Lock Metal Detectable",
+            "styleCodeRaw": "W05",
+            "styleCodeNormalized": "W05",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7518,
+            "postType": "accessory",
+            "title": "Serrated Detectable",
+            "styleCodeRaw": "W06",
+            "styleCodeNormalized": "W06",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7522,
+            "postType": "accessory",
+            "title": "350 AMP Genuine",
+            "styleCodeRaw": "J84",
+            "styleCodeNormalized": "J84",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7551,
+            "postType": "accessory",
+            "title": "Narrow Slotted",
+            "styleCodeRaw": "H06",
+            "styleCodeNormalized": "H06",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7554,
+            "postType": "accessory",
+            "title": "CEEFORM EXTENSION",
+            "styleCodeRaw": "PS3C",
+            "styleCodeNormalized": "PS3C",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7658,
+            "postType": "cable",
+            "title": "H07RN-F",
+            "styleCodeRaw": "ET",
+            "styleCodeNormalized": "ET",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:ET",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7683,
+            "postType": "cable",
+            "title": "Flexible Rubber Power & Control Cable",
+            "styleCodeRaw": "H7",
+            "styleCodeNormalized": "H7",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:H7",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7715,
+            "postType": "accessory",
+            "title": "Finder SMARTimer",
+            "styleCodeRaw": "E03",
+            "styleCodeNormalized": "E03",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7716,
+            "postType": "accessory",
+            "title": "GPS",
+            "styleCodeRaw": "E04",
+            "styleCodeNormalized": "E04",
+            "tcSourceMatch": false,
+            "matchMethod": "NO_MATCH",
+            "targetProductIdentity": null,
+            "status": "SOURCE_ONLY",
+            "issues": [
+                "no_tc_style_match"
+            ]
+        },
+        {
+            "wordpressPostId": 7729,
+            "postType": "cable",
+            "title": "Flexible Switchboard",
+            "styleCodeRaw": "UPA",
+            "styleCodeNormalized": "UPA",
+            "tcSourceMatch": true,
+            "matchMethod": "EXPLICIT_MAPPING",
+            "targetProductIdentity": "B070E6F0-F091-F111-B337-000D3AE094E4",
+            "status": "READY",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7801,
+            "postType": "cable",
+            "title": "VFD Uninsulated Grounds",
+            "styleCodeRaw": "VUF",
+            "styleCodeNormalized": "VUF",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:VUF",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7864,
+            "postType": "cable",
+            "title": "Flexible Rubber Medium Voltage Cable",
+            "styleCodeRaw": "T4",
+            "styleCodeNormalized": "T4",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:T4",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7865,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation Cable",
+            "styleCodeRaw": "E1",
+            "styleCodeNormalized": "E1",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:E1",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7866,
+            "postType": "cable",
+            "title": "Flexible Rubber Power & Control",
+            "styleCodeRaw": "SC",
+            "styleCodeNormalized": "SC",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:SC",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7886,
+            "postType": "cable",
+            "title": "Flexible Rubber Medium Voltage Cable",
+            "styleCodeRaw": "P4",
+            "styleCodeNormalized": "P4",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:P4",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7887,
+            "postType": "cable",
+            "title": "Flexible Rubber Medium Voltage Cable",
+            "styleCodeRaw": "P3",
+            "styleCodeNormalized": "P3",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:P3",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7925,
+            "postType": "cable",
+            "title": "Flexible Rubber",
+            "styleCodeRaw": "SH",
+            "styleCodeNormalized": "SH",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:SH",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7929,
+            "postType": "cable",
+            "title": "Flexible Rubber Power and Control",
+            "styleCodeRaw": "FB",
+            "styleCodeNormalized": "FB",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FB",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7930,
+            "postType": "cable",
+            "title": "Flexible Rubber Instrumentation",
+            "styleCodeRaw": "F1",
+            "styleCodeNormalized": "F1",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:F1",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7931,
+            "postType": "cable",
+            "title": "Flexible Rubber VSD/VFD (Split Earth)",
+            "styleCodeRaw": "FV",
+            "styleCodeNormalized": "FV",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:FV",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7933,
+            "postType": "cable",
+            "title": "Flexible Rubber Power and Control",
+            "styleCodeRaw": "WT",
+            "styleCodeNormalized": "WT",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:WT",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7934,
+            "postType": "cable",
+            "title": "Flexible Rubber Braid with Pilots",
+            "styleCodeRaw": "OT",
+            "styleCodeNormalized": "OT",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:OT",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7959,
+            "postType": "cable",
+            "title": "Kevlar Braided Rubber Power & Control",
+            "styleCodeRaw": "AR",
+            "styleCodeNormalized": "AR",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:AR",
+            "status": "REVIEW",
+            "issues": []
+        },
+        {
+            "wordpressPostId": 7960,
+            "postType": "cable",
+            "title": "Flexible Rubber MV Power",
+            "styleCodeRaw": "T3",
+            "styleCodeNormalized": "T3",
+            "tcSourceMatch": true,
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:T3",
+            "status": "REVIEW",
+            "issues": []
+        }
+    ],
+    "counts": {
+        "READY": 24,
+        "REVIEW": 205,
+        "BLOCKED": 0,
+        "SOURCE_ONLY": 211,
+        "INVALID": 8,
+        "EXCLUDED": 0
+    },
+    "existingLegacyMappingsObserved": 100,
+    "forbiddenHeuristics": [
+        "LEFT(tpro.ida, 3) prefix matching",
+        "name-only matching"
+    ],
+    "allowedMatchMethods": [
+        "EXACT_STYLE",
+        "EXPLICIT_MAPPING",
+        "ACCESSORY_MAPPING",
+        "NO_MATCH",
+        "AMBIGUOUS",
+        "INVALID"
+    ]
+}

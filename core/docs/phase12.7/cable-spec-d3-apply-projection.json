@@ -1,0 +1,17 @@
+{
+    "mode": "DRY_RUN_PROJECTION_ONLY",
+    "writesWouldExecute": false,
+    "definitionsToCreate": 9,
+    "definitionsAlreadyExisting": 0,
+    "definitionConflicts": 0,
+    "mappingsToInsert": 538,
+    "mappingsIdenticalExisting": 0,
+    "mappingsToUpdate": 0,
+    "mappingConflicts": 0,
+    "unitsToCreate": 0,
+    "optionsToCreate": 0,
+    "productSpecValues": 0,
+    "variantSpecValues": 0,
+    "otherProductMutations": 0,
+    "actualWrites": 0
+}

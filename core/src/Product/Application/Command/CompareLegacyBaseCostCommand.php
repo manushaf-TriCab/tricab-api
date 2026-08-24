@@ -9,7 +9,7 @@ final readonly class CompareLegacyBaseCostCommand
     public function __construct(
         public string $productPublicId,
         public string $variantPublicId,
-        public int $legacyDebtorCompanyCode,
+        public ?int $legacyDebtorCompanyCode = null,
         public ?string $priceListPublicId = null,
     ) {
     }

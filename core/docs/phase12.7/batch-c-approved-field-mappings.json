@@ -1,0 +1,2110 @@
+[
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D01",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D02",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D03",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D04",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D05",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D06",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D07",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D08",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D09",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D10",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D12",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm<i/>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D19",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D20",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D21",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D22",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "D24",
+        "sourceField": "d1",
+        "legacyLabel": "Thread OD<br><i>mm</>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "EBL",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A</>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "F14",
+        "sourceField": "d2",
+        "legacyLabel": "Thread OD<br><i>mm<i/>",
+        "normalizedLabel": "thread od mm",
+        "targetDefinitionCode": "THREAD-OD",
+        "targetDefinitionPublicId": "FE97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "G10",
+        "sourceField": "d7",
+        "legacyLabel": "No. of Cores<br>&nbsp;",
+        "normalizedLabel": "no. of cores",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "0.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J01",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J01",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J01",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J01",
+        "sourceField": "d4",
+        "legacyLabel": "Phases<br>&nbsp;",
+        "normalizedLabel": "phases",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "3.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J02",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J02",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J02",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J02",
+        "sourceField": "d4",
+        "legacyLabel": "Phases<br>&nbsp;",
+        "normalizedLabel": "phases",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "3.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J03",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J03",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J03",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J03",
+        "sourceField": "d4",
+        "legacyLabel": "Phases<br>&nbsp;",
+        "normalizedLabel": "phases",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "3.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J05",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J05",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J05",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J06",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J06",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J06",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J07",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J07",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J07",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J08",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J08",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J08",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J09",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J09",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J09",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J09",
+        "sourceField": "d4",
+        "legacyLabel": "Phases<br>&nbsp;",
+        "normalizedLabel": "phases",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "3.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J10",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J10",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J10",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J10",
+        "sourceField": "d4",
+        "legacyLabel": "Phases<br>&nbsp;",
+        "normalizedLabel": "phases",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "3.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J11",
+        "sourceField": "d1",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J11",
+        "sourceField": "d2",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J16",
+        "sourceField": "d1",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J16",
+        "sourceField": "d2",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J17",
+        "sourceField": "d1",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J17",
+        "sourceField": "d2",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J18",
+        "sourceField": "d1",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J18",
+        "sourceField": "d2",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J19",
+        "sourceField": "d1",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J19",
+        "sourceField": "d2",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J19",
+        "sourceField": "d3",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J30",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J30",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J30",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J31",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J31",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J31",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J32",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J32",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J32",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J33",
+        "sourceField": "d1",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J33",
+        "sourceField": "d2",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J33",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J34",
+        "sourceField": "d1",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J34",
+        "sourceField": "d2",
+        "legacyLabel": "Voltage<br><i>V<i/>",
+        "normalizedLabel": "voltage v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J34",
+        "sourceField": "d3",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J70",
+        "sourceField": "d1",
+        "legacyLabel": "No. of Poles<br>&nbsp;",
+        "normalizedLabel": "no. of poles",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J70",
+        "sourceField": "d2",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J70",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage Rating<br><i>V<i/>",
+        "normalizedLabel": "voltage rating v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J90",
+        "sourceField": "d1",
+        "legacyLabel": "No. of Poles<br>&nbsp;\r\n",
+        "normalizedLabel": "no. of poles",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J90",
+        "sourceField": "d2",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J90",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage Rating<br><i>V<i/>",
+        "normalizedLabel": "voltage rating v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J91",
+        "sourceField": "d1",
+        "legacyLabel": "No. of Poles<br>&nbsp;\r\n",
+        "normalizedLabel": "no. of poles",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J91",
+        "sourceField": "d2",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J91",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage Rating<br><i>V<i/>",
+        "normalizedLabel": "voltage rating v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J92",
+        "sourceField": "d1",
+        "legacyLabel": "No. of Poles<br>&nbsp;\r\n",
+        "normalizedLabel": "no. of poles",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J92",
+        "sourceField": "d2",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J92",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage Rating<br><i>V<i/>",
+        "normalizedLabel": "voltage rating v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J93",
+        "sourceField": "d1",
+        "legacyLabel": "No. of Poles<br>&nbsp;\r\n",
+        "normalizedLabel": "no. of poles",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J93",
+        "sourceField": "d2",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J93",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage Rating<br><i>V<i/>",
+        "normalizedLabel": "voltage rating v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J94",
+        "sourceField": "d1",
+        "legacyLabel": "No. of Poles<br>&nbsp;\r\n",
+        "normalizedLabel": "no. of poles",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J94",
+        "sourceField": "d2",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J94",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage Rating<br><i>V<i/>",
+        "normalizedLabel": "voltage rating v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J95",
+        "sourceField": "d1",
+        "legacyLabel": "No. of Poles<br>&nbsp;\r\n",
+        "normalizedLabel": "no. of poles",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J95",
+        "sourceField": "d2",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J95",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage Rating<br><i>V<i/>",
+        "normalizedLabel": "voltage rating v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J96",
+        "sourceField": "d1",
+        "legacyLabel": "No. of Poles<br>&nbsp;\r\n",
+        "normalizedLabel": "no. of poles",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J96",
+        "sourceField": "d2",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J96",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage Rating<br><i>V<i/>",
+        "normalizedLabel": "voltage rating v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J97",
+        "sourceField": "d1",
+        "legacyLabel": "No. of Poles<br>&nbsp;\r\n",
+        "normalizedLabel": "no. of poles",
+        "targetDefinitionCode": "CORES",
+        "targetDefinitionPublicId": "BE15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J97",
+        "sourceField": "d2",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "J97",
+        "sourceField": "d3",
+        "legacyLabel": "Voltage Rating<br><i>V<i/>",
+        "normalizedLabel": "voltage rating v",
+        "targetDefinitionCode": "VOLTAGE",
+        "targetDefinitionPublicId": "BC15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "10.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "LL1E",
+        "sourceField": "d1",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "LLA1",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PS1",
+        "sourceField": "d1",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PS1",
+        "sourceField": "d2",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "15.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PS1A",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PS1B",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PS1C",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PS1D",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PS2",
+        "sourceField": "d4",
+        "legacyLabel": "Rating<br><i>Amp<i/>",
+        "normalizedLabel": "rating amp",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "3.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PS2",
+        "sourceField": "d5",
+        "legacyLabel": "Pins<br>&nbsp;",
+        "normalizedLabel": "pins",
+        "targetDefinitionCode": "PIN-COUNT",
+        "targetDefinitionPublicId": "FC97EC16-009D-F111-9B33-000D3AE12DFC",
+        "evidence": {
+            "sampleValues": [
+                "2.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PS6",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PSKH1C",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PSKH2A",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PSKH3E",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "PSXA",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "S01",
+        "sourceField": "d1",
+        "legacyLabel": "Cable Diameter<br><i>mm</>",
+        "normalizedLabel": "cable diameter mm",
+        "targetDefinitionCode": "NOM-CABLE-OD",
+        "targetDefinitionPublicId": "9F7FC4CE-5A94-F111-9B33-00224815955A",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "S02",
+        "sourceField": "d1",
+        "legacyLabel": "Cable Diameter<br><i>mm</>",
+        "normalizedLabel": "cable diameter mm",
+        "targetDefinitionCode": "NOM-CABLE-OD",
+        "targetDefinitionPublicId": "9F7FC4CE-5A94-F111-9B33-00224815955A",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "S03",
+        "sourceField": "d1",
+        "legacyLabel": "Cable Diameter<br><i>mm</>",
+        "normalizedLabel": "cable diameter mm",
+        "targetDefinitionCode": "NOM-CABLE-OD",
+        "targetDefinitionPublicId": "9F7FC4CE-5A94-F111-9B33-00224815955A",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "S04",
+        "sourceField": "d1",
+        "legacyLabel": "Cable Diameter<br><i>mm</>",
+        "normalizedLabel": "cable diameter mm",
+        "targetDefinitionCode": "NOM-CABLE-OD",
+        "targetDefinitionPublicId": "9F7FC4CE-5A94-F111-9B33-00224815955A",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    },
+    {
+        "sourceSystem": "tc",
+        "styleCode": "TC12",
+        "sourceField": "d1",
+        "legacyLabel": "Current Rating<br><i>A<i/>",
+        "normalizedLabel": "current rating a",
+        "targetDefinitionCode": "CURRENT",
+        "targetDefinitionPublicId": "BD15E18E-7E90-F111-B336-000D3AE079A8",
+        "evidence": {
+            "sampleValues": [
+                "12.00"
+            ],
+            "confidence": "high",
+            "reason": "operator_default_high_confidence_existing_definition"
+        },
+        "decision": "APPROVED_MAP"
+    }
+]

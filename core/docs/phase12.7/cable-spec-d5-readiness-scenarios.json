@@ -1,0 +1,139 @@
+{
+    "current": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        },
+        "note": "Projection only \u2014 D.5 does not mutate target readiness."
+    },
+    "highConfidenceOnly": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        },
+        "note": "Projection only \u2014 D.5 does not mutate target readiness."
+    },
+    "ccOnly": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "stillBlockingConcepts": {
+            "ct": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        },
+        "note": "Projection only \u2014 D.5 does not mutate target readiness."
+    },
+    "ctOnly": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        },
+        "note": "Projection only \u2014 D.5 does not mutate target readiness."
+    },
+    "ccAndCt": {
+        "READY": 35,
+        "REVIEW": 19,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 35,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "stillBlockingConcepts": {
+            "walu": 14,
+            "wbnz": 14,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        },
+        "note": "Projection only \u2014 D.5 does not mutate target readiness."
+    },
+    "allHighConfidenceBlockersResolved": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        },
+        "note": "Projection only \u2014 D.5 does not mutate target readiness."
+    },
+    "allProposedCandidatesResolved": {
+        "READY": 0,
+        "REVIEW": 54,
+        "BLOCKED": 0,
+        "CABLE_SPEC_FIELD_MAPPING_READY": 0,
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "stillBlockingConcepts": {
+            "cc": 54,
+            "ct": 54,
+            "ins": 5,
+            "Af": 1,
+            "r": 1,
+            "x50": 1,
+            "x60": 1,
+            "tension": 1
+        },
+        "note": "Projection only \u2014 D.5 does not mutate target readiness."
+    }
+}

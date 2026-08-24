@@ -45,9 +45,14 @@ final class LegacyReadOnlyRepositoriesTest extends TestCase
                     'small_desc' => 'short',
                 ],
             ],
+            'INFORMATION_SCHEMA.TABLES' => [
+                ['name' => 'wp_posts'],
+                ['name' => 'wp_postmeta'],
+            ],
             'SHOW TABLES' => [['Tables_in_db' => 'wp_posts'], ['Tables_in_db' => 'wp_postmeta']],
             'DESCRIBE' => [['Field' => 'ID'], ['Field' => 'post_title']],
             'COUNT' => [['cnt' => 1]],
+            'GROUP BY POST_TYPE' => [['post_type' => 'cable', 'post_status' => 'publish', 'total' => 12]],
         ]);
         $repo = new MysqlLegacyWordPressRepository($conn, 'wp_');
         $products = $repo->findProducts(['styleCode' => 'FT', 'maxRecords' => 10]);
@@ -55,6 +60,8 @@ final class LegacyReadOnlyRepositoriesTest extends TestCase
         self::assertSame('FT', $products[0]['style_code']);
         $schema = $repo->inspectSchema();
         self::assertContains('wp_posts', $schema['tables']);
+        $types = $repo->discoverPostTypeCounts();
+        self::assertNotEmpty($types);
         foreach ($logger->entries() as $entry) {
             self::assertTrue($guard->isAllowed($entry->sql), $entry->sql);
             self::assertSame('MysqlLegacyWordPressRepository', $entry->repository);

@@ -1,0 +1,507 @@
+{
+    "previouslyVacuousReadyProducts": 55,
+    "FIELD_MAPPING_NOT_APPLICABLE": 55,
+    "FIELD_MAPPING_COMPLETE": 0,
+    "incompleteOrUnknown": 40,
+    "policyCorrection": "Vacuous cable styles must NOT count as SPEC_FIELD_MAPPING_READY. Use FIELD_MAPPING_NOT_APPLICABLE.",
+    "itemsNotApplicable": [
+        {
+            "styleCode": "BV",
+            "family": "CABLE",
+            "productTitle": "RI Shipboard",
+            "variantCount": 1302,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "DV",
+            "family": "CABLE",
+            "productTitle": "RFOI RFCI Shipboard",
+            "variantCount": 750,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "RR",
+            "family": "CABLE",
+            "productTitle": "BI Shipboard Fire Res.",
+            "variantCount": 367,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "BH",
+            "family": "CABLE",
+            "productTitle": "BFOI BFCI Shipboard Fire Res.",
+            "variantCount": 218,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "RC",
+            "family": "CABLE",
+            "productTitle": "RI (c) Shipboard",
+            "variantCount": 205,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "RS",
+            "family": "CABLE",
+            "productTitle": "RFOI (c) RFCI (c) Shipboard",
+            "variantCount": 98,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "ES",
+            "family": "CABLE",
+            "productTitle": "BI (c) Shipboard Fire Res.",
+            "variantCount": 89,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "FJ",
+            "family": "CABLE",
+            "productTitle": "BFOI (c) BFCI (c) Shipboard Fire Res.",
+            "variantCount": 69,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "EW",
+            "family": "CABLE",
+            "productTitle": "RI (i&c) Shipboard",
+            "variantCount": 142,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "EG",
+            "family": "CABLE",
+            "productTitle": "RFOI (i&c) RFCI (i&c) Shipboard",
+            "variantCount": 94,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "FC",
+            "family": "CABLE",
+            "productTitle": "BI (i&c) Shipboard Fire Res.",
+            "variantCount": 40,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "FL",
+            "family": "CABLE",
+            "productTitle": "BFOI (i&c) BFCI (i&c) Shipboard Fire Res.",
+            "variantCount": 60,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "PJ",
+            "family": "CABLE",
+            "productTitle": "RIOI RICI Offshore Braid Armour",
+            "variantCount": 497,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "HT",
+            "family": "CABLE",
+            "productTitle": "BIOI BICI Offshore Braid Armour Fire Res.",
+            "variantCount": 202,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "RB",
+            "family": "CABLE",
+            "productTitle": "RIOI (c) RICI (c) Offshore Braid Armour",
+            "variantCount": 153,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "FK",
+            "family": "CABLE",
+            "productTitle": "BIOI (c) BICI (c) Offshore Braid Armour Fire Res.",
+            "variantCount": 132,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "FZ",
+            "family": "CABLE",
+            "productTitle": "RIOI (i&c) RICI (i&c) Offshore Braid Armour",
+            "variantCount": 202,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "FE",
+            "family": "CABLE",
+            "productTitle": "BIOI (i&c) BICI (i&c) Offshore Braid Arm. Fire Res.",
+            "variantCount": 146,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "DF",
+            "family": "CABLE",
+            "productTitle": "600V Braid",
+            "variantCount": 43,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "DG",
+            "family": "CABLE",
+            "productTitle": "1.8kV/3.0kV",
+            "variantCount": 43,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "NV",
+            "family": "CABLE",
+            "productTitle": "RU P18 TriCab NVC",
+            "variantCount": 15,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "NR",
+            "family": "CABLE",
+            "productTitle": "BU P17 TriCab NRC",
+            "variantCount": 14,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "NJ",
+            "family": "CABLE",
+            "productTitle": "P1 TriCab NJC <br /> P1/P8 TriCab NJM",
+            "variantCount": 62,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "NT",
+            "family": "CABLE",
+            "productTitle": "P5 TriCab NTC <br />P5/P12 TriCab NTM",
+            "variantCount": 56,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "NU",
+            "family": "CABLE",
+            "productTitle": "P1 TriCab NUC<br />P1/P8 TriCab NUM",
+            "variantCount": 12,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "B1",
+            "family": "CABLE",
+            "productTitle": "P1 TriCab B1C<br />P1/P8 TriCab B1M",
+            "variantCount": 1,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "KL",
+            "family": "CABLE",
+            "productTitle": "Flexible Rubber SDI",
+            "variantCount": 334,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "LS",
+            "family": "CABLE",
+            "productTitle": "Flexible LSZH",
+            "variantCount": 319,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "LP",
+            "family": "CABLE",
+            "productTitle": "Flexible Rubber",
+            "variantCount": 125,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "KA",
+            "family": "CABLE",
+            "productTitle": "Flexible Control",
+            "variantCount": 174,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "XL",
+            "family": "CABLE",
+            "productTitle": "Flexible Rubber Control",
+            "variantCount": 346,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "KC",
+            "family": "CABLE",
+            "productTitle": "Flexible Rubber",
+            "variantCount": 118,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "C1",
+            "family": "CABLE",
+            "productTitle": "Flexible",
+            "variantCount": 240,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "RE",
+            "family": "CABLE",
+            "productTitle": "Flexible Rubber Instrumentation",
+            "variantCount": 172,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "R1",
+            "family": "CABLE",
+            "productTitle": "Flexible Instrumentation",
+            "variantCount": 167,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "KN",
+            "family": "CABLE",
+            "productTitle": "Flexible Nylon Extruded",
+            "variantCount": 161,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "XN",
+            "family": "CABLE",
+            "productTitle": "Flexible Nylon Extruded",
+            "variantCount": 174,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "KU",
+            "family": "CABLE",
+            "productTitle": "Flexible Rubber",
+            "variantCount": 100,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "XU",
+            "family": "CABLE",
+            "productTitle": "Flexible Rubber",
+            "variantCount": 100,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "EA",
+            "family": "CABLE",
+            "productTitle": "Flexible Rubber",
+            "variantCount": 33,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "XA",
+            "family": "CABLE",
+            "productTitle": "Flexible Rubber",
+            "variantCount": 178,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "TP",
+            "family": "CABLE",
+            "productTitle": "Industrial Power & Control Tray Cable",
+            "variantCount": 81,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "TR",
+            "family": "CABLE",
+            "productTitle": "Industrial Power & Control Tray Cable, Shielded",
+            "variantCount": 17,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "TV",
+            "family": "CABLE",
+            "productTitle": "Industrial VFD",
+            "variantCount": 8,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "TK",
+            "family": "CABLE",
+            "productTitle": "Industrial VFD",
+            "variantCount": 0,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "VP",
+            "family": "CABLE",
+            "productTitle": "Industrial Power & Control",
+            "variantCount": 11,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "VR",
+            "family": "CABLE",
+            "productTitle": "Industrial Power & Control, Shielded",
+            "variantCount": 3,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "VS",
+            "family": "CABLE",
+            "productTitle": "Industrial Power & Control",
+            "variantCount": 0,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "VV",
+            "family": "CABLE",
+            "productTitle": "Industrial VFD",
+            "variantCount": 6,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "VW",
+            "family": "CABLE",
+            "productTitle": "Industrial VFD",
+            "variantCount": 22,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "NF",
+            "family": "CABLE",
+            "productTitle": "P5 TriCab NFC <br />P5/P12 TriCab NFM",
+            "variantCount": 0,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "TS",
+            "family": "CABLE",
+            "productTitle": "Shipboard Braid",
+            "variantCount": 0,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "TG",
+            "family": "CABLE",
+            "productTitle": "Shipboard",
+            "variantCount": 0,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        },
+        {
+            "styleCode": "F25",
+            "family": "ACCESSORIES",
+            "productTitle": "Solar Conduit Heavy Duty",
+            "variantCount": 0,
+            "reason": "NO_DV_FIELDS",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE"
+        },
+        {
+            "styleCode": "VUF",
+            "family": "CABLE",
+            "productTitle": "VFD Uninsulated Grounds",
+            "variantCount": 0,
+            "reason": "CABLE_SPEC_SOURCE_USED",
+            "classification": "FIELD_MAPPING_NOT_APPLICABLE",
+            "note": "Accessory d/v fields do not apply; cable_specs / WP meta still require separate mapping completeness."
+        }
+    ],
+    "byReason": {
+        "CABLE_SPEC_SOURCE_USED": 54,
+        "NO_DV_FIELDS": 1
+    }
+}

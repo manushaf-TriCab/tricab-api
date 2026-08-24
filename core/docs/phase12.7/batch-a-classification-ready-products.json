@@ -1,0 +1,1813 @@
+{
+    "generatedAtUtc": "2026-08-21T00:14:06+00:00",
+    "counts": {
+        "ready": 95
+    },
+    "items": [
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RI Shipboard",
+            "style_code": "BV",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "BV",
+            "tcIdentityStatus": null,
+            "variantCount": 1302,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RFOI RFCI Shipboard",
+            "style_code": "DV",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "DV",
+            "tcIdentityStatus": null,
+            "variantCount": 750,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BI Shipboard Fire Res.",
+            "style_code": "RR",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "RR",
+            "tcIdentityStatus": null,
+            "variantCount": 367,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BFOI BFCI Shipboard Fire Res.",
+            "style_code": "BH",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "BH",
+            "tcIdentityStatus": null,
+            "variantCount": 218,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RI (c) Shipboard",
+            "style_code": "RC",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "RC",
+            "tcIdentityStatus": null,
+            "variantCount": 205,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RFOI (c) RFCI (c) Shipboard",
+            "style_code": "RS",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "RS",
+            "tcIdentityStatus": null,
+            "variantCount": 98,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BI (c) Shipboard Fire Res.",
+            "style_code": "ES",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "ES",
+            "tcIdentityStatus": null,
+            "variantCount": 89,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BFOI (c) BFCI (c) Shipboard Fire Res.",
+            "style_code": "FJ",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "FJ",
+            "tcIdentityStatus": null,
+            "variantCount": 69,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RI (i&c) Shipboard",
+            "style_code": "EW",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "EW",
+            "tcIdentityStatus": null,
+            "variantCount": 142,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RFOI (i&c) RFCI (i&c) Shipboard",
+            "style_code": "EG",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "EG",
+            "tcIdentityStatus": null,
+            "variantCount": 94,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BI (i&c) Shipboard Fire Res.",
+            "style_code": "FC",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "FC",
+            "tcIdentityStatus": null,
+            "variantCount": 40,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BFOI (i&c) BFCI (i&c) Shipboard Fire Res.",
+            "style_code": "FL",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "FL",
+            "tcIdentityStatus": null,
+            "variantCount": 60,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RIOI RICI Offshore Braid Armour",
+            "style_code": "PJ",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "PJ",
+            "tcIdentityStatus": null,
+            "variantCount": 497,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BIOI BICI Offshore Braid Armour Fire Res.",
+            "style_code": "HT",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "HT",
+            "tcIdentityStatus": null,
+            "variantCount": 202,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RIOI (c) RICI (c) Offshore Braid Armour",
+            "style_code": "RB",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "RB",
+            "tcIdentityStatus": null,
+            "variantCount": 153,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BIOI (c) BICI (c) Offshore Braid Armour Fire Res.",
+            "style_code": "FK",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "FK",
+            "tcIdentityStatus": null,
+            "variantCount": 132,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RIOI (i&c) RICI (i&c) Offshore Braid Armour",
+            "style_code": "FZ",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "FZ",
+            "tcIdentityStatus": null,
+            "variantCount": 202,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BIOI (i&c) BICI (i&c) Offshore Braid Arm. Fire Res.",
+            "style_code": "FE",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "FE",
+            "tcIdentityStatus": null,
+            "variantCount": 146,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "600V Braid",
+            "style_code": "DF",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "DF",
+            "tcIdentityStatus": null,
+            "variantCount": 43,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "1.8kV/3.0kV",
+            "style_code": "DG",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "DG",
+            "tcIdentityStatus": null,
+            "variantCount": 43,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "RU P18 TriCab NVC",
+            "style_code": "NV",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "NV",
+            "tcIdentityStatus": null,
+            "variantCount": 15,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "BU P17 TriCab NRC",
+            "style_code": "NR",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "NR",
+            "tcIdentityStatus": null,
+            "variantCount": 14,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "P1 TriCab NJC <br /> P1/P8 TriCab NJM",
+            "style_code": "NJ",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "NJ",
+            "tcIdentityStatus": null,
+            "variantCount": 62,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "P5 TriCab NTC <br />P5/P12 TriCab NTM",
+            "style_code": "NT",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "NT",
+            "tcIdentityStatus": null,
+            "variantCount": 56,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "P1 TriCab NUC<br />P1/P8 TriCab NUM",
+            "style_code": "NU",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "NU",
+            "tcIdentityStatus": null,
+            "variantCount": 12,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "P1 TriCab B1C<br />P1/P8 TriCab B1M",
+            "style_code": "B1",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "B1",
+            "tcIdentityStatus": null,
+            "variantCount": 1,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Rubber SDI",
+            "style_code": "KL",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "KL",
+            "tcIdentityStatus": null,
+            "variantCount": 334,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible LSZH",
+            "style_code": "LS",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "LS",
+            "tcIdentityStatus": null,
+            "variantCount": 319,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Rubber",
+            "style_code": "LP",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "LP",
+            "tcIdentityStatus": null,
+            "variantCount": 125,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Control",
+            "style_code": "KA",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "KA",
+            "tcIdentityStatus": null,
+            "variantCount": 174,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Rubber Control",
+            "style_code": "XL",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "XL",
+            "tcIdentityStatus": null,
+            "variantCount": 346,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Rubber",
+            "style_code": "KC",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "KC",
+            "tcIdentityStatus": null,
+            "variantCount": 118,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible",
+            "style_code": "C1",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "C1",
+            "tcIdentityStatus": null,
+            "variantCount": 240,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Rubber Instrumentation",
+            "style_code": "RE",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "RE",
+            "tcIdentityStatus": null,
+            "variantCount": 172,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Instrumentation",
+            "style_code": "R1",
+            "family": "CABLE",
+            "category": "INSTRUMENTATION",
+            "series": "R1",
+            "tcIdentityStatus": null,
+            "variantCount": 167,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Nylon Extruded",
+            "style_code": "KN",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "KN",
+            "tcIdentityStatus": null,
+            "variantCount": 161,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Nylon Extruded",
+            "style_code": "XN",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "XN",
+            "tcIdentityStatus": null,
+            "variantCount": 174,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Rubber",
+            "style_code": "KU",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "KU",
+            "tcIdentityStatus": null,
+            "variantCount": 100,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Rubber",
+            "style_code": "XU",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "XU",
+            "tcIdentityStatus": null,
+            "variantCount": 100,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Rubber",
+            "style_code": "EA",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "EA",
+            "tcIdentityStatus": null,
+            "variantCount": 33,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Flexible Rubber",
+            "style_code": "XA",
+            "family": "CABLE",
+            "category": "FLEX-POWER",
+            "series": "XA",
+            "tcIdentityStatus": null,
+            "variantCount": 178,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Industrial Power & Control Tray Cable",
+            "style_code": "TP",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "TP",
+            "tcIdentityStatus": null,
+            "variantCount": 81,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Industrial Power & Control Tray Cable, Shielded",
+            "style_code": "TR",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "TR",
+            "tcIdentityStatus": null,
+            "variantCount": 17,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Industrial VFD",
+            "style_code": "TV",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "TV",
+            "tcIdentityStatus": null,
+            "variantCount": 8,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Industrial VFD",
+            "style_code": "TK",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "TK",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Industrial Power & Control",
+            "style_code": "VP",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "VP",
+            "tcIdentityStatus": null,
+            "variantCount": 11,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Industrial Power & Control, Shielded",
+            "style_code": "VR",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "VR",
+            "tcIdentityStatus": null,
+            "variantCount": 3,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Industrial Power & Control",
+            "style_code": "VS",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "VS",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Industrial VFD",
+            "style_code": "VV",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "VV",
+            "tcIdentityStatus": null,
+            "variantCount": 6,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Industrial VFD",
+            "style_code": "VW",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "VW",
+            "tcIdentityStatus": null,
+            "variantCount": 22,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Female\u00a0Bullet Quick Disconnect",
+            "style_code": "A35",
+            "family": "ACCESSORIES",
+            "category": "TERMINALS",
+            "series": "A35",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Male\u00a0Bullet Quick Disconnect",
+            "style_code": "A36",
+            "family": "ACCESSORIES",
+            "category": "TERMINALS",
+            "series": "A36",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Long Thread Straight Spiral Top",
+            "style_code": "D04",
+            "family": "ACCESSORIES",
+            "category": "GLANDS",
+            "series": "D04",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "90\u00b0 Watertight",
+            "style_code": "D05",
+            "family": "ACCESSORIES",
+            "category": "GLANDS",
+            "series": "D05",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Premium Nylon",
+            "style_code": "D07",
+            "family": "ACCESSORIES",
+            "category": "GLANDS",
+            "series": "D07",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "90\u00b0 Spiral Top",
+            "style_code": "D09",
+            "family": "ACCESSORIES",
+            "category": "GLANDS",
+            "series": "D09",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Straight Spiral Top",
+            "style_code": "D10",
+            "family": "ACCESSORIES",
+            "category": "GLANDS",
+            "series": "D10",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Pin Terminals",
+            "style_code": "A10",
+            "family": "ACCESSORIES",
+            "category": "TERMINALS",
+            "series": "A10",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Blade Terminal",
+            "style_code": "A12",
+            "family": "ACCESSORIES",
+            "category": "TERMINALS",
+            "series": "A12",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Ring Terminal",
+            "style_code": "A47",
+            "family": "ACCESSORIES",
+            "category": "TERMINALS",
+            "series": "A47",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Fork Terminal",
+            "style_code": "A48",
+            "family": "ACCESSORIES",
+            "category": "TERMINALS",
+            "series": "A48",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "P5 TriCab NFC <br />P5/P12 TriCab NFM",
+            "style_code": "NF",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "NF",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Bushings",
+            "style_code": "X04",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "X04",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Split Loom",
+            "style_code": "F20",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F20",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Nylon Split Loom",
+            "style_code": "F21",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F21",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Medium Duty",
+            "style_code": "F07",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F07",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Heavy Duty",
+            "style_code": "F22",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F22",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Conduit",
+            "style_code": "F08",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F08",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Inspection Tee",
+            "style_code": "F12",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F12",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Coupling",
+            "style_code": "F09",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F09",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Conduit Gland",
+            "style_code": "F14",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F14",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Conduit",
+            "style_code": "F10",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F10",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Standard PG threaded Nylon",
+            "style_code": "D21",
+            "family": "ACCESSORIES",
+            "category": "GLANDS",
+            "series": "D21",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Standard Nylon",
+            "style_code": "D20",
+            "family": "ACCESSORIES",
+            "category": "GLANDS",
+            "series": "D20",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Standard NPT threaded Nylon",
+            "style_code": "D22",
+            "family": "ACCESSORIES",
+            "category": "GLANDS",
+            "series": "D22",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Bi-Metallic Reducing",
+            "style_code": "B21",
+            "family": "ACCESSORIES",
+            "category": "LINKS",
+            "series": "B21",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Shipboard Braid",
+            "style_code": "TS",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "TS",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "Shipboard",
+            "style_code": "TG",
+            "family": "CABLE",
+            "category": "CTRL-MULTI",
+            "series": "TG",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Aluminium",
+            "style_code": "B24",
+            "family": "ACCESSORIES",
+            "category": "LINKS",
+            "series": "B24",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Copper",
+            "style_code": "B07",
+            "family": "ACCESSORIES",
+            "category": "LINKS",
+            "series": "B07",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "INDUSTRIAL PLUG-SOCKET",
+            "style_code": "PS1A",
+            "family": "ACCESSORIES",
+            "category": "PLUG-SOCKET-LEADS",
+            "series": "PS1A",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "INDUSTRIAL PLUG-SOCKET",
+            "style_code": "PS1B",
+            "family": "ACCESSORIES",
+            "category": "PLUG-SOCKET-LEADS",
+            "series": "PS1B",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "INDUSTRIAL PLUG-SOCKET",
+            "style_code": "PS1C",
+            "family": "ACCESSORIES",
+            "category": "PLUG-SOCKET-LEADS",
+            "series": "PS1C",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "INDUSTRIAL PLUG-SOCKET",
+            "style_code": "PS1D",
+            "family": "ACCESSORIES",
+            "category": "PLUG-SOCKET-LEADS",
+            "series": "PS1D",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Solar Conduit Heavy Duty",
+            "style_code": "F25",
+            "family": "ACCESSORIES",
+            "category": "CONDUITS-FITTINGS",
+            "series": "F25",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "Tin Plated Copper",
+            "style_code": "B36",
+            "family": "ACCESSORIES",
+            "category": "LINKS",
+            "series": "B36",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "TECHNO Junction",
+            "style_code": "J90",
+            "family": "ACCESSORIES",
+            "category": "TECHNO-CONNECTORS",
+            "series": "J90",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "TECHNO",
+            "style_code": "J91",
+            "family": "ACCESSORIES",
+            "category": "TECHNO-CONNECTORS",
+            "series": "J91",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "TECHNO",
+            "style_code": "J92",
+            "family": "ACCESSORIES",
+            "category": "TECHNO-CONNECTORS",
+            "series": "J92",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "TECHNO Plug",
+            "style_code": "J93",
+            "family": "ACCESSORIES",
+            "category": "TECHNO-CONNECTORS",
+            "series": "J93",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "TECHNO Socket",
+            "style_code": "J94",
+            "family": "ACCESSORIES",
+            "category": "TECHNO-CONNECTORS",
+            "series": "J94",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "TECHNO Plug",
+            "style_code": "J95",
+            "family": "ACCESSORIES",
+            "category": "TECHNO-CONNECTORS",
+            "series": "J95",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "TECHNO Socket",
+            "style_code": "J96",
+            "family": "ACCESSORIES",
+            "category": "TECHNO-CONNECTORS",
+            "series": "J96",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "accessory",
+            "productTitle": "TECHNO",
+            "style_code": "J97",
+            "family": "ACCESSORIES",
+            "category": "TECHNO-CONNECTORS",
+            "series": "J97",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": false,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        },
+        {
+            "legacyPostId": null,
+            "postType": "cable",
+            "productTitle": "VFD Uninsulated Grounds",
+            "style_code": "VUF",
+            "family": "CABLE",
+            "category": "VFD",
+            "series": "VUF",
+            "tcIdentityStatus": null,
+            "variantCount": 0,
+            "classificationStatus": "CLASSIFICATION_READY",
+            "fullProductMigrationReady": true,
+            "blockingReason": null,
+            "evidence": {
+                "seriesDecision": "APPROVED_MAP_EXISTING",
+                "categoryApproved": true,
+                "seriesApproved": true
+            }
+        }
+    ]
+}

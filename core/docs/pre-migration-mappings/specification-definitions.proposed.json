@@ -1,0 +1,684 @@
+[
+    {
+        "legacyField": "standards",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 490,
+        "exampleValues": [
+            "",
+            "UPM"
+        ],
+        "candidateDefinition": "STANDARDS",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "small_desc",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 440,
+        "exampleValues": [
+            "",
+            "Y Screw Mount"
+        ],
+        "candidateDefinition": "PRODUCT_DESCRIPTION",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "style_code",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 440,
+        "exampleValues": [
+            "A01",
+            "Z41"
+        ],
+        "candidateDefinition": "SERIES_OR_IDENTITY",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "sub_title",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 440,
+        "exampleValues": [
+            " ",
+            "XHHW-2/XHHW/XHH/R90/RW90/SIS/FFH-2"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "search_keywords",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 391,
+        "exampleValues": [
+            "",
+            "Two-Hole Aluminium Lug"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "certificate_upload",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 287,
+        "exampleValues": [
+            "3726",
+            "8099"
+        ],
+        "candidateDefinition": "DOCUMENT",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "issuing_organisation",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 287,
+        "exampleValues": [
+            " ",
+            "WI"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "styles",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 287,
+        "exampleValues": [
+            "",
+            "XL"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "industrial_or_shipboard",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 265,
+        "exampleValues": [
+            "",
+            "a:2:{i:0;s:3:\"IND\";i:1;s:3:\"SBO\";}"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "compound_code",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 230,
+        "exampleValues": [
+            "",
+            "XLPO-105"
+        ],
+        "candidateDefinition": "OUTER_DIAMETER",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "control_core_1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 230,
+        "exampleValues": [
+            "",
+            "7195"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "control_core_2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 230,
+        "exampleValues": [
+            "",
+            "7222"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "ind_or_sbo",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 230,
+        "exampleValues": [
+            "industrial",
+            "shipboard-offshore"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "industry_code",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 230,
+        "exampleValues": [
+            "",
+            "UX"
+        ],
+        "candidateDefinition": "OUTER_DIAMETER",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "multi_core_1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 230,
+        "exampleValues": [
+            "",
+            "7730"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "multi_core_2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 230,
+        "exampleValues": [
+            "",
+            "7731"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "single_core_1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 230,
+        "exampleValues": [
+            "",
+            "7691"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "single_core_2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 230,
+        "exampleValues": [
+            "",
+            "7784"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "al-control-image-1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "al-control-image-2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "al-multi-image-1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "al-multi-image-2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "al-single-image-1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            "6528"
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "al-single-image-2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            "7786"
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "cu-al-control-image-1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "cu-al-control-image-2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "cu-al-multi-image-1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "cu-al-multi-image-2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "cu-al-single-image-1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            "5003"
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "cu-al-single-image-2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 213,
+        "exampleValues": [
+            "",
+            "7124"
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "section_1",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 210,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "section_2",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 210,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "al_single_core_category",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 204,
+        "exampleValues": [
+            "",
+            "6527"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "cu_single_core_category",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 204,
+        "exampleValues": [
+            "",
+            "8026"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "display_order",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 204,
+        "exampleValues": [
+            "",
+            "SDI, Battery/DC"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "small_desc_cat_page",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 204,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "acc_display_order",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 178,
+        "exampleValues": [
+            "1",
+            "9"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "acc_display_order_group",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 178,
+        "exampleValues": [
+            "1",
+            "2"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "ind_degrees",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 150,
+        "exampleValues": [
+            "105",
+            "Dry 90\u00b0C and Wet 75"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "ind_kilovolts",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 150,
+        "exampleValues": [
+            ".6/1kV",
+            "900/1500V dc-600/1000V ac"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "amour_braid_screen",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 120,
+        "exampleValues": [
+            "",
+            "screen"
+        ],
+        "candidateDefinition": "BRAID",
+        "status": "EXISTING_DEFINITION"
+    },
+    {
+        "legacyField": "ind_lszh_fire",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 120,
+        "exampleValues": [
+            "",
+            "a:2:{i:0;s:4:\"lszh\";i:1;s:4:\"fire\";}"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "certificate_thumbnail",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 117,
+        "exampleValues": [
+            "",
+            "8098"
+        ],
+        "candidateDefinition": "MEDIA",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "conductor_type",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 117,
+        "exampleValues": [
+            "",
+            "a:2:{i:0;s:2:\"Cu\";i:1;s:2:\"Al\";}"
+        ],
+        "candidateDefinition": "CONDUCTOR",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "degrees",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 90,
+        "exampleValues": [
+            "105",
+            "90"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "hcl_emission",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 90,
+        "exampleValues": [
+            "",
+            ">0.5%"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "kilovolts",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 90,
+        "exampleValues": [
+            "0.6.1kV",
+            "8.7/15kV"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "oxygen_index",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 90,
+        "exampleValues": [
+            "",
+            ">32."
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "lzsh_braid_fire",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 84,
+        "exampleValues": [
+            "",
+            "a:3:{i:0;s:4:\"lszh\";i:1;s:5:\"braid\";i:2;s:4:\"Fire\";}"
+        ],
+        "candidateDefinition": "BRAID",
+        "status": "EXISTING_DEFINITION"
+    },
+    {
+        "legacyField": "al_display_order",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 55,
+        "exampleValues": [
+            "1",
+            "1"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "cu_display_order",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 55,
+        "exampleValues": [
+            "1",
+            "1"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "nek_class",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 55,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "row_desc",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 55,
+        "exampleValues": [
+            "",
+            ""
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "compliance_content",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 53,
+        "exampleValues": [
+            "",
+            "ISO:/wp-content/uploads/2015/06/ISO.png\r\nRoHS Compliance:/wp-content/uploads/2019/07/rohs.png\r\nREACH:/wp-content/uploads/2019/07/reach.png"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "construction_content",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 53,
+        "exampleValues": [
+            "",
+            "Construction: Fine wire plain or tinned annealed copper to IEC 60228 and AS/NZS 1125.\r\nInsulation:LSFLEX\u00ae X-125 (X-HF-110), Cross-Linked, Thermoset, Elastomeric, Low Smoke Zero Halogen. 125\u00b0C max operating temperature conforms to UL1581.\r\nJacket:Low-Friction LSFLEX\u00ae T-10 (HFS-110-TP) Flame Retardant, Thermoplastic, Elastomeric, Low Smoke Zero Halogen. Splash resistant to oil, skydrol, petrol, acid and sea water. Resists ozone and UV. Excellent abrasion resistance. Anti-Termite/Rodent Jacket is Available."
+        ],
+        "candidateDefinition": "CONSTRUCTION",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "operation_content",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 53,
+        "exampleValues": [
+            "",
+            "Operating Temp:-70\u00b0C to +90\u00b0C\r\nVoltage Rating:600/1000 Volts\r\nCore Colour:Default colours or to customer specification\r\nJacket Colour:Black or to customer specification"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "standards_content",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 53,
+        "exampleValues": [
+            "",
+            "VDE 0207/20\r\nVDE 0250/602\r\nUL 1581\r\nAS/NZS 1125\r\nAS/NZS 3008.1\r\nAS/NZS 1660.5.1\r\nAS/NZS 1660.5.6\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "candidateDefinition": "STANDARDS",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "compliance_content_al",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 39,
+        "exampleValues": [
+            "",
+            "ISO:/wp-content/uploads/2015/06/ISO.png\r\nRoHS Compliance:/wp-content/uploads/2019/07/rohs.png\r\nREACH:/wp-content/uploads/2019/07/reach.png"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "construction_content_al",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 39,
+        "exampleValues": [
+            "",
+            "Conductors:Fine Wire EC1350 Aluminium to AS/NZS 1125, IEC 60228\r\nInsulation:LSFLEX R-125(X-HF-110), Flame Retardant, Cross-Linked, Thermoset, Elastomeric, Low Smoke Zero Halogen. 125\u00b0C max operating temperature conforms to UL1581. Splash resistant to oil, skydrol, petrol, acid and sea water. Resists ozone and UV. Anti-Termite/Rodent Jacket is Available."
+        ],
+        "candidateDefinition": "CONSTRUCTION",
+        "status": "NEW_DEFINITION_REQUIRED"
+    },
+    {
+        "legacyField": "img_overwrite",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 39,
+        "exampleValues": [
+            "",
+            "XL-CT"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "operation_content_al",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 39,
+        "exampleValues": [
+            "",
+            "Operating Temperature:-15\u00b0C to 90\u00b0C\r\nVoltage Rating:600/1000Volts\r\nCore Identification:To customer specification\r\nJacket Colour:To customer specification"
+        ],
+        "candidateDefinition": "",
+        "status": "AMBIGUOUS"
+    },
+    {
+        "legacyField": "standards_content_al",
+        "sourceTable": "wp_postmeta",
+        "usageCount": 39,
+        "exampleValues": [
+            "",
+            "ASN/NZS 1125\r\nASN/NZS 1660.5.1\r\nASN/NZS 1660.5.6\r\nASN/NZS 3008.1\r\nASN/NZS 3808\r\nASN/NZS 5000.1\r\nIEC 60228\r\nIEC 60332-1"
+        ],
+        "candidateDefinition": "STANDARDS",
+        "status": "NEW_DEFINITION_REQUIRED"
+    }
+]

@@ -1,0 +1,36 @@
+{
+    "CURRENT": {
+        "SPEC_FIELD_MAPPING_READY": 0,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "FULL_PRODUCT_MIGRATION_BLOCKED": 336,
+        "note": "Mappings not applied; vacuous no longer counted as ready."
+    },
+    "SCENARIO_A_CURRENT_124_ONLY": {
+        "SPEC_FIELD_MAPPING_READY": 11,
+        "SPEC_FIELD_MAPPING_REVIEW": 29,
+        "FIELD_MAPPING_NOT_APPLICABLE": 55,
+        "accessoryProductsFieldReady": 11,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "FULL_PRODUCT_MIGRATION_BLOCKED": 336,
+        "note": "FULL_* unchanged until accessory identity + value migration solved; field-mapping ready is independent."
+    },
+    "SCENARIO_B_PLUS_MAP_EXISTING": {
+        "SPEC_FIELD_MAPPING_READY": 11,
+        "SPEC_FIELD_MAPPING_REVIEW": 29,
+        "FIELD_MAPPING_NOT_APPLICABLE": 55,
+        "accessoryProductsFieldReady": 11,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "FULL_PRODUCT_MIGRATION_BLOCKED": 336,
+        "note": "FULL_* unchanged until accessory identity + value migration solved; field-mapping ready is independent."
+    },
+    "SCENARIO_C_PLUS_PROPOSED_DEFINITIONS": {
+        "SPEC_FIELD_MAPPING_READY": 27,
+        "SPEC_FIELD_MAPPING_REVIEW": 13,
+        "FIELD_MAPPING_NOT_APPLICABLE": 55,
+        "accessoryProductsFieldReady": 27,
+        "FULL_PRODUCT_MIGRATION_READY": 54,
+        "FULL_PRODUCT_MIGRATION_BLOCKED": 336,
+        "note": "FULL_* unchanged until accessory identity + value migration solved; field-mapping ready is independent."
+    },
+    "approvedMapsPreserved": 124
+}

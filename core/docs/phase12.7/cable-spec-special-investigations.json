@@ -1,0 +1,110 @@
+{
+    "cc": {
+        "field": "cc",
+        "products": 54,
+        "styles": 54,
+        "nonEmpty": 4491,
+        "distinct": 4,
+        "samples": [
+            "c",
+            "p",
+            "t",
+            "a"
+        ],
+        "valueDistribution": [
+            {
+                "value": "c",
+                "count": 3027,
+                "styles": 39
+            },
+            {
+                "value": "p",
+                "count": 1177,
+                "styles": 14
+            },
+            {
+                "value": "t",
+                "count": 279,
+                "styles": 14
+            },
+            {
+                "value": "a",
+                "count": 8,
+                "styles": 1
+            }
+        ],
+        "inferredMeaning": "legacy construction/class code (unconfirmed); possible copper/class/construction flag",
+        "inferredType": "code",
+        "inferredUnit": null,
+        "likelyTarget": null,
+        "confidence": "low",
+        "decision": "REVIEW",
+        "reason": "UNKNOWN_SEMANTICS"
+    },
+    "mt": {
+        "field": "mt",
+        "products": 54,
+        "styles": 54,
+        "nonEmpty": 4491,
+        "distinct": 3,
+        "samples": [
+            "1301",
+            "1302",
+            "0"
+        ],
+        "valueDistribution": [
+            {
+                "value": "1301",
+                "count": 2774,
+                "styles": 41
+            },
+            {
+                "value": "1302",
+                "count": 1698,
+                "styles": 33
+            },
+            {
+                "value": "0",
+                "count": 19,
+                "styles": 1
+            }
+        ],
+        "inferredMeaning": "legacy material/type lookup code (unconfirmed)",
+        "inferredType": "code",
+        "inferredUnit": null,
+        "likelyTarget": null,
+        "confidence": "low",
+        "decision": "REVIEW",
+        "reason": "UNKNOWN_SEMANTICS"
+    },
+    "ct": {
+        "field": "ct",
+        "products": 54,
+        "styles": 54,
+        "nonEmpty": 4491,
+        "distinct": 2,
+        "samples": [
+            "p",
+            "a"
+        ],
+        "valueDistribution": [
+            {
+                "value": "p",
+                "count": 4215,
+                "styles": 54
+            },
+            {
+                "value": "a",
+                "count": 276,
+                "styles": 11
+            }
+        ],
+        "inferredMeaning": "legacy conductor/construction type flag (unconfirmed); p dominates, a minority",
+        "inferredType": "code",
+        "inferredUnit": null,
+        "likelyTarget": null,
+        "confidence": "low",
+        "decision": "REVIEW",
+        "reason": "UNKNOWN_SEMANTICS"
+    }
+}

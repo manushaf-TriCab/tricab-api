@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Http\Action\Admin;
 
-use TriCab\Core\Product\Application\DTO\ProductClassificationRecord;
-use TriCab\Core\Product\Application\DTO\ProductClassificationUsage;
+use TriCab\Core\Product\Application\DTO\LegacyPriceContextVerification;
+use TriCab\Core\Product\Application\DTO\PriceListLookupItem;
+use TriCab\Core\Product\Application\DTO\PriceListRecord;
+use TriCab\Core\Product\Application\DTO\PriceListUsage;
+use TriCab\Core\Product\Application\DTO\PricingUnitLookupItem;
 
 use TriCab\Core\Product\Application\DTO\ProductAdminDetail;
 use TriCab\Core\Product\Application\DTO\ProductAdminListItem;
 use TriCab\Core\Product\Application\DTO\ProductAuditEntry;
+use TriCab\Core\Product\Application\DTO\ProductClassificationRecord;
+use TriCab\Core\Product\Application\DTO\ProductClassificationUsage;
 use TriCab\Core\Product\Application\DTO\ProductCodePreviewResult;
 use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Application\DTO\ProductListResult;
@@ -373,6 +378,8 @@ final class ProductManagementDtoSerializer
             'regionPublicId' => $summary->regionPublicId,
             'marketPublicId' => $summary->marketPublicId,
             'unitOfMeasureCode' => $summary->unitOfMeasureCode,
+            'unitOfMeasureSymbol' => $summary->unitOfMeasureSymbol,
+            'unitOfMeasurePublicId' => $summary->unitOfMeasurePublicId,
             'priceSourceCode' => $summary->priceSourceCode,
             'effectiveFromUtc' => $summary->effectiveFromUtc,
             'effectiveToUtc' => $summary->effectiveToUtc,
@@ -413,7 +420,35 @@ final class ProductManagementDtoSerializer
             'scheduledRecordCount' => $overview->scheduledRecordCount,
             'expiredRecordCount' => $overview->expiredRecordCount,
             'inactiveRecordCount' => $overview->inactiveRecordCount,
+            'defaultUnitOfMeasurePublicId' => $overview->defaultUnitOfMeasurePublicId,
+            'defaultUnitOfMeasureCode' => $overview->defaultUnitOfMeasureCode,
+            'defaultUnitOfMeasureSymbol' => $overview->defaultUnitOfMeasureSymbol,
+            'defaultUnitSource' => $overview->defaultUnitSource,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function pricingUnitLookup(PricingUnitLookupItem $item): array
+    {
+        return [
+            'publicId' => $item->publicId,
+            'code' => $item->code,
+            'name' => $item->name,
+            'symbol' => $item->symbol,
+            'displayOrder' => $item->displayOrder,
+            'isActive' => $item->isActive,
+        ];
+    }
+
+    /**
+     * @param list<PricingUnitLookupItem> $items
+     * @return list<array<string, mixed>>
+     */
+    public static function pricingUnitLookupList(array $items): array
+    {
+        return array_map(self::pricingUnitLookup(...), $items);
     }
 
     /**
@@ -504,6 +539,86 @@ final class ProductManagementDtoSerializer
             'differenceAmount' => $comparison->differenceAmount,
             'legacyAvailable' => $comparison->legacyAvailable,
             'message' => $comparison->message,
+            'resolutionStatus' => $comparison->resolutionStatus,
+            'resolutionSource' => $comparison->resolutionSource,
+            'priceDataStatus' => $comparison->priceDataStatus,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function legacyPricingCodeInspection(\TriCab\Core\Product\Application\DTO\LegacyPricingCodeInspection $inspection): array
+    {
+        return [
+            'exists' => $inspection->exists,
+            'revisionCount' => $inspection->revisionCount,
+            'latestDc' => $inspection->latestDc,
+            'latestCost' => $inspection->latestCost,
+            'zeroCost' => $inspection->zeroCost,
+            'duplicateLatestDc' => $inspection->duplicateLatestDc,
+            'priceDataStatus' => $inspection->priceDataStatus,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function legacyVariantPricingIdentity(\TriCab\Core\Product\Application\DTO\LegacyVariantPricingIdentityResolution $resolution): array
+    {
+        return [
+            'variantPublicId' => $resolution->variantPublicId,
+            'variantCode' => $resolution->variantCode,
+            'priceListPublicId' => $resolution->priceListPublicId,
+            'legacyDbco' => $resolution->legacyDbco,
+            'resolutionStatus' => $resolution->resolutionStatus,
+            'legacyPriceCode' => $resolution->legacyPriceCode,
+            'resolutionSource' => $resolution->resolutionSource,
+            'explicitMappingCode' => $resolution->explicitMappingCode,
+            'exactCandidateCode' => $resolution->exactCandidateCode,
+            'maskCandidates' => $resolution->maskCandidates,
+            'legacyMatch' => $resolution->legacyMatch !== null
+                ? self::legacyPricingCodeInspection($resolution->legacyMatch)
+                : null,
+            'priceDataStatus' => $resolution->priceDataStatus,
+            'warnings' => $resolution->warnings,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function legacyVariantPricingIdentityAudit(\TriCab\Core\Product\Application\DTO\LegacyVariantPricingIdentityAuditSummary $summary): array
+    {
+        return [
+            'variantsScanned' => $summary->variantsScanned,
+            'explicitCount' => $summary->explicitCount,
+            'exactCount' => $summary->exactCount,
+            'maskCount' => $summary->maskCount,
+            'unresolvedCount' => $summary->unresolvedCount,
+            'ambiguousCount' => $summary->ambiguousCount,
+            'invalidExplicitCount' => $summary->invalidExplicitCount,
+            'zeroCostCount' => $summary->zeroCostCount,
+            'priceRevisionAmbiguousCount' => $summary->priceRevisionAmbiguousCount,
+            'systemDefaultUomCount' => $summary->systemDefaultUomCount,
+            'noPriceListContextCount' => $summary->noPriceListContextCount,
+            'byDbco' => $summary->byDbco,
+            'legacyQueryCount' => $summary->legacyQueryCount,
+            'executionSeconds' => $summary->executionSeconds,
+            'warnings' => $summary->warnings,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function variantLegacyPricingIdentityMapping(\TriCab\Core\Product\Application\DTO\VariantLegacyPricingIdentityMapping $mapping): array
+    {
+        return [
+            'publicId' => $mapping->publicId,
+            'variantPublicId' => $mapping->variantPublicId,
+            'legacyPriceCode' => $mapping->legacyPriceCode,
+            'isActive' => $mapping->isActive,
         ];
     }
 
@@ -788,6 +903,93 @@ final class ProductManagementDtoSerializer
             'currencies' => self::lookupItems($bundle['currencies']),
             'specificationDefinitions' => self::lookupItems($bundle['specificationDefinitions']),
             'codeRuleSets' => self::lookupItems($bundle['codeRuleSets']),
+            'priceLists' => self::priceListLookupItems($bundle['priceLists'] ?? []),
+            'pricingUnits' => self::pricingUnitLookupList($bundle['pricingUnits'] ?? []),
+        ];
+    }
+
+    /**
+     * @param list<PriceListLookupItem> $items
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function priceListLookupItems(array $items): array
+    {
+        $mapped = [];
+        foreach ($items as $item) {
+            $mapped[] = [
+                'publicId' => $item->publicId,
+                'code' => $item->code,
+                'name' => $item->name,
+                'currencyCode' => $item->currencyCode,
+                'regionName' => $item->regionName,
+                'legacySourceCode' => $item->legacySourceCode,
+                'legacyContextCode' => $item->legacyContextCode,
+                'isActive' => $item->isActive,
+            ];
+        }
+
+        return $mapped;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function priceListRecord(PriceListRecord $record): array
+    {
+        return [
+            'publicId' => $record->publicId,
+            'code' => $record->code,
+            'name' => $record->name,
+            'currencyCode' => $record->currencyCode,
+            'currencyPublicId' => $record->currencyPublicId,
+            'regionPublicId' => $record->regionPublicId,
+            'regionCode' => $record->regionCode,
+            'regionName' => $record->regionName,
+            'marketPublicId' => $record->marketPublicId,
+            'marketCode' => $record->marketCode,
+            'marketName' => $record->marketName,
+            'legacySourceCode' => $record->legacySourceCode,
+            'legacyContextType' => $record->legacyContextType,
+            'legacyContextCode' => $record->legacyContextCode,
+            'effectiveFromUtc' => $record->effectiveFromUtc,
+            'effectiveToUtc' => $record->effectiveToUtc,
+            'isActive' => $record->isActive,
+            'isDeleted' => $record->isDeleted,
+            'rowVersion' => $record->rowVersion,
+            'createdAtUtc' => $record->createdAtUtc,
+            'updatedAtUtc' => $record->updatedAtUtc,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function priceListUsage(PriceListUsage $usage): array
+    {
+        return [
+            'productPriceCount' => $usage->productPriceCount,
+            'variantPriceCount' => $usage->variantPriceCount,
+            'customerPriceCount' => $usage->customerPriceCount,
+            'priceListCustomerCount' => $usage->priceListCustomerCount,
+            'summary' => $usage->summary,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function legacyPriceContextVerification(LegacyPriceContextVerification $result): array
+    {
+        return [
+            'connectionOk' => $result->connectionOk,
+            'legacySourceCode' => $result->legacySourceCode,
+            'legacyContextType' => $result->legacyContextType,
+            'legacyContextCode' => $result->legacyContextCode,
+            'priceRowCount' => $result->priceRowCount,
+            'distinctCodeCount' => $result->distinctCodeCount,
+            'valid' => $result->valid,
+            'message' => $result->message,
         ];
     }
 

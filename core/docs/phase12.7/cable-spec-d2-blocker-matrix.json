@@ -1,0 +1,687 @@
+{
+    "products": [
+        {
+            "styleCode": "B1",
+            "productTitle": "P1 TriCab B1C<br />P1/P8 TriCab B1M",
+            "blockingConcepts": [
+                "A45c",
+                "Af",
+                "cc",
+                "ct",
+                "ins",
+                "mt",
+                "r",
+                "tension",
+                "x50",
+                "x60"
+            ],
+            "blockingCount": 10
+        },
+        {
+            "styleCode": "BH",
+            "productTitle": "BFOI BFCI Shipboard Fire Res.",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "BV",
+            "productTitle": "RI Shipboard",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "C1",
+            "productTitle": "Flexible",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "DF",
+            "productTitle": "600V Braid",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "DG",
+            "productTitle": "1.8kV/3.0kV",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "DV",
+            "productTitle": "RFOI RFCI Shipboard",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "EA",
+            "productTitle": "Flexible Rubber",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "EG",
+            "productTitle": "RFOI (i&c) RFCI (i&c) Shipboard",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "ES",
+            "productTitle": "BI (c) Shipboard Fire Res.",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "EW",
+            "productTitle": "RI (i&c) Shipboard",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "FC",
+            "productTitle": "BI (i&c) Shipboard Fire Res.",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "FE",
+            "productTitle": "BIOI (i&c) BICI (i&c) Offshore Braid Arm. Fire Res.",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "FJ",
+            "productTitle": "BFOI (c) BFCI (c) Shipboard Fire Res.",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "FK",
+            "productTitle": "BIOI (c) BICI (c) Offshore Braid Armour Fire Res.",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "FL",
+            "productTitle": "BFOI (i&c) BFCI (i&c) Shipboard Fire Res.",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "FZ",
+            "productTitle": "RIOI (i&c) RICI (i&c) Offshore Braid Armour",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "HT",
+            "productTitle": "BIOI BICI Offshore Braid Armour Fire Res.",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "KA",
+            "productTitle": "Flexible Control",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "KC",
+            "productTitle": "Flexible Rubber",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "KL",
+            "productTitle": "Flexible Rubber SDI",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "KN",
+            "productTitle": "Flexible Nylon Extruded",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "ins",
+                "mt"
+            ],
+            "blockingCount": 6
+        },
+        {
+            "styleCode": "KU",
+            "productTitle": "Flexible Rubber",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "LP",
+            "productTitle": "Flexible Rubber",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "LS",
+            "productTitle": "Flexible LSZH",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "NF",
+            "productTitle": "P5 TriCab NFC <br />P5/P12 TriCab NFM",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "NJ",
+            "productTitle": "P1 TriCab NJC <br /> P1/P8 TriCab NJM",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "NR",
+            "productTitle": "BU P17 TriCab NRC",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "ins",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "NT",
+            "productTitle": "P5 TriCab NTC <br />P5/P12 TriCab NTM",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "NU",
+            "productTitle": "P1 TriCab NUC<br />P1/P8 TriCab NUM",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "NV",
+            "productTitle": "RU P18 TriCab NVC",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "ins",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "PJ",
+            "productTitle": "RIOI RICI Offshore Braid Armour",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "R1",
+            "productTitle": "Flexible Instrumentation",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "RB",
+            "productTitle": "RIOI (c) RICI (c) Offshore Braid Armour",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "RC",
+            "productTitle": "RI (c) Shipboard",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "RE",
+            "productTitle": "Flexible Rubber Instrumentation",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "RR",
+            "productTitle": "BI Shipboard Fire Res.",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "RS",
+            "productTitle": "RFOI (c) RFCI (c) Shipboard",
+            "blockingConcepts": [
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 3
+        },
+        {
+            "styleCode": "TG",
+            "productTitle": "Shipboard",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "TK",
+            "productTitle": "Industrial VFD",
+            "blockingConcepts": [
+                "A30c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "TP",
+            "productTitle": "Industrial Power & Control Tray Cable",
+            "blockingConcepts": [
+                "A30c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "TR",
+            "productTitle": "Industrial Power & Control Tray Cable, Shielded",
+            "blockingConcepts": [
+                "A30c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "TS",
+            "productTitle": "Shipboard Braid",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "TV",
+            "productTitle": "Industrial VFD",
+            "blockingConcepts": [
+                "A30c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "VP",
+            "productTitle": "Industrial Power & Control",
+            "blockingConcepts": [
+                "A30c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "VR",
+            "productTitle": "Industrial Power & Control, Shielded",
+            "blockingConcepts": [
+                "A30c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "VS",
+            "productTitle": "Industrial Power & Control",
+            "blockingConcepts": [
+                "A30c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "VUF",
+            "productTitle": "VFD Uninsulated Grounds",
+            "blockingConcepts": [
+                "A45c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "VV",
+            "productTitle": "Industrial VFD",
+            "blockingConcepts": [
+                "A30c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "VW",
+            "productTitle": "Industrial VFD",
+            "blockingConcepts": [
+                "A30c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 4
+        },
+        {
+            "styleCode": "XA",
+            "productTitle": "Flexible Rubber",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "XL",
+            "productTitle": "Flexible Rubber Control",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        },
+        {
+            "styleCode": "XN",
+            "productTitle": "Flexible Nylon Extruded",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "ins",
+                "mt"
+            ],
+            "blockingCount": 6
+        },
+        {
+            "styleCode": "XU",
+            "productTitle": "Flexible Rubber",
+            "blockingConcepts": [
+                "A30c",
+                "A40c",
+                "cc",
+                "ct",
+                "mt"
+            ],
+            "blockingCount": 5
+        }
+    ],
+    "conceptSummary": [
+        {
+            "concept": "cc",
+            "productsBlocked": 54,
+            "confidence": "MEDIUM",
+            "reason": "CORE_CONFIGURATION_INFERRED_NOT_PROVEN"
+        },
+        {
+            "concept": "ct",
+            "productsBlocked": 54,
+            "confidence": "MEDIUM",
+            "reason": "CONDUCTOR_TYPE_INFERRED_NOT_PROVEN"
+        },
+        {
+            "concept": "mt",
+            "productsBlocked": 54,
+            "confidence": "HIGH",
+            "reason": "MEASUREMENT_SYSTEM_METADATA"
+        },
+        {
+            "concept": "A30c",
+            "productsBlocked": 22,
+            "confidence": "HIGH",
+            "reason": "AMBIENT_CURRENT_SEMANTIC_COLLISION"
+        },
+        {
+            "concept": "A45c",
+            "productsBlocked": 18,
+            "confidence": "HIGH",
+            "reason": "AMBIENT_CURRENT_SEMANTIC_COLLISION"
+        },
+        {
+            "concept": "A40c",
+            "productsBlocked": 13,
+            "confidence": "HIGH",
+            "reason": "AMBIENT_CURRENT_SEMANTIC_COLLISION"
+        },
+        {
+            "concept": "ins",
+            "productsBlocked": 5,
+            "confidence": "MEDIUM",
+            "reason": "TYPE_AMBIGUITY"
+        },
+        {
+            "concept": "Af",
+            "productsBlocked": 1,
+            "confidence": "LOW",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        },
+        {
+            "concept": "r",
+            "productsBlocked": 1,
+            "confidence": "MEDIUM",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        },
+        {
+            "concept": "tension",
+            "productsBlocked": 1,
+            "confidence": "MEDIUM",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        },
+        {
+            "concept": "x50",
+            "productsBlocked": 1,
+            "confidence": "MEDIUM",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        },
+        {
+            "concept": "x60",
+            "productsBlocked": 1,
+            "confidence": "MEDIUM",
+            "reason": "INSUFFICIENT_VALUES_SINGLE_STYLE"
+        }
+    ],
+    "criticalCodeBlockers": {
+        "cc": 54,
+        "mt": 54,
+        "ct": 54
+    },
+    "note": "Unresolved REVIEW concepts only. APPROVED_* / NOT_A_SPECIFICATION candidates are not blockers in this matrix."
+}
