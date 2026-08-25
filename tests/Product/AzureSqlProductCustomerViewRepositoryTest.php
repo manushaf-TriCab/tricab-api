@@ -50,6 +50,12 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
             ],
         ]);
         $connection->queueFetch([]);
+        $connection->queueFetch([
+            [
+                'StyleCode' => 'BHA',
+                'ParentStyleCode' => 'BH',
+            ],
+        ]);
 
         $repository = new AzureSqlProductCustomerViewRepository(
             $connection,
@@ -58,6 +64,8 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
         );
         $detail = $repository->findByPublicId(ProductPublicId::fromString($publicId));
         self::assertNotNull($detail);
+        self::assertSame('BHA', $detail->styleCode);
+        self::assertSame('BH', $detail->parentStyleCode);
 
         $valueSql = null;
         foreach ($connection->calls as $call) {
@@ -73,7 +81,15 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
             $valueSql,
         );
         self::assertStringNotContainsString('ORDER BY', $valueSql);
-        self::assertArrayHasKey(':code0', $connection->calls[array_key_last($connection->calls)]['params']);
+        $valueCall = null;
+        foreach ($connection->calls as $call) {
+            if (str_contains($call['sql'], 'ProductVariantSpecificationValues')) {
+                $valueCall = $call;
+                break;
+            }
+        }
+        self::assertNotNull($valueCall);
+        self::assertArrayHasKey(':code0', $valueCall['params']);
     }
 
     public function test_variant_matrix_preserves_cells_nulls_decimals_and_options(): void
@@ -121,6 +137,12 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
             $this->valueRow($variantA, $currentId, optionLabel: 'Red'),
             $this->valueRow($variantB, $sizeId, valueText: null),
             $this->valueRow($variantB, $weightId, valueDecimal: '0'),
+        ]);
+        $connection->queueFetch([
+            [
+                'StyleCode' => 'BHA',
+                'ParentStyleCode' => 'BH',
+            ],
         ]);
 
         $repository = new AzureSqlProductCustomerViewRepository(

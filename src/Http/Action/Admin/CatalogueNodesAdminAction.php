@@ -17,7 +17,9 @@ use TriCab\Api\Http\Request\Admin\Product\UpsertCatalogueNodeRequest;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Core\Product\Application\Command\AssignCatalogueNodeProductStyleCommand;
 use TriCab\Core\Product\Application\Command\AssignCatalogueNodeProductsCommand;
+use TriCab\Core\Product\Application\Command\RemoveCatalogueNodeProductStyleCommand;
 use TriCab\Core\Product\Application\Command\CatalogueStatusCommand;
 use TriCab\Core\Product\Application\Command\MoveCatalogueNodeCommand;
 use TriCab\Core\Product\Application\Command\ReorderCatalogueCommand;
@@ -83,6 +85,48 @@ final class CatalogueNodesAdminAction
                 ));
 
                 return $this->responder->success(['acknowledged' => true]);
+            }
+            if ($op === 'product-styles-get') {
+                $id = RouteParams::require($request, 'nodePublicId');
+
+                return $this->responder->success([
+                    'items' => CatalogueDtoSerializer::nodeProductStyleList($this->service->listNodeProductStyles($id)),
+                ]);
+            }
+            if ($op === 'product-styles-post') {
+                $id = RouteParams::require($request, 'nodePublicId');
+                $body = JsonRequestBody::requireObject($request);
+                $stylePublicId = is_string($body['productStylePublicId'] ?? null) ? $body['productStylePublicId'] : '';
+                $displayOrder = is_int($body['displayOrder'] ?? null) ? $body['displayOrder'] : 10;
+                $this->transaction->run(fn () => $this->service->assignNodeProductStyle(
+                    $actor,
+                    new AssignCatalogueNodeProductStyleCommand($id, $stylePublicId, $displayOrder),
+                ));
+
+                return $this->responder->success(['acknowledged' => true]);
+            }
+            if ($op === 'product-styles-delete') {
+                $id = RouteParams::require($request, 'nodePublicId');
+                $stylePublicId = RouteParams::require($request, 'stylePublicId');
+                $this->transaction->run(fn () => $this->service->removeNodeProductStyle(
+                    $actor,
+                    new RemoveCatalogueNodeProductStyleCommand($id, $stylePublicId),
+                ));
+
+                return $this->responder->success(['acknowledged' => true]);
+            }
+            if ($op === 'resolved-products-get') {
+                $id = RouteParams::require($request, 'nodePublicId');
+                $regionCode = isset($request->getQueryParams()['regionCode'])
+                    && is_string($request->getQueryParams()['regionCode'])
+                    ? $request->getQueryParams()['regionCode']
+                    : null;
+
+                return $this->responder->success([
+                    'items' => CatalogueDtoSerializer::resolvedNodeProductList(
+                        $this->service->listResolvedNodeProducts($id, $regionCode),
+                    ),
+                ]);
             }
             if ($op === 'create') {
                 $input = UpsertCatalogueNodeRequest::fromArray(JsonRequestBody::requireObject($request));
@@ -184,6 +228,18 @@ final class CatalogueNodesAdminAction
     {
         $path = rtrim($request->getUri()->getPath(), '/');
         $method = strtoupper($request->getMethod());
+        if (str_ends_with($path, '/resolved-products') && $method === 'GET') {
+            return 'resolved-products-get';
+        }
+        if (preg_match('#/product-styles/[^/]+$#', $path) === 1 && $method === 'DELETE') {
+            return 'product-styles-delete';
+        }
+        if (str_ends_with($path, '/product-styles') && $method === 'GET') {
+            return 'product-styles-get';
+        }
+        if (str_ends_with($path, '/product-styles') && $method === 'POST') {
+            return 'product-styles-post';
+        }
         if (str_ends_with($path, '/products') && $method === 'GET') {
             return 'products-get';
         }

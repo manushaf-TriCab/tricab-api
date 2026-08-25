@@ -135,6 +135,15 @@ use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
+use TriCab\Api\Http\Action\Passkey\ListPasskeysAction;
+use TriCab\Api\Http\Action\Passkey\PasskeyAuthenticationCompleteAction;
+use TriCab\Api\Http\Action\Passkey\PasskeyAuthenticationOptionsAction;
+use TriCab\Api\Http\Action\Passkey\PasskeyRegistrationCompleteAction;
+use TriCab\Api\Http\Action\Passkey\PasskeyRegistrationOptionsAction;
+use TriCab\Api\Http\Action\Passkey\RenamePasskeyAction;
+use TriCab\Api\Http\Action\Passkey\RequestPasskeySetupLinkAction;
+use TriCab\Api\Http\Action\Passkey\RevokePasskeyAction;
+use TriCab\Api\Http\Action\Passkey\VerifyPasskeySetupLinkAction;
 use TriCab\Api\Http\Action\RequestGuestOtpAction;
 use TriCab\Api\Http\Action\AuthenticateGoogleAction;
 use TriCab\Api\Http\Action\AppleAuthChallengeAction;
@@ -164,6 +173,7 @@ use TriCab\Api\Product\Persistence\AzureSqlLegacyProductMappingRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductAdminQueryRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductAuditRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductClassificationRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductStyleRepository;
 use TriCab\Api\Product\Persistence\AzureSqlCatalogueNavigationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductCodeRuleRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductDocumentRepository;
@@ -227,7 +237,8 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryRegionRepository;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Api\Http\Action\AssistantMessageAction;
-use TriCab\Api\Http\Auth\AssistantErrorMapper;
+use TriCab\Api\Http\Auth\PasskeyAuthErrorMapper;
+use TriCab\Api\Http\Auth\WindowedPasskeyAuthRateLimiter;
 use TriCab\Api\Identity\Authentication\CompositeBearerTokenValidator;
 use TriCab\Api\Identity\Authentication\EntraJwksClient;
 use TriCab\Api\Identity\Authentication\EntraJwksProvider;
@@ -244,9 +255,18 @@ use TriCab\Api\Identity\Authentication\GuestJwtIssuer;
 use TriCab\Api\Identity\Authentication\GuestJwtValidator;
 use TriCab\Api\Identity\Authentication\MicrosoftEntraJwtValidator;
 use TriCab\Api\Identity\Email\DevelopmentGuestOtpEmailSender;
+use TriCab\Api\Identity\Email\DevelopmentGuestPasskeyEmailSender;
 use TriCab\Api\Identity\Email\MicrosoftGraphGuestOtpEmailSender;
+use TriCab\Api\Identity\Email\MicrosoftGraphGuestPasskeyEmailSender;
 use TriCab\Api\Identity\Email\PostmarkGuestOtpEmailSender;
+use TriCab\Api\Identity\Email\PostmarkGuestPasskeyEmailSender;
+use TriCab\Api\Identity\Passkey\FakePasskeyCeremony;
+use TriCab\Api\Identity\Passkey\WebauthnLibPasskeyCeremony;
 use TriCab\Api\Identity\Persistence\AzureSqlEmailOtpChallengeRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlGuestPasskeySetupTokenRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlPasskeyChallengeRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlPasskeyRegistrationSessionRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlUserPasskeyRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlGuestLoginEligibilityLookup;
 use TriCab\Api\Identity\Persistence\AzureSqlGuestSessionRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlPermissionManagementRepository;
@@ -257,7 +277,11 @@ use TriCab\Api\Identity\Persistence\AzureSqlUserProvisioningRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlUserRepository;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Identity\Persistence\InMemoryEmailOtpChallengeRepository;
+use TriCab\Api\Identity\Persistence\InMemoryGuestPasskeySetupTokenRepository;
 use TriCab\Api\Identity\Persistence\InMemoryGuestSessionRepository;
+use TriCab\Api\Identity\Persistence\InMemoryPasskeyChallengeRepository;
+use TriCab\Api\Identity\Persistence\InMemoryPasskeyRegistrationSessionRepository;
+use TriCab\Api\Identity\Persistence\InMemoryUserPasskeyRepository;
 use TriCab\Api\Identity\Persistence\InMemoryUserManagementStore;
 use TriCab\Api\Http\Middleware\ReferenceDataCacheInvalidationMiddleware;
 use TriCab\Api\Infrastructure\Authentication\AzureCliAccessTokenProvider;
@@ -307,6 +331,14 @@ use TriCab\Core\Identity\Application\Service\CreateGuestSessionService;
 use TriCab\Core\Identity\Application\Service\GuestLoginEligibilityService;
 use TriCab\Core\Identity\Application\Service\GuestUserProvisioningService;
 use TriCab\Core\Identity\Application\Service\IssueGuestSessionService;
+use TriCab\Core\Identity\Application\Service\ManageUserPasskeysService;
+use TriCab\Core\Identity\Application\Service\CompletePasskeyAuthenticationService;
+use TriCab\Core\Identity\Application\Service\CompletePasskeyRegistrationService;
+use TriCab\Core\Identity\Application\Service\RequestGuestPasskeySetupLinkService;
+use TriCab\Core\Identity\Application\Service\StartPasskeyAuthenticationService;
+use TriCab\Core\Identity\Application\Service\StartPasskeyRegistrationService;
+use TriCab\Core\Identity\Application\Service\VerifyGuestPasskeySetupTokenService;
+use TriCab\Core\Identity\Application\DTO\PasskeyRpConfig;
 use TriCab\Core\Identity\Application\Service\RequestAndSendGuestOtpService;
 use TriCab\Core\Identity\Application\Service\RequestGuestOtpService;
 use TriCab\Core\Identity\Application\Service\RevokeGuestSessionService;
@@ -338,7 +370,14 @@ use TriCab\Core\Identity\Contract\GuestAccessTokenIssuer;
 use TriCab\Core\Identity\Contract\GuestAccessTokenValidator;
 use TriCab\Core\Identity\Contract\GuestLoginEligibilityLookup;
 use TriCab\Core\Identity\Contract\GuestOtpEmailSender;
+use TriCab\Core\Identity\Contract\GuestPasskeyEmailSender;
+use TriCab\Core\Identity\Contract\GuestPasskeySetupTokenRepository;
 use TriCab\Core\Identity\Contract\GuestSessionRepository;
+use TriCab\Core\Identity\Contract\PasskeyAuthRateLimiter;
+use TriCab\Core\Identity\Contract\PasskeyCeremony;
+use TriCab\Core\Identity\Contract\PasskeyChallengeRepository;
+use TriCab\Core\Identity\Contract\PasskeyRegistrationSessionRepository;
+use TriCab\Core\Identity\Contract\UserPasskeyRepository;
 use TriCab\Core\Identity\Contract\OtpGenerator;
 use TriCab\Core\Identity\Contract\OtpHasher;
 use TriCab\Core\Identity\Contract\PermissionManagementRepository;
@@ -366,6 +405,43 @@ use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabTreeAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueNodeAction;
 use TriCab\Core\Product\Application\Service\ManagePriceListService;
+use TriCab\Core\Product\Application\Service\ManageProductClassificationService;
+use TriCab\Core\Product\Application\Service\ManageProductStyleService;
+use TriCab\Core\Product\Application\Service\MakeLocalCopyStyleResourceService;
+use TriCab\Core\Product\Application\Service\ResolveEffectiveStyleResourcesService;
+use TriCab\Core\Product\Application\Service\DiscoverLegacyStyleHierarchyService;
+use TriCab\Core\Product\Application\Service\DiscoverLegacyStyleInventoryService;
+use TriCab\Core\Product\Application\Service\CreateMissingProductStylesFromInventoryService;
+use TriCab\Core\Product\Application\Service\ReviewLegacyStyleHierarchyEvidenceService;
+use TriCab\Core\Product\Application\Service\DiscoverExistingProductStyleMappingService;
+use TriCab\Core\Product\Application\Service\DiscoverProductCodeStyleMappingService;
+use TriCab\Core\Product\Application\Service\DiscoverCatalogueProductStyleMappingService;
+use TriCab\Core\Product\Application\Service\DiscoverStyleSharedDataGeneralisationService;
+use TriCab\Core\Product\Application\Service\StyleSharedDataClassifier;
+use TriCab\Core\Product\Application\Service\ResolveCatalogueStyleFamilyProductsService;
+use TriCab\Core\Product\Contract\CatalogueProductStyleEvidenceSource;
+use TriCab\Core\Product\Persistence\EmptyCatalogueProductStyleEvidenceSource;
+use TriCab\Api\Product\Migration\AzureSqlCatalogueProductStyleEvidenceSource;
+use TriCab\Core\Product\Application\Service\ApplyProductCodeStyleMappingService;
+use TriCab\Core\Product\Application\Service\ApplyApprovedCatalogueNodeProductStylesService;
+use TriCab\Core\Product\Application\Service\ApplyApprovedStyleFamilyTreeAndMappingService;
+use TriCab\Core\Product\Application\Service\CatalogueNodeEffectiveProductsService;
+use TriCab\Core\Product\Contract\LegacyStyleOccurrenceSource;
+use TriCab\Core\Product\Contract\ProductStyleMappingIdentitySource;
+use TriCab\Core\Product\Contract\ProductStyleFamilyEvidenceSource;
+use TriCab\Core\Product\Contract\StyleSharedDataEvidenceSource;
+use TriCab\Core\Product\Application\Service\AssignProductStyleService;
+use TriCab\Core\Product\Application\Service\EnrichPublicProductWithStyleInheritanceService;
+use TriCab\Core\Product\Application\Service\InitiateStyleMediaUploadService;
+use TriCab\Core\Product\Application\Service\CompleteStyleMediaUploadService;
+use TriCab\Core\Product\Application\Service\DeleteStyleMediaAssetService;
+use TriCab\Core\Product\Persistence\InMemoryProductStyleRepository;
+use TriCab\Core\Product\Persistence\EmptyProductStyleMappingIdentitySource;
+use TriCab\Core\Product\Persistence\EmptyProductStyleFamilyEvidenceSource;
+use TriCab\Core\Product\Persistence\EmptyStyleSharedDataEvidenceSource;
+use TriCab\Api\Product\Migration\AzureSqlProductStyleMappingIdentitySource;
+use TriCab\Api\Product\Migration\AzureSqlProductStyleFamilyEvidenceSource;
+use TriCab\Api\Product\Persistence\AzureSqlStyleSharedDataEvidenceSource;
 use TriCab\Core\Product\Application\Service\VerifyLegacyPriceContextService;
 use TriCab\Core\Product\Application\Service\ManageCatalogueNavigationService;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
@@ -431,6 +507,7 @@ use TriCab\Core\Product\Migration\Contract\MigrationLookupIndex;
 use TriCab\Core\Product\Migration\Identity\EmptyMigrationLookupIndex;
 use TriCab\Core\Product\Migration\Identity\ProductIdentityMatcher;
 use TriCab\Core\Product\Migration\Identity\ProductVariantClassifier;
+use TriCab\Api\Product\Migration\MysqlLegacyStyleOccurrenceSource;
 use TriCab\Api\Product\Migration\MysqlLegacyTcRepository;
 use TriCab\Api\Product\Migration\MysqlLegacyWordPressRepository;
 use TriCab\Api\Product\Migration\MysqlLiveInventoryProbe;
@@ -526,6 +603,7 @@ use TriCab\Core\Product\Contract\ProductDocumentRepository;
 use TriCab\Core\Product\Contract\ProductIntegrationRepository;
 use TriCab\Core\Product\Contract\ProductLookupRepository;
 use TriCab\Core\Product\Contract\ProductClassificationRepository;
+use TriCab\Core\Product\Contract\ProductStyleRepository;
 use TriCab\Core\Product\Contract\ProductMarketRepository;
 use TriCab\Core\Product\Contract\ProductBlobStore;
 use TriCab\Core\Product\Contract\ProductFilePathBuilder;
@@ -1007,6 +1085,35 @@ final class ContainerFactory
             SearchProductsService::class => \DI\autowire(SearchProductsService::class),
 
             ManageProductClassificationService::class => \DI\autowire(ManageProductClassificationService::class),
+            ManageProductStyleService::class => \DI\autowire(ManageProductStyleService::class),
+            ResolveEffectiveStyleResourcesService::class => \DI\autowire(ResolveEffectiveStyleResourcesService::class),
+            MakeLocalCopyStyleResourceService::class => \DI\autowire(MakeLocalCopyStyleResourceService::class),
+            LegacyStyleOccurrenceSource::class => \DI\autowire(MysqlLegacyStyleOccurrenceSource::class),
+            DiscoverLegacyStyleInventoryService::class => \DI\autowire(DiscoverLegacyStyleInventoryService::class),
+            CreateMissingProductStylesFromInventoryService::class => \DI\autowire(CreateMissingProductStylesFromInventoryService::class),
+            DiscoverLegacyStyleHierarchyService::class => \DI\autowire(DiscoverLegacyStyleHierarchyService::class)
+                ->constructorParameter('inventory', \DI\get(DiscoverLegacyStyleInventoryService::class)),
+            ReviewLegacyStyleHierarchyEvidenceService::class => \DI\autowire(ReviewLegacyStyleHierarchyEvidenceService::class),
+            DiscoverExistingProductStyleMappingService::class => \DI\autowire(DiscoverExistingProductStyleMappingService::class),
+            DiscoverProductCodeStyleMappingService::class => \DI\autowire(DiscoverProductCodeStyleMappingService::class),
+            DiscoverProductStyleFamilyTreeService::class => \DI\autowire(DiscoverProductStyleFamilyTreeService::class),
+            DiscoverCatalogueProductStyleMappingService::class => \DI\autowire(DiscoverCatalogueProductStyleMappingService::class),
+            DiscoverStyleSharedDataGeneralisationService::class => \DI\autowire(DiscoverStyleSharedDataGeneralisationService::class),
+            StyleSharedDataClassifier::class => \DI\autowire(StyleSharedDataClassifier::class),
+            ResolveCatalogueStyleFamilyProductsService::class => \DI\autowire(ResolveCatalogueStyleFamilyProductsService::class),
+            CatalogueProductStyleEvidenceSource::class => \DI\autowire(EmptyCatalogueProductStyleEvidenceSource::class),
+            ApplyProductCodeStyleMappingService::class => \DI\autowire(ApplyProductCodeStyleMappingService::class),
+            ApplyApprovedStyleFamilyTreeAndMappingService::class => \DI\autowire(ApplyApprovedStyleFamilyTreeAndMappingService::class),
+            ApplyApprovedCatalogueNodeProductStylesService::class => \DI\autowire(ApplyApprovedCatalogueNodeProductStylesService::class),
+            CatalogueNodeEffectiveProductsService::class => \DI\autowire(CatalogueNodeEffectiveProductsService::class),
+            ProductStyleMappingIdentitySource::class => \DI\autowire(EmptyProductStyleMappingIdentitySource::class),
+            ProductStyleFamilyEvidenceSource::class => \DI\autowire(EmptyProductStyleFamilyEvidenceSource::class),
+            StyleSharedDataEvidenceSource::class => \DI\autowire(EmptyStyleSharedDataEvidenceSource::class),
+            AssignProductStyleService::class => \DI\autowire(AssignProductStyleService::class),
+            EnrichPublicProductWithStyleInheritanceService::class => \DI\autowire(EnrichPublicProductWithStyleInheritanceService::class),
+            InitiateStyleMediaUploadService::class => \DI\autowire(InitiateStyleMediaUploadService::class),
+            CompleteStyleMediaUploadService::class => \DI\autowire(CompleteStyleMediaUploadService::class),
+            DeleteStyleMediaAssetService::class => \DI\autowire(DeleteStyleMediaAssetService::class),
             ManagePriceListService::class => \DI\autowire(ManagePriceListService::class),
             VerifyLegacyPriceContextService::class => \DI\autowire(VerifyLegacyPriceContextService::class),
             ManageCatalogueNavigationService::class => \DI\autowire(ManageCatalogueNavigationService::class),
@@ -1434,6 +1541,10 @@ final class ContainerFactory
             $definitions[UserRepository::class] = \DI\autowire(AzureSqlUserRepository::class);
             $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(AzureSqlEmailOtpChallengeRepository::class);
             $definitions[GuestSessionRepository::class] = \DI\autowire(AzureSqlGuestSessionRepository::class);
+            $definitions[UserPasskeyRepository::class] = \DI\autowire(AzureSqlUserPasskeyRepository::class);
+            $definitions[GuestPasskeySetupTokenRepository::class] = \DI\autowire(AzureSqlGuestPasskeySetupTokenRepository::class);
+            $definitions[PasskeyChallengeRepository::class] = \DI\autowire(AzureSqlPasskeyChallengeRepository::class);
+            $definitions[PasskeyRegistrationSessionRepository::class] = \DI\autowire(AzureSqlPasskeyRegistrationSessionRepository::class);
             $definitions[UserProvisioningRepository::class] = \DI\autowire(AzureSqlUserProvisioningRepository::class);
             $definitions[UserManagementRepository::class] = \DI\autowire(AzureSqlUserManagementRepository::class);
             $definitions[RoleManagementRepository::class] = \DI\autowire(AzureSqlRoleManagementRepository::class);
@@ -1452,6 +1563,11 @@ final class ContainerFactory
             $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(AzureSqlProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(AzureSqlProductClassificationRepository::class);
+            $definitions[ProductStyleRepository::class] = \DI\autowire(AzureSqlProductStyleRepository::class);
+            $definitions[ProductStyleMappingIdentitySource::class] = \DI\autowire(AzureSqlProductStyleMappingIdentitySource::class);
+            $definitions[ProductStyleFamilyEvidenceSource::class] = \DI\autowire(AzureSqlProductStyleFamilyEvidenceSource::class);
+            $definitions[StyleSharedDataEvidenceSource::class] = \DI\autowire(AzureSqlStyleSharedDataEvidenceSource::class);
+            $definitions[CatalogueProductStyleEvidenceSource::class] = \DI\autowire(AzureSqlCatalogueProductStyleEvidenceSource::class);
             $definitions[PriceListRepository::class] = \DI\autowire(AzureSqlPriceListRepository::class);
             $definitions[VariantLegacyPricingIdentityRepository::class] = \DI\autowire(AzureSqlVariantLegacyPricingIdentityRepository::class);
             $definitions[CatalogueNavigationRepository::class] = \DI\autowire(AzureSqlCatalogueNavigationRepository::class);
@@ -1526,6 +1642,10 @@ SQL,
             if ($settings->isGuestJwtConfigured()) {
                 $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(InMemoryEmailOtpChallengeRepository::class);
                 $definitions[GuestSessionRepository::class] = \DI\autowire(InMemoryGuestSessionRepository::class);
+                $definitions[UserPasskeyRepository::class] = \DI\autowire(InMemoryUserPasskeyRepository::class);
+                $definitions[GuestPasskeySetupTokenRepository::class] = \DI\autowire(InMemoryGuestPasskeySetupTokenRepository::class);
+                $definitions[PasskeyChallengeRepository::class] = \DI\autowire(InMemoryPasskeyChallengeRepository::class);
+                $definitions[PasskeyRegistrationSessionRepository::class] = \DI\autowire(InMemoryPasskeyRegistrationSessionRepository::class);
                 self::addGuestAuthDefinitions($definitions, $settings);
             }
 
@@ -1583,6 +1703,7 @@ SQL,
             $definitions[ProductSearchRepository::class] = \DI\autowire(InMemoryProductSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(InMemoryProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(InMemoryProductClassificationRepository::class);
+            $definitions[ProductStyleRepository::class] = \DI\autowire(InMemoryProductStyleRepository::class);
             $definitions[CatalogueNavigationRepository::class] = \DI\autowire(InMemoryCatalogueNavigationRepository::class);
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(InMemoryProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(InMemoryProductMediaRepository::class);
@@ -1691,6 +1812,140 @@ SQL,
         $definitions[AppleAuthErrorMapper::class] = \DI\autowire(AppleAuthErrorMapper::class);
         $definitions[AppleAuthChallengeAction::class] = \DI\autowire(AppleAuthChallengeAction::class);
         $definitions[AuthenticateAppleAction::class] = \DI\autowire(AuthenticateAppleAction::class);
+        self::addPasskeyAuthDefinitions($definitions, $settings);
+    }
+
+    /**
+     * Real webauthn-lib unless Fake is explicitly opted in for in-memory development tests.
+     * RP ID and origins always come from Settings, never from the request Host header.
+     */
+    public static function passkeyCeremonyFor(Settings $settings): PasskeyCeremony
+    {
+        if ($settings->usesFakePasskeyCeremony()) {
+            return new FakePasskeyCeremony();
+        }
+
+        return new WebauthnLibPasskeyCeremony();
+    }
+
+    /**
+     * @param array<string, mixed> $definitions
+     */
+    private static function addPasskeyAuthDefinitions(array &$definitions, Settings $settings): void
+    {
+        if (!$settings->isPasskeyAuthConfigured()) {
+            return;
+        }
+
+        $definitions[PasskeyRpConfig::class] = static function () use ($settings): PasskeyRpConfig {
+            return new PasskeyRpConfig(
+                rpId: $settings->passkeyRpId,
+                rpName: $settings->passkeyRpName,
+                allowedOrigins: $settings->passkeyAllowedOrigins,
+            );
+        };
+        $definitions[PasskeyCeremony::class] = static function () use ($settings): PasskeyCeremony {
+            return self::passkeyCeremonyFor($settings);
+        };
+        $definitions[PasskeyAuthRateLimiter::class] = static function (Container $container): PasskeyAuthRateLimiter {
+            return new WindowedPasskeyAuthRateLimiter(self::get($container, ApplicationCache::class));
+        };
+        $definitions[GuestPasskeyEmailSender::class] = static function (Container $container) use ($settings): GuestPasskeyEmailSender {
+            return self::createGuestPasskeyEmailSender($settings, $container);
+        };
+        $definitions[RequestGuestPasskeySetupLinkService::class] = static function (Container $container) use ($settings): RequestGuestPasskeySetupLinkService {
+            return new RequestGuestPasskeySetupLinkService(
+                eligibility: self::get($container, GuestLoginEligibilityService::class),
+                users: self::get($container, UserRepository::class),
+                tokens: self::get($container, GuestPasskeySetupTokenRepository::class),
+                emailSender: self::get($container, GuestPasskeyEmailSender::class),
+                rateLimiter: self::get($container, PasskeyAuthRateLimiter::class),
+                publicAppBaseUrl: $settings->passkeyPublicAppBaseUrl,
+                ttlSeconds: $settings->passkeySetupTokenTtlSeconds,
+                clock: self::get($container, Clock::class),
+            );
+        };
+        $definitions[VerifyGuestPasskeySetupTokenService::class] = static function (Container $container) use ($settings): VerifyGuestPasskeySetupTokenService {
+            return new VerifyGuestPasskeySetupTokenService(
+                tokens: self::get($container, GuestPasskeySetupTokenRepository::class),
+                sessions: self::get($container, PasskeyRegistrationSessionRepository::class),
+                users: self::get($container, UserRepository::class),
+                rateLimiter: self::get($container, PasskeyAuthRateLimiter::class),
+                sessionTtlSeconds: $settings->passkeyRegistrationChallengeTtlSeconds,
+                clock: self::get($container, Clock::class),
+            );
+        };
+        $definitions[StartPasskeyRegistrationService::class] = static function (Container $container) use ($settings): StartPasskeyRegistrationService {
+            return new StartPasskeyRegistrationService(
+                sessions: self::get($container, PasskeyRegistrationSessionRepository::class),
+                challenges: self::get($container, PasskeyChallengeRepository::class),
+                passkeys: self::get($container, UserPasskeyRepository::class),
+                users: self::get($container, UserRepository::class),
+                ceremony: self::get($container, PasskeyCeremony::class),
+                rp: self::get($container, PasskeyRpConfig::class),
+                rateLimiter: self::get($container, PasskeyAuthRateLimiter::class),
+                challengeTtlSeconds: $settings->passkeyRegistrationChallengeTtlSeconds,
+                clock: self::get($container, Clock::class),
+            );
+        };
+        $definitions[CompletePasskeyRegistrationService::class] = \DI\autowire(CompletePasskeyRegistrationService::class);
+        $definitions[StartPasskeyAuthenticationService::class] = static function (Container $container) use ($settings): StartPasskeyAuthenticationService {
+            return new StartPasskeyAuthenticationService(
+                challenges: self::get($container, PasskeyChallengeRepository::class),
+                ceremony: self::get($container, PasskeyCeremony::class),
+                rp: self::get($container, PasskeyRpConfig::class),
+                rateLimiter: self::get($container, PasskeyAuthRateLimiter::class),
+                challengeTtlSeconds: $settings->passkeyAuthChallengeTtlSeconds,
+                clock: self::get($container, Clock::class),
+            );
+        };
+        $definitions[CompletePasskeyAuthenticationService::class] = \DI\autowire(CompletePasskeyAuthenticationService::class);
+        $definitions[ManageUserPasskeysService::class] = \DI\autowire(ManageUserPasskeysService::class);
+        $definitions[PasskeyAuthErrorMapper::class] = \DI\autowire(PasskeyAuthErrorMapper::class);
+        $definitions[RequestPasskeySetupLinkAction::class] = \DI\autowire(RequestPasskeySetupLinkAction::class);
+        $definitions[VerifyPasskeySetupLinkAction::class] = static function (Container $container) use ($settings): VerifyPasskeySetupLinkAction {
+            return new VerifyPasskeySetupLinkAction(
+                service: self::get($container, VerifyGuestPasskeySetupTokenService::class),
+                responder: self::get($container, JsonResponder::class),
+                errors: self::get($container, PasskeyAuthErrorMapper::class),
+                logger: self::get($container, GuestAuthEventLogger::class),
+                secureCookies: $settings->isProduction(),
+            );
+        };
+        $definitions[PasskeyRegistrationOptionsAction::class] = \DI\autowire(PasskeyRegistrationOptionsAction::class);
+        $definitions[PasskeyRegistrationCompleteAction::class] = \DI\autowire(PasskeyRegistrationCompleteAction::class);
+        $definitions[PasskeyAuthenticationOptionsAction::class] = \DI\autowire(PasskeyAuthenticationOptionsAction::class);
+        $definitions[PasskeyAuthenticationCompleteAction::class] = \DI\autowire(PasskeyAuthenticationCompleteAction::class);
+        $definitions[ListPasskeysAction::class] = \DI\autowire(ListPasskeysAction::class);
+        $definitions[RenamePasskeyAction::class] = \DI\autowire(RenamePasskeyAction::class);
+        $definitions[RevokePasskeyAction::class] = \DI\autowire(RevokePasskeyAction::class);
+    }
+
+    private static function createGuestPasskeyEmailSender(Settings $settings, Container $container): GuestPasskeyEmailSender
+    {
+        if ($settings->usesDevelopmentGuestEmail()) {
+            return new DevelopmentGuestPasskeyEmailSender();
+        }
+
+        $http = self::get($container, JsonHttpClient::class);
+
+        if ($settings->usesMicrosoftGraphGuestEmail()) {
+            return new MicrosoftGraphGuestPasskeyEmailSender(
+                http: $http,
+                tenantId: $settings->graphTenantId,
+                clientId: $settings->graphClientId,
+                clientSecret: $settings->graphClientSecret,
+                mailbox: $settings->rfqMailbox,
+            );
+        }
+
+        return new PostmarkGuestPasskeyEmailSender(
+            http: $http,
+            serverToken: $settings->postmarkServerToken,
+            fromEmail: $settings->postmarkFromEmail,
+            fromName: $settings->postmarkFromName,
+            messageStream: $settings->postmarkMessageStream,
+        );
     }
 
     /**

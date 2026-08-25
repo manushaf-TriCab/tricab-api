@@ -12,6 +12,7 @@ use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Action\Admin\AddProductDocumentAction;
 use TriCab\Api\Http\Action\Admin\AddProductMediaAction;
 use TriCab\Api\Http\Action\Admin\ProductSeriesAdminAction;
+use TriCab\Api\Http\Action\Admin\ProductStylesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductFamiliesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductCategoriesAdminAction;
 use TriCab\Api\Http\Action\Admin\ProductPriceListsAdminAction;
@@ -153,6 +154,16 @@ use TriCab\Api\Http\Action\AuthenticateGoogleAction;
 use TriCab\Api\Http\Action\AppleAuthChallengeAction;
 use TriCab\Api\Http\Action\AuthenticateAppleAction;
 use TriCab\Api\Http\Action\VerifyGuestOtpAction;
+use TriCab\Api\Http\Action\Passkey\ListPasskeysAction;
+use TriCab\Api\Http\Action\Passkey\PasskeyAuthenticationCompleteAction;
+use TriCab\Api\Http\Action\Passkey\PasskeyAuthenticationOptionsAction;
+use TriCab\Api\Http\Action\Passkey\PasskeyDiagnosticsAction;
+use TriCab\Api\Http\Action\Passkey\PasskeyRegistrationCompleteAction;
+use TriCab\Api\Http\Action\Passkey\PasskeyRegistrationOptionsAction;
+use TriCab\Api\Http\Action\Passkey\RenamePasskeyAction;
+use TriCab\Api\Http\Action\Passkey\RequestPasskeySetupLinkAction;
+use TriCab\Api\Http\Action\Passkey\RevokePasskeyAction;
+use TriCab\Api\Http\Action\Passkey\VerifyPasskeySetupLinkAction;
 use TriCab\Api\Http\Auth\RequirePermission;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
@@ -231,6 +242,22 @@ final class AppBuilder
         if ($settings->isAppleAuthConfigured()) {
             $app->get('/api/v1/auth/apple/challenge', AppleAuthChallengeAction::class);
             $app->post('/api/v1/auth/apple', AuthenticateAppleAction::class);
+        }
+
+        if ($settings->isPasskeyAuthConfigured()) {
+            $app->post('/api/v1/auth/guest/passkey/setup-link', RequestPasskeySetupLinkAction::class);
+            $app->post('/api/v1/auth/guest/passkey/setup-link/verify', VerifyPasskeySetupLinkAction::class);
+            $app->post('/api/v1/auth/passkeys/registration/options', PasskeyRegistrationOptionsAction::class);
+            $app->post('/api/v1/auth/passkeys/registration/complete', PasskeyRegistrationCompleteAction::class);
+            $app->post('/api/v1/auth/passkeys/authentication/options', PasskeyAuthenticationOptionsAction::class);
+            $app->post('/api/v1/auth/passkeys/authentication/complete', PasskeyAuthenticationCompleteAction::class);
+            $require = new RequirePermission($container);
+            $app->get('/api/v1/auth/passkeys', ListPasskeysAction::class)->add(($require)('ACCOUNT.LOGIN'));
+            $app->patch('/api/v1/auth/passkeys/{publicId}', RenamePasskeyAction::class)->add(($require)('ACCOUNT.LOGIN'));
+            $app->delete('/api/v1/auth/passkeys/{publicId}', RevokePasskeyAction::class)->add(($require)('ACCOUNT.LOGIN'));
+            if ($settings->isDevelopment()) {
+                $app->get('/api/v1/dev/passkey-diagnostics', PasskeyDiagnosticsAction::class);
+            }
         }
 
         if ($settings->isDevMemoryProductFileDeliveryEnabled()) {
@@ -544,6 +571,65 @@ final class AppBuilder
         $app->get('/api/v1/admin/product-series/{seriesPublicId}/usage', ProductSeriesAdminAction::class)
             ->add(($require)('PRODUCT.READ'));
 
+        $app->get('/api/v1/admin/product-styles', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->get('/api/v1/admin/product-styles/tree', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->post('/api/v1/admin/product-styles', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/reorder', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/discovery/preview', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->post('/api/v1/admin/product-styles/discovery/evidence-review', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->post('/api/v1/admin/product-styles/discovery/product-mapping', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->post('/api/v1/admin/product-styles/discovery/product-code-mapping', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->post('/api/v1/admin/product-styles/discovery/family-tree', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->post('/api/v1/admin/product-styles/discovery/apply-product-code-mapping', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/discovery/apply-assignments', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/discovery/apply-hierarchy', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->get('/api/v1/admin/product-styles/{stylePublicId}', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->put('/api/v1/admin/product-styles/{stylePublicId}', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/{stylePublicId}/parent', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->put('/api/v1/admin/product-styles/{stylePublicId}/inheritance', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.INHERITANCE.MANAGE'));
+        $app->put('/api/v1/admin/product-styles/{stylePublicId}/specifications', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.INHERITANCE.MANAGE'));
+        $app->get('/api/v1/admin/product-styles/{stylePublicId}/effective-resources', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->post('/api/v1/admin/product-styles/{stylePublicId}/make-local-copy', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.INHERITANCE.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/{stylePublicId}/activate', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/{stylePublicId}/deactivate', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/{stylePublicId}/archive', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/{stylePublicId}/restore', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+        $app->get('/api/v1/admin/product-styles/{stylePublicId}/usage', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.READ'));
+        $app->post('/api/v1/admin/product-styles/{stylePublicId}/media/upload-session', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.INHERITANCE.MANAGE'));
+        $app->post('/api/v1/admin/product-styles/{stylePublicId}/media/{assetPublicId}/complete-upload', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.INHERITANCE.MANAGE'));
+        $app->delete('/api/v1/admin/product-styles/{stylePublicId}/media/{assetPublicId}', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.INHERITANCE.MANAGE'));
+        $app->get('/api/v1/admin/products/{productPublicId}/style-inheritance', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->put('/api/v1/admin/products/{productPublicId}/style-inheritance', ProductStylesAdminAction::class)
+            ->add(($require)('PRODUCT.STYLES.MANAGE'));
+
         $app->get('/api/v1/admin/catalogue-tabs', CatalogueTabsAdminAction::class)
             ->add(($require)('PRODUCT.READ'));
         $app->post('/api/v1/admin/catalogue-tabs', CatalogueTabsAdminAction::class)
@@ -591,6 +677,14 @@ final class AppBuilder
             ->add(($require)('PRODUCT.READ'));
         $app->put('/api/v1/admin/catalogue-nodes/{nodePublicId}/products', CatalogueNodesAdminAction::class)
             ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/catalogue-nodes/{nodePublicId}/product-styles', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->post('/api/v1/admin/catalogue-nodes/{nodePublicId}/product-styles', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->delete('/api/v1/admin/catalogue-nodes/{nodePublicId}/product-styles/{stylePublicId}', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.LOOKUPS.MANAGE'));
+        $app->get('/api/v1/admin/catalogue-nodes/{nodePublicId}/resolved-products', CatalogueNodesAdminAction::class)
+            ->add(($require)('PRODUCT.READ'));
 
         $app->get('/api/v1/admin/products/{productPublicId}/catalogue-placements', ProductCataloguePlacementsAdminAction::class)
             ->add(($require)('PRODUCT.READ'));

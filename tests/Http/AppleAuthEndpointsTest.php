@@ -14,6 +14,7 @@ use TriCab\Core\Identity\Application\DTO\VerifiedAppleIdToken;
 use TriCab\Core\Identity\Contract\AppleAuthorizationCodeExchanger;
 use TriCab\Core\Identity\Contract\AppleIdTokenValidator;
 use TriCab\Core\Identity\Contract\UserProvisioningRepository;
+use TriCab\Core\Identity\Domain\Service\AppleExternalIdentityFactory;
 use TriCab\Core\Identity\Domain\Service\EmailOtpExternalIdentityFactory;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
@@ -40,7 +41,7 @@ final class AppleAuthEndpointsTest extends TestCase
         self::assertSame(2, substr_count((string) $data['state'], '.'));
     }
 
-    public function test_apple_login_issues_session_without_external_identity_writes_and_me_works(): void
+    public function test_apple_login_issues_session_links_apple_identity_and_me_works(): void
     {
         $app = $this->createAppleApp();
         $users = $this->users($app);
@@ -74,7 +75,10 @@ final class AppleAuthEndpointsTest extends TestCase
         /** @var array<string, mixed> $user */
         $user = $data['user'];
         self::assertSame('admin@tricab.com', $user['emailAddress']);
-        self::assertSame($afterSeedLinks, $users->externalIdentityCount());
+        self::assertSame($afterSeedLinks + 1, $users->externalIdentityCount());
+        self::assertNotNull($users->findByExternalIdentity(
+            AppleExternalIdentityFactory::forSubject('apple-sub-1'),
+        ));
         self::assertNull($users->findByExternalIdentity(
             EmailOtpExternalIdentityFactory::forEmail(EmailAddress::fromString('admin@tricab.com')),
         ));

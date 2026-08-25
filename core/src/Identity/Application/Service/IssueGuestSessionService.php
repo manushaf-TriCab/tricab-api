@@ -38,6 +38,7 @@ final class IssueGuestSessionService
         User $user,
         ?string $createdIpAddress = null,
         ?string $createdUserAgent = null,
+        string $authProvider = 'email-otp',
     ): IssuedGuestSession {
         $user->assertAuthenticationAllowed();
 
@@ -52,6 +53,7 @@ final class IssueGuestSessionService
             jwtId: $jwtId,
             issuedAtUtc: $issuedAtUtc,
             expiresAtUtc: $expiresAtUtc,
+            authProvider: $authProvider,
         );
 
         $tokenHash = $this->tokenHasher->hash($issuedToken->token);

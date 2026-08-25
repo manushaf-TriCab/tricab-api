@@ -12,12 +12,14 @@ final class ExternalProvider
     public const EMAIL_OTP = 'email_otp';
     public const GOOGLE = 'google';
     public const APPLE = 'apple';
+    public const PASSKEY = 'passkey';
 
     private const ALLOWED = [
         self::MICROSOFT_ENTRA,
         self::EMAIL_OTP,
         self::GOOGLE,
         self::APPLE,
+        self::PASSKEY,
     ];
 
     private function __construct(private readonly string $value)
@@ -56,6 +58,11 @@ final class ExternalProvider
         return new self(self::APPLE);
     }
 
+    public static function passkey(): self
+    {
+        return new self(self::PASSKEY);
+    }
+
     public function toString(): string
     {
         return $this->value;
@@ -84,5 +91,10 @@ final class ExternalProvider
     public function isApple(): bool
     {
         return $this->value === self::APPLE;
+    }
+
+    public function isPasskey(): bool
+    {
+        return $this->value === self::PASSKEY;
     }
 }

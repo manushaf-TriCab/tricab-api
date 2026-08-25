@@ -8,6 +8,8 @@ use TriCab\Api\Bootstrap\Environment;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+\TriCab\Api\Bootstrap\CoreAutoload::register();
+
 $basePath = dirname(__DIR__);
 $settings = Environment::settings($basePath);
 $container = ContainerFactory::create($settings);

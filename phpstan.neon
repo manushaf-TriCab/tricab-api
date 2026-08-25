@@ -3,6 +3,8 @@ parameters:
     paths:
         - src
         - tests
+    scanDirectories:
+        - core/src
     excludePaths:
         - src/Product/Persistence/AzureSqlMigrationBatchRepository.php
     treatPhpDocTypesAsCertain: true

@@ -35,7 +35,13 @@ final class GuestAuthEventLogger
             || str_contains($normalized, 'password')
             || str_contains($normalized, 'secret')
             || str_contains($normalized, 'hash')
-            || str_contains($normalized, 'jwt');
+            || str_contains($normalized, 'jwt')
+            || str_contains($normalized, 'cookie')
+            || str_contains($normalized, 'attestation')
+            || str_contains($normalized, 'assertion')
+            || str_contains($normalized, 'credential')
+            || str_contains($normalized, 'publickey')
+            || str_contains($normalized, 'private');
     }
 
     private function looksSensitive(string $value): bool

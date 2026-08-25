@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace TriCab\Core\Product\Application\Service;
 
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
+use TriCab\Core\Product\Application\Command\AssignCatalogueNodeProductStyleCommand;
 use TriCab\Core\Product\Application\Command\AssignCatalogueNodeProductsCommand;
+use TriCab\Core\Product\Application\Command\RemoveCatalogueNodeProductStyleCommand;
 use TriCab\Core\Product\Application\Command\CatalogueStatusCommand;
 use TriCab\Core\Product\Application\Command\MoveCatalogueNodeCommand;
 use TriCab\Core\Product\Application\Command\ReorderCatalogueCommand;
@@ -13,7 +15,9 @@ use TriCab\Core\Product\Application\Command\ReplaceProductCataloguePlacementsCom
 use TriCab\Core\Product\Application\Command\UpsertCatalogueNodeCommand;
 use TriCab\Core\Product\Application\Command\UpsertCatalogueTabCommand;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeProductRecord;
+use TriCab\Core\Product\Application\DTO\CatalogueNodeProductStyleRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeRecord;
+use TriCab\Core\Product\Application\DTO\CatalogueNodeResolvedProductRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeTreeNode;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeUsage;
 use TriCab\Core\Product\Application\DTO\CatalogueProductPlacementRecord;
@@ -38,6 +42,7 @@ final class ManageCatalogueNavigationService
         private readonly CatalogueNavigationRepository $catalogue,
         private readonly ApplicationTransaction $transaction,
         private readonly ProductAuditRecorder $audit,
+        private readonly CatalogueNodeEffectiveProductsService $effectiveProducts,
         private readonly int $maxDepth = CatalogueNavigationRepository::MAX_DEPTH,
     ) {
     }
@@ -540,6 +545,69 @@ final class ManageCatalogueNavigationService
                 newValues: [
                     'nodePublicId' => $command->nodePublicId,
                     'count' => count($command->placements),
+                ],
+            );
+        });
+    }
+
+    /** @return list<CatalogueNodeProductStyleRecord> */
+    public function listNodeProductStyles(string $nodePublicId): array
+    {
+        $this->requireNode($nodePublicId, true);
+
+        return $this->catalogue->listNodeProductStyles($nodePublicId, false);
+    }
+
+    /** @return list<CatalogueNodeResolvedProductRecord> */
+    public function listResolvedNodeProducts(string $nodePublicId, ?string $regionCode = null): array
+    {
+        $this->requireNode($nodePublicId, true);
+
+        return $this->effectiveProducts->listResolvedAdmin($nodePublicId, $regionCode);
+    }
+
+    public function assignNodeProductStyle(ActorContext $actor, AssignCatalogueNodeProductStyleCommand $command): void
+    {
+        $this->transaction->run(function () use ($actor, $command): void {
+            $this->requireNode($command->nodePublicId);
+            $this->catalogue->addNodeProductStyle(
+                $command->nodePublicId,
+                $command->productStylePublicId,
+                $command->displayOrder,
+                $this->audit->actorUserId($actor),
+            );
+            $this->audit->record(
+                actor: $actor,
+                productPublicId: null,
+                entityTypeCode: 'catalogue-node-product-style',
+                entityId: null,
+                actionCode: 'assigned',
+                newValues: [
+                    'nodePublicId' => $command->nodePublicId,
+                    'productStylePublicId' => $command->productStylePublicId,
+                ],
+            );
+        });
+    }
+
+    public function removeNodeProductStyle(ActorContext $actor, RemoveCatalogueNodeProductStyleCommand $command): void
+    {
+        $this->transaction->run(function () use ($actor, $command): void {
+            $this->requireNode($command->nodePublicId);
+            $this->catalogue->deactivateNodeProductStyle(
+                $command->nodePublicId,
+                $command->productStylePublicId,
+                $this->audit->actorUserId($actor),
+            );
+            $this->audit->record(
+                actor: $actor,
+                productPublicId: null,
+                entityTypeCode: 'catalogue-node-product-style',
+                entityId: null,
+                actionCode: 'removed',
+                newValues: [
+                    'nodePublicId' => $command->nodePublicId,
+                    'productStylePublicId' => $command->productStylePublicId,
                 ],
             );
         });

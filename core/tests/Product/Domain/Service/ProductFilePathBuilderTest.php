@@ -71,4 +71,28 @@ final class ProductFilePathBuilderTest extends TestCase
         self::assertStringNotContainsString('products/products/', $this->builder->model3dPreviewPath('p1', 'm1', 'x.webp'));
         self::assertStringNotContainsString('products/products/', $this->builder->model3dOptimizedPath('p1', 'm1', 'a1', 'model.glb'));
     }
+
+    public function test_style_asset_paths(): void
+    {
+        self::assertSame(
+            'products/styles/s1/images/a1/hero.jpg',
+            $this->builder->styleAssetPath('s1', 'images', 'a1', 'hero.jpg'),
+        );
+        self::assertSame(
+            'products/styles/s1/documents/a1/spec.pdf',
+            $this->builder->styleAssetPath('s1', 'documents', 'a1', 'spec.pdf'),
+        );
+        self::assertSame(
+            'products/styles/s1/360/a1/frame.jpg',
+            $this->builder->styleAssetPath('s1', '360', 'a1', 'frame.jpg'),
+        );
+        self::assertSame(
+            'products/styles/s1/3d/a1/model.glb',
+            $this->builder->styleAssetPath('s1', '3d', 'a1', 'model.glb'),
+        );
+        self::assertSame(
+            'products/styles/s1/ar/a1/model.usdz',
+            $this->builder->styleAssetPath('s1', 'ar', 'a1', 'model.usdz'),
+        );
+    }
 }

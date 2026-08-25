@@ -87,6 +87,11 @@ Serverless bills primarily while the database is **resumed**, not per query. Int
 
 External identity lookup key: `ProviderCode` + `TenantIdentifier` + `SubjectIdentifier`.
 
+## Guest passkeys
+
+See [docs/passkey-authentication.md](docs/passkey-authentication.md). Provider code is `passkey`
+(not `apple_passkey` / `android_passkey`). Passkeys prove identity only.
+
 ## Guest OTP email delivery
 
 Provider selection (`GUEST_EMAIL_PROVIDER`):

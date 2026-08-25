@@ -82,4 +82,32 @@ final class ProductFilePathBuilder
     {
         return sprintf('products/%s/tmp/%s/%s', $productPublicId, $uploadSessionPublicId, $safeFileName);
     }
+
+    /**
+     * Style-owned blobs live under products/styles/… so they share the products
+     * container and existing SAS/read infrastructure without a second store.
+     */
+    public function styleAssetPath(
+        string $stylePublicId,
+        string $kind,
+        string $assetPublicId,
+        string $safeFileName,
+    ): string {
+        $normalizedKind = match (strtolower(trim($kind))) {
+            'image', 'images' => 'images',
+            'document', 'documents' => 'documents',
+            '360', 'spin_360', 'spin360' => '360',
+            '3d', 'models_3d', 'model3d' => '3d',
+            'ar', 'ar_assets' => 'ar',
+            default => throw new \InvalidArgumentException('Unsupported style storage kind: ' . $kind),
+        };
+
+        return sprintf(
+            'products/styles/%s/%s/%s/%s',
+            $stylePublicId,
+            $normalizedKind,
+            $assetPublicId,
+            $safeFileName,
+        );
+    }
 }

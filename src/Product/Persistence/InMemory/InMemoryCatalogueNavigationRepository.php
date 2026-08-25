@@ -7,6 +7,7 @@ namespace TriCab\Api\Product\Persistence\InMemory;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeProductRecord;
+use TriCab\Core\Product\Application\DTO\CatalogueNodeProductStyleRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeTreeNode;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeUsage;
@@ -30,6 +31,9 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
 
     /** @var array<string, list<array<string, mixed>>> */
     private array $nodeProducts = [];
+
+    /** @var array<string, list<array<string, mixed>>> */
+    private array $nodeProductStyles = [];
 
     /** @var array<string, list<string>> */
     private array $nodeRegions = [];
@@ -525,6 +529,90 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
             static fn (CatalogueNodeProductRecord $a, CatalogueNodeProductRecord $b): int =>
                 [$a->displayOrder, $a->productName] <=> [$b->displayOrder, $b->productName],
         );
+
+        return $out;
+    }
+
+    public function listNodeProductStyles(string $nodePublicId, bool $activeOnly = false): array
+    {
+        $out = [];
+        foreach ($this->nodeProductStyles[$nodePublicId] ?? [] as $link) {
+            if ($activeOnly && !($link['isActive'] ?? true)) {
+                continue;
+            }
+            $out[] = new CatalogueNodeProductStyleRecord(
+                productStylePublicId: (string) ($link['productStylePublicId'] ?? ''),
+                styleCode: (string) ($link['styleCode'] ?? ''),
+                displayName: (string) ($link['displayName'] ?? ''),
+                displayOrder: (int) ($link['displayOrder'] ?? 0),
+                isActive: (bool) ($link['isActive'] ?? true),
+                childStyleCount: (int) ($link['childStyleCount'] ?? 0),
+                assignedProductCount: (int) ($link['assignedProductCount'] ?? 0),
+            );
+        }
+        usort(
+            $out,
+            static fn (CatalogueNodeProductStyleRecord $a, CatalogueNodeProductStyleRecord $b): int =>
+                [$a->displayOrder, $a->styleCode] <=> [$b->displayOrder, $b->styleCode],
+        );
+
+        return $out;
+    }
+
+    public function addNodeProductStyle(
+        string $nodePublicId,
+        string $productStylePublicId,
+        int $displayOrder,
+        UserId $actorUserId,
+    ): void {
+        unset($actorUserId);
+        $links = $this->nodeProductStyles[$nodePublicId] ?? [];
+        foreach ($links as &$link) {
+            if (($link['productStylePublicId'] ?? '') === $productStylePublicId) {
+                $link['isActive'] = true;
+                $link['displayOrder'] = $displayOrder;
+
+                return;
+            }
+        }
+        unset($link);
+        $links[] = [
+            'productStylePublicId' => $productStylePublicId,
+            'styleCode' => $productStylePublicId,
+            'displayName' => $productStylePublicId,
+            'displayOrder' => $displayOrder,
+            'isActive' => true,
+            'childStyleCount' => 0,
+            'assignedProductCount' => 0,
+        ];
+        $this->nodeProductStyles[$nodePublicId] = $links;
+    }
+
+    public function deactivateNodeProductStyle(
+        string $nodePublicId,
+        string $productStylePublicId,
+        UserId $actorUserId,
+    ): void {
+        unset($actorUserId);
+        foreach ($this->nodeProductStyles[$nodePublicId] ?? [] as &$link) {
+            if (($link['productStylePublicId'] ?? '') === $productStylePublicId) {
+                $link['isActive'] = false;
+            }
+        }
+        unset($link);
+    }
+
+    public function listNodePublicIdsWithActiveStyleLinks(): array
+    {
+        $out = [];
+        foreach ($this->nodeProductStyles as $nodePublicId => $links) {
+            foreach ($links as $link) {
+                if ($link['isActive'] ?? true) {
+                    $out[] = $nodePublicId;
+                    break;
+                }
+            }
+        }
 
         return $out;
     }

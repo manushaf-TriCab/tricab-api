@@ -19,7 +19,7 @@ use TriCab\Core\Identity\Application\Exception\GuestSessionIssuanceFailed;
 use TriCab\Core\Identity\Contract\EmailOtpChallengeRepository;
 use TriCab\Core\Identity\Contract\GuestOtpEmailSender;
 use TriCab\Core\Identity\Contract\UserProvisioningRepository;
-use TriCab\Core\Identity\Domain\Service\EmailOtpExternalIdentityFactory;
+use TriCab\Core\Identity\Domain\Service\GoogleExternalIdentityFactory;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Identity\Domain\ValueObject\OtpPurpose;
 use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
@@ -462,9 +462,7 @@ final class GuestAuthEndpointsTest extends TestCase
             status: UserStatus::active(),
             roles: [RoleCode::fromString('GUEST')],
             permissions: [PermissionCode::fromString('ACCOUNT.LOGIN')],
-            identity: EmailOtpExternalIdentityFactory::forEmail(
-                EmailAddress::fromString('seed-' . $emailAddress->toString()),
-            ),
+            identity: GoogleExternalIdentityFactory::forSubject('seed-' . $emailAddress->toString()),
         );
     }
 

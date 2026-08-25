@@ -45,7 +45,14 @@ use TriCab\Core\Product\Application\Exception\PriceListInUse;
 use TriCab\Core\Product\Application\Exception\PriceListNotFound;
 use TriCab\Core\Product\Application\Exception\ProductClassificationConcurrencyConflict;
 use TriCab\Core\Product\Application\Exception\ProductClassificationInUse;
+use TriCab\Core\Product\Application\Exception\DuplicateProductClassificationCode;
+use TriCab\Core\Product\Application\Exception\DuplicateProductStyleCode;
+use TriCab\Core\Product\Application\Exception\InvalidProductStyleHierarchy;
 use TriCab\Core\Product\Application\Exception\ProductClassificationNotFound;
+use TriCab\Core\Product\Application\Exception\ProductNotFound;
+use TriCab\Core\Product\Application\Exception\ProductStyleConcurrencyConflict;
+use TriCab\Core\Product\Application\Exception\ProductStyleInUse;
+use TriCab\Core\Product\Application\Exception\ProductStyleNotFound;
 use TriCab\Core\Product\Application\Exception\DuplicateSpecificationCode;
 use TriCab\Core\Product\Application\Exception\SpecificationMasterConcurrencyConflict;
 use TriCab\Core\Product\Application\Exception\SpecificationMasterInUse;
@@ -131,6 +138,26 @@ final class ProductManagementErrorMapper
 
         if ($exception instanceof InvalidRegion) {
             return $this->responder->error('INVALID_REGION', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof ProductStyleNotFound) {
+            return $this->responder->error('PRODUCT_STYLE_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof ProductStyleConcurrencyConflict) {
+            return $this->responder->error('PRODUCT_STYLE_CONCURRENCY_CONFLICT', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof DuplicateProductStyleCode) {
+            return $this->responder->error('DUPLICATE_PRODUCT_STYLE_CODE', $exception->getMessage(), 409);
+        }
+
+        if ($exception instanceof ProductStyleInUse) {
+            return $this->responder->error('PRODUCT_STYLE_IN_USE', $exception->getMessage(), 422);
+        }
+
+        if ($exception instanceof InvalidProductStyleHierarchy) {
+            return $this->responder->error('INVALID_PRODUCT_STYLE_HIERARCHY', $exception->getMessage(), 422);
         }
 
         if ($exception instanceof ProductClassificationNotFound) {

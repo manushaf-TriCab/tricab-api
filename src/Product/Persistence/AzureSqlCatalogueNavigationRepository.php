@@ -8,6 +8,7 @@ use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeProductRecord;
+use TriCab\Core\Product\Application\DTO\CatalogueNodeProductStyleRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeTreeNode;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeUsage;
@@ -707,6 +708,158 @@ SQL;
             ),
             $this->connection->fetchAll($sql, [':nodePublicId' => $nodePublicId]),
         );
+    }
+
+    public function listNodeProductStyles(string $nodePublicId, bool $activeOnly = false): array
+    {
+        $sql = <<<'SQL'
+SELECT
+    CONVERT(NVARCHAR(36), ps.[PublicId]) AS [ProductStylePublicId],
+    ps.[StyleCode],
+    ps.[DisplayName],
+    cnps.[DisplayOrder],
+    cnps.[IsActive],
+    (
+        SELECT COUNT(*)
+        FROM [product].[ProductStyles] child
+        WHERE child.[ParentStyleId] = ps.[ProductStyleId]
+          AND child.[DeletedAtUtc] IS NULL
+          AND child.[IsActive] = 1
+    ) AS [ChildStyleCount],
+    (
+        SELECT COUNT(*)
+        FROM [product].[ProductStyleAssignments] psa
+        INNER JOIN [product].[Products] p ON p.[ProductId] = psa.[ProductId]
+        WHERE psa.[ProductStyleId] = ps.[ProductStyleId]
+          AND p.[DeletedAtUtc] IS NULL
+    ) AS [AssignedProductCount]
+FROM [product].[CatalogueNodeProductStyles] cnps
+INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnps.[CatalogueNodeId]
+INNER JOIN [product].[ProductStyles] ps ON ps.[ProductStyleId] = cnps.[ProductStyleId]
+WHERE n.[PublicId] = :nodePublicId
+  AND ps.[DeletedAtUtc] IS NULL
+SQL;
+        if ($activeOnly) {
+            $sql .= ' AND cnps.[IsActive] = 1 AND ps.[IsActive] = 1';
+        }
+        $sql .= ' ORDER BY cnps.[DisplayOrder], ps.[StyleCode]';
+
+        return array_map(
+            static fn (array $row): CatalogueNodeProductStyleRecord => new CatalogueNodeProductStyleRecord(
+                productStylePublicId: AzureSqlValueMapper::stringValue($row['ProductStylePublicId'] ?? ''),
+                styleCode: AzureSqlValueMapper::stringValue($row['StyleCode'] ?? ''),
+                displayName: AzureSqlValueMapper::stringValue($row['DisplayName'] ?? ''),
+                displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+                isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
+                childStyleCount: AzureSqlValueMapper::intValue($row['ChildStyleCount'] ?? 0),
+                assignedProductCount: AzureSqlValueMapper::intValue($row['AssignedProductCount'] ?? 0),
+            ),
+            $this->connection->fetchAll($sql, [':nodePublicId' => $nodePublicId]),
+        );
+    }
+
+    public function addNodeProductStyle(
+        string $nodePublicId,
+        string $productStylePublicId,
+        int $displayOrder,
+        UserId $actorUserId,
+    ): void {
+        $nodeId = $this->requireNodeId($nodePublicId);
+        $styleId = $this->requireProductStyleId($productStylePublicId);
+        $existing = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT [IsActive]
+FROM [product].[CatalogueNodeProductStyles]
+WHERE [CatalogueNodeId] = :nodeId AND [ProductStyleId] = :styleId
+SQL,
+            [':nodeId' => $nodeId, ':styleId' => $styleId],
+        );
+        if ($existing !== []) {
+            if (AzureSqlValueMapper::boolValue($existing[0]['IsActive'] ?? false)) {
+                return;
+            }
+            $this->connection->execute(
+                <<<'SQL'
+UPDATE [product].[CatalogueNodeProductStyles]
+SET [IsActive] = 1,
+    [DisplayOrder] = :displayOrder,
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [CatalogueNodeId] = :nodeId AND [ProductStyleId] = :styleId
+SQL,
+                [
+                    ':nodeId' => $nodeId,
+                    ':styleId' => $styleId,
+                    ':displayOrder' => $displayOrder,
+                    ':updatedByUserId' => $actorUserId->toInt(),
+                ],
+            );
+
+            return;
+        }
+        $this->connection->execute(
+            <<<'SQL'
+INSERT INTO [product].[CatalogueNodeProductStyles] (
+    [CatalogueNodeId], [ProductStyleId], [DisplayOrder], [IsActive],
+    [CreatedByUserId], [UpdatedByUserId]
+) VALUES (
+    :nodeId, :styleId, :displayOrder, 1,
+    :createdByUserId, :updatedByUserId
+)
+SQL,
+            [
+                ':nodeId' => $nodeId,
+                ':styleId' => $styleId,
+                ':displayOrder' => $displayOrder,
+                ':createdByUserId' => $actorUserId->toInt(),
+                ':updatedByUserId' => $actorUserId->toInt(),
+            ],
+        );
+    }
+
+    public function deactivateNodeProductStyle(
+        string $nodePublicId,
+        string $productStylePublicId,
+        UserId $actorUserId,
+    ): void {
+        $nodeId = $this->requireNodeId($nodePublicId);
+        $styleId = $this->requireProductStyleId($productStylePublicId);
+        $this->connection->execute(
+            <<<'SQL'
+UPDATE [product].[CatalogueNodeProductStyles]
+SET [IsActive] = 0,
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [CatalogueNodeId] = :nodeId AND [ProductStyleId] = :styleId AND [IsActive] = 1
+SQL,
+            [
+                ':nodeId' => $nodeId,
+                ':styleId' => $styleId,
+                ':updatedByUserId' => $actorUserId->toInt(),
+            ],
+        );
+    }
+
+    public function listNodePublicIdsWithActiveStyleLinks(): array
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT DISTINCT CONVERT(NVARCHAR(36), n.[PublicId]) AS [NodePublicId]
+FROM [product].[CatalogueNodeProductStyles] cnps
+INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnps.[CatalogueNodeId]
+INNER JOIN [product].[ProductStyles] ps ON ps.[ProductStyleId] = cnps.[ProductStyleId]
+WHERE cnps.[IsActive] = 1
+  AND n.[DeletedAtUtc] IS NULL
+  AND n.[IsActive] = 1
+  AND ps.[DeletedAtUtc] IS NULL
+  AND ps.[IsActive] = 1
+SQL,
+        );
+
+        return array_values(array_map(
+            static fn (array $row): string => AzureSqlValueMapper::stringValue($row['NodePublicId'] ?? ''),
+            $rows,
+        ));
     }
 
     public function replaceNodeProducts(string $nodePublicId, array $placements, UserId $actorUserId): void
@@ -1870,6 +2023,25 @@ SQL,
         }
 
         return (int) $rows[0]['ProductId'];
+    }
+
+    private function requireProductStyleId(string $productStylePublicId): int
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT [ProductStyleId]
+FROM [product].[ProductStyles]
+WHERE [PublicId] = :publicId
+  AND [DeletedAtUtc] IS NULL
+  AND [IsActive] = 1
+SQL,
+            [':publicId' => $productStylePublicId],
+        );
+        if ($rows === []) {
+            throw CatalogueNotFound::forNode($productStylePublicId);
+        }
+
+        return (int) $rows[0]['ProductStyleId'];
     }
 
     private function assertTabExistsForMutation(string $publicId, bool $includeDeleted = false): void

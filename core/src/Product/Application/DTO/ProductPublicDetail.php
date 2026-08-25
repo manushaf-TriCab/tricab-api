@@ -18,6 +18,7 @@ final readonly class ProductPublicDetail
      * @param list<string> $industryNames
      * @param list<ProductPublicRelationshipItem> $relationships
      * @param list<ProductPublicSpecificationItem> $specifications
+     * @param list<Product360SetSummary> $spin360
      */
     public function __construct(
         public string $publicId,
@@ -38,6 +39,8 @@ final readonly class ProductPublicDetail
         public array $relationships = [],
         public array $specifications = [],
         public ProductPublic3DPayload $threeD = new ProductPublic3DPayload(false, null, []),
+        /** @var list<Product360SetSummary> */
+        public array $spin360 = [],
     ) {
     }
 }

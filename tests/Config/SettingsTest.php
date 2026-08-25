@@ -413,4 +413,160 @@ final class SettingsTest extends TestCase
         ]);
         self::assertFalse($missingSecret->isAppleAuthConfigured());
     }
+
+    public function test_production_passkey_rejects_localhost_rp_id(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('PASSKEY_RP_ID must be the production registrable domain');
+
+        Settings::fromEnvironment($this->productionPasskeyEnv([
+            'PASSKEY_RP_ID' => 'localhost',
+        ]));
+    }
+
+    public function test_production_passkey_rejects_azurewebsites_rp_id(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('PASSKEY_RP_ID must be the production registrable domain');
+
+        Settings::fromEnvironment($this->productionPasskeyEnv([
+            'PASSKEY_RP_ID' => 'tricab-api.azurewebsites.net',
+        ]));
+    }
+
+    public function test_production_passkey_rejects_deployment_slot_origin(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('PASSKEY_ALLOWED_ORIGINS in production must be exactly');
+
+        Settings::fromEnvironment($this->productionPasskeyEnv([
+            'PASSKEY_ALLOWED_ORIGINS' => 'https://tricab-web-staging.azurewebsites.net,https://www.tricab.com',
+        ]));
+    }
+
+    public function test_production_passkey_rejects_arbitrary_subdomain_rp_id(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('PASSKEY_RP_ID must be the production registrable domain');
+
+        Settings::fromEnvironment($this->productionPasskeyEnv([
+            'PASSKEY_RP_ID' => 'app.tricab.com',
+        ]));
+    }
+
+    public function test_production_passkey_rejects_www_as_rp_id(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('PASSKEY_RP_ID must be the production registrable domain');
+
+        Settings::fromEnvironment($this->productionPasskeyEnv([
+            'PASSKEY_RP_ID' => 'www.tricab.com',
+        ]));
+    }
+
+    public function test_production_passkey_rejects_non_tricab_origin(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('PASSKEY_ALLOWED_ORIGINS in production must be exactly');
+
+        Settings::fromEnvironment($this->productionPasskeyEnv([
+            'PASSKEY_ALLOWED_ORIGINS' => 'https://www.tricab.com,https://evil.com',
+        ]));
+    }
+
+    public function test_production_passkey_rejects_slot_public_app_base_url(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('PASSKEY_PUBLIC_APP_BASE_URL in production must be');
+
+        Settings::fromEnvironment($this->productionPasskeyEnv([
+            'PASSKEY_PUBLIC_APP_BASE_URL' => 'https://tricab-web.azurewebsites.net',
+        ]));
+    }
+
+    public function test_production_passkey_accepts_exact_tricab_allowlist(): void
+    {
+        $settings = Settings::fromEnvironment($this->productionPasskeyEnv());
+
+        self::assertTrue($settings->isPasskeyAuthConfigured());
+        self::assertSame('tricab.com', $settings->passkeyRpId);
+        self::assertSame(['https://www.tricab.com', 'https://tricab.com'], $settings->passkeyAllowedOrigins);
+        self::assertSame('https://www.tricab.com', $settings->passkeyPublicAppBaseUrl);
+        self::assertFalse($settings->usesFakePasskeyCeremony());
+    }
+
+    public function test_production_passkey_defaults_are_the_tricab_allowlist(): void
+    {
+        $settings = Settings::fromEnvironment($this->productionPasskeyEnv([
+            'PASSKEY_RP_ID' => null,
+            'PASSKEY_ALLOWED_ORIGINS' => null,
+            'PASSKEY_PUBLIC_APP_BASE_URL' => null,
+        ]));
+
+        self::assertSame('tricab.com', $settings->passkeyRpId);
+        self::assertSame(['https://www.tricab.com', 'https://tricab.com'], $settings->passkeyAllowedOrigins);
+        self::assertSame('https://www.tricab.com', $settings->passkeyPublicAppBaseUrl);
+    }
+
+    public function test_development_passkey_defaults_are_configured(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'GUEST_JWT_ISSUER' => 'https://api.tricab.local',
+            'GUEST_JWT_AUDIENCE' => 'tricab-api',
+            'GUEST_JWT_SECRET' => 'local-development-guest-jwt-secret-32b',
+        ]);
+
+        self::assertTrue($settings->passkeyEnabled);
+        self::assertTrue($settings->isPasskeyAuthConfigured());
+        self::assertSame('localhost', $settings->passkeyRpId);
+        self::assertFalse($settings->usesFakePasskeyCeremony());
+    }
+
+    public function test_fake_passkey_ceremony_requires_explicit_development_memory_opt_in(): void
+    {
+        $memory = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'USER_REPOSITORY' => 'memory',
+            'PASSKEY_FAKE_CEREMONY' => 'true',
+            'GUEST_JWT_SECRET' => 'local-development-guest-jwt-secret-32b',
+        ]);
+        self::assertTrue($memory->usesFakePasskeyCeremony());
+
+        $azure = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'USER_REPOSITORY' => 'azure-sql',
+            'PASSKEY_FAKE_CEREMONY' => 'true',
+            'GUEST_JWT_SECRET' => 'local-development-guest-jwt-secret-32b',
+        ]);
+        self::assertFalse($azure->usesFakePasskeyCeremony());
+
+        $production = Settings::fromEnvironment($this->productionPasskeyEnv([
+            'PASSKEY_FAKE_CEREMONY' => 'true',
+        ]));
+        self::assertFalse($production->usesFakePasskeyCeremony());
+    }
+
+    /**
+     * @param array<string, string|null> $overrides
+     * @return array<string, string|null>
+     */
+    private function productionPasskeyEnv(array $overrides = []): array
+    {
+        return array_merge([
+            'APP_ENV' => 'production',
+            'ALLOW_IN_MEMORY_REPOSITORY_IN_PRODUCTION' => 'true',
+            'USER_REPOSITORY' => 'memory',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
+            'GUEST_JWT_ISSUER' => 'https://api.tricab.local',
+            'GUEST_JWT_AUDIENCE' => 'tricab-api',
+            'GUEST_JWT_SECRET' => 'local-development-guest-jwt-secret-32b',
+            'PASSKEY_ENABLED' => 'true',
+            'PASSKEY_RP_ID' => 'tricab.com',
+            'PASSKEY_ALLOWED_ORIGINS' => 'https://www.tricab.com,https://tricab.com',
+            'PASSKEY_PUBLIC_APP_BASE_URL' => 'https://www.tricab.com',
+        ], $overrides);
+    }
 }

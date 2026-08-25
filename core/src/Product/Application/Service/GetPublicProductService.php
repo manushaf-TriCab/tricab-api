@@ -14,6 +14,7 @@ final class GetPublicProductService
 {
     public function __construct(
         private readonly ProductPublicQueryRepository $publicQuery,
+        private readonly ?EnrichPublicProductWithStyleInheritanceService $styleInheritance = null,
     ) {
     }
 
@@ -32,7 +33,7 @@ final class GetPublicProductService
                 $regionCode,
             );
             if ($byPublicId !== null) {
-                return $byPublicId;
+                return $this->enrich($byPublicId);
             }
         }
 
@@ -41,7 +42,7 @@ final class GetPublicProductService
             throw ProductNotFound::forSlug($slug);
         }
 
-        return $detail;
+        return $this->enrich($detail);
     }
 
     public function byPublicId(string $publicId, ?string $regionCode = null): ProductPublicDetail
@@ -51,6 +52,11 @@ final class GetPublicProductService
             throw ProductNotFound::forPublicId($publicId);
         }
 
-        return $detail;
+        return $this->enrich($detail);
+    }
+
+    private function enrich(ProductPublicDetail $detail): ProductPublicDetail
+    {
+        return $this->styleInheritance?->enrich($detail) ?? $detail;
     }
 }

@@ -6,6 +6,7 @@ namespace TriCab\Core\Product\Contract;
 
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeProductRecord;
+use TriCab\Core\Product\Application\DTO\CatalogueNodeProductStyleRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeTreeNode;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeUsage;
@@ -162,6 +163,25 @@ interface CatalogueNavigationRepository
 
     /** @return list<CatalogueNodeProductRecord> */
     public function listNodeProducts(string $nodePublicId, bool $activeOnly = false): array;
+
+    /** @return list<CatalogueNodeProductStyleRecord> */
+    public function listNodeProductStyles(string $nodePublicId, bool $activeOnly = false): array;
+
+    public function addNodeProductStyle(
+        string $nodePublicId,
+        string $productStylePublicId,
+        int $displayOrder,
+        UserId $actorUserId,
+    ): void;
+
+    public function deactivateNodeProductStyle(
+        string $nodePublicId,
+        string $productStylePublicId,
+        UserId $actorUserId,
+    ): void;
+
+    /** @return list<string> CatalogueNode PublicIds with at least one active style link */
+    public function listNodePublicIdsWithActiveStyleLinks(): array;
 
     /**
      * Replace all product placements for a node.

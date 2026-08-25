@@ -19,6 +19,14 @@ final class GuestJwtIssuer implements GuestAccessTokenIssuer
     public const AUTH_PROVIDER = 'email-otp';
     public const ALGORITHM = 'HS256';
 
+    /** Guest JWT auth_provider values issued by TriCab (identity only; not authorization). */
+    public const ALLOWED_AUTH_PROVIDERS = [
+        self::AUTH_PROVIDER,
+        'google',
+        'apple',
+        'passkey',
+    ];
+
     public function __construct(
         private readonly string $issuer,
         private readonly string $audience,
@@ -35,6 +43,7 @@ final class GuestJwtIssuer implements GuestAccessTokenIssuer
         UuidPublicId $jwtId,
         DateTimeImmutable $issuedAtUtc,
         DateTimeImmutable $expiresAtUtc,
+        string $authProvider = self::AUTH_PROVIDER,
     ): IssuedGuestAccessToken {
         $payload = [
             'iss' => $this->issuer,
@@ -44,7 +53,7 @@ final class GuestJwtIssuer implements GuestAccessTokenIssuer
             'iat' => $issuedAtUtc->getTimestamp(),
             'nbf' => $issuedAtUtc->getTimestamp(),
             'exp' => $expiresAtUtc->getTimestamp(),
-            'auth_provider' => self::AUTH_PROVIDER,
+            'auth_provider' => self::normalizeAuthProvider($authProvider),
             'session_id' => $sessionPublicId->toString(),
             'email' => $user->emailAddress()->toString(),
         ];
@@ -57,5 +66,23 @@ final class GuestJwtIssuer implements GuestAccessTokenIssuer
             sessionPublicId: $sessionPublicId->toString(),
             jwtId: $jwtId->toString(),
         );
+    }
+
+    public static function normalizeAuthProvider(string $authProvider): string
+    {
+        $normalized = strtolower(trim($authProvider));
+        if ($normalized === '') {
+            return self::AUTH_PROVIDER;
+        }
+        if (!in_array($normalized, self::ALLOWED_AUTH_PROVIDERS, true)) {
+            return self::AUTH_PROVIDER;
+        }
+
+        return $normalized;
+    }
+
+    public static function isAllowedAuthProvider(string $authProvider): bool
+    {
+        return in_array(strtolower(trim($authProvider)), self::ALLOWED_AUTH_PROVIDERS, true);
     }
 }

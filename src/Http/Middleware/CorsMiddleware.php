@@ -18,7 +18,7 @@ use TriCab\Api\Config\Settings;
 final class CorsMiddleware implements MiddlewareInterface
 {
     private const ALLOWED_METHODS = 'GET, POST, PUT, PATCH, DELETE, OPTIONS';
-    private const ALLOWED_HEADERS = 'Authorization, Content-Type, Accept, If-None-Match, X-Request-Id';
+    private const ALLOWED_HEADERS = 'Authorization, Content-Type, Accept, If-None-Match, X-Request-Id, X-TriCab-Passkey-Registration-Session';
     private const EXPOSED_HEADERS = 'ETag, Cache-Control';
 
     public function __construct(

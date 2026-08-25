@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace TriCab\Api\Http\Action\Admin;
 
 use TriCab\Core\Product\Application\DTO\CatalogueNodeProductRecord;
+use TriCab\Core\Product\Application\DTO\CatalogueNodeProductStyleRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeRecord;
+use TriCab\Core\Product\Application\DTO\CatalogueNodeResolvedProductRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeTreeNode;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeUsage;
 use TriCab\Core\Product\Application\DTO\CatalogueProductPlacementRecord;
@@ -154,6 +156,53 @@ final class CatalogueDtoSerializer
     public static function nodeProductList(array $items): array
     {
         return array_map(self::nodeProduct(...), $items);
+    }
+
+    /** @return array<string, mixed> */
+    public static function nodeProductStyle(CatalogueNodeProductStyleRecord $record): array
+    {
+        return [
+            'productStylePublicId' => $record->productStylePublicId,
+            'styleCode' => $record->styleCode,
+            'displayName' => $record->displayName,
+            'displayOrder' => $record->displayOrder,
+            'isActive' => $record->isActive,
+            'childStyleCount' => $record->childStyleCount,
+            'assignedProductCount' => $record->assignedProductCount,
+        ];
+    }
+
+    /** @param list<CatalogueNodeProductStyleRecord> $items
+     * @return list<array<string, mixed>>
+     */
+    public static function nodeProductStyleList(array $items): array
+    {
+        return array_map(self::nodeProductStyle(...), $items);
+    }
+
+    /** @return array<string, mixed> */
+    public static function resolvedNodeProduct(CatalogueNodeResolvedProductRecord $record): array
+    {
+        return [
+            'productPublicId' => $record->productPublicId,
+            'productName' => $record->productName,
+            'productCode' => $record->productCode,
+            'provenance' => $record->provenance,
+            'resolvedViaStyleCode' => $record->resolvedViaStyleCode,
+            'linkedStyleCode' => $record->linkedStyleCode,
+            'publicationStatus' => $record->publicationStatus,
+            'publicVisible' => $record->publicVisible,
+            'regionVisible' => $record->regionVisible,
+            'displayOrder' => $record->displayOrder,
+        ];
+    }
+
+    /** @param list<CatalogueNodeResolvedProductRecord> $items
+     * @return list<array<string, mixed>>
+     */
+    public static function resolvedNodeProductList(array $items): array
+    {
+        return array_map(self::resolvedNodeProduct(...), $items);
     }
 
     /** @return array<string, mixed> */
