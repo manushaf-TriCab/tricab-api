@@ -178,7 +178,7 @@ final class GuestJwtValidator implements GuestAccessTokenValidator
             throw AuthTokenValidationFailed::invalid('Unexpected token audience.');
         }
 
-        if (self::stringClaim($claims, 'auth_provider') !== GuestJwtIssuer::AUTH_PROVIDER) {
+        if (!GuestJwtIssuer::isAllowedAuthProvider(self::stringClaim($claims, 'auth_provider'))) {
             throw AuthTokenValidationFailed::invalid('Unexpected authentication provider.');
         }
     }

@@ -13,6 +13,7 @@ use TriCab\Core\Product\Application\Command\MoveCatalogueNodeCommand;
 use TriCab\Core\Product\Application\Command\UpsertCatalogueNodeCommand;
 use TriCab\Core\Product\Application\Command\UpsertCatalogueTabCommand;
 use TriCab\Core\Product\Application\Exception\InvalidCatalogueHierarchy;
+use TriCab\Core\Product\Application\Service\CatalogueNodeEffectiveProductsService;
 use TriCab\Core\Product\Application\Service\ManageCatalogueNavigationService;
 use TriCab\Core\Product\Application\Service\ProductAuditRecorder;
 use TriCab\Api\Shared\Persistence\NoOpApplicationTransaction;
@@ -23,13 +24,19 @@ final class ManageCatalogueNavigationServiceTest extends TestCase
     private ManageCatalogueNavigationService $service;
     private ActorContext $actor;
 
-    protected function setUp(): void
+        protected function setUp(): void
     {
         $this->store = new InMemoryProductStore();
+        $catalogue = new InMemoryCatalogueNavigationRepository($this->store);
         $this->service = new ManageCatalogueNavigationService(
-            new InMemoryCatalogueNavigationRepository($this->store),
+            $catalogue,
             new NoOpApplicationTransaction(),
             new ProductAuditRecorder(new InMemoryProductAuditRepository($this->store)),
+            new CatalogueNodeEffectiveProductsService(
+                $catalogue,
+                new \TriCab\Core\Product\Persistence\InMemoryProductStyleRepository(),
+                new \TriCab\Api\Product\Persistence\InMemory\InMemoryProductAdminQueryRepository($this->store),
+            ),
             maxDepth: 3,
         );
         $this->actor = new ActorContext(userId: 1, publicId: 'actor-1', emailAddress: 'a@example.test');

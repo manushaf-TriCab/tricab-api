@@ -6,9 +6,12 @@ namespace TriCab\Api\Tests\Product;
 
 use PHPUnit\Framework\TestCase;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryCatalogueNavigationRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductAdminQueryRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductStore;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
+use TriCab\Core\Product\Application\Service\CatalogueNodeEffectiveProductsService;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
+use TriCab\Core\Product\Persistence\InMemoryProductStyleRepository;
 use TriCab\Core\Product\Domain\Entity\Product;
 use TriCab\Core\Product\Domain\ValueObject\ProductLifecycleStatusCode;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
@@ -25,7 +28,14 @@ final class PublicCatalogueRegionFilteringTest extends TestCase
     {
         $this->store = new InMemoryProductStore();
         $this->repo = new InMemoryCatalogueNavigationRepository($this->store);
-        $this->service = new GetPublicCatalogueService($this->repo);
+        $this->service = new GetPublicCatalogueService(
+            $this->repo,
+            new CatalogueNodeEffectiveProductsService(
+                $this->repo,
+                new InMemoryProductStyleRepository(),
+                new InMemoryProductAdminQueryRepository($this->store),
+            ),
+        );
         $this->seedRegions();
     }
 

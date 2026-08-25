@@ -585,6 +585,11 @@ final class MysqlLegacyTcRepository implements LegacyTcRepository
     public function discoverStyleCodes(): array
     {
         $out = [];
+        if ($this->tableExists('tpro') && in_array('style', $this->allColumns('tpro'), true)) {
+            foreach ($this->connection->query('SELECT DISTINCT `style` AS style_code FROM `tpro` WHERE `style` IS NOT NULL AND `style` <> \'\'', [], self::REPO, 'discoverStyleCodes.tpro') as $row) {
+                $out[] = ['style_code' => MigrationPayload::string($row['style_code'] ?? ''), 'source' => 'tpro.style'];
+            }
+        }
         if ($this->tableExists('tpro_ext') && in_array('style', $this->allColumns('tpro_ext'), true)) {
             foreach ($this->connection->query('SELECT DISTINCT `style` AS style_code FROM `tpro_ext` WHERE `style` IS NOT NULL AND `style` <> \'\'', [], self::REPO, 'discoverStyleCodes.tproExt') as $row) {
                 $out[] = ['style_code' => MigrationPayload::string($row['style_code'] ?? ''), 'source' => 'tpro_ext.style'];

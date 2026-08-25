@@ -13,8 +13,21 @@ use TriCab\Core\Product\Application\DTO\PricingUnitLookupItem;
 use TriCab\Core\Product\Application\DTO\ProductAdminDetail;
 use TriCab\Core\Product\Application\DTO\ProductAdminListItem;
 use TriCab\Core\Product\Application\DTO\ProductAuditEntry;
+use TriCab\Core\Product\Application\DTO\EffectiveSpecificationValue;
+use TriCab\Core\Product\Application\DTO\EffectiveStyleAsset;
 use TriCab\Core\Product\Application\DTO\ProductClassificationRecord;
 use TriCab\Core\Product\Application\DTO\ProductClassificationUsage;
+use TriCab\Core\Product\Application\DTO\ProductStyleAssignment;
+use TriCab\Core\Product\Application\DTO\ProductStyleRecord;
+use TriCab\Core\Product\Application\DTO\ProductStyleTreeNode;
+use TriCab\Core\Product\Application\DTO\ProductStyleUsage;
+use TriCab\Core\Product\Application\DTO\ProductStyleMappingRow;
+use TriCab\Core\Product\Application\DTO\ProductCodeStyleMappingRow;
+use TriCab\Core\Product\Application\DTO\UnresolvedLegacyStyleProduct;
+use TriCab\Core\Product\Application\DTO\StyleDiscoveryProposal;
+use TriCab\Core\Product\Application\DTO\StyleHierarchyEvidenceRow;
+use TriCab\Core\Product\Application\DTO\StyleMembershipEvidence;
+use TriCab\Core\Product\Application\DTO\StyleSharedDataComparison;
 use TriCab\Core\Product\Application\DTO\ProductCodePreviewResult;
 use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Application\DTO\ProductListResult;
@@ -196,6 +209,10 @@ final class ProductManagementDtoSerializer
             'relationships' => array_map(self::publicRelationship(...), $detail->relationships),
             'specifications' => array_map(self::publicSpecification(...), $detail->specifications),
             'threeD' => self::publicThreeD($detail->threeD, $devUrls),
+            'spin360' => array_map(
+                static fn (Product360SetSummary $set): array => self::public360SetSummary($set, $devUrls),
+                $detail->spin360,
+            ),
         ];
     }
 
@@ -253,6 +270,8 @@ final class ProductManagementDtoSerializer
                 'rows' => array_map(self::customerViewMatrixRow(...), $detail->variantMatrix->rows),
             ],
             'threeD' => self::publicThreeD($detail->threeD, $devUrls),
+            'styleCode' => $detail->styleCode,
+            'parentStyleCode' => $detail->parentStyleCode,
         ];
     }
 
@@ -1177,6 +1196,36 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
+    public static function public360SetSummary(
+        Product360SetSummary $summary,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
+        return [
+            'publicId' => $summary->publicId,
+            'title' => $summary->title,
+            'expectedFrameCount' => $summary->expectedFrameCount,
+            'uploadedFrameCount' => $summary->uploadedFrameCount,
+            'isActive' => $summary->isActive,
+            'frames' => array_map(
+                static fn (Product360FrameSummary $frame): array => [
+                    'publicId' => $frame->publicId,
+                    'frameNumber' => $frame->frameNumber,
+                    'publicUrl' => self::resolveAssetUrl(
+                        $devUrls,
+                        $frame->publicUrl,
+                        $frame->publicId,
+                        $frame->storageContainer,
+                        $frame->storagePath,
+                    ),
+                ],
+                $summary->frames,
+            ),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public static function product360SetSummary(
         Product360SetSummary $summary,
         ?ProductDevMediaUrlResolver $devUrls = null,
@@ -1638,6 +1687,366 @@ final class ProductManagementDtoSerializer
         }
 
         return self::resolveAssetUrl($devUrls, $storedThumbnailUrl);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function styleRecord(ProductStyleRecord $record): array
+    {
+        return [
+            'publicId' => $record->publicId,
+            'styleCode' => $record->styleCode,
+            'displayName' => $record->displayName,
+            'parentPublicId' => $record->parentPublicId,
+            'parentStyleCode' => $record->parentStyleCode,
+            'parentDisplayName' => $record->parentDisplayName,
+            'sortOrder' => $record->sortOrder,
+            'isActive' => $record->isActive,
+            'isDeleted' => $record->isDeleted,
+            'rowVersion' => $record->rowVersion,
+            'createdAtUtc' => $record->createdAtUtc,
+            'updatedAtUtc' => $record->updatedAtUtc,
+            'productCount' => $record->productCount,
+            'childCount' => $record->childCount,
+            'activeChildCount' => $record->activeChildCount,
+            'inheritance' => $record->inheritance->toMap(),
+            'ancestors' => $record->ancestors,
+            'children' => $record->children,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function styleTreeNode(ProductStyleTreeNode $node): array
+    {
+        return [
+            'publicId' => $node->publicId,
+            'styleCode' => $node->styleCode,
+            'displayName' => $node->displayName,
+            'parentPublicId' => $node->parentPublicId,
+            'sortOrder' => $node->sortOrder,
+            'isActive' => $node->isActive,
+            'childCount' => $node->childCount,
+            'productCount' => $node->productCount,
+            'children' => array_map(self::styleTreeNode(...), $node->children),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function styleUsage(ProductStyleUsage $usage): array
+    {
+        return [
+            'publicId' => $usage->publicId,
+            'productCount' => $usage->productCount,
+            'childCount' => $usage->childCount,
+            'activeChildCount' => $usage->activeChildCount,
+            'deletedChildCount' => $usage->deletedChildCount,
+            'summary' => $usage->summary,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function styleAssignment(ProductStyleAssignment $assignment): array
+    {
+        return [
+            'productPublicId' => $assignment->productPublicId,
+            'stylePublicId' => $assignment->stylePublicId,
+            'styleCode' => $assignment->styleCode,
+            'displayName' => $assignment->displayName,
+            'parentPublicId' => $assignment->parentPublicId,
+            'parentStyleCode' => $assignment->parentStyleCode,
+            'ancestors' => $assignment->ancestors,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function effectiveSpecification(EffectiveSpecificationValue $item): array
+    {
+        return [
+            'definitionPublicId' => $item->definitionPublicId,
+            'definitionCode' => $item->definitionCode,
+            'definitionName' => $item->definitionName,
+            'displayValue' => $item->displayValue,
+            'value' => $item->value,
+            'inherited' => $item->provenance->inherited,
+            'sourceType' => $item->provenance->sourceType,
+            'sourceStylePublicId' => $item->provenance->sourceStylePublicId,
+            'sourceStyleCode' => $item->provenance->sourceStyleCode,
+            'sourceLevel' => $item->provenance->sourceLevel,
+            'label' => $item->provenance->label,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function effectiveAsset(
+        EffectiveStyleAsset $item,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
+        $filePublicId = is_string($item->asset['publicId'] ?? null) ? $item->asset['publicId'] : '';
+
+        return [
+            'publicId' => $filePublicId !== '' ? $filePublicId : null,
+            'resourceType' => $item->resourceType,
+            'title' => $item->title,
+            'roleCode' => $item->roleCode,
+            'storagePath' => $item->storagePath,
+            'storageContainer' => $item->storageContainer,
+            'publicUrl' => self::resolveAssetUrl(
+                $devUrls,
+                $item->publicUrl,
+                $filePublicId,
+                $item->storageContainer,
+                $item->storagePath,
+            ),
+            'displayOrder' => $item->displayOrder,
+            'isPrimary' => $item->isPrimary,
+            'asset' => $item->asset,
+            'inherited' => $item->provenance->inherited,
+            'sourceType' => $item->provenance->sourceType,
+            'sourceStylePublicId' => $item->provenance->sourceStylePublicId,
+            'sourceStyleCode' => $item->provenance->sourceStyleCode,
+            'sourceLevel' => $item->provenance->sourceLevel,
+            'label' => $item->provenance->label,
+        ];
+    }
+
+    /**
+     * @param list<EffectiveSpecificationValue> $specifications
+     * @param list<EffectiveStyleAsset> $images
+     * @param list<EffectiveStyleAsset> $documents
+     * @param list<EffectiveStyleAsset> $spin360
+     * @param list<EffectiveStyleAsset> $models3d
+     * @param list<EffectiveStyleAsset> $arAssets
+     * @param array<string, int> $specSummary
+     * @return array<string, mixed>
+     */
+    public static function productStyleInheritance(
+        ?ProductStyleAssignment $assignment,
+        array $specifications,
+        array $images,
+        array $specSummary,
+        array $documents = [],
+        array $spin360 = [],
+        array $models3d = [],
+        array $arAssets = [],
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
+        $map = static fn (EffectiveStyleAsset $item): array => self::effectiveAsset($item, $devUrls);
+
+        return [
+            'assignment' => $assignment === null ? null : self::styleAssignment($assignment),
+            'specifications' => array_map(self::effectiveSpecification(...), $specifications),
+            'specificationSummary' => $specSummary,
+            'images' => array_map($map, $images),
+            'documents' => array_map($map, $documents),
+            'spin360' => array_map($map, $spin360),
+            'models3d' => array_map($map, $models3d),
+            'arAssets' => array_map($map, $arAssets),
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $preview
+     * @return array<string, mixed>
+     */
+    public static function styleDiscoveryPreview(array $preview): array
+    {
+        return [
+            'writeGuard' => $preview['writeGuard'],
+            'styleCodes' => $preview['styleCodes'] ?? [],
+            'proposals' => array_map(static fn (StyleDiscoveryProposal $p): array => [
+                'parentStyleCode' => $p->parentStyleCode,
+                'childStyleCode' => $p->childStyleCode,
+                'reason' => $p->reason,
+                'confidence' => $p->confidence,
+                'productCount' => $p->productCount,
+                'sharedSpecificationEvidence' => $p->sharedSpecificationEvidence,
+                'sharedMediaEvidence' => $p->sharedMediaEvidence,
+                'candidateSource' => $p->candidateSource,
+                'warnings' => $p->warnings,
+                'familyEvidence' => $p->familyEvidence,
+                'sourceEvidence' => $p->sourceEvidence,
+                'applicationState' => $p->applicationState,
+                'ambiguousParent' => $p->ambiguousParent,
+                'cycleConflict' => $p->cycleConflict,
+                'persistedParentStyleCode' => $p->persistedParentStyleCode,
+                'prefixCandidates' => $p->prefixCandidates,
+            ], $preview['proposals'] ?? []),
+            'comparisons' => array_map(static fn (StyleSharedDataComparison $c): array => [
+                'proposedParentStyleCode' => $c->proposedParentStyleCode,
+                'childStyleCodes' => $c->childStyleCodes,
+                'identicalSpecificationCount' => $c->identicalSpecificationCount,
+                'differingSpecificationCount' => $c->differingSpecificationCount,
+                'missingSpecificationCount' => $c->missingSpecificationCount,
+                'identicalSpecificationCodes' => $c->identicalSpecificationCodes,
+                'differingSpecificationCodes' => $c->differingSpecificationCodes,
+                'missingSpecificationCodes' => $c->missingSpecificationCodes,
+                'commonMediaCount' => $c->commonMediaCount,
+                'commonMediaKeys' => $c->commonMediaKeys,
+                'childSpecificMediaKeys' => $c->childSpecificMediaKeys,
+            ], $preview['comparisons'] ?? []),
+            'proposedTrees' => $preview['proposedTrees'] ?? [],
+            'standaloneStyleCodes' => $preview['standaloneStyleCodes'] ?? [],
+            'targetOnlyStyleCodes' => $preview['targetOnlyStyleCodes'] ?? [],
+            'inventory' => $preview['inventory'] ?? null,
+            'counters' => $preview['counters'] ?? [],
+            'notes' => $preview['notes'] ?? [],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $review
+     * @return array<string, mixed>
+     */
+    public static function styleHierarchyEvidenceReview(array $review): array
+    {
+        $rows = [];
+        foreach ($review['rows'] ?? [] as $row) {
+            $rows[] = $row instanceof StyleHierarchyEvidenceRow ? $row->toArray() : $row;
+        }
+        $selected = [];
+        foreach ($review['selected'] ?? [] as $row) {
+            $selected[] = $row instanceof StyleHierarchyEvidenceRow ? $row->toArray() : $row;
+        }
+        $membership = [];
+        foreach ($review['membership'] ?? [] as $code => $item) {
+            $membership[$code] = $item instanceof StyleMembershipEvidence ? $item->toArray() : $item;
+        }
+
+        return [
+            'writeGuard' => $review['writeGuard'] ?? [],
+            'sourceReads' => $review['sourceReads'] ?? [],
+            'originalCounters' => $review['originalCounters'] ?? [],
+            'counters' => $review['counters'] ?? [],
+            'rows' => $rows,
+            'selected' => $selected,
+            'groups' => $review['groups'] ?? [],
+            'membership' => $membership,
+            'preview' => isset($review['preview']) && is_array($review['preview'])
+                ? self::styleDiscoveryPreview($review['preview'])
+                : null,
+            'relationshipsApplied' => 0,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $mapping
+     * @return array<string, mixed>
+     */
+    public static function productStyleMappingDryRun(array $mapping): array
+    {
+        $rows = [];
+        foreach ($mapping['rows'] ?? [] as $row) {
+            $rows[] = $row instanceof ProductStyleMappingRow ? $row->toArray() : $row;
+        }
+        $safe = [];
+        foreach ($mapping['safeAssignmentCandidates'] ?? [] as $row) {
+            $safe[] = $row instanceof ProductStyleMappingRow ? $row->toArray() : $row;
+        }
+        $unresolved = [];
+        foreach ($mapping['unresolvedLegacyProducts'] ?? [] as $row) {
+            $unresolved[] = $row instanceof UnresolvedLegacyStyleProduct ? $row->toArray() : $row;
+        }
+        $cable = [];
+        foreach ($mapping['cableStyleCases'] ?? [] as $row) {
+            $cable[] = $row instanceof ProductStyleMappingRow ? $row->toArray() : $row;
+        }
+        $existing = [];
+        foreach ($mapping['existingAssignments'] ?? [] as $row) {
+            $existing[] = $row instanceof ProductStyleMappingRow ? $row->toArray() : $row;
+        }
+
+        return [
+            'writeGuard' => $mapping['writeGuard'] ?? [],
+            'sourceReads' => $mapping['sourceReads'] ?? [],
+            'hierarchy' => $mapping['hierarchy'] ?? ['selectedRelationships' => [], 'newParentRelationshipsApplied' => 0],
+            'identity' => $mapping['identity'] ?? [],
+            'counters' => $mapping['counters'] ?? [],
+            'notes' => $mapping['notes'] ?? [],
+            'styleCoverage' => $mapping['styleCoverage'] ?? [],
+            'productsPerStyle' => $mapping['productsPerStyle'] ?? [],
+            'rows' => $rows,
+            'safeAssignmentCandidates' => $safe,
+            'unresolvedLegacyProducts' => $unresolved,
+            'cableStyleCases' => $cable,
+            'existingAssignments' => $existing,
+            'assignmentsApplied' => 0,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $mapping
+     * @return array<string, mixed>
+     */
+    public static function productCodeStyleMappingDryRun(array $mapping): array
+    {
+        $toRows = static function (array $items): array {
+            $out = [];
+            foreach ($items as $row) {
+                $out[] = $row instanceof ProductCodeStyleMappingRow ? $row->toArray() : $row;
+            }
+
+            return $out;
+        };
+
+        return [
+            'writeGuard' => $mapping['writeGuard'] ?? [],
+            'sourceReads' => $mapping['sourceReads'] ?? [],
+            'businessRule' => $mapping['businessRule'] ?? [],
+            'hierarchy' => $mapping['hierarchy'] ?? ['selectedRelationships' => [], 'newParentRelationshipsApplied' => 0],
+            'notes' => $mapping['notes'] ?? [],
+            'counters' => $mapping['counters'] ?? [],
+            'styleCoverage' => $mapping['styleCoverage'] ?? [],
+            'duplicateProductCodes' => $mapping['duplicateProductCodes'] ?? [],
+            'rows' => $toRows($mapping['rows'] ?? []),
+            'existingStyleAssignmentCandidates' => $toRows($mapping['existingStyleAssignmentCandidates'] ?? []),
+            'missingStyleCreationCandidates' => $toRows($mapping['missingStyleCreationCandidates'] ?? []),
+            'assignmentAfterCreateCandidates' => $toRows($mapping['assignmentAfterCreateCandidates'] ?? []),
+            'assignmentConflicts' => $toRows($mapping['assignmentConflicts'] ?? []),
+            'existingAssignments' => $toRows($mapping['existingAssignments'] ?? []),
+            'stylesCreated' => 0,
+            'assignmentsApplied' => 0,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $tree
+     * @return array<string, mixed>
+     */
+    public static function styleFamilyTreeDryRun(array $tree): array
+    {
+        return [
+            'writeGuard' => $tree['writeGuard'] ?? [],
+            'sourceReads' => $tree['sourceReads'] ?? [],
+            'businessRule' => $tree['businessRule'] ?? [],
+            'notes' => $tree['notes'] ?? [],
+            'cycleValidation' => $tree['cycleValidation'] ?? [],
+            'counters' => $tree['counters'] ?? [],
+            'families' => $tree['families'] ?? [],
+            'proposedTree' => $tree['proposedTree'] ?? [],
+            'operatorConfirmedRelationships' => $tree['operatorConfirmedRelationships'] ?? [],
+            'proposedAdditionalRelationships' => $tree['proposedAdditionalRelationships'] ?? [],
+            'reviewRelationships' => $tree['reviewRelationships'] ?? [],
+            'rejectedRelationships' => $tree['rejectedRelationships'] ?? [],
+            'standaloneStyles' => $tree['standaloneStyles'] ?? [],
+            'missingParentStyleCandidates' => $tree['missingParentStyleCandidates'] ?? [],
+            'missingChildStyleCandidates' => $tree['missingChildStyleCandidates'] ?? [],
+            'productMappings' => $tree['productMappings'] ?? [],
+            'styleRoles' => $tree['styleRoles'] ?? [],
+            'smokeRelationships' => $tree['smokeRelationships'] ?? [],
+            'inheritanceCandidates' => $tree['inheritanceCandidates'] ?? [],
+            'relationshipsApplied' => 0,
+        ];
     }
 
 }

@@ -17,6 +17,7 @@ final class GetPublicCatalogueService
 {
     public function __construct(
         private readonly CatalogueNavigationRepository $catalogue,
+        private readonly CatalogueNodeEffectiveProductsService $effectiveProducts,
         private readonly RegionAwareCatalogueTreeFilter $treeFilter = new RegionAwareCatalogueTreeFilter(),
     ) {
     }
@@ -60,10 +61,11 @@ final class GetPublicCatalogueService
             throw CatalogueNotFound::forTab((string) $selected);
         }
 
-        $tree = $this->applyRegionTreeFilter(
-            $this->catalogue->getPublicTabTree($match->slug, $region, $includeProducts),
-            $region,
-        );
+        $tree = $this->catalogue->getPublicTabTree($match->slug, $region, $includeProducts);
+        if ($includeProducts) {
+            $tree = $this->enrichTreeWithEffectiveProducts($tree, $region, true);
+        }
+        $tree = $this->applyRegionTreeFilter($tree, $region);
 
         return [
             'tabs' => $tabs,
@@ -76,10 +78,11 @@ final class GetPublicCatalogueService
     public function getTabTree(string $tabSlug, ?string $regionCode = null, bool $includeProducts = false): array
     {
         $region = $this->normalizeRegion($regionCode);
-        $tree = $this->applyRegionTreeFilter(
-            $this->catalogue->getPublicTabTree($tabSlug, $region, $includeProducts),
-            $region,
-        );
+        $tree = $this->catalogue->getPublicTabTree($tabSlug, $region, $includeProducts);
+        if ($includeProducts) {
+            $tree = $this->enrichTreeWithEffectiveProducts($tree, $region, true);
+        }
+        $tree = $this->applyRegionTreeFilter($tree, $region);
         if ($tree === [] && $this->catalogue->findTabBySlug($tabSlug) === null) {
             throw CatalogueNotFound::forTab($tabSlug);
         }
@@ -95,7 +98,11 @@ final class GetPublicCatalogueService
             throw CatalogueNotFound::forNode($nodeSlug);
         }
 
-        return $this->requireVisibleNode($node, $nodeSlug, $region);
+        return $this->requireVisibleNode(
+            $this->enrichNodeWithEffectiveProducts($node, $region, false),
+            $nodeSlug,
+            $region,
+        );
     }
 
     public function getNodeByPublicId(string $nodePublicId, ?string $regionCode = null): PublicCatalogueTreeNode
@@ -106,7 +113,11 @@ final class GetPublicCatalogueService
             throw CatalogueNotFound::forNode($nodePublicId);
         }
 
-        return $this->requireVisibleNode($node, $nodePublicId, $region);
+        return $this->requireVisibleNode(
+            $this->enrichNodeWithEffectiveProducts($node, $region, false),
+            $nodePublicId,
+            $region,
+        );
     }
 
     /** @return list<PublicCatalogueTreeNode> */
@@ -117,7 +128,11 @@ final class GetPublicCatalogueService
         $region = $this->normalizeRegion($regionCode);
 
         return $this->applyRegionTreeFilter(
-            $this->catalogue->listPublicChildren($nodePublicId, $region),
+            $this->enrichTreeWithEffectiveProducts(
+                $this->catalogue->listPublicChildren($nodePublicId, $region),
+                $region,
+                false,
+            ),
             $region,
         );
     }
@@ -127,7 +142,80 @@ final class GetPublicCatalogueService
     {
         $this->getNodeByPublicId($nodePublicId, $regionCode);
 
-        return $this->catalogue->listPublicNodeProducts($nodePublicId, $this->normalizeRegion($regionCode));
+        return $this->effectiveProducts->listPublicProductCards($nodePublicId, $this->normalizeRegion($regionCode));
+    }
+
+    /**
+     * @param list<PublicCatalogueTreeNode> $tree
+     * @return list<PublicCatalogueTreeNode>
+     */
+    private function enrichTreeWithEffectiveProducts(array $tree, ?string $regionCode, bool $includeProducts): array
+    {
+        $out = [];
+        foreach ($tree as $node) {
+            $children = $this->enrichTreeWithEffectiveProducts($node->children, $regionCode, $includeProducts);
+            $products = $includeProducts
+                ? $this->effectiveProducts->listPublicProductCards($node->publicId, $regionCode)
+                : [];
+            $hasProducts = $this->effectiveProducts->hasPublicVisibleProducts(
+                $node->publicId,
+                $node->hasProducts,
+                $regionCode,
+            );
+            $out[] = new PublicCatalogueTreeNode(
+                publicId: $node->publicId,
+                nodeCode: $node->nodeCode,
+                nodeName: $node->nodeName,
+                slug: $node->slug,
+                description: $node->description,
+                nodeTypeCode: $node->nodeTypeCode,
+                imageUrl: $node->imageUrl,
+                imageAltText: $node->imageAltText,
+                displayOrder: $node->displayOrder,
+                depth: $node->depth,
+                hasChildren: $children !== [],
+                hasProducts: $hasProducts,
+                children: $children,
+                products: $products,
+                parentPublicId: $node->parentPublicId,
+            );
+        }
+
+        return $out;
+    }
+
+    private function enrichNodeWithEffectiveProducts(
+        PublicCatalogueTreeNode $node,
+        ?string $regionCode,
+        bool $includeProducts,
+    ): PublicCatalogueTreeNode {
+        $children = $this->enrichTreeWithEffectiveProducts($node->children, $regionCode, $includeProducts);
+        $products = $includeProducts
+            ? $this->effectiveProducts->listPublicProductCards($node->publicId, $regionCode)
+            : $node->products;
+        $hasProducts = $this->effectiveProducts->hasPublicVisibleProducts(
+            $node->publicId,
+            $node->hasProducts,
+            $regionCode,
+        );
+
+        return new PublicCatalogueTreeNode(
+            publicId: $node->publicId,
+            nodeCode: $node->nodeCode,
+            nodeName: $node->nodeName,
+            slug: $node->slug,
+            description: $node->description,
+            nodeTypeCode: $node->nodeTypeCode,
+            imageUrl: $node->imageUrl,
+            imageAltText: $node->imageAltText,
+            displayOrder: $node->displayOrder,
+            depth: $node->depth,
+            hasChildren: $children !== [] || $node->hasChildren,
+            hasProducts: $hasProducts,
+            children: $children,
+            products: $products,
+            parentPublicId: $node->parentPublicId,
+        );
     }
 
     private function normalizeRegion(?string $regionCode): ?string

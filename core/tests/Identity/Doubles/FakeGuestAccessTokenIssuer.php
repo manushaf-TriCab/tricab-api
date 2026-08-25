@@ -21,6 +21,7 @@ final class FakeGuestAccessTokenIssuer implements GuestAccessTokenIssuer
         UuidPublicId $jwtId,
         DateTimeImmutable $issuedAtUtc,
         DateTimeImmutable $expiresAtUtc,
+        string $authProvider = 'email-otp',
     ): IssuedGuestAccessToken {
         $token = implode('.', [
             'header',
@@ -31,7 +32,7 @@ final class FakeGuestAccessTokenIssuer implements GuestAccessTokenIssuer
                 'jti' => $jwtId->toString(),
                 'session_id' => $sessionPublicId->toString(),
                 'email' => $user->emailAddress()->toString(),
-                'auth_provider' => 'email-otp',
+                'auth_provider' => $authProvider,
                 'iat' => $issuedAtUtc->getTimestamp(),
                 'exp' => $expiresAtUtc->getTimestamp(),
             ], JSON_THROW_ON_ERROR) ?: ''),

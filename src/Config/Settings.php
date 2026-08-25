@@ -41,6 +41,7 @@ final readonly class Settings
 
     /**
      * @param list<string> $corsAllowedOrigins
+     * @param list<string> $passkeyAllowedOrigins
      */
     public function __construct(
         public string $appEnv,
@@ -117,6 +118,15 @@ final readonly class Settings
         public string $foundryApiKey,
         public int $foundryTimeoutSeconds,
         public int $foundryMaxToolCalls,
+        public bool $passkeyEnabled,
+        public string $passkeyRpId,
+        public string $passkeyRpName,
+        public array $passkeyAllowedOrigins,
+        public string $passkeyPublicAppBaseUrl,
+        public int $passkeySetupTokenTtlSeconds,
+        public int $passkeyRegistrationChallengeTtlSeconds,
+        public int $passkeyAuthChallengeTtlSeconds,
+        public bool $passkeyFakeCeremony,
     ) {
     }
 
@@ -138,6 +148,18 @@ final readonly class Settings
     public function usesAzureSqlUserRepository(): bool
     {
         return $this->userRepository === self::USER_REPOSITORY_AZURE_SQL;
+    }
+
+    /**
+     * Fake WebAuthn is opt-in for in-memory development tests only.
+     * Azure SQL, production, and any environment without PASSKEY_FAKE_CEREMONY=true
+     * always use web-auth/webauthn-lib.
+     */
+    public function usesFakePasskeyCeremony(): bool
+    {
+        return $this->passkeyFakeCeremony
+            && $this->isDevelopment()
+            && !$this->usesAzureSqlUserRepository();
     }
 
     public function usesEntraCliAuth(): bool
@@ -214,6 +236,15 @@ final readonly class Settings
         }
 
         return true;
+    }
+
+    public function isPasskeyAuthConfigured(): bool
+    {
+        return $this->passkeyEnabled
+            && $this->isGuestJwtConfigured()
+            && trim($this->passkeyRpId) !== ''
+            && $this->passkeyAllowedOrigins !== []
+            && trim($this->passkeyPublicAppBaseUrl) !== '';
     }
 
     /**
@@ -529,6 +560,54 @@ final readonly class Settings
             );
         }
 
+        $corsAllowedOrigins = self::csvList($env, 'CORS_ALLOWED_ORIGINS', 'http://localhost:5173');
+        $passkeyEnabled = self::bool($env, 'PASSKEY_ENABLED', $appEnv !== 'production');
+        $passkeyRpId = strtolower(trim(self::string(
+            $env,
+            'PASSKEY_RP_ID',
+            $appEnv === 'production' ? 'tricab.com' : 'localhost',
+        )));
+        $passkeyRpName = self::string($env, 'PASSKEY_RP_NAME', 'TriCab');
+        $passkeyAllowedOrigins = self::csvList(
+            $env,
+            'PASSKEY_ALLOWED_ORIGINS',
+            $appEnv === 'production'
+                ? 'https://www.tricab.com,https://tricab.com'
+                : implode(',', $corsAllowedOrigins),
+        );
+        $passkeyPublicAppBaseUrl = rtrim(self::string(
+            $env,
+            'PASSKEY_PUBLIC_APP_BASE_URL',
+            $appEnv === 'production'
+                ? 'https://www.tricab.com'
+                : ($corsAllowedOrigins[0] ?? 'http://localhost:5173'),
+        ), '/');
+        $passkeySetupTokenTtlSeconds = self::boundedInt($env, 'PASSKEY_SETUP_TOKEN_TTL_SECONDS', 900, 60, 3600);
+        $passkeyRegistrationChallengeTtlSeconds = self::boundedInt(
+            $env,
+            'PASSKEY_REGISTRATION_CHALLENGE_TTL_SECONDS',
+            300,
+            30,
+            600,
+        );
+        $passkeyAuthChallengeTtlSeconds = self::boundedInt(
+            $env,
+            'PASSKEY_AUTH_CHALLENGE_TTL_SECONDS',
+            300,
+            30,
+            600,
+        );
+        $passkeyFakeCeremony = self::bool($env, 'PASSKEY_FAKE_CEREMONY', false);
+
+        if ($passkeyEnabled) {
+            self::assertPasskeyRpConfiguration(
+                $appEnv,
+                $passkeyRpId,
+                $passkeyAllowedOrigins,
+                $passkeyPublicAppBaseUrl,
+            );
+        }
+
         return new self(
             appEnv: $appEnv,
             appName: self::string($env, 'APP_NAME', 'tricab-api'),
@@ -548,7 +627,7 @@ final readonly class Settings
             appleKeyId: self::string($env, 'APPLE_KEY_ID', ''),
             applePrivateKey: self::string($env, 'APPLE_PRIVATE_KEY', ''),
             appleRedirectUri: self::string($env, 'APPLE_REDIRECT_URI', ''),
-            corsAllowedOrigins: self::csvList($env, 'CORS_ALLOWED_ORIGINS', 'http://localhost:5173'),
+            corsAllowedOrigins: $corsAllowedOrigins,
             userRepository: $userRepository,
             dbAuthMode: $dbAuthMode,
             azureCliBinary: self::string($env, 'AZURE_CLI_BINARY', 'az'),
@@ -608,7 +687,69 @@ final readonly class Settings
             foundryApiKey: $foundryApiKey,
             foundryTimeoutSeconds: $foundryTimeoutSeconds,
             foundryMaxToolCalls: $foundryMaxToolCalls,
+            passkeyEnabled: $passkeyEnabled,
+            passkeyRpId: $passkeyRpId,
+            passkeyRpName: $passkeyRpName,
+            passkeyAllowedOrigins: $passkeyAllowedOrigins,
+            passkeyPublicAppBaseUrl: $passkeyPublicAppBaseUrl,
+            passkeySetupTokenTtlSeconds: $passkeySetupTokenTtlSeconds,
+            passkeyRegistrationChallengeTtlSeconds: $passkeyRegistrationChallengeTtlSeconds,
+            passkeyAuthChallengeTtlSeconds: $passkeyAuthChallengeTtlSeconds,
+            passkeyFakeCeremony: $passkeyFakeCeremony,
         );
+    }
+
+    /**
+     * @param list<string> $allowedOrigins
+     */
+    private static function assertPasskeyRpConfiguration(
+        string $appEnv,
+        string $rpId,
+        array $allowedOrigins,
+        string $publicAppBaseUrl,
+    ): void {
+        if ($rpId === '') {
+            throw new InvalidArgumentException('PASSKEY_RP_ID is required when PASSKEY_ENABLED=true.');
+        }
+
+        if ($allowedOrigins === []) {
+            throw new InvalidArgumentException('PASSKEY_ALLOWED_ORIGINS is required when PASSKEY_ENABLED=true.');
+        }
+
+        if ($publicAppBaseUrl === '') {
+            throw new InvalidArgumentException('PASSKEY_PUBLIC_APP_BASE_URL is required when PASSKEY_ENABLED=true.');
+        }
+
+        if ($appEnv !== 'production') {
+            return;
+        }
+
+        if ($rpId !== 'tricab.com') {
+            throw new InvalidArgumentException(
+                'PASSKEY_RP_ID must be the production registrable domain (tricab.com), not localhost, an Azure hostname, a deployment slot, the request Host header, or an arbitrary subdomain.',
+            );
+        }
+
+        $normalizedOrigins = [];
+        foreach ($allowedOrigins as $origin) {
+            $normalizedOrigins[] = rtrim(strtolower(trim($origin)), '/');
+        }
+        $uniqueOrigins = array_values(array_unique($normalizedOrigins));
+        sort($uniqueOrigins);
+        $expectedOrigins = ['https://tricab.com', 'https://www.tricab.com'];
+        sort($expectedOrigins);
+        if ($uniqueOrigins !== $expectedOrigins) {
+            throw new InvalidArgumentException(
+                'PASSKEY_ALLOWED_ORIGINS in production must be exactly https://www.tricab.com and https://tricab.com.',
+            );
+        }
+
+        $appNormalized = rtrim(strtolower(trim($publicAppBaseUrl)), '/');
+        if ($appNormalized !== 'https://www.tricab.com' && $appNormalized !== 'https://tricab.com') {
+            throw new InvalidArgumentException(
+                'PASSKEY_PUBLIC_APP_BASE_URL in production must be https://www.tricab.com or https://tricab.com.',
+            );
+        }
     }
 
     /**

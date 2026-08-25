@@ -108,13 +108,19 @@ SQL,
         $statusCode = AzureSqlValueMapper::stringValue($row['StatusCode'] ?? '');
         $primarySlug = $slug !== '' ? $slug : null;
         $variants = $this->listPreviewVariants($pid);
+        $documents = $this->listPublicDocuments($pid, $regionCode);
+        $applicationNames = $this->listNames($pid, 'applications');
+        $industryNames = $this->listNames($pid, 'industries');
+        $relationships = $this->listPublicRelationships($pid);
+        $specifications = $this->listCustomerSpecifications($pid);
+        $variantMatrix = $this->buildVariantMatrix($pid, $variants);
+        $styleAssignment = $this->loadStyleAssignment($pid);
 
         $internalCode = AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null);
 
         return new ProductCustomerViewDetail(
             publicId: $publicId,
             productName: AzureSqlValueMapper::stringValue($row['ProductName'] ?? ''),
-            // Header code block shows InternalCode (catalogue product code, e.g. BHA).
             productCode: $internalCode ?? $this->primaryProductCode($pid),
             shortDescription: AzureSqlValueMapper::nullableString($row['ShortDescription'] ?? null),
             fullDescription: AzureSqlValueMapper::nullableString($row['FullDescription'] ?? null),
@@ -125,19 +131,52 @@ SQL,
             thumbnailUrl: $thumbnailUrl,
             variants: $variants,
             media: $media,
-            documents: $this->listPublicDocuments($pid, $regionCode),
-            applicationNames: $this->listNames($pid, 'applications'),
-            industryNames: $this->listNames($pid, 'industries'),
-            relationships: $this->listPublicRelationships($pid),
-            specifications: $this->listCustomerSpecifications($pid),
-            variantMatrix: $this->buildVariantMatrix($pid, $variants),
+            documents: $documents,
+            applicationNames: $applicationNames,
+            industryNames: $industryNames,
+            relationships: $relationships,
+            specifications: $specifications,
+            variantMatrix: $variantMatrix,
             statusCode: $statusCode,
             lifecycleStatusCode: AzureSqlValueMapper::stringValue($row['LifecycleStatusCode'] ?? ''),
             isPublished: strcasecmp($statusCode, 'published') === 0,
             isArchived: AzureSqlValueMapper::boolValue($row['IsArchived'] ?? false),
             primarySlug: $primarySlug,
             threeD: $this->loadPublicThreeD($pid),
+            styleCode: $styleAssignment['styleCode'],
+            parentStyleCode: $styleAssignment['parentStyleCode'],
         );
+    }
+
+    /**
+     * @return array{styleCode: ?string, parentStyleCode: ?string}
+     */
+    private function loadStyleAssignment(ProductPublicId $productPublicId): array
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT
+    child.[StyleCode] AS [StyleCode],
+    parent.[StyleCode] AS [ParentStyleCode]
+FROM [product].[ProductStyleAssignments] psa
+INNER JOIN [product].[Products] p ON p.[ProductId] = psa.[ProductId]
+INNER JOIN [product].[ProductStyles] child ON child.[ProductStyleId] = psa.[ProductStyleId]
+LEFT JOIN [product].[ProductStyles] parent ON parent.[ProductStyleId] = child.[ParentStyleId]
+    AND parent.[DeletedAtUtc] IS NULL
+WHERE p.[PublicId] = :publicId
+  AND p.[DeletedAtUtc] IS NULL
+  AND child.[DeletedAtUtc] IS NULL
+SQL,
+            [':publicId' => $productPublicId->toString()],
+        );
+        if ($rows === []) {
+            return ['styleCode' => null, 'parentStyleCode' => null];
+        }
+
+        return [
+            'styleCode' => AzureSqlValueMapper::nullableString($rows[0]['StyleCode'] ?? null),
+            'parentStyleCode' => AzureSqlValueMapper::nullableString($rows[0]['ParentStyleCode'] ?? null),
+        ];
     }
 
     private function loadPublicThreeD(ProductPublicId $pid): ProductPublic3DPayload

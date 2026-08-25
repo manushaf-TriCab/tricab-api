@@ -37,6 +37,7 @@ final class TestAppFactory
             'GUEST_JWT_TTL_SECONDS' => '86400',
             'APP_PERFORMANCE_LOGGING' => 'false',
             'APP_CACHE_DRIVER' => 'array',
+            'PASSKEY_FAKE_CEREMONY' => 'true',
         ];
 
         $merged = array_merge($defaults, $env);

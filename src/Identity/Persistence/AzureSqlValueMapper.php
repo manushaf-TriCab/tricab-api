@@ -170,4 +170,35 @@ final class AzureSqlValueMapper
 
         throw new RuntimeException('Unexpected binary column length.');
     }
+
+    /**
+     * Reads a VARBINARY column of any length (WebAuthn challenges, handles).
+     */
+    public static function rawBinary(mixed $value): string
+    {
+        if (is_resource($value)) {
+            $contents = stream_get_contents($value);
+            if ($contents === false) {
+                throw new RuntimeException('Unable to read binary column.');
+            }
+
+            return $contents;
+        }
+
+        if (!is_string($value) || $value === '') {
+            throw new RuntimeException('Expected binary string column.');
+        }
+
+        if (str_starts_with($value, '0x') || str_starts_with($value, '0X')) {
+            $hex = strtolower(substr($value, 2));
+            if ($hex !== '' && ctype_xdigit($hex) && (strlen($hex) % 2) === 0) {
+                $binary = hex2bin($hex);
+                if ($binary !== false) {
+                    return $binary;
+                }
+            }
+        }
+
+        return $value;
+    }
 }

@@ -48,6 +48,9 @@ BEGIN TRY
         (N'PRODUCT.PRICING.VIEW', N'View product pricing', N'View product and variant prices.', N'product'),
         (N'PRODUCT.PRICING.MANAGE', N'Manage product pricing', N'Create and update product pricing.', N'product'),
         (N'PRODUCT.LOOKUPS.MANAGE', N'Manage product lookups', N'Manage families, categories, series, regions, and other lookups.', N'product'),
+        (N'PRODUCT.STYLES.READ', N'View product styles', N'View product style hierarchy and inherited resources.', N'product'),
+        (N'PRODUCT.STYLES.MANAGE', N'Manage product styles', N'Create and maintain product style hierarchy.', N'product'),
+        (N'PRODUCT.STYLES.INHERITANCE.MANAGE', N'Manage product style inheritance', N'Configure style inheritance and make local copies.', N'product'),
         (N'PRODUCT.MIGRATION.MANAGE', N'Manage product migration', N'Run product legacy migration tooling.', N'product'),
         (N'PRODUCT.AUDIT.VIEW', N'View product audit history', N'View product audit events.', N'product');
 

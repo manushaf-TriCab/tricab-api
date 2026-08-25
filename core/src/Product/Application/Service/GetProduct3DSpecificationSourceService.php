@@ -21,6 +21,7 @@ final class GetProduct3DSpecificationSourceService
         private readonly ProductAdminQueryRepository $products,
         private readonly ProductSpecificationRepository $specifications,
         private readonly Cable3DSpecificationMapping $mapping = new Cable3DSpecificationMapping(),
+        private readonly ?ResolveEffectiveStyleResourcesService $styleResources = null,
     ) {
     }
 
@@ -51,10 +52,19 @@ final class GetProduct3DSpecificationSourceService
         }
 
         $merged = [];
-        foreach ($this->specifications->listProductValues($productId) as $value) {
-            $mapped = $this->mapValueRow($value, $defsByPublicId, 'product');
-            if ($mapped !== null) {
-                $merged[strtoupper($mapped['code'])] = $mapped;
+        if ($this->styleResources !== null) {
+            foreach ($this->styleResources->specificationsForProduct($productId->toString()) as $effective) {
+                $mapped = $this->mapValueRow($effective->value, $defsByPublicId, $effective->provenance->inherited ? 'style' : strtolower($effective->provenance->sourceType));
+                if ($mapped !== null) {
+                    $merged[strtoupper($mapped['code'])] = $mapped;
+                }
+            }
+        } else {
+            foreach ($this->specifications->listProductValues($productId) as $value) {
+                $mapped = $this->mapValueRow($value, $defsByPublicId, 'product');
+                if ($mapped !== null) {
+                    $merged[strtoupper($mapped['code'])] = $mapped;
+                }
             }
         }
 

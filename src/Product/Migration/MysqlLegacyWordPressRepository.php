@@ -339,7 +339,8 @@ SQL;
 SELECT
     m.meta_value AS style_code,
     COUNT(*) AS product_count,
-    GROUP_CONCAT(DISTINCT p.post_status ORDER BY p.post_status SEPARATOR ',') AS statuses
+    GROUP_CONCAT(DISTINCT p.post_status ORDER BY p.post_status SEPARATOR ',') AS statuses,
+    SUBSTRING_INDEX(GROUP_CONCAT(DISTINCT p.post_title ORDER BY p.ID SEPARATOR '|'), '|', 5) AS sample_products
 FROM {$meta} m
 INNER JOIN {$posts} p ON p.ID = m.post_id
 WHERE p.post_type IN ({$in})

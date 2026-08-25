@@ -45,6 +45,8 @@ final readonly class ProductCustomerViewDetail
         public bool $isArchived,
         public ?string $primarySlug,
         public ProductPublic3DPayload $threeD = new ProductPublic3DPayload(false, null, []),
+        public ?string $styleCode = null,
+        public ?string $parentStyleCode = null,
     ) {
     }
 }

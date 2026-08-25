@@ -20,5 +20,6 @@ interface GuestAccessTokenIssuer
         UuidPublicId $jwtId,
         DateTimeImmutable $issuedAtUtc,
         DateTimeImmutable $expiresAtUtc,
+        string $authProvider = 'email-otp',
     ): IssuedGuestAccessToken;
 }
