@@ -108,11 +108,21 @@ final class ProductManagementErrorMapper
             }
 
             if ($exception->isInvalidObjectReference()) {
-                error_log('Database schema mismatch during region operation: ' . $exception->getMessage());
+                $previousMessage = $exception->getPrevious()?->getMessage() ?? $exception->getMessage();
+                error_log('Database schema mismatch: ' . $previousMessage);
+
+                $regionRelated = self::mentionsRegionSchema($previousMessage);
+                if ($regionRelated) {
+                    return $this->responder->error(
+                        'DATABASE_SCHEMA_MISMATCH',
+                        'The database schema is missing a required region table or column. Run the latest region migration scripts.',
+                        503,
+                    );
+                }
 
                 return $this->responder->error(
                     'DATABASE_SCHEMA_MISMATCH',
-                    'The database schema is missing a required region table or column. Run the latest region migration scripts.',
+                    'The database schema is missing a required table or column for this product operation. Check API logs for the underlying SQL object name.',
                     503,
                 );
             }
@@ -358,5 +368,19 @@ final class ProductManagementErrorMapper
         }
 
         return $this->responder->error('INTERNAL_ERROR', 'An unexpected error occurred.', 500);
+    }
+
+    /**
+     * Only attribute schema mismatches to region migrations when the driver message
+     * names a region-related object. Pricing/UOM/other schema gaps must not surface
+     * as "run the latest region migration scripts".
+     */
+    private static function mentionsRegionSchema(string $message): bool
+    {
+        $lower = strtolower($message);
+
+        return str_contains($lower, 'region')
+            || str_contains($lower, 'productregions')
+            || str_contains($lower, 'marketregions');
     }
 }

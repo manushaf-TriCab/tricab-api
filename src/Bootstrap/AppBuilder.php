@@ -136,6 +136,8 @@ use TriCab\Api\Http\Action\PublicProduct\GetPublicProductMediaAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductRelationshipsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductSpecificationsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductVariantsAction;
+use TriCab\Api\Http\Action\PublicProduct\PostCustomerVariantPricingBatchAction;
+use TriCab\Api\Http\Action\PublicProduct\PostPrepareRfqLinePricingAction;
 use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
 use TriCab\Api\Http\Action\PublicRegionAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
@@ -378,6 +380,8 @@ final class AppBuilder
         $app->get('/api/v1/products/{slug}/customer-view', GetPublicProductCustomerViewAction::class);
         $app->get('/api/v1/customer-view-theme', GetCustomerViewThemeAction::class);
         $app->get('/api/v1/products/{slug}/variants', GetPublicProductVariantsAction::class);
+        $app->post('/api/v1/products/{slug}/variants/pricing', PostCustomerVariantPricingBatchAction::class);
+        $app->post('/api/v1/products/{slug}/rfq/lines/prepare', PostPrepareRfqLinePricingAction::class);
         $app->get('/api/v1/products/{slug}/media', GetPublicProductMediaAction::class);
         $app->get('/api/v1/products/{slug}/documents', GetPublicProductDocumentsAction::class);
         $app->get('/api/v1/products/{slug}/documents/{documentPublicId}/download', DownloadProductDocumentAction::class);

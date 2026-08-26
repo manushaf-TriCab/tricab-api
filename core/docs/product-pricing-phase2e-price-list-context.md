@@ -57,11 +57,12 @@ Legacy comparison uses price list currency when resolved via `priceListPublicId`
 
 | dbco | Inferred currency | Evidence | Confidence |
 |------|-------------------|----------|------------|
-| 2507 | AUD | Live validation + legacy comparison default | Medium — not on `tc.price` rows |
-| 2517 | USD | Application code assumption | Low — code-derived only |
-| 2519 | USD | Application code assumption | Low — code-derived only |
+| 2507 | AUD | `ProductConfigurator::getDebtCompany` AU/NZ → 2507; Phase 13.2A source verify | **HIGH** — APPROVED for Phase 13.3 |
+| 2517 | USD | `getDebtCompany` US → 2517; Phase 13.2A source verify | **HIGH** — APPROVED for Phase 13.3 (supersedes prior LOW) |
+| 2519 | USD (unproven) | Staff Price Lookup / RFQ TCASIA only — not catalogue `getDebtCompany` | **LOW** — **EXCLUDED** from Phase 13.3 (`2519_NOT_REQUIRED_FOR_PHASE_13_3`) |
 
-Configure explicit currency on each `PriceList`; do not rely on friendly company names.
+See `tmp/phase13.2a-pricing-reconciliation-report.md`.
+
 
 ## Region relationship
 

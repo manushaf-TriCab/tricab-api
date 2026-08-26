@@ -1439,6 +1439,48 @@ final class ContainerFactory
                 );
                 return new MysqlLegacyTcRepository($conn);
             },
+            \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class => static function (Container $container): \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                $factory = self::get($container, ReadOnlyMysqlConnectionFactory::class);
+                if (!$config->tcConfigured()) {
+                    throw new InvalidArgumentException('Legacy TC source is not configured.');
+                }
+
+                return $factory->create(
+                    (string) $config->tcDsn,
+                    (string) $config->tcUser,
+                    (string) $config->tcPassword,
+                    'tc',
+                    $config->tcSslMode,
+                );
+            },
+            \TriCab\Core\Product\Application\Pricing\CustomerPricingMarginRepository::class => static function (Container $container): \TriCab\Core\Product\Application\Pricing\CustomerPricingMarginRepository {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                if (!$config->tcConfigured()) {
+                    return new \TriCab\Core\Product\Application\Pricing\InMemoryCustomerPricingMarginRepository();
+                }
+
+                return new \TriCab\Api\Product\Pricing\MysqlLegacyCustomerMarginRepository(
+                    self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                );
+            },
+            \TriCab\Core\Product\Application\Pricing\CurrencyFxRateRepository::class => static function (Container $container): \TriCab\Core\Product\Application\Pricing\CurrencyFxRateRepository {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                if (!$config->tcConfigured()) {
+                    return new \TriCab\Core\Product\Application\Pricing\InMemoryCurrencyFxRateRepository();
+                }
+
+                return new \TriCab\Api\Product\Pricing\MysqlLegacyCurrencyFxRepository(
+                    self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                );
+            },
+            \TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService::class),
+            \TriCab\Core\Product\Application\Pricing\PrepareRfqLinePricingService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\PrepareRfqLinePricingService::class),
+            \TriCab\Core\Product\Application\Pricing\ResolveCustomerPricingContextService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\ResolveCustomerPricingContextService::class),
+            \TriCab\Core\Product\Application\Pricing\CustomerPricingContextResolver::class => \DI\get(\TriCab\Core\Product\Application\Pricing\ResolveCustomerPricingContextService::class),
+            \TriCab\Api\Http\Auth\ResolveRequestAuthenticatedUser::class => \DI\autowire(\TriCab\Api\Http\Auth\ResolveRequestAuthenticatedUser::class),
+            \TriCab\Api\Http\Action\PublicProduct\PostCustomerVariantPricingBatchAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicProduct\PostCustomerVariantPricingBatchAction::class),
+            \TriCab\Api\Http\Action\PublicProduct\PostPrepareRfqLinePricingAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicProduct\PostPrepareRfqLinePricingAction::class),
             LiveInventoryProbe::class => static function (Container $container): LiveInventoryProbe {
                 $config = self::get($container, LiveLegacySourceConfig::class);
                 if (!$config->wordpressConfigured() && !$config->tcConfigured()) {
@@ -1598,6 +1640,7 @@ final class ContainerFactory
             $definitions[SiteConfigurationRepository::class] = \DI\autowire(AzureSqlSiteConfigurationRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(AzureSqlProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(AzureSqlProductPricingRepository::class);
+            $definitions[\TriCab\Core\Product\Application\Pricing\VariantBaseCostRepository::class] = \DI\autowire(\TriCab\Api\Product\Pricing\AzureSqlVariantBaseCostRepository::class);
             $definitions[ProductAuditRepository::class] = \DI\autowire(AzureSqlProductAuditRepository::class);
             $definitions[AdminDashboardQueryRepository::class] = \DI\autowire(AzureSqlAdminDashboardQueryRepository::class);
             $definitions[ProductIntegrationRepository::class] = \DI\autowire(AzureSqlProductIntegrationRepository::class);
@@ -1718,6 +1761,7 @@ SQL,
             $definitions[ProductPricingRepository::class] = \DI\autowire(InMemoryProductPricingRepository::class);
             $definitions[PriceListRepository::class] = \DI\autowire(InMemoryPriceListRepository::class);
             $definitions[VariantLegacyPricingIdentityRepository::class] = \DI\autowire(InMemoryVariantLegacyPricingIdentityRepository::class);
+            $definitions[\TriCab\Core\Product\Application\Pricing\VariantBaseCostRepository::class] = \DI\autowire(\TriCab\Core\Product\Application\Pricing\InMemoryVariantBaseCostRepository::class);
             $definitions[ProductAuditRepository::class] = \DI\autowire(InMemoryProductAuditRepository::class);
             $definitions[AdminDashboardQueryRepository::class] = \DI\autowire(InMemoryAdminDashboardQueryRepository::class);
             $definitions[ProductIntegrationRepository::class] = \DI\autowire(InMemoryProductIntegrationRepository::class);
