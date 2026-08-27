@@ -11,6 +11,10 @@
         <testsuite name="TriCab API">
             <directory>tests</directory>
         </testsuite>
+        <testsuite name="TriCab Core">
+            <directory>core/tests</directory>
+            <exclude>core/tests/SmokeTest.php</exclude>
+        </testsuite>
     </testsuites>
     <source>
         <include>

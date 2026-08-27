@@ -1439,6 +1439,101 @@ final class ContainerFactory
                 );
                 return new MysqlLegacyTcRepository($conn);
             },
+            \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class => static function (Container $container): \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                $factory = self::get($container, ReadOnlyMysqlConnectionFactory::class);
+                if (!$config->tcConfigured()) {
+                    throw new InvalidArgumentException('Legacy TC source is not configured.');
+                }
+
+                return $factory->create(
+                    (string) $config->tcDsn,
+                    (string) $config->tcUser,
+                    (string) $config->tcPassword,
+                    'tc',
+                    $config->tcSslMode,
+                );
+            },
+            \TriCab\Core\Product\Application\Pricing\CustomerPricingMarginRepository::class => static function (Container $container): \TriCab\Core\Product\Application\Pricing\CustomerPricingMarginRepository {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                if (!$config->tcConfigured()) {
+                    return new \TriCab\Core\Product\Application\Pricing\InMemoryCustomerPricingMarginRepository();
+                }
+
+                return new \TriCab\Api\Product\Pricing\MysqlLegacyCustomerMarginRepository(
+                    self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                );
+            },
+            \TriCab\Core\Product\Application\Pricing\CurrencyFxRateRepository::class => static function (Container $container): \TriCab\Core\Product\Application\Pricing\CurrencyFxRateRepository {
+                $config = self::get($container, LiveLegacySourceConfig::class);
+                if (!$config->tcConfigured()) {
+                    return new \TriCab\Core\Product\Application\Pricing\InMemoryCurrencyFxRateRepository();
+                }
+
+                return new \TriCab\Api\Product\Pricing\MysqlLegacyCurrencyFxRepository(
+                    self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                );
+            },
+            \TriCab\Core\Product\Application\Pricing\LegacyCostCalculationGateway::class => static function (Container $container) use ($settings): \TriCab\Core\Product\Application\Pricing\LegacyCostCalculationGateway {
+                if (!$settings->isLegacyCostApiEnabled()) {
+                    return new \TriCab\Api\Product\Pricing\DisabledLegacyCostCalculationGateway();
+                }
+
+                $http = new StreamJsonHttpClient((float) $settings->legacyCostApiTimeoutSeconds);
+
+                return new \TriCab\Api\Product\Pricing\HttpLegacyCostCalculationGateway(
+                    $http,
+                    $settings->legacyCostApiUrl,
+                );
+            },
+            \TriCab\Core\Product\Application\Pricing\ResolvePricingDbcoService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\ResolvePricingDbcoService::class),
+            \TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService::class => static function (Container $container) use ($settings): \TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService {
+                return new \TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService(
+                    catalog: self::get($container, \TriCab\Core\Product\Application\Pricing\VariantCommercialCatalogRepository::class),
+                    margins: self::get($container, \TriCab\Core\Product\Application\Pricing\CustomerPricingMarginRepository::class),
+                    fx: self::get($container, \TriCab\Core\Product\Application\Pricing\CurrencyFxRateRepository::class),
+                    formula: new \TriCab\Core\Product\Migration\Pricing\LegacyCustomerSellFormulaContract(),
+                    legacyCost: self::get($container, \TriCab\Core\Product\Application\Pricing\LegacyCostCalculationGateway::class),
+                    legacyCostApiEnabled: $settings->isLegacyCostApiEnabled(),
+                    dbcoResolver: self::get($container, \TriCab\Core\Product\Application\Pricing\ResolvePricingDbcoService::class),
+                );
+            },
+            \TriCab\Core\Product\Application\Pricing\PrepareRfqLinePricingService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\PrepareRfqLinePricingService::class),
+            \TriCab\Core\Product\Application\Pricing\PrepareCartItemPricingService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\PrepareCartItemPricingService::class),
+            \TriCab\Core\Commerce\Contract\VariantAvailabilityRepository::class => \DI\autowire(\TriCab\Api\Commerce\Persistence\UnknownVariantAvailabilityRepository::class),
+            \TriCab\Core\Commerce\Application\Service\CartEffectiveCustomerResolver::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\CartEffectiveCustomerResolver::class),
+            \TriCab\Core\Commerce\Application\Service\CartDtoAssembler::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\CartDtoAssembler::class),
+            \TriCab\Core\Commerce\Application\Service\GetCartService::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\GetCartService::class),
+            \TriCab\Core\Commerce\Application\Service\AddCartItemService::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\AddCartItemService::class),
+            \TriCab\Core\Commerce\Application\Service\UpdateCartItemService::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\UpdateCartItemService::class),
+            \TriCab\Core\Commerce\Application\Service\RemoveCartItemService::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\RemoveCartItemService::class),
+            \TriCab\Core\Commerce\Application\Service\RepriceCartService::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\RepriceCartService::class),
+            \TriCab\Core\Commerce\Application\Service\SwitchCartCustomerService::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\SwitchCartCustomerService::class),
+            \TriCab\Api\Http\Action\PublicCart\GetCartAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicCart\GetCartAction::class),
+            \TriCab\Api\Http\Action\PublicCart\PostCartItemAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicCart\PostCartItemAction::class),
+            \TriCab\Api\Http\Action\PublicCart\PatchCartItemAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicCart\PatchCartItemAction::class),
+            \TriCab\Api\Http\Action\PublicCart\DeleteCartItemAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicCart\DeleteCartItemAction::class),
+            \TriCab\Api\Http\Action\PublicCart\PostCartRepriceAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicCart\PostCartRepriceAction::class),
+            \TriCab\Core\Product\Application\Pricing\StaffPricingContextTokenCodec::class => \DI\factory(static function (\Psr\Container\ContainerInterface $c): \TriCab\Core\Product\Application\Pricing\StaffPricingContextTokenCodec {
+                $settings = $c->get(\TriCab\Api\Config\Settings::class);
+                $secret = $settings->guestJwtSecret !== ''
+                    ? $settings->guestJwtSecret
+                    : hash('sha256', 'tricab-dev-pricing-context|' . $settings->appEnv);
+
+                return new \TriCab\Core\Product\Application\Pricing\StaffPricingContextTokenCodec($secret);
+            }),
+            \TriCab\Core\Product\Application\Pricing\ResolvePricingActorContextService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\ResolvePricingActorContextService::class),
+            \TriCab\Core\Product\Application\Pricing\PricingActorContextResolver::class => \DI\get(\TriCab\Core\Product\Application\Pricing\ResolvePricingActorContextService::class),
+            \TriCab\Core\Product\Application\Pricing\ResolveCustomerPricingContextService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\ResolveCustomerPricingContextService::class),
+            \TriCab\Core\Product\Application\Pricing\CustomerPricingContextResolver::class => \DI\get(\TriCab\Core\Product\Application\Pricing\ResolveCustomerPricingContextService::class),
+            \TriCab\Api\Http\Auth\ResolveRequestAuthenticatedUser::class => \DI\autowire(\TriCab\Api\Http\Auth\ResolveRequestAuthenticatedUser::class),
+            \TriCab\Api\Http\Action\PublicProduct\PostCustomerVariantPricingBatchAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicProduct\PostCustomerVariantPricingBatchAction::class),
+            \TriCab\Api\Http\Action\PublicProduct\PostPrepareRfqLinePricingAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicProduct\PostPrepareRfqLinePricingAction::class),
+            \TriCab\Api\Http\Action\PublicProduct\PostPrepareCartItemPricingAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicProduct\PostPrepareCartItemPricingAction::class),
+            \TriCab\Api\Http\Action\PublicProduct\PostPricingCustomerContextAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicProduct\PostPricingCustomerContextAction::class),
+            \TriCab\Api\Http\Action\PublicProduct\GetPricingCustomersAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicProduct\GetPricingCustomersAction::class),
+            \TriCab\Api\Http\Action\PublicProduct\GetPricingCustomerContactsAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicProduct\GetPricingCustomerContactsAction::class),
+            \TriCab\Api\Http\Action\PublicProduct\PostPricingMarginOverrideAction::class => \DI\autowire(\TriCab\Api\Http\Action\PublicProduct\PostPricingMarginOverrideAction::class),
             LiveInventoryProbe::class => static function (Container $container): LiveInventoryProbe {
                 $config = self::get($container, LiveLegacySourceConfig::class);
                 if (!$config->wordpressConfigured() && !$config->tcConfigured()) {
@@ -1557,6 +1652,7 @@ final class ContainerFactory
             $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
             $definitions[GuestLoginEligibilityLookup::class] = \DI\autowire(AzureSqlGuestLoginEligibilityLookup::class);
             $definitions[ProductRepository::class] = \DI\autowire(AzureSqlProductRepository::class);
+            $definitions[\TriCab\Core\Commerce\Contract\CartRepository::class] = \DI\autowire(\TriCab\Api\Commerce\Persistence\AzureSqlCartRepository::class);
             $definitions[RegionRepository::class] = \DI\autowire(AzureSqlRegionRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
@@ -1598,6 +1694,8 @@ final class ContainerFactory
             $definitions[SiteConfigurationRepository::class] = \DI\autowire(AzureSqlSiteConfigurationRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(AzureSqlProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(AzureSqlProductPricingRepository::class);
+            $definitions[\TriCab\Core\Product\Application\Pricing\VariantCommercialCatalogRepository::class] = \DI\autowire(\TriCab\Api\Product\Pricing\AzureSqlVariantCommercialCatalogRepository::class);
+            $definitions[\TriCab\Core\Product\Application\Pricing\VariantBaseCostRepository::class] = \DI\autowire(\TriCab\Api\Product\Pricing\AzureSqlVariantBaseCostRepository::class);
             $definitions[ProductAuditRepository::class] = \DI\autowire(AzureSqlProductAuditRepository::class);
             $definitions[AdminDashboardQueryRepository::class] = \DI\autowire(AzureSqlAdminDashboardQueryRepository::class);
             $definitions[ProductIntegrationRepository::class] = \DI\autowire(AzureSqlProductIntegrationRepository::class);
@@ -1680,6 +1778,7 @@ SQL,
             $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
             $definitions[GuestLoginEligibilityLookup::class] = \DI\autowire(CompositeGuestLoginEligibilityLookup::class);
             $definitions[InMemoryProductStore::class] = \DI\autowire(InMemoryProductStore::class);
+            $definitions[\TriCab\Core\Commerce\Contract\CartRepository::class] = \DI\autowire(\TriCab\Api\Commerce\Persistence\InMemoryCartRepository::class);
             $definitions[RegionRepository::class] = \DI\autowire(InMemoryRegionRepository::class);
             $definitions[ProductRepository::class] = \DI\autowire(InMemoryProductRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(InMemoryProductVariantRepository::class);
@@ -1718,6 +1817,8 @@ SQL,
             $definitions[ProductPricingRepository::class] = \DI\autowire(InMemoryProductPricingRepository::class);
             $definitions[PriceListRepository::class] = \DI\autowire(InMemoryPriceListRepository::class);
             $definitions[VariantLegacyPricingIdentityRepository::class] = \DI\autowire(InMemoryVariantLegacyPricingIdentityRepository::class);
+            $definitions[\TriCab\Core\Product\Application\Pricing\VariantCommercialCatalogRepository::class] = \DI\autowire(\TriCab\Core\Product\Application\Pricing\InMemoryVariantCommercialCatalogRepository::class);
+            $definitions[\TriCab\Core\Product\Application\Pricing\VariantBaseCostRepository::class] = \DI\autowire(\TriCab\Core\Product\Application\Pricing\InMemoryVariantBaseCostRepository::class);
             $definitions[ProductAuditRepository::class] = \DI\autowire(InMemoryProductAuditRepository::class);
             $definitions[AdminDashboardQueryRepository::class] = \DI\autowire(InMemoryAdminDashboardQueryRepository::class);
             $definitions[ProductIntegrationRepository::class] = \DI\autowire(InMemoryProductIntegrationRepository::class);
