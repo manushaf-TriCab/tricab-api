@@ -64,6 +64,8 @@ final class DevelopmentUserManagementCatalog
             'PRODUCT.CODES.MANAGE' => ['name' => 'Manage Product Codes', 'module' => 'PRODUCT'],
             'PRODUCT.PRICING.VIEW' => ['name' => 'View Product Pricing', 'module' => 'PRODUCT'],
             'PRODUCT.PRICING.MANAGE' => ['name' => 'Manage Product Pricing', 'module' => 'PRODUCT'],
+            'PRODUCT.PRICING.OVERRIDE' => ['name' => 'Override Product Margin', 'module' => 'PRODUCT'],
+            'CUSTOMER.PRICE_AS' => ['name' => 'Price As Customer', 'module' => 'CUSTOMER'],
             'PRODUCT.LOOKUPS.MANAGE' => ['name' => 'Manage Product Lookups', 'module' => 'PRODUCT'],
             'PRODUCT.STYLES.READ' => ['name' => 'View Product Styles', 'module' => 'PRODUCT'],
             'PRODUCT.STYLES.MANAGE' => ['name' => 'Manage Product Styles', 'module' => 'PRODUCT'],

@@ -9,7 +9,7 @@ use TriCab\Core\Product\Application\Pricing\CustomerPricingContext;
 use TriCab\Core\Product\Application\Pricing\CustomerSellPriceStatus;
 use TriCab\Core\Product\Application\Pricing\InMemoryCurrencyFxRateRepository;
 use TriCab\Core\Product\Application\Pricing\InMemoryCustomerPricingMarginRepository;
-use TriCab\Core\Product\Application\Pricing\InMemoryVariantBaseCostRepository;
+use TriCab\Core\Product\Application\Pricing\InMemoryVariantCommercialCatalogRepository;
 use TriCab\Core\Product\Application\Pricing\PrepareRfqLinePricingService;
 use TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService;
 
@@ -31,8 +31,8 @@ final class PrepareRfqLinePricingServiceTest extends TestCase
 
     public function test_tbc_does_not_become_zero(): void
     {
-        $base = new InMemoryVariantBaseCostRepository();
-        $base->seed('v1', [
+        $base = new InMemoryVariantCommercialCatalogRepository();
+        $base->seedFromLegacyBase('v1', [
             'baseCost' => '9.943',
             'currencyCode' => 'AUD',
             'priceListCode' => 'TCA-BASE',
@@ -71,8 +71,8 @@ final class PrepareRfqLinePricingServiceTest extends TestCase
 
     private function service(): PrepareRfqLinePricingService
     {
-        $base = new InMemoryVariantBaseCostRepository();
-        $base->seed('v1', [
+        $base = new InMemoryVariantCommercialCatalogRepository();
+        $base->seedFromLegacyBase('v1', [
             'baseCost' => '9.943',
             'currencyCode' => 'AUD',
             'priceListCode' => 'TCA-BASE',

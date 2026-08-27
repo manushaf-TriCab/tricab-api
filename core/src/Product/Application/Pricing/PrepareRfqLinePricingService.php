@@ -36,7 +36,7 @@ final class PrepareRfqLinePricingService
             ];
         }
 
-        $resolved = $this->pricing->resolve($variantPublicId, $context, false);
+        $resolved = $this->pricing->resolve($variantPublicId, $context, false, null, false, (string) $length);
         $result = $resolved instanceof CustomerVariantSellPriceDiagnostic ? $resolved->customer : $resolved;
 
         $clientIgnored = $clientClaimedUnitPrice !== null && $clientClaimedUnitPrice !== '';

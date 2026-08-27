@@ -11,16 +11,19 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Auth\ResolveRequestAuthenticatedUser;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
-use TriCab\Core\Product\Application\Pricing\CustomerPricingContextResolver;
+use TriCab\Core\Product\Application\Pricing\CustomerSellPriceStatus;
 use TriCab\Core\Product\Application\Pricing\CustomerVariantSellPriceDiagnostic;
+use TriCab\Core\Product\Application\Pricing\PricingActorAuthorizationException;
+use TriCab\Core\Product\Application\Pricing\PricingActorContextResolver;
 use TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService;
 
 /**
  * Batch customer-safe variant sell prices for the size modal.
  * POST /api/v1/products/{slug}/variants/pricing
  *
- * Body: { "variantIds": ["..."] }
- * Does not accept margin/dbco/priceListId from the client.
+ * Optional staff price-as: pricingContextToken / X-Pricing-Context-Token
+ * Optional length (metres) for MAKE Cost API pricing.
+ * Does not accept margin/dbco/priceListId/customerId as commercial authority.
  */
 final class PostCustomerVariantPricingBatchAction
 {
@@ -28,7 +31,7 @@ final class PostCustomerVariantPricingBatchAction
 
     public function __construct(
         private readonly ResolveRequestAuthenticatedUser $requestUser,
-        private readonly CustomerPricingContextResolver $contextResolver,
+        private readonly PricingActorContextResolver $actorContext,
         private readonly ResolveCustomerSellPriceService $pricing,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
@@ -41,12 +44,22 @@ final class PostCustomerVariantPricingBatchAction
 
         try {
             $user = $this->requestUser->fromRequest($request);
-            $context = $this->contextResolver->fromAuthenticatedUser($user);
 
             $body = $request->getParsedBody();
             if (!is_array($body)) {
                 $body = [];
             }
+
+            // Reject client attempts to inject commercial parameters as authority.
+            foreach (['marginPercent', 'dbco', 'priceListId', 'baseCost', 'customerId', 'defaultCost', 'calculatedCostPerMeter'] as $forbidden) {
+                if (array_key_exists($forbidden, $body)) {
+                    return $this->responder->error('VALIDATION_FAILED', 'Client may not supply ' . $forbidden . '.', 422);
+                }
+            }
+
+            $token = trim((string) ($body['pricingContextToken'] ?? $request->getHeaderLine('X-Pricing-Context-Token')));
+            $context = $this->actorContext->fromAuthenticatedUser($user, $token !== '' ? $token : null);
+
             $rawIds = $body['variantIds'] ?? [];
             if (!is_array($rawIds)) {
                 return $this->responder->error('VALIDATION_FAILED', 'variantIds must be an array.', 422);
@@ -63,11 +76,13 @@ final class PostCustomerVariantPricingBatchAction
                 return $this->responder->error('VALIDATION_FAILED', 'Too many variantIds (max ' . self::MAX_BATCH . ').', 422);
             }
 
-            // Reject client attempts to inject commercial parameters.
-            foreach (['marginPercent', 'dbco', 'priceListId', 'baseCost', 'customerId'] as $forbidden) {
-                if (array_key_exists($forbidden, $body)) {
-                    return $this->responder->error('VALIDATION_FAILED', 'Client may not supply ' . $forbidden . '.', 422);
+            $requestedLength = null;
+            if (array_key_exists('length', $body) && $body['length'] !== null && $body['length'] !== '') {
+                $rawLength = is_numeric($body['length']) ? (string) $body['length'] : trim((string) $body['length']);
+                if (!$this->pricing->isValidPositiveLength($rawLength)) {
+                    return $this->responder->error('INVALID_LENGTH', 'length must be a positive number.', 422);
                 }
+                $requestedLength = $rawLength;
             }
 
             $staffDiag = false;
@@ -77,13 +92,33 @@ final class PostCustomerVariantPricingBatchAction
 
             $items = [];
             foreach ($variantIds as $variantId) {
-                $resolved = $this->pricing->resolve($variantId, $context, $staffDiag);
+                try {
+                    $resolved = $this->pricing->resolve($variantId, $context, $staffDiag, null, false, $requestedLength);
+                } catch (Throwable $e) {
+                    unset($e);
+                    $items[] = [
+                        'variantId' => $variantId,
+                        'status' => CustomerSellPriceStatus::TEMPORARILY_UNAVAILABLE,
+                        'availability' => CustomerSellPriceStatus::AVAILABILITY_UNKNOWN,
+                        'unitPrice' => null,
+                        'currency' => null,
+                        'uom' => 'm',
+                        'displayMessage' => 'Pricing temporarily unavailable',
+                        'canAddToRfq' => false,
+                    ];
+                    continue;
+                }
                 if ($resolved instanceof CustomerVariantSellPriceDiagnostic) {
                     $items[] = $resolved->toStaffArray();
                 } else {
                     $payload = $resolved->toCustomerArray();
-                    // Defence in depth — never leak baseCost keys
-                    unset($payload['baseCost'], $payload['marginPercent'], $payload['dbco']);
+                    unset(
+                        $payload['baseCost'],
+                        $payload['marginPercent'],
+                        $payload['dbco'],
+                        $payload['defaultCost'],
+                        $payload['calculatedCostPerMeter'],
+                    );
                     $items[] = $payload;
                 }
             }
@@ -91,8 +126,16 @@ final class PostCustomerVariantPricingBatchAction
             return $this->responder->success([
                 'authState' => $context->authState,
                 'currency' => $context->sellCurrency,
+                'pricingMode' => $context->pricingMode,
+                'customerId' => $context->customerPublicId,
+                'customerCode' => $context->customerCode,
+                'customerDisplayName' => $context->customerDisplayName,
+                'overrideMargin' => $context->overrideMarginPercent,
+                'length' => $requestedLength,
                 'items' => $items,
             ]);
+        } catch (PricingActorAuthorizationException $e) {
+            return $this->responder->error('CONTEXT_INVALID', $e->getMessage(), 403);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

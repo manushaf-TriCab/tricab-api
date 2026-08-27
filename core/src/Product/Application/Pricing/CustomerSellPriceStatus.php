@@ -18,6 +18,10 @@ final class CustomerSellPriceStatus
     public const FX_NOT_AVAILABLE = 'FX_NOT_AVAILABLE';
     public const REVIEW = 'REVIEW';
     public const TEMPORARILY_UNAVAILABLE = 'TEMPORARILY_UNAVAILABLE';
+    /** MAKE item needs a positive length before Cost API can price. */
+    public const LENGTH_REQUIRED = 'LENGTH_REQUIRED';
+    /** Cost API failed for MAKE (or unusable) — map to TEMPORARILY_UNAVAILABLE in customer DTO when preferred. */
+    public const COST_SOURCE_UNAVAILABLE = 'COST_SOURCE_UNAVAILABLE';
 
     public const AVAILABILITY_STOCKED = 'STOCKED';
     public const AVAILABILITY_MAKE = 'MAKE';

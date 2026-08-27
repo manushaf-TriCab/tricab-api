@@ -10,7 +10,7 @@ use TriCab\Core\Product\Application\Pricing\CustomerPricingContext;
 use TriCab\Core\Product\Application\Pricing\CustomerSellPriceStatus;
 use TriCab\Core\Product\Application\Pricing\InMemoryCurrencyFxRateRepository;
 use TriCab\Core\Product\Application\Pricing\InMemoryCustomerPricingMarginRepository;
-use TriCab\Core\Product\Application\Pricing\InMemoryVariantBaseCostRepository;
+use TriCab\Core\Product\Application\Pricing\InMemoryVariantCommercialCatalogRepository;
 use TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService;
 use TriCab\Core\Product\Migration\Pricing\LegacyCustomerSellFormulaContract;
 
@@ -28,8 +28,8 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
 
     public function test_resolved_au_customer_price(): void
     {
-        $base = new InMemoryVariantBaseCostRepository();
-        $base->seed('v1', [
+        $base = new InMemoryVariantCommercialCatalogRepository();
+        $base->seedFromLegacyBase('v1', [
             'baseCost' => '100',
             'currencyCode' => 'AUD',
             'priceListCode' => 'TCA-BASE',
@@ -62,7 +62,7 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
     public function test_guest_login_required(): void
     {
         $svc = new ResolveCustomerSellPriceService(
-            new InMemoryVariantBaseCostRepository(),
+            new InMemoryVariantCommercialCatalogRepository(),
             new InMemoryCustomerPricingMarginRepository(),
             new InMemoryCurrencyFxRateRepository(),
         );
@@ -74,7 +74,7 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
     public function test_missing_base_cost_price_not_available(): void
     {
         $svc = new ResolveCustomerSellPriceService(
-            new InMemoryVariantBaseCostRepository(),
+            new InMemoryVariantCommercialCatalogRepository(),
             new InMemoryCustomerPricingMarginRepository(),
             new InMemoryCurrencyFxRateRepository(),
         );
@@ -85,8 +85,8 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
 
     public function test_no_margin_is_tbc(): void
     {
-        $base = new InMemoryVariantBaseCostRepository();
-        $base->seed('v1', [
+        $base = new InMemoryVariantCommercialCatalogRepository();
+        $base->seedFromLegacyBase('v1', [
             'baseCost' => '10',
             'currencyCode' => 'AUD',
             'priceListCode' => 'TCA-BASE',
@@ -108,8 +108,8 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
 
     public function test_unsupported_currency_fx_not_available(): void
     {
-        $base = new InMemoryVariantBaseCostRepository();
-        $base->seed('v1', [
+        $base = new InMemoryVariantCommercialCatalogRepository();
+        $base->seedFromLegacyBase('v1', [
             'baseCost' => '10',
             'currencyCode' => 'AUD',
             'priceListCode' => 'TCA-BASE',
@@ -131,8 +131,8 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
 
     public function test_zero_base_cost_blocked(): void
     {
-        $base = new InMemoryVariantBaseCostRepository();
-        $base->seed('v1', [
+        $base = new InMemoryVariantCommercialCatalogRepository();
+        $base->seedFromLegacyBase('v1', [
             'baseCost' => '0',
             'currencyCode' => 'AUD',
             'priceListCode' => 'TCA-BASE',
@@ -157,8 +157,8 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
 
     public function test_tas_rule_not_applied_by_default(): void
     {
-        $base = new InMemoryVariantBaseCostRepository();
-        $base->seed('v1', [
+        $base = new InMemoryVariantCommercialCatalogRepository();
+        $base->seedFromLegacyBase('v1', [
             'baseCost' => '99',
             'currencyCode' => 'AUD',
             'priceListCode' => 'TCA-BASE',
@@ -196,8 +196,8 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
 
     public function test_customer_array_never_contains_base_cost(): void
     {
-        $base = new InMemoryVariantBaseCostRepository();
-        $base->seed('v1', [
+        $base = new InMemoryVariantCommercialCatalogRepository();
+        $base->seedFromLegacyBase('v1', [
             'baseCost' => '2.134',
             'currencyCode' => 'AUD',
             'priceListCode' => 'TCA-BASE',

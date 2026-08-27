@@ -127,7 +127,15 @@ final readonly class Settings
         public int $passkeyRegistrationChallengeTtlSeconds,
         public int $passkeyAuthChallengeTtlSeconds,
         public bool $passkeyFakeCeremony,
+        public bool $legacyCostApiEnabled = false,
+        public string $legacyCostApiUrl = 'https://www.tricab.com/cost-api/',
+        public int $legacyCostApiTimeoutSeconds = 8,
     ) {
+    }
+
+    public function isLegacyCostApiEnabled(): bool
+    {
+        return $this->legacyCostApiEnabled && trim($this->legacyCostApiUrl) !== '';
     }
 
     public function isDevelopment(): bool
@@ -608,6 +616,10 @@ final readonly class Settings
             );
         }
 
+        $legacyCostApiUrl = self::string($env, 'LEGACY_COST_API_URL', 'https://www.tricab.com/cost-api/');
+        $legacyCostApiTimeoutSeconds = self::boundedInt($env, 'LEGACY_COST_API_TIMEOUT_SECONDS', 8, 1, 30);
+        $legacyCostApiEnabled = self::bool($env, 'LEGACY_COST_API_ENABLED', false);
+
         return new self(
             appEnv: $appEnv,
             appName: self::string($env, 'APP_NAME', 'tricab-api'),
@@ -696,6 +708,9 @@ final readonly class Settings
             passkeyRegistrationChallengeTtlSeconds: $passkeyRegistrationChallengeTtlSeconds,
             passkeyAuthChallengeTtlSeconds: $passkeyAuthChallengeTtlSeconds,
             passkeyFakeCeremony: $passkeyFakeCeremony,
+            legacyCostApiEnabled: $legacyCostApiEnabled,
+            legacyCostApiUrl: $legacyCostApiUrl,
+            legacyCostApiTimeoutSeconds: $legacyCostApiTimeoutSeconds,
         );
     }
 

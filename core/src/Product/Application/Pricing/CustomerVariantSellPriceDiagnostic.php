@@ -25,6 +25,9 @@ final readonly class CustomerVariantSellPriceDiagnostic
         public string $formulaPath,
         public array $trace,
         public bool $tasRuleApplied,
+        public ?string $resolvedMarginPercent = null,
+        public ?string $overrideMarginPercent = null,
+        public ?string $marginSource = null,
     ) {
     }
 
@@ -40,6 +43,9 @@ final readonly class CustomerVariantSellPriceDiagnostic
                 'baseCurrency' => $this->baseCurrency,
                 'priceListCode' => $this->priceListCode,
                 'marginPercent' => $this->marginPercent,
+                'resolvedMarginPercent' => $this->resolvedMarginPercent,
+                'overrideMarginPercent' => $this->overrideMarginPercent,
+                'marginSource' => $this->marginSource,
                 'fxRate' => $this->fxRate,
                 'fxSource' => $this->fxSource,
                 'formulaPath' => $this->formulaPath,

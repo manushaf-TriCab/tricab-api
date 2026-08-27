@@ -14,11 +14,11 @@ use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Product\Application\Pricing\CustomerPricingContext;
-use TriCab\Core\Product\Application\Pricing\CustomerPricingContextResolver;
 use TriCab\Core\Product\Application\Pricing\CustomerSellPriceStatus;
 use TriCab\Core\Product\Application\Pricing\InMemoryCurrencyFxRateRepository;
 use TriCab\Core\Product\Application\Pricing\InMemoryCustomerPricingMarginRepository;
-use TriCab\Core\Product\Application\Pricing\InMemoryVariantBaseCostRepository;
+use TriCab\Core\Product\Application\Pricing\InMemoryVariantCommercialCatalogRepository;
+use TriCab\Core\Product\Application\Pricing\PricingActorContextResolver;
 use TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService;
 
 use TriCab\Api\Tests\TestAppFactory;
@@ -35,6 +35,15 @@ final class CustomerVariantPricingBatchActionTest extends TestCase
         self::assertSame(422, $response2->getStatusCode());
     }
 
+    public function test_rejects_invalid_length(): void
+    {
+        $action = $this->action(CustomerPricingContext::guest());
+        $response = $action($this->request(['variantIds' => ['v1'], 'length' => 0]), new \Slim\Psr7\Response());
+        self::assertSame(422, $response->getStatusCode());
+        $payload = json_decode((string) $response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('INVALID_LENGTH', $payload['error']['code'] ?? $payload['code'] ?? null);
+    }
+
     public function test_guest_returns_login_required_without_base_cost(): void
     {
         $action = $this->action(CustomerPricingContext::guest());
@@ -49,8 +58,8 @@ final class CustomerVariantPricingBatchActionTest extends TestCase
 
     public function test_resolved_customer_dto_omits_internal_fields(): void
     {
-        $base = new InMemoryVariantBaseCostRepository();
-        $base->seed('v1', [
+        $base = new InMemoryVariantCommercialCatalogRepository();
+        $base->seedFromLegacyBase('v1', [
             'baseCost' => '9.943',
             'currencyCode' => 'AUD',
             'priceListCode' => 'TCA-BASE',
@@ -90,21 +99,21 @@ final class CustomerVariantPricingBatchActionTest extends TestCase
         CustomerPricingContext $context,
         ?ResolveCustomerSellPriceService $pricing = null,
     ): PostCustomerVariantPricingBatchAction {
-        $contextResolver = new class ($context) implements CustomerPricingContextResolver {
+        $actorContext = new class ($context) implements PricingActorContextResolver {
             public function __construct(private readonly CustomerPricingContext $fixed)
             {
             }
 
-            public function fromAuthenticatedUser(?AuthenticatedUser $user): CustomerPricingContext
+            public function fromAuthenticatedUser(?AuthenticatedUser $user, ?string $pricingContextToken = null): CustomerPricingContext
             {
-                unset($user);
+                unset($user, $pricingContextToken);
 
                 return $this->fixed;
             }
         };
 
         $pricing ??= new ResolveCustomerSellPriceService(
-            new InMemoryVariantBaseCostRepository(),
+            new InMemoryVariantCommercialCatalogRepository(),
             new InMemoryCustomerPricingMarginRepository(),
             new InMemoryCurrencyFxRateRepository(),
         );
@@ -112,7 +121,6 @@ final class CustomerVariantPricingBatchActionTest extends TestCase
         $requestUser = new class extends ResolveRequestAuthenticatedUser {
             public function __construct()
             {
-                // Test stub — parent handler unused.
             }
 
             public function fromRequest(\Psr\Http\Message\ServerRequestInterface $request): ?AuthenticatedUser
@@ -125,7 +133,7 @@ final class CustomerVariantPricingBatchActionTest extends TestCase
 
         return new PostCustomerVariantPricingBatchAction(
             $requestUser,
-            $contextResolver,
+            $actorContext,
             $pricing,
             new JsonResponder(),
             new ProductManagementErrorMapper(new JsonResponder()),

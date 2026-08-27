@@ -10,8 +10,9 @@ use Throwable;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Auth\ResolveRequestAuthenticatedUser;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\Product\Application\Pricing\CustomerPricingContextResolver;
 use TriCab\Core\Product\Application\Pricing\PrepareRfqLinePricingService;
+use TriCab\Core\Product\Application\Pricing\PricingActorAuthorizationException;
+use TriCab\Core\Product\Application\Pricing\PricingActorContextResolver;
 
 /**
  * Server-authoritative RFQ line pricing prepare (no persistence yet).
@@ -23,7 +24,7 @@ final class PostPrepareRfqLinePricingAction
 {
     public function __construct(
         private readonly ResolveRequestAuthenticatedUser $requestUser,
-        private readonly CustomerPricingContextResolver $contextResolver,
+        private readonly PricingActorContextResolver $actorContext,
         private readonly PrepareRfqLinePricingService $prepare,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
@@ -36,7 +37,6 @@ final class PostPrepareRfqLinePricingAction
 
         try {
             $user = $this->requestUser->fromRequest($request);
-            $context = $this->contextResolver->fromAuthenticatedUser($user);
 
             $body = $request->getParsedBody();
             if (!is_array($body)) {
@@ -48,6 +48,9 @@ final class PostPrepareRfqLinePricingAction
                     return $this->responder->error('VALIDATION_FAILED', 'Client may not supply ' . $forbidden . '.', 422);
                 }
             }
+
+            $token = trim((string) ($body['pricingContextToken'] ?? $request->getHeaderLine('X-Pricing-Context-Token')));
+            $context = $this->actorContext->fromAuthenticatedUser($user, $token !== '' ? $token : null);
 
             $variantId = trim((string) ($body['variantId'] ?? $body['variantPublicId'] ?? ''));
             if ($variantId === '') {
@@ -61,6 +64,8 @@ final class PostPrepareRfqLinePricingAction
             $result = $this->prepare->prepare($variantId, $context, $quantity, $length, $clientPrice);
 
             return $this->responder->success($result);
+        } catch (PricingActorAuthorizationException $e) {
+            return $this->responder->error('FORBIDDEN', $e->getMessage(), 403);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }
