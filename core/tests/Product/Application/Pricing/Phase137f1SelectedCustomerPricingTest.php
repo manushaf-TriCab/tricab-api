@@ -19,7 +19,7 @@ use TriCab\Core\Product\Application\Pricing\StaffPricingContextTokenCodec;
 
 final class Phase137f1SelectedCustomerPricingTest extends TestCase
 {
-    public function test_bne_like_missing_margin_returns_tbc_not_temporarily_unavailable(): void
+    public function test_bne_like_missing_margin_uses_default_zero_not_unavailable(): void
     {
         $fake = new FakeLegacyCostCalculationGateway();
         $fake->seed('BVA-PJ2D/3C25BK', '2507', '100', new CostResolution(
@@ -77,14 +77,15 @@ final class Phase137f1SelectedCustomerPricingTest extends TestCase
 
         $diag = $svc->resolve('v-bne', $bneCtx, true, null, false, '100');
         self::assertInstanceOf(CustomerVariantSellPriceDiagnostic::class, $diag);
-        self::assertSame(CustomerSellPriceStatus::TBC, $diag->customer->status);
-        self::assertSame('Customer pricing setup incomplete', $diag->customer->displayMessage);
+        self::assertSame(CustomerSellPriceStatus::RESOLVED, $diag->customer->status);
+        self::assertSame('0', $diag->marginPercent);
         self::assertContains('NO_MARGIN_RULE', $diag->trace);
+        self::assertContains('MARGIN_DEFAULT:0', $diag->trace);
         self::assertContains('COST_SOURCE:LEGACY_COST_API', $diag->trace);
         self::assertNotSame(CustomerSellPriceStatus::TEMPORARILY_UNAVAILABLE, $diag->customer->status);
     }
 
-    public function test_staff_margin_override_resolves_from_tbc(): void
+    public function test_staff_margin_override_changes_automatic_zero_price(): void
     {
         $svc = $this->pricingWithMarginSeed();
         $bneCtx = new CustomerPricingContext(
@@ -97,12 +98,14 @@ final class Phase137f1SelectedCustomerPricingTest extends TestCase
             pricingMode: CustomerPricingContext::MODE_STAFF_SELECTED,
         );
 
-        $tbc = $svc->resolve('v-bne', $bneCtx, false, null, false, '100');
-        self::assertSame(CustomerSellPriceStatus::TBC, $tbc->status);
+        $automatic = $svc->resolve('v-bne', $bneCtx, false, null, false, '100');
+        self::assertSame(CustomerSellPriceStatus::RESOLVED, $automatic->status);
+        self::assertNotNull($automatic->unitSellPrice);
 
         $overridden = $svc->resolve('v-bne', $bneCtx->withOverrideMargin('31'), false, null, false, '100');
         self::assertSame(CustomerSellPriceStatus::RESOLVED, $overridden->status);
         self::assertNotNull($overridden->unitSellPrice);
+        self::assertNotSame($automatic->unitSellPrice, $overridden->unitSellPrice);
     }
 
     public function test_pricing_context_token_with_contact_accepted(): void

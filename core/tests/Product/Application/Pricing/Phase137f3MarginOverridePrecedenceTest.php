@@ -94,7 +94,7 @@ final class Phase137f3MarginOverridePrecedenceTest extends TestCase
         self::assertNull($cleared->overrideMarginPercent);
     }
 
-    public function test_tbc_automatic_with_override_resolves_numeric_and_clear_returns_tbc(): void
+    public function test_tbc_automatic_with_override_resolves_numeric_and_clear_returns_default(): void
     {
         $fake = new FakeLegacyCostCalculationGateway();
         $fake->seed('BVA-PAXD/2C35BK', '2507', '100', new CostResolution(
@@ -142,16 +142,20 @@ final class Phase137f3MarginOverridePrecedenceTest extends TestCase
 
         $automatic = $svc->resolve('v-bne', $ctx, true, null, false, '100');
         self::assertInstanceOf(CustomerVariantSellPriceDiagnostic::class, $automatic);
-        self::assertSame(CustomerSellPriceStatus::TBC, $automatic->customer->status);
+        self::assertSame(CustomerSellPriceStatus::RESOLVED, $automatic->customer->status);
+        self::assertSame('0', $automatic->marginPercent);
 
         $overridden = $svc->resolve('v-bne', $ctx->withOverrideMargin('3'), true, null, false, '100');
         self::assertInstanceOf(CustomerVariantSellPriceDiagnostic::class, $overridden);
         self::assertSame(CustomerSellPriceStatus::RESOLVED, $overridden->customer->status);
         self::assertSame('3', $overridden->marginPercent);
+        self::assertNotSame($automatic->customer->unitSellPrice, $overridden->customer->unitSellPrice);
 
         $cleared = $svc->resolve('v-bne', $ctx->withOverrideMargin(null), true, null, false, '100');
         self::assertInstanceOf(CustomerVariantSellPriceDiagnostic::class, $cleared);
-        self::assertSame(CustomerSellPriceStatus::TBC, $cleared->customer->status);
+        self::assertSame(CustomerSellPriceStatus::RESOLVED, $cleared->customer->status);
+        self::assertSame('0', $cleared->marginPercent);
+        self::assertSame($automatic->customer->unitSellPrice, $cleared->customer->unitSellPrice);
     }
 
     private function pricingServiceWithAutomaticMargin(string $marginPercent): ResolveCustomerSellPriceService

@@ -22,6 +22,8 @@ final class ResolveCustomerSellPriceService
         private readonly ?LegacyCostCalculationGateway $legacyCost = null,
         private readonly bool $legacyCostApiEnabled = false,
         private readonly ResolvePricingDbcoService $dbcoResolver = new ResolvePricingDbcoService(),
+        private readonly string $pricingCostSource = 'legacy-fallback',
+        private readonly string $defaultTmmktmMargin = '0',
     ) {
     }
 
@@ -60,16 +62,23 @@ final class ResolveCustomerSellPriceService
 
         $base = $this->buildCommercialBase($catalogEntry, $context);
         $hasAzureBase = $catalogEntry['azureBase'] !== null;
+        $attemptLegacyCostApi = $this->shouldAttemptLegacyCostApi();
 
-        if (!$this->legacyCostApiEnabled && !$hasAzureBase) {
+        $trace[] = 'PRICING_COST_SOURCE_MODE:' . $this->pricingCostSource;
+
+        if (!$attemptLegacyCostApi && !$hasAzureBase) {
             $trace[] = 'NO_AZURE_BASE_COST';
 
             return $this->wrap($this->statusOnly($variantPublicId, CustomerSellPriceStatus::PRICE_NOT_AVAILABLE, 'Contact us for pricing', $base), $includeDiagnostic, $trace, $base);
         }
 
-        $trace[] = $hasAzureBase
-            ? 'BASE_META_FROM_AZURE:' . $base['priceListCode']
-            : 'BASE_META_FROM_CATALOG:' . $base['priceListCode'];
+        if ($this->isLegacyCostApiPrimaryMode()) {
+            $trace[] = 'BASE_META_FROM_CATALOG:' . $base['priceListCode'];
+        } else {
+            $trace[] = $hasAzureBase
+                ? 'BASE_META_FROM_AZURE:' . $base['priceListCode']
+                : 'BASE_META_FROM_CATALOG:' . $base['priceListCode'];
+        }
 
         $sellCurrency = strtoupper($context->sellCurrency);
         $baseCurrency = strtoupper($base['currencyCode']);
@@ -96,7 +105,7 @@ final class ResolveCustomerSellPriceService
         $costSource = 'AZURE_BASE';
         $effectiveCostForDiag = isset($base['baseCost']) ? (string) $base['baseCost'] : null;
 
-        if ($this->legacyCostApiEnabled && $this->legacyCost !== null) {
+        if ($attemptLegacyCostApi) {
             $productCode = trim((string) ($base['variantCode'] ?? ''));
             if ($productCode === '') {
                 $trace[] = 'NO_PRODUCT_CODE';
@@ -266,18 +275,27 @@ final class ResolveCustomerSellPriceService
         );
         if ($margin === null && ($context->overrideMarginPercent === null || $context->overrideMarginPercent === '')) {
             $trace[] = 'NO_MARGIN_RULE';
-
-            return $this->wrap(
-                $this->commercialContextIncomplete(
-                    $variantPublicId,
-                    $context,
+            $defaultMargin = $this->normalizedDefaultTmmktmMargin();
+            if ($defaultMargin === null) {
+                return $this->wrap(
+                    $this->commercialContextIncomplete(
+                        $variantPublicId,
+                        $context,
+                        array_merge($base, ['availability' => $availability]),
+                    ),
+                    $includeDiagnostic,
+                    $trace,
                     array_merge($base, ['availability' => $availability]),
-                ),
-                $includeDiagnostic,
-                $trace,
-                array_merge($base, ['availability' => $availability]),
-                $fx,
-            );
+                    $fx,
+                );
+            }
+
+            $margin = [
+                'marginPercent' => $defaultMargin,
+                'ruleLevel' => 'default',
+                'coreClass' => 'p',
+            ];
+            $trace[] = 'MARGIN_DEFAULT:' . $defaultMargin;
         }
 
         $resolvedMarginPercent = $margin['marginPercent'] ?? null;
@@ -385,6 +403,33 @@ final class ResolveCustomerSellPriceService
         return $out;
     }
 
+    private function shouldAttemptLegacyCostApi(): bool
+    {
+        return $this->legacyCostApiEnabled && $this->legacyCost !== null;
+    }
+
+    private function isLegacyCostApiPrimaryMode(): bool
+    {
+        return $this->shouldAttemptLegacyCostApi() && $this->pricingCostSource === 'legacy-cost-api';
+    }
+
+    /** @return numeric-string|null */
+    private function normalizedDefaultTmmktmMargin(): ?string
+    {
+        $raw = trim($this->defaultTmmktmMargin);
+        if ($raw === '' || !is_numeric($raw)) {
+            return null;
+        }
+        if (bccomp(bcsub('100', $raw, 12), '0', 12) <= 0) {
+            return null;
+        }
+        if (bccomp($raw, '0', 12) === 0) {
+            return '0';
+        }
+
+        return $raw;
+    }
+
     /**
      * @param array{
      *   variantPublicId: string,
@@ -414,9 +459,22 @@ final class ResolveCustomerSellPriceService
 
         $variantCode = trim($catalog['legacyProductCode']);
         $azure = $catalog['azureBase'];
-        if ($azure !== null) {
+        if ($azure !== null && !$this->isLegacyCostApiPrimaryMode()) {
             return [
                 'baseCost' => $azure['baseCost'],
+                'currencyCode' => $azure['currencyCode'],
+                'priceListCode' => $azure['priceListCode'],
+                'uomCode' => $catalog['uomCode'],
+                'uomSymbol' => $catalog['uomSymbol'],
+                'variantCode' => $variantCode,
+                'styleCode' => $catalog['styleCode'],
+                'availability' => $azure['availability'],
+            ];
+        }
+
+        if ($azure !== null) {
+            return [
+                'baseCost' => '0',
                 'currencyCode' => $azure['currencyCode'],
                 'priceListCode' => $azure['priceListCode'],
                 'uomCode' => $catalog['uomCode'],
@@ -509,7 +567,10 @@ final class ResolveCustomerSellPriceService
         }
 
         if ($knownStocked || (!$knownMake && $azureAvailability === CustomerSellPriceStatus::AVAILABILITY_STOCKED)) {
-            if (isset($base['baseCost']) && is_numeric($base['baseCost']) && bccomp((string) $base['baseCost'], '0', 6) > 0) {
+            if (
+                !$this->isLegacyCostApiPrimaryMode()
+                && isset($base['baseCost']) && is_numeric($base['baseCost']) && bccomp((string) $base['baseCost'], '0', 6) > 0
+            ) {
                 $trace[] = 'COST_API_FAILED_AZURE_STOCKED_FALLBACK';
 
                 return [

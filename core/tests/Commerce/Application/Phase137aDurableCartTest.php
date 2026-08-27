@@ -118,7 +118,7 @@ final class Phase137aDurableCartTest extends TestCase
         self::assertSame('NZD', $nzd['currency']);
     }
 
-    public function test_tbc_null_prices_never_zero(): void
+    public function test_default_zero_margin_prices_are_never_fake_zero(): void
     {
         $ctx = new CustomerPricingContext(
             customerPublicId: 'c-tbc',
@@ -131,11 +131,10 @@ final class Phase137aDurableCartTest extends TestCase
         $result = $this->addService($ctx)->execute($this->user(), 'v1', 1, 100);
 
         self::assertTrue($result['accepted']);
-        self::assertSame(CustomerSellPriceStatus::TBC, $result['items'][0]['pricingStatus']);
-        self::assertNull($result['items'][0]['unitPrice']);
-        self::assertNull($result['items'][0]['lineTotal']);
-        self::assertNull($result['subtotal']);
-        self::assertTrue($result['hasUnpricedLines']);
+        self::assertSame(CustomerSellPriceStatus::RESOLVED, $result['items'][0]['pricingStatus']);
+        self::assertNotNull($result['items'][0]['unitPrice']);
+        self::assertNotNull($result['items'][0]['lineTotal']);
+        self::assertFalse($result['hasUnpricedLines']);
         self::assertNotSame('0.00', $result['items'][0]['unitPrice']);
     }
 
