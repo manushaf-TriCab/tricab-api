@@ -83,7 +83,7 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
         self::assertSame(CustomerSellPriceStatus::PRICE_NOT_AVAILABLE, $result->status);
     }
 
-    public function test_no_margin_is_tbc(): void
+    public function test_no_margin_uses_default_zero(): void
     {
         $base = new InMemoryVariantCommercialCatalogRepository();
         $base->seedFromLegacyBase('v1', [
@@ -103,7 +103,9 @@ final class ResolveCustomerSellPriceServiceTest extends TestCase
         );
         $ctx = new CustomerPricingContext('cust-1', 'AU', 'VIC', 'ELE', 'AUD', 'OK');
         $result = $svc->resolve('v1', $ctx);
-        self::assertSame(CustomerSellPriceStatus::TBC, $result->status);
+        self::assertSame(CustomerSellPriceStatus::RESOLVED, $result->status);
+        self::assertNotNull($result->unitSellPrice);
+        self::assertNotSame('0.00', $result->unitSellPrice);
     }
 
     public function test_unsupported_currency_fx_not_available(): void

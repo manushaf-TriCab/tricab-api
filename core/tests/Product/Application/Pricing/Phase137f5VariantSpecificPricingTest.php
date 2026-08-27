@@ -58,13 +58,15 @@ final class Phase137f5VariantSpecificPricingTest extends TestCase
         self::assertSame('BVA-PJXN/5C1.5BK', $result->customer->variantCode);
     }
 
-    public function test_automatic_without_override_stays_tbc_for_bne_like_context(): void
+    public function test_automatic_without_override_uses_default_zero_margin(): void
     {
         $svc = $this->service();
         $result = $svc->resolve(self::PJXN, $this->staffContext(), true, null, false, '100');
         self::assertInstanceOf(CustomerVariantSellPriceDiagnostic::class, $result);
-        self::assertSame(CustomerSellPriceStatus::TBC, $result->customer->status);
+        self::assertSame(CustomerSellPriceStatus::RESOLVED, $result->customer->status);
+        self::assertSame('0', $result->marginPercent);
         self::assertContains('NO_MARGIN_RULE', $result->trace);
+        self::assertContains('MARGIN_DEFAULT:0', $result->trace);
     }
 
     private function service(): ResolveCustomerSellPriceService

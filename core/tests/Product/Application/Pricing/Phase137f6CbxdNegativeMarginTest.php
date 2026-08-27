@@ -72,14 +72,15 @@ final class Phase137f6CbxdNegativeMarginTest extends TestCase
         self::assertSame('9.382442748091', $sell);
     }
 
-    public function test_automatic_bne_context_stays_tbc_for_cbxd(): void
+    public function test_automatic_bne_context_uses_default_zero_margin_for_cbxd(): void
     {
         $svc = $this->service();
         $result = $svc->resolve(self::CBXD, $this->staffContext(), true, null, false, '100');
         self::assertInstanceOf(CustomerVariantSellPriceDiagnostic::class, $result);
-        self::assertSame(CustomerSellPriceStatus::TBC, $result->customer->status);
-        self::assertSame('Customer pricing setup incomplete', $result->customer->displayMessage);
+        self::assertSame(CustomerSellPriceStatus::RESOLVED, $result->customer->status);
+        self::assertSame('0', $result->marginPercent);
         self::assertContains('NO_MARGIN_RULE', $result->trace);
+        self::assertContains('MARGIN_DEFAULT:0', $result->trace);
     }
 
     /**
@@ -96,7 +97,8 @@ final class Phase137f6CbxdNegativeMarginTest extends TestCase
         self::assertInstanceOf(CustomerVariantSellPriceDiagnostic::class, $cbxd);
 
         if ($margin === null) {
-            self::assertSame(CustomerSellPriceStatus::TBC, $cbxd->customer->status);
+            self::assertSame(CustomerSellPriceStatus::RESOLVED, $cbxd->customer->status);
+            self::assertSame('0', $cbxd->marginPercent);
 
             return;
         }

@@ -29,7 +29,7 @@ final class PrepareRfqLinePricingServiceTest extends TestCase
         self::assertSame(100, $result['totalMetres']);
     }
 
-    public function test_tbc_does_not_become_zero(): void
+    public function test_default_zero_margin_does_not_become_fake_zero_price(): void
     {
         $base = new InMemoryVariantCommercialCatalogRepository();
         $base->seedFromLegacyBase('v1', [
@@ -52,10 +52,10 @@ final class PrepareRfqLinePricingServiceTest extends TestCase
         $ctx = new CustomerPricingContext('cust-1', 'AU', 'VIC', 'ELE', 'AUD', 'OK');
         $result = $svc->prepare('v1', $ctx, 1, 100, '0.00');
 
-        self::assertSame(CustomerSellPriceStatus::TBC, $result['status']);
-        self::assertNull($result['unitPrice']);
-        self::assertNull($result['estimatedTotal']);
-        self::assertFalse($result['accepted']);
+        self::assertSame(CustomerSellPriceStatus::RESOLVED, $result['status']);
+        self::assertNotNull($result['unitPrice']);
+        self::assertNotSame('0.00', $result['unitPrice']);
+        self::assertTrue($result['accepted']);
     }
 
     public function test_quantity_two_doubles_total(): void

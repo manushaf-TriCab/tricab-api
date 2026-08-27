@@ -1496,6 +1496,8 @@ final class ContainerFactory
                     legacyCost: self::get($container, \TriCab\Core\Product\Application\Pricing\LegacyCostCalculationGateway::class),
                     legacyCostApiEnabled: $settings->isLegacyCostApiEnabled(),
                     dbcoResolver: self::get($container, \TriCab\Core\Product\Application\Pricing\ResolvePricingDbcoService::class),
+                    pricingCostSource: $settings->pricingCostSource,
+                    defaultTmmktmMargin: $settings->pricingDefaultTmmktmMargin,
                 );
             },
             \TriCab\Core\Product\Application\Pricing\PrepareRfqLinePricingService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\PrepareRfqLinePricingService::class),

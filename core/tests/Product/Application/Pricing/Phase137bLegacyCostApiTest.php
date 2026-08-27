@@ -336,6 +336,7 @@ final class Phase137bLegacyCostApiTest extends TestCase
             new InMemoryCurrencyFxRateRepository(),
             legacyCost: $gateway,
             legacyCostApiEnabled: $enabled,
+            pricingCostSource: 'legacy-fallback',
         );
     }
 }

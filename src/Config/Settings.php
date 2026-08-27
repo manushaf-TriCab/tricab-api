@@ -39,6 +39,10 @@ final readonly class Settings
     public const FOUNDRY_AUTH_MODE_MANAGED_IDENTITY = 'managed-identity';
     public const FOUNDRY_AUTH_MODE_API_KEY = 'api-key';
 
+    public const PRICING_COST_SOURCE_LEGACY_COST_API = 'legacy-cost-api';
+    public const PRICING_COST_SOURCE_LEGACY_FALLBACK = 'legacy-fallback';
+    public const PRICING_COST_SOURCE_AZURE_FIRST = 'azure-first';
+
     /**
      * @param list<string> $corsAllowedOrigins
      * @param list<string> $passkeyAllowedOrigins
@@ -130,12 +134,20 @@ final readonly class Settings
         public bool $legacyCostApiEnabled = false,
         public string $legacyCostApiUrl = 'https://www.tricab.com/cost-api/',
         public int $legacyCostApiTimeoutSeconds = 8,
+        public string $pricingCostSource = self::PRICING_COST_SOURCE_LEGACY_FALLBACK,
+        public string $pricingDefaultTmmktmMargin = '0',
     ) {
     }
 
     public function isLegacyCostApiEnabled(): bool
     {
         return $this->legacyCostApiEnabled && trim($this->legacyCostApiUrl) !== '';
+    }
+
+    public function isLegacyCostApiPrimaryCostSource(): bool
+    {
+        return $this->isLegacyCostApiEnabled()
+            && $this->pricingCostSource === self::PRICING_COST_SOURCE_LEGACY_COST_API;
     }
 
     public function isDevelopment(): bool
@@ -619,6 +631,17 @@ final readonly class Settings
         $legacyCostApiUrl = self::string($env, 'LEGACY_COST_API_URL', 'https://www.tricab.com/cost-api/');
         $legacyCostApiTimeoutSeconds = self::boundedInt($env, 'LEGACY_COST_API_TIMEOUT_SECONDS', 8, 1, 30);
         $legacyCostApiEnabled = self::bool($env, 'LEGACY_COST_API_ENABLED', false);
+        $pricingCostSource = strtolower(trim(self::string($env, 'PRICING_COST_SOURCE', '')));
+        if ($pricingCostSource === '') {
+            $pricingCostSource = $appEnv === 'production'
+                ? self::PRICING_COST_SOURCE_LEGACY_FALLBACK
+                : ($legacyCostApiEnabled
+                    ? self::PRICING_COST_SOURCE_LEGACY_COST_API
+                    : self::PRICING_COST_SOURCE_AZURE_FIRST);
+        }
+        self::assertPricingCostSource($pricingCostSource);
+        $pricingDefaultTmmktmMargin = trim(self::string($env, 'PRICING_DEFAULT_TMMKTM_MARGIN', '0'));
+        self::assertPricingDefaultTmmktmMargin($pricingDefaultTmmktmMargin);
 
         return new self(
             appEnv: $appEnv,
@@ -711,7 +734,35 @@ final readonly class Settings
             legacyCostApiEnabled: $legacyCostApiEnabled,
             legacyCostApiUrl: $legacyCostApiUrl,
             legacyCostApiTimeoutSeconds: $legacyCostApiTimeoutSeconds,
+            pricingCostSource: $pricingCostSource,
+            pricingDefaultTmmktmMargin: $pricingDefaultTmmktmMargin,
         );
+    }
+
+    private static function assertPricingCostSource(string $mode): void
+    {
+        $allowed = [
+            self::PRICING_COST_SOURCE_LEGACY_COST_API,
+            self::PRICING_COST_SOURCE_LEGACY_FALLBACK,
+            self::PRICING_COST_SOURCE_AZURE_FIRST,
+        ];
+        if (!in_array($mode, $allowed, true)) {
+            throw new InvalidArgumentException(
+                'PRICING_COST_SOURCE must be one of: legacy-cost-api, legacy-fallback, azure-first.',
+            );
+        }
+    }
+
+    private static function assertPricingDefaultTmmktmMargin(string $margin): void
+    {
+        if ($margin === '') {
+            return;
+        }
+        if (!is_numeric($margin) || bccomp(bcsub('100', $margin, 12), '0', 12) <= 0) {
+            throw new InvalidArgumentException(
+                'PRICING_DEFAULT_TMMKTM_MARGIN must be numeric and less than 100, or empty to disable.',
+            );
+        }
     }
 
     /**
