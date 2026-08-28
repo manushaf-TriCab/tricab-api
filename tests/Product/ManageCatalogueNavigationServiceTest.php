@@ -12,7 +12,9 @@ use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
 use TriCab\Core\Product\Application\Command\MoveCatalogueNodeCommand;
 use TriCab\Core\Product\Application\Command\UpsertCatalogueNodeCommand;
 use TriCab\Core\Product\Application\Command\UpsertCatalogueTabCommand;
+use TriCab\Core\Product\Application\Exception\DuplicateCatalogueSlug;
 use TriCab\Core\Product\Application\Exception\InvalidCatalogueHierarchy;
+use TriCab\Core\Product\Domain\Exception\InvalidProductValue;
 use TriCab\Core\Product\Application\Service\CatalogueNodeEffectiveProductsService;
 use TriCab\Core\Product\Application\Service\ManageCatalogueNavigationService;
 use TriCab\Core\Product\Application\Service\ProductAuditRecorder;
@@ -98,6 +100,45 @@ final class ManageCatalogueNavigationServiceTest extends TestCase
             nodeCode: 'L3',
             slug: 'l3',
             parentPublicId: $level2->publicId,
+        ));
+    }
+
+    public function test_create_node_requires_a_name(): void
+    {
+        $tab = $this->service->createTab($this->actor, new UpsertCatalogueTabCommand('Named', 'NAMED', 'named'));
+        $this->expectException(InvalidProductValue::class);
+        $this->service->createNode($this->actor, new UpsertCatalogueNodeCommand(
+            tabPublicId: $tab->publicId,
+            nodeName: '   ',
+            nodeCode: 'EMPTY-NAME',
+            slug: 'empty-name',
+        ));
+    }
+
+    public function test_create_node_rejects_duplicate_sibling_slug(): void
+    {
+        $tab = $this->service->createTab($this->actor, new UpsertCatalogueTabCommand('Dup', 'DUP', 'dup'));
+        $parent = $this->service->createNode($this->actor, new UpsertCatalogueNodeCommand(
+            tabPublicId: $tab->publicId,
+            nodeName: 'Parent',
+            nodeCode: 'PARENT',
+            slug: 'parent',
+        ));
+        $this->service->createNode($this->actor, new UpsertCatalogueNodeCommand(
+            tabPublicId: $tab->publicId,
+            nodeName: 'Child',
+            nodeCode: 'CHILD-A',
+            slug: 'j-box-assembly',
+            parentPublicId: $parent->publicId,
+        ));
+
+        $this->expectException(DuplicateCatalogueSlug::class);
+        $this->service->createNode($this->actor, new UpsertCatalogueNodeCommand(
+            tabPublicId: $tab->publicId,
+            nodeName: 'Child two',
+            nodeCode: 'CHILD-B',
+            slug: 'J-Box Assembly',
+            parentPublicId: $parent->publicId,
         ));
     }
 }
