@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Commerce\Application\Service;
 
+use TriCab\Core\Commerce\Application\DTO\CartLineMedia;
+use TriCab\Core\Commerce\Contract\CartLineMediaResolver;
 use TriCab\Core\Commerce\Domain\Entity\Cart;
 use TriCab\Core\Commerce\Domain\Entity\CartLine;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
@@ -14,6 +16,11 @@ use TriCab\Core\Product\Application\Pricing\CustomerPricingContext;
  */
 final class CartDtoAssembler
 {
+    public function __construct(
+        private readonly ?CartLineMediaResolver $mediaResolver = null,
+    ) {
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -29,8 +36,9 @@ final class CartDtoAssembler
         $freshCount = 0;
         $staleCount = 0;
 
+        $mediaByVariant = $this->resolveMedia($cart);
         foreach ($cart->lines() as $line) {
-            $items[] = $this->lineToArray($line);
+            $items[] = $this->lineToArray($line, media: $this->mediaFor($line->variantPublicId(), $mediaByVariant));
             if ($line->lineTotal() === null) {
                 $hasUnpriced = true;
             } else {
@@ -80,13 +88,17 @@ final class CartDtoAssembler
     /**
      * @return array<string, mixed>
      */
-    public function lineToArray(CartLine $line, ?bool $priceChanged = null): array
+    public function lineToArray(CartLine $line, ?bool $priceChanged = null, ?CartLineMedia $media = null): array
     {
+        $variantPublicId = $line->variantPublicId();
         $row = [
             'lineId' => $line->publicId()->toString(),
-            'variantId' => $line->variantPublicId(),
+            'variantId' => $variantPublicId,
+            'variantPublicId' => $variantPublicId,
+            'productPublicId' => $media?->productPublicId,
             'variantCode' => $line->variantCode(),
             'displayName' => $line->displayName(),
+            'imageUrl' => $media?->imageUrl,
             'availability' => $line->availability(),
             'quantity' => $line->quantity(),
             'length' => $line->length(),
@@ -102,5 +114,41 @@ final class CartDtoAssembler
         }
 
         return $row;
+    }
+
+    /**
+     * @return array<string, CartLineMedia>
+     */
+    private function resolveMedia(Cart $cart): array
+    {
+        if ($this->mediaResolver === null) {
+            return [];
+        }
+
+        $variantPublicIds = [];
+        foreach ($cart->lines() as $line) {
+            $variantPublicIds[] = $line->variantPublicId();
+        }
+
+        return $this->mediaResolver->resolveForVariantPublicIds($variantPublicIds);
+    }
+
+    /**
+     * @param array<string, CartLineMedia> $mediaByVariant
+     */
+    private function mediaFor(string $variantPublicId, array $mediaByVariant): ?CartLineMedia
+    {
+        if (isset($mediaByVariant[$variantPublicId])) {
+            return $mediaByVariant[$variantPublicId];
+        }
+
+        $upper = strtoupper($variantPublicId);
+        foreach ($mediaByVariant as $key => $media) {
+            if (strtoupper((string) $key) === $upper) {
+                return $media;
+            }
+        }
+
+        return null;
     }
 }

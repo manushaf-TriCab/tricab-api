@@ -152,9 +152,11 @@ SQL,
 
     public function softDeleteTab(string $publicId, string $expectedRowVersion, UserId $actorUserId): CatalogueTabRecord
     {
+        $actorId = $actorUserId->toInt();
         $params = [
             ':publicId' => $publicId,
-            ':updatedByUserId' => $actorUserId->toInt(),
+            ':deletedByUserId' => $actorId,
+            ':updatedByUserId' => $actorId,
             ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary(
                 \TriCab\Core\Product\Domain\ValueObject\RowVersionToken::fromBase64($expectedRowVersion),
             ),
@@ -163,7 +165,7 @@ SQL,
             <<<'SQL'
 UPDATE [product].[CatalogueTabs]
 SET [DeletedAtUtc] = SYSUTCDATETIME(),
-    [DeletedByUserId] = :updatedByUserId,
+    [DeletedByUserId] = :deletedByUserId,
     [IsActive] = 0,
     [UpdatedAtUtc] = SYSUTCDATETIME(),
     [UpdatedByUserId] = :updatedByUserId
@@ -431,9 +433,11 @@ SQL,
 
     public function softDeleteNode(string $publicId, string $expectedRowVersion, UserId $actorUserId): CatalogueNodeRecord
     {
+        $actorId = $actorUserId->toInt();
         $params = [
             ':publicId' => $publicId,
-            ':updatedByUserId' => $actorUserId->toInt(),
+            ':deletedByUserId' => $actorId,
+            ':updatedByUserId' => $actorId,
             ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary(
                 \TriCab\Core\Product\Domain\ValueObject\RowVersionToken::fromBase64($expectedRowVersion),
             ),
@@ -442,7 +446,7 @@ SQL,
             <<<'SQL'
 UPDATE [product].[CatalogueNodes]
 SET [DeletedAtUtc] = SYSUTCDATETIME(),
-    [DeletedByUserId] = :updatedByUserId,
+    [DeletedByUserId] = :deletedByUserId,
     [IsActive] = 0,
     [UpdatedAtUtc] = SYSUTCDATETIME(),
     [UpdatedByUserId] = :updatedByUserId
@@ -496,8 +500,20 @@ SQL,
         unset($actorUserId);
         $order = 10;
         foreach ($orderedPublicIds as $publicId) {
+            // sqlsrv PDO rejects reused named parameters; branch parent matching in PHP.
+            $parentSql = $parentPublicId === null
+                ? ' AND n.[ParentNodeId] IS NULL'
+                : ' AND p.[PublicId] = :parentPublicId';
+            $params = [
+                ':displayOrder' => $order,
+                ':publicId' => $publicId,
+                ':tabPublicId' => $tabPublicId,
+            ];
+            if ($parentPublicId !== null) {
+                $params[':parentPublicId'] = $parentPublicId;
+            }
             $this->connection->execute(
-                <<<'SQL'
+                <<<SQL
 UPDATE n
 SET n.[DisplayOrder] = :displayOrder, n.[UpdatedAtUtc] = SYSUTCDATETIME()
 FROM [product].[CatalogueNodes] n
@@ -505,17 +521,9 @@ INNER JOIN [product].[CatalogueTabs] t ON t.[CatalogueTabId] = n.[CatalogueTabId
 LEFT JOIN [product].[CatalogueNodes] p ON p.[CatalogueNodeId] = n.[ParentNodeId]
 WHERE n.[PublicId] = :publicId
   AND t.[PublicId] = :tabPublicId
-  AND (
-        (:parentPublicId IS NULL AND n.[ParentNodeId] IS NULL)
-        OR p.[PublicId] = :parentPublicId
-  )
+{$parentSql}
 SQL,
-                [
-                    ':displayOrder' => $order,
-                    ':publicId' => $publicId,
-                    ':tabPublicId' => $tabPublicId,
-                    ':parentPublicId' => $parentPublicId,
-                ],
+                $params,
             );
             $order += 10;
         }
@@ -545,24 +553,30 @@ SQL;
 
     public function siblingSlugExists(string $tabPublicId, ?string $parentPublicId, string $slug, ?string $excludePublicId = null): bool
     {
+        // sqlsrv PDO rejects reused named parameters; branch parent matching in PHP.
         $sql = <<<'SQL'
 SELECT 1 AS [ExistsFlag]
 FROM [product].[CatalogueNodes] n
 INNER JOIN [product].[CatalogueTabs] t ON t.[CatalogueTabId] = n.[CatalogueTabId]
-LEFT JOIN [product].[CatalogueNodes] p ON p.[CatalogueNodeId] = n.[ParentNodeId]
 WHERE n.[DeletedAtUtc] IS NULL
   AND t.[PublicId] = :tabPublicId
   AND n.[Slug] = :slug
-  AND (
-        (:parentPublicId IS NULL AND n.[ParentNodeId] IS NULL)
-        OR p.[PublicId] = :parentPublicId
-  )
 SQL;
         $params = [
             ':tabPublicId' => $tabPublicId,
             ':slug' => strtolower(trim($slug)),
-            ':parentPublicId' => $parentPublicId,
         ];
+        if ($parentPublicId === null) {
+            $sql .= ' AND n.[ParentNodeId] IS NULL';
+        } else {
+            $sql .= ' AND EXISTS (
+                SELECT 1
+                FROM [product].[CatalogueNodes] p
+                WHERE p.[CatalogueNodeId] = n.[ParentNodeId]
+                  AND p.[PublicId] = :parentPublicId
+            )';
+            $params[':parentPublicId'] = $parentPublicId;
+        }
         if ($excludePublicId !== null) {
             $sql .= ' AND n.[PublicId] <> :excludePublicId';
             $params[':excludePublicId'] = $excludePublicId;
@@ -629,26 +643,30 @@ SQL,
         $rows = $this->connection->fetchAll(
             <<<'SQL'
 SELECT
-    SUM(CASE WHEN c.[DeletedAtUtc] IS NULL THEN 1 ELSE 0 END) AS [ChildCount],
-    SUM(CASE WHEN c.[DeletedAtUtc] IS NULL AND c.[IsActive] = 1 THEN 1 ELSE 0 END) AS [ActiveChildCount],
+    SUM(CASE WHEN c.[CatalogueNodeId] IS NOT NULL AND c.[DeletedAtUtc] IS NULL THEN 1 ELSE 0 END) AS [ChildCount],
+    SUM(CASE WHEN c.[CatalogueNodeId] IS NOT NULL AND c.[DeletedAtUtc] IS NULL AND c.[IsActive] = 1 THEN 1 ELSE 0 END) AS [ActiveChildCount],
     (
         SELECT COUNT(*)
         FROM [product].[CatalogueNodeProducts] cnp
         INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnp.[CatalogueNodeId]
-        WHERE n.[PublicId] = :publicId
+        WHERE n.[PublicId] = :productCountPublicId
     ) AS [ProductCount],
     (
         SELECT COUNT(*)
         FROM [product].[CatalogueNodeRegions] cnr
         INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnr.[CatalogueNodeId]
-        WHERE n.[PublicId] = :publicId
+        WHERE n.[PublicId] = :regionCountPublicId
     ) AS [RegionCount]
 FROM [product].[CatalogueNodes] p
 LEFT JOIN [product].[CatalogueNodes] c ON c.[ParentNodeId] = p.[CatalogueNodeId]
 WHERE p.[PublicId] = :publicId
 GROUP BY p.[PublicId]
 SQL,
-            [':publicId' => $publicId],
+            [
+                ':publicId' => $publicId,
+                ':productCountPublicId' => $publicId,
+                ':regionCountPublicId' => $publicId,
+            ],
         );
         $row = $rows[0] ?? [];
         $childCount = AzureSqlValueMapper::intValue($row['ChildCount'] ?? 0);

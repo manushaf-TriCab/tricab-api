@@ -127,6 +127,9 @@ final class ProductManagementErrorMapper
                 );
             }
 
+            $previousMessage = $exception->getPrevious()?->getMessage() ?? $exception->getMessage();
+            error_log('Database unavailable: ' . $previousMessage);
+
             return $this->responder->error('DATABASE_UNAVAILABLE', 'The database is temporarily unavailable.', 503);
         }
 

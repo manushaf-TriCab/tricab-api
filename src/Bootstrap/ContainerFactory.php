@@ -1504,7 +1504,11 @@ final class ContainerFactory
             \TriCab\Core\Product\Application\Pricing\PrepareCartItemPricingService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\PrepareCartItemPricingService::class),
             \TriCab\Core\Commerce\Contract\VariantAvailabilityRepository::class => \DI\autowire(\TriCab\Api\Commerce\Persistence\UnknownVariantAvailabilityRepository::class),
             \TriCab\Core\Commerce\Application\Service\CartEffectiveCustomerResolver::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\CartEffectiveCustomerResolver::class),
-            \TriCab\Core\Commerce\Application\Service\CartDtoAssembler::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\CartDtoAssembler::class),
+            \TriCab\Core\Commerce\Application\Service\CartDtoAssembler::class => static function (Container $container): \TriCab\Core\Commerce\Application\Service\CartDtoAssembler {
+                return new \TriCab\Core\Commerce\Application\Service\CartDtoAssembler(
+                    self::get($container, \TriCab\Core\Commerce\Contract\CartLineMediaResolver::class),
+                );
+            },
             \TriCab\Core\Commerce\Application\Service\GetCartService::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\GetCartService::class),
             \TriCab\Core\Commerce\Application\Service\AddCartItemService::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\AddCartItemService::class),
             \TriCab\Core\Commerce\Application\Service\UpdateCartItemService::class => \DI\autowire(\TriCab\Core\Commerce\Application\Service\UpdateCartItemService::class),
@@ -1655,6 +1659,12 @@ final class ContainerFactory
             $definitions[GuestLoginEligibilityLookup::class] = \DI\autowire(AzureSqlGuestLoginEligibilityLookup::class);
             $definitions[ProductRepository::class] = \DI\autowire(AzureSqlProductRepository::class);
             $definitions[\TriCab\Core\Commerce\Contract\CartRepository::class] = \DI\autowire(\TriCab\Api\Commerce\Persistence\AzureSqlCartRepository::class);
+            $definitions[\TriCab\Core\Commerce\Contract\CartLineMediaResolver::class] = static function (Container $container): \TriCab\Core\Commerce\Contract\CartLineMediaResolver {
+                return new \TriCab\Api\Commerce\Persistence\AzureSqlCartLineMediaResolver(
+                    self::get($container, SqlConnection::class),
+                    self::get($container, ProductDevMediaUrlResolver::class),
+                );
+            };
             $definitions[RegionRepository::class] = \DI\autowire(AzureSqlRegionRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
@@ -1781,6 +1791,7 @@ SQL,
             $definitions[GuestLoginEligibilityLookup::class] = \DI\autowire(CompositeGuestLoginEligibilityLookup::class);
             $definitions[InMemoryProductStore::class] = \DI\autowire(InMemoryProductStore::class);
             $definitions[\TriCab\Core\Commerce\Contract\CartRepository::class] = \DI\autowire(\TriCab\Api\Commerce\Persistence\InMemoryCartRepository::class);
+            $definitions[\TriCab\Core\Commerce\Contract\CartLineMediaResolver::class] = \DI\autowire(\TriCab\Api\Commerce\Persistence\InMemoryCartLineMediaResolver::class);
             $definitions[RegionRepository::class] = \DI\autowire(InMemoryRegionRepository::class);
             $definitions[ProductRepository::class] = \DI\autowire(InMemoryProductRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(InMemoryProductVariantRepository::class);

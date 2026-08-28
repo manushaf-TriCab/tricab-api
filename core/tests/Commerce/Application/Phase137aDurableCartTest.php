@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Tests\Commerce\Application;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Api\Commerce\Persistence\InMemoryCartLineMediaResolver;
 use TriCab\Api\Commerce\Persistence\InMemoryCartRepository;
 use TriCab\Api\Commerce\Persistence\UnknownVariantAvailabilityRepository;
 use TriCab\Core\Commerce\Application\Service\AddCartItemService;
@@ -35,6 +36,7 @@ final class Phase137aDurableCartTest extends TestCase
     private InMemoryCustomerPricingMarginRepository $margins;
     private ApplicationTransaction $tx;
     private CartDtoAssembler $assembler;
+    private InMemoryCartLineMediaResolver $media;
     private CartEffectiveCustomerResolver $customerResolver;
     private UnknownVariantAvailabilityRepository $availability;
 
@@ -68,7 +70,9 @@ final class Phase137aDurableCartTest extends TestCase
             legacyCostApiEnabled: false,
         );
         $this->tx = new PassthroughApplicationTransaction();
-        $this->assembler = new CartDtoAssembler();
+        $this->media = new InMemoryCartLineMediaResolver();
+        $this->media->seed('v1', 'product-bva', 'https://cdn.example/bva.jpg');
+        $this->assembler = new CartDtoAssembler($this->media);
         $customers = $this->createMock(CustomerRepository::class);
         $this->customerResolver = new CartEffectiveCustomerResolver($customers);
         $this->availability = new UnknownVariantAvailabilityRepository();
@@ -87,6 +91,11 @@ final class Phase137aDurableCartTest extends TestCase
         self::assertSame('48.244', $first['items'][0]['unitPrice']);
         self::assertSame('4824.40', $first['items'][0]['lineTotal']);
         self::assertSame('4824.40', $first['subtotal']);
+        self::assertSame('v1', $first['items'][0]['variantId']);
+        self::assertSame('v1', $first['items'][0]['variantPublicId']);
+        self::assertSame('product-bva', $first['items'][0]['productPublicId']);
+        self::assertSame('BVA-CAXD/37C1.5BK', $first['items'][0]['variantCode']);
+        self::assertSame('https://cdn.example/bva.jpg', $first['items'][0]['imageUrl']);
 
         $second = $add->execute($user, 'v1', 1, 100);
         self::assertSame(1, $second['itemCount']);
@@ -150,11 +159,45 @@ final class Phase137aDurableCartTest extends TestCase
         self::assertSame(2, $updated['items'][0]['quantity']);
         self::assertSame('50.000', $updated['items'][0]['length']);
         self::assertSame('4824.40', $updated['items'][0]['lineTotal']);
+        self::assertSame('https://cdn.example/bva.jpg', $updated['items'][0]['imageUrl']);
 
         $rowVersion2 = $updated['items'][0]['rowVersion'];
         $removed = $this->removeService($ctx)->execute($user, $lineId, $rowVersion2);
         self::assertSame(0, $removed['itemCount']);
         self::assertSame('0.00', $removed['subtotal']);
+    }
+
+    public function test_cart_line_uses_variant_image_when_seeded(): void
+    {
+        $this->media->seed('v1', 'product-bva', 'https://cdn.example/variant-specific.jpg');
+        $result = $this->addService($this->context('c1'))->execute($this->user(), 'v1', 1, 100);
+
+        self::assertSame('https://cdn.example/variant-specific.jpg', $result['items'][0]['imageUrl']);
+        self::assertSame('product-bva', $result['items'][0]['productPublicId']);
+        self::assertSame('v1', $result['items'][0]['variantPublicId']);
+        self::assertSame('48.244', $result['items'][0]['unitPrice']);
+    }
+
+    public function test_cart_line_image_null_when_no_media(): void
+    {
+        $assembler = new CartDtoAssembler(new InMemoryCartLineMediaResolver());
+        $add = new AddCartItemService(
+            $this->carts,
+            $this->fixedActor($this->context('c1')),
+            $this->pricing,
+            $this->availability,
+            $this->customerResolver,
+            $assembler,
+            $this->tx,
+        );
+
+        $result = $add->execute($this->user(), 'v1', 1, 100);
+        self::assertTrue($result['accepted']);
+        self::assertArrayHasKey('imageUrl', $result['items'][0]);
+        self::assertNull($result['items'][0]['imageUrl']);
+        self::assertNull($result['items'][0]['productPublicId']);
+        self::assertSame('v1', $result['items'][0]['variantPublicId']);
+        self::assertSame('48.244', $result['items'][0]['unitPrice']);
     }
 
     public function test_reprice_price_changed_with_commit(): void
