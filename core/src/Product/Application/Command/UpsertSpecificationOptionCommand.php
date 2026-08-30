@@ -15,6 +15,7 @@ final readonly class UpsertSpecificationOptionCommand
         public bool $isActive = true,
         public ?string $expectedRowVersion = null,
         public ?string $optionPublicId = null,
+        public ?string $imageUrl = null,
     ) {
     }
 }

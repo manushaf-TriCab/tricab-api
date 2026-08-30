@@ -56,6 +56,7 @@ final class SpecificationOptionsAdminAction
                     value: $input->value,
                     displayOrder: $input->displayOrder,
                     isActive: $input->isActive,
+                    imageUrl: $input->imageUrl !== null && $input->imageUrl !== '' ? $input->imageUrl : null,
                 )));
                 return $this->responder->success(ProductManagementDtoSerializer::specificationOption($created), 201);
             }
@@ -71,6 +72,7 @@ final class SpecificationOptionsAdminAction
                     isActive: $input->isActive,
                     expectedRowVersion: $input->expectedRowVersion,
                     optionPublicId: $id,
+                    imageUrl: $input->imageUrl,
                 )));
                 return $this->responder->success(ProductManagementDtoSerializer::specificationOption($updated));
             }

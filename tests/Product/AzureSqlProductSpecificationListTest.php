@@ -66,9 +66,14 @@ final class AzureSqlProductSpecificationListTest extends TestCase
 
         self::assertNull($values[3]['optionPublicId']);
         self::assertSame(['opt-a', 'opt-b'], $values[3]['optionPublicIds']);
+        self::assertSame(
+            ['opt-a' => 'approved', 'opt-b' => 'approved'],
+            $values[3]['optionStatuses'],
+        );
 
         self::assertSame('12.50', $values[4]['valueDecimal']);
         self::assertSame([], $values[4]['optionPublicIds']);
+        self::assertSame([], $values[4]['optionStatuses']);
 
         foreach ($values as $value) {
             self::assertArrayHasKey('definitionPublicId', $value);
@@ -83,6 +88,7 @@ final class AzureSqlProductSpecificationListTest extends TestCase
             self::assertArrayHasKey('valueMaxDecimal', $value);
             self::assertArrayHasKey('optionPublicId', $value);
             self::assertArrayHasKey('optionPublicIds', $value);
+            self::assertArrayHasKey('optionStatuses', $value);
             self::assertArrayNotHasKey('_valueId', $value);
             self::assertArrayNotHasKey('rowVersion', $value);
         }

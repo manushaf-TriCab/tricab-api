@@ -93,6 +93,7 @@ final class EnrichPublicProductWithStyleInheritanceService
             industryNames: $detail->industryNames,
             relationships: $detail->relationships,
             specifications: $specifications,
+            approvalCertificates: $detail->approvalCertificates,
             threeD: $this->mergeAr(
                 $this->effective->assetsForProduct($detail->publicId, StyleResourceType::fromString(StyleResourceType::AR_ASSETS)),
                 $this->mergeThreeD(

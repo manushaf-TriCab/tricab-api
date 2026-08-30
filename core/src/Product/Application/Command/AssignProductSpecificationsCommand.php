@@ -17,7 +17,8 @@ namespace TriCab\Core\Product\Application\Command;
  *   valueMinDecimal?: ?string,
  *   valueMaxDecimal?: ?string,
  *   optionPublicId?: ?string,
- *   optionPublicIds?: list<string>
+ *   optionPublicIds?: list<string>,
+ *   optionStatuses?: array<string, string>
  * }
  */
 final readonly class AssignProductSpecificationsCommand

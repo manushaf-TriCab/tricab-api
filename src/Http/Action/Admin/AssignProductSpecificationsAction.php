@@ -64,7 +64,8 @@ final class AssignProductSpecificationsAction
      *   valueMinDecimal?: ?string,
      *   valueMaxDecimal?: ?string,
      *   optionPublicId?: ?string,
-     *   optionPublicIds?: list<string>
+     *   optionPublicIds?: list<string>,
+     *   optionStatuses?: array<string, string>
      * }>
      */
     private static function normalizeSpecValues(array $values): array
@@ -107,6 +108,15 @@ final class AssignProductSpecificationsAction
                     }
                 }
                 $item['optionPublicIds'] = $optionPublicIds;
+            }
+            if (isset($value['optionStatuses']) && is_array($value['optionStatuses'])) {
+                $optionStatuses = [];
+                foreach ($value['optionStatuses'] as $optionPublicId => $statusCode) {
+                    if (is_string($optionPublicId) && is_string($statusCode)) {
+                        $optionStatuses[$optionPublicId] = $statusCode;
+                    }
+                }
+                $item['optionStatuses'] = $optionStatuses;
             }
             $normalized[] = $item;
         }

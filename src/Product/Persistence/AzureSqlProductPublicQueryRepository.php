@@ -29,6 +29,8 @@ use TriCab\Core\Product\Domain\ValueObject\ProductSlug;
  */
 final class AzureSqlProductPublicQueryRepository implements ProductPublicQueryRepository
 {
+    use LoadsProductApprovalCertificates;
+
     private const PUBLIC_VISIBILITY_SQL = <<<'SQL'
   AND p.[DeletedAtUtc] IS NULL
   AND p.[IsActive] = 1
@@ -216,6 +218,7 @@ SQL,
             industryNames: $this->listNames($pid, 'industries'),
             relationships: $this->listPublicRelationships($pid),
             specifications: $this->listPublicSpecifications($pid),
+            approvalCertificates: $this->listApprovalCertificates($pid),
             threeD: $this->product3dEnabled
                 ? $this->threeDModels->listPublicByProduct($pid)
                 : ProductPublic3DPayload::empty(),
