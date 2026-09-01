@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace TriCab\Api\Product\Persistence\InMemory;
 
 use TriCab\Core\Product\Application\DTO\Pagination;
+use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
 use TriCab\Core\Product\Application\DTO\ProductSearchCriteria;
 use TriCab\Core\Product\Application\DTO\ProductSearchListResult;
 use TriCab\Core\Product\Application\DTO\ProductSearchResult;
+use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Contract\ProductSearchRepository;
 use TriCab\Core\Product\Domain\Entity\Product;
 
@@ -142,7 +144,11 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
         }
 
         $needle = strtolower($query);
-        if ($product->internalCode()?->toString() === $query) {
+        $internal = $product->internalCode()?->toString();
+        if ($internal !== null && (
+            $internal === $query
+            || str_starts_with(strtolower($internal), $needle)
+        )) {
             return true;
         }
         if (str_contains(strtolower($product->productName()), $needle)) {
@@ -180,12 +186,24 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
             return false;
         }
 
+        $needle = strtolower($query);
         foreach ($this->store->variantRecords() as $record) {
             $variant = $record['variant'];
             if (!$variant->productId()->equals($productId) || $variant->isSoftDeleted()) {
                 continue;
             }
-            if ($variant->sku()?->toString() === $query) {
+            $sku = $variant->sku()?->toString();
+            if ($sku !== null && (
+                $sku === $query
+                || str_starts_with(strtolower($sku), $needle)
+            )) {
+                return true;
+            }
+            $variantCode = $variant->variantCode()?->toString();
+            if ($variantCode !== null && (
+                $variantCode === $query
+                || str_starts_with(strtolower($variantCode), $needle)
+            )) {
                 return true;
             }
         }
@@ -213,8 +231,11 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
         foreach ($this->store->productCodes() as $row) {
             if (
                 ($row['productPublicId'] ?? '') === $product->publicId()->toString()
-                && ($row['codeValue'] ?? '') === $query
                 && !($row['deleted'] ?? false)
+                && (
+                    ($row['codeValue'] ?? '') === $query
+                    || str_starts_with(strtolower((string) ($row['codeValue'] ?? '')), strtolower($query))
+                )
             ) {
                 return true;
             }
@@ -312,6 +333,8 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
             seriesName: $this->store->seriesNameForId($product->seriesId()),
             statusCode: $product->status()->toString(),
             thumbnailUrl: $this->thumbnailUrl($publicId),
+            thumbnailImageUrl: $this->thumbnailImageUrl($publicId),
+            thumbnailBackgroundColor: $this->store->thumbnailBackgroundColorForProduct($product->publicId()),
         );
     }
 
@@ -320,8 +343,11 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
         $rank = fn (ProductSearchResult $item): int => match (true) {
             $item->productCode === $query => 0,
             $this->variantSkuMatchesPublicId($item->publicId, $query) => 1,
-            strcasecmp($item->productName, $query) === 0 => 2,
-            default => 3,
+            $item->productCode !== null
+                && str_starts_with(strtolower($item->productCode), strtolower($query)) => 2,
+            $this->variantCodePrefixMatchesPublicId($item->publicId, $query) => 3,
+            strcasecmp($item->productName, $query) === 0 => 4,
+            default => 5,
         };
 
         $value = $rank($a) <=> $rank($b);
@@ -340,8 +366,30 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
             if ($parent === null || $parent['product']->publicId()->toString() !== $productPublicId) {
                 continue;
             }
-            if ($variant->sku()?->toString() === $query) {
+            if ($variant->sku()?->toString() === $query || $variant->variantCode()?->toString() === $query) {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function variantCodePrefixMatchesPublicId(string $productPublicId, string $query): bool
+    {
+        $needle = strtolower($query);
+        foreach ($this->store->variantRecords() as $record) {
+            $variant = $record['variant'];
+            if ($variant->isSoftDeleted()) {
+                continue;
+            }
+            $parent = $this->store->productRecordById($variant->productId());
+            if ($parent === null || $parent['product']->publicId()->toString() !== $productPublicId) {
+                continue;
+            }
+            foreach ([$variant->sku()?->toString(), $variant->variantCode()?->toString()] as $code) {
+                if ($code !== null && str_starts_with(strtolower($code), $needle)) {
+                    return true;
+                }
             }
         }
 
@@ -380,5 +428,31 @@ final class InMemoryProductSearchRepository implements ProductSearchRepository
         }
 
         return null;
+    }
+
+    private function thumbnailImageUrl(string $productPublicId): ?string
+    {
+        $media = [];
+        foreach ($this->store->media() as $row) {
+            if (($row['productPublicId'] ?? '') !== $productPublicId || ($row['archived'] ?? false)) {
+                continue;
+            }
+            $publicUrl = $row['publicUrl'] ?? null;
+            if (!is_string($publicUrl) || $publicUrl === '') {
+                continue;
+            }
+            $media[] = new ProductMediaSummary(
+                publicId: (string) ($row['publicId'] ?? ''),
+                mediaCategoryCode: (string) ($row['mediaCategoryCode'] ?? 'gallery'),
+                mediaTypeCode: (string) ($row['mediaTypeCode'] ?? 'primary-image'),
+                title: (string) ($row['title'] ?? 'Image'),
+                publicUrl: $publicUrl,
+                altText: null,
+                displayOrder: (int) ($row['displayOrder'] ?? 0),
+                isPrimary: (bool) ($row['isPrimary'] ?? false),
+            );
+        }
+
+        return ProductThumbnailImageResolver::fromMediaSummaries($media);
     }
 }

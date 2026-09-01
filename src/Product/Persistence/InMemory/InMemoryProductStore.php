@@ -102,6 +102,9 @@ final class InMemoryProductStore
     /** @var array<string, array<string, mixed>> */
     private array $seo = [];
 
+    /** @var array<string, string> */
+    private array $thumbnailBackgroundColors = [];
+
     /** @var list<array<string, mixed>> */
     private array $redirects = [];
 
@@ -1198,6 +1201,23 @@ final class InMemoryProductStore
         }
 
         return null;
+    }
+
+    public function thumbnailBackgroundColorForProduct(ProductPublicId $publicId): ?string
+    {
+        return $this->thumbnailBackgroundColors[$publicId->toString()] ?? null;
+    }
+
+    public function setThumbnailBackgroundColor(ProductPublicId $publicId, ?string $color): void
+    {
+        $key = $publicId->toString();
+        if ($color === null) {
+            unset($this->thumbnailBackgroundColors[$key]);
+
+            return;
+        }
+
+        $this->thumbnailBackgroundColors[$key] = $color;
     }
 
     /**

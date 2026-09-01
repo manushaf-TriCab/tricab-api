@@ -34,9 +34,20 @@ class DatabaseUnavailable extends RuntimeException
         return (int) $info[1];
     }
 
+    public function isCheckConstraintViolation(): bool
+    {
+        if ($this->sqlDriverCode() !== 547) {
+            return false;
+        }
+
+        $message = strtolower($this->getPrevious()?->getMessage() ?? $this->getMessage());
+
+        return str_contains($message, 'check constraint');
+    }
+
     public function isForeignKeyViolation(): bool
     {
-        return $this->sqlDriverCode() === 547;
+        return $this->sqlDriverCode() === 547 && !$this->isCheckConstraintViolation();
     }
 
     public function isInvalidObjectReference(): bool

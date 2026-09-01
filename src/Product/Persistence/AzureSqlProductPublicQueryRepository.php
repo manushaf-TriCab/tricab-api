@@ -15,8 +15,9 @@ use TriCab\Core\Product\Application\DTO\ProductPublicSpecificationItem;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Contract\ProductPublicQueryRepository;
-use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
+use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Domain\ValueObject\ProductSlug;
+use TriCab\Core\Product\Domain\ValueObject\ThumbnailBackgroundColor;
 
 /**
  * Public product reads. Visibility is enforced in SQL:
@@ -155,7 +156,8 @@ SELECT
           AND slug.[IsActive] = 1
           AND slug.[IsPrimary] = 1
         ORDER BY slug.[ProductSlugId]
-    ) AS [Slug]
+    ) AS [Slug],
+    p.[ThumbnailBackgroundColor]
 FROM [product].[Products] p
 INNER JOIN [product].[ProductStatuses] ps ON ps.[ProductStatusId] = p.[ProductStatusId]
 LEFT JOIN [product].[ProductFamilies] f ON f.[ProductFamilyId] = p.[ProductFamilyId]
@@ -183,6 +185,7 @@ SQL,
         $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
         $pid = ProductPublicId::fromString($publicId);
         $media = $this->listPublicMedia($pid);
+        $thumbnailImageUrl = ProductThumbnailImageResolver::fromMediaSummaries($media);
         $thumbnailUrl = null;
         foreach ($media as $item) {
             if ($item->isPrimary && $item->publicUrl !== null) {
@@ -211,6 +214,10 @@ SQL,
             seriesName: AzureSqlValueMapper::nullableString($row['SeriesName'] ?? null),
             slug: AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
             thumbnailUrl: $thumbnailUrl,
+            thumbnailImageUrl: $thumbnailImageUrl,
+            thumbnailBackgroundColor: ThumbnailBackgroundColor::tryFromString(
+                AzureSqlValueMapper::nullableString($row['ThumbnailBackgroundColor'] ?? null),
+            )?->toString(),
             variants: $this->listPublicVariants($pid),
             media: $media,
             documents: $this->listPublicDocuments($pid, $regionCode),

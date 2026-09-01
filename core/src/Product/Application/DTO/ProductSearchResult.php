@@ -15,6 +15,8 @@ final readonly class ProductSearchResult
         public ?string $seriesName,
         public string $statusCode,
         public ?string $thumbnailUrl,
+        public ?string $thumbnailImageUrl = null,
+        public ?string $thumbnailBackgroundColor = null,
     ) {
     }
 }

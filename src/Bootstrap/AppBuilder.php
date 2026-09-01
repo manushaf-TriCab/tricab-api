@@ -121,6 +121,7 @@ use TriCab\Api\Http\Action\Admin\UpdateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\UpdatePermissionAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductSeoAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductThumbnailPresentationAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
 use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
 use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
@@ -489,6 +490,8 @@ final class AppBuilder
         $app->put('/api/v1/admin/products/{productPublicId}/specifications', AssignProductSpecificationsAction::class)
             ->add(($require)('PRODUCT.SPECIFICATIONS.MANAGE'));
         $app->put('/api/v1/admin/products/{productPublicId}/seo', UpdateProductSeoAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
+        $app->put('/api/v1/admin/products/{productPublicId}/thumbnail-presentation', UpdateProductThumbnailPresentationAction::class)
             ->add(($require)('PRODUCT.UPDATE'));
         $app->put('/api/v1/admin/products/{productPublicId}/pricing/default-unit', SetProductDefaultPricingUnitAction::class)
             ->add(($require)('PRODUCT.PRICING.MANAGE'));

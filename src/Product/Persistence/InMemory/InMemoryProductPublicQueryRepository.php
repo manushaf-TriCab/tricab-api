@@ -15,6 +15,7 @@ use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Contract\ProductPublicQueryRepository;
 use TriCab\Core\Product\Domain\Entity\Product;
+use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Product\Domain\ValueObject\ProductRelationshipType;
 use TriCab\Core\Product\Domain\ValueObject\ProductSlug;
@@ -122,6 +123,7 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
     {
         $publicId = $product->publicId()->toString();
         $media = $this->listPublicMedia($publicId);
+        $thumbnailImageUrl = ProductThumbnailImageResolver::fromMediaSummaries($media);
         $thumbnailUrl = null;
         foreach ($media as $item) {
             if ($item->isPrimary && $item->publicUrl !== null) {
@@ -149,6 +151,8 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
             seriesName: $this->store->seriesNameForId($product->seriesId()),
             slug: $slug,
             thumbnailUrl: $thumbnailUrl,
+            thumbnailImageUrl: $thumbnailImageUrl,
+            thumbnailBackgroundColor: $this->store->thumbnailBackgroundColorForProduct($product->publicId()),
             variants: $this->listPublicVariants($product),
             media: $media,
             documents: $this->listPublicDocuments($publicId, $regionCode),

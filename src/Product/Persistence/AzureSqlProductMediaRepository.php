@@ -206,7 +206,7 @@ SQL,
         string $imageRoleCode,
         UserId $actorUserId,
     ): void {
-        $exclusiveRoles = ['primary', 'cross-section', 'diagram', 'hero', 'thumbnail'];
+        $exclusiveRoles = ['primary', 'cross-section', 'diagram', 'hero', 'thumbnail', 'product-thumbnail'];
         $this->runInTransaction(
             $this->connection,
             function () use ($productPublicId, $mediaPublicId, $imageRoleCode, $actorUserId, $exclusiveRoles): void {

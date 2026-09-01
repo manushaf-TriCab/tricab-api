@@ -59,6 +59,7 @@ use TriCab\Core\Product\Application\DTO\ProductPublishReadinessReport;
 use TriCab\Core\Product\Application\DTO\ProductSearchListResult;
 use TriCab\Core\Product\Application\DTO\ProductSearchResult;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
+use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Application\DTO\Pagination;
 use TriCab\Core\Product\Application\DTO\SpecificationDefinitionRecord;
 use TriCab\Core\Product\Application\DTO\SpecificationGroupRecord;
@@ -123,6 +124,7 @@ final class ProductManagementDtoSerializer
             'createdByDisplayName' => $detail->createdByDisplayName,
             'updatedByDisplayName' => $detail->updatedByDisplayName,
             'rowVersion' => $detail->rowVersion,
+            'thumbnailBackgroundColor' => $detail->thumbnailBackgroundColor,
         ];
     }
 
@@ -199,6 +201,12 @@ final class ProductManagementDtoSerializer
                 $media,
                 $devUrls,
             ),
+            'thumbnailImageUrl' => self::resolveAssetUrl(
+                $devUrls,
+                $detail->thumbnailImageUrl ?? ProductThumbnailImageResolver::fromMediaSummaries($detail->media),
+                $detail->publicId,
+            ),
+            'thumbnailBackgroundColor' => $detail->thumbnailBackgroundColor ?? null,
             'variants' => array_map(self::variantSummary(...), $detail->variants),
             'media' => $media,
             'documents' => array_map(
@@ -371,10 +379,15 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function searchListResult(ProductSearchListResult $result): array
-    {
+    public static function searchListResult(
+        ProductSearchListResult $result,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
-            'items' => array_map(self::searchResult(...), $result->items),
+            'items' => array_map(
+                static fn (ProductSearchResult $item): array => self::searchResult($item, $devUrls),
+                $result->items,
+            ),
             'pagination' => self::pagination($result->pagination),
         ];
     }
@@ -382,8 +395,10 @@ final class ProductManagementDtoSerializer
     /**
      * @return array<string, mixed>
      */
-    public static function searchResult(ProductSearchResult $result): array
-    {
+    public static function searchResult(
+        ProductSearchResult $result,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
         return [
             'publicId' => $result->publicId,
             'productName' => $result->productName,
@@ -392,7 +407,13 @@ final class ProductManagementDtoSerializer
             'categoryName' => $result->categoryName,
             'seriesName' => $result->seriesName,
             'statusCode' => $result->statusCode,
-            'thumbnailUrl' => $result->thumbnailUrl,
+            'thumbnailUrl' => self::resolveAssetUrl($devUrls, $result->thumbnailUrl, $result->publicId),
+            'thumbnailImageUrl' => self::resolveAssetUrl(
+                $devUrls,
+                $result->thumbnailImageUrl ?? $result->thumbnailUrl,
+                $result->publicId,
+            ),
+            'thumbnailBackgroundColor' => $result->thumbnailBackgroundColor,
         ];
     }
 

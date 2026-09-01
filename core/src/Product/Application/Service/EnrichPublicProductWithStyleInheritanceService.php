@@ -13,7 +13,7 @@ use TriCab\Core\Product\Application\DTO\ProductPublic3DModel;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\DTO\ProductPublicDetail;
 use TriCab\Core\Product\Application\DTO\ProductPublicSpecificationItem;
-use TriCab\Core\Product\Contract\ProductStyleRepository;
+use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Domain\ValueObject\StyleResourceType;
 
 /**
@@ -74,6 +74,7 @@ final class EnrichPublicProductWithStyleInheritanceService
                 break;
             }
         }
+        $thumbnailImageUrl = ProductThumbnailImageResolver::fromMediaSummaries($media);
 
         return new ProductPublicDetail(
             publicId: $detail->publicId,
@@ -86,6 +87,8 @@ final class EnrichPublicProductWithStyleInheritanceService
             seriesName: $detail->seriesName,
             slug: $detail->slug,
             thumbnailUrl: $thumbnailUrl,
+            thumbnailImageUrl: $thumbnailImageUrl,
+            thumbnailBackgroundColor: $detail->thumbnailBackgroundColor,
             variants: $detail->variants,
             media: $media,
             documents: $documents,

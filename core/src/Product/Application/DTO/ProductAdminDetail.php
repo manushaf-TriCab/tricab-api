@@ -47,6 +47,7 @@ final readonly class ProductAdminDetail
         public ?string $createdByDisplayName,
         public ?string $updatedByDisplayName,
         public string $rowVersion,
+        public ?string $thumbnailBackgroundColor = null,
     ) {
     }
 }

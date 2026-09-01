@@ -99,6 +99,14 @@ final class ProductManagementErrorMapper
         }
 
         if ($exception instanceof DatabaseUnavailable) {
+            if ($exception->isCheckConstraintViolation()) {
+                return $this->responder->error(
+                    'DATABASE_CONSTRAINT_VIOLATION',
+                    'The database rejected this media role. Apply the latest product image-role migration (product-thumbnail) and try again.',
+                    422,
+                );
+            }
+
             if ($exception->isForeignKeyViolation()) {
                 return $this->responder->error(
                     'REFERENCE_IN_USE',
