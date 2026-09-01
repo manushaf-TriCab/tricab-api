@@ -16,6 +16,7 @@ use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Contract\ProductPublicQueryRepository;
 use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
+use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Product\Domain\ValueObject\ProductSlug;
 use TriCab\Core\Product\Domain\ValueObject\ThumbnailBackgroundColor;
 
