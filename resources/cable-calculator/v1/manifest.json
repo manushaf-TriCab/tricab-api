@@ -1,0 +1,10 @@
+{
+    "datasetVersion": "v1",
+    "source": "tc-web/data/cable-calculator/runtime",
+    "capturedAt": "2026-08-31T02:55:37+00:00",
+    "ratingRows": 557,
+    "cableSpecsRows": 9338,
+    "ratingSha256": "8c9725037531fb90fc8cadd084e3a8dc65e741a99511756ae1f4d8b19f813704",
+    "cableSpecsSha256": "e63cac808caf7472f349b2cee5e78d65d0ba18e45ef97be6fb382282d6a8c178",
+    "baselineLabel": "LOCAL_LEGACY_PARITY_BASELINE"
+}

@@ -1,0 +1,237 @@
+{
+    "startedAt": "2026-08-31T04:15:23+00:00",
+    "apiBase": "http:\/\/127.0.0.1:8080",
+    "fixtureRoot": "\/Users\/thilanh\/Documents\/Projects\/tc-web\/tests\/fixtures\/cable-calculator",
+    "sections": {
+        "environment": {
+            "APP_ENV": "development",
+            "IS_PRODUCTION": "NO",
+            "DB_HOST": "tricab-mel.database.windows.net",
+            "DB_DATABASE": "tc",
+            "calculatorDataSource": "legacy MySQL via tc-web calculate-json.php (not Azure SQL direct)",
+            "webTarget": "http:\/\/127.0.0.1:5173 (local Vite)",
+            "apiTarget": "http:\/\/127.0.0.1:8080"
+        },
+        "cliBridgeLocal": {
+            "calculateJsonExists": true,
+            "calculateJsonPath": "\/Users\/thilanh\/Documents\/Projects\/tc-web\/tools\/legacy-cable-calculator\/calculate-json.php",
+            "azureDeployNote": "tc-web script path assumes sibling repo layout; separate API\/web Azure deploy would need TRICAB_TC_WEB_CALCULATE_JSON"
+        },
+        "localDatasetBaseline": {
+            "ratingsPath": "\/Users\/thilanh\/Documents\/Projects\/tc-web\/data\/cable-calculator\/runtime\/ratings.json",
+            "ratingsRows": 557,
+            "ratingsSha256": "8c9725037531fb90fc8cadd084e3a8dc65e741a99511756ae1f4d8b19f813704",
+            "cableSpecsPath": "\/Users\/thilanh\/Documents\/Projects\/tc-web\/data\/cable-calculator\/runtime\/cableSpecs.json",
+            "cableSpecsRows": 9338,
+            "cableSpecsSha256": "e63cac808caf7472f349b2cee5e78d65d0ba18e45ef97be6fb382282d6a8c178",
+            "label": "LOCAL_LEGACY_PARITY_BASELINE"
+        },
+        "screenshotCase": {
+            "httpStatus": 200,
+            "pass": true,
+            "bands": {
+                "90": {
+                    "temperatureBand": "90",
+                    "style": "XL",
+                    "activeSizeMm2": 6,
+                    "earthSizeMm2": 2.5,
+                    "earthScreenSizeMm2": 0,
+                    "runs": 1,
+                    "currentRatingA": 49,
+                    "operatingTemperatureC": 40,
+                    "voltageDropPercent": 0.07,
+                    "faultLoop": 716,
+                    "faultRatingActive": 0.86,
+                    "faultRatingEarth": 0.34,
+                    "spaceRequirement": "15",
+                    "weightKg": 0.368,
+                    "quantityM": 200,
+                    "multiple": 4,
+                    "productCodeActive": "XL-PAXN\/1C6OR",
+                    "productCodeEarth": "LP-XXXD\/1C2.5EA",
+                    "nc": 1,
+                    "ne": 0,
+                    "earthNe": 1
+                },
+                "110": {
+                    "temperatureBand": "110",
+                    "style": "KL",
+                    "activeSizeMm2": 6,
+                    "earthSizeMm2": 2.5,
+                    "earthScreenSizeMm2": 0,
+                    "runs": 1,
+                    "currentRatingA": 61,
+                    "operatingTemperatureC": 40,
+                    "voltageDropPercent": 0.07,
+                    "faultLoop": 716,
+                    "faultRatingActive": 0.79,
+                    "faultRatingEarth": 0.34,
+                    "spaceRequirement": "15",
+                    "weightKg": 0.368,
+                    "quantityM": 200,
+                    "multiple": 4,
+                    "productCodeActive": "KL-PAXN\/1C6OR",
+                    "productCodeEarth": "LP-XXXD\/1C2.5EA",
+                    "nc": 1,
+                    "ne": 0,
+                    "earthNe": 1
+                }
+            },
+            "statusLabel": "CALCULATION COMPLETE",
+            "parityBaseline": "LOCAL_LEGACY_PARITY_BASELINE",
+            "deprecatedResultMustNotAppear": "1.5mm\u00b2 \/ 3.6A \/ 0.26% \/ 1.04V"
+        },
+        "anchor200A": {
+            "httpStatus": 200,
+            "pass": true,
+            "bands": {
+                "90": {
+                    "temperatureBand": "90",
+                    "style": "XL",
+                    "activeSizeMm2": 70,
+                    "earthSizeMm2": 25,
+                    "earthScreenSizeMm2": 0,
+                    "runs": 1,
+                    "currentRatingA": 241,
+                    "operatingTemperatureC": 74,
+                    "voltageDropPercent": 0.29,
+                    "faultLoop": 11.8,
+                    "faultRatingActive": 10.01,
+                    "faultRatingEarth": 3.4,
+                    "spaceRequirement": "32",
+                    "weightKg": 2.904,
+                    "quantityM": 40,
+                    "multiple": 4,
+                    "productCodeActive": "XL-PAXN\/1C70OR",
+                    "productCodeEarth": "LP-XXXN\/1C25EA",
+                    "nc": 1,
+                    "ne": 0,
+                    "earthNe": 1
+                },
+                "110": {
+                    "temperatureBand": "110",
+                    "style": "KL",
+                    "activeSizeMm2": 50,
+                    "earthSizeMm2": 16,
+                    "earthScreenSizeMm2": 0,
+                    "runs": 1,
+                    "currentRatingA": 233,
+                    "operatingTemperatureC": 92,
+                    "voltageDropPercent": 0.41,
+                    "faultLoop": 18.1,
+                    "faultRatingActive": 6.6,
+                    "faultRatingEarth": 2.18,
+                    "spaceRequirement": "28",
+                    "weightKg": 2.044,
+                    "quantityM": 40,
+                    "multiple": 4,
+                    "productCodeActive": "KL-PAXN\/1C50OR",
+                    "productCodeEarth": "LP-XXXN\/1C16EA",
+                    "nc": 1,
+                    "ne": 0,
+                    "earthNe": 1
+                }
+            }
+        },
+        "fixture003": {
+            "historicalSourceExpected": {
+                "vdRange": [
+                    0.5,
+                    0.7
+                ],
+                "cr": 181,
+                "xa": 35,
+                "earth_size": 10
+            },
+            "localLegacyOutput": {
+                "style": "CC",
+                "xa": 50,
+                "earth_size": 16,
+                "runs": 1,
+                "cr": 213,
+                "ot": 90,
+                "vd": 0.41,
+                "fault-loop": 18.1,
+                "fr-active": 6.6,
+                "fr-earth": 2.72,
+                "space": 63,
+                "weight": 2.052,
+                "qty": 40,
+                "multiple": 4,
+                "productCodeActive": "CC-PAXN\/1C50OR",
+                "productCodeEarth": "LS-XXXN\/1C16EA"
+            },
+            "stagingRuntime110": {
+                "temperatureBand": "110",
+                "style": "CC",
+                "activeSizeMm2": 70,
+                "earthSizeMm2": 25,
+                "earthScreenSizeMm2": 0,
+                "runs": 1,
+                "currentRatingA": 220,
+                "operatingTemperatureC": 69,
+                "voltageDropPercent": 0.28,
+                "faultLoop": 11.8,
+                "faultRatingActive": 9.24,
+                "faultRatingEarth": 4.25,
+                "spaceRequirement": "63",
+                "weightKg": 2.916,
+                "quantityM": 40,
+                "multiple": 4,
+                "productCodeActive": "CC-PAXN\/1C70OR",
+                "productCodeEarth": "LS-XXXN\/1C25EA",
+                "nc": 1,
+                "ne": 0,
+                "earthNe": 1
+            },
+            "resolution": "UNRESOLVED",
+            "metaFailureReason": "Engine output consistent with current tc.rating buried rows; cableTest assertions appear stale (xa 50 vs expected 35)"
+        },
+        "regression": {
+            "total": 108,
+            "exact": 108,
+            "failed": 0,
+            "failures": []
+        },
+        "performance": {
+            "sampleCount": 108,
+            "minMs": 43.32304000854492,
+            "medianMs": 45.445919036865234,
+            "p95Ms": 52.39605903625488,
+            "maxMs": 65.63806533813477
+        },
+        "errorHandling": {
+            "missingLoad": 422,
+            "loadZero": 422,
+            "erhZero": 422
+        },
+        "concurrency": {
+            "fiveRequests": [
+                200,
+                200,
+                200,
+                200,
+                200
+            ],
+            "tenRequests": [
+                200,
+                200,
+                200,
+                200,
+                200,
+                200,
+                200,
+                200,
+                200,
+                200
+            ],
+            "fiveAll200": true,
+            "tenAll200": true
+        },
+        "verdict": {
+            "status": "STAGING_PARITY_VALIDATED",
+            "note": "Local non-prod validation; no Azure App Service staging slot deployed in this run"
+        }
+    },
+    "finishedAt": "2026-08-31T04:15:35+00:00"
+}

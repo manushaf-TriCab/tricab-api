@@ -51,6 +51,32 @@ final class Environment
     }
 
     /**
+     * Read one config key after .env load. Matches {@see load()} overlays:
+     * getenv → $_SERVER → $_ENV (later wins). Immutable Dotenv does not putenv,
+     * so calculator DI must not rely on getenv alone.
+     */
+    public static function value(string $key, ?string $default = null): ?string
+    {
+        $candidates = [
+            getenv($key),
+            $_SERVER[$key] ?? null,
+            $_ENV[$key] ?? null,
+        ];
+
+        $resolved = null;
+        foreach ($candidates as $candidate) {
+            if ($candidate === false || $candidate === null) {
+                continue;
+            }
+            if (is_string($candidate) || is_int($candidate) || is_float($candidate)) {
+                $resolved = (string) $candidate;
+            }
+        }
+
+        return $resolved ?? $default;
+    }
+
+    /**
      * @param array<string, string|null> ...$layers
      * @return array<string, string|null>
      */
