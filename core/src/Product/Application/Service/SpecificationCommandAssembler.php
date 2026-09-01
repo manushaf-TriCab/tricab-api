@@ -154,6 +154,28 @@ final class SpecificationCommandAssembler
             'valueMaxDecimal' => $input['valueMaxDecimal'] ?? null,
             'optionPublicId' => $input['optionPublicId'] ?? null,
             'optionPublicIds' => $input['optionPublicIds'] ?? [],
+            'optionStatuses' => self::normalizeOptionStatuses($input['optionStatuses'] ?? []),
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $statuses
+     * @return array<string, string>
+     */
+    private static function normalizeOptionStatuses(array $statuses): array
+    {
+        $normalized = [];
+        foreach ($statuses as $optionPublicId => $statusCode) {
+            if (!is_string($optionPublicId) || $optionPublicId === '' || !is_string($statusCode)) {
+                continue;
+            }
+            $code = strtolower(trim($statusCode));
+            if ($code !== 'pending' && $code !== 'approved') {
+                continue;
+            }
+            $normalized[$optionPublicId] = $code;
+        }
+
+        return $normalized;
     }
 }

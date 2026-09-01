@@ -60,6 +60,10 @@ $batches = array_values(array_filter(
 ));
 
 $settings = Environment::settings($basePath);
+if ($settings->appEnv === 'production') {
+    fwrite(STDERR, "STOP: APP_ENV=production — development SQL scripts cannot run here.\n");
+    exit(1);
+}
 $container = ContainerFactory::create($settings);
 /** @var SqlConnection $db */
 $db = $container->get(SqlConnection::class);

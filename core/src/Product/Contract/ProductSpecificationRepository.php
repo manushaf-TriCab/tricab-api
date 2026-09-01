@@ -40,7 +40,8 @@ use TriCab\Core\Product\Domain\ValueObject\ProductVariantPublicId;
  *   valueMinDecimal: ?string,
  *   valueMaxDecimal: ?string,
  *   optionPublicId: ?string,
- *   optionPublicIds: list<string>
+ *   optionPublicIds: list<string>,
+ *   optionStatuses?: array<string, string>
  * }
  */
 interface ProductSpecificationRepository

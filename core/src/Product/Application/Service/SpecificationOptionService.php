@@ -72,6 +72,7 @@ final class SpecificationOptionService
                 'value' => SpecificationMasterSupport::normalizeDescription($command->value),
                 'displayOrder' => $command->displayOrder,
                 'isActive' => $command->isActive,
+                'imageUrl' => $command->imageUrl,
             ], $this->audit->actorUserId($actor));
             $record = $this->require($created->publicId);
             $this->audit->record(
@@ -108,6 +109,7 @@ final class SpecificationOptionService
                     'name' => $name,
                     'value' => SpecificationMasterSupport::normalizeDescription($command->value),
                     'displayOrder' => $command->displayOrder,
+                    'imageUrl' => $command->imageUrl,
                 ],
                 $command->expectedRowVersion,
                 $this->audit->actorUserId($actor),

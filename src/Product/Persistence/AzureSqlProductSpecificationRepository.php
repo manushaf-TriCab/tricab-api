@@ -102,7 +102,7 @@ WHERE o.[DeletedAtUtc] IS NULL
   AND d.[DeletedAtUtc] IS NULL
 SQL;
         if ($activeOnly) {
-            $sql .= ' AND d.[IsActive] = 1';
+            $sql .= ' AND d.[IsActive] = 1 AND o.[IsActive] = 1';
         }
         $sql .= ' ORDER BY d.[DisplayOrder], o.[DisplayOrder], o.[OptionLabel]';
 
@@ -561,22 +561,30 @@ SQL,
             [':valueId' => $valueId],
         );
 
+        $statuses = $value['optionStatuses'] ?? [];
         foreach ($optionPublicIds as $optionPublicId) {
             $optionId = $this->requireOptionId($optionPublicId);
+            $statusCode = is_string($statuses[$optionPublicId] ?? null) ? strtolower($statuses[$optionPublicId]) : 'approved';
+            if ($statusCode !== 'pending' && $statusCode !== 'approved') {
+                $statusCode = 'approved';
+            }
             $this->connection->execute(
                 <<<'SQL'
 INSERT INTO [product].[ProductSpecificationOptionValues] (
     [ProductSpecificationValueId],
-    [SpecificationOptionId]
+    [SpecificationOptionId],
+    [StatusCode]
 )
 VALUES (
     :valueId,
-    :optionId
+    :optionId,
+    :statusCode
 )
 SQL,
                 [
                     ':valueId' => $valueId,
                     ':optionId' => $optionId,
+                    ':statusCode' => $statusCode,
                 ],
             );
         }
@@ -692,6 +700,7 @@ SQL,
                     'valueMaxDecimal' => ProductDecimalMapper::toNullableString($row['ValueMaxDecimal'] ?? null),
                     'optionPublicId' => AzureSqlValueMapper::nullableString($row['OptionPublicId'] ?? null),
                     'optionPublicIds' => [],
+                    'optionStatuses' => [],
                     '_valueId' => AzureSqlValueMapper::intValue(
                         $row[$isVariant ? 'ProductVariantSpecificationValueId' : 'ProductSpecificationValueId'] ?? 0,
                     ),
@@ -717,9 +726,18 @@ SQL,
             $valueId = $item['_valueId'];
             unset($item['_valueId']);
 
-            foreach ($optionsByValueId[$valueId] ?? [] as $junctionOptionPublicId) {
+            foreach ($optionsByValueId[$valueId] ?? [] as $junction) {
+                $junctionOptionPublicId = $junction['optionPublicId'];
                 if ($junctionOptionPublicId !== '' && !in_array($junctionOptionPublicId, $item['optionPublicIds'], true)) {
                     $item['optionPublicIds'][] = $junctionOptionPublicId;
+                }
+                if ($junctionOptionPublicId !== '') {
+                    $item['optionStatuses'][$junctionOptionPublicId] = $junction['statusCode'];
+                }
+            }
+            foreach ($item['optionPublicIds'] as $optionPublicId) {
+                if (!isset($item['optionStatuses'][$optionPublicId])) {
+                    $item['optionStatuses'][$optionPublicId] = 'approved';
                 }
             }
         }
@@ -730,7 +748,7 @@ SQL,
 
     /**
      * @param list<int> $valueIds
-     * @return array<int, list<string>>
+     * @return array<int, list<array{optionPublicId: string, statusCode: string}>>
      */
     private function loadOptionPublicIdsByValueIds(array $valueIds, bool $isVariant): array
     {
@@ -750,11 +768,15 @@ SQL,
         $junctionTable = $isVariant
             ? '[product].[ProductVariantSpecificationOptionValues]'
             : '[product].[ProductSpecificationOptionValues]';
+        $statusSelect = $isVariant
+            ? "N'approved' AS [StatusCode]"
+            : "ISNULL(j.[StatusCode], N'approved') AS [StatusCode]";
 
         $sql = <<<SQL
 SELECT
     {$valueIdColumn} AS [ValueId],
-    CONVERT(NVARCHAR(36), o.[PublicId]) AS [OptionPublicId]
+    CONVERT(NVARCHAR(36), o.[PublicId]) AS [OptionPublicId],
+    {$statusSelect}
 FROM {$junctionTable} j
 INNER JOIN [product].[SpecificationOptions] o ON o.[SpecificationOptionId] = j.[SpecificationOptionId]
 WHERE {$valueIdColumn} IN ({$inList})
@@ -766,7 +788,14 @@ SQL;
             if ($valueId <= 0 || $optionPublicId === '') {
                 continue;
             }
-            $grouped[$valueId][] = $optionPublicId;
+            $statusCode = strtolower(AzureSqlValueMapper::stringValue($row['StatusCode'] ?? 'approved'));
+            if ($statusCode !== 'pending' && $statusCode !== 'approved') {
+                $statusCode = 'approved';
+            }
+            $grouped[$valueId][] = [
+                'optionPublicId' => $optionPublicId,
+                'statusCode' => $statusCode,
+            ];
         }
 
         return $grouped;

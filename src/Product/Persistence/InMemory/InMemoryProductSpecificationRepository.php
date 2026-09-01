@@ -410,6 +410,7 @@ final class InMemoryProductSpecificationRepository implements ProductSpecificati
         $row = $this->newRow($data);
         $row['definitionPublicId'] = $data['definitionPublicId'];
         $row['value'] = $data['value'] ?? null;
+        $row['imageUrl'] = $data['imageUrl'] ?? null;
         $this->options[] = $row;
 
         return $this->toOption($row);
@@ -752,6 +753,7 @@ final class InMemoryProductSpecificationRepository implements ProductSpecificati
             rowVersion: $row['rowVersion'],
             createdAtUtc: $row['createdAtUtc'] ?? null,
             updatedAtUtc: $row['updatedAtUtc'] ?? null,
+            imageUrl: isset($row['imageUrl']) && is_string($row['imageUrl']) ? $row['imageUrl'] : null,
         );
     }
 

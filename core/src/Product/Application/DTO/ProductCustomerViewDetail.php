@@ -19,6 +19,7 @@ final readonly class ProductCustomerViewDetail
      * @param list<string> $industryNames
      * @param list<ProductPublicRelationshipItem> $relationships
      * @param list<ProductPublicSpecificationItem> $specifications
+     * @param list<ProductApprovalCertificateItem> $approvalCertificates
      */
     public function __construct(
         public string $publicId,
@@ -47,6 +48,8 @@ final readonly class ProductCustomerViewDetail
         public ProductPublic3DPayload $threeD = new ProductPublic3DPayload(false, null, []),
         public ?string $styleCode = null,
         public ?string $parentStyleCode = null,
+        /** @var list<ProductApprovalCertificateItem> */
+        public array $approvalCertificates = [],
     ) {
     }
 }

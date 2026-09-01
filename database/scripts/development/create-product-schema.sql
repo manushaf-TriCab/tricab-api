@@ -768,6 +768,7 @@ BEGIN TRY
     [OptionCode] NVARCHAR(50) NOT NULL,
     [OptionLabel] NVARCHAR(200) NOT NULL,
     [OptionValue] NVARCHAR(200) NULL,
+    [ImageUrl] NVARCHAR(2000) NULL,
     [DisplayOrder] INT NOT NULL CONSTRAINT DF_product_SpecificationOptions_DisplayOrder DEFAULT (0),
     
     [IsActive] BIT NOT NULL CONSTRAINT DF_product_SpecificationOptions_IsActive DEFAULT (1),
@@ -911,9 +912,11 @@ BEGIN TRY
     [ProductSpecificationOptionValueId] BIGINT IDENTITY(1,1) NOT NULL,
     [ProductSpecificationValueId] BIGINT NOT NULL,
     [SpecificationOptionId] BIGINT NOT NULL,
+    [StatusCode] NVARCHAR(30) NOT NULL CONSTRAINT DF_product_ProductSpecificationOptionValues_StatusCode DEFAULT (N'approved'),
     [CreatedAtUtc] DATETIME2(7) NOT NULL CONSTRAINT DF_product_ProductSpecificationOptionValues_CreatedAtUtc DEFAULT (SYSUTCDATETIME()),
     CONSTRAINT PK_product_ProductSpecificationOptionValues PRIMARY KEY CLUSTERED ([ProductSpecificationOptionValueId]),
     CONSTRAINT UQ_product_ProductSpecificationOptionValues_Value_Option UNIQUE ([ProductSpecificationValueId], [SpecificationOptionId]),
+    CONSTRAINT CK_product_ProductSpecificationOptionValues_StatusCode CHECK ([StatusCode] IN (N'approved', N'pending')),
     CONSTRAINT FK_product_ProductSpecificationOptionValues_Value FOREIGN KEY ([ProductSpecificationValueId]) REFERENCES [product].[ProductSpecificationValues] ([ProductSpecificationValueId]),
     CONSTRAINT FK_product_ProductSpecificationOptionValues_Option FOREIGN KEY ([SpecificationOptionId]) REFERENCES [product].[SpecificationOptions] ([SpecificationOptionId])
 );

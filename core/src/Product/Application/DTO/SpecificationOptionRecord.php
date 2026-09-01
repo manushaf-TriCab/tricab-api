@@ -19,6 +19,7 @@ final readonly class SpecificationOptionRecord
         public ?string $createdAtUtc = null,
         public ?string $updatedAtUtc = null,
         public int $valueUsageCount = 0,
+        public ?string $imageUrl = null,
     ) {
     }
 }

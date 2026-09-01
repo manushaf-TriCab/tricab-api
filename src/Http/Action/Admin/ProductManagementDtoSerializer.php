@@ -52,6 +52,7 @@ use TriCab\Core\Product\Application\DTO\ProductCustomerViewDetail;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixColumn;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixRow;
 use TriCab\Core\Product\Application\DTO\ProductPublicDetail;
+use TriCab\Core\Product\Application\DTO\ProductApprovalCertificateItem;
 use TriCab\Core\Product\Application\DTO\ProductPublishReadinessCheck;
 use TriCab\Core\Product\Application\DTO\ProductPublishReadinessIssue;
 use TriCab\Core\Product\Application\DTO\ProductPublishReadinessReport;
@@ -208,6 +209,10 @@ final class ProductManagementDtoSerializer
             'industryNames' => $detail->industryNames,
             'relationships' => array_map(self::publicRelationship(...), $detail->relationships),
             'specifications' => array_map(self::publicSpecification(...), $detail->specifications),
+            'approvalCertificates' => array_map(
+                static fn (ProductApprovalCertificateItem $item): array => self::approvalCertificate($item, $devUrls),
+                $detail->approvalCertificates,
+            ),
             'threeD' => self::publicThreeD($detail->threeD, $devUrls),
             'spin360' => array_map(
                 static fn (Product360SetSummary $set): array => self::public360SetSummary($set, $devUrls),
@@ -265,6 +270,10 @@ final class ProductManagementDtoSerializer
             'industryNames' => $detail->industryNames,
             'relationships' => array_map(self::publicRelationship(...), $detail->relationships),
             'specifications' => array_map(self::publicSpecification(...), $detail->specifications),
+            'approvalCertificates' => array_map(
+                static fn (ProductApprovalCertificateItem $item): array => self::approvalCertificate($item, $devUrls),
+                $detail->approvalCertificates,
+            ),
             'variantMatrix' => [
                 'columns' => array_map(self::customerViewMatrixColumn(...), $detail->variantMatrix->columns),
                 'rows' => array_map(self::customerViewMatrixRow(...), $detail->variantMatrix->rows),
@@ -333,6 +342,29 @@ final class ProductManagementDtoSerializer
             'groupName' => $item->groupName,
             'displayValue' => $item->displayValue,
             'unit' => $item->unit,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function approvalCertificate(
+        ProductApprovalCertificateItem $item,
+        ?ProductDevMediaUrlResolver $devUrls = null,
+    ): array {
+        $imageUrl = $item->imageUrl;
+        if ($imageUrl !== null && (str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://'))) {
+            $imageUrl = self::resolveAssetUrl($devUrls, $imageUrl);
+        }
+
+        return [
+            'publicId' => $item->publicId,
+            'code' => $item->code,
+            'name' => $item->name,
+            'issuer' => $item->issuer,
+            'imageUrl' => $imageUrl,
+            'statusCode' => $item->statusCode,
+            'displayOrder' => $item->displayOrder,
         ];
     }
 
@@ -1078,7 +1110,8 @@ final class ProductManagementDtoSerializer
      *   valueMinDecimal: ?string,
      *   valueMaxDecimal: ?string,
      *   optionPublicId: ?string,
-     *   optionPublicIds: list<string>
+     *   optionPublicIds: list<string>,
+     *   optionStatuses?: array<string, string>
      * } $value
      *
      * @return array<string, mixed>
@@ -1098,6 +1131,7 @@ final class ProductManagementDtoSerializer
             'valueMaxDecimal' => $value['valueMaxDecimal'],
             'optionPublicId' => $value['optionPublicId'],
             'optionPublicIds' => array_values($value['optionPublicIds']),
+            'optionStatuses' => $value['optionStatuses'] ?? [],
         ];
     }
 
@@ -1568,6 +1602,7 @@ final class ProductManagementDtoSerializer
             'createdAtUtc' => $record->createdAtUtc,
             'updatedAtUtc' => $record->updatedAtUtc,
             'valueUsageCount' => $record->valueUsageCount,
+            'imageUrl' => $record->imageUrl,
         ];
     }
 

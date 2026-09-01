@@ -28,6 +28,8 @@ use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
  */
 final class AzureSqlProductCustomerViewRepository implements ProductCustomerViewQueryRepository
 {
+    use LoadsProductApprovalCertificates;
+
     public function __construct(
         private readonly SqlConnection $connection,
         private readonly Product3DModelRepository $threeDModels,
@@ -145,6 +147,7 @@ SQL,
             threeD: $this->loadPublicThreeD($pid),
             styleCode: $styleAssignment['styleCode'],
             parentStyleCode: $styleAssignment['parentStyleCode'],
+            approvalCertificates: $this->listApprovalCertificates($pid),
         );
     }
 

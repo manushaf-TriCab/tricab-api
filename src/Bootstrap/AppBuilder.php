@@ -151,6 +151,7 @@ use TriCab\Api\Http\Action\PublicCart\PostCartItemAction;
 use TriCab\Api\Http\Action\PublicCart\PostCartRepriceAction;
 use TriCab\Api\Http\Action\PublicRegionAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
+use TriCab\Api\Http\Action\CableCalculator\PostCableCalculatorCalculateAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardAction;
@@ -412,6 +413,7 @@ final class AppBuilder
         $app->get('/api/v1/catalogue/tabs', GetPublicCatalogueTabsAction::class);
         $app->get('/api/v1/catalogue/tabs/{tabSlug}/tree', GetPublicCatalogueTabTreeAction::class);
         $app->get('/api/v1/catalogue/nodes/{nodeSlugOrPublicId}', GetPublicCatalogueNodeAction::class);
+        $app->post('/api/v1/cable-calculator/calculate', PostCableCalculatorCalculateAction::class);
     }
 
     /**

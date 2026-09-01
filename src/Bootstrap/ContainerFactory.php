@@ -404,6 +404,15 @@ use TriCab\Api\Http\Action\PublicProduct\GetPublicCataloguePanelAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabTreeAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueNodeAction;
+use TriCab\Api\Http\Action\CableCalculator\PostCableCalculatorCalculateAction;
+use TriCab\Api\CableCalculator\LegacyCliTriCalcEngine;
+use TriCab\Core\CableCalculator\Application\Service\CalculateCableService;
+use TriCab\Core\CableCalculator\Contract\CableCalculatorEngine;
+use TriCab\Core\CableCalculator\Engine\NativeCableCalculatorEngine;
+use TriCab\Core\CableCalculator\Application\Service\ResolveCableCalculationProductsService;
+use TriCab\Core\CableCalculator\Application\ProductResolution\NullCableCalculatorProductResolver;
+use TriCab\Core\CableCalculator\Contract\CableCalculatorProductResolver;
+use TriCab\Api\CableCalculator\AzureSqlCableCalculatorProductResolver;
 use TriCab\Core\Product\Application\Service\ManagePriceListService;
 use TriCab\Core\Product\Application\Service\ManageProductClassificationService;
 use TriCab\Core\Product\Application\Service\ManageProductStyleService;
@@ -1604,6 +1613,61 @@ final class ContainerFactory
             GetPublicCatalogueTabsAction::class => \DI\autowire(GetPublicCatalogueTabsAction::class),
             GetPublicCatalogueTabTreeAction::class => \DI\autowire(GetPublicCatalogueTabTreeAction::class),
             GetPublicCatalogueNodeAction::class => \DI\autowire(GetPublicCatalogueNodeAction::class),
+            PostCableCalculatorCalculateAction::class => \DI\autowire(PostCableCalculatorCalculateAction::class),
+            CalculateCableService::class => \DI\autowire(CalculateCableService::class),
+            ResolveCableCalculationProductsService::class => \DI\autowire(ResolveCableCalculationProductsService::class),
+            CableCalculatorProductResolver::class => static function (\Psr\Container\ContainerInterface $c) {
+                // Default null: catalogue lookup must never block / crash engineering calculation
+                // (paused Azure SQL + LoginTimeout can exceed max_execution_time as a fatal).
+                $mode = strtolower((string) (Environment::value('CABLE_CALCULATOR_PRODUCT_RESOLVER', 'null') ?? 'null'));
+                if ($mode === 'null' || $mode === 'disabled' || $mode === 'off') {
+                    return new NullCableCalculatorProductResolver();
+                }
+
+                return $c->get(AzureSqlCableCalculatorProductResolver::class);
+            },
+            AzureSqlCableCalculatorProductResolver::class => static function (\Psr\Container\ContainerInterface $c): AzureSqlCableCalculatorProductResolver {
+                // Lazy PDO: Action DI must not open Azure SQL before CalculateCableService runs.
+                return new AzureSqlCableCalculatorProductResolver(
+                    static function () use ($c): ?PDO {
+                        try {
+                            if (!$c->has(PDO::class)) {
+                                return null;
+                            }
+                            $candidate = $c->get(PDO::class);
+
+                            return $candidate instanceof PDO ? $candidate : null;
+                        } catch (\Throwable) {
+                            return null;
+                        }
+                    },
+                );
+            },
+            CableCalculatorEngine::class => static function (\Psr\Container\ContainerInterface $c) {
+                $mode = strtolower((string) (Environment::value('CABLE_CALCULATOR_ENGINE', 'legacy-cli') ?? 'legacy-cli'));
+                if ($mode === 'native') {
+                    return $c->get(NativeCableCalculatorEngine::class);
+                }
+
+                return $c->get(LegacyCliTriCalcEngine::class);
+            },
+            NativeCableCalculatorEngine::class => static function (): NativeCableCalculatorEngine {
+                $configured = Environment::value('CABLE_CALCULATOR_DATASET_DIR');
+                $default = dirname(__DIR__, 2) . '/resources/cable-calculator/v1';
+                $datasetDir = $configured !== null && $configured !== '' ? $configured : $default;
+                $resolved = realpath($datasetDir) ?: $datasetDir;
+
+                return new NativeCableCalculatorEngine($resolved);
+            },
+            LegacyCliTriCalcEngine::class => static function (): LegacyCliTriCalcEngine {
+                $configured = Environment::value('TRICAB_TC_WEB_CALCULATE_JSON');
+                $default = dirname(__DIR__, 4) . '/tc-web/tools/legacy-cable-calculator/calculate-json.php';
+                $script = $configured !== null && $configured !== '' ? $configured : $default;
+                $resolved = realpath($script) ?: $script;
+                $php = PHP_BINARY;
+
+                return new LegacyCliTriCalcEngine($resolved, $php);
+            },
             ProductCategoriesAdminAction::class => \DI\autowire(ProductCategoriesAdminAction::class),
             ProductSeriesAdminAction::class => \DI\autowire(ProductSeriesAdminAction::class),
             SpecificationGroupsAdminAction::class => \DI\autowire(SpecificationGroupsAdminAction::class),

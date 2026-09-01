@@ -515,6 +515,7 @@ SELECT
     o.[OptionCode] AS [Code],
     o.[OptionLabel] AS [Name],
     o.[OptionValue] AS [Value],
+    o.[ImageUrl],
     o.[DisplayOrder],
     o.[IsActive],
     CASE WHEN o.[DeletedAtUtc] IS NULL THEN 0 ELSE 1 END AS [IsDeleted],
@@ -570,14 +571,15 @@ SQL;
         $definitionId = $this->resolveDefinitionId((string) $data['definitionPublicId']);
         $rows = $this->connection->fetchAll(
             'INSERT INTO [product].[SpecificationOptions]
-                ([SpecificationDefinitionId], [OptionCode], [OptionLabel], [OptionValue], [DisplayOrder], [IsActive], [CreatedByUserId], [UpdatedByUserId])
+                ([SpecificationDefinitionId], [OptionCode], [OptionLabel], [OptionValue], [ImageUrl], [DisplayOrder], [IsActive], [CreatedByUserId], [UpdatedByUserId])
              OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
-             VALUES (:definitionId, :code, :name, :value, :displayOrder, :isActive, :createdBy, :updatedBy)',
+             VALUES (:definitionId, :code, :name, :value, :imageUrl, :displayOrder, :isActive, :createdBy, :updatedBy)',
             [
                 ':definitionId' => $definitionId,
                 ':code' => $data['code'],
                 ':name' => $data['name'],
                 ':value' => $data['value'] ?? null,
+                ':imageUrl' => $data['imageUrl'] ?? null,
                 ':displayOrder' => $data['displayOrder'] ?? 0,
                 ':isActive' => ($data['isActive'] ?? true) ? 1 : 0,
                 ':createdBy' => $actorUserId->toInt(),
@@ -602,7 +604,7 @@ SQL;
             ':actor' => $actorUserId->toInt(),
             ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary(RowVersionToken::fromBase64($expectedRowVersion)),
         ];
-        foreach (['code' => '[OptionCode] = :code', 'name' => '[OptionLabel] = :name', 'value' => '[OptionValue] = :value', 'displayOrder' => '[DisplayOrder] = :displayOrder', 'isActive' => '[IsActive] = :isActive'] as $key => $sqlSet) {
+        foreach (['code' => '[OptionCode] = :code', 'name' => '[OptionLabel] = :name', 'value' => '[OptionValue] = :value', 'imageUrl' => '[ImageUrl] = :imageUrl', 'displayOrder' => '[DisplayOrder] = :displayOrder', 'isActive' => '[IsActive] = :isActive'] as $key => $sqlSet) {
             if (!array_key_exists($key, $data)) {
                 continue;
             }
@@ -1096,6 +1098,7 @@ SELECT
     o.[OptionCode] AS [Code],
     o.[OptionLabel] AS [Name],
     o.[OptionValue] AS [Value],
+    o.[ImageUrl],
     o.[DisplayOrder],
     o.[IsActive],
     CASE WHEN o.[DeletedAtUtc] IS NULL THEN 0 ELSE 1 END AS [IsDeleted],
@@ -1203,6 +1206,7 @@ SQL;
             rowVersion: ProductRowVersionMapper::toToken($row['RowVersion'] ?? null)->toBase64(),
             createdAtUtc: AzureSqlValueMapper::nullableString($row['CreatedAtUtc'] ?? null),
             updatedAtUtc: AzureSqlValueMapper::nullableString($row['UpdatedAtUtc'] ?? null),
+            imageUrl: AzureSqlValueMapper::nullableString($row['ImageUrl'] ?? null),
         );
     }
 }

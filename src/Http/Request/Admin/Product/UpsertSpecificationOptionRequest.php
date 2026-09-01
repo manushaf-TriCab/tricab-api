@@ -16,6 +16,7 @@ final readonly class UpsertSpecificationOptionRequest
         public int $displayOrder,
         public bool $isActive,
         public ?string $expectedRowVersion,
+        public ?string $imageUrl,
     ) {
     }
 
@@ -38,6 +39,7 @@ final readonly class UpsertSpecificationOptionRequest
             displayOrder: isset($data['displayOrder']) && is_numeric($data['displayOrder']) ? (int) $data['displayOrder'] : 0,
             isActive: array_key_exists('isActive', $data) ? (bool) $data['isActive'] : true,
             expectedRowVersion: isset($data['expectedRowVersion']) && is_string($data['expectedRowVersion']) ? $data['expectedRowVersion'] : null,
+            imageUrl: isset($data['imageUrl']) && is_string($data['imageUrl']) ? trim($data['imageUrl']) : null,
         );
     }
 }
