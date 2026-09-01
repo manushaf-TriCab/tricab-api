@@ -74,6 +74,29 @@ final class ProductPrivateBlobReadUrlTest extends TestCase
         self::assertSame($canonical, $summary->publicUrl);
     }
 
+    public function test_public_search_result_signs_private_thumbnail_url(): void
+    {
+        $resolver = $this->azureResolver();
+        $canonical = 'https://tricabv2.blob.core.windows.net/products/products/p1/images/m1/image.jpg';
+        $result = new \TriCab\Core\Product\Application\DTO\ProductSearchResult(
+            publicId: 'p1',
+            productName: 'ALI Cable',
+            productCode: 'PJ',
+            slug: 'ali-cable',
+            categoryName: 'Control Multicore',
+            seriesName: null,
+            statusCode: 'published',
+            thumbnailUrl: $canonical,
+        );
+
+        $payload = ProductManagementDtoSerializer::searchResult($result, $resolver);
+
+        self::assertIsString($payload['thumbnailUrl']);
+        self::assertStringStartsWith($canonical . '?', (string) $payload['thumbnailUrl']);
+        self::assertStringContainsString('sp=r', (string) $payload['thumbnailUrl']);
+        self::assertSame($canonical, $result->thumbnailUrl);
+    }
+
     private function azureResolver(): ProductDevMediaUrlResolver
     {
         $key = base64_encode(str_repeat('d', 32));

@@ -111,6 +111,7 @@ use TriCab\Api\Http\Action\Admin\UpdateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\UpdatePermissionAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductSeoAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductThumbnailPresentationAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
 use TriCab\Api\Http\Action\Admin\UpsertProductPricingAction;
 use TriCab\Api\Http\Action\Admin\CompareLegacyBaseCostAction;
@@ -203,6 +204,7 @@ use TriCab\Api\Product\Persistence\AzureSqlProductRelationshipRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductSearchRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductSeoRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductThumbnailPresentationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductSpecificationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductVariantRepository;
 use TriCab\Api\Product\Persistence\AzureSqlRegionRepository;
@@ -230,6 +232,7 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProductRelationshipRepositor
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSearchRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSeoRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductThumbnailPresentationRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSpecificationRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductStore;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductVariantRepository;
@@ -597,6 +600,7 @@ use TriCab\Core\Product\Application\Service\SoftDeleteProductService;
 use TriCab\Core\Product\Application\Service\SoftDeleteProductVariantService;
 use TriCab\Core\Product\Application\Service\UnpublishProductService;
 use TriCab\Core\Product\Application\Service\UpdateProductSeoService;
+use TriCab\Core\Product\Application\Service\UpdateProductThumbnailPresentationService;
 use TriCab\Core\Product\Application\Service\UpdateProductService;
 use TriCab\Core\Product\Application\Service\UpdateProductVariantService;
 use TriCab\Core\Product\Application\Service\UpsertProductPricingService;
@@ -676,6 +680,7 @@ use TriCab\Core\Product\Contract\ProductRelationshipRepository;
 use TriCab\Core\Product\Contract\ProductRepository;
 use TriCab\Core\Product\Contract\ProductSearchRepository;
 use TriCab\Core\Product\Contract\ProductSeoRepository;
+use TriCab\Core\Product\Contract\ProductThumbnailPresentationRepository;
 use TriCab\Core\Product\Contract\ProductSpecificationRepository;
 use TriCab\Core\Product\Contract\ProductVariantRepository;
 use TriCab\Core\Product\Contract\RegionRepository;
@@ -945,6 +950,7 @@ final class ContainerFactory
             ReplaceProductRelationshipsAction::class => \DI\autowire(ReplaceProductRelationshipsAction::class),
             GetProductSeoAction::class => \DI\autowire(GetProductSeoAction::class),
             UpdateProductSeoAction::class => \DI\autowire(UpdateProductSeoAction::class),
+            UpdateProductThumbnailPresentationAction::class => \DI\autowire(UpdateProductThumbnailPresentationAction::class),
             ChangeProductSlugAction::class => \DI\autowire(ChangeProductSlugAction::class),
             GetProductPricingAction::class => \DI\autowire(GetProductPricingAction::class),
             CompareLegacyBaseCostAction::class => \DI\autowire(CompareLegacyBaseCostAction::class),
@@ -1075,6 +1081,7 @@ final class ContainerFactory
             AssignProductApplicationsService::class => \DI\autowire(AssignProductApplicationsService::class),
             ReplaceProductRelationshipsService::class => \DI\autowire(ReplaceProductRelationshipsService::class),
             UpdateProductSeoService::class => \DI\autowire(UpdateProductSeoService::class),
+            UpdateProductThumbnailPresentationService::class => \DI\autowire(UpdateProductThumbnailPresentationService::class),
             ChangeProductSlugService::class => \DI\autowire(ChangeProductSlugService::class),
             UpsertProductPricingService::class => \DI\autowire(UpsertProductPricingService::class),
             GetProductPricingOverviewService::class => \DI\autowire(GetProductPricingOverviewService::class),
@@ -1767,6 +1774,7 @@ final class ContainerFactory
             $definitions[ProductMarketRepository::class] = \DI\autowire(AzureSqlProductMarketRepository::class);
             $definitions[ProductRelationshipRepository::class] = \DI\autowire(AzureSqlProductRelationshipRepository::class);
             $definitions[ProductSeoRepository::class] = \DI\autowire(AzureSqlProductSeoRepository::class);
+            $definitions[ProductThumbnailPresentationRepository::class] = \DI\autowire(AzureSqlProductThumbnailPresentationRepository::class);
             $definitions[SiteConfigurationRepository::class] = \DI\autowire(AzureSqlSiteConfigurationRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(AzureSqlProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(AzureSqlProductPricingRepository::class);
@@ -1889,6 +1897,7 @@ SQL,
             $definitions[ProductMarketRepository::class] = \DI\autowire(InMemoryProductMarketRepository::class);
             $definitions[ProductRelationshipRepository::class] = \DI\autowire(InMemoryProductRelationshipRepository::class);
             $definitions[ProductSeoRepository::class] = \DI\autowire(InMemoryProductSeoRepository::class);
+            $definitions[ProductThumbnailPresentationRepository::class] = \DI\autowire(InMemoryProductThumbnailPresentationRepository::class);
             $definitions[SiteConfigurationRepository::class] = \DI\autowire(InMemorySiteConfigurationRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(InMemoryProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(InMemoryProductPricingRepository::class);

@@ -87,6 +87,7 @@ final class InMemoryProductAdminQueryRepository implements ProductAdminQueryRepo
             createdByDisplayName: null,
             updatedByDisplayName: null,
             rowVersion: $product->rowVersion()?->toBase64() ?? '',
+            thumbnailBackgroundColor: $this->store->thumbnailBackgroundColorForProduct($publicId),
         );
     }
 

@@ -986,7 +986,7 @@ BEGIN TRY
     CONSTRAINT CK_product_ProductImages_Title_NotEmpty CHECK (LEN(LTRIM(RTRIM([Title]))) > 0),
     CONSTRAINT CK_product_ProductImages_Path_NotEmpty CHECK (LEN(LTRIM(RTRIM([StoragePath]))) > 0),
     CONSTRAINT CK_product_ProductImages_Role CHECK (
-        [ImageRoleCode] IN (N'primary', N'gallery', N'thumbnail', N'hero', N'diagram', N'cross-section', N'installation')
+        [ImageRoleCode] IN (N'primary', N'gallery', N'thumbnail', N'product-thumbnail', N'hero', N'diagram', N'cross-section', N'installation')
     ),
     CONSTRAINT FK_product_ProductImages_Product FOREIGN KEY ([ProductId]) REFERENCES [product].[Products] ([ProductId]),
     CONSTRAINT FK_product_ProductImages_Variant FOREIGN KEY ([ProductVariantId]) REFERENCES [product].[ProductVariants] ([ProductVariantId]),

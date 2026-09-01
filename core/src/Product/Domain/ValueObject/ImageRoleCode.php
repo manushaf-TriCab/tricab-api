@@ -16,6 +16,8 @@ final class ImageRoleCode
     public const PRIMARY = 'primary';
     public const GALLERY = 'gallery';
     public const THUMBNAIL = 'thumbnail';
+    /** Dedicated small-card thumbnail (distinct from legacy {@see THUMBNAIL} role). */
+    public const PRODUCT_THUMBNAIL = 'product-thumbnail';
     public const HERO = 'hero';
     public const DIAGRAM = 'diagram';
     public const CROSS_SECTION = 'cross-section';
@@ -25,6 +27,7 @@ final class ImageRoleCode
         self::PRIMARY,
         self::GALLERY,
         self::THUMBNAIL,
+        self::PRODUCT_THUMBNAIL,
         self::HERO,
         self::DIAGRAM,
         self::CROSS_SECTION,

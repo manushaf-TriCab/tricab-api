@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Commerce\Application\Service;
 
 use TriCab\Core\Commerce\Application\DTO\CartLineMedia;
+use TriCab\Core\Product\Domain\ValueObject\ImageRoleCode;
 
 /**
  * Picks one canonical Product Media URL per variant from a batched candidate set.
@@ -112,13 +113,16 @@ final class CartLineMediaPicker
         $isPrimary = self::bool($row['isPrimary'] ?? false);
         $role = strtolower(self::string($row['imageRoleCode'] ?? ''));
 
-        if ($variantSpecific && ($isPrimary || in_array($role, ['thumbnail', 'primary'], true))) {
+        if ($variantSpecific && ($isPrimary || in_array($role, ['thumbnail', 'primary', ImageRoleCode::PRODUCT_THUMBNAIL], true))) {
             return 1;
         }
         if ($variantSpecific) {
             return 2;
         }
         if ($isPrimary) {
+            return 3;
+        }
+        if ($role === ImageRoleCode::PRODUCT_THUMBNAIL) {
             return 3;
         }
         if (in_array($role, ['thumbnail', 'primary', 'hero'], true)) {

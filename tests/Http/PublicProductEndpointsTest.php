@@ -48,6 +48,7 @@ final class PublicProductEndpointsTest extends TestCase
         self::assertSame($slug, $data['slug']);
         self::assertArrayHasKey('productCode', $data);
         self::assertArrayHasKey('thumbnailUrl', $data);
+        self::assertArrayHasKey('thumbnailImageUrl', $data);
         self::assertArrayHasKey('relationships', $data);
         self::assertArrayHasKey('specifications', $data);
         self::assertIsArray($data['variants']);
@@ -184,7 +185,30 @@ final class PublicProductEndpointsTest extends TestCase
         $data = $payload['data'];
         self::assertIsArray($data['items']);
         self::assertGreaterThanOrEqual(1, count($data['items']));
+        self::assertArrayHasKey('thumbnailImageUrl', $data['items'][0]);
+        self::assertArrayHasKey('thumbnailBackgroundColor', $data['items'][0]);
         self::assertIsArray($data['pagination']);
+    }
+
+    public function test_public_product_search_excludes_draft_products(): void
+    {
+        $app = TestAppFactory::create();
+        $this->seedReferenceData($app);
+
+        $create = $app->handle($this->jsonRequest('POST', '/api/v1/admin/products', [
+            'productName' => 'Draft Only Widget XYZ',
+            'familyPublicId' => self::FAMILY_PUBLIC_ID,
+        ]));
+        self::assertSame(201, $create->getStatusCode(), (string) $create->getBody());
+
+        $response = $app->handle(TestAppFactory::request('GET', '/api/v1/product-search?query=Draft%20Only%20Widget%20XYZ'));
+        $payload = TestAppFactory::json($response);
+
+        self::assertSame(200, $response->getStatusCode());
+        /** @var array<string, mixed> $data */
+        $data = $payload['data'];
+        self::assertSame([], $data['items']);
+        self::assertSame(0, $data['pagination']['totalItems'] ?? null);
     }
 
     public function test_public_product_search_requires_query(): void

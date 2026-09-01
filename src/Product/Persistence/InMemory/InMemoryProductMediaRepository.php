@@ -223,7 +223,7 @@ final class InMemoryProductMediaRepository implements ProductMediaRepository
         UserId $actorUserId,
     ): void {
         unset($actorUserId);
-        $exclusiveRoles = ['primary', 'cross-section', 'diagram', 'hero', 'thumbnail'];
+        $exclusiveRoles = ['primary', 'cross-section', 'diagram', 'hero', 'thumbnail', 'product-thumbnail'];
         foreach ($this->store->media() as $row) {
             if (($row['productPublicId'] ?? '') !== $productPublicId->toString()) {
                 continue;

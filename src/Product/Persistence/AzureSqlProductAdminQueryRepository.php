@@ -16,6 +16,7 @@ use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Contract\ProductAdminQueryRepository;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Product\Domain\ValueObject\ProductVariantPublicId;
+use TriCab\Core\Product\Domain\ValueObject\ThumbnailBackgroundColor;
 
 /**
  * Admin query repository — DTO reads only.
@@ -37,12 +38,20 @@ SELECT
         ORDER BY pc.[ProductCodeId]
     ) AS [PrimaryProductCode],
     (
-        SELECT TOP 1 img.[PublicUrl]
+        SELECT TOP 1 COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl])
         FROM [product].[ProductImages] img
         WHERE img.[ProductId] = p.[ProductId]
-          AND img.[IsPrimary] = 1
           AND img.[DeletedAtUtc] IS NULL
-        ORDER BY img.[DisplayOrder]
+          AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
+        ORDER BY
+          CASE LOWER(img.[ImageRoleCode])
+              WHEN N'product-thumbnail' THEN 0
+              WHEN N'primary' THEN 1
+              ELSE 2
+          END,
+          CASE WHEN img.[IsPrimary] = 1 THEN 0 ELSE 1 END,
+          img.[DisplayOrder],
+          img.[ProductImagesId]
     ) AS [ThumbnailUrl],
     (
         SELECT STRING_AGG(r.[RegionCode], N',') WITHIN GROUP (ORDER BY r.[DisplayOrder])
@@ -144,6 +153,7 @@ SELECT
     p.[ErpReference],
     p.[LegacyProductId],
     p.[IsActive],
+    p.[ThumbnailBackgroundColor],
     CASE WHEN ps.[StatusCode] = N'archived' THEN 1 ELSE 0 END AS [IsArchived],
     CONVERT(VARCHAR(33), p.[CreatedAtUtc], 127) AS [CreatedAtUtc],
     CONVERT(VARCHAR(33), p.[UpdatedAtUtc], 127) AS [UpdatedAtUtc],
@@ -210,6 +220,9 @@ SQL,
             createdByDisplayName: AzureSqlValueMapper::nullableString($row['CreatedByDisplayName'] ?? null),
             updatedByDisplayName: AzureSqlValueMapper::nullableString($row['UpdatedByDisplayName'] ?? null),
             rowVersion: ProductRowVersionMapper::toToken($row['RowVersion'] ?? null)->toBase64(),
+            thumbnailBackgroundColor: ThumbnailBackgroundColor::tryFromString(
+                AzureSqlValueMapper::nullableString($row['ThumbnailBackgroundColor'] ?? null),
+            )?->toString(),
         );
     }
 

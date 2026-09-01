@@ -32,6 +32,8 @@ final readonly class ProductPublicDetail
         public ?string $seriesName,
         public string $slug,
         public ?string $thumbnailUrl,
+        public ?string $thumbnailImageUrl = null,
+        public ?string $thumbnailBackgroundColor = null,
         public array $variants,
         public array $media,
         public array $documents,

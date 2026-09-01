@@ -12,10 +12,12 @@ use TriCab\Core\Product\Application\DTO\ProductSearchCriteria;
 use TriCab\Core\Product\Application\DTO\ProductSearchListResult;
 use TriCab\Core\Product\Application\DTO\ProductSearchResult;
 use TriCab\Core\Product\Contract\ProductSearchRepository;
+use TriCab\Core\Product\Domain\ValueObject\ThumbnailBackgroundColor;
 
 /**
  * Azure SQL search boundary suitable for later Azure AI Search replacement.
- * Supports exact code/SKU, partial name, slug, and region-aware published filtering.
+ * Supports exact/prefix code/SKU/variant code, partial name/description,
+ * slug, and region-aware published filtering.
  */
 final class AzureSqlProductSearchRepository implements ProductSearchRepository
 {
@@ -66,13 +68,91 @@ SELECT
     c.[CategoryName],
     s.[SeriesName],
     ps.[StatusCode],
+    p.[ThumbnailBackgroundColor],
     (
-        SELECT TOP 1 img.[PublicUrl]
+        SELECT TOP 1 COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl])
         FROM [product].[ProductImages] img
         WHERE img.[ProductId] = p.[ProductId]
-          AND img.[IsPrimary] = 1
           AND img.[DeletedAtUtc] IS NULL
-        ORDER BY img.[DisplayOrder]
+          AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
+        ORDER BY
+          CASE LOWER(img.[ImageRoleCode])
+              WHEN N'product-thumbnail' THEN 0
+              WHEN N'primary' THEN 1
+              ELSE 2
+          END,
+          CASE WHEN img.[IsPrimary] = 1 THEN 0 ELSE 1 END,
+          img.[DisplayOrder],
+          img.[ProductImagesId]
+    ) AS [ThumbnailImageUrl],
+    (
+        SELECT TOP 1 thumb.[Url]
+        FROM (
+            -- Catalogue side-panel leaf image (direct product placement)
+            SELECT
+                NULLIF(LTRIM(RTRIM(n.[ImageUrl])), N'') AS [Url],
+                0 AS [SourceRank],
+                cnp.[DisplayOrder] AS [SortOrder]
+            FROM [product].[CatalogueNodeProducts] cnp
+            INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnp.[CatalogueNodeId]
+            WHERE cnp.[ProductId] = p.[ProductId]
+              AND n.[DeletedAtUtc] IS NULL
+              AND n.[IsActive] = 1
+              AND n.[IsPublic] = 1
+              AND NULLIF(LTRIM(RTRIM(n.[ImageUrl])), N'') IS NOT NULL
+            UNION ALL
+            -- Catalogue side-panel image via style placement
+            SELECT
+                NULLIF(LTRIM(RTRIM(n.[ImageUrl])), N'') AS [Url],
+                1 AS [SourceRank],
+                cnps.[DisplayOrder] AS [SortOrder]
+            FROM [product].[CatalogueNodeProductStyles] cnps
+            INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnps.[CatalogueNodeId]
+            INNER JOIN [product].[ProductStyles] ps ON ps.[ProductStyleId] = cnps.[ProductStyleId]
+            INNER JOIN [product].[ProductStyleAssignments] psa ON psa.[ProductStyleId] = ps.[ProductStyleId]
+            WHERE psa.[ProductId] = p.[ProductId]
+              AND cnps.[IsActive] = 1
+              AND n.[DeletedAtUtc] IS NULL
+              AND n.[IsActive] = 1
+              AND n.[IsPublic] = 1
+              AND ps.[DeletedAtUtc] IS NULL
+              AND NULLIF(LTRIM(RTRIM(n.[ImageUrl])), N'') IS NOT NULL
+            UNION ALL
+            -- Catalogue leaf named/coded like the product series (e.g. BV.png side panel)
+            SELECT
+                NULLIF(LTRIM(RTRIM(n.[ImageUrl])), N'') AS [Url],
+                2 AS [SourceRank],
+                n.[DisplayOrder] AS [SortOrder]
+            FROM [product].[CatalogueNodes] n
+            WHERE n.[DeletedAtUtc] IS NULL
+              AND n.[IsActive] = 1
+              AND n.[IsPublic] = 1
+              AND p.[InternalCode] IS NOT NULL
+              AND (
+                  n.[NodeName] = p.[InternalCode]
+                  OR n.[NodeCode] = p.[InternalCode]
+              )
+              AND NULLIF(LTRIM(RTRIM(n.[ImageUrl])), N'') IS NOT NULL
+            UNION ALL
+            -- Product media, preferring primary/thumbnail/hero over cross-section
+            SELECT
+                COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) AS [Url],
+                3 AS [SourceRank],
+                CASE LOWER(img.[ImageRoleCode])
+                    WHEN N'product-thumbnail' THEN -1
+                    WHEN N'primary' THEN 0
+                    WHEN N'thumbnail' THEN 1
+                    WHEN N'hero' THEN 2
+                    WHEN N'gallery' THEN 3
+                    ELSE 4
+                END AS [SortOrder]
+            FROM [product].[ProductImages] img
+            WHERE img.[ProductId] = p.[ProductId]
+              AND img.[DeletedAtUtc] IS NULL
+              AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
+        ) thumb
+        WHERE thumb.[Url] IS NOT NULL
+        ORDER BY thumb.[SourceRank], thumb.[SortOrder]
     ) AS [ThumbnailUrl]
 FROM [product].[Products] p
 INNER JOIN [product].[ProductStatuses] ps ON ps.[ProductStatusId] = p.[ProductStatusId]
@@ -84,10 +164,22 @@ ORDER BY
     CASE WHEN p.[InternalCode] = :rankExactInternal THEN 0
          WHEN EXISTS (
             SELECT 1 FROM [product].[ProductVariants] vx
-            WHERE vx.[ProductId] = p.[ProductId] AND vx.[DeletedAtUtc] IS NULL AND vx.[Sku] = :rankExactSku
+            WHERE vx.[ProductId] = p.[ProductId]
+              AND vx.[DeletedAtUtc] IS NULL
+              AND (vx.[Sku] = :rankExactSku OR vx.[VariantCode] = :rankExactVariantCode)
          ) THEN 1
-         WHEN p.[ProductName] = :rankExactName THEN 2
-         ELSE 3 END ASC,
+         WHEN p.[InternalCode] LIKE :rankPrefixInternal THEN 2
+         WHEN EXISTS (
+            SELECT 1 FROM [product].[ProductVariants] vx
+            WHERE vx.[ProductId] = p.[ProductId]
+              AND vx.[DeletedAtUtc] IS NULL
+              AND (
+                  vx.[Sku] LIKE :rankPrefixSku
+                  OR vx.[VariantCode] LIKE :rankPrefixVariantCode
+              )
+         ) THEN 3
+         WHEN p.[ProductName] = :rankExactName THEN 4
+         ELSE 5 END ASC,
     p.[ProductName] ASC
 OFFSET :offset ROWS FETCH NEXT :pageSize ROWS ONLY
 SQL,
@@ -95,6 +187,10 @@ SQL,
                 ...$params,
                 ':rankExactInternal' => $query,
                 ':rankExactSku' => $query,
+                ':rankExactVariantCode' => $query,
+                ':rankPrefixInternal' => $query . '%',
+                ':rankPrefixSku' => $query . '%',
+                ':rankPrefixVariantCode' => $query . '%',
                 ':rankExactName' => $query,
                 ':offset' => $offset,
                 ':pageSize' => $criteria->pageSize,
@@ -110,6 +206,10 @@ SQL,
             seriesName: AzureSqlValueMapper::nullableString($row['SeriesName'] ?? null),
             statusCode: AzureSqlValueMapper::stringValue($row['StatusCode'] ?? ''),
             thumbnailUrl: AzureSqlValueMapper::nullableString($row['ThumbnailUrl'] ?? null),
+            thumbnailImageUrl: AzureSqlValueMapper::nullableString($row['ThumbnailImageUrl'] ?? null),
+            thumbnailBackgroundColor: ThumbnailBackgroundColor::tryFromString(
+                AzureSqlValueMapper::nullableString($row['ThumbnailBackgroundColor'] ?? null),
+            )?->toString(),
         ), $rows);
 
         return new ProductSearchListResult(
@@ -189,12 +289,18 @@ SQL,
         $where = ' AND p.[DeletedAtUtc] IS NULL';
         $like = '%' . $query . '%';
         // sqlsrv rejects duplicate named parameters; each occurrence needs a distinct name.
+        $prefix = $query . '%';
         $params = [
             ':exactInternal' => $query,
+            ':prefixInternal' => $prefix,
             ':likeName' => $like,
             ':exactSku' => $query,
+            ':prefixSku' => $prefix,
+            ':exactVariantCode' => $query,
+            ':prefixVariantCode' => $prefix,
             ':exactSlug' => $query,
             ':exactCode' => $query,
+            ':prefixCode' => $prefix,
             ':likeCategory' => $like,
             ':likeSeries' => $like,
             ':likeShortDescription' => $like,
@@ -231,12 +337,18 @@ SQL;
         $where .= <<<'SQL'
  AND (
     p.[InternalCode] = :exactInternal
+    OR p.[InternalCode] LIKE :prefixInternal
     OR p.[ProductName] LIKE :likeName
     OR EXISTS (
         SELECT 1 FROM [product].[ProductVariants] v
         WHERE v.[ProductId] = p.[ProductId]
           AND v.[DeletedAtUtc] IS NULL
-          AND v.[Sku] = :exactSku
+          AND (
+              v.[Sku] = :exactSku
+              OR v.[Sku] LIKE :prefixSku
+              OR v.[VariantCode] = :exactVariantCode
+              OR v.[VariantCode] LIKE :prefixVariantCode
+          )
     )
     OR EXISTS (
         SELECT 1 FROM [product].[ProductSlugs] slug
@@ -248,7 +360,10 @@ SQL;
         SELECT 1 FROM [product].[ProductCodes] pc
         WHERE pc.[ProductId] = p.[ProductId]
           AND pc.[DeletedAtUtc] IS NULL
-          AND pc.[CodeValue] = :exactCode
+          AND (
+              pc.[CodeValue] = :exactCode
+              OR pc.[CodeValue] LIKE :prefixCode
+          )
     )
     OR c.[CategoryName] LIKE :likeCategory
     OR s.[SeriesName] LIKE :likeSeries
