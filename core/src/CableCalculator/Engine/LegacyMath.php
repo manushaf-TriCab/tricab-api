@@ -9,35 +9,48 @@ namespace TriCab\Core\CableCalculator\Engine;
  */
 final class LegacyMath
 {
+    private static function sizeTableKey(float $size): string|int
+    {
+        return match (true) {
+            $size === 0.5 => '0.5',
+            $size === 0.75 => '0.75',
+            $size === 1.5 => '1.5',
+            $size === 2.5 => '2.5',
+            default => (int) $size,
+        };
+    }
+
     /* inductance mH per km */
     public static function inductance(float $xa, float $od = 0, bool $multi = false, bool $isAl = false): float
     {
+        $sizeKey = self::sizeTableKey($xa);
+
         if ($isAl) {
             $indAl = [
-                0.5 => 0.502, 0.75 => 0.482, 1 => 0.447, 1.5 => 0.416, 2.5 => 0.407, 4 => 0.368,
+                '0.5' => 0.502, '0.75' => 0.482, 1 => 0.447, '1.5' => 0.416, '2.5' => 0.407, 4 => 0.368,
                 6 => 0.35, 10 => 0.319, 16 => 0.298, 25 => 0.287, 35 => 0.275, 50 => 0.264,
                 70 => 0.26, 95 => 0.254, 120 => 0.252, 150 => 0.251, 185 => 0.249, 240 => 0.247,
                 300 => 0.243, 400 => 0.241, 500 => 0.238, 630 => 0.236, 800 => 0.235, 1000 => 0.233,
             ];
-            if (($indAl[$xa] ?? 0) > 0) {
-                return $indAl[$xa];
+            if (($indAl[$sizeKey] ?? 0) > 0) {
+                return $indAl[$sizeKey];
             }
         }
 
         $inductance = [
-            0.5 => 0.528, 0.75 => 0.507, 1 => 0.471, 1.5 => 0.438, 2.5 => 0.428, 4 => 0.387,
+            '0.5' => 0.528, '0.75' => 0.507, 1 => 0.471, '1.5' => 0.438, '2.5' => 0.428, 4 => 0.387,
             6 => 0.368, 10 => 0.336, 16 => 0.314, 25 => 0.303, 35 => 0.288, 50 => 0.279,
             70 => 0.269, 95 => 0.262, 120 => 0.259, 150 => 0.258, 185 => 0.257, 240 => 0.254,
             300 => 0.25, 400 => 0.247, 500 => 0.246, 630 => 0.244, 800 => 0.215,
         ];
 
         $spacing = [
-            1.5 => 2.997, 2.5 => 3.609, 4.0 => 4.017, 6.0 => 4.629, 10 => 5.649, 16 => 6.669,
+            '1.5' => 2.997, '2.5' => 3.609, 4 => 4.017, 6 => 4.629, 10 => 5.649, 16 => 6.669,
             25 => 8.408, 35 => 9.836, 50 => 11.471, 70 => 13.310, 95 => 15.350, 120 => 17.290,
             150 => 19.540, 185 => 21.687, 240 => 24.239, 300 => 26.690, 400 => 30.673,
         ];
 
-        $space = ($spacing[$xa] ?? 0) > 0 ? $spacing[$xa] : 0.07 * $xa;
+        $space = ($spacing[$sizeKey] ?? 0) > 0 ? $spacing[$sizeKey] : 0.07 * $xa;
 
         if ($od > 0) {
             $dia = self::dia($xa);
@@ -46,8 +59,8 @@ final class LegacyMath
             return 0.2 * log(2 * $od / $dia) + 0.0514;
         }
 
-        if (($inductance[$xa] ?? 0) > 0) {
-            return $inductance[$xa];
+        if (($inductance[$sizeKey] ?? 0) > 0) {
+            return $inductance[$sizeKey];
         }
 
         return 0.0;
@@ -151,9 +164,10 @@ final class LegacyMath
 
     public static function dcRes(float $xa, float $temp, float $length, bool $isAl = false): float
     {
+        $sizeKey = self::sizeTableKey($xa);
         $rstvtBySize = [
-            0.5 => [0.0195, 0.03], 0.75 => [0.0195, 0.03], 1 => [0.0195, 0.03], 1.5 => [0.01995, 0.03],
-            2.5 => [0.01995, 0.03], 4 => [0.0198, 0.03], 6 => [0.0198, 0.03], 10 => [0.0191, 0.03],
+            '0.5' => [0.0195, 0.03], '0.75' => [0.0195, 0.03], 1 => [0.0195, 0.03], '1.5' => [0.01995, 0.03],
+            '2.5' => [0.01995, 0.03], 4 => [0.0198, 0.03], 6 => [0.0198, 0.03], 10 => [0.0191, 0.03],
             16 => [0.01936, 0.03], 25 => [0.0195, 0.03], 35 => [0.01939, 0.03038], 50 => [0.0193, 0.03205],
             70 => [0.01904, 0.03101], 95 => [0.01957, 0.0304], 120 => [0.01932, 0.03036], 150 => [0.01935, 0.0309],
             185 => [0.01961, 0.03034], 240 => [0.019224, 0.03], 300 => [0.01923, 0.03], 400 => [0.01944, 0.03112],
@@ -162,13 +176,13 @@ final class LegacyMath
 
         if (!$isAl) {
             $rstvt = 0.0191;
-            if (array_key_exists($xa, $rstvtBySize)) {
-                $rstvt = $rstvtBySize[$xa][0];
+            if (array_key_exists($sizeKey, $rstvtBySize)) {
+                $rstvt = $rstvtBySize[$sizeKey][0];
             }
         } else {
             $rstvt = 0.03;
-            if (array_key_exists($xa, $rstvtBySize)) {
-                $rstvt = $rstvtBySize[$xa][1];
+            if (array_key_exists($sizeKey, $rstvtBySize)) {
+                $rstvt = $rstvtBySize[$sizeKey][1];
             }
         }
 

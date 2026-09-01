@@ -6,6 +6,8 @@ use TriCab\Api\Bootstrap\AppBuilder;
 use TriCab\Api\Bootstrap\ContainerFactory;
 use TriCab\Api\Bootstrap\Environment;
 
+ini_set('display_errors', '0');
+
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 \TriCab\Api\Bootstrap\CoreAutoload::register();
