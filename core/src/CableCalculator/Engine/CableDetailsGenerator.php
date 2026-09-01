@@ -28,8 +28,8 @@ final class CableDetailsGenerator
         $cable['request_earth_ne'] = $erh;
         if ($erh === 'auto') {
             $cable['earth_ne'] = $cable['runs'];
-        } elseif ($erh !== '') {
-            $cable['earth_ne'] = $erh;
+        } elseif ($erh !== '' && is_numeric($erh)) {
+            $cable['earth_ne'] = (int) $erh;
         } elseif ($cable['type'] > 9 && $cable['type'] < 13) {
             $cable['earth_ne'] = $cable['runs'];
         } elseif ($cable['type'] < 4 && $cable['phase'] < 5) {
@@ -40,7 +40,8 @@ final class CableDetailsGenerator
             $cable['earth_ne'] = $cable['ne'];
         }
 
-        if (isset($cable['earth_ne']) && $cable['xa'] * $cable['runs'] / $cable['earth_ne'] > 1000) {
+        $earthNe = isset($cable['earth_ne']) && is_numeric($cable['earth_ne']) ? (int) $cable['earth_ne'] : null;
+        if ($earthNe !== null && $earthNe > 0 && $cable['xa'] * $cable['runs'] / $earthNe > 1000) {
             $cable['earth_ne'] = (int) ceil($cable['xa'] * $cable['runs'] / 1000);
         }
 
