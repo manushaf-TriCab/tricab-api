@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Assistant;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Api\Assistant\Application\AssistantConversationRepository;
+use TriCab\Api\Assistant\Application\AssistantQueryInterpreter;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
+use TriCab\Api\Assistant\Infrastructure\AgentAssistantQueryInterpreter;
+use TriCab\Api\Assistant\Infrastructure\AzureSqlAssistantConversationRepository;
 use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantResponseProvider;
 use TriCab\Api\Assistant\Infrastructure\FallbackAssistantResponseProvider;
 use TriCab\Api\Bootstrap\ContainerFactory;
@@ -39,6 +43,31 @@ final class AssistantProviderContainerTest extends TestCase
         self::assertInstanceOf(
             FallbackAssistantResponseProvider::class,
             $container->get(AssistantResponseProvider::class),
+        );
+        self::assertInstanceOf(
+            AgentAssistantQueryInterpreter::class,
+            $container->get(AssistantQueryInterpreter::class),
+        );
+    }
+
+    public function test_binds_durable_conversations_for_the_azure_sql_runtime(): void
+    {
+        $container = ContainerFactory::create(Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'USER_REPOSITORY' => 'azure-sql',
+            'DB_AUTH_MODE' => 'sql-login',
+            'DB_HOST' => 'test.database.windows.net',
+            'DB_DATABASE' => 'tricab-test',
+            'DB_USERNAME' => 'test',
+            'DB_PASSWORD' => 'test',
+            'GUEST_JWT_ISSUER' => 'https://api.test',
+            'GUEST_JWT_AUDIENCE' => 'tricab-api',
+            'GUEST_JWT_SECRET' => 'test-secret-that-is-at-least-32-bytes',
+        ]));
+
+        self::assertInstanceOf(
+            AzureSqlAssistantConversationRepository::class,
+            $container->get(AssistantConversationRepository::class),
         );
     }
 }

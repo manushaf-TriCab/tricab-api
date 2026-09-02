@@ -4,21 +4,15 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Assistant\Application;
 
-use Throwable;
-use TriCab\Core\Product\Application\DTO\ProductCustomerViewDetail;
-use TriCab\Core\Product\Application\DTO\ProductPublicDetail;
 use TriCab\Core\Product\Application\DTO\ProductSearchCriteria;
 use TriCab\Core\Product\Application\DTO\ProductSearchResult;
-use TriCab\Core\Product\Application\Service\GetPublicProductService;
-use TriCab\Core\Product\Application\Service\GetAdminProductCustomerViewService;
 use TriCab\Core\Product\Application\Service\SearchProductsService;
 
 final class ProductAssistantService
 {
     public function __construct(
         private readonly SearchProductsService $searchProducts,
-        private readonly GetPublicProductService $getPublicProduct,
-        private readonly GetAdminProductCustomerViewService $getStaffProduct,
+        private readonly AssistantProductGrounder $productGrounder,
         private readonly AssistantQueryInterpreter $queryInterpreter,
         private readonly AssistantResponseProvider $provider,
         private readonly AssistantConversationRepository $conversations,
@@ -35,7 +29,11 @@ final class ProductAssistantService
         ?string $conversationId = null,
         AssistantCatalogueVisibility $catalogueVisibility = AssistantCatalogueVisibility::PUBLIC,
     ): array {
-        $conversation = $this->conversations->getOrCreate($conversationId);
+        $conversation = $this->conversations->getOrCreate(
+            $conversationId,
+            $regionCode,
+            $catalogueVisibility,
+        );
         $searchPlan = $this->queryInterpreter->interpret($message, $searchQuery, $regionCode);
         [$items, $matchedSearchTerm] = $this->findVisibleProducts(
             $searchPlan,
@@ -44,7 +42,7 @@ final class ProductAssistantService
         );
 
         $products = array_map(
-            fn (ProductSearchResult $item): GroundedProduct => $this->groundProduct(
+            fn (ProductSearchResult $item): GroundedProduct => $this->productGrounder->fromSearchResult(
                 $item,
                 $regionCode,
                 $catalogueVisibility,
@@ -63,25 +61,37 @@ final class ProductAssistantService
             clarificationQuestion: $searchPlan->clarificationQuestion,
             queryInstructionVersion: $searchPlan->instructionVersion,
             catalogueVisibility: $catalogueVisibility->value,
+            conversationTurns: $conversation->turns(),
         ));
-        $conversation->append(new AssistantConversationTurn(
+        $this->conversations->appendTurn($conversation, new AssistantConversationTurn(
             userMessage: trim($message),
             assistantMessage: $providerResult->text,
         ));
 
+        $cards = $providerResult->cards !== []
+            ? $providerResult->cards
+            : array_map(
+                static fn (GroundedProduct $product): array => $product->toCard(),
+                $products,
+            );
+
+        $capabilities = $catalogueVisibility === AssistantCatalogueVisibility::STAFF
+            ? ['public-product-search', 'staff-product-search']
+            : ['public-product-search'];
+        foreach ($providerResult->toolNames as $toolName) {
+            $capabilities[] = 'assistant-tool:' . $toolName;
+        }
+
         return [
             'conversation' => [
                 'publicId' => $conversation->publicId,
-                'persisted' => false,
+                'persisted' => $this->conversations->persistsAcrossRequests(),
             ],
             'message' => [
                 'publicId' => self::uuid(),
                 'role' => 'assistant',
                 'text' => $providerResult->text,
-                'cards' => array_map(
-                    static fn (GroundedProduct $product): array => $product->toCard(),
-                    $products,
-                ),
+                'cards' => $cards,
                 'citations' => [],
             ],
             'provider' => [
@@ -93,9 +103,7 @@ final class ProductAssistantService
                 'visibility' => $catalogueVisibility->value,
                 'includesUnpublished' => $catalogueVisibility === AssistantCatalogueVisibility::STAFF,
             ],
-            'capabilities' => $catalogueVisibility === AssistantCatalogueVisibility::STAFF
-                ? ['public-product-search', 'staff-product-search']
-                : ['public-product-search'],
+            'capabilities' => array_values(array_unique($capabilities)),
         ];
     }
 
@@ -126,109 +134,6 @@ final class ProductAssistantService
         }
 
         return [[], null];
-    }
-
-    private function groundProduct(
-        ProductSearchResult $item,
-        ?string $regionCode,
-        AssistantCatalogueVisibility $catalogueVisibility,
-    ): GroundedProduct
-    {
-        if ($catalogueVisibility === AssistantCatalogueVisibility::STAFF) {
-            try {
-                return $this->fromCustomerView($this->getStaffProduct->execute($item->publicId, $regionCode));
-            } catch (Throwable) {
-                // The safe search projection remains usable if a richer preview
-                // races with an update or has incomplete migrated subresources.
-            }
-        }
-
-        if ($item->slug !== null) {
-            try {
-                return $this->fromDetail($this->getPublicProduct->bySlug($item->slug, $regionCode));
-            } catch (Throwable) {
-                // The public search projection remains safe and useful when a detail
-                // lookup races with catalogue publication or indexing.
-            }
-        }
-
-        return new GroundedProduct(
-            publicId: $item->publicId,
-            productName: $item->productName,
-            productCode: $item->productCode,
-            slug: $item->slug,
-            seriesName: $item->seriesName,
-            categoryName: $item->categoryName,
-            summary: null,
-            applications: [],
-            specifications: [],
-            thumbnailUrl: $item->thumbnailUrl,
-            statusCode: $item->statusCode,
-        );
-    }
-
-    private function fromDetail(ProductPublicDetail $detail): GroundedProduct
-    {
-        $specifications = [];
-        foreach ($detail->specifications as $specification) {
-            $value = trim((string) $specification->displayValue);
-            if ($value === '') {
-                continue;
-            }
-            if ($specification->unit !== null && trim($specification->unit) !== '') {
-                $value .= ' ' . trim($specification->unit);
-            }
-            $specifications[] = [
-                'name' => $specification->name,
-                'value' => $value,
-            ];
-        }
-
-        return new GroundedProduct(
-            publicId: $detail->publicId,
-            productName: $detail->productName,
-            productCode: $detail->productCode,
-            slug: $detail->slug,
-            seriesName: $detail->seriesName,
-            categoryName: $detail->categoryName,
-            summary: $detail->shortDescription ?? $detail->fullDescription,
-            applications: $detail->applicationNames,
-            specifications: $specifications,
-            thumbnailUrl: $detail->thumbnailUrl,
-            statusCode: 'published',
-        );
-    }
-
-    private function fromCustomerView(ProductCustomerViewDetail $detail): GroundedProduct
-    {
-        $specifications = [];
-        foreach ($detail->specifications as $specification) {
-            $value = trim((string) $specification->displayValue);
-            if ($value === '') {
-                continue;
-            }
-            if ($specification->unit !== null && trim($specification->unit) !== '') {
-                $value .= ' ' . trim($specification->unit);
-            }
-            $specifications[] = [
-                'name' => $specification->name,
-                'value' => $value,
-            ];
-        }
-
-        return new GroundedProduct(
-            publicId: $detail->publicId,
-            productName: $detail->productName,
-            productCode: $detail->productCode,
-            slug: $detail->primarySlug,
-            seriesName: $detail->seriesName,
-            categoryName: $detail->categoryName,
-            summary: $detail->shortDescription ?? $detail->fullDescription,
-            applications: $detail->applicationNames,
-            specifications: $specifications,
-            thumbnailUrl: $detail->thumbnailUrl,
-            statusCode: $detail->statusCode,
-        );
     }
 
     private static function uuid(): string

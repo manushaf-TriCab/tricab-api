@@ -11,6 +11,8 @@ final class AssistantConversation
 
     public function __construct(
         public readonly string $publicId,
+        public readonly ?string $regionCode = null,
+        public readonly string $catalogueVisibility = 'public',
     ) {
     }
 

@@ -135,7 +135,7 @@ final class AssistantEndpointsTest extends TestCase
         self::assertCount(1, $cards);
         self::assertSame('product', $cards[0]['type']);
         self::assertSame('KL Cable', $cards[0]['title']);
-        self::assertSame('/products/cable/kl-cable', $cards[0]['href']);
+        self::assertSame('/products/plugs-sockets/industrial/kl-cable', $cards[0]['href']);
         self::assertArrayNotHasKey('rowVersion', $cards[0]);
         self::assertArrayNotHasKey('erpReference', $cards[0]);
         self::assertArrayNotHasKey('pricing', $cards[0]);

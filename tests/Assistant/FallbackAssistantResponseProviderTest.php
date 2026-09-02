@@ -63,12 +63,16 @@ final class FallbackAssistantResponseProviderTest extends TestCase
         self::assertSame('foundry-claude', $result->provider);
     }
 
-    public function test_skips_the_primary_provider_when_no_products_are_grounded(): void
+    public function test_calls_the_primary_provider_when_pre_search_found_no_products(): void
     {
         $primary = new class implements AssistantResponseProvider {
             public function generate(AssistantGrounding $grounding): AssistantProviderResult
             {
-                throw new RuntimeException('Primary must not be called without catalogue grounding.');
+                return new AssistantProviderResult(
+                    'I can search with tools or ask a targeted question.',
+                    'foundry-claude-agent',
+                    'v3',
+                );
             }
         };
         $provider = new FallbackAssistantResponseProvider(
@@ -86,8 +90,8 @@ final class FallbackAssistantResponseProviderTest extends TestCase
             clarificationQuestion: 'What voltage do you need?',
         ));
 
-        self::assertSame('deterministic-search', $result->provider);
-        self::assertStringContainsString('Fire Resistant', $result->text);
+        self::assertSame('foundry-claude-agent', $result->provider);
+        self::assertStringContainsString('search with tools', $result->text);
     }
 
     private function publishedProduct(): GroundedProduct

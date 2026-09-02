@@ -44,6 +44,14 @@ final readonly class Settings
     public const PRICING_COST_SOURCE_AZURE_FIRST = 'azure-first';
 
     /**
+     * The product finder is a loopback-only sidecar. Anything else is a
+     * misconfiguration, not a deployment option.
+     *
+     * @var list<string>
+     */
+    public const PRODUCT_FINDER_ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '::1', '[::1]'];
+
+    /**
      * @param list<string> $corsAllowedOrigins
      * @param list<string> $passkeyAllowedOrigins
      */
@@ -136,7 +144,29 @@ final readonly class Settings
         public int $legacyCostApiTimeoutSeconds = 8,
         public string $pricingCostSource = self::PRICING_COST_SOURCE_LEGACY_FALLBACK,
         public string $pricingDefaultTmmktmMargin = '0',
+        public bool $productFinderEnabled = false,
+        public string $productFinderBaseUrl = 'http://127.0.0.1:8001',
+        public int $productFinderTimeoutSeconds = 20,
     ) {
+    }
+
+    /**
+     * The finder answers over loopback inside the App Service, so — unlike
+     * `isTrustedFoundryEndpoint`, which guards a call out to Azure AI over the
+     * public internet — this checks the opposite thing: that the URL has *not*
+     * been pointed off-box. A misconfigured value here would send a customer's
+     * requirement to a third party, and the process it is meant to reach has no
+     * authentication because it is only ever reachable from this instance.
+     */
+    public function isProductFinderEnabled(): bool
+    {
+        if (!$this->productFinderEnabled) {
+            return false;
+        }
+
+        $host = parse_url($this->productFinderBaseUrl, PHP_URL_HOST);
+
+        return is_string($host) && in_array(strtolower($host), self::PRODUCT_FINDER_ALLOWED_HOSTS, true);
     }
 
     public function isLegacyCostApiEnabled(): bool
@@ -643,6 +673,21 @@ final readonly class Settings
         $pricingDefaultTmmktmMargin = trim(self::string($env, 'PRICING_DEFAULT_TMMKTM_MARGIN', '0'));
         self::assertPricingDefaultTmmktmMargin($pricingDefaultTmmktmMargin);
 
+        $productFinderEnabled = self::bool($env, 'PRODUCT_FINDER_ENABLED', false);
+        $productFinderBaseUrl = rtrim(self::string($env, 'PRODUCT_FINDER_BASE_URL', 'http://127.0.0.1:8001'), '/');
+        $productFinderTimeoutSeconds = self::boundedInt($env, 'PRODUCT_FINDER_TIMEOUT_SECONDS', 20, 1, 120);
+        if ($productFinderEnabled) {
+            $productFinderHost = parse_url($productFinderBaseUrl, PHP_URL_HOST);
+            if (!is_string($productFinderHost)
+                || !in_array(strtolower($productFinderHost), self::PRODUCT_FINDER_ALLOWED_HOSTS, true)
+            ) {
+                throw new InvalidArgumentException(
+                    'PRODUCT_FINDER_BASE_URL must point at the loopback interface; '
+                    . 'the finder runs inside this App Service and is not exposed.'
+                );
+            }
+        }
+
         return new self(
             appEnv: $appEnv,
             appName: self::string($env, 'APP_NAME', 'tricab-api'),
@@ -736,6 +781,9 @@ final readonly class Settings
             legacyCostApiTimeoutSeconds: $legacyCostApiTimeoutSeconds,
             pricingCostSource: $pricingCostSource,
             pricingDefaultTmmktmMargin: $pricingDefaultTmmktmMargin,
+            productFinderEnabled: $productFinderEnabled,
+            productFinderBaseUrl: $productFinderBaseUrl,
+            productFinderTimeoutSeconds: $productFinderTimeoutSeconds,
         );
     }
 

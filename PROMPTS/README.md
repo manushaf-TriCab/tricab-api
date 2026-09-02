@@ -19,3 +19,6 @@ Current prompts:
   contract.
 - `product-assistant-response-v2.md` writes permission-aware public or staff
   answers using only catalogue records authorized by the application.
+- `product-assistant-response-v3.md` is the bounded agent contract: tool choice,
+  conversation corrections, one-question clarification and the current sizing /
+  stock accuracy limits.

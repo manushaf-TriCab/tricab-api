@@ -31,9 +31,10 @@ final readonly class GroundedProduct
     public function toCard(): array
     {
         $isPublished = strcasecmp($this->statusCode, 'published') === 0;
-        $routeKey = $this->seriesName ?? $this->slug;
         $href = $isPublished
-            ? ($routeKey !== null ? '/products/cable/' . rawurlencode($routeKey) : null)
+            ? ($this->slug !== null
+                ? '/products/plugs-sockets/industrial/' . rawurlencode($this->slug)
+                : '/products/plugs-sockets/industrial/' . rawurlencode($this->publicId))
             : '/admin/products/' . rawurlencode($this->publicId) . '/customer-view';
 
         return [

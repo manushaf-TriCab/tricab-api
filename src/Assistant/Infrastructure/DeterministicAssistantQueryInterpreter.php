@@ -26,28 +26,42 @@ final class DeterministicAssistantQueryInterpreter implements AssistantQueryInte
     ): AssistantSearchPlan {
         $explicit = trim((string) $explicitSearchQuery);
         if ($explicit !== '') {
-            return new AssistantSearchPlan(
-                originalQuery: $explicit,
-                canonicalIntent: null,
-                searchTerms: [$explicit],
-                clarificationQuestion: null,
-                instructionVersion: self::INSTRUCTION_VERSION,
-            );
+            return $this->planFor($explicit, tryVerbatimFirst: true);
         }
 
-        $query = trim($message);
+        return $this->planFor(trim($message), tryVerbatimFirst: false);
+    }
+
+    /**
+     * An explicit search query is what the customer typed into the search box, so it is tried
+     * verbatim first — a pasted code or SKU must still win as an exact match. Everything after it
+     * is the same graded degradation the message path already gets: the intent vocabulary when a
+     * rule matches, otherwise the query with stop words stripped, then token by token.
+     *
+     * Returning the explicit string on its own was enough while search was one opaque LIKE. Phase 2
+     * made matching AND-across-tokens, so a single unmatchable token now zeroes the whole result:
+     * "I need LSZH marine cable, 4 cores, 4mm2" from the hero found nothing, because "i", "need"
+     * and "4mm2" have to match too. It also skipped `knownIntent`, losing the LSZH rule entirely.
+     */
+    private function planFor(string $query, bool $tryVerbatimFirst): AssistantSearchPlan
+    {
         $known = $this->knownIntent($query);
         if ($known !== null) {
             return new AssistantSearchPlan(
                 originalQuery: $query,
                 canonicalIntent: $known['intent'],
-                searchTerms: $known['terms'],
+                searchTerms: $tryVerbatimFirst
+                    ? $this->uniqueTerms(array_merge([$query], $known['terms']))
+                    : $known['terms'],
                 clarificationQuestion: $known['question'],
                 instructionVersion: self::INSTRUCTION_VERSION,
             );
         }
 
         $terms = $this->fallbackTerms($query);
+        if ($tryVerbatimFirst) {
+            $terms = array_slice($this->uniqueTerms(array_merge([$query], $terms)), 0, 6);
+        }
 
         return new AssistantSearchPlan(
             originalQuery: $query,
@@ -55,7 +69,9 @@ final class DeterministicAssistantQueryInterpreter implements AssistantQueryInte
             searchTerms: $terms,
             clarificationQuestion: 'What application, voltage and cable construction do you need?',
             instructionVersion: self::INSTRUCTION_VERSION,
-            semanticInterpretationRecommended: count($terms) > 1,
+            // Left false on the explicit path. The graded terms above resolve it deterministically,
+            // and Phase 4 retires this pre-search interpreter rather than widening its Foundry use.
+            semanticInterpretationRecommended: !$tryVerbatimFirst && count($terms) > 1,
         );
     }
 

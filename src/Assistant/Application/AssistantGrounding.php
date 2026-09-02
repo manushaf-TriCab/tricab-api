@@ -9,6 +9,7 @@ final readonly class AssistantGrounding
     /**
      * @param list<GroundedProduct> $products
      * @param list<string> $searchTerms
+     * @param list<AssistantConversationTurn> $conversationTurns
      */
     public function __construct(
         public string $userMessage,
@@ -21,6 +22,7 @@ final readonly class AssistantGrounding
         public ?string $clarificationQuestion = null,
         public string $queryInstructionVersion = 'product-assistant-query-legacy-v1',
         public string $catalogueVisibility = 'public',
+        public array $conversationTurns = [],
     ) {
     }
 }

@@ -11,15 +11,22 @@ use PDO;
 use TriCab\Api\Assistant\Application\AssistantQueryInterpreter;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
 use TriCab\Api\Assistant\Application\AssistantConversationRepository;
+use TriCab\Api\Assistant\Application\AssistantProductGrounder;
+use TriCab\Api\Assistant\Application\AssistantStyleOptionsProvider;
+use TriCab\Api\Assistant\Application\AssistantToolExecutor;
 use TriCab\Api\Assistant\Application\ProductAssistantService;
+use TriCab\Api\Assistant\Infrastructure\AgentAssistantQueryInterpreter;
+use TriCab\Api\Assistant\Infrastructure\AzureSqlAssistantConversationRepository;
+use TriCab\Api\Assistant\Infrastructure\AzureSqlAssistantStyleOptionsProvider;
 use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantQueryInterpreter;
 use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantResponseProvider;
 use TriCab\Api\Assistant\Infrastructure\FallbackAssistantResponseProvider;
-use TriCab\Api\Assistant\Infrastructure\Foundry\ClaudeFoundryQueryInterpreter;
-use TriCab\Api\Assistant\Infrastructure\Foundry\ClaudeFoundryResponseProvider;
+use TriCab\Api\Assistant\Infrastructure\Foundry\ClaudeFoundryAgentProvider;
 use TriCab\Api\Assistant\Infrastructure\Foundry\ManagedIdentityFoundryAccessTokenProvider;
-use TriCab\Api\Assistant\Infrastructure\HybridAssistantQueryInterpreter;
 use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantConversationRepository;
+use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantStyleOptionsProvider;
+use TriCab\Api\Assistant\Infrastructure\ProductAssistantToolExecutor;
+use TriCab\Api\Assistant\Infrastructure\SearchGroundedDeterministicAssistantResponseProvider;
 use TriCab\Api\Assistant\Infrastructure\Prompt\MarkdownPromptRepository;
 use TriCab\Api\Config\Settings;
 
@@ -418,6 +425,10 @@ use TriCab\Core\CableCalculator\Application\Service\ResolveCableCalculationProdu
 use TriCab\Core\CableCalculator\Application\ProductResolution\NullCableCalculatorProductResolver;
 use TriCab\Core\CableCalculator\Contract\CableCalculatorProductResolver;
 use TriCab\Api\CableCalculator\AzureSqlCableCalculatorProductResolver;
+use TriCab\Api\Http\Action\ProductFinder\FindProductAction;
+use TriCab\Api\ProductFinder\HttpProductFinderClient;
+use TriCab\Core\ProductFinder\Application\Client\NullProductFinderClient;
+use TriCab\Core\ProductFinder\Contract\ProductFinderClient;
 use TriCab\Core\Product\Application\Service\ManagePriceListService;
 use TriCab\Core\Product\Application\Service\ManageProductClassificationService;
 use TriCab\Core\Product\Application\Service\ManageProductStyleService;
@@ -710,45 +721,41 @@ final class ContainerFactory
             Settings::class => $settings,
             JsonResponder::class => \DI\create(JsonResponder::class),
             AssistantQueryInterpreter::class => static function () use ($settings, $prompts): AssistantQueryInterpreter {
-                $rules = new DeterministicAssistantQueryInterpreter();
-                if (!$settings->isFoundryConfigured()) {
-                    return $rules;
-                }
+                unset($prompts);
 
-                $http = new StreamJsonHttpClient((float) $settings->foundryTimeoutSeconds);
-                $semantic = new ClaudeFoundryQueryInterpreter(
-                    http: $http,
-                    accessTokens: new ManagedIdentityFoundryAccessTokenProvider($http),
-                    endpoint: $settings->foundryEndpoint,
-                    deployment: $settings->foundryModelDeployment,
-                    authMode: $settings->foundryAuthMode,
-                    prompt: $prompts->get('product-assistant-query', 'v1'),
-                    apiKey: $settings->foundryApiKey,
-                );
-
-                return new HybridAssistantQueryInterpreter($rules, $semantic);
+                return $settings->isFoundryConfigured()
+                    ? new AgentAssistantQueryInterpreter()
+                    : new DeterministicAssistantQueryInterpreter();
             },
-            AssistantResponseProvider::class => static function () use ($settings, $prompts): AssistantResponseProvider {
-                $fallback = new DeterministicAssistantResponseProvider();
+            AssistantResponseProvider::class => static function (Container $container) use ($settings, $prompts): AssistantResponseProvider {
                 if (!$settings->isFoundryConfigured()) {
-                    return $fallback;
+                    return new DeterministicAssistantResponseProvider();
                 }
 
                 $http = new StreamJsonHttpClient((float) $settings->foundryTimeoutSeconds);
-                $primary = new ClaudeFoundryResponseProvider(
+                $primary = new ClaudeFoundryAgentProvider(
                     http: $http,
                     accessTokens: new ManagedIdentityFoundryAccessTokenProvider($http),
+                    tools: self::get($container, AssistantToolExecutor::class),
                     endpoint: $settings->foundryEndpoint,
                     deployment: $settings->foundryModelDeployment,
                     authMode: $settings->foundryAuthMode,
-                    prompt: $prompts->get('product-assistant-response', 'v2'),
+                    prompt: $prompts->get('product-assistant-response', 'v3'),
+                    maxToolCalls: $settings->foundryMaxToolCalls,
                     apiKey: $settings->foundryApiKey,
                 );
 
-                return new FallbackAssistantResponseProvider($primary, $fallback);
+                return new FallbackAssistantResponseProvider(
+                    $primary,
+                    self::get($container, SearchGroundedDeterministicAssistantResponseProvider::class),
+                );
             },
             InMemoryAssistantConversationRepository::class => \DI\create(InMemoryAssistantConversationRepository::class),
             AssistantConversationRepository::class => \DI\get(InMemoryAssistantConversationRepository::class),
+            AssistantProductGrounder::class => \DI\autowire(AssistantProductGrounder::class),
+            ProductAssistantToolExecutor::class => \DI\autowire(ProductAssistantToolExecutor::class),
+            AssistantToolExecutor::class => \DI\get(ProductAssistantToolExecutor::class),
+            SearchGroundedDeterministicAssistantResponseProvider::class => \DI\autowire(SearchGroundedDeterministicAssistantResponseProvider::class),
             ProductAssistantService::class => \DI\autowire(ProductAssistantService::class),
             AssistantErrorMapper::class => \DI\autowire(AssistantErrorMapper::class),
             AssistantMessageAction::class => \DI\autowire(AssistantMessageAction::class),
@@ -1626,6 +1633,25 @@ final class ContainerFactory
             GetPublicCatalogueTabTreeAction::class => \DI\autowire(GetPublicCatalogueTabTreeAction::class),
             GetPublicCatalogueNodeAction::class => \DI\autowire(GetPublicCatalogueNodeAction::class),
             PostCableCalculatorCalculateAction::class => \DI\autowire(PostCableCalculatorCalculateAction::class),
+            FindProductAction::class => \DI\autowire(FindProductAction::class),
+            ProductFinderClient::class => static function () use ($settings): ProductFinderClient {
+                // Off unless a Python service is actually running. Locally that
+                // is the usual case, and a null client answers the same shape
+                // the HTTP one does when the service is down, so nothing
+                // downstream needs a second code path.
+                if (!$settings->isProductFinderEnabled()) {
+                    return new NullProductFinderClient();
+                }
+
+                // Its own client, not the shared JsonHttpClient: this hop is a
+                // loopback socket to a process that loads an 18,994-product
+                // catalogue on first use, so it wants a longer timeout than the
+                // ten seconds the shared default carries.
+                return new HttpProductFinderClient(
+                    new StreamJsonHttpClient((float) $settings->productFinderTimeoutSeconds),
+                    $settings->productFinderBaseUrl,
+                );
+            },
             CalculateCableService::class => \DI\autowire(CalculateCableService::class),
             ResolveCableCalculationProductsService::class => \DI\autowire(ResolveCableCalculationProductsService::class),
             CableCalculatorProductResolver::class => static function (\Psr\Container\ContainerInterface $c) {
@@ -1746,6 +1772,8 @@ final class ContainerFactory
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
             $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
             $definitions[ProductCodeSearchRepository::class] = \DI\autowire(AzureSqlProductCodeSearchRepository::class);
+            $definitions[AssistantConversationRepository::class] = \DI\autowire(AzureSqlAssistantConversationRepository::class);
+            $definitions[AssistantStyleOptionsProvider::class] = \DI\autowire(AzureSqlAssistantStyleOptionsProvider::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(AzureSqlProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(AzureSqlProductClassificationRepository::class);
             $definitions[ProductStyleRepository::class] = \DI\autowire(AzureSqlProductStyleRepository::class);
@@ -1892,6 +1920,7 @@ SQL,
             };
             $definitions[ProductSearchRepository::class] = \DI\autowire(InMemoryProductSearchRepository::class);
             $definitions[ProductCodeSearchRepository::class] = \DI\autowire(InMemoryProductCodeSearchRepository::class);
+            $definitions[AssistantStyleOptionsProvider::class] = \DI\autowire(InMemoryAssistantStyleOptionsProvider::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(InMemoryProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(InMemoryProductClassificationRepository::class);
             $definitions[ProductStyleRepository::class] = \DI\autowire(InMemoryProductStyleRepository::class);
