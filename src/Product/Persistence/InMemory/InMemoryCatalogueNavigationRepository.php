@@ -16,7 +16,9 @@ use TriCab\Core\Product\Application\DTO\CatalogueTabRecord;
 use TriCab\Core\Product\Application\DTO\PublicCatalogueProductCard;
 use TriCab\Core\Product\Application\DTO\PublicCatalogueTab;
 use TriCab\Core\Product\Application\DTO\PublicCatalogueTreeNode;
+use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
 use TriCab\Core\Product\Application\Exception\CatalogueConcurrencyConflict;
+use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Contract\CatalogueNavigationRepository;
 use TriCab\Core\Product\Domain\Entity\Product;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
@@ -1264,16 +1266,65 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
             return null;
         }
         $meta = $this->productMeta($productPublicId);
+        $thumbs = $this->listPublicProductThumbnailUrls([$productPublicId]);
 
         return new PublicCatalogueProductCard(
             publicId: $productPublicId,
             name: $meta['name'],
             slug: $meta['slug'],
             internalCode: $meta['internalCode'],
-            thumbnailUrl: $meta['thumbnailUrl'],
+            thumbnailUrl: $thumbs[$productPublicId] ?? null,
             displayOrder: AzureSqlValueMapper::intValue($placement['displayOrder'] ?? 0),
             isFeatured: AzureSqlValueMapper::boolValue($placement['isFeatured'] ?? false),
         );
+    }
+
+    public function listPublicProductThumbnailUrls(array $productPublicIds): array
+    {
+        $wanted = [];
+        foreach ($productPublicIds as $id) {
+            if ($id !== '') {
+                $wanted[$id] = true;
+            }
+        }
+        if ($wanted === []) {
+            return [];
+        }
+
+        $mediaByProduct = [];
+        foreach ($this->store->media() as $row) {
+            $productPublicId = (string) ($row['productPublicId'] ?? '');
+            if (!isset($wanted[$productPublicId])) {
+                continue;
+            }
+            if (($row['archived'] ?? false) === true) {
+                continue;
+            }
+            if (($row['isActive'] ?? true) === false) {
+                continue;
+            }
+            $mediaByProduct[$productPublicId][] = new ProductMediaSummary(
+                publicId: AzureSqlValueMapper::stringValue($row['publicId'] ?? ''),
+                mediaCategoryCode: AzureSqlValueMapper::stringValue($row['mediaCategoryCode'] ?? ''),
+                mediaTypeCode: AzureSqlValueMapper::stringValue($row['mediaTypeCode'] ?? ''),
+                title: AzureSqlValueMapper::stringValue($row['title'] ?? ''),
+                publicUrl: AzureSqlValueMapper::nullableString($row['publicUrl'] ?? null),
+                altText: AzureSqlValueMapper::nullableString($row['altText'] ?? null),
+                displayOrder: AzureSqlValueMapper::intValue($row['displayOrder'] ?? 0),
+                isPrimary: AzureSqlValueMapper::boolValue($row['isPrimary'] ?? false),
+                thumbnailUrl: AzureSqlValueMapper::nullableString($row['thumbnailUrl'] ?? null),
+            );
+        }
+
+        $out = [];
+        foreach ($mediaByProduct as $productPublicId => $media) {
+            $url = ProductThumbnailImageResolver::fromMediaSummaries($media);
+            if ($url !== null) {
+                $out[$productPublicId] = $url;
+            }
+        }
+
+        return $out;
     }
 
     private function isPublishedProduct(Product $product, ?string $regionCode): bool

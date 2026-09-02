@@ -34,6 +34,31 @@ final class AzureSqlCatalogueNavigationRepository implements CatalogueNavigation
   AND (p.[UnpublishAtUtc] IS NULL OR p.[UnpublishAtUtc] > SYSUTCDATETIME())
 SQL;
 
+    private const PUBLIC_PRODUCT_THUMBNAIL_APPLY = <<<'SQL'
+OUTER APPLY (
+    SELECT TOP (1) COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) AS [ThumbnailUrl]
+    FROM [product].[ProductImages] img
+    WHERE img.[ProductId] = p.[ProductId]
+      AND img.[DeletedAtUtc] IS NULL
+      AND img.[IsActive] = 1
+      AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
+      AND (img.[UploadStatusCode] IS NULL OR img.[UploadStatusCode] = N'active')
+      AND (
+            img.[ScanStatusCode] IS NULL
+            OR img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+      )
+    ORDER BY
+        CASE LOWER(ISNULL(img.[ImageRoleCode], N''))
+            WHEN N'product-thumbnail' THEN 0
+            WHEN N'primary' THEN 1
+            ELSE 2
+        END,
+        CASE WHEN img.[IsPrimary] = 1 THEN 0 ELSE 1 END,
+        img.[DisplayOrder],
+        img.[ProductImagesId]
+) productThumb
+SQL;
+
     public function __construct(
         private readonly SqlConnection $connection,
     ) {
@@ -1169,7 +1194,8 @@ SELECT
     COALESCE(primarySlug.[Slug], CONVERT(NVARCHAR(36), p.[PublicId])) AS [Slug],
     p.[InternalCode],
     cnp.[DisplayOrder],
-    cnp.[IsFeatured]
+    cnp.[IsFeatured],
+    productThumb.[ThumbnailUrl]
 FROM [product].[CatalogueNodeProducts] cnp
 INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnp.[CatalogueNodeId]
 INNER JOIN [product].[Products] p ON p.[ProductId] = cnp.[ProductId]
@@ -1181,6 +1207,9 @@ OUTER APPLY (
       AND s.[IsPrimary] = 1
       AND s.[DeletedAtUtc] IS NULL
 ) primarySlug
+SQL;
+        $sql .= "\n" . self::PUBLIC_PRODUCT_THUMBNAIL_APPLY . <<<'SQL'
+
 WHERE n.[PublicId] = :nodePublicId
   AND cnp.[IsActive] = 1
 SQL;
@@ -1192,12 +1221,52 @@ SQL;
                 name: AzureSqlValueMapper::stringValue($row['Name'] ?? ''),
                 slug: AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
                 internalCode: AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null),
-                thumbnailUrl: null,
+                thumbnailUrl: AzureSqlValueMapper::nullableString($row['ThumbnailUrl'] ?? null),
                 displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
                 isFeatured: AzureSqlValueMapper::boolValue($row['IsFeatured'] ?? false),
             ),
             $this->connection->fetchAll($sql, $params),
         );
+    }
+
+    public function listPublicProductThumbnailUrls(array $productPublicIds): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            $productPublicIds,
+            static fn (string $id): bool => $id !== '',
+        )));
+        if ($ids === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach (array_chunk($ids, 400) as $chunk) {
+            $placeholders = [];
+            $params = [];
+            foreach ($chunk as $index => $id) {
+                $name = ':pid' . $index;
+                $placeholders[] = $name;
+                $params[$name] = $id;
+            }
+            $inList = implode(', ', $placeholders);
+            $apply = self::PUBLIC_PRODUCT_THUMBNAIL_APPLY;
+            $sql = <<<SQL
+SELECT CONVERT(NVARCHAR(36), p.[PublicId]) AS [PublicId], productThumb.[ThumbnailUrl]
+FROM [product].[Products] p
+{$apply}
+WHERE p.[PublicId] IN ({$inList})
+  AND p.[DeletedAtUtc] IS NULL
+SQL;
+            foreach ($this->connection->fetchAll($sql, $params) as $row) {
+                $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
+                $url = AzureSqlValueMapper::nullableString($row['ThumbnailUrl'] ?? null);
+                if ($publicId !== '' && $url !== null) {
+                    $out[$publicId] = $url;
+                }
+            }
+        }
+
+        return $out;
     }
 
     public function searchAdmin(string $query, int $limit = 50): array

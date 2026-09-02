@@ -8,6 +8,11 @@ use PHPUnit\Framework\TestCase;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryCatalogueNavigationRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductStore;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
+use TriCab\Core\Product\Domain\Entity\Product;
+use TriCab\Core\Product\Domain\ValueObject\ProductLifecycleStatusCode;
+use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
+use TriCab\Core\Product\Domain\ValueObject\ProductStatusCode;
+use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 
 final class InMemoryCatalogueNavigationRepositoryTest extends TestCase
 {
@@ -52,5 +57,78 @@ final class InMemoryCatalogueNavigationRepositoryTest extends TestCase
         $tree = $repo->getPublicTabTree('shop', null, false);
         self::assertCount(1, $tree);
         self::assertSame('root', $tree[0]->slug);
+    }
+
+    public function test_public_product_cards_use_preferred_product_image_thumbnail(): void
+    {
+        $store = new InMemoryProductStore();
+        $repo = new InMemoryCatalogueNavigationRepository($store);
+        $actor = UserId::fromInt(1);
+        $productPublicId = '11111111-1111-1111-1111-111111111201';
+        $this->seedPublishedProduct($store, $productPublicId, 'BV Cable');
+        $store->addMedia([
+            'publicId' => 'media-gallery',
+            'productPublicId' => $productPublicId,
+            'mediaCategoryCode' => 'gallery',
+            'mediaTypeCode' => 'gallery-image',
+            'title' => 'Gallery',
+            'publicUrl' => 'https://cdn.example/gallery.jpg',
+            'isPrimary' => false,
+            'displayOrder' => 0,
+        ]);
+        $store->addMedia([
+            'publicId' => 'media-thumb',
+            'productPublicId' => $productPublicId,
+            'mediaCategoryCode' => 'product-thumbnail',
+            'mediaTypeCode' => 'primary-image',
+            'title' => 'Thumb',
+            'publicUrl' => 'https://cdn.example/thumb.jpg',
+            'isPrimary' => false,
+            'displayOrder' => 1,
+        ]);
+
+        $tab = $repo->createTab([
+            'tabCode' => 'SHOP',
+            'tabName' => 'Shop',
+            'slug' => 'shop',
+        ], $actor);
+        $leaf = $repo->createNode([
+            'tabPublicId' => $tab->publicId,
+            'nodeCode' => 'BV',
+            'nodeName' => 'BV',
+            'slug' => 'bv',
+        ], $actor);
+        $repo->replaceNodeProducts($leaf->publicId, [
+            ['productPublicId' => $productPublicId, 'displayOrder' => 1],
+        ], $actor);
+
+        $cards = $repo->listPublicNodeProducts($leaf->publicId);
+        self::assertCount(1, $cards);
+        self::assertSame('https://cdn.example/thumb.jpg', $cards[0]->thumbnailUrl);
+
+        $batch = $repo->listPublicProductThumbnailUrls([$productPublicId, 'missing']);
+        self::assertSame('https://cdn.example/thumb.jpg', $batch[$productPublicId]);
+        self::assertArrayNotHasKey('missing', $batch);
+    }
+
+    private function seedPublishedProduct(InMemoryProductStore $store, string $publicId, string $name): void
+    {
+        $productId = $store->allocateProductId();
+        $product = new Product(
+            id: $productId,
+            publicId: ProductPublicId::fromString($publicId),
+            productName: $name,
+            status: ProductStatusCode::published(),
+            lifecycleStatus: ProductLifecycleStatusCode::active(),
+            rowVersion: RowVersionToken::fromBase64('AAAAAAAAAAA='),
+        );
+        $now = $store->nowUtc();
+        $store->saveProductRecord($productId, [
+            'product' => $product,
+            'createdAtUtc' => $now,
+            'updatedAtUtc' => $now,
+            'createdByUserId' => 1,
+            'updatedByUserId' => 1,
+        ]);
     }
 }

@@ -66,6 +66,7 @@ use TriCab\Core\Product\Application\DTO\SpecificationGroupRecord;
 use TriCab\Core\Product\Application\DTO\SpecificationOptionRecord;
 use TriCab\Core\Product\Application\DTO\SpecificationUnitRecord;
 use TriCab\Core\Product\Application\DTO\SpecificationUsage;
+use TriCab\Api\Product\Catalogue\CatalogueStaticMediaResolver;
 use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 
 /**
@@ -360,7 +361,7 @@ final class ProductManagementDtoSerializer
         ProductApprovalCertificateItem $item,
         ?ProductDevMediaUrlResolver $devUrls = null,
     ): array {
-        $imageUrl = $item->imageUrl;
+        $imageUrl = CatalogueStaticMediaResolver::instance()->toPublicUrl($item->imageUrl);
         if ($imageUrl !== null && (str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://'))) {
             $imageUrl = self::resolveAssetUrl($devUrls, $imageUrl);
         }
@@ -407,8 +408,8 @@ final class ProductManagementDtoSerializer
             'categoryName' => $result->categoryName,
             'seriesName' => $result->seriesName,
             'statusCode' => $result->statusCode,
-            'thumbnailUrl' => self::resolveAssetUrl($devUrls, $result->thumbnailUrl, $result->publicId),
-            'thumbnailImageUrl' => self::resolveAssetUrl(
+            'thumbnailUrl' => self::resolvePublicMediaUrl($devUrls, $result->thumbnailUrl, $result->publicId),
+            'thumbnailImageUrl' => self::resolvePublicMediaUrl(
                 $devUrls,
                 $result->thumbnailImageUrl ?? $result->thumbnailUrl,
                 $result->publicId,
@@ -1686,6 +1687,26 @@ final class ProductManagementDtoSerializer
             'templateCount' => $usage->templateCount,
             'summary' => $usage->summaryMessage(),
         ];
+    }
+
+    /**
+     * Response-time browser URL. SAS is never persisted.
+     * Website /assets and /certificates paths rewrite to /media when a copy exists.
+     */
+    private static function resolvePublicMediaUrl(
+        ?ProductDevMediaUrlResolver $devUrls,
+        ?string $storedUrl,
+        string $filePublicId = '',
+        ?string $storageContainer = null,
+        ?string $storagePath = null,
+    ): ?string {
+        return self::resolveAssetUrl(
+            $devUrls,
+            CatalogueStaticMediaResolver::instance()->toPublicUrl($storedUrl),
+            $filePublicId,
+            $storageContainer,
+            $storagePath,
+        );
     }
 
     /**
