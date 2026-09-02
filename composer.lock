@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a9379f8a58f566e8f7e425ce278c2fb3",
+    "content-hash": "a387d6e68b4ad3bafa7787fcca6c297c",
     "packages": [
         {
             "name": "brick/math",
@@ -3530,7 +3530,7 @@
             "dist": {
                 "type": "path",
                 "url": "core",
-                "reference": "b2e013966880042461494b6d95c9110d1fe3387b"
+                "reference": "44f7cebdfc92d36639740e6bcd5a3f591e412f9a"
             },
             "require": {
                 "php": "^8.3"
@@ -3567,7 +3567,6 @@
             ],
             "description": "TriCab Core — framework-independent domain and application library for the TriCab Platform Rebuild",
             "transport-options": {
-                "symlink": false,
                 "relative": true
             }
         },

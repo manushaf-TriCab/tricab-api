@@ -89,7 +89,7 @@ final class CableCalculatorDtoSerializer
       'warnings' => $result->warnings,
       'isPreview' => $result->isPreview,
       'calculatedAtUtc' => $result->calculatedAtUtc,
-      'engineVersion' => strtolower((string) (\TriCab\Api\Bootstrap\Environment::value('CABLE_CALCULATOR_ENGINE', 'legacy-cli') ?? 'legacy-cli')) === 'native'
+      'engineVersion' => strtolower((string) (\TriCab\Api\Bootstrap\Environment::value('CABLE_CALCULATOR_ENGINE', 'native') ?? 'native')) === 'native'
         ? 'native-v1'
         : 'legacy-cli-oracle',
       'datasetVersion' => 'legacy-tc-2026-08',

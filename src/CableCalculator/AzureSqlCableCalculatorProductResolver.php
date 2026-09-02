@@ -16,6 +16,79 @@ use TriCab\Core\CableCalculator\Contract\CableCalculatorProductResolver;
  */
 final class AzureSqlCableCalculatorProductResolver implements CableCalculatorProductResolver
 {
+    /**
+     * Exact code lookup against both code sources, never fuzzy.
+     *
+     * [product].[ProductCodes] holds curated codes and is authoritative when present, but
+     * catalog-load leaves it empty by design, so [product].[ProductVariants].[VariantCode]
+     * is what actually carries the loaded variant codes. Both branches are exact equality;
+     * curated codes rank first so adding them later cannot be overridden by a variant.
+     *
+     * Slug comes from [product].[ProductSlugs] — [Products] has no [Slug] column, and no
+     * [Name] column either (it is [ProductName]). Selecting those two non-existent columns
+     * was why every live call raised "Invalid column name" and was buried as RESOLVER_ERROR.
+     *
+     * The resolver takes no region, so the slug preference is primary first, then the
+     * region-neutral slug, then lowest id — deterministic without guessing a region.
+     *
+     * The code is bound twice under distinct names because sqlsrv rejects a named parameter
+     * that appears more than once in a statement (SQLSTATE 07002).
+     */
+    public const RESOLVE_SQL = <<<'SQL'
+WITH [CodeMatch] AS (
+    SELECT
+        COALESCE(pc.[ProductId], pcv.[ProductId]) AS [ProductId],
+        pc.[ProductVariantId] AS [ProductVariantId],
+        0 AS [MatchRank]
+    FROM [product].[ProductCodes] pc
+    LEFT JOIN [product].[ProductVariants] pcv
+        ON pcv.[ProductVariantId] = pc.[ProductVariantId]
+        AND pcv.[DeletedAtUtc] IS NULL
+    WHERE pc.[CodeValue] = :codeCurated
+      AND pc.[DeletedAtUtc] IS NULL
+
+    UNION ALL
+
+    SELECT
+        v.[ProductId] AS [ProductId],
+        v.[ProductVariantId] AS [ProductVariantId],
+        1 AS [MatchRank]
+    FROM [product].[ProductVariants] v
+    WHERE v.[VariantCode] = :codeVariant
+      AND v.[DeletedAtUtc] IS NULL
+)
+SELECT
+    CONVERT(nvarchar(36), p.[PublicId]) AS [ProductPublicId],
+    (
+        SELECT TOP 1 slug.[Slug]
+        FROM [product].[ProductSlugs] slug
+        WHERE slug.[ProductId] = p.[ProductId]
+          AND slug.[DeletedAtUtc] IS NULL
+          AND slug.[IsActive] = 1
+        ORDER BY
+            CASE WHEN slug.[IsPrimary] = 1 THEN 0 ELSE 1 END,
+            CASE WHEN slug.[RegionId] IS NULL THEN 0 ELSE 1 END,
+            slug.[ProductSlugId]
+    ) AS [Slug],
+    p.[ProductName] AS [DisplayName],
+    ps.[StatusCode] AS [StatusCode],
+    CONVERT(nvarchar(36), v.[PublicId]) AS [VariantPublicId],
+    v.[VariantCode] AS [VariantCode]
+FROM [CodeMatch] m
+INNER JOIN [product].[Products] p
+    ON p.[ProductId] = m.[ProductId]
+    AND p.[DeletedAtUtc] IS NULL
+INNER JOIN [product].[ProductStatuses] ps
+    ON ps.[ProductStatusId] = p.[ProductStatusId]
+LEFT JOIN [product].[ProductVariants] v
+    ON v.[ProductVariantId] = m.[ProductVariantId]
+    AND v.[DeletedAtUtc] IS NULL
+ORDER BY
+    m.[MatchRank],
+    CASE WHEN v.[ProductVariantId] IS NULL THEN 1 ELSE 0 END,
+    v.[ProductVariantId]
+SQL;
+
     /** @var (callable(): ?PDO)|null */
     private $pdoProvider;
 
@@ -62,28 +135,8 @@ final class AzureSqlCableCalculatorProductResolver implements CableCalculatorPro
         }
 
         try {
-            $stmt = $pdo->prepare(
-                <<<'SQL'
-SELECT
-    CONVERT(nvarchar(36), p.[PublicId]) AS [ProductPublicId],
-    p.[Slug] AS [Slug],
-    p.[Name] AS [DisplayName],
-    ps.[StatusCode] AS [StatusCode],
-    CONVERT(nvarchar(36), v.[PublicId]) AS [VariantPublicId],
-    v.[VariantCode] AS [VariantCode]
-FROM [product].[ProductCodes] pc
-INNER JOIN [product].[Products] p ON p.[ProductId] = pc.[ProductId] AND p.[DeletedAtUtc] IS NULL
-INNER JOIN [product].[ProductStatuses] ps ON ps.[ProductStatusId] = p.[ProductStatusId]
-LEFT JOIN [product].[ProductVariants] v
-    ON v.[ProductId] = p.[ProductId]
-    AND v.[DeletedAtUtc] IS NULL
-    AND v.[VariantCode] = pc.[CodeValue]
-WHERE pc.[CodeValue] = :code
-  AND pc.[DeletedAtUtc] IS NULL
-ORDER BY CASE WHEN v.[VariantCode] = pc.[CodeValue] THEN 0 ELSE 1 END, v.[ProductVariantId]
-SQL
-            );
-            $stmt->execute(['code' => $code]);
+            $stmt = $pdo->prepare(self::RESOLVE_SQL);
+            $stmt->execute(['codeCurated' => $code, 'codeVariant' => $code]);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
             if ($rows === []) {

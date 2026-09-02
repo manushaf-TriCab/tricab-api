@@ -1651,7 +1651,7 @@ final class ContainerFactory
                 );
             },
             CableCalculatorEngine::class => static function (\Psr\Container\ContainerInterface $c) {
-                $mode = strtolower((string) (Environment::value('CABLE_CALCULATOR_ENGINE', 'legacy-cli') ?? 'legacy-cli'));
+                $mode = strtolower((string) (Environment::value('CABLE_CALCULATOR_ENGINE', 'native') ?? 'native'));
                 if ($mode === 'native') {
                     return $c->get(NativeCableCalculatorEngine::class);
                 }

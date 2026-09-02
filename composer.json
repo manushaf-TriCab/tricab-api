@@ -21,16 +21,12 @@
     "repositories": [
         {
             "type": "path",
-            "url": "core",
-            "options": {
-                "symlink": false
-            }
+            "url": "core"
         }
     ],
     "autoload": {
         "psr-4": {
-            "TriCab\\Api\\": "src/",
-            "TriCab\\Core\\LegacyMigration\\": "core/src/LegacyMigration/"
+            "TriCab\\Api\\": "src/"
         }
     },
     "autoload-dev": {

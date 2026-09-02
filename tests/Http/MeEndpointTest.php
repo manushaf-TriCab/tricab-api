@@ -155,7 +155,40 @@ final class MeEndpointTest extends TestCase
         self::assertFalse(is_dir($apiRoot . '/core/src/Http'));
         self::assertFalse(is_dir($apiRoot . '/../tricab-core/src/Http'));
         self::assertDirectoryExists($vendorCore);
-        self::assertFalse(is_link($vendorCore));
         self::assertFalse(class_exists('TriCab\\Core\\Identity\\Persistence\\InMemoryApiUserRepository'));
+
+        // The vendor entry must expose every module in core/src. Composer symlinks the path
+        // repository locally so this holds by construction; the release build mirrors it
+        // instead (COMPOSER_MIRROR_PATH_REPOS=1), and there this assertion is the guard that
+        // a stale mirror cannot ship. A module missing here is invisible to the autoloader.
+        self::assertSame(
+            self::moduleNames($apiRoot . '/core/src'),
+            self::moduleNames($vendorCore . '/src'),
+            'vendor/tricab/tricab-core is out of date with core/src — run: composer update tricab/tricab-core',
+        );
+    }
+
+    /**
+     * Immediate subdirectories of a core src tree — one per domain module.
+     *
+     * @return list<string>
+     */
+    private static function moduleNames(string $srcDir): array
+    {
+        $entries = scandir($srcDir);
+        self::assertIsArray($entries, "Unreadable core src directory: {$srcDir}");
+
+        $modules = [];
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            if (is_dir($srcDir . '/' . $entry)) {
+                $modules[] = $entry;
+            }
+        }
+        sort($modules);
+
+        return $modules;
     }
 }

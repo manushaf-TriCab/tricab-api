@@ -148,6 +148,12 @@ foreach ($directory in @('var\cache\app', 'var\cache\apple-jwks', 'var\cache\ent
     New-Item -ItemType Directory -Path (Join-Path $appRoot $directory) -Force | Out-Null
 }
 
+# The core path repository is symlinked in local development so core/src is never
+# stale. The release must be self-contained instead: force Composer to mirror it,
+# because the staged core directory is deleted immediately below.
+$previousMirrorPathRepos = [Environment]::GetEnvironmentVariable('COMPOSER_MIRROR_PATH_REPOS', 'Process')
+Set-ProcessEnvironmentValue -Name 'COMPOSER_MIRROR_PATH_REPOS' -Value '1'
+
 Push-Location $appRoot
 try {
     Invoke-CheckedCommand -Command 'composer' -Arguments @(
@@ -161,6 +167,7 @@ try {
 }
 finally {
     Pop-Location
+    Set-ProcessEnvironmentValue -Name 'COMPOSER_MIRROR_PATH_REPOS' -Value $previousMirrorPathRepos
 }
 
 $vendorCore = Get-Item -LiteralPath (Join-Path $appRoot 'vendor\tricab\tricab-core')

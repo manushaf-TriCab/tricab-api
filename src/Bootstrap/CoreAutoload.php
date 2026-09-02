@@ -5,8 +5,15 @@ declare(strict_types=1);
 namespace TriCab\Api\Bootstrap;
 
 /**
- * Prefer the in-repo Core tree over a stale Composer path-package copy.
- * Path repository copies with symlink=false are only refreshed on reinstall.
+ * Loads TriCab\Core classes straight from the in-repo core/src tree.
+ *
+ * This existed because the core path repository was copied rather than symlinked, so the
+ * Composer vendor tree went stale whenever a module was added. It is symlinked now, which
+ * means Composer's own mapping is always current and this shim is a fallback rather than
+ * the primary route — it still serves entry points that want core/src regardless of vendor
+ * state. Do not treat it as licence to leave the vendor tree stale: because it silently
+ * succeeds, it hides staleness from everything except a fresh checkout. The vendor tree is
+ * checked directly by MeEndpointTest::test_api_depends_on_core_through_composer.
  */
 final class CoreAutoload
 {
