@@ -217,6 +217,15 @@ interface CatalogueNavigationRepository
     public function listPublicNodeProducts(string $nodePublicId, ?string $regionCode = null): array;
 
     /**
+     * Preferred public product-card thumbnail URLs for the given product public IDs.
+     * One batched lookup — not a customer-view request per card.
+     *
+     * @param list<string> $productPublicIds
+     * @return array<string, string> productPublicId => url
+     */
+    public function listPublicProductThumbnailUrls(array $productPublicIds): array;
+
+    /**
      * Admin search across tabs/nodes.
      *
      * @return array{tabs: list<CatalogueTabRecord>, nodes: list<CatalogueNodeRecord>}

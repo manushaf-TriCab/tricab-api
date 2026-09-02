@@ -97,6 +97,51 @@ final class AzureSqlCatalogueNavigationQueryBatchingTest extends TestCase
         self::assertStringContainsString('c.[CatalogueNodeId] IS NOT NULL', $connection->calls[1]['sql']);
     }
 
+    public function test_list_public_node_products_selects_product_image_thumbnail(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([
+            [
+                'PublicId' => '11111111-1111-1111-1111-111111111301',
+                'Name' => 'BV Cable',
+                'Slug' => 'bv-cable',
+                'InternalCode' => 'BV',
+                'DisplayOrder' => 1,
+                'IsFeatured' => 0,
+                'ThumbnailUrl' => 'https://cdn.example/thumb.jpg',
+            ],
+        ]);
+        $repository = new AzureSqlCatalogueNavigationRepository($connection);
+        $cards = $repository->listPublicNodeProducts('node-1');
+
+        self::assertCount(1, $cards);
+        self::assertSame('https://cdn.example/thumb.jpg', $cards[0]->thumbnailUrl);
+        self::assertStringContainsString('ProductImages', $connection->calls[0]['sql']);
+        self::assertStringContainsString('product-thumbnail', $connection->calls[0]['sql']);
+    }
+
+    public function test_list_public_product_thumbnail_urls_is_batched(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([
+            [
+                'PublicId' => '11111111-1111-1111-1111-111111111301',
+                'ThumbnailUrl' => 'https://cdn.example/thumb.jpg',
+            ],
+        ]);
+        $repository = new AzureSqlCatalogueNavigationRepository($connection);
+        $map = $repository->listPublicProductThumbnailUrls([
+            '11111111-1111-1111-1111-111111111301',
+            '11111111-1111-1111-1111-111111111302',
+        ]);
+
+        self::assertSame('https://cdn.example/thumb.jpg', $map['11111111-1111-1111-1111-111111111301']);
+        self::assertCount(1, $connection->calls);
+        self::assertStringContainsString('IN (', $connection->calls[0]['sql']);
+        self::assertArrayHasKey(':pid0', $connection->calls[0]['params']);
+        self::assertArrayHasKey(':pid1', $connection->calls[0]['params']);
+    }
+
     /**
      * @return array<string, mixed>
      */

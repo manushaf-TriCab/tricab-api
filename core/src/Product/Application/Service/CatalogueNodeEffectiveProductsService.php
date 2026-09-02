@@ -49,7 +49,7 @@ final class CatalogueNodeEffectiveProductsService
     public function listPublicProductCards(string $nodePublicId, ?string $regionCode = null): array
     {
         $resolved = $this->resolve($nodePublicId, $regionCode, true);
-        $cards = [];
+        $visible = [];
         foreach ($resolved as $row) {
             if (!$row->publicVisible || !$row->regionVisible) {
                 continue;
@@ -58,12 +58,20 @@ final class CatalogueNodeEffectiveProductsService
             if ($detail === null) {
                 continue;
             }
+            $visible[] = [$row, $detail];
+        }
+        $thumbnailUrls = $this->catalogue->listPublicProductThumbnailUrls(array_map(
+            static fn (array $pair): string => $pair[0]->productPublicId,
+            $visible,
+        ));
+        $cards = [];
+        foreach ($visible as [$row, $detail]) {
             $cards[] = new PublicCatalogueProductCard(
                 publicId: $row->productPublicId,
                 name: $row->productName,
                 slug: $detail->primarySlug ?? $row->productPublicId,
                 internalCode: $row->productCode,
-                thumbnailUrl: null,
+                thumbnailUrl: $thumbnailUrls[$row->productPublicId] ?? null,
                 displayOrder: $row->displayOrder,
                 isFeatured: false,
             );
