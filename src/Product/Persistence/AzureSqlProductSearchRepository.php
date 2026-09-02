@@ -276,6 +276,12 @@ SQL,
     }
 
     /**
+     * Free-text search was matching one opaque '%whole query%' against every column,
+     * so "marine 3.3kv cable" found nothing: no single column contains that string.
+     * Now every token must match somewhere — AND across tokens, OR across columns —
+     * while the whole query is still tried as an exact or prefix identity match, so
+     * pasting a full code or SKU keeps ranking first.
+     *
      * @param list<string> $statusCodes
      * @return array{0: string, 1: array<string, scalar|SqlBinary|null>}
      */
@@ -287,13 +293,12 @@ SQL,
     ): array
     {
         $where = ' AND p.[DeletedAtUtc] IS NULL';
-        $like = '%' . $query . '%';
         // sqlsrv rejects duplicate named parameters; each occurrence needs a distinct name.
-        $prefix = $query . '%';
+        $prefix = self::escapeLike($query) . '%';
+        /** @var array<string, scalar|SqlBinary|null> $params */
         $params = [
             ':exactInternal' => $query,
             ':prefixInternal' => $prefix,
-            ':likeName' => $like,
             ':exactSku' => $query,
             ':prefixSku' => $prefix,
             ':exactVariantCode' => $query,
@@ -301,18 +306,6 @@ SQL,
             ':exactSlug' => $query,
             ':exactCode' => $query,
             ':prefixCode' => $prefix,
-            ':likeCategory' => $like,
-            ':likeSeries' => $like,
-            ':likeShortDescription' => $like,
-            ':likeFullDescription' => $like,
-            ':likeApplicationName' => $like,
-            ':likeApplicationCode' => $like,
-            ':likeSpecificationName' => $like,
-            ':likeSpecificationCode' => $like,
-            ':likeSpecificationText' => $like,
-            ':likeSpecificationLongText' => $like,
-            ':likeSpecificationOption' => $like,
-            ':likeSpecificationUnit' => $like,
         ];
 
         if ($publishedOnly) {
@@ -334,20 +327,29 @@ SQL;
             $where .= ' AND LOWER(ps.[StatusCode]) IN (' . implode(', ', $statusPlaceholders) . ')';
         }
 
-        $where .= <<<'SQL'
+        $tokenClauses = [];
+        foreach (self::tokenize($query) as $index => $token) {
+            [$clause, $tokenParams] = self::tokenClause($index, $token);
+            $tokenClauses[] = $clause;
+            $params = [...$params, ...$tokenParams];
+        }
+        $tokensMatch = $tokenClauses === []
+            ? '1 = 0'
+            : "(\n" . implode("\n    AND ", $tokenClauses) . "\n    )";
+
+        $where .= <<<SQL
  AND (
     p.[InternalCode] = :exactInternal
-    OR p.[InternalCode] LIKE :prefixInternal
-    OR p.[ProductName] LIKE :likeName
+    OR p.[InternalCode] LIKE :prefixInternal ESCAPE N'~'
     OR EXISTS (
         SELECT 1 FROM [product].[ProductVariants] v
         WHERE v.[ProductId] = p.[ProductId]
           AND v.[DeletedAtUtc] IS NULL
           AND (
               v.[Sku] = :exactSku
-              OR v.[Sku] LIKE :prefixSku
+              OR v.[Sku] LIKE :prefixSku ESCAPE N'~'
               OR v.[VariantCode] = :exactVariantCode
-              OR v.[VariantCode] LIKE :prefixVariantCode
+              OR v.[VariantCode] LIKE :prefixVariantCode ESCAPE N'~'
           )
     )
     OR EXISTS (
@@ -362,45 +364,10 @@ SQL;
           AND pc.[DeletedAtUtc] IS NULL
           AND (
               pc.[CodeValue] = :exactCode
-              OR pc.[CodeValue] LIKE :prefixCode
+              OR pc.[CodeValue] LIKE :prefixCode ESCAPE N'~'
           )
     )
-    OR c.[CategoryName] LIKE :likeCategory
-    OR s.[SeriesName] LIKE :likeSeries
-    OR p.[ShortDescription] LIKE :likeShortDescription
-    OR p.[FullDescription] LIKE :likeFullDescription
-    OR EXISTS (
-        SELECT 1
-        FROM [product].[ProductApplications] pa
-        INNER JOIN [product].[Applications] a ON a.[ApplicationId] = pa.[ApplicationId]
-        WHERE pa.[ProductId] = p.[ProductId]
-          AND a.[DeletedAtUtc] IS NULL
-          AND a.[IsActive] = 1
-          AND (
-              a.[ApplicationName] LIKE :likeApplicationName
-              OR a.[ApplicationCode] LIKE :likeApplicationCode
-          )
-    )
-    OR EXISTS (
-        SELECT 1
-        FROM [product].[ProductSpecificationValues] psv
-        INNER JOIN [product].[SpecificationDefinitions] sd
-            ON sd.[SpecificationDefinitionId] = psv.[SpecificationDefinitionId]
-        LEFT JOIN [product].[SpecificationOptions] so
-            ON so.[SpecificationOptionId] = psv.[SpecificationOptionId]
-        WHERE psv.[ProductId] = p.[ProductId]
-          AND psv.[DeletedAtUtc] IS NULL
-          AND sd.[DeletedAtUtc] IS NULL
-          AND sd.[IsActive] = 1
-          AND (
-              sd.[DefinitionName] LIKE :likeSpecificationName
-              OR sd.[DefinitionCode] LIKE :likeSpecificationCode
-              OR psv.[ValueText] LIKE :likeSpecificationText
-              OR psv.[ValueLongText] LIKE :likeSpecificationLongText
-              OR so.[OptionLabel] LIKE :likeSpecificationOption
-              OR COALESCE(psv.[UnitOverride], sd.[Unit]) LIKE :likeSpecificationUnit
-          )
-    )
+    OR {$tokensMatch}
  )
 SQL;
 
@@ -420,5 +387,119 @@ SQL;
         }
 
         return [$where, $params];
+    }
+
+    /**
+     * One token, OR'd across every searchable column. All of these must hold for the
+     * row to match, one clause per token.
+     *
+     * @return array{0: string, 1: array<string, scalar|SqlBinary|null>}
+     */
+    private static function tokenClause(int $index, string $token): array
+    {
+        $like = '%' . self::escapeLike($token) . '%';
+        $names = [
+            'Name', 'Sku', 'VariantCode', 'Internal', 'Code', 'Category', 'Series',
+            'ShortDescription', 'FullDescription', 'ApplicationName', 'ApplicationCode',
+            'SpecificationName', 'SpecificationCode', 'SpecificationText',
+            'SpecificationLongText', 'SpecificationOption', 'SpecificationUnit',
+        ];
+
+        /** @var array<string, scalar|SqlBinary|null> $params */
+        $params = [];
+        /** @var array<string, string> $p */
+        $p = [];
+        foreach ($names as $name) {
+            $placeholder = ':t' . $index . $name;
+            $p[$name] = $placeholder;
+            $params[$placeholder] = $like;
+        }
+
+        $clause = <<<SQL
+(
+        p.[ProductName] LIKE {$p['Name']} ESCAPE N'~'
+        OR p.[InternalCode] LIKE {$p['Internal']} ESCAPE N'~'
+        OR EXISTS (
+            SELECT 1 FROM [product].[ProductVariants] v
+            WHERE v.[ProductId] = p.[ProductId]
+              AND v.[DeletedAtUtc] IS NULL
+              AND (
+                  v.[Sku] LIKE {$p['Sku']} ESCAPE N'~'
+                  OR v.[VariantCode] LIKE {$p['VariantCode']} ESCAPE N'~'
+              )
+        )
+        OR EXISTS (
+            SELECT 1 FROM [product].[ProductCodes] pc
+            WHERE pc.[ProductId] = p.[ProductId]
+              AND pc.[DeletedAtUtc] IS NULL
+              AND pc.[CodeValue] LIKE {$p['Code']} ESCAPE N'~'
+        )
+        OR c.[CategoryName] LIKE {$p['Category']} ESCAPE N'~'
+        OR s.[SeriesName] LIKE {$p['Series']} ESCAPE N'~'
+        OR p.[ShortDescription] LIKE {$p['ShortDescription']} ESCAPE N'~'
+        OR p.[FullDescription] LIKE {$p['FullDescription']} ESCAPE N'~'
+        OR EXISTS (
+            SELECT 1
+            FROM [product].[ProductApplications] pa
+            INNER JOIN [product].[Applications] a ON a.[ApplicationId] = pa.[ApplicationId]
+            WHERE pa.[ProductId] = p.[ProductId]
+              AND a.[DeletedAtUtc] IS NULL
+              AND a.[IsActive] = 1
+              AND (
+                  a.[ApplicationName] LIKE {$p['ApplicationName']} ESCAPE N'~'
+                  OR a.[ApplicationCode] LIKE {$p['ApplicationCode']} ESCAPE N'~'
+              )
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM [product].[ProductSpecificationValues] psv
+            INNER JOIN [product].[SpecificationDefinitions] sd
+                ON sd.[SpecificationDefinitionId] = psv.[SpecificationDefinitionId]
+            LEFT JOIN [product].[SpecificationOptions] so
+                ON so.[SpecificationOptionId] = psv.[SpecificationOptionId]
+            WHERE psv.[ProductId] = p.[ProductId]
+              AND psv.[DeletedAtUtc] IS NULL
+              AND sd.[DeletedAtUtc] IS NULL
+              AND sd.[IsActive] = 1
+              AND (
+                  sd.[DefinitionName] LIKE {$p['SpecificationName']} ESCAPE N'~'
+                  OR sd.[DefinitionCode] LIKE {$p['SpecificationCode']} ESCAPE N'~'
+                  OR psv.[ValueText] LIKE {$p['SpecificationText']} ESCAPE N'~'
+                  OR psv.[ValueLongText] LIKE {$p['SpecificationLongText']} ESCAPE N'~'
+                  OR so.[OptionLabel] LIKE {$p['SpecificationOption']} ESCAPE N'~'
+                  OR COALESCE(psv.[UnitOverride], sd.[Unit]) LIKE {$p['SpecificationUnit']} ESCAPE N'~'
+              )
+        )
+    )
+SQL;
+
+        return [$clause, $params];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function tokenize(string $query): array
+    {
+        $tokens = preg_split('/\s+/', trim($query));
+        if ($tokens === false) {
+            return [$query];
+        }
+
+        return array_values(array_unique(array_filter(
+            $tokens,
+            static fn (string $token): bool => $token !== '',
+        )));
+    }
+
+    /**
+     * A customer-typed '%' or '_' would otherwise widen the search rather than narrow it.
+     *
+     * Escaped with a tilde, not a backslash: PDO's placeholder scanner reads N'\' as an
+     * unterminated string and drops every named parameter that follows it.
+     */
+    private static function escapeLike(string $value): string
+    {
+        return strtr($value, ['~' => '~~', '%' => '~%', '_' => '~_', '[' => '~[']);
     }
 }

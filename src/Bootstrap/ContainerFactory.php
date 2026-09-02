@@ -177,6 +177,7 @@ use TriCab\Api\Product\Persistence\AzureSqlProductClassificationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductStyleRepository;
 use TriCab\Api\Product\Persistence\AzureSqlCatalogueNavigationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductCodeRuleRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductCodeSearchRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductDocumentRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductIntegrationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductLookupRepository;
@@ -214,6 +215,7 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProductAuditRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductClassificationRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryCatalogueNavigationRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCodeRuleRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCodeSearchRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductDocumentRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductIntegrationRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductLookupRepository;
@@ -591,6 +593,7 @@ use TriCab\Core\Product\Application\Service\ReplaceProductRelationshipsService;
 use TriCab\Core\Product\Application\Service\RestoreArchivedProductService;
 use TriCab\Core\Product\Application\Service\RestoreDeletedProductService;
 use TriCab\Core\Product\Application\Service\RestoreProductVariantService;
+use TriCab\Core\Product\Application\Service\SearchProductCodesService;
 use TriCab\Core\Product\Application\Service\SearchProductsService;
 use TriCab\Core\Product\Application\Service\SetPrimaryProductImageService;
 use TriCab\Core\Product\Application\Service\UpdateProductMediaRoleService;
@@ -612,6 +615,7 @@ use TriCab\Core\Product\Contract\PriceListRepository;
 use TriCab\Core\Product\Contract\VariantLegacyPricingIdentityRepository;
 use TriCab\Core\Product\Contract\CatalogueNavigationRepository;
 use TriCab\Core\Product\Contract\ProductCodeRuleRepository;
+use TriCab\Core\Product\Contract\ProductCodeSearchRepository;
 use TriCab\Core\Product\Contract\ProductDocumentRepository;
 use TriCab\Core\Product\Contract\ProductIntegrationRepository;
 use TriCab\Core\Product\Contract\ProductLookupRepository;
@@ -1099,6 +1103,7 @@ final class ContainerFactory
             GetAdminProductCustomerViewService::class => \DI\autowire(GetAdminProductCustomerViewService::class),
             GetPublicProductService::class => \DI\autowire(GetPublicProductService::class),
             SearchProductsService::class => \DI\autowire(SearchProductsService::class),
+            SearchProductCodesService::class => \DI\autowire(SearchProductCodesService::class),
 
             ManageProductClassificationService::class => \DI\autowire(ManageProductClassificationService::class),
             ManageProductStyleService::class => \DI\autowire(ManageProductStyleService::class),
@@ -1740,6 +1745,7 @@ final class ContainerFactory
             $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
             $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
+            $definitions[ProductCodeSearchRepository::class] = \DI\autowire(AzureSqlProductCodeSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(AzureSqlProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(AzureSqlProductClassificationRepository::class);
             $definitions[ProductStyleRepository::class] = \DI\autowire(AzureSqlProductStyleRepository::class);
@@ -1885,6 +1891,7 @@ SQL,
                 );
             };
             $definitions[ProductSearchRepository::class] = \DI\autowire(InMemoryProductSearchRepository::class);
+            $definitions[ProductCodeSearchRepository::class] = \DI\autowire(InMemoryProductCodeSearchRepository::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(InMemoryProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(InMemoryProductClassificationRepository::class);
             $definitions[ProductStyleRepository::class] = \DI\autowire(InMemoryProductStyleRepository::class);

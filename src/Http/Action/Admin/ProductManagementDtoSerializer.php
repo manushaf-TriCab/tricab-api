@@ -56,6 +56,8 @@ use TriCab\Core\Product\Application\DTO\ProductApprovalCertificateItem;
 use TriCab\Core\Product\Application\DTO\ProductPublishReadinessCheck;
 use TriCab\Core\Product\Application\DTO\ProductPublishReadinessIssue;
 use TriCab\Core\Product\Application\DTO\ProductPublishReadinessReport;
+use TriCab\Core\Product\Application\DTO\ProductCodeSearchListResult;
+use TriCab\Core\Product\Application\DTO\ProductCodeSearchResult;
 use TriCab\Core\Product\Application\DTO\ProductSearchListResult;
 use TriCab\Core\Product\Application\DTO\ProductSearchResult;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
@@ -389,6 +391,61 @@ final class ProductManagementDtoSerializer
                 $result->items,
             ),
             'pagination' => self::pagination($result->pagination),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function codeSearchListResult(ProductCodeSearchListResult $result): array
+    {
+        return [
+            'items' => array_map(
+                static fn (ProductCodeSearchResult $item): array => self::codeSearchResult($item),
+                $result->items,
+            ),
+            'pagination' => self::pagination($result->pagination),
+        ];
+    }
+
+    /**
+     * The nine segments are exposed individually as well as assembled: the UI renders
+     * a segment-by-segment breakdown, and catalogue fields are null for the ~27,000
+     * indexed codes with no loaded variant behind them.
+     *
+     * @return array<string, mixed>
+     */
+    public static function codeSearchResult(ProductCodeSearchResult $result): array
+    {
+        return [
+            'codeValue' => $result->codeValue,
+            'styleCode' => $result->styleCode,
+            'styleName' => $result->styleName,
+            'segments' => [
+                'styleCode' => $result->styleCode,
+                'styleSuffix' => $result->styleSuffix,
+                'jacketTypeCode' => $result->jacketTypeCode,
+                'coreColourConfig' => $result->coreColourConfig,
+                'braidArmourScreen' => $result->braidArmourScreen,
+                'conductorCode' => $result->conductorCode,
+                'coreCount' => $result->coreCount,
+                'coreTypeCode' => $result->coreTypeCode,
+                'crossSection' => $result->crossSectionRaw,
+                'jacketColour' => $result->jacketColour,
+            ],
+            'crossSectionUnit' => $result->crossSectionUnit,
+            'crossSectionMm2' => $result->crossSectionMm2,
+            'crossSectionNominalMm2' => $result->crossSectionNominalMm2,
+            'setCores' => $result->setCores,
+            'stockStatus' => $result->stockStatus,
+            'isCurrent' => $result->isCurrent,
+            'weightKgPerKm' => $result->weightKgPerKm,
+            'description' => $result->description,
+            'productName' => $result->productName,
+            'productSlug' => $result->productSlug,
+            'variantPublicId' => $result->variantPublicId,
+            'variantCode' => $result->variantCode,
+            'matchTier' => $result->matchTier,
         ];
     }
 

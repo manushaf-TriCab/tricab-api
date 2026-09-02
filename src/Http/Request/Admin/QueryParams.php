@@ -72,6 +72,72 @@ final class QueryParams
     /**
      * @param array<string, mixed> $query
      */
+    public static function intOrNull(array $query, string $key): ?int
+    {
+        $value = $query[$key] ?? null;
+        if (!is_string($value) && !is_int($value)) {
+            return null;
+        }
+
+        if (!is_numeric($value)) {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    /**
+     * @param array<string, mixed> $query
+     */
+    public static function floatOrNull(array $query, string $key): ?float
+    {
+        $value = $query[$key] ?? null;
+        if (!is_string($value) && !is_int($value) && !is_float($value)) {
+            return null;
+        }
+
+        if (!is_numeric($value)) {
+            return null;
+        }
+
+        return (float) $value;
+    }
+
+    /**
+     * A repeatable, comma-separated list parameter: ?styleCodes=BH,BV or
+     * ?styleCodes[]=BH&styleCodes[]=BV. Empty entries are dropped rather than
+     * turned into an empty-string filter that matches nothing.
+     *
+     * @param array<string, mixed> $query
+     * @return list<string>
+     */
+    public static function stringList(array $query, string $key): array
+    {
+        $value = $query[$key] ?? null;
+        if ($value === null) {
+            return [];
+        }
+
+        $raw = is_array($value) ? $value : [$value];
+        $items = [];
+        foreach ($raw as $entry) {
+            if (!is_string($entry)) {
+                continue;
+            }
+            foreach (explode(',', $entry) as $part) {
+                $trimmed = trim($part);
+                if ($trimmed !== '') {
+                    $items[] = $trimmed;
+                }
+            }
+        }
+
+        return array_values(array_unique($items));
+    }
+
+    /**
+     * @param array<string, mixed> $query
+     */
     public static function boolOrNull(array $query, string $key): ?bool
     {
         $value = $query[$key] ?? null;

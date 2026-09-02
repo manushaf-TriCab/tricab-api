@@ -144,6 +144,7 @@ use TriCab\Api\Http\Action\PublicProduct\GetPricingCustomerContactsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPricingCustomersAction;
 use TriCab\Api\Http\Action\PublicProduct\PostPricingCustomerContextAction;
 use TriCab\Api\Http\Action\PublicProduct\PostPricingMarginOverrideAction;
+use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductCodesAction;
 use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
 use TriCab\Api\Http\Action\PublicCart\DeleteCartItemAction;
 use TriCab\Api\Http\Action\PublicCart\GetCartAction;
@@ -410,6 +411,7 @@ final class AppBuilder
         $app->get('/api/v1/products/{slug}/relationships', GetPublicProductRelationshipsAction::class);
         $app->get('/api/v1/products/{slug}/specifications', GetPublicProductSpecificationsAction::class);
         $app->get('/api/v1/product-search', SearchPublicProductsAction::class);
+        $app->get('/api/v1/product-codes/search', SearchPublicProductCodesAction::class);
         $app->get('/api/v1/catalogue/panel', GetPublicCataloguePanelAction::class);
         $app->get('/api/v1/catalogue/tabs', GetPublicCatalogueTabsAction::class);
         $app->get('/api/v1/catalogue/tabs/{tabSlug}/tree', GetPublicCatalogueTabTreeAction::class);
