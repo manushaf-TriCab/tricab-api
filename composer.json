@@ -1,6 +1,6 @@
 {
     "name": "tricab/tricab-api",
-    "description": "TriCab Slim API — authentication slice consuming TriCab Core",
+    "description": "TriCab Slim API \u2014 authentication slice consuming TriCab Core",
     "type": "project",
     "license": "proprietary",
     "require": {
@@ -40,14 +40,21 @@
         "analyse": "phpstan analyse",
         "check": [
             "@test",
-            "@analyse"
+            "@analyse",
+            "@python-test"
         ],
         "verify-core": "php bin/verify-core-import.php",
-        "start": "php -S localhost:8080 -t public public/router.php"
+        "start": "php -S localhost:8080 -t public public/router.php",
+        "python-test": "python3 -m pytest core/python",
+        "python-check": "python3 core/python/tools/check_rules_sync.py"
     },
     "config": {
         "sort-packages": true
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts-descriptions": {
+        "python-test": "Run the product finder and cable-rules pytest suite",
+        "python-check": "Check tricab_cable_rules against the RFQ parser (set RFQ_MATCHER_PATH)"
+    }
 }

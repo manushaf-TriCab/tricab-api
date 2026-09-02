@@ -56,6 +56,14 @@ server {
         deny all;
     }
 
+    # Both of these sit at the web root because the App Service reads them from
+    # there. `location /` falls through to try_files, so without this they are
+    # served as static files — the startup script names the venv path, the log
+    # directory and the finder's bind address.
+    location = /startup.sh {
+        deny all;
+    }
+
     location ~ [^/]\.php(?:/|$) {
         return 404;
     }

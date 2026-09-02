@@ -1,0 +1,5 @@
+-r requirements.txt
+
+pytest
+PyMySQL        # PRODUCT_FINDER_SIZING_SOURCE=mysql, for parity checks against
+               # live tc.cable_specs / tc.rating and for tc.price.

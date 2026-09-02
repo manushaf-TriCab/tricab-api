@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tricab-cable-python"
+version = "0.1.0"
+description = "TriCab cable-selection rules and the product finder that reads them"
+requires-python = ">=3.11"
+
+# Deliberately no `dependencies` here: the App Service installs from
+# requirements.txt into a venv outside wwwroot, and nothing pip-installs this
+# tree. The metadata exists so pytest and the editable install work, not so the
+# package can be published.
+
+[tool.setuptools]
+packages = ["tricab_cable_rules", "product_finder"]
+
+[tool.setuptools.package-data]
+tricab_cable_rules = ["data/cable_rules/*.json", "data/catalog/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `tests/` imports `product_finder` and `tricab_cable_rules` from this directory.
+pythonpath = ["."]
+filterwarnings = ["error::DeprecationWarning:product_finder.*"]

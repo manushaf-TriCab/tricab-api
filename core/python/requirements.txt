@@ -1,0 +1,15 @@
+# Runtime dependencies for the product finder on the App Service.
+# Installed once into /home/data/python/venv — see docs/product-finder/DEPLOYMENT.md.
+Flask
+gunicorn
+python-dotenv
+openpyxl        # tricab_cable_rules.data reads the style workbooks
+
+# Not here on purpose:
+#   pyodbc / azure-identity — the finder no longer opens Azure SQL at all. It
+#     only ever did so for a health probe; PHP owns that connection and already
+#     publishes /health/database. Dropping them drops the msodbcsql18 native
+#     driver from this service's install.
+#   PyMySQL — only for PRODUCT_FINDER_SIZING_SOURCE=mysql, which needs the
+#     corporate VPN and so cannot be the App Service's source. See
+#     requirements-dev.txt.

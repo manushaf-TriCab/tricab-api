@@ -1,0 +1,19 @@
+{
+  "_source": "Ported verbatim from TriCab 4Js M092cd.4gl (code structure service), version v351.2.",
+  "_functions": {
+    "family_group": "_x_stylga2stylgg (M092cd.4gl:1404)",
+    "mica": "_is_stylga_mica (M092cd.4gl:1459)",
+    "one_pass": "is_stylga_1pass (M092cd.4gl:1487)",
+    "set_code_cores": "_x_ccfga2cset_ccnt (M092cd.4gl:1508)"
+  },
+  "_report_note": "When re-porting after a 4Js release, diff these lists against the cited functions and re-run the catalog round-trip test.",
+
+  "group_B": ["BC", "BD", "BE", "BF", "BK", "BM", "BN", "BP", "BR", "BS", "BT"],
+  "group_M": ["BH", "BV", "DF", "DV", "EG", "ES", "EW", "FC", "FE", "FJ", "FK", "FL", "FZ", "HT", "PJ", "RB", "RC", "RR", "RS"],
+  "group_T": ["TD", "TE", "TW"],
+
+  "mica_fire_rated": ["BH", "ES", "FC", "FJ", "FK", "FL", "FR", "HT", "PC", "RR", "WG", "WH"],
+  "one_pass": ["EH", "EZ", "FP", "FW", "XL"],
+
+  "set_code_cores": {"A": 1, "C": 1, "P": 2, "T": 3, "Q": 4}
+}

@@ -78,7 +78,10 @@ foreach ($requiredPath in @(
     (Join-Path $webRoot 'package.json'),
     (Join-Path $webRoot 'package-lock.json'),
     (Join-Path $apiRoot 'deploy\app-service\default'),
-    (Join-Path $apiRoot 'deploy\app-service\api\index.php')
+    (Join-Path $apiRoot 'deploy\app-service\startup.sh'),
+    (Join-Path $apiRoot 'deploy\app-service\api\index.php'),
+    (Join-Path $apiRoot 'core\python\requirements.txt'),
+    (Join-Path $apiRoot 'core\python\wsgi.py')
 )) {
     if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
         throw "Required release input is missing: $requiredPath"
@@ -175,7 +178,49 @@ if (($vendorCore.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
     throw "Release vendor Core must be mirrored, not linked: $($vendorCore.FullName)"
 }
 
+# The product finder's Python. `app/core` is deleted immediately below because
+# Composer has already mirrored it into vendor/tricab/tricab-core, so Python
+# left under core/ would go with it -- it survives only in vendor, at a path
+# nothing should depend on. Stage it to `app/python` instead: a stable location
+# for the gunicorn --chdir, and outside the vendor tree.
 $stagedCore = Join-Path $appRoot 'core'
+$sourcePython = Join-Path $stagedCore 'python'
+if (-not (Test-Path -LiteralPath $sourcePython -PathType Container)) {
+    throw "Required API directory is missing: $sourcePython"
+}
+
+# A virtualenv under core/python is hundreds of megabytes and Composer's path
+# copy is wholesale, so it would already be in vendor by now. Fail rather than
+# ship it.
+foreach ($unwanted in @('.venv', 'venv', '.pytest_cache')) {
+    $strays = @(Get-ChildItem -LiteralPath $sourcePython -Recurse -Force -Directory -Filter $unwanted -ErrorAction SilentlyContinue)
+    if ($strays.Count -gt 0) {
+        throw "core/python must not contain a $unwanted directory: $($strays[0].FullName)"
+    }
+}
+
+$appPython = Join-Path $appRoot 'python'
+Copy-Item -LiteralPath $sourcePython -Destination $appPython -Recurse -Force
+foreach ($prune in @('__pycache__', '.pytest_cache')) {
+    Get-ChildItem -LiteralPath $appPython -Recurse -Force -Directory -Filter $prune -ErrorAction SilentlyContinue |
+        ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force }
+}
+# `tests/` and `tools/` are development surface, not runtime.
+foreach ($devOnly in @('tests', 'tools')) {
+    $devPath = Join-Path $appPython $devOnly
+    if (Test-Path -LiteralPath $devPath) {
+        Remove-Item -LiteralPath $devPath -Recurse -Force
+    }
+}
+
+# Composer mirrored core/ wholesale, Python included. Drop that second copy:
+# two copies of the selection rules on one disk is the exact thing
+# tricab_cable_rules exists to prevent, even when one of them is unreachable.
+$vendorPython = Join-Path $appRoot 'vendor\tricab\tricab-core\python'
+if (Test-Path -LiteralPath $vendorPython) {
+    Remove-Item -LiteralPath $vendorPython -Recurse -Force
+}
+
 Assert-NoReparsePoints -Root $stagedCore
 Remove-Item -LiteralPath $stagedCore -Recurse -Force
 
@@ -183,6 +228,7 @@ $apiPublicRoot = Join-Path $releaseRoot 'api'
 New-Item -ItemType Directory -Path $apiPublicRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\api\index.php') -Destination (Join-Path $apiPublicRoot 'index.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\default') -Destination (Join-Path $releaseRoot 'default') -Force
+Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\startup.sh') -Destination (Join-Path $releaseRoot 'startup.sh') -Force
 
 if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force

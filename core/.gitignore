@@ -3,3 +3,15 @@
 composer.lock
 .phpunit.result.cache
 .DS_Store
+
+# Python. Composer's path repository copies core/ wholesale into
+# vendor/tricab/tricab-core/ — docs/, phpunit.xml and this file are already
+# duplicated there — so anything left in this tree is copied on every install
+# and again into the release zip. A virtualenv here would be hundreds of
+# megabytes of that, per install.
+python/**/__pycache__/
+python/**/*.py[cod]
+python/.venv/
+python/**/.venv/
+python/.pytest_cache/
+python/.env
