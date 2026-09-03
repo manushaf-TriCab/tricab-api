@@ -111,6 +111,56 @@ final class InMemoryCatalogueNavigationRepositoryTest extends TestCase
         self::assertArrayNotHasKey('missing', $batch);
     }
 
+    public function test_public_node_attaches_products_to_requested_node_not_every_descendant(): void
+    {
+        $store = new InMemoryProductStore();
+        $repo = new InMemoryCatalogueNavigationRepository($store);
+        $actor = UserId::fromInt(1);
+        $rootProduct = '11111111-1111-1111-1111-111111111211';
+        $childProduct = '11111111-1111-1111-1111-111111111212';
+        $this->seedPublishedProduct($store, $rootProduct, 'Root Cable');
+        $this->seedPublishedProduct($store, $childProduct, 'Child Cable');
+
+        $tab = $repo->createTab([
+            'tabCode' => 'SHOP',
+            'tabName' => 'Shop',
+            'slug' => 'shop',
+        ], $actor);
+        $root = $repo->createNode([
+            'tabPublicId' => $tab->publicId,
+            'nodeCode' => 'MARINE',
+            'nodeName' => 'Marine IEC LSZH',
+            'slug' => 'marine-iec-lszh',
+        ], $actor);
+        $child = $repo->createNode([
+            'tabPublicId' => $tab->publicId,
+            'parentPublicId' => $root->publicId,
+            'nodeCode' => 'SHIP',
+            'nodeName' => 'Shipboard',
+            'slug' => 'marine-shipboard',
+        ], $actor);
+        $repo->replaceNodeProducts($root->publicId, [
+            ['productPublicId' => $rootProduct, 'displayOrder' => 1],
+        ], $actor);
+        $repo->replaceNodeProducts($child->publicId, [
+            ['productPublicId' => $childProduct, 'displayOrder' => 1],
+        ], $actor);
+
+        $parent = $repo->getPublicNodeBySlug('marine-iec-lszh');
+        self::assertNotNull($parent);
+        self::assertCount(1, $parent->products);
+        self::assertSame($rootProduct, $parent->products[0]->publicId);
+        self::assertCount(1, $parent->children);
+        self::assertSame([], $parent->children[0]->products);
+        self::assertTrue($parent->children[0]->hasProducts);
+
+        $openedChild = $repo->getPublicNodeBySlug('marine-shipboard');
+        self::assertNotNull($openedChild);
+        self::assertCount(1, $openedChild->products);
+        self::assertSame($childProduct, $openedChild->products[0]->publicId);
+        self::assertSame('Child Cable', $openedChild->products[0]->name);
+    }
+
     private function seedPublishedProduct(InMemoryProductStore $store, string $publicId, string $name): void
     {
         $productId = $store->allocateProductId();

@@ -1131,7 +1131,7 @@ SQL;
                 continue;
             }
 
-            return $this->buildPublicTreeNode($node, $nodes, $regionCode, true, $this->nodeDepth((string) $row['PublicId']));
+            return $this->buildRequestedPublicNode($node, $nodes, $regionCode);
         }
 
         return null;
@@ -1152,7 +1152,7 @@ SQL;
             return null;
         }
 
-        return $this->buildPublicTreeNode($flat, $nodes, $regionCode, true, $node->depth);
+        return $this->buildRequestedPublicNode($flat, $nodes, $regionCode);
     }
 
     public function listPublicChildren(string $nodePublicId, ?string $regionCode = null): array
@@ -1672,6 +1672,75 @@ SQL,
     }
 
     /**
+     * Build the requested node the same way as the panel tree (set-based descendants,
+     * no per-child product-card query), then attach product cards for this node only.
+     *
+     * @param array<string, mixed> $node
+     * @param list<array<string, mixed>> $nodes
+     */
+    private function buildRequestedPublicNode(
+        array $node,
+        array $nodes,
+        ?string $regionCode,
+    ): PublicCatalogueTreeNode {
+        $tree = $this->buildPublicTreeNode(
+            $node,
+            $nodes,
+            $regionCode,
+            false,
+            $this->depthInFlatList($nodes, (string) $node['publicId']),
+        );
+        $products = $this->listPublicNodeProducts($tree->publicId, $regionCode);
+
+        return new PublicCatalogueTreeNode(
+            publicId: $tree->publicId,
+            nodeCode: $tree->nodeCode,
+            nodeName: $tree->nodeName,
+            slug: $tree->slug,
+            description: $tree->description,
+            nodeTypeCode: $tree->nodeTypeCode,
+            imageUrl: $tree->imageUrl,
+            imageAltText: $tree->imageAltText,
+            displayOrder: $tree->displayOrder,
+            depth: $tree->depth,
+            hasChildren: $tree->hasChildren,
+            hasProducts: $tree->hasProducts || $products !== [],
+            children: $tree->children,
+            products: $products,
+            parentPublicId: $tree->parentPublicId,
+        );
+    }
+
+    /**
+     * @param list<array<string, mixed>> $nodes
+     */
+    private function depthInFlatList(array $nodes, string $publicId): int
+    {
+        $byId = [];
+        foreach ($nodes as $candidate) {
+            $id = (string) ($candidate['publicId'] ?? '');
+            if ($id !== '') {
+                $byId[$id] = $candidate;
+            }
+        }
+        $depth = 0;
+        $current = $byId[$publicId] ?? null;
+        while ($current !== null) {
+            $parentId = $current['parentPublicId'] ?? null;
+            if (!is_string($parentId) || $parentId === '') {
+                break;
+            }
+            $current = $byId[$parentId] ?? null;
+            ++$depth;
+            if ($depth > 100) {
+                break;
+            }
+        }
+
+        return $depth;
+    }
+
+    /**
      * @param list<array<string, mixed>> $nodes
      * @param array<string, mixed> $node
      */
@@ -1812,6 +1881,10 @@ SQL,
 
     private function nodeVisibleForRegion(string $nodePublicId, ?string $regionCode): bool
     {
+        if ($regionCode === null || trim($regionCode) === '') {
+            return true;
+        }
+
         return $this->nodeVisibleForRegionCodes($this->loadRegionCodes($nodePublicId), $regionCode);
     }
 

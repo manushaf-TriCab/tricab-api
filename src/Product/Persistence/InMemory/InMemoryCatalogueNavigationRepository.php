@@ -776,7 +776,7 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
                 return null;
             }
 
-            return $this->buildPublicTreeNode($row, $regionCode, true, $this->nodeDepth((string) $row['publicId']));
+            return $this->buildRequestedPublicNode($row, $regionCode);
         }
 
         return null;
@@ -789,7 +789,7 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
             return null;
         }
 
-        return $this->buildPublicTreeNode($row, $regionCode, true, $this->nodeDepth($nodePublicId));
+        return $this->buildRequestedPublicNode($row, $regionCode);
     }
 
     public function listPublicChildren(string $nodePublicId, ?string $regionCode = null): array
@@ -1132,6 +1132,33 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
     /**
      * @param array<string, mixed> $row
      */
+    private function buildRequestedPublicNode(array $row, ?string $regionCode): PublicCatalogueTreeNode
+    {
+        $tree = $this->buildPublicTreeNode($row, $regionCode, false, $this->nodeDepth((string) $row['publicId']));
+        $products = $this->listPublicNodeProducts((string) $row['publicId'], $regionCode);
+
+        return new PublicCatalogueTreeNode(
+            publicId: $tree->publicId,
+            nodeCode: $tree->nodeCode,
+            nodeName: $tree->nodeName,
+            slug: $tree->slug,
+            description: $tree->description,
+            nodeTypeCode: $tree->nodeTypeCode,
+            imageUrl: $tree->imageUrl,
+            imageAltText: $tree->imageAltText,
+            displayOrder: $tree->displayOrder,
+            depth: $tree->depth,
+            hasChildren: $tree->hasChildren,
+            hasProducts: $tree->hasProducts || $products !== [],
+            children: $tree->children,
+            products: $products,
+            parentPublicId: $tree->parentPublicId,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
     private function buildPublicTreeNode(array $row, ?string $regionCode, bool $includeProducts, int $depth): PublicCatalogueTreeNode
     {
         $publicId = (string) ($row['publicId'] ?? '');
@@ -1153,12 +1180,10 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
         $products = $includeProducts ? $this->listPublicNodeProducts($publicId, $regionCode) : [];
         $productCount = $includeProducts
             ? count($products)
-            : (($regionCode !== null && trim($regionCode) !== '')
-                ? count($this->listPublicNodeProducts($publicId, $regionCode))
-                : count(array_filter(
-                    $this->nodeProducts[$publicId] ?? [],
-                    static fn (array $placement): bool => (bool) ($placement['isActive'] ?? true),
-                )));
+            : count(array_filter(
+                $this->nodeProducts[$publicId] ?? [],
+                static fn (array $placement): bool => (bool) ($placement['isActive'] ?? true),
+            ));
 
         return new PublicCatalogueTreeNode(
             publicId: $publicId,
