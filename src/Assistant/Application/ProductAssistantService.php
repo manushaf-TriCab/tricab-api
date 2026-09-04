@@ -63,10 +63,15 @@ final class ProductAssistantService
             catalogueVisibility: $catalogueVisibility->value,
             conversationTurns: $conversation->turns(),
         ));
+        // The turn keeps the provider's original text, including any choice
+        // list lifted out below, so later turns still show the agent what it
+        // offered when the customer answers with just "copper".
         $this->conversations->appendTurn($conversation, new AssistantConversationTurn(
             userMessage: trim($message),
             assistantMessage: $providerResult->text,
         ));
+
+        $clarification = AssistantClarificationOptions::extract($providerResult->text);
 
         $cards = $providerResult->cards !== []
             ? $providerResult->cards
@@ -90,8 +95,9 @@ final class ProductAssistantService
             'message' => [
                 'publicId' => self::uuid(),
                 'role' => 'assistant',
-                'text' => $providerResult->text,
+                'text' => $clarification->text,
                 'cards' => $cards,
+                'clarificationOptions' => $clarification->options,
                 'citations' => [],
             ],
             'provider' => [
