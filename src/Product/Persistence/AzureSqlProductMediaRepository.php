@@ -67,7 +67,178 @@ SQL;
             [':productPublicId' => $productPublicId->toString()],
         );
 
-        return array_map(fn (array $row): ProductMediaSummary => $this->hydrate($row), $rows);
+        $rolesByMedia = $this->listPresentationRolesByMedia($productPublicId);
+
+        return array_map(
+            function (array $row) use ($rolesByMedia): ProductMediaSummary {
+                $summary = $this->hydrate($row);
+                $roles = $rolesByMedia[$summary->publicId] ?? [];
+
+                return $roles === [] ? $summary : $summary->withPresentationRoles($roles);
+            },
+            $rows,
+        );
+    }
+
+    public function listPresentationRolesByMedia(ProductPublicId $productPublicId): array
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT
+    CONVERT(NVARCHAR(36), i.[PublicId]) AS [MediaPublicId],
+    a.[RoleCode]
+FROM [product].[ProductImageRoleAssignments] a
+INNER JOIN [product].[Products] p ON p.[ProductId] = a.[ProductId]
+INNER JOIN [product].[ProductImages] i ON i.[ProductImagesId] = a.[ProductImagesId]
+WHERE p.[PublicId] = :productPublicId
+  AND p.[DeletedAtUtc] IS NULL
+  AND i.[DeletedAtUtc] IS NULL
+ORDER BY a.[RoleCode]
+SQL,
+            [':productPublicId' => $productPublicId->toString()],
+        );
+
+        $map = [];
+        foreach ($rows as $row) {
+            $mediaId = AzureSqlValueMapper::stringValue($row['MediaPublicId'] ?? '');
+            $role = strtolower(AzureSqlValueMapper::stringValue($row['RoleCode'] ?? ''));
+            if ($mediaId === '' || $role === '') {
+                continue;
+            }
+            $map[$mediaId] ??= [];
+            if (!in_array($role, $map[$mediaId], true)) {
+                $map[$mediaId][] = $role;
+            }
+        }
+
+        return $map;
+    }
+
+    public function listPresentationRoleAssignments(ProductPublicId $productPublicId): array
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT
+    a.[RoleCode],
+    CONVERT(NVARCHAR(36), i.[PublicId]) AS [MediaPublicId]
+FROM [product].[ProductImageRoleAssignments] a
+INNER JOIN [product].[Products] p ON p.[ProductId] = a.[ProductId]
+INNER JOIN [product].[ProductImages] i ON i.[ProductImagesId] = a.[ProductImagesId]
+WHERE p.[PublicId] = :productPublicId
+  AND p.[DeletedAtUtc] IS NULL
+  AND i.[DeletedAtUtc] IS NULL
+SQL,
+            [':productPublicId' => $productPublicId->toString()],
+        );
+
+        $map = [];
+        foreach ($rows as $row) {
+            $role = strtolower(AzureSqlValueMapper::stringValue($row['RoleCode'] ?? ''));
+            $mediaId = AzureSqlValueMapper::stringValue($row['MediaPublicId'] ?? '');
+            if ($role !== '' && $mediaId !== '') {
+                $map[$role] = $mediaId;
+            }
+        }
+
+        return $map;
+    }
+
+    public function assignPresentationRole(
+        ProductPublicId $productPublicId,
+        string $mediaPublicId,
+        string $roleCode,
+        UserId $actorUserId,
+    ): void {
+        $this->runInTransaction(
+            $this->connection,
+            function () use ($productPublicId, $mediaPublicId, $roleCode, $actorUserId): void {
+                $productId = $this->requireProductId($productPublicId);
+                $imageId = $this->requireProductImageIdForProduct($productPublicId, $mediaPublicId);
+
+                $this->connection->execute(
+                    <<<'SQL'
+MERGE [product].[ProductImageRoleAssignments] AS target
+USING (
+    SELECT
+        :productId AS [ProductId],
+        :productImagesId AS [ProductImagesId],
+        :roleCode AS [RoleCode]
+) AS source
+ON target.[ProductId] = source.[ProductId]
+   AND target.[RoleCode] = source.[RoleCode]
+WHEN MATCHED THEN
+    UPDATE SET
+        target.[ProductImagesId] = source.[ProductImagesId],
+        target.[UpdatedAtUtc] = SYSUTCDATETIME(),
+        target.[UpdatedByUserId] = :updatedByUserId
+WHEN NOT MATCHED THEN
+    INSERT ([ProductId], [ProductImagesId], [RoleCode], [CreatedByUserId], [UpdatedByUserId])
+    VALUES (
+        source.[ProductId],
+        source.[ProductImagesId],
+        source.[RoleCode],
+        :createdByUserId,
+        :updatedByUserIdInsert
+    );
+SQL,
+                    [
+                        ':productId' => $productId,
+                        ':productImagesId' => $imageId,
+                        ':roleCode' => strtolower(trim($roleCode)),
+                        ':updatedByUserId' => $actorUserId->toInt(),
+                        ':createdByUserId' => $actorUserId->toInt(),
+                        ':updatedByUserIdInsert' => $actorUserId->toInt(),
+                    ],
+                );
+            },
+        );
+    }
+
+    public function clearPresentationRole(
+        ProductPublicId $productPublicId,
+        string $roleCode,
+        UserId $actorUserId,
+    ): void {
+        unset($actorUserId);
+        $this->connection->execute(
+            <<<'SQL'
+DELETE a
+FROM [product].[ProductImageRoleAssignments] a
+INNER JOIN [product].[Products] p ON p.[ProductId] = a.[ProductId]
+WHERE p.[PublicId] = :productPublicId
+  AND a.[RoleCode] = :roleCode
+SQL,
+            [
+                ':productPublicId' => $productPublicId->toString(),
+                ':roleCode' => strtolower(trim($roleCode)),
+            ],
+        );
+    }
+
+    private function requireProductImageIdForProduct(
+        ProductPublicId $productPublicId,
+        string $mediaPublicId,
+    ): int {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT i.[ProductImagesId]
+FROM [product].[ProductImages] i
+INNER JOIN [product].[Products] p ON p.[ProductId] = i.[ProductId]
+WHERE p.[PublicId] = :productPublicId
+  AND i.[PublicId] = :mediaPublicId
+  AND p.[DeletedAtUtc] IS NULL
+  AND i.[DeletedAtUtc] IS NULL
+SQL,
+            [
+                ':productPublicId' => $productPublicId->toString(),
+                ':mediaPublicId' => $mediaPublicId,
+            ],
+        );
+        if ($rows === []) {
+            throw ProductPersistenceException::lookupNotFound('Product image', $mediaPublicId);
+        }
+
+        return AzureSqlValueMapper::intValue($rows[0]['ProductImagesId'] ?? 0);
     }
 
     public function create(

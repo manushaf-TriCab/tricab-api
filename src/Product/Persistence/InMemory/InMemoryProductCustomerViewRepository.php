@@ -98,6 +98,7 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
             threeD: $this->product3dEnabled
                 ? $this->threeDModels->listPublicByProduct(ProductPublicId::fromString($publicId))
                 : ProductPublic3DPayload::empty(),
+            thumbnailBackgroundColor: $this->store->thumbnailBackgroundColorForProduct($product->publicId()),
         );
     }
 

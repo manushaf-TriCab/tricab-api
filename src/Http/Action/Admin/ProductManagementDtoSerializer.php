@@ -34,6 +34,9 @@ use TriCab\Core\Product\Application\DTO\ProductListResult;
 use TriCab\Core\Product\Application\DTO\ProductLookupItem;
 use TriCab\Core\Product\Application\DTO\ProductMediaFileRecord;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
+use TriCab\Core\Product\Application\Service\PresentationMediaResolver;
+use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
+use TriCab\Core\Product\Domain\ValueObject\PresentationMediaRole;
 use TriCab\Core\Product\Application\DTO\ProductDocumentDownloadResult;
 use TriCab\Core\Product\Application\DTO\ProductUploadSessionResult;
 use TriCab\Core\Product\Application\DTO\Product360SetSummary;
@@ -59,7 +62,6 @@ use TriCab\Core\Product\Application\DTO\ProductPublishReadinessReport;
 use TriCab\Core\Product\Application\DTO\ProductSearchListResult;
 use TriCab\Core\Product\Application\DTO\ProductSearchResult;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
-use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Application\DTO\Pagination;
 use TriCab\Core\Product\Application\DTO\SpecificationDefinitionRecord;
 use TriCab\Core\Product\Application\DTO\SpecificationGroupRecord;
@@ -196,16 +198,13 @@ final class ProductManagementDtoSerializer
             'categoryName' => $detail->categoryName,
             'seriesName' => $detail->seriesName,
             'slug' => $detail->slug,
-            'thumbnailUrl' => self::resolveDetailThumbnail(
-                $detail->thumbnailUrl,
-                $detail->media,
-                $media,
+            'thumbnailUrl' => self::resolveAssetUrl(
                 $devUrls,
+                ProductThumbnailImageResolver::fromMediaSummaries($detail->media),
             ),
             'thumbnailImageUrl' => self::resolveAssetUrl(
                 $devUrls,
-                $detail->thumbnailImageUrl ?? ProductThumbnailImageResolver::fromMediaSummaries($detail->media),
-                $detail->publicId,
+                ProductThumbnailImageResolver::fromMediaSummaries($detail->media),
             ),
             'thumbnailBackgroundColor' => $detail->thumbnailBackgroundColor ?? null,
             'variants' => array_map(self::variantSummary(...), $detail->variants),
@@ -244,11 +243,22 @@ final class ProductManagementDtoSerializer
             $detail->media,
         );
 
-        $thumbnailUrl = self::resolveDetailThumbnail(
-            $detail->thumbnailUrl,
-            $detail->media,
-            $media,
+        $canonicalThumbnail = self::resolveAssetUrl(
             $devUrls,
+            ProductThumbnailImageResolver::fromMediaSummaries($detail->media),
+        );
+
+        $productThumbnail = PresentationMediaResolver::select(
+            $detail->media,
+            PresentationMediaRole::PRODUCT_THUMBNAIL,
+        );
+        $primaryVisual = PresentationMediaResolver::select(
+            $detail->media,
+            PresentationMediaRole::PRIMARY,
+        );
+        $crossSection = PresentationMediaResolver::select(
+            $detail->media,
+            PresentationMediaRole::CROSS_SECTION,
         );
 
         return [
@@ -268,7 +278,19 @@ final class ProductManagementDtoSerializer
             'categoryName' => $detail->categoryName,
             'seriesName' => $detail->seriesName,
             'slug' => $detail->slug,
-            'thumbnailUrl' => $thumbnailUrl,
+            'thumbnailUrl' => $canonicalThumbnail,
+            'thumbnailImageUrl' => $canonicalThumbnail,
+            'presentationMedia' => [
+                'productThumbnail' => $productThumbnail === null
+                    ? null
+                    : self::publicMediaSummary($productThumbnail, $devUrls),
+                'primary' => $primaryVisual === null
+                    ? null
+                    : self::publicMediaSummary($primaryVisual, $devUrls),
+                'crossSection' => $crossSection === null
+                    ? null
+                    : self::publicMediaSummary($crossSection, $devUrls),
+            ],
             'variants' => array_map(self::variantSummary(...), $detail->variants),
             'media' => $media,
             'documents' => array_map(
@@ -290,6 +312,7 @@ final class ProductManagementDtoSerializer
             'threeD' => self::publicThreeD($detail->threeD, $devUrls),
             'styleCode' => $detail->styleCode,
             'parentStyleCode' => $detail->parentStyleCode,
+            'thumbnailBackgroundColor' => $detail->thumbnailBackgroundColor,
         ];
     }
 
@@ -736,6 +759,7 @@ final class ProductManagementDtoSerializer
             'altText' => $summary->altText,
             'displayOrder' => $summary->displayOrder,
             'isPrimary' => $summary->isPrimary,
+            'presentationRoles' => $summary->presentationRoles,
         ];
 
         if ($includeAdminFields) {

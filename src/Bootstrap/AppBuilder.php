@@ -75,6 +75,7 @@ use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerViewThemeAction;
 use TriCab\Api\Http\Action\Admin\GetProductCustomerViewAction;
 use TriCab\Api\Http\Action\Admin\UpdateCustomerViewThemeAction;
+use TriCab\Api\Http\Action\Admin\ClearProductPresentationMediaRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductMediaRoleAction;
 use TriCab\Api\Http\Action\Admin\GetProductLookupsAction;
 use TriCab\Api\Http\Action\Admin\GetProductPricingAction;
@@ -179,6 +180,15 @@ use TriCab\Api\Http\Action\Passkey\RequestPasskeySetupLinkAction;
 use TriCab\Api\Http\Action\Passkey\RevokePasskeyAction;
 use TriCab\Api\Http\Action\Passkey\VerifyPasskeySetupLinkAction;
 use TriCab\Api\Http\Auth\RequirePermission;
+use TriCab\Api\Http\Action\TriExpense\ApproveExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\CreateExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\GetExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\ListExpenseApprovalsAction;
+use TriCab\Api\Http\Action\TriExpense\ListExpenseReceiptsAction;
+use TriCab\Api\Http\Action\TriExpense\RejectExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\SendBackExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\SubmitExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\UpdateExpenseReceiptAction;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
 use TriCab\Api\Http\Middleware\DevelopmentAuthenticationMiddleware;
@@ -279,6 +289,7 @@ final class AppBuilder
         }
 
         self::registerPublicProductRoutes($app);
+        self::registerTriExpenseRoutes($app, $container);
         $app->get('/api/v1/regions', PublicRegionAction::class);
         $app->get('/api/v1/regions/current', PublicRegionAction::class);
         $app->post('/api/v1/regions/select', PublicRegionAction::class);
@@ -347,6 +358,26 @@ final class AppBuilder
     /**
      * @param App<ContainerInterface> $app
      */
+
+    /**
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerTriExpenseRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $gate = 'TRIEXPENSE.ACCESS';
+
+        $app->get('/api/v1/tri-expense/receipts', ListExpenseReceiptsAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts', CreateExpenseReceiptAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/receipts/{id}', GetExpenseReceiptAction::class)->add(($require)($gate));
+        $app->patch('/api/v1/tri-expense/receipts/{id}', UpdateExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/submit', SubmitExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/approve', ApproveExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/reject', RejectExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/send-back', SendBackExpenseReceiptAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/approvals', ListExpenseApprovalsAction::class)->add(($require)($gate));
+    }
+
     private static function registerAdminLegacyMigrationRoutes(App $app, RequirePermission $require): void
     {
         $gate = 'MIGRATION.ADMIN';
@@ -934,6 +965,8 @@ final class AppBuilder
         $app->post('/api/v1/admin/product-media/{mediaPublicId}/set-primary', SetPrimaryProductImageAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
         $app->post('/api/v1/admin/product-media/{mediaPublicId}/role', UpdateProductMediaRoleAction::class)
+            ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->delete('/api/v1/admin/products/{productPublicId}/presentation-media-roles/{roleCode}', ClearProductPresentationMediaRoleAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
 
         $app->post('/api/v1/admin/products/{productPublicId}/360-sets', CreateProduct360SetAction::class)

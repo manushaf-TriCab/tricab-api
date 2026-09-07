@@ -76,6 +76,12 @@ SELECT
           AND img.[DeletedAtUtc] IS NULL
           AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
         ORDER BY
+          CASE WHEN EXISTS (
+              SELECT 1
+              FROM [product].[ProductImageRoleAssignments] a
+              WHERE a.[ProductImagesId] = img.[ProductImagesId]
+                AND a.[RoleCode] = N'product-thumbnail'
+          ) THEN 0 ELSE 1 END,
           CASE LOWER(img.[ImageRoleCode])
               WHEN N'product-thumbnail' THEN 0
               WHEN N'primary' THEN 1
