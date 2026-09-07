@@ -20,7 +20,7 @@ core/python/
 | Path | What | Why there |
 |---|---|---|
 | `/home/site/wwwroot/app/python` | the code | Staged from `core/python` by the release script. `app/` is denied by nginx, so nothing here is servable. |
-| `/home/data/python/venv` | the virtualenv | **Outside `wwwroot`.** A zip deploy replaces `wwwroot` wholesale, so a venv under it is rebuilt on every release. `/home` is the persistent share, so this survives deploys and is shared across instances. `tc-web` puts its venv at `/home/site/wwwroot/rfq-parser/.venv`; do not copy that. |
+| `/home/site/wwwroot/app/python/_vendor` | the dependencies | Wheels resolved at build time for the image's CPython 3.11 on x86_64 and shipped in the zip. `startup.sh` puts this on `PYTHONPATH`. There is no virtualenv — see below. |
 | `/home/LogFiles/product-finder/` | startup, access and error logs | Reachable from Kudu without a redeploy. |
 
 ## Startup command
@@ -32,22 +32,52 @@ bash /home/site/wwwroot/startup.sh
 ```
 
 This replaces the previous one-liner. `startup.sh` still applies the nginx
-config first — that is unchanged and must keep happening — then creates the venv
-if `requirements.txt` has changed, then launches gunicorn under a restart loop.
+config first — that is unchanged and must keep happening — then launches
+gunicorn under a restart loop.
 
-**One-time install.** There is none. The first startup after a deploy builds the
-venv itself and records `sha256(requirements.txt)` at
-`/home/data/python/venv/.requirements.sha256`; later startups skip the install
-unless that hash changes. On a multi-instance plan one instance takes a
-`mkdir`-based lock and the others wait rather than racing pip against a shared
-Azure Files directory.
+**There is no install step, and there must not be one.** The Linux PHP image
+ships `python3` (3.11.2 at `/usr/bin/python3`) but *not* Debian's
+`python3-venv`, so `python3 -m venv` fails outright:
 
-To rebuild it by hand from Kudu:
+```
+The virtual environment was not created successfully because ensurepip is not
+available.  On Debian/Ubuntu systems, you need to install the python3-venv
+package using the following command.
+
+    apt install python3.11-venv
+```
+
+An earlier revision of this document described building a venv on first
+startup and caching it at `/home/data/python/venv`. That cannot work on this
+image; the venv step failed in under a second and the finder never started,
+while the API reported `sizing: unavailable` exactly as designed.
+
+The release vendors the wheels instead. `scripts/build-app-service-release.sh`
+resolves them for the target interpreter, not the build machine:
 
 ```bash
-rm -rf /home/data/python/venv
-# then restart the App Service
+python3 -m pip install --target app/python/_vendor \
+    -r core/python/requirements.txt \
+    --platform manylinux2014_x86_64 --python-version 3.11 \
+    --implementation cp --only-binary=:all:
 ```
+
+`--only-binary=:all:` is required for pip to honour the platform triple.
+MarkupSafe is the one dependency with a native extension; the build asserts
+every `.so` in the tree is `x86_64-linux-gnu` before packaging, because a wheel
+built for the wrong platform is silent until import time on the instance. The
+console scripts under `_vendor/bin` are dropped — their shebangs point at the
+build machine's python — so `startup.sh` runs `python3 -m gunicorn` with
+`PYTHONPATH=_vendor:app/python`.
+
+`requirements.txt` is unpinned, so the build records what it actually resolved
+at `app/python/_vendor/VENDORED.txt`, and `startup.sh` logs that line. The
+release zip is the only place those versions are fixed.
+
+**If the image's Python ever moves off 3.11**, the vendored extension stops
+importing. `startup.sh` compares the running interpreter against 3.11 and logs
+a warning naming the version to rebuild with; change `PY_VERSION` at the top of
+the build script and re-release.
 
 ## What supervises what
 
@@ -91,11 +121,15 @@ answers. `HttpProductFinderClient` never throws:
 degraded path to reason about rather than three, and it is the same
 primary/fallback posture as `FallbackAssistantResponseProvider`.
 
-**The risk worth naming:** the Linux PHP App Service image is not guaranteed to
-ship `python3`. `startup.sh` checks and logs an explicit error to
-`/home/LogFiles/product-finder/startup.log` rather than failing quietly, but if
-that error fires the finder cannot run in this image and the deployment needs a
-different answer. Check that log after the first deploy — a finder that is
+**The risk worth naming** was that the Linux PHP App Service image might not
+ship `python3` at all. It does — 3.11.2 — so that is settled. What it omits is
+`python3-venv`, which is what actually broke the first deployment and is why
+the dependencies are now vendored rather than installed.
+
+The live risk is narrower: the vendored wheels are pinned to CPython 3.11 and
+x86_64, so a base-image upgrade that moves the interpreter breaks the import.
+`startup.sh` logs a warning naming the version it saw. Check
+`/home/LogFiles/product-finder/startup.log` after any deploy — a finder that is
 quietly absent looks exactly like a finder that has nothing to say.
 
 ## Sizing data

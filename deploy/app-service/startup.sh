@@ -17,21 +17,27 @@
 # same data.
 #
 # Nothing below is allowed to fail the deployment. If Python is missing or the
-# install fails, the site still serves: `HttpProductFinderClient` degrades to
-# `sizing: unavailable` rather than 500ing, the same primary/fallback posture as
-# `FallbackAssistantResponseProvider`. It logs loudly instead of failing
-# silently — a finder that is quietly absent looks exactly like a finder that
-# has nothing to say.
+# dependencies did not ship, the site still serves: `HttpProductFinderClient`
+# degrades to `sizing: unavailable` rather than 500ing, the same primary/fallback
+# posture as `FallbackAssistantResponseProvider`. It logs loudly instead of
+# failing silently — a finder that is quietly absent looks exactly like a finder
+# that has nothing to say.
+#
+# There is no install step. An earlier revision built a virtualenv here and
+# pip-installed into it; that cannot work on this image, which ships python3
+# but not Debian's python3-venv, so `python3 -m venv` dies on a missing
+# ensurepip. The wheels are vendored into the release instead.
 
 set -u
 
 WWWROOT=/home/site/wwwroot
 APP_PYTHON="$WWWROOT/app/python"
-# Outside wwwroot on purpose: a zip deploy replaces wwwroot wholesale, so a venv
-# under it is rebuilt on every release (minutes of pip per deploy). /home is the
-# persistent share, so this survives deploys and is shared across instances.
-# `tc-web` puts its venv at /home/site/wwwroot/rfq-parser/.venv; do not copy that.
-VENV=/home/data/python/venv
+# The dependencies ship in the release, already resolved for this image's
+# CPython 3.11 on x86_64. There is no virtualenv and no pip at runtime: this
+# image has python3 but not Debian's python3-venv, so `python3 -m venv` fails
+# with "ensurepip is not available" and no amount of retrying helps. The build
+# script vendors the wheels instead -- see docs/product-finder/DEPLOYMENT.md.
+VENDOR="$APP_PYTHON/_vendor"
 LOG_DIR=/home/LogFiles/product-finder
 BIND=127.0.0.1:8001
 WORKERS="${PRODUCT_FINDER_WORKERS:-2}"
@@ -68,40 +74,26 @@ start_finder() {
     fi
     log "using $PYTHON_BIN ($("$PYTHON_BIN" --version 2>&1))"
 
-    # One instance builds the venv; the others wait rather than racing pip
-    # against a shared Azure Files directory. mkdir is the atomic primitive
-    # available on that share.
-    local stamp="$VENV/.requirements.sha256"
-    local want
-    want="$(sha256sum "$APP_PYTHON/requirements.txt" | cut -d' ' -f1)"
-
-    if [ ! -x "$VENV/bin/python" ] || [ "$(cat "$stamp" 2>/dev/null || true)" != "$want" ]; then
-        mkdir -p "$(dirname "$VENV")"
-        if mkdir "$VENV.lock" 2>/dev/null; then
-            trap 'rmdir "$VENV.lock" 2>/dev/null || true' EXIT
-            log "building the venv at $VENV"
-            "$PYTHON_BIN" -m venv "$VENV" >>"$LOG" 2>&1 || { log "ERROR: venv creation failed"; return 1; }
-            "$VENV/bin/pip" install --no-cache-dir --disable-pip-version-check \
-                -r "$APP_PYTHON/requirements.txt" >>"$LOG" 2>&1 \
-                || { log "ERROR: pip install failed; see $LOG"; return 1; }
-            echo "$want" > "$stamp"
-            rmdir "$VENV.lock" 2>/dev/null || true
-            trap - EXIT
-            log "venv ready"
-        else
-            log "another instance is building the venv; waiting"
-            for _ in $(seq 1 60); do
-                sleep 5
-                [ -x "$VENV/bin/python" ] && [ "$(cat "$stamp" 2>/dev/null || true)" = "$want" ] && break
-            done
-            if [ ! -x "$VENV/bin/python" ]; then
-                log "ERROR: timed out waiting for the venv"
-                return 1
-            fi
-        fi
-    else
-        log "venv is current"
+    if [ ! -d "$VENDOR/gunicorn" ]; then
+        log "ERROR: $VENDOR carries no gunicorn. The release zip was built without the vendored dependencies."
+        return 1
     fi
+    if [ -f "$VENDOR/VENDORED.txt" ]; then
+        log "vendored dependencies: $(tr '\n' ' ' < "$VENDOR/VENDORED.txt")"
+    fi
+
+    # The wheels are compiled for CPython 3.11. A different minor version on the
+    # image cannot import MarkupSafe's extension, and the failure would surface
+    # as a worker that dies on every request rather than a clear startup error.
+    local py_minor
+    py_minor="$("$PYTHON_BIN" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || echo unknown)"
+    if [ "$py_minor" != "3.11" ]; then
+        log "WARNING: vendored wheels target CPython 3.11 but this image runs $py_minor; rebuild the release with PY_VERSION=$py_minor"
+    fi
+
+    # PYTHONPATH carries both the dependencies and the finder itself, so
+    # `wsgi:application` and `product_finder.app` resolve without a venv.
+    export PYTHONPATH="$VENDOR:$APP_PYTHON"
 
     # Gunicorn's master supervises its workers; nothing supervises the master.
     # An OOM kill or a bad deploy takes it out and the finder is simply gone
@@ -111,7 +103,7 @@ start_finder() {
         delay=2
         while true; do
             log "starting gunicorn on $BIND ($WORKERS workers)"
-            "$VENV/bin/gunicorn" \
+            "$PYTHON_BIN" -m gunicorn \
                 --chdir "$APP_PYTHON" \
                 --bind "$BIND" \
                 --workers "$WORKERS" \

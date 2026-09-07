@@ -14,6 +14,12 @@ set -euo pipefail
 WEB_ORIGIN='https://tc-web-core-e7b7gdbjgadjd3ff.australiasoutheast-01.azurewebsites.net'
 SKIP_NPM_CI=0
 
+# The finder's Python dependencies are cross-compiled for the App Service image,
+# not for this build machine. Keep these in step with the image's interpreter --
+# `startup.log` records it as "using /usr/bin/python3 (Python 3.11.2)".
+PY_VERSION='3.11'
+PY_PLATFORM='manylinux2014_x86_64'
+
 while [ $# -gt 0 ]; do
     case "$1" in
         --web-origin)
@@ -83,6 +89,13 @@ do
         exit 1
     fi
 done
+
+# The release vendors the finder's wheels, so the build needs pip even though
+# nothing Python runs here.
+if ! python3 -m pip --version >/dev/null 2>&1; then
+    echo "python3 -m pip is required to vendor the finder's dependencies." >&2
+    exit 1
+fi
 
 if [ -e "$artifacts_root" ]; then
     if [ ! -d "$artifacts_root" ] || [ -L "$artifacts_root" ]; then
@@ -188,6 +201,53 @@ find "$app_python" -type d \( -name __pycache__ -o -name .pytest_cache \) -prune
 for dev_only in tests tools; do
     rm -rf "$app_python/$dev_only"
 done
+
+# The finder's Python dependencies, vendored into the release.
+#
+# The App Service cannot build a virtualenv for itself: the Linux PHP image
+# ships python3 (3.11) but not Debian's python3-venv, so `python3 -m venv`
+# fails with "ensurepip is not available" and gunicorn never starts. Rather
+# than mutate the container with apt at every cold start, or download
+# get-pip.py over the internet on boot, resolve the wheels here and ship them.
+#
+# Cross-compiled deliberately: this runs on a developer's macOS machine but the
+# target is the image's CPython 3.11 on x86_64 Linux, so the platform triple is
+# pinned and --only-binary is required for pip to honour it. MarkupSafe is the
+# one dependency with a native extension; the rest are pure Python.
+echo "==> Vendoring the finder's Python dependencies for $PY_PLATFORM / cp$PY_VERSION"
+vendor_python="$app_python/_vendor"
+python3 -m pip install \
+    --quiet \
+    --target "$vendor_python" \
+    --requirement "$api_root/core/python/requirements.txt" \
+    --platform "$PY_PLATFORM" \
+    --python-version "$PY_VERSION" \
+    --implementation cp \
+    --only-binary=:all:
+
+if [ ! -d "$vendor_python/gunicorn" ]; then
+    echo "Vendored dependencies are missing gunicorn: $vendor_python" >&2
+    exit 1
+fi
+
+# Console scripts carry this build machine's shebang, so they would point at a
+# python that does not exist on the instance. startup.sh runs `python3 -m
+# gunicorn` against PYTHONPATH instead; drop the scripts so nothing is tempted.
+rm -rf "$vendor_python/bin"
+
+# A wheel built for the wrong platform is the failure this step exists to
+# prevent, and it is silent until import time on the instance.
+if find "$vendor_python" -name '*.so' | grep -qv 'x86_64-linux-gnu'; then
+    echo "Vendored tree contains a native extension that is not x86_64 Linux:" >&2
+    find "$vendor_python" -name '*.so' | grep -v 'x86_64-linux-gnu' >&2
+    exit 1
+fi
+
+# requirements.txt is unpinned, so record what this build actually resolved.
+# The release is the only place those versions are fixed.
+find "$vendor_python" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
+    | sort > "$vendor_python/VENDORED.txt"
+echo "    vendored $(wc -l < "$vendor_python/VENDORED.txt" | tr -d ' ') distributions"
 
 # Composer mirrored core/ wholesale, Python included. Drop that second copy:
 # two copies of the selection rules on one disk is the exact thing
