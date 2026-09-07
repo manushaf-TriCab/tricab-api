@@ -66,6 +66,7 @@ use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerViewThemeAction;
 use TriCab\Api\Http\Action\Admin\GetProductCustomerViewAction;
 use TriCab\Api\Http\Action\Admin\UpdateCustomerViewThemeAction;
+use TriCab\Api\Http\Action\Admin\ClearProductPresentationMediaRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductMediaRoleAction;
 use TriCab\Api\Site\Persistence\AzureSqlSiteConfigurationRepository;
 use TriCab\Api\Site\Persistence\InMemory\InMemorySiteConfigurationRepository;
@@ -606,6 +607,7 @@ use TriCab\Core\Product\Application\Service\RestoreDeletedProductService;
 use TriCab\Core\Product\Application\Service\RestoreProductVariantService;
 use TriCab\Core\Product\Application\Service\SearchProductCodesService;
 use TriCab\Core\Product\Application\Service\SearchProductsService;
+use TriCab\Core\Product\Application\Service\ClearProductPresentationMediaRoleService;
 use TriCab\Core\Product\Application\Service\SetPrimaryProductImageService;
 use TriCab\Core\Product\Application\Service\UpdateProductMediaRoleService;
 use TriCab\Core\Product\Application\Service\SoftDeleteProductDocumentService;
@@ -720,6 +722,28 @@ final class ContainerFactory
         $definitions = [
             Settings::class => $settings,
             JsonResponder::class => \DI\create(JsonResponder::class),
+
+            // Tri Expense Stage 2/3 — memory defaults; azure-sql branch overrides persistence below.
+            \TriCab\Core\Expense\Contract\ExpenseReceiptRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReceiptRepository::class),
+            \TriCab\Core\Expense\Contract\ExpenseProfileRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseProfileRepository::class),
+            \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
+            \TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\OrExpenseFinanceCapabilityResolver::class),
+            \TriCab\Core\Expense\Contract\ExpenseManagerResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileManagerResolver::class),
+            \TriCab\Core\Expense\Contract\ExpenseNotificationPort::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseNotificationPort::class),
+            \TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseAuditRecorder::class),
+            \TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort::class => \DI\autowire(\TriCab\Api\Expense\Persistence\DisabledExpenseCaptureAssistPort::class),
+            \TriCab\Core\Expense\Contract\ExpenseAttachmentStore::class => \DI\autowire(\TriCab\Api\Expense\Persistence\MetadataExpenseAttachmentStore::class),
+            \TriCab\Api\Http\Auth\ExpenseErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class),
+            \TriCab\Core\Expense\Application\Service\ExpenseAccessService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class),
+            \TriCab\Core\Expense\Application\Service\ExpenseReceiptAssembler::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseReceiptAssembler::class),
+            \TriCab\Core\Expense\Application\Service\CreateExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CreateExpenseReceiptService::class),
+            \TriCab\Core\Expense\Application\Service\UpdateExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\UpdateExpenseReceiptService::class),
+            \TriCab\Core\Expense\Application\Service\SubmitExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\SubmitExpenseReceiptService::class),
+            \TriCab\Core\Expense\Application\Service\ExpenseApprovalService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseApprovalService::class),
+            \TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class),
+            \TriCab\Core\Expense\Application\Service\ListExpenseApprovalsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseApprovalsService::class),
+
             AssistantQueryInterpreter::class => static function () use ($settings, $prompts): AssistantQueryInterpreter {
                 unset($prompts);
 
@@ -1001,6 +1025,8 @@ final class ContainerFactory
             ReorderProductMediaService::class => \DI\autowire(ReorderProductMediaService::class),
             SetPrimaryProductImageService::class => \DI\autowire(SetPrimaryProductImageService::class),
             UpdateProductMediaRoleService::class => \DI\autowire(UpdateProductMediaRoleService::class),
+            ClearProductPresentationMediaRoleService::class => \DI\autowire(ClearProductPresentationMediaRoleService::class),
+            ClearProductPresentationMediaRoleAction::class => \DI\autowire(ClearProductPresentationMediaRoleAction::class),
             SoftDeleteProductMediaService::class => \DI\autowire(SoftDeleteProductMediaService::class),
             ProductFilePathBuilder::class => \DI\autowire(ProductFilePathBuilder::class),
             ProductFileValidationPolicy::class => \DI\autowire(ProductFileValidationPolicy::class),
@@ -1767,6 +1793,12 @@ final class ContainerFactory
                     self::get($container, ProductDevMediaUrlResolver::class),
                 );
             };
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseReceiptRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReceiptRepository::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseProfileRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseProfileRepository::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseNotificationPort::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseNotificationPort::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\OrExpenseFinanceCapabilityResolver::class);
             $definitions[RegionRepository::class] = \DI\autowire(AzureSqlRegionRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);

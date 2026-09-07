@@ -140,4 +140,37 @@ interface ProductMediaRepository
         string $mediaPublicId,
         UserId $actorUserId,
     ): void;
+
+    /**
+     * Canonical presentation-role map: mediaPublicId => list of role codes.
+     *
+     * @return array<string, list<string>>
+     */
+    public function listPresentationRolesByMedia(ProductPublicId $productPublicId): array;
+
+    /**
+     * Canonical presentation-role map: roleCode => mediaPublicId.
+     *
+     * @return array<string, string>
+     */
+    public function listPresentationRoleAssignments(ProductPublicId $productPublicId): array;
+
+    /**
+     * Upsert one ProductId+RoleCode assignment without mutating ImageRoleCode.
+     */
+    public function assignPresentationRole(
+        ProductPublicId $productPublicId,
+        string $mediaPublicId,
+        string $roleCode,
+        UserId $actorUserId,
+    ): void;
+
+    /**
+     * Remove one ProductId+RoleCode assignment without touching other roles.
+     */
+    public function clearPresentationRole(
+        ProductPublicId $productPublicId,
+        string $roleCode,
+        UserId $actorUserId,
+    ): void;
 }

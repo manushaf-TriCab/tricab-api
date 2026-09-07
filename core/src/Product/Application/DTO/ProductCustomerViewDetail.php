@@ -50,6 +50,7 @@ final readonly class ProductCustomerViewDetail
         public ?string $parentStyleCode = null,
         /** @var list<ProductApprovalCertificateItem> */
         public array $approvalCertificates = [],
+        public ?string $thumbnailBackgroundColor = null,
     ) {
     }
 }

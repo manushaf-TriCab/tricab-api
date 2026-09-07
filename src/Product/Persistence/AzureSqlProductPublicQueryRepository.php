@@ -474,7 +474,10 @@ SQL,
             [':productPublicId' => $productPublicId->toString()],
         );
 
-        return array_map(static fn (array $row): ProductMediaSummary => new ProductMediaSummary(
+        $rolesByMedia = $this->listPresentationRolesByMedia($productPublicId);
+
+        return array_map(static function (array $row) use ($rolesByMedia): ProductMediaSummary {
+            $summary = new ProductMediaSummary(
             publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
             mediaCategoryCode: AzureSqlValueMapper::stringValue($row['MediaCategoryCode'] ?? ''),
             mediaTypeCode: AzureSqlValueMapper::stringValue($row['MediaTypeCode'] ?? ''),
@@ -485,7 +488,45 @@ SQL,
             isPrimary: AzureSqlValueMapper::boolValue($row['IsPrimary'] ?? false),
             storagePath: AzureSqlValueMapper::nullableString($row['StoragePath'] ?? null),
             storageContainer: AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null),
-        ), $rows);
+            );
+            $roles = $rolesByMedia[$summary->publicId] ?? [];
+
+            return $roles === [] ? $summary : $summary->withPresentationRoles($roles);
+        }, $rows);
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function listPresentationRolesByMedia(ProductPublicId $productPublicId): array
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT
+    CONVERT(NVARCHAR(36), i.[PublicId]) AS [MediaPublicId],
+    a.[RoleCode]
+FROM [product].[ProductImageRoleAssignments] a
+INNER JOIN [product].[Products] p ON p.[ProductId] = a.[ProductId]
+INNER JOIN [product].[ProductImages] i ON i.[ProductImagesId] = a.[ProductImagesId]
+WHERE p.[PublicId] = :productPublicId
+  AND i.[DeletedAtUtc] IS NULL
+SQL,
+            [':productPublicId' => $productPublicId->toString()],
+        );
+        $map = [];
+        foreach ($rows as $row) {
+            $mediaId = AzureSqlValueMapper::stringValue($row['MediaPublicId'] ?? '');
+            $role = strtolower(AzureSqlValueMapper::stringValue($row['RoleCode'] ?? ''));
+            if ($mediaId === '' || $role === '') {
+                continue;
+            }
+            $map[$mediaId] ??= [];
+            if (!in_array($role, $map[$mediaId], true)) {
+                $map[$mediaId][] = $role;
+            }
+        }
+
+        return $map;
     }
 
     /**

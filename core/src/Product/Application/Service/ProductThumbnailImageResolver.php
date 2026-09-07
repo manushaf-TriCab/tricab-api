@@ -6,15 +6,17 @@ namespace TriCab\Core\Product\Application\Service;
 
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
 use TriCab\Core\Product\Domain\ValueObject\ImageRoleCode;
+use TriCab\Core\Product\Domain\ValueObject\PresentationMediaRole;
 
 /**
  * Resolves the public product-card thumbnail URL from product media.
  *
  * Precedence:
- * 1. product-thumbnail role
- * 2. primary image (IsPrimary or primary role)
- * 3. first valid product image URL
- * 4. null
+ * 1. ProductImageRoleAssignments product-thumbnail
+ * 2. legacy ImageRoleCode product-thumbnail
+ * 3. primary image (assignment / IsPrimary / primary role)
+ * 4. first valid product image URL
+ * 5. null
  */
 final class ProductThumbnailImageResolver
 {
@@ -23,6 +25,14 @@ final class ProductThumbnailImageResolver
      */
     public static function fromMediaSummaries(array $media): ?string
     {
+        $assigned = PresentationMediaResolver::select($media, PresentationMediaRole::PRODUCT_THUMBNAIL);
+        if ($assigned !== null) {
+            $url = self::canonicalUrl($assigned);
+            if ($url !== null) {
+                return $url;
+            }
+        }
+
         $candidates = [];
         foreach ($media as $item) {
             $url = self::canonicalUrl($item);
@@ -34,6 +44,7 @@ final class ProductThumbnailImageResolver
                 'role' => strtolower($item->mediaCategoryCode),
                 'isPrimary' => $item->isPrimary,
                 'displayOrder' => $item->displayOrder,
+                'presentationRoles' => $item->presentationRoles,
             ];
         }
 
@@ -59,18 +70,26 @@ final class ProductThumbnailImageResolver
     }
 
     /**
-     * @param array{role: string, isPrimary: bool} $candidate
+     * @param array{role: string, isPrimary: bool, presentationRoles?: list<string>} $candidate
      */
     private static function rank(array $candidate): int
     {
-        if ($candidate['role'] === ImageRoleCode::PRODUCT_THUMBNAIL) {
+        $roles = $candidate['presentationRoles'] ?? [];
+        if (in_array(PresentationMediaRole::PRODUCT_THUMBNAIL, $roles, true)) {
             return 0;
         }
-        if ($candidate['isPrimary'] || $candidate['role'] === ImageRoleCode::PRIMARY) {
+        if ($candidate['role'] === ImageRoleCode::PRODUCT_THUMBNAIL) {
             return 1;
         }
+        if (
+            in_array(PresentationMediaRole::PRIMARY, $roles, true)
+            || $candidate['isPrimary']
+            || $candidate['role'] === ImageRoleCode::PRIMARY
+        ) {
+            return 2;
+        }
 
-        return 2;
+        return 3;
     }
 
     private static function canonicalUrl(ProductMediaSummary $item): ?string

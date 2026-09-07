@@ -33,7 +33,7 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
                 'Slug' => 'cable',
             ],
         ]);
-        for ($i = 0; $i < 7; ++$i) {
+        for ($i = 0; $i < 8; ++$i) {
             $connection->queueFetch([]);
         }
         $connection->queueFetch([
@@ -118,6 +118,7 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
                 'Slug' => 'cable',
             ],
         ]);
+        $connection->queueFetch([]);
         $connection->queueFetch([]);
         $connection->queueFetch([
             $this->variantRow($variantA, 'Variant A', 1),

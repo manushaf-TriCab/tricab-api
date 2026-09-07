@@ -19,7 +19,9 @@ use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Application\DTO\SpecificationValidationRules;
 use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Contract\ProductCustomerViewQueryRepository;
+use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
+use TriCab\Core\Product\Domain\ValueObject\ThumbnailBackgroundColor;
 
 /**
  * Admin customer-view aggregate. Loads non-deleted products regardless of
@@ -54,6 +56,7 @@ SELECT
     ps.[StatusCode],
     pls.[LifecycleStatusCode],
     CASE WHEN ps.[StatusCode] = N'archived' THEN 1 ELSE 0 END AS [IsArchived],
+    p.[ThumbnailBackgroundColor],
     (
         SELECT TOP 1 slug.[Slug]
         FROM [product].[ProductSlugs] slug
@@ -90,22 +93,7 @@ SQL,
         $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
         $pid = ProductPublicId::fromString($publicId);
         $media = $this->listPublicMedia($pid);
-        $thumbnailUrl = null;
-        foreach ($media as $item) {
-            if ($item->isPrimary && $item->publicUrl !== null) {
-                $thumbnailUrl = $item->publicUrl;
-                break;
-            }
-        }
-        if ($thumbnailUrl === null) {
-            foreach ($media as $item) {
-                if ($item->publicUrl !== null) {
-                    $thumbnailUrl = $item->publicUrl;
-                    break;
-                }
-            }
-        }
-
+        $thumbnailUrl = ProductThumbnailImageResolver::fromMediaSummaries($media);
         $slug = AzureSqlValueMapper::stringValue($row['Slug'] ?? '');
         $statusCode = AzureSqlValueMapper::stringValue($row['StatusCode'] ?? '');
         $primarySlug = $slug !== '' ? $slug : null;
@@ -148,6 +136,9 @@ SQL,
             styleCode: $styleAssignment['styleCode'],
             parentStyleCode: $styleAssignment['parentStyleCode'],
             approvalCertificates: $this->listApprovalCertificates($pid),
+            thumbnailBackgroundColor: ThumbnailBackgroundColor::tryFromString(
+                AzureSqlValueMapper::nullableString($row['ThumbnailBackgroundColor'] ?? null),
+            )?->toString(),
         );
     }
 
@@ -661,7 +652,10 @@ SQL,
             [':productPublicId' => $productPublicId->toString()],
         );
 
-        return array_map(static fn (array $row): ProductMediaSummary => new ProductMediaSummary(
+        $rolesByMedia = $this->listPresentationRolesByMedia($productPublicId);
+
+        return array_map(static function (array $row) use ($rolesByMedia): ProductMediaSummary {
+            $summary = new ProductMediaSummary(
             publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
             mediaCategoryCode: AzureSqlValueMapper::stringValue($row['MediaCategoryCode'] ?? ''),
             mediaTypeCode: AzureSqlValueMapper::stringValue($row['MediaTypeCode'] ?? ''),
@@ -672,7 +666,45 @@ SQL,
             isPrimary: AzureSqlValueMapper::boolValue($row['IsPrimary'] ?? false),
             storagePath: AzureSqlValueMapper::nullableString($row['StoragePath'] ?? null),
             storageContainer: AzureSqlValueMapper::nullableString($row['StorageContainer'] ?? null),
-        ), $rows);
+            );
+            $roles = $rolesByMedia[$summary->publicId] ?? [];
+
+            return $roles === [] ? $summary : $summary->withPresentationRoles($roles);
+        }, $rows);
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function listPresentationRolesByMedia(ProductPublicId $productPublicId): array
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT
+    CONVERT(NVARCHAR(36), i.[PublicId]) AS [MediaPublicId],
+    a.[RoleCode]
+FROM [product].[ProductImageRoleAssignments] a
+INNER JOIN [product].[Products] p ON p.[ProductId] = a.[ProductId]
+INNER JOIN [product].[ProductImages] i ON i.[ProductImagesId] = a.[ProductImagesId]
+WHERE p.[PublicId] = :productPublicId
+  AND i.[DeletedAtUtc] IS NULL
+SQL,
+            [':productPublicId' => $productPublicId->toString()],
+        );
+        $map = [];
+        foreach ($rows as $row) {
+            $mediaId = AzureSqlValueMapper::stringValue($row['MediaPublicId'] ?? '');
+            $role = strtolower(AzureSqlValueMapper::stringValue($row['RoleCode'] ?? ''));
+            if ($mediaId === '' || $role === '') {
+                continue;
+            }
+            $map[$mediaId] ??= [];
+            if (!in_array($role, $map[$mediaId], true)) {
+                $map[$mediaId][] = $role;
+            }
+        }
+
+        return $map;
     }
 
     /**

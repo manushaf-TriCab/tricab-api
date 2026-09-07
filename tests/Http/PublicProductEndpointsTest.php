@@ -80,6 +80,7 @@ final class PublicProductEndpointsTest extends TestCase
         self::assertArrayHasKey('columns', $data['variantMatrix']);
         self::assertArrayHasKey('rows', $data['variantMatrix']);
         self::assertArrayHasKey('preview', $data);
+        self::assertArrayHasKey('thumbnailBackgroundColor', $data);
         self::assertTrue((bool) $data['preview']['isPublished']);
         self::assertArrayNotHasKey('rowVersion', $data);
         self::assertArrayNotHasKey('pricing', $data);

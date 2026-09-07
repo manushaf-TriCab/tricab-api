@@ -23,7 +23,7 @@ final class InMemoryFakeProductMediaRepository implements ProductMediaRepository
     public function listByProduct(ProductPublicId $productPublicId): array
     {
         return array_values(array_map(
-            static fn (array $row): ProductMediaSummary => self::toSummary($row),
+            fn (array $row): ProductMediaSummary => $this->toSummary($row),
             array_filter(
                 $this->store->mediaFor($productPublicId->toString()),
                 static fn (array $row): bool => empty($row['archived']),
@@ -270,6 +270,52 @@ final class InMemoryFakeProductMediaRepository implements ProductMediaRepository
         }
     }
 
+    public function listPresentationRolesByMedia(ProductPublicId $productPublicId): array
+    {
+        $byRole = $this->listPresentationRoleAssignments($productPublicId);
+        $map = [];
+        foreach ($byRole as $role => $mediaPublicId) {
+            $map[$mediaPublicId] ??= [];
+            $map[$mediaPublicId][] = $role;
+        }
+
+        return $map;
+    }
+
+    public function listPresentationRoleAssignments(ProductPublicId $productPublicId): array
+    {
+        return $this->presentationAssignments[$productPublicId->toString()] ?? [];
+    }
+
+    public function assignPresentationRole(
+        ProductPublicId $productPublicId,
+        string $mediaPublicId,
+        string $roleCode,
+        UserId $actorUserId,
+    ): void {
+        unset($actorUserId);
+        $map = $this->store->mediaByPublicIdMap();
+        $row = $map[$mediaPublicId] ?? null;
+        if ($row === null || ($row['productPublicId'] ?? '') !== $productPublicId->toString() || !empty($row['archived'])) {
+            throw new RuntimeException('media not found for product');
+        }
+        $pid = $productPublicId->toString();
+        $this->presentationAssignments[$pid] ??= [];
+        $this->presentationAssignments[$pid][strtolower(trim($roleCode))] = $mediaPublicId;
+    }
+
+    public function clearPresentationRole(
+        ProductPublicId $productPublicId,
+        string $roleCode,
+        UserId $actorUserId,
+    ): void {
+        unset($actorUserId);
+        unset($this->presentationAssignments[$productPublicId->toString()][strtolower(trim($roleCode))]);
+    }
+
+    /** @var array<string, array<string, string>> */
+    private array $presentationAssignments = [];
+
     /** @param array<string, mixed> $row */
     private function persistRow(string $productPublicId, array $row): void
     {
@@ -292,9 +338,9 @@ final class InMemoryFakeProductMediaRepository implements ProductMediaRepository
     }
 
     /** @param array<string, mixed> $row */
-    private static function toSummary(array $row): ProductMediaSummary
+    private function toSummary(array $row): ProductMediaSummary
     {
-        return new ProductMediaSummary(
+        $summary = new ProductMediaSummary(
             $row['publicId'],
             $row['mediaCategoryCode'],
             $row['mediaTypeCode'],
@@ -314,6 +360,14 @@ final class InMemoryFakeProductMediaRepository implements ProductMediaRepository
             $row['storagePath'] ?? null,
             $row['storageContainer'] ?? null,
         );
+        $roles = [];
+        foreach ($this->presentationAssignments[$row['productPublicId'] ?? ''] ?? [] as $role => $mediaId) {
+            if ($mediaId === $summary->publicId) {
+                $roles[] = $role;
+            }
+        }
+
+        return $roles === [] ? $summary : $summary->withPresentationRoles($roles);
     }
 
     /** @param array<string, mixed> $row */
