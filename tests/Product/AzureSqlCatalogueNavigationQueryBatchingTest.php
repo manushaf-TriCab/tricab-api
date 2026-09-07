@@ -97,6 +97,139 @@ final class AzureSqlCatalogueNavigationQueryBatchingTest extends TestCase
         self::assertStringContainsString('c.[CatalogueNodeId] IS NOT NULL', $connection->calls[1]['sql']);
     }
 
+    public function test_list_public_node_products_selects_product_image_thumbnail(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([
+            [
+                'PublicId' => '11111111-1111-1111-1111-111111111301',
+                'Name' => 'BV Cable',
+                'Slug' => 'bv-cable',
+                'InternalCode' => 'BV',
+                'DisplayOrder' => 1,
+                'IsFeatured' => 0,
+                'ThumbnailUrl' => 'https://cdn.example/thumb.jpg',
+            ],
+        ]);
+        $repository = new AzureSqlCatalogueNavigationRepository($connection);
+        $cards = $repository->listPublicNodeProducts('node-1');
+
+        self::assertCount(1, $cards);
+        self::assertSame('https://cdn.example/thumb.jpg', $cards[0]->thumbnailUrl);
+        self::assertStringContainsString('ProductImages', $connection->calls[0]['sql']);
+        self::assertStringContainsString('product-thumbnail', $connection->calls[0]['sql']);
+    }
+
+    public function test_list_public_product_thumbnail_urls_is_batched(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([
+            [
+                'PublicId' => '11111111-1111-1111-1111-111111111301',
+                'ThumbnailUrl' => 'https://cdn.example/thumb.jpg',
+            ],
+        ]);
+        $repository = new AzureSqlCatalogueNavigationRepository($connection);
+        $map = $repository->listPublicProductThumbnailUrls([
+            '11111111-1111-1111-1111-111111111301',
+            '11111111-1111-1111-1111-111111111302',
+        ]);
+
+        self::assertSame('https://cdn.example/thumb.jpg', $map['11111111-1111-1111-1111-111111111301']);
+        self::assertCount(1, $connection->calls);
+        self::assertStringContainsString('IN (', $connection->calls[0]['sql']);
+        self::assertArrayHasKey(':pid0', $connection->calls[0]['params']);
+        self::assertArrayHasKey(':pid1', $connection->calls[0]['params']);
+    }
+
+    public function test_get_public_node_by_slug_loads_product_cards_once_not_per_descendant(): void
+    {
+        $connection = new FakeSqlConnection();
+        $parent = '00000000-0000-0000-0000-000000000101';
+        $childA = '00000000-0000-0000-0000-000000000102';
+        $childB = '00000000-0000-0000-0000-000000000103';
+        $connection->queueFetch([
+            [
+                'PublicId' => $parent,
+                'NodeCode' => 'MARINE',
+                'NodeName' => 'Marine IEC LSZH',
+                'Slug' => 'marine-iec-lszh',
+                'Description' => null,
+                'NodeTypeCode' => 'category',
+                'ImageUrl' => null,
+                'ImageAltText' => null,
+                'DisplayOrder' => 0,
+                'ParentPublicId' => null,
+                'TabPublicId' => 'tab-1',
+            ],
+        ]);
+        $connection->queueFetch([
+            [
+                'PublicId' => $parent,
+                'NodeCode' => 'MARINE',
+                'NodeName' => 'Marine IEC LSZH',
+                'Slug' => 'marine-iec-lszh',
+                'Description' => null,
+                'NodeTypeCode' => 'category',
+                'ImageUrl' => null,
+                'ImageAltText' => null,
+                'DisplayOrder' => 0,
+                'ParentPublicId' => null,
+                'ProductCount' => 0,
+            ],
+            self::publicNodeSqlRow($childA, $parent, 1),
+            self::publicNodeSqlRow($childB, $parent, 1),
+        ]);
+        $connection->queueFetch([
+            [
+                'PublicId' => '11111111-1111-1111-1111-111111111301',
+                'Name' => 'Root Cable',
+                'Slug' => 'root-cable',
+                'InternalCode' => 'R',
+                'DisplayOrder' => 1,
+                'IsFeatured' => 0,
+                'ThumbnailUrl' => 'https://cdn.example/thumb.jpg',
+            ],
+        ]);
+
+        $repository = new AzureSqlCatalogueNavigationRepository($connection);
+        $node = $repository->getPublicNodeBySlug('marine-iec-lszh');
+
+        self::assertNotNull($node);
+        self::assertSame('marine-iec-lszh', $node->slug);
+        self::assertCount(2, $node->children);
+        self::assertCount(1, $node->products);
+        self::assertSame('https://cdn.example/thumb.jpg', $node->products[0]->thumbnailUrl);
+        self::assertSame([], $node->children[0]->products);
+        self::assertSame([], $node->children[1]->products);
+        $productCardQueries = array_values(array_filter(
+            $connection->calls,
+            static fn (array $call): bool => str_contains($call['sql'], '[IsFeatured]'),
+        ));
+        self::assertCount(1, $productCardQueries);
+        self::assertLessThan(5, count($connection->calls));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function publicNodeSqlRow(string $publicId, ?string $parentPublicId, int $productCount): array
+    {
+        return [
+            'PublicId' => $publicId,
+            'NodeCode' => 'N-' . $publicId,
+            'NodeName' => 'Node ' . $publicId,
+            'Slug' => 'node-' . substr($publicId, -3),
+            'Description' => null,
+            'NodeTypeCode' => 'category',
+            'ImageUrl' => null,
+            'ImageAltText' => null,
+            'DisplayOrder' => 0,
+            'ParentPublicId' => $parentPublicId,
+            'ProductCount' => $productCount,
+        ];
+    }
+
     /**
      * @return array<string, mixed>
      */

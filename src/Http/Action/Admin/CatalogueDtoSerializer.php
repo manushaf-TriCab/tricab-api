@@ -12,6 +12,7 @@ use TriCab\Core\Product\Application\DTO\CatalogueNodeTreeNode;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeUsage;
 use TriCab\Core\Product\Application\DTO\CatalogueProductPlacementRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueTabRecord;
+use TriCab\Api\Product\Catalogue\CatalogueStaticMediaResolver;
 use TriCab\Core\Product\Application\DTO\PublicCatalogueProductCard;
 use TriCab\Core\Product\Application\DTO\PublicCatalogueTab;
 use TriCab\Core\Product\Application\DTO\PublicCatalogueTreeNode;
@@ -261,7 +262,7 @@ final class CatalogueDtoSerializer
             'slug' => $node->slug,
             'description' => $node->description,
             'nodeTypeCode' => $node->nodeTypeCode,
-            'imageUrl' => $node->imageUrl,
+            'imageUrl' => CatalogueStaticMediaResolver::instance()->toPublicUrl($node->imageUrl),
             'imageAltText' => $node->imageAltText,
             'displayOrder' => $node->displayOrder,
             'depth' => $node->depth,
@@ -289,7 +290,7 @@ final class CatalogueDtoSerializer
             'name' => $card->name,
             'slug' => $card->slug,
             'internalCode' => $card->internalCode,
-            'thumbnailUrl' => $card->thumbnailUrl,
+            'thumbnailUrl' => CatalogueStaticMediaResolver::instance()->toPublicUrl($card->thumbnailUrl),
             'displayOrder' => $card->displayOrder,
             'isFeatured' => $card->isFeatured,
         ];

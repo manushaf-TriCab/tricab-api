@@ -16,7 +16,9 @@ use TriCab\Core\Product\Application\DTO\CatalogueTabRecord;
 use TriCab\Core\Product\Application\DTO\PublicCatalogueProductCard;
 use TriCab\Core\Product\Application\DTO\PublicCatalogueTab;
 use TriCab\Core\Product\Application\DTO\PublicCatalogueTreeNode;
+use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
 use TriCab\Core\Product\Application\Exception\CatalogueConcurrencyConflict;
+use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Contract\CatalogueNavigationRepository;
 use TriCab\Core\Product\Domain\Entity\Product;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
@@ -774,7 +776,7 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
                 return null;
             }
 
-            return $this->buildPublicTreeNode($row, $regionCode, true, $this->nodeDepth((string) $row['publicId']));
+            return $this->buildRequestedPublicNode($row, $regionCode);
         }
 
         return null;
@@ -787,7 +789,7 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
             return null;
         }
 
-        return $this->buildPublicTreeNode($row, $regionCode, true, $this->nodeDepth($nodePublicId));
+        return $this->buildRequestedPublicNode($row, $regionCode);
     }
 
     public function listPublicChildren(string $nodePublicId, ?string $regionCode = null): array
@@ -1130,6 +1132,33 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
     /**
      * @param array<string, mixed> $row
      */
+    private function buildRequestedPublicNode(array $row, ?string $regionCode): PublicCatalogueTreeNode
+    {
+        $tree = $this->buildPublicTreeNode($row, $regionCode, false, $this->nodeDepth((string) $row['publicId']));
+        $products = $this->listPublicNodeProducts((string) $row['publicId'], $regionCode);
+
+        return new PublicCatalogueTreeNode(
+            publicId: $tree->publicId,
+            nodeCode: $tree->nodeCode,
+            nodeName: $tree->nodeName,
+            slug: $tree->slug,
+            description: $tree->description,
+            nodeTypeCode: $tree->nodeTypeCode,
+            imageUrl: $tree->imageUrl,
+            imageAltText: $tree->imageAltText,
+            displayOrder: $tree->displayOrder,
+            depth: $tree->depth,
+            hasChildren: $tree->hasChildren,
+            hasProducts: $tree->hasProducts || $products !== [],
+            children: $tree->children,
+            products: $products,
+            parentPublicId: $tree->parentPublicId,
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
     private function buildPublicTreeNode(array $row, ?string $regionCode, bool $includeProducts, int $depth): PublicCatalogueTreeNode
     {
         $publicId = (string) ($row['publicId'] ?? '');
@@ -1151,12 +1180,10 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
         $products = $includeProducts ? $this->listPublicNodeProducts($publicId, $regionCode) : [];
         $productCount = $includeProducts
             ? count($products)
-            : (($regionCode !== null && trim($regionCode) !== '')
-                ? count($this->listPublicNodeProducts($publicId, $regionCode))
-                : count(array_filter(
-                    $this->nodeProducts[$publicId] ?? [],
-                    static fn (array $placement): bool => (bool) ($placement['isActive'] ?? true),
-                )));
+            : count(array_filter(
+                $this->nodeProducts[$publicId] ?? [],
+                static fn (array $placement): bool => (bool) ($placement['isActive'] ?? true),
+            ));
 
         return new PublicCatalogueTreeNode(
             publicId: $publicId,
@@ -1264,16 +1291,65 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
             return null;
         }
         $meta = $this->productMeta($productPublicId);
+        $thumbs = $this->listPublicProductThumbnailUrls([$productPublicId]);
 
         return new PublicCatalogueProductCard(
             publicId: $productPublicId,
             name: $meta['name'],
             slug: $meta['slug'],
             internalCode: $meta['internalCode'],
-            thumbnailUrl: $meta['thumbnailUrl'],
+            thumbnailUrl: $thumbs[$productPublicId] ?? null,
             displayOrder: AzureSqlValueMapper::intValue($placement['displayOrder'] ?? 0),
             isFeatured: AzureSqlValueMapper::boolValue($placement['isFeatured'] ?? false),
         );
+    }
+
+    public function listPublicProductThumbnailUrls(array $productPublicIds): array
+    {
+        $wanted = [];
+        foreach ($productPublicIds as $id) {
+            if ($id !== '') {
+                $wanted[$id] = true;
+            }
+        }
+        if ($wanted === []) {
+            return [];
+        }
+
+        $mediaByProduct = [];
+        foreach ($this->store->media() as $row) {
+            $productPublicId = (string) ($row['productPublicId'] ?? '');
+            if (!isset($wanted[$productPublicId])) {
+                continue;
+            }
+            if (($row['archived'] ?? false) === true) {
+                continue;
+            }
+            if (($row['isActive'] ?? true) === false) {
+                continue;
+            }
+            $mediaByProduct[$productPublicId][] = new ProductMediaSummary(
+                publicId: AzureSqlValueMapper::stringValue($row['publicId'] ?? ''),
+                mediaCategoryCode: AzureSqlValueMapper::stringValue($row['mediaCategoryCode'] ?? ''),
+                mediaTypeCode: AzureSqlValueMapper::stringValue($row['mediaTypeCode'] ?? ''),
+                title: AzureSqlValueMapper::stringValue($row['title'] ?? ''),
+                publicUrl: AzureSqlValueMapper::nullableString($row['publicUrl'] ?? null),
+                altText: AzureSqlValueMapper::nullableString($row['altText'] ?? null),
+                displayOrder: AzureSqlValueMapper::intValue($row['displayOrder'] ?? 0),
+                isPrimary: AzureSqlValueMapper::boolValue($row['isPrimary'] ?? false),
+                thumbnailUrl: AzureSqlValueMapper::nullableString($row['thumbnailUrl'] ?? null),
+            );
+        }
+
+        $out = [];
+        foreach ($mediaByProduct as $productPublicId => $media) {
+            $url = ProductThumbnailImageResolver::fromMediaSummaries($media);
+            if ($url !== null) {
+                $out[$productPublicId] = $url;
+            }
+        }
+
+        return $out;
     }
 
     private function isPublishedProduct(Product $product, ?string $regionCode): bool

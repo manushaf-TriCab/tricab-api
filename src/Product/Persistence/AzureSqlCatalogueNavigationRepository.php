@@ -34,6 +34,31 @@ final class AzureSqlCatalogueNavigationRepository implements CatalogueNavigation
   AND (p.[UnpublishAtUtc] IS NULL OR p.[UnpublishAtUtc] > SYSUTCDATETIME())
 SQL;
 
+    private const PUBLIC_PRODUCT_THUMBNAIL_APPLY = <<<'SQL'
+OUTER APPLY (
+    SELECT TOP (1) COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) AS [ThumbnailUrl]
+    FROM [product].[ProductImages] img
+    WHERE img.[ProductId] = p.[ProductId]
+      AND img.[DeletedAtUtc] IS NULL
+      AND img.[IsActive] = 1
+      AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
+      AND (img.[UploadStatusCode] IS NULL OR img.[UploadStatusCode] = N'active')
+      AND (
+            img.[ScanStatusCode] IS NULL
+            OR img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+      )
+    ORDER BY
+        CASE LOWER(ISNULL(img.[ImageRoleCode], N''))
+            WHEN N'product-thumbnail' THEN 0
+            WHEN N'primary' THEN 1
+            ELSE 2
+        END,
+        CASE WHEN img.[IsPrimary] = 1 THEN 0 ELSE 1 END,
+        img.[DisplayOrder],
+        img.[ProductImagesId]
+) productThumb
+SQL;
+
     public function __construct(
         private readonly SqlConnection $connection,
     ) {
@@ -1106,7 +1131,7 @@ SQL;
                 continue;
             }
 
-            return $this->buildPublicTreeNode($node, $nodes, $regionCode, true, $this->nodeDepth((string) $row['PublicId']));
+            return $this->buildRequestedPublicNode($node, $nodes, $regionCode);
         }
 
         return null;
@@ -1127,7 +1152,7 @@ SQL;
             return null;
         }
 
-        return $this->buildPublicTreeNode($flat, $nodes, $regionCode, true, $node->depth);
+        return $this->buildRequestedPublicNode($flat, $nodes, $regionCode);
     }
 
     public function listPublicChildren(string $nodePublicId, ?string $regionCode = null): array
@@ -1169,7 +1194,8 @@ SELECT
     COALESCE(primarySlug.[Slug], CONVERT(NVARCHAR(36), p.[PublicId])) AS [Slug],
     p.[InternalCode],
     cnp.[DisplayOrder],
-    cnp.[IsFeatured]
+    cnp.[IsFeatured],
+    productThumb.[ThumbnailUrl]
 FROM [product].[CatalogueNodeProducts] cnp
 INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnp.[CatalogueNodeId]
 INNER JOIN [product].[Products] p ON p.[ProductId] = cnp.[ProductId]
@@ -1181,6 +1207,9 @@ OUTER APPLY (
       AND s.[IsPrimary] = 1
       AND s.[DeletedAtUtc] IS NULL
 ) primarySlug
+SQL;
+        $sql .= "\n" . self::PUBLIC_PRODUCT_THUMBNAIL_APPLY . <<<'SQL'
+
 WHERE n.[PublicId] = :nodePublicId
   AND cnp.[IsActive] = 1
 SQL;
@@ -1192,12 +1221,52 @@ SQL;
                 name: AzureSqlValueMapper::stringValue($row['Name'] ?? ''),
                 slug: AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
                 internalCode: AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null),
-                thumbnailUrl: null,
+                thumbnailUrl: AzureSqlValueMapper::nullableString($row['ThumbnailUrl'] ?? null),
                 displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
                 isFeatured: AzureSqlValueMapper::boolValue($row['IsFeatured'] ?? false),
             ),
             $this->connection->fetchAll($sql, $params),
         );
+    }
+
+    public function listPublicProductThumbnailUrls(array $productPublicIds): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            $productPublicIds,
+            static fn (string $id): bool => $id !== '',
+        )));
+        if ($ids === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach (array_chunk($ids, 400) as $chunk) {
+            $placeholders = [];
+            $params = [];
+            foreach ($chunk as $index => $id) {
+                $name = ':pid' . $index;
+                $placeholders[] = $name;
+                $params[$name] = $id;
+            }
+            $inList = implode(', ', $placeholders);
+            $apply = self::PUBLIC_PRODUCT_THUMBNAIL_APPLY;
+            $sql = <<<SQL
+SELECT CONVERT(NVARCHAR(36), p.[PublicId]) AS [PublicId], productThumb.[ThumbnailUrl]
+FROM [product].[Products] p
+{$apply}
+WHERE p.[PublicId] IN ({$inList})
+  AND p.[DeletedAtUtc] IS NULL
+SQL;
+            foreach ($this->connection->fetchAll($sql, $params) as $row) {
+                $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
+                $url = AzureSqlValueMapper::nullableString($row['ThumbnailUrl'] ?? null);
+                if ($publicId !== '' && $url !== null) {
+                    $out[$publicId] = $url;
+                }
+            }
+        }
+
+        return $out;
     }
 
     public function searchAdmin(string $query, int $limit = 50): array
@@ -1603,6 +1672,75 @@ SQL,
     }
 
     /**
+     * Build the requested node the same way as the panel tree (set-based descendants,
+     * no per-child product-card query), then attach product cards for this node only.
+     *
+     * @param array<string, mixed> $node
+     * @param list<array<string, mixed>> $nodes
+     */
+    private function buildRequestedPublicNode(
+        array $node,
+        array $nodes,
+        ?string $regionCode,
+    ): PublicCatalogueTreeNode {
+        $tree = $this->buildPublicTreeNode(
+            $node,
+            $nodes,
+            $regionCode,
+            false,
+            $this->depthInFlatList($nodes, (string) $node['publicId']),
+        );
+        $products = $this->listPublicNodeProducts($tree->publicId, $regionCode);
+
+        return new PublicCatalogueTreeNode(
+            publicId: $tree->publicId,
+            nodeCode: $tree->nodeCode,
+            nodeName: $tree->nodeName,
+            slug: $tree->slug,
+            description: $tree->description,
+            nodeTypeCode: $tree->nodeTypeCode,
+            imageUrl: $tree->imageUrl,
+            imageAltText: $tree->imageAltText,
+            displayOrder: $tree->displayOrder,
+            depth: $tree->depth,
+            hasChildren: $tree->hasChildren,
+            hasProducts: $tree->hasProducts || $products !== [],
+            children: $tree->children,
+            products: $products,
+            parentPublicId: $tree->parentPublicId,
+        );
+    }
+
+    /**
+     * @param list<array<string, mixed>> $nodes
+     */
+    private function depthInFlatList(array $nodes, string $publicId): int
+    {
+        $byId = [];
+        foreach ($nodes as $candidate) {
+            $id = (string) ($candidate['publicId'] ?? '');
+            if ($id !== '') {
+                $byId[$id] = $candidate;
+            }
+        }
+        $depth = 0;
+        $current = $byId[$publicId] ?? null;
+        while ($current !== null) {
+            $parentId = $current['parentPublicId'] ?? null;
+            if (!is_string($parentId) || $parentId === '') {
+                break;
+            }
+            $current = $byId[$parentId] ?? null;
+            ++$depth;
+            if ($depth > 100) {
+                break;
+            }
+        }
+
+        return $depth;
+    }
+
+    /**
      * @param list<array<string, mixed>> $nodes
      * @param array<string, mixed> $node
      */
@@ -1743,6 +1881,10 @@ SQL,
 
     private function nodeVisibleForRegion(string $nodePublicId, ?string $regionCode): bool
     {
+        if ($regionCode === null || trim($regionCode) === '') {
+            return true;
+        }
+
         return $this->nodeVisibleForRegionCodes($this->loadRegionCodes($nodePublicId), $regionCode);
     }
 
