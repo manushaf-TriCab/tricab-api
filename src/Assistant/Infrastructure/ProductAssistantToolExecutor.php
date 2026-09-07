@@ -30,6 +30,13 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
 {
     private const MAX_RESULTS = 12;
 
+    /**
+     * Higher than MAX_RESULTS on purpose. A style row is a short facet summary,
+     * not a product projection, and 145 styles carry facets — a cap of 30 with
+     * no paging is what made most of the register unreachable.
+     */
+    private const MAX_STYLE_RESULTS = 50;
+
     public function __construct(
         private SearchProductCodesService $searchProductCodes,
         private ProductFinderClient $productFinder,
@@ -55,7 +62,10 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
                 'crossSectionMm2Min' => ['type' => 'number', 'exclusiveMinimum' => 0],
                 'crossSectionMm2Max' => ['type' => 'number', 'exclusiveMinimum' => 0],
                 'conductorCode' => ['type' => 'string'],
-                'jacketColour' => ['type' => 'string'],
+                'jacketColour' => [
+                    'type' => 'string',
+                    'description' => 'Two-character sheath colour segment code, matched exactly: BK black, OR orange, RE red, GY grey, BL blue, WH white, EA green/yellow earth, YE yellow, BR brown, GR green, DB dark blue, LB light blue, PU purple, PI pink, CL clear. A colour word ("orange") matches nothing. If you are unsure of the code, use find_product, which takes the word.',
+                ],
                 'braidArmourScreen' => ['type' => 'string'],
                 'isLszh' => ['type' => 'boolean'],
                 'isFireResistant' => ['type' => 'boolean'],
@@ -70,12 +80,16 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
                 'page' => ['type' => 'integer', 'minimum' => 1],
                 'pageSize' => ['type' => 'integer', 'minimum' => 1, 'maximum' => self::MAX_RESULTS],
             ]),
-            $this->tool('find_product', 'Turn a cable requirement into a TriCab product-code recommendation using the corrected product finder. It may ask for clarification. Any sizing and stock fields are advisory because their source datasets are still under Technical review.', [
+            $this->tool('find_product', 'Turn a cable requirement into a TriCab product-code recommendation using the corrected product finder. Use it for a stated construction (style, cores, size, colour) as well as for a sizing question — it resolves the construction whether or not an electrical duty is given, and it is the only tool that understands colour words and style synonyms. It may ask for clarification. Any sizing and stock fields it returns are advisory because their source datasets are still under Technical review.', [
                 'text' => ['type' => 'string'],
                 'cableType' => ['type' => 'integer'],
                 'style' => ['type' => 'string'],
                 'coreCount' => ['type' => 'integer', 'minimum' => 1],
                 'crossSectionMm2' => ['type' => 'number', 'exclusiveMinimum' => 0],
+                'colour' => [
+                    'type' => 'string',
+                    'description' => 'Sheath colour, as a plain word ("orange") or the two-character segment code ("OR"). The selection rules normalise it, so pass what the customer said. Unlike search_product_codes.jacketColour this does not need the segment code.',
+                ],
                 'loadAmps' => ['type' => 'number', 'exclusiveMinimum' => 0],
                 'lengthM' => ['type' => 'number', 'exclusiveMinimum' => 0],
                 'voltage' => ['type' => 'integer', 'minimum' => 1],
@@ -111,10 +125,15 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             $this->tool('get_product_detail', 'Get the server-authorized catalogue detail for one product returned by search_products. Pass its publicId where possible.', [
                 'identifier' => ['type' => 'string', 'minLength' => 1],
             ], ['identifier']),
-            $this->tool('list_style_options', 'List real style names and their reviewed structured facets. Use this to compare candidate styles and formulate one targeted clarification question.', [
+            $this->tool('list_style_options', 'Search real style names and their reviewed structured facets. Use it to answer a style-level question ("which styles suit earthing?", "what is the LSZH equivalent of KL?"), to compare candidate styles, and to formulate one targeted clarification question. This is the right tool when the customer asks about styles rather than a specific product code.', [
+                'text' => [
+                    'type' => 'string',
+                    'description' => 'Keywords matched against the style code, display name and the style register line — which carries the application prose, the standards list, voltage class and temperature range. Every word must match, so "lszh earthing" narrows. Search by what the cable is FOR ("earthing", "switchboard", "trailing"), by standard ("AS/NZS 5000.1"), or by construction ("armoured", "screened").',
+                ],
                 'styleCodes' => ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 12],
                 'cableType' => ['type' => 'string'],
-                'limit' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 30],
+                'page' => ['type' => 'integer', 'minimum' => 1],
+                'pageSize' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50],
             ]),
         ];
     }
@@ -188,6 +207,7 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             style: $this->string($input, 'style'),
             coreCount: $this->int($input, 'coreCount'),
             crossSectionMm2: $this->float($input, 'crossSectionMm2'),
+            colour: $this->string($input, 'colour'),
             loadAmps: $this->float($input, 'loadAmps'),
             lengthM: $this->float($input, 'lengthM'),
             voltage: $this->int($input, 'voltage'),
@@ -203,10 +223,19 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         }
 
         $data = $this->productFinder->find($query)->toArray();
-        $data['assistantAdvisories'] = [
-            'Sizing is advisory: Technical has not yet approved the finder sizing snapshot, which differs from live MySQL for 29% of the measured cases.',
+
+        // The stock caveat is always true. The sizing one is only true when the
+        // finder actually sized something: a stated construction with no
+        // electrical duty comes back with `sizing: null`, and caveating absent
+        // sizing gives the agent a reason to distrust a correct construction
+        // answer and go looking for a second opinion it cannot get.
+        $advisories = [
             'Stock status is incomplete and must not be presented as a confirmed live availability promise.',
         ];
+        if (self::wasSized($data)) {
+            $advisories[] = 'Sizing is advisory: Technical has not yet approved the finder sizing snapshot, which differs from live MySQL for 29% of the measured cases.';
+        }
+        $data['assistantAdvisories'] = $advisories;
 
         $productCode = $data['productCode'] ?? null;
 
@@ -285,12 +314,36 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
     /** @param array<string, mixed> $input */
     private function listStyleOptions(array $input): AssistantToolResult
     {
+        $result = $this->styleOptions->search(
+            $this->stringList($input, 'styleCodes'),
+            $this->string($input, 'text'),
+            $this->string($input, 'cableType'),
+            $this->int($input, 'page') ?? 1,
+            min(self::MAX_STYLE_RESULTS, $this->int($input, 'pageSize') ?? 20),
+        );
+        $shown = count($result['items']);
+
         return new AssistantToolResult([
-            'styles' => $this->styleOptions->list(
-                $this->stringList($input, 'styleCodes'),
-                $this->string($input, 'cableType'),
-                min(30, $this->int($input, 'limit') ?? 20),
-            ),
+            'styles' => $result['items'],
+            'pagination' => [
+                'page' => $result['page'],
+                'pageSize' => $result['pageSize'],
+                'totalItems' => $result['totalItems'],
+                'totalPages' => $result['pageSize'] > 0
+                    ? (int) ceil($result['totalItems'] / $result['pageSize'])
+                    : 0,
+            ],
+            // Said out loud because the silent version of this was the bug: a
+            // truncated list read as the whole catalogue, and the agent
+            // concluded a style category did not exist when it simply sat
+            // past the cut-off.
+            'coverage' => $shown < $result['totalItems']
+                ? sprintf(
+                    'Showing %d of %d matching styles. This is a page, not the whole answer — narrow with text or request the next page before concluding a style does not exist.',
+                    $shown,
+                    $result['totalItems'],
+                )
+                : sprintf('Showing all %d matching styles.', $result['totalItems']),
             'classificationReview' => 'Some styles and facets are unknown pending Technical review; absence is not false.',
         ]);
     }
@@ -349,6 +402,27 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
     }
 
     /**
+     * Whether the finder actually sized a cable, as opposed to resolving a
+     * construction the customer stated outright.
+     *
+     * Three shapes reach here and only the first is sized. A sizing run returns
+     * the `SizingResult` payload; a stated construction with no electrical duty
+     * returns `sizing: null`, so a bare `isset` would read it as sized; and
+     * `ProductFinderResult::unavailable()` returns `['available' => false, …]`,
+     * which is an array and would fool a bare `is_array`.
+     *
+     * @param array<string, mixed> $data
+     */
+    private static function wasSized(array $data): bool
+    {
+        $sizing = $data['sizing'] ?? null;
+
+        return is_array($sizing)
+            && $sizing !== []
+            && ($sizing['available'] ?? null) !== false;
+    }
+
+    /**
      * @param array<string, mixed> $data
      * @return array<string, mixed>
      */
@@ -362,7 +436,9 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         $warnings = is_array($data['warnings'] ?? null)
             ? array_values(array_filter($data['warnings'], 'is_string'))
             : [];
-        $warnings[] = 'Sizing is advisory until Technical approves the finder sizing snapshot.';
+        if (self::wasSized($data)) {
+            $warnings[] = 'Sizing is advisory until Technical approves the finder sizing snapshot.';
+        }
         $warnings[] = 'Stock status is incomplete and is not a confirmed live availability promise.';
 
         return [

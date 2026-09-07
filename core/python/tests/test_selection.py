@@ -361,3 +361,73 @@ def test_fix_cable_rated_exactly_at_load_is_accepted():
     if result.status != "sized" or not result.candidate:
         pytest.skip("no solution available in this dataset")
     assert result.candidate.total_capacity >= request.load_amps
+
+
+# ── a colour stated as a parameter ───────────────────────────────────────────
+
+
+@requires_rules
+def test_a_parameter_colour_reaches_the_code():
+    """A colour given as a parameter must land in the code, not just steer style
+    ranking.
+
+    It used to reach the rules only by luck: it set `fields["colour"]` and went
+    into the synthesised line, but when the customer's own text was the better
+    candidate — the usual case for a stated construction — that text carried no
+    colour and the rules defaulted to the style standard.
+    """
+    result = FINDER.find(
+        FinderRequest(text="KL 1C 95mm", colour="orange")
+    ).public()
+
+    assert result["productCode"] == "KL-PAXN/1C95OR"
+    assert "colour" not in result["inferredFields"], "a stated colour is not inferred"
+
+
+@requires_rules
+def test_both_colour_forms_are_accepted():
+    """The word and the two-character segment code resolve alike — the tool
+    schema promises the agent it may pass either."""
+    word = FINDER.find(FinderRequest(text="KL 1C 95mm", colour="orange")).public()
+    code = FINDER.find(FinderRequest(text="KL 1C 95mm", colour="OR")).public()
+
+    assert word["productCode"] == code["productCode"] == "KL-PAXN/1C95OR"
+
+
+@requires_rules
+def test_a_non_default_colour_is_not_silently_dropped():
+    """The regression that hid the defect: KL's default colour is OR, so a
+    request for orange looked correct however it was handled. Black is the
+    honest test."""
+    result = FINDER.find(FinderRequest(text="KL 1C 95mm", colour="black")).public()
+
+    assert result["productCode"].endswith("BK")
+    assert "colour" not in result["inferredFields"]
+
+
+@requires_rules
+def test_an_unreadable_colour_says_so_rather_than_defaulting_quietly():
+    """The extractor knows every colour word and the common segment codes, but a
+    few real catalogue colours (DB, DG, CL) have no word it reads. Falling back
+    to the style default is acceptable; doing it silently is not."""
+    result = FINDER.find(
+        FinderRequest(text="KL 1C 95mm", colour="chartreuse")
+    ).public()
+
+    assert any("not recognised" in w for w in result["warnings"])
+    assert "colour" in result["inferredFields"]
+
+
+@requires_rules
+def test_vocabularies_publish_what_a_style_is_for():
+    """The style register's application prose is the only place either register
+    says what a style is FOR. Publishing code/title/voltage/temperature and
+    dropping it left a consumer unable to tell that LP is the earthing style."""
+    from product_finder.selection import vocabularies
+
+    styles = {s["code"]: s for s in vocabularies()["styles"]}
+
+    assert "LP" in styles and "LS" in styles
+    assert "earthing" in styles["LP"]["application"].lower()
+    assert "earthing" in styles["LS"]["application"].lower()
+    assert styles["LP"]["cableType"]

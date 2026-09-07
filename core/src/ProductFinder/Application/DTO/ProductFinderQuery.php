@@ -12,6 +12,13 @@ namespace TriCab\Core\ProductFinder\Application\DTO;
  * parameters win, because a customer who typed a number into a labelled box
  * meant that number — the finder's own `FinderRequest.from_payload` resolves it
  * the same way.
+ *
+ * `colour` accepts a word ("orange") or the two-character segment code ("OR"),
+ * and is deliberately not normalised here. `canonical_colour` in
+ * `core/python/tricab_cable_rules/normalize.py` is the single alias table, and
+ * it earns that: naive two-character truncation maps "grey" to GR, which is
+ * *green*. A second copy of those aliases on this side of the hop is the exact
+ * divergence `core/python/tools/check_rules_sync.py` exists to prevent.
  */
 final readonly class ProductFinderQuery
 {
@@ -21,6 +28,7 @@ final readonly class ProductFinderQuery
         public ?string $style = null,
         public ?int $coreCount = null,
         public ?float $crossSectionMm2 = null,
+        public ?string $colour = null,
         public ?float $loadAmps = null,
         public ?float $lengthM = null,
         public ?int $voltage = null,
@@ -67,6 +75,7 @@ final readonly class ProductFinderQuery
             'style' => $this->style,
             'cores' => $this->coreCount,
             'crossSection' => $this->crossSectionMm2,
+            'colour' => $this->colour,
             'load' => $this->loadAmps,
             'length' => $this->lengthM,
             'voltage' => $this->voltage,

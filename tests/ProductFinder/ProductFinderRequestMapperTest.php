@@ -73,6 +73,46 @@ final class ProductFinderRequestMapperTest extends TestCase
         self::assertNull($query->loadAmps);
     }
 
+    public function test_a_stated_colour_reaches_the_finder_unnormalised(): void
+    {
+        // Both forms are accepted and neither is translated here: the alias
+        // table is `canonical_colour` in `tricab_cable_rules/normalize.py`, and
+        // a second copy on this side is the divergence `check_rules_sync.py`
+        // exists to prevent. Naive truncation would map "grey" to GR, which is
+        // green.
+        foreach (['orange', 'OR', 'grey', 'dark blue'] as $stated) {
+            $query = ProductFinderRequestMapper::fromHttpBody([
+                'text' => 'KL 1C 95mm',
+                'colour' => $stated,
+            ]);
+
+            self::assertSame($stated, $query->colour);
+            self::assertSame($stated, $query->toPayload()['colour']);
+        }
+    }
+
+    public function test_a_colour_alone_is_not_a_cable_requirement(): void
+    {
+        // Nothing to resolve from a colour, so the action must still reject it
+        // rather than pay a round trip for a guaranteed clarification.
+        $query = ProductFinderRequestMapper::fromHttpBody(['colour' => 'orange']);
+
+        self::assertSame('orange', $query->colour);
+        self::assertTrue($query->isEmpty());
+    }
+
+    public function test_an_unstated_colour_is_absent_from_the_payload(): void
+    {
+        // Not merely null: the finder distinguishes "not stated" from a stated
+        // value, and a JSON null would arrive as the latter.
+        $payload = ProductFinderRequestMapper::fromHttpBody([
+            'text' => 'KL 1C 95mm',
+            'colour' => '   ',
+        ])->toPayload();
+
+        self::assertArrayNotHasKey('colour', $payload);
+    }
+
     public function test_ai_is_on_unless_it_is_switched_off(): void
     {
         self::assertTrue(ProductFinderRequestMapper::fromHttpBody(['text' => 'x'])->allowAi);

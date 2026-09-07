@@ -22,3 +22,15 @@ Current prompts:
 - `product-assistant-response-v3.md` is the bounded agent contract: tool choice,
   conversation corrections, one-question clarification and the current sizing /
   stock accuracy limits.
+- `product-assistant-response-v4.md` adds the response-format contract: the
+  Markdown subset the panel renders, when a list or table earns its place, and
+  the trailing choice list the server turns into tappable buttons.
+- `product-assistant-response-v5.md` routes a stated construction
+  to `find_product` rather than `search_product_codes`, spells out that
+  `search_product_codes` facets are exact code segments and not words
+  (`jacketColour` wants `OR`, not "orange"), and confines the sizing caveat to
+  answers that actually carry sizing.
+- `product-assistant-response-v6.md` is current. It makes `list_style_options` the tool for a
+  style-level question, tells the agent to search it by what a cable is *for* rather than only by
+  style code, and requires it to read the new `pagination` / `coverage` fields before concluding
+  that a style or a whole category does not exist.

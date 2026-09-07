@@ -101,6 +101,44 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertStringContainsString('"is_error":true', $secondJson);
     }
 
+    public function test_a_researched_code_is_not_offered_when_the_answer_is_about_something_else(): void
+    {
+        // The agent looks a style up to describe it, then recommends a
+        // different one. The looked-up code is working, not an offer: it must
+        // not arrive as a product card under a recommendation to buy something
+        // else. `curatesCards` then stops `ProductAssistantService` refilling
+        // the empty set from its pre-search.
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            ['status' => 200, 'body' => json_encode([
+                'content' => [[
+                    'type' => 'tool_use',
+                    'id' => 'tool-1',
+                    'name' => 'search_product_codes',
+                    'input' => ['styleCodes' => ['KL']],
+                ]],
+            ], JSON_THROW_ON_ERROR)],
+            ['status' => 200, 'body' => json_encode([
+                'content' => [[
+                    'type' => 'text',
+                    'text' => '`KL` is not LSZH. The closest equivalent is `CC` — Flexible LSZH (Fixed Wiring).',
+                ]],
+            ], JSON_THROW_ON_ERROR)],
+        ];
+        $tools = $this->toolExecutor();
+
+        $result = $this->provider($http, $tools, 5)->generate(new AssistantGrounding(
+            userMessage: 'Do you have a low smoke cable style similar to KL?',
+            searchQuery: 'low smoke cable similar to KL',
+            regionCode: 'AU',
+            products: [],
+        ));
+
+        self::assertCount(1, $tools->calls, 'the lookup still happens');
+        self::assertSame([], $result->cards, 'but it is not offered to the customer');
+        self::assertTrue($result->curatesCards);
+    }
+
     private function provider(
         FakeJsonHttpClient $http,
         AssistantToolExecutor $tools,

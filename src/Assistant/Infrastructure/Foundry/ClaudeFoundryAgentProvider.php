@@ -6,6 +6,7 @@ namespace TriCab\Api\Assistant\Infrastructure\Foundry;
 
 use JsonException;
 use Throwable;
+use TriCab\Api\Assistant\Application\AssistantAnswerCards;
 use TriCab\Api\Assistant\Application\AssistantCatalogueVisibility;
 use TriCab\Api\Assistant\Application\AssistantConversationTurn;
 use TriCab\Api\Assistant\Application\AssistantGrounding;
@@ -57,8 +58,12 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
                     text: $text,
                     provider: 'foundry-claude-agent',
                     instructionVersion: $this->prompt->id(),
-                    cards: $this->uniqueCards($cards),
+                    // `$cards` is everything every tool returned across the
+                    // loop — the agent's working, not its answer. Only what the
+                    // answer names is offered to the customer.
+                    cards: AssistantAnswerCards::mentionedIn($text, $this->uniqueCards($cards)),
                     toolNames: array_values(array_unique($usedToolNames)),
+                    curatesCards: true,
                 );
             }
 

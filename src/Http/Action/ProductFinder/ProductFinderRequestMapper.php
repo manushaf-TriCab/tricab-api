@@ -27,6 +27,7 @@ final class ProductFinderRequestMapper
             style: self::string($body, 'style'),
             coreCount: self::int($body, 'coreCount'),
             crossSectionMm2: self::float($body, 'crossSection'),
+            colour: self::string($body, 'colour'),
             loadAmps: self::float($body, 'loadAmps'),
             lengthM: self::float($body, 'lengthM'),
             voltage: self::int($body, 'voltage'),

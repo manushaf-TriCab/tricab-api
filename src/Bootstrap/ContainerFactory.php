@@ -740,7 +740,7 @@ final class ContainerFactory
                     endpoint: $settings->foundryEndpoint,
                     deployment: $settings->foundryModelDeployment,
                     authMode: $settings->foundryAuthMode,
-                    prompt: $prompts->get('product-assistant-response', 'v4'),
+                    prompt: $prompts->get('product-assistant-response', 'v6'),
                     maxToolCalls: $settings->foundryMaxToolCalls,
                     apiKey: $settings->foundryApiKey,
                 );

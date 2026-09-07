@@ -73,7 +73,13 @@ final class ProductAssistantService
 
         $clarification = AssistantClarificationOptions::extract($providerResult->text);
 
-        $cards = $providerResult->cards !== []
+        // The pre-search products are a fallback for a provider that has no
+        // cards of its own — the deterministic templates. A provider that
+        // curates its cards has already decided, and an empty set from one of
+        // those means "the answer names nothing to offer", not "nothing was
+        // found": substituting here would put back the research cards the
+        // agent just filtered out.
+        $cards = ($providerResult->cards !== [] || $providerResult->curatesCards)
             ? $providerResult->cards
             : array_map(
                 static fn (GroundedProduct $product): array => $product->toCard(),

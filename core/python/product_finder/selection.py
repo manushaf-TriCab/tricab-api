@@ -267,6 +267,10 @@ class ProductFinder:
             if (style_source == "inferred" or not request.text)
             else [request.text, synthesised]
         )
+        if request.colour:
+            candidates_lines = self._apply_stated_colour(
+                candidates_lines, request.colour, warnings
+            )
 
         resolved: dict[str, Any] | None = None
         try:
@@ -349,6 +353,71 @@ class ProductFinder:
                 if p.get("product_code") != product_code
             ],
         )
+
+    @staticmethod
+    def _reads_colour(line: str) -> bool:
+        """Whether the rules' own extractor finds a colour in this line.
+
+        `extract_entities` returns a wrapper -- `raw_text`, `normalized_text`,
+        `provenance` and the `fields` dict -- so the colour is one level down.
+        Reading `colour` off the wrapper gets `None` for every line, including
+        the ones that do state a colour.
+        """
+        return bool(rules.extract_fields(line).get("fields", {}).get("colour"))
+
+    def _apply_stated_colour(
+        self,
+        lines: list[str | None],
+        colour: str,
+        warnings: list[str],
+    ) -> list[str | None]:
+        """Put a parameter-stated colour into the line the rules will read.
+
+        A colour given as a parameter used to reach the rules only by luck. It
+        set `fields["colour"]`, which steers style ranking, and it appeared in
+        the synthesised line -- but when the customer's own text was the better
+        candidate (the usual case for a stated construction) that text carried
+        no colour, so the rules defaulted to the style standard and reported
+        `Colour not stated`. Harmless on KL, whose default *is* OR; a
+        non-default colour was silently dropped.
+
+        `colour` cannot go through `field_overrides` instead: the rules'
+        `LLM_OVERRIDE_KEYS` does not include it, and widening that set means
+        editing `tricab_cable_rules`, which must stay byte-identical to the RFQ
+        parser's copy (`tools/check_rules_sync.py`). Amending the line is the
+        honest equivalent anyway -- the customer did state the colour, just in a
+        form field rather than in prose -- and it keeps one alias table.
+
+        Appends the request's own wording so both accepted forms work: the
+        extractor reads colour words and bare two-character codes.
+        """
+        amended: list[str | None] = []
+        applied = False
+        for line in lines:
+            if not line:
+                amended.append(line)
+                continue
+            if self._reads_colour(line):
+                amended.append(line)
+                applied = True
+                continue
+            candidate = f"{line} {colour.strip()}"
+            if self._reads_colour(candidate):
+                applied = True
+                amended.append(candidate)
+            else:
+                amended.append(line)
+
+        # Say so rather than quietly shipping the style default. The extractor
+        # knows every colour word and the common segment codes, but a handful of
+        # real catalogue colours (DB, DG, CL) have no word spelling it reads.
+        if not applied:
+            warnings.append(
+                f"Requested colour {colour!r} was not recognised; the code "
+                "carries the style's default colour instead. Confirm."
+            )
+
+        return amended
 
     def _synthesise_line(
         self,
@@ -771,6 +840,13 @@ def vocabularies() -> dict[str, Any]:
                     "title": getattr(style, "title", ""),
                     "voltage": getattr(style, "voltage", ""),
                     "temperature": getattr(style, "temperature", ""),
+                    # The register's own application prose. Without it a
+                    # consumer sees "LP - Flexible Rubber Building Wire" and
+                    # cannot tell that the workbook says this style is "used
+                    # for earthing of mains and sub mains" -- which is the only
+                    # place either register states what a style is FOR.
+                    "application": getattr(style, "application", ""),
+                    "cableType": getattr(style, "cable_type", ""),
                 }
             )
     except Exception:  # noqa: BLE001 - the UI copes with an empty list

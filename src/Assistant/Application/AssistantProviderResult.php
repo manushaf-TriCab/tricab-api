@@ -9,6 +9,11 @@ final readonly class AssistantProviderResult
     /**
      * @param list<array<string, mixed>> $cards
      * @param list<string> $toolNames
+     * @param bool $curatesCards Whether this provider chose its own card set,
+     *        so an empty `$cards` means "show none" rather than "I had none to
+     *        give". `ProductAssistantService` substitutes its pre-search
+     *        products for the latter, which would undo the agent's filtering
+     *        and put back the very cards the answer does not mention.
      */
     public function __construct(
         public string $text,
@@ -16,6 +21,7 @@ final readonly class AssistantProviderResult
         public string $instructionVersion,
         public array $cards = [],
         public array $toolNames = [],
+        public bool $curatesCards = false,
     ) {
     }
 }
