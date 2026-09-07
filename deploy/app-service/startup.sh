@@ -95,6 +95,19 @@ start_finder() {
     # `wsgi:application` and `product_finder.app` resolve without a venv.
     export PYTHONPATH="$VENDOR:$APP_PYTHON"
 
+    # The pinned cable-calculator snapshots. The finder can infer this from its
+    # own location, but the release layout is not the repository layout -- the
+    # zip stages core/python as app/python, so the relative walk differs -- and
+    # a wrong guess here surfaces as "sizing unavailable" while matching still
+    # works. State it instead of inferring it.
+    local dataset="$WWWROOT/app/resources/cable-calculator/v1"
+    if [ -f "$dataset/cableSpecs.json" ]; then
+        export PRODUCT_FINDER_DATASET_DIR="$dataset"
+        log "sizing dataset: $dataset"
+    else
+        log "WARNING: $dataset is missing; matching will work but sizing will report unavailable"
+    fi
+
     # Gunicorn's master supervises its workers; nothing supervises the master.
     # An OOM kill or a bad deploy takes it out and the finder is simply gone
     # until the next restart, which on an App Service can be days. Hence the

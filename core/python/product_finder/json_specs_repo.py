@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from bisect import bisect_left
 from functools import lru_cache
 from pathlib import Path
@@ -57,9 +58,39 @@ from .specs_repo import METRIC_MT, SpecRow, _as_float, _as_int
 
 log = logging.getLogger(__name__)
 
-# resources/cable-calculator/v1/ relative to this file: core/python/product_finder
-# -> core/python -> core -> tricab-api.
-DATASET_DIR = Path(__file__).resolve().parents[3] / "resources" / "cable-calculator" / "v1"
+_DATASET_SUFFIX = ("resources", "cable-calculator", "v1")
+
+
+def _default_dataset_dir() -> Path:
+    """Where the pinned snapshots live, in both layouts this code runs in.
+
+    In the repository this file is ``core/python/product_finder/``, so the
+    snapshots sit three levels up. The App Service release stages
+    ``core/python`` as ``app/python`` — that drops the ``core/`` level, and the
+    same three-level walk lands one directory above ``app/``, where there is no
+    ``resources``. Sizing then reported itself unavailable while matching
+    worked, which is a confusing way to discover a path bug.
+
+    So probe both depths, and let ``PRODUCT_FINDER_DATASET_DIR`` override
+    outright for a layout neither guess covers.
+    """
+    override = os.environ.get("PRODUCT_FINDER_DATASET_DIR", "").strip()
+    if override:
+        return Path(override)
+
+    here = Path(__file__).resolve()
+    repo_layout = here.parents[3].joinpath(*_DATASET_SUFFIX)
+    release_layout = here.parents[2].joinpath(*_DATASET_SUFFIX)
+    for candidate in (repo_layout, release_layout):
+        if candidate.is_dir():
+            return candidate
+
+    # Nothing found: keep the repository path so the error names the expected
+    # location rather than an incidental one.
+    return repo_layout
+
+
+DATASET_DIR = _default_dataset_dir()
 
 
 def _mysql_number(value: Any) -> float | None:

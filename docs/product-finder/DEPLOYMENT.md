@@ -111,6 +111,20 @@ directory and the bind address.
 | `PRODUCT_FINDER_TIMEOUT_SECONDS` | `20` | Longer than the shared HTTP default: the first request loads an 18,994-product catalogue. |
 | `PRODUCT_FINDER_WORKERS` | `2` | Read by `startup.sh`. Each worker holds its own catalogue, ≈150 MB. |
 | `PRODUCT_FINDER_SIZING_SOURCE` | `json` | `json` \| `mysql` \| `auto`. Leave `json` — see below. |
+| `PRODUCT_FINDER_DATASET_DIR` | probed | The pinned snapshots. `startup.sh` sets it to `/home/site/wwwroot/app/resources/cable-calculator/v1`; set it by hand only for a layout neither depth covers. |
+
+### Why the dataset path needs stating
+
+`json_specs_repo` locates the snapshots relative to its own file. In the
+repository that is `core/python/product_finder/`, three levels below
+`resources/`. The release stages `core/python` as `app/python`, which drops the
+`core/` level, so the same walk lands one directory *above* `app/` — where
+there is no `resources/`. The symptom is specific and misleading: matching
+returns a product code normally while `sizing` reports itself unavailable.
+
+The module now probes both depths and honours
+`PRODUCT_FINDER_DATASET_DIR`, and `startup.sh` sets that variable explicitly
+rather than leaving the release to a guess.
 
 ## Nothing here can fail the site
 
