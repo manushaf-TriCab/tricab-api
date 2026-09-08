@@ -16,12 +16,13 @@ use TriCab\Api\Config\Settings;
 use TriCab\Core\Identity\Application\DTO\VerifiedAppleIdToken;
 use TriCab\Core\Identity\Application\Exception\AppleIdTokenInvalid;
 use TriCab\Core\Identity\Contract\AppleIdTokenValidator;
+use TriCab\Core\Identity\Contract\AppleNativeIdTokenValidator;
 use UnexpectedValueException;
 
 /**
  * Validates Apple ID tokens using Apple's OpenID JWKS.
  */
-final class AppleOidcIdTokenValidator implements AppleIdTokenValidator
+final class AppleOidcIdTokenValidator implements AppleIdTokenValidator, AppleNativeIdTokenValidator
 {
     private const ISSUER = 'https://appleid.apple.com';
 
@@ -43,32 +44,8 @@ final class AppleOidcIdTokenValidator implements AppleIdTokenValidator
             throw AppleIdTokenInvalid::notConfigured();
         }
 
-        $token = trim($idToken);
-        if ($token === '' || substr_count($token, '.') !== 2) {
-            throw AppleIdTokenInvalid::create('Malformed Apple ID token.');
-        }
-
-        $previousLeeway = JWT::$leeway;
-        JWT::$leeway = $this->clockSkewSeconds;
-
-        try {
-            $keys = $this->resolveSigningKeys();
-            $decoded = JWT::decode($token, $keys);
-        } catch (ExpiredException) {
-            throw AppleIdTokenInvalid::expired();
-        } catch (BeforeValidException) {
-            throw AppleIdTokenInvalid::create('Apple ID token is not yet valid.');
-        } catch (SignatureInvalidException) {
-            throw AppleIdTokenInvalid::create('Apple ID token signature is invalid.');
-        } catch (UnexpectedValueException $exception) {
-            throw AppleIdTokenInvalid::create($exception->getMessage());
-        } catch (RuntimeException $exception) {
-            throw AppleIdTokenInvalid::create($exception->getMessage());
-        } finally {
-            JWT::$leeway = $previousLeeway;
-        }
-
-        $this->assertAudience($decoded);
+        $decoded = $this->decode($idToken);
+        $this->assertAudience($decoded, $this->settings->appleClientId);
         $this->assertIssuer($decoded);
         $this->assertNonce($decoded, $expectedNonce);
 
@@ -91,12 +68,73 @@ final class AppleOidcIdTokenValidator implements AppleIdTokenValidator
         );
     }
 
-    private function assertAudience(stdClass $claims): void
+    public function validateNative(string $idToken): VerifiedAppleIdToken
+    {
+        if (!$this->settings->isAppleNativeAuthConfigured()) {
+            throw AppleIdTokenInvalid::notConfigured();
+        }
+
+        $decoded = $this->decode($idToken);
+        $this->assertAudience($decoded, $this->settings->appleNativeClientId);
+        $this->assertIssuer($decoded);
+
+        $subject = $this->stringClaim($decoded, 'sub');
+        $emailRaw = $decoded->email ?? null;
+        $email = is_string($emailRaw) ? strtolower(trim($emailRaw)) : '';
+        $emailVerified = true;
+        if ($email !== '') {
+            if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+                throw AppleIdTokenInvalid::missingEmail();
+            }
+            try {
+                $emailVerified = $this->booleanClaim($decoded, 'email_verified');
+            } catch (AppleIdTokenInvalid) {
+                $emailVerified = true;
+            }
+        }
+
+        return new VerifiedAppleIdToken(
+            subjectId: $subject,
+            emailAddress: $email,
+            emailVerified: $emailVerified,
+        );
+    }
+
+    private function decode(string $idToken): stdClass
+    {
+        $token = trim($idToken);
+        if ($token === '' || substr_count($token, '.') !== 2) {
+            throw AppleIdTokenInvalid::create('Malformed Apple ID token.');
+        }
+
+        $previousLeeway = JWT::$leeway;
+        JWT::$leeway = $this->clockSkewSeconds;
+
+        try {
+            $keys = $this->resolveSigningKeys();
+
+            return JWT::decode($token, $keys);
+        } catch (ExpiredException) {
+            throw AppleIdTokenInvalid::expired();
+        } catch (BeforeValidException) {
+            throw AppleIdTokenInvalid::create('Apple ID token is not yet valid.');
+        } catch (SignatureInvalidException) {
+            throw AppleIdTokenInvalid::create('Apple ID token signature is invalid.');
+        } catch (UnexpectedValueException $exception) {
+            throw AppleIdTokenInvalid::create($exception->getMessage());
+        } catch (RuntimeException $exception) {
+            throw AppleIdTokenInvalid::create($exception->getMessage());
+        } finally {
+            JWT::$leeway = $previousLeeway;
+        }
+    }
+
+    private function assertAudience(stdClass $claims, string $expectedAudience): void
     {
         $audience = $claims->aud ?? null;
         $ok = is_string($audience)
-            ? $audience === $this->settings->appleClientId
-            : (is_array($audience) && in_array($this->settings->appleClientId, $audience, true));
+            ? $audience === $expectedAudience
+            : (is_array($audience) && in_array($expectedAudience, $audience, true));
 
         if (!$ok) {
             throw AppleIdTokenInvalid::wrongAudience();

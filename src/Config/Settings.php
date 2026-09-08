@@ -69,7 +69,10 @@ final readonly class Settings
         public string $entraRequiredScope,
         public string $entraSubjectClaim,
         public string $googleClientId,
+        public string $googleIosClientId,
+        public string $googleAndroidClientId,
         public string $appleClientId,
+        public string $appleNativeClientId,
         public string $appleTeamId,
         public string $appleKeyId,
         public string $applePrivateKey,
@@ -256,7 +259,28 @@ final readonly class Settings
 
     public function isGoogleAuthConfigured(): bool
     {
-        return $this->isGuestJwtConfigured() && trim($this->googleClientId) !== '';
+        return $this->isGuestJwtConfigured() && $this->googleAllowedClientIds() !== [];
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function googleAllowedClientIds(): array
+    {
+        $ids = [];
+        foreach ([$this->googleClientId, $this->googleIosClientId, $this->googleAndroidClientId] as $id) {
+            $trimmed = trim($id);
+            if ($trimmed !== '' && !in_array($trimmed, $ids, true)) {
+                $ids[] = $trimmed;
+            }
+        }
+
+        return $ids;
+    }
+
+    public function isAppleNativeAuthConfigured(): bool
+    {
+        return $this->isGuestJwtConfigured() && trim($this->appleNativeClientId) !== '';
     }
 
     public function isAppleAuthConfigured(): bool
@@ -702,7 +726,10 @@ final readonly class Settings
             entraRequiredScope: self::string($env, 'ENTRA_REQUIRED_SCOPE', 'access_as_user'),
             entraSubjectClaim: $subjectClaim,
             googleClientId: self::string($env, 'GOOGLE_CLIENT_ID', ''),
+            googleIosClientId: self::string($env, 'GOOGLE_IOS_CLIENT_ID', ''),
+            googleAndroidClientId: self::string($env, 'GOOGLE_ANDROID_CLIENT_ID', ''),
             appleClientId: self::string($env, 'APPLE_CLIENT_ID', ''),
+            appleNativeClientId: self::string($env, 'APPLE_NATIVE_CLIENT_ID', 'com.tricab.TriCab'),
             appleTeamId: self::string($env, 'APPLE_TEAM_ID', ''),
             appleKeyId: self::string($env, 'APPLE_KEY_ID', ''),
             applePrivateKey: self::string($env, 'APPLE_PRIVATE_KEY', ''),

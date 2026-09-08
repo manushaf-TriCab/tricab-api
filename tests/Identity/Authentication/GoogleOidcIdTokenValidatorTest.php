@@ -29,7 +29,7 @@ final class GoogleOidcIdTokenValidatorTest extends TestCase
         ], $privateKey, 'RS256', 'test-kid');
 
         $validator = new GoogleOidcIdTokenValidator(
-            googleClientId: self::CLIENT_ID,
+            googleClientIds: self::CLIENT_ID,
             jwksClient: new FixedGoogleJwksClient($jwks),
         );
 
@@ -55,7 +55,7 @@ final class GoogleOidcIdTokenValidatorTest extends TestCase
         ], $privateKey, 'RS256', 'test-kid');
 
         $validator = new GoogleOidcIdTokenValidator(
-            googleClientId: self::CLIENT_ID,
+            googleClientIds: self::CLIENT_ID,
             jwksClient: new FixedGoogleJwksClient($jwks),
         );
 
@@ -78,7 +78,7 @@ final class GoogleOidcIdTokenValidatorTest extends TestCase
         ], $privateKey, 'RS256', 'test-kid');
 
         $validator = new GoogleOidcIdTokenValidator(
-            googleClientId: self::CLIENT_ID,
+            googleClientIds: self::CLIENT_ID,
             jwksClient: new FixedGoogleJwksClient($jwks),
         );
 

@@ -170,6 +170,7 @@ use TriCab\Api\Http\Action\RequestGuestOtpAction;
 use TriCab\Api\Http\Action\AuthenticateGoogleAction;
 use TriCab\Api\Http\Action\AppleAuthChallengeAction;
 use TriCab\Api\Http\Action\AuthenticateAppleAction;
+use TriCab\Api\Http\Action\AuthenticateAppleNativeAction;
 use TriCab\Api\Http\Action\VerifyGuestOtpAction;
 use TriCab\Api\Http\Action\Passkey\ListPasskeysAction;
 use TriCab\Api\Http\Action\Passkey\PasskeyAuthenticationCompleteAction;
@@ -268,6 +269,10 @@ final class AppBuilder
         if ($settings->isAppleAuthConfigured()) {
             $app->get('/api/v1/auth/apple/challenge', AppleAuthChallengeAction::class);
             $app->post('/api/v1/auth/apple', AuthenticateAppleAction::class);
+        }
+
+        if ($settings->isAppleNativeAuthConfigured()) {
+            $app->post('/api/v1/auth/apple/native', AuthenticateAppleNativeAction::class);
         }
 
         if ($settings->isPasskeyAuthConfigured()) {

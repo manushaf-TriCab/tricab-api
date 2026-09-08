@@ -157,6 +157,7 @@ use TriCab\Api\Http\Action\RequestGuestOtpAction;
 use TriCab\Api\Http\Action\AuthenticateGoogleAction;
 use TriCab\Api\Http\Action\AppleAuthChallengeAction;
 use TriCab\Api\Http\Action\AuthenticateAppleAction;
+use TriCab\Api\Http\Action\AuthenticateAppleNativeAction;
 use TriCab\Api\Http\Action\VerifyGuestOtpAction;
 use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\CustomerManagementErrorMapper;
@@ -339,6 +340,7 @@ use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Application\Service\IdentityResolutionService;
 use TriCab\Core\Identity\Application\Service\AuthenticateWithGoogleService;
 use TriCab\Core\Identity\Application\Service\AuthenticateWithAppleService;
+use TriCab\Core\Identity\Application\Service\AuthenticateWithAppleNativeService;
 use TriCab\Core\Identity\Application\Service\CompositeGuestLoginEligibilityLookup;
 use TriCab\Core\Identity\Application\Service\CreateGuestSessionService;
 use TriCab\Core\Identity\Application\Service\GuestLoginEligibilityService;
@@ -378,6 +380,7 @@ use TriCab\Core\Identity\Application\Service\VerifyGuestOtpService;
 use TriCab\Core\Identity\Contract\EmailOtpChallengeRepository;
 use TriCab\Core\Identity\Contract\GoogleIdTokenValidator;
 use TriCab\Core\Identity\Contract\AppleIdTokenValidator;
+use TriCab\Core\Identity\Contract\AppleNativeIdTokenValidator;
 use TriCab\Core\Identity\Contract\AppleAuthorizationCodeExchanger;
 use TriCab\Core\Identity\Contract\GuestAccessTokenIssuer;
 use TriCab\Core\Identity\Contract\GuestAccessTokenValidator;
@@ -2043,7 +2046,7 @@ SQL,
         $definitions[GoogleJwksClient::class] = \DI\create(GoogleJwksClient::class);
         $definitions[GoogleIdTokenValidator::class] = static function (Container $container) use ($settings): GoogleIdTokenValidator {
             return new GoogleOidcIdTokenValidator(
-                googleClientId: $settings->googleClientId,
+                googleClientIds: $settings->googleAllowedClientIds(),
                 jwksClient: self::get($container, GoogleJwksClient::class),
                 clockSkewSeconds: $settings->guestJwtClockSkewSeconds,
             );
@@ -2056,17 +2059,21 @@ SQL,
         $definitions[AppleClientSecretGenerator::class] = \DI\autowire(AppleClientSecretGenerator::class);
         $definitions[AppleAuthorizationChallengeService::class] = \DI\autowire(AppleAuthorizationChallengeService::class);
         $definitions[AppleAuthorizationCodeExchanger::class] = \DI\autowire(AppleAuthorizationCodeHttpExchanger::class);
-        $definitions[AppleIdTokenValidator::class] = static function (Container $container) use ($settings): AppleIdTokenValidator {
+        $definitions[AppleOidcIdTokenValidator::class] = static function (Container $container) use ($settings): AppleOidcIdTokenValidator {
             return new AppleOidcIdTokenValidator(
                 settings: $settings,
                 jwksClient: self::get($container, AppleJwksClient::class),
                 clockSkewSeconds: $settings->guestJwtClockSkewSeconds,
             );
         };
+        $definitions[AppleIdTokenValidator::class] = \DI\get(AppleOidcIdTokenValidator::class);
+        $definitions[AppleNativeIdTokenValidator::class] = \DI\get(AppleOidcIdTokenValidator::class);
         $definitions[AuthenticateWithAppleService::class] = \DI\autowire(AuthenticateWithAppleService::class);
+        $definitions[AuthenticateWithAppleNativeService::class] = \DI\autowire(AuthenticateWithAppleNativeService::class);
         $definitions[AppleAuthErrorMapper::class] = \DI\autowire(AppleAuthErrorMapper::class);
         $definitions[AppleAuthChallengeAction::class] = \DI\autowire(AppleAuthChallengeAction::class);
         $definitions[AuthenticateAppleAction::class] = \DI\autowire(AuthenticateAppleAction::class);
+        $definitions[AuthenticateAppleNativeAction::class] = \DI\autowire(AuthenticateAppleNativeAction::class);
         self::addPasskeyAuthDefinitions($definitions, $settings);
     }
 

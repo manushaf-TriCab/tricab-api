@@ -33,15 +33,35 @@ final class GoogleOidcIdTokenValidator implements GoogleIdTokenValidator
     private int $cachedKeysFetchedAt = 0;
 
     public function __construct(
-        private readonly string $googleClientId,
+        private readonly string|array $googleClientIds,
         private readonly GoogleJwksProvider $jwksClient = new GoogleJwksClient(),
         private readonly int $clockSkewSeconds = 60,
     ) {
     }
 
+    /**
+     * @return list<string>
+     */
+    private function allowedAudiences(): array
+    {
+        $raw = is_array($this->googleClientIds) ? $this->googleClientIds : [$this->googleClientIds];
+        $ids = [];
+        foreach ($raw as $id) {
+            if (!is_string($id)) {
+                continue;
+            }
+            $trimmed = trim($id);
+            if ($trimmed !== '' && !in_array($trimmed, $ids, true)) {
+                $ids[] = $trimmed;
+            }
+        }
+
+        return $ids;
+    }
+
     public function validate(string $idToken): VerifiedGoogleIdToken
     {
-        if (trim($this->googleClientId) === '') {
+        if ($this->allowedAudiences() === []) {
             throw GoogleIdTokenInvalid::notConfigured();
         }
 
@@ -91,9 +111,10 @@ final class GoogleOidcIdTokenValidator implements GoogleIdTokenValidator
     private function assertAudience(stdClass $claims): void
     {
         $audience = $claims->aud ?? null;
+        $allowed = $this->allowedAudiences();
         $ok = is_string($audience)
-            ? $audience === $this->googleClientId
-            : (is_array($audience) && in_array($this->googleClientId, $audience, true));
+            ? in_array($audience, $allowed, true)
+            : (is_array($audience) && array_intersect($allowed, $audience) !== []);
 
         if (!$ok) {
             throw GoogleIdTokenInvalid::create('Google ID token audience is invalid.');
