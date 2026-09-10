@@ -297,6 +297,7 @@ final class AppBuilder
 
         self::registerPublicProductRoutes($app);
         self::registerTriExpenseRoutes($app, $container);
+        self::registerLogNoteRoutes($app, $container);
         $app->get('/api/v1/regions', PublicRegionAction::class);
         $app->get('/api/v1/regions/current', PublicRegionAction::class);
         $app->post('/api/v1/regions/select', PublicRegionAction::class);
@@ -383,6 +384,25 @@ final class AppBuilder
         $app->post('/api/v1/tri-expense/receipts/{id}/reject', RejectExpenseReceiptAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/receipts/{id}/send-back', SendBackExpenseReceiptAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/approvals', ListExpenseApprovalsAction::class)->add(($require)($gate));
+    }
+
+    /**
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerLogNoteRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+
+        $app->post('/api/v1/log-notes/summarise', \TriCab\Api\Http\Action\LogNote\SummariseLogNoteAction::class)
+            ->add(($require)('CUSTOMER_NOTE.CREATE'));
+        $app->get('/api/v1/log-notes', \TriCab\Api\Http\Action\LogNote\ListLogNotesAction::class)
+            ->add(($require)('CUSTOMER_NOTE.READ'));
+        $app->post('/api/v1/log-notes', \TriCab\Api\Http\Action\LogNote\CreateLogNoteAction::class)
+            ->add(($require)('CUSTOMER_NOTE.CREATE'));
+        $app->get('/api/v1/log-notes/{publicId}', \TriCab\Api\Http\Action\LogNote\GetLogNoteAction::class)
+            ->add(($require)('CUSTOMER_NOTE.READ'));
+        $app->get('/api/v1/customers/{customerPublicId}/log-notes', \TriCab\Api\Http\Action\LogNote\ListCustomerLogNotesAction::class)
+            ->add(($require)('CUSTOMER_NOTE.READ'));
     }
 
     private static function registerAdminLegacyMigrationRoutes(App $app, RequirePermission $require): void

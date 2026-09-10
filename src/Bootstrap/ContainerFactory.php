@@ -167,7 +167,9 @@ use TriCab\Api\Http\Auth\GoogleAuthErrorMapper;
 use TriCab\Api\Http\Auth\AppleAuthErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthEventLogger;
 use TriCab\Api\Http\Auth\GuestAuthRateLimiter;
+use TriCab\Api\Http\Auth\GuestAuthRateLimited;
 use TriCab\Api\Http\Auth\NoOpGuestAuthRateLimiter;
+use TriCab\Api\Http\Auth\WindowedGuestAuthRateLimiter;
 use TriCab\Api\Http\Auth\UserManagementErrorMapper;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
@@ -747,6 +749,34 @@ final class ContainerFactory
             \TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\ListExpenseApprovalsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseApprovalsService::class),
 
+            \TriCab\Core\LogNote\Contract\LogNoteRepository::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\InMemoryLogNoteRepository::class),
+            \TriCab\Core\LogNote\Contract\LogNoteAuditRecorder::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\InMemoryLogNoteAuditRecorder::class),
+            \TriCab\Core\LogNote\Contract\CustomerNoteExternalSync::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\DisabledCustomerNoteExternalSync::class),
+            \TriCab\Api\LogNote\Infrastructure\DeterministicLogNoteSummariser::class => \DI\autowire(\TriCab\Api\LogNote\Infrastructure\DeterministicLogNoteSummariser::class),
+            \TriCab\Core\LogNote\Contract\LogNoteSummariser::class => static function (Container $container) use ($settings): \TriCab\Core\LogNote\Contract\LogNoteSummariser {
+                $fallback = self::get($container, \TriCab\Api\LogNote\Infrastructure\DeterministicLogNoteSummariser::class);
+                if (!$settings->isFoundryConfigured()) {
+                    return $fallback;
+                }
+
+                $http = new StreamJsonHttpClient((float) $settings->foundryTimeoutSeconds);
+                $primary = new \TriCab\Api\LogNote\Infrastructure\FoundryLogNoteSummariser(
+                    http: $http,
+                    accessTokens: new ManagedIdentityFoundryAccessTokenProvider($http),
+                    endpoint: $settings->foundryEndpoint,
+                    deployment: $settings->foundryModelDeployment,
+                    authMode: $settings->foundryAuthMode,
+                    apiKey: $settings->foundryApiKey,
+                );
+
+                return new \TriCab\Api\LogNote\Infrastructure\FallbackLogNoteSummariser($primary, $fallback);
+            },
+            \TriCab\Api\Http\Auth\LogNoteErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\LogNoteErrorMapper::class),
+            \TriCab\Core\LogNote\Application\Service\CreateLogNoteService::class => \DI\autowire(\TriCab\Core\LogNote\Application\Service\CreateLogNoteService::class),
+            \TriCab\Core\LogNote\Application\Service\ListLogNotesService::class => \DI\autowire(\TriCab\Core\LogNote\Application\Service\ListLogNotesService::class),
+            \TriCab\Core\LogNote\Application\Service\GetLogNoteService::class => \DI\autowire(\TriCab\Core\LogNote\Application\Service\GetLogNoteService::class),
+            \TriCab\Core\LogNote\Application\Service\SummariseLogNoteService::class => \DI\autowire(\TriCab\Core\LogNote\Application\Service\SummariseLogNoteService::class),
+
             AssistantQueryInterpreter::class => static function () use ($settings, $prompts): AssistantQueryInterpreter {
                 unset($prompts);
 
@@ -845,7 +875,9 @@ final class ContainerFactory
             Clock::class => \DI\autowire(SystemClock::class),
             GuestAuthEventLogger::class => \DI\create(GuestAuthEventLogger::class),
             GuestAuthErrorMapper::class => \DI\autowire(GuestAuthErrorMapper::class),
-            GuestAuthRateLimiter::class => \DI\autowire(NoOpGuestAuthRateLimiter::class),
+            GuestAuthRateLimiter::class => static function (Container $container): GuestAuthRateLimiter {
+                return new WindowedGuestAuthRateLimiter(self::get($container, ApplicationCache::class));
+            },
             GuestOtpEmailSender::class => static function (Container $container) use ($settings): GuestOtpEmailSender {
                 return self::createGuestOtpEmailSender($settings, $container);
             },
@@ -1784,6 +1816,8 @@ final class ContainerFactory
             $definitions[UserManagementAuditRepository::class] = \DI\autowire(AzureSqlUserManagementAuditRepository::class);
             $definitions[AdminMutationTransaction::class] = \DI\autowire(AdminMutationTransaction::class);
             $definitions[CustomerRepository::class] = \DI\autowire(AzureSqlCustomerRepository::class);
+            $definitions[\TriCab\Core\LogNote\Contract\LogNoteRepository::class] = \DI\autowire(\TriCab\Api\LogNote\Persistence\AzureSqlLogNoteRepository::class);
+            $definitions[\TriCab\Core\LogNote\Contract\LogNoteAuditRecorder::class] = \DI\autowire(\TriCab\Api\LogNote\Persistence\AzureSqlLogNoteAuditRecorder::class);
             $definitions[CustomerContactRepository::class] = \DI\autowire(AzureSqlCustomerContactRepository::class);
             $definitions[CustomerContactUserRepository::class] = \DI\autowire(AzureSqlCustomerContactUserRepository::class);
             $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
