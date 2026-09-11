@@ -190,13 +190,13 @@ Guest routes are registered when `GUEST_JWT_*` is configured. Employees should u
 - Logout revokes the guest session (idempotent). Entra tokens receive `403 AUTH_GUEST_SESSION_REQUIRED`.
 - Challenge attempt limit remains enforced (5 attempts).
 
-### Intended future rate limits (not enforced yet)
+### OTP rate limits
 
 - 3 OTP requests per email per 15 minutes
 - 10 OTP requests per IP per 15 minutes
-- optional temporary IP blocking after repeated failures
+- 20 verify-otp attempts per IP / challenge per 15 minutes
 
-Integration point: `TriCab\Api\Http\Auth\GuestAuthRateLimiter`.
+Integration point: `TriCab\Api\Http\Auth\GuestAuthRateLimiter` (`WindowedGuestAuthRateLimiter`).
 
 ### Request OTP
 

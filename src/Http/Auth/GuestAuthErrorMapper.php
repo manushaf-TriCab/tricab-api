@@ -32,6 +32,19 @@ final class GuestAuthErrorMapper
 
     public function map(Throwable $exception, string $route, string $event): ResponseInterface
     {
+        if ($exception instanceof GuestAuthRateLimited) {
+            $this->logger->log($event, [
+                'route' => $route,
+                'reason' => $exception->errorCode,
+            ]);
+
+            return $this->responder->error(
+                $exception->errorCode,
+                $exception->getMessage(),
+                $exception->httpStatus,
+            );
+        }
+
         if ($exception instanceof HttpRequestValidationFailed) {
             $this->logger->log($event, [
                 'route' => $route,

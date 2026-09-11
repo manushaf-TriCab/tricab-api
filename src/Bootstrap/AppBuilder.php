@@ -166,6 +166,9 @@ use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
+use TriCab\Api\Http\Action\TrustedDevice\ExchangeTrustedDeviceSessionAction;
+use TriCab\Api\Http\Action\TrustedDevice\RegisterTrustedDeviceAction;
+use TriCab\Api\Http\Action\TrustedDevice\RevokeTrustedDeviceAction;
 use TriCab\Api\Http\Action\RequestGuestOtpAction;
 use TriCab\Api\Http\Action\AuthenticateGoogleAction;
 use TriCab\Api\Http\Action\AppleAuthChallengeAction;
@@ -260,6 +263,13 @@ final class AppBuilder
             $app->post('/api/v1/auth/guest/request-otp', RequestGuestOtpAction::class);
             $app->post('/api/v1/auth/guest/verify-otp', VerifyGuestOtpAction::class);
             $app->post('/api/v1/auth/guest/logout', LogoutGuestAction::class);
+
+            $requireGuest = new RequirePermission($container);
+            $app->post('/api/v1/auth/devices/register', RegisterTrustedDeviceAction::class)
+                ->add(($requireGuest)('ACCOUNT.LOGIN'));
+            $app->post('/api/v1/auth/devices/session', ExchangeTrustedDeviceSessionAction::class);
+            $app->delete('/api/v1/auth/devices/current', RevokeTrustedDeviceAction::class)
+                ->add(($requireGuest)('ACCOUNT.LOGIN'));
         }
 
         if ($settings->isGoogleAuthConfigured()) {

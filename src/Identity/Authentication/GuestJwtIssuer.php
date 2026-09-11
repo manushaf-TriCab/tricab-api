@@ -25,6 +25,7 @@ final class GuestJwtIssuer implements GuestAccessTokenIssuer
         'google',
         'apple',
         'passkey',
+        'trusted-device',
     ];
 
     public function __construct(

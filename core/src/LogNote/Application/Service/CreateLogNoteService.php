@@ -10,6 +10,7 @@ use TriCab\Core\Customer\Application\Exception\CustomerContactNotFound;
 use TriCab\Core\Customer\Application\Exception\CustomerNotFound;
 use TriCab\Core\Customer\Contract\CustomerContactRepository;
 use TriCab\Core\Customer\Contract\CustomerRepository;
+use TriCab\Core\Customer\Domain\Exception\InvalidCustomerValue;
 use TriCab\Core\Customer\Domain\ValueObject\CustomerContactPublicId;
 use TriCab\Core\Customer\Domain\ValueObject\CustomerPublicId;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
@@ -86,7 +87,12 @@ final class CreateLogNoteService
             if ($contact === null) {
                 throw CustomerContactNotFound::forPublicId($contactPublicId->toString());
             }
-            if ($contact->customerPublicId !== $customerPublicId->toString()) {
+            try {
+                $contactCustomerPublicId = CustomerPublicId::fromString($contact->customerPublicId);
+            } catch (InvalidCustomerValue) {
+                throw LogNoteContactCustomerMismatch::forContact($contactPublicId->toString());
+            }
+            if (!$contactCustomerPublicId->equals($customerPublicId)) {
                 throw LogNoteContactCustomerMismatch::forContact($contactPublicId->toString());
             }
             $contactId = $this->contacts->findIdByPublicId($contactPublicId);

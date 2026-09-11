@@ -144,6 +144,9 @@ use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
+use TriCab\Api\Http\Action\TrustedDevice\ExchangeTrustedDeviceSessionAction;
+use TriCab\Api\Http\Action\TrustedDevice\RegisterTrustedDeviceAction;
+use TriCab\Api\Http\Action\TrustedDevice\RevokeTrustedDeviceAction;
 use TriCab\Api\Http\Action\Passkey\ListPasskeysAction;
 use TriCab\Api\Http\Action\Passkey\PasskeyAuthenticationCompleteAction;
 use TriCab\Api\Http\Action\Passkey\PasskeyAuthenticationOptionsAction;
@@ -163,6 +166,7 @@ use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\CustomerManagementErrorMapper;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthErrorMapper;
+use TriCab\Api\Http\Auth\TrustedDeviceAuthErrorMapper;
 use TriCab\Api\Http\Auth\GoogleAuthErrorMapper;
 use TriCab\Api\Http\Auth\AppleAuthErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthEventLogger;
@@ -285,6 +289,7 @@ use TriCab\Api\Identity\Persistence\AzureSqlPasskeyRegistrationSessionRepository
 use TriCab\Api\Identity\Persistence\AzureSqlUserPasskeyRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlGuestLoginEligibilityLookup;
 use TriCab\Api\Identity\Persistence\AzureSqlGuestSessionRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlTrustedDeviceRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlPermissionManagementRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlRoleManagementRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlUserManagementAuditRepository;
@@ -295,6 +300,7 @@ use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Identity\Persistence\InMemoryEmailOtpChallengeRepository;
 use TriCab\Api\Identity\Persistence\InMemoryGuestPasskeySetupTokenRepository;
 use TriCab\Api\Identity\Persistence\InMemoryGuestSessionRepository;
+use TriCab\Api\Identity\Persistence\InMemoryTrustedDeviceRepository;
 use TriCab\Api\Identity\Persistence\InMemoryPasskeyChallengeRepository;
 use TriCab\Api\Identity\Persistence\InMemoryPasskeyRegistrationSessionRepository;
 use TriCab\Api\Identity\Persistence\InMemoryUserPasskeyRepository;
@@ -348,6 +354,9 @@ use TriCab\Core\Identity\Application\Service\CreateGuestSessionService;
 use TriCab\Core\Identity\Application\Service\GuestLoginEligibilityService;
 use TriCab\Core\Identity\Application\Service\GuestUserProvisioningService;
 use TriCab\Core\Identity\Application\Service\IssueGuestSessionService;
+use TriCab\Core\Identity\Application\Service\ExchangeTrustedDeviceSessionService;
+use TriCab\Core\Identity\Application\Service\RegisterTrustedDeviceService;
+use TriCab\Core\Identity\Application\Service\RevokeTrustedDeviceService;
 use TriCab\Core\Identity\Application\Service\ManageUserPasskeysService;
 use TriCab\Core\Identity\Application\Service\CompletePasskeyAuthenticationService;
 use TriCab\Core\Identity\Application\Service\CompletePasskeyRegistrationService;
@@ -391,6 +400,7 @@ use TriCab\Core\Identity\Contract\GuestOtpEmailSender;
 use TriCab\Core\Identity\Contract\GuestPasskeyEmailSender;
 use TriCab\Core\Identity\Contract\GuestPasskeySetupTokenRepository;
 use TriCab\Core\Identity\Contract\GuestSessionRepository;
+use TriCab\Core\Identity\Contract\TrustedDeviceRepository;
 use TriCab\Core\Identity\Contract\PasskeyAuthRateLimiter;
 use TriCab\Core\Identity\Contract\PasskeyCeremony;
 use TriCab\Core\Identity\Contract\PasskeyChallengeRepository;
@@ -409,6 +419,7 @@ use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Identity\Domain\Service\PasswordOtpHasher;
 use TriCab\Core\Identity\Domain\Service\SecureOtpGenerator;
 use TriCab\Core\Identity\Domain\Service\Sha256SessionTokenHasher;
+use TriCab\Core\Identity\Domain\Service\TrustedDeviceCredentialGenerator;
 use TriCab\Core\Product\Application\Service\AddProductDocumentService;
 use TriCab\Core\Product\Application\Service\AddProductMediaService;
 use TriCab\Api\Http\Action\Admin\ProductSeriesAdminAction;
@@ -1805,6 +1816,7 @@ final class ContainerFactory
             $definitions[UserRepository::class] = \DI\autowire(AzureSqlUserRepository::class);
             $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(AzureSqlEmailOtpChallengeRepository::class);
             $definitions[GuestSessionRepository::class] = \DI\autowire(AzureSqlGuestSessionRepository::class);
+            $definitions[TrustedDeviceRepository::class] = \DI\autowire(AzureSqlTrustedDeviceRepository::class);
             $definitions[UserPasskeyRepository::class] = \DI\autowire(AzureSqlUserPasskeyRepository::class);
             $definitions[GuestPasskeySetupTokenRepository::class] = \DI\autowire(AzureSqlGuestPasskeySetupTokenRepository::class);
             $definitions[PasskeyChallengeRepository::class] = \DI\autowire(AzureSqlPasskeyChallengeRepository::class);
@@ -1927,6 +1939,7 @@ SQL,
             if ($settings->isGuestJwtConfigured()) {
                 $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(InMemoryEmailOtpChallengeRepository::class);
                 $definitions[GuestSessionRepository::class] = \DI\autowire(InMemoryGuestSessionRepository::class);
+                $definitions[TrustedDeviceRepository::class] = \DI\autowire(InMemoryTrustedDeviceRepository::class);
                 $definitions[UserPasskeyRepository::class] = \DI\autowire(InMemoryUserPasskeyRepository::class);
                 $definitions[GuestPasskeySetupTokenRepository::class] = \DI\autowire(InMemoryGuestPasskeySetupTokenRepository::class);
                 $definitions[PasskeyChallengeRepository::class] = \DI\autowire(InMemoryPasskeyChallengeRepository::class);
@@ -2076,6 +2089,22 @@ SQL,
         $definitions[RequestGuestOtpAction::class] = \DI\autowire(RequestGuestOtpAction::class);
         $definitions[VerifyGuestOtpAction::class] = \DI\autowire(VerifyGuestOtpAction::class);
         $definitions[LogoutGuestAction::class] = \DI\autowire(LogoutGuestAction::class);
+
+        $definitions[TrustedDeviceCredentialGenerator::class] = \DI\autowire(TrustedDeviceCredentialGenerator::class);
+        $definitions[RegisterTrustedDeviceService::class] = static function (Container $container) use ($settings): RegisterTrustedDeviceService {
+            return new RegisterTrustedDeviceService(
+                devices: self::get($container, TrustedDeviceRepository::class),
+                credentials: self::get($container, TrustedDeviceCredentialGenerator::class),
+                clock: self::get($container, Clock::class),
+                ttlDays: $settings->trustedDeviceTtlDays,
+            );
+        };
+        $definitions[ExchangeTrustedDeviceSessionService::class] = \DI\autowire(ExchangeTrustedDeviceSessionService::class);
+        $definitions[RevokeTrustedDeviceService::class] = \DI\autowire(RevokeTrustedDeviceService::class);
+        $definitions[TrustedDeviceAuthErrorMapper::class] = \DI\autowire(TrustedDeviceAuthErrorMapper::class);
+        $definitions[RegisterTrustedDeviceAction::class] = \DI\autowire(RegisterTrustedDeviceAction::class);
+        $definitions[ExchangeTrustedDeviceSessionAction::class] = \DI\autowire(ExchangeTrustedDeviceSessionAction::class);
+        $definitions[RevokeTrustedDeviceAction::class] = \DI\autowire(RevokeTrustedDeviceAction::class);
 
         $definitions[GoogleJwksClient::class] = \DI\create(GoogleJwksClient::class);
         $definitions[GoogleIdTokenValidator::class] = static function (Container $container) use ($settings): GoogleIdTokenValidator {

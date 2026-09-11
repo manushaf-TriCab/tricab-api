@@ -24,6 +24,10 @@ final readonly class Settings
     public const MAX_GUEST_JWT_TTL_SECONDS = 86400;
     public const MIN_GUEST_JWT_SECRET_BYTES = 32;
 
+    public const DEFAULT_TRUSTED_DEVICE_TTL_DAYS = 90;
+    public const MIN_TRUSTED_DEVICE_TTL_DAYS = 1;
+    public const MAX_TRUSTED_DEVICE_TTL_DAYS = 365;
+
     public const BLOB_AUTH_MODE_DISABLED = 'disabled';
     public const BLOB_AUTH_MODE_CONNECTION_STRING = 'connection-string';
     public const BLOB_AUTH_MODE_MEMORY = 'memory';
@@ -105,6 +109,7 @@ final readonly class Settings
         public string $guestJwtSecret,
         public int $guestJwtTtlSeconds,
         public int $guestJwtClockSkewSeconds,
+        public int $trustedDeviceTtlDays,
         public string $blobAuthMode,
         public string $blobConnectionString,
         public string $blobAccountName,
@@ -491,6 +496,13 @@ final readonly class Settings
         $guestJwtSecret = self::string($env, 'GUEST_JWT_SECRET', '');
         $guestJwtTtlSeconds = self::int($env, 'GUEST_JWT_TTL_SECONDS', self::DEFAULT_GUEST_JWT_TTL_SECONDS);
         $guestJwtClockSkewSeconds = self::int($env, 'GUEST_JWT_CLOCK_SKEW_SECONDS', 30);
+        $trustedDeviceTtlDays = self::boundedInt(
+            $env,
+            'TRUSTED_DEVICE_TTL_DAYS',
+            self::DEFAULT_TRUSTED_DEVICE_TTL_DAYS,
+            self::MIN_TRUSTED_DEVICE_TTL_DAYS,
+            self::MAX_TRUSTED_DEVICE_TTL_DAYS,
+        );
 
         if ($guestJwtTtlSeconds < 1 || $guestJwtTtlSeconds > self::MAX_GUEST_JWT_TTL_SECONDS) {
             throw new InvalidArgumentException(
@@ -762,6 +774,7 @@ final readonly class Settings
             guestJwtSecret: $guestJwtSecret,
             guestJwtTtlSeconds: $guestJwtTtlSeconds,
             guestJwtClockSkewSeconds: $guestJwtClockSkewSeconds,
+            trustedDeviceTtlDays: $trustedDeviceTtlDays,
             blobAuthMode: $blobAuthMode,
             blobConnectionString: $blobConnectionString,
             blobAccountName: $blobAccountName,
