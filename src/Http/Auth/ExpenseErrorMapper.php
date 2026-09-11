@@ -10,7 +10,9 @@ use Psr\Http\Message\ResponseInterface;
 use Throwable;
 use TriCab\Api\Http\Exception\HttpRequestValidationFailed;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Core\Customer\Application\Exception\CustomerNotFound;
 use TriCab\Core\Expense\Application\Exception\ExpenseAccessDenied;
+use TriCab\Core\Expense\Application\Exception\ExpenseAttachmentUnavailable;
 use TriCab\Core\Expense\Application\Exception\ExpenseManagerRequired;
 use TriCab\Core\Expense\Application\Exception\ExpenseReceiptNotFound;
 use TriCab\Core\Expense\Domain\Exception\ExpenseConcurrencyConflict;
@@ -43,12 +45,41 @@ final class ExpenseErrorMapper
             return $this->responder->error('TRIEXPENSE_RECEIPT_NOT_FOUND', $exception->getMessage(), 404);
         }
 
+        if ($exception instanceof CustomerNotFound) {
+            return $this->responder->error('TRIEXPENSE_CUSTOMER_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
         if ($exception instanceof ExpenseManagerRequired) {
             return $this->responder->error('TRIEXPENSE_MANAGER_REQUIRED', $exception->getMessage(), 422);
         }
 
         if ($exception instanceof ExpenseConcurrencyConflict) {
-            return $this->responder->error('TRIEXPENSE_CONCURRENCY_CONFLICT', $exception->getMessage(), 409);
+            return $this->responder->payload([
+                'success' => false,
+                'error' => [
+                    'code' => 'TRIEXPENSE_CONCURRENCY_CONFLICT',
+                    'message' => $exception->getMessage(),
+                    'reloadRequired' => true,
+                ],
+            ], 409);
+        }
+
+        if ($exception instanceof ExpenseAttachmentUnavailable) {
+            $message = $exception->getMessage();
+            if (str_contains($message, 'migrated')) {
+                return $this->responder->error('LEGACY_ATTACHMENT_NOT_MIGRATED', $message, 422);
+            }
+            if (str_contains($message, 'not allowed')) {
+                return $this->responder->error('TRIEXPENSE_ATTACHMENT_INVALID', $message, 422);
+            }
+            if (str_contains($message, 'Uploaded attachment')) {
+                return $this->responder->error('TRIEXPENSE_ATTACHMENT_MISSING', $message, 422);
+            }
+            if (str_contains($message, 'not found')) {
+                return $this->responder->error('TRIEXPENSE_ATTACHMENT_NOT_FOUND', $message, 404);
+            }
+
+            return $this->responder->error('TRIEXPENSE_ATTACHMENT_UNAVAILABLE', $message, 503);
         }
 
         if ($exception instanceof InvalidExpenseStatusTransition) {

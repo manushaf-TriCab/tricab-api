@@ -187,12 +187,22 @@ use TriCab\Api\Http\Action\Passkey\RevokePasskeyAction;
 use TriCab\Api\Http\Action\Passkey\VerifyPasskeySetupLinkAction;
 use TriCab\Api\Http\Auth\RequirePermission;
 use TriCab\Api\Http\Action\TriExpense\ApproveExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\CheckExpenseDuplicateAction;
+use TriCab\Api\Http\Action\TriExpense\CompleteExpenseAttachmentAction;
 use TriCab\Api\Http\Action\TriExpense\CreateExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\GetExpenseAttachmentFileAction;
+use TriCab\Api\Http\Action\TriExpense\GetExpenseConfigAction;
+use TriCab\Api\Http\Action\TriExpense\GetExpenseCustomerContactsAction;
 use TriCab\Api\Http\Action\TriExpense\GetExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\InitiateExpenseAttachmentAction;
 use TriCab\Api\Http\Action\TriExpense\ListExpenseApprovalsAction;
 use TriCab\Api\Http\Action\TriExpense\ListExpenseReceiptsAction;
+use TriCab\Api\Http\Action\TriExpense\PurgeExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\RejectExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\RestoreExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\SearchExpenseCustomersAction;
 use TriCab\Api\Http\Action\TriExpense\SendBackExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\SoftDeleteExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\SubmitExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\UpdateExpenseReceiptAction;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
@@ -385,6 +395,7 @@ final class AppBuilder
         $require = new RequirePermission($container);
         $gate = 'TRIEXPENSE.ACCESS';
 
+        $app->get('/api/v1/tri-expense/config', GetExpenseConfigAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/receipts', ListExpenseReceiptsAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/receipts', CreateExpenseReceiptAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/receipts/{id}', GetExpenseReceiptAction::class)->add(($require)($gate));
@@ -393,7 +404,16 @@ final class AppBuilder
         $app->post('/api/v1/tri-expense/receipts/{id}/approve', ApproveExpenseReceiptAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/receipts/{id}/reject', RejectExpenseReceiptAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/receipts/{id}/send-back', SendBackExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/delete', SoftDeleteExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/restore', RestoreExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/purge', PurgeExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/attachment/initiate', InitiateExpenseAttachmentAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/attachment/complete', CompleteExpenseAttachmentAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/receipts/{id}/file', GetExpenseAttachmentFileAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/approvals', ListExpenseApprovalsAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/customers', SearchExpenseCustomersAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/customers/{code}/contacts', GetExpenseCustomerContactsAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/duplicate-check', CheckExpenseDuplicateAction::class)->add(($require)($gate));
     }
 
     /**

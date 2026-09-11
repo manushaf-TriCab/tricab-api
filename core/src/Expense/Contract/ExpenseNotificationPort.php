@@ -11,7 +11,10 @@ use TriCab\Core\Expense\Domain\Entity\ExpenseReceipt;
  */
 interface ExpenseNotificationPort
 {
-    public function notifySubmitted(ExpenseReceipt $receipt): void;
+    /**
+     * @param 'draft_then_submit'|'immediate' $submitMode
+     */
+    public function notifySubmitted(ExpenseReceipt $receipt, string $submitMode = 'draft_then_submit'): void;
 
     public function notifyApproved(ExpenseReceipt $receipt): void;
 

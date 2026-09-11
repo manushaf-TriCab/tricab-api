@@ -130,6 +130,23 @@ ORDER BY r.[ExpenseReceiptId] DESC',
         return array_map(fn (array $row): ExpenseReceipt => $this->hydrate($row), $rows);
     }
 
+    public function deletePermanently(ExpenseReceipt $receipt, ?RowVersionToken $expectedRowVersion = null): void
+    {
+        $sql = 'DELETE FROM [expense].[ExpenseReceipts]
+OUTPUT DELETED.[ExpenseReceiptId]
+WHERE [PublicId] = :publicId AND [DeletedAtUtc] IS NOT NULL';
+        $params = [':publicId' => $receipt->publicId()->toString()];
+        if ($expectedRowVersion !== null) {
+            $sql .= ' AND [RowVersion] = :expectedRowVersion';
+            $params[':expectedRowVersion'] = ProductRowVersionMapper::toSqlBinary($expectedRowVersion);
+        }
+
+        $rows = $this->connection->fetchAll($sql, $params);
+        if ($rows === []) {
+            throw ExpenseConcurrencyConflict::forReceipt();
+        }
+    }
+
     private function insert(ExpenseReceipt $receipt): ExpenseReceipt
     {
         $attachment = $receipt->attachment();

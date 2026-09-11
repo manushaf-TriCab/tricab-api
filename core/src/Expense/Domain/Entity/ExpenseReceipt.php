@@ -290,7 +290,7 @@ final class ExpenseReceipt
         $this->status = ExpenseReceiptStatus::pending();
         $this->managerStatus = ManagerApprovalStatus::pending();
         $this->submittedByUserId = $submittedByUserId;
-        if ($managerUserId !== null) {
+        if ($this->managerUserId === null && $managerUserId !== null) {
             $this->managerUserId = $managerUserId;
         }
         $this->submittedAt = $now;
@@ -338,6 +338,35 @@ final class ExpenseReceipt
         $this->deletedBy = trim($deletedBy);
         $this->bankFeedEntryId = null;
         $this->updatedAt = $now;
+    }
+
+    public function restore(DateTimeImmutable $now): void
+    {
+        if ($this->deletedAt === null) {
+            throw InvalidExpenseStatusTransition::notEditable($this->status);
+        }
+        $this->deletedAt = null;
+        $this->deletedBy = null;
+        $this->updatedAt = $now;
+    }
+
+    public function replaceAttachment(?ExpenseAttachmentRef $attachment, DateTimeImmutable $now): void
+    {
+        if ($this->deletedAt !== null) {
+            throw InvalidExpenseStatusTransition::notEditable($this->status);
+        }
+        $this->attachment = $attachment;
+        $this->updatedAt = $now;
+    }
+
+    public function freezeManager(UserId $managerUserId): bool
+    {
+        if ($this->managerUserId !== null) {
+            return false;
+        }
+        $this->managerUserId = $managerUserId;
+
+        return true;
     }
 
     public function id(): ?ExpenseReceiptId { return $this->id; }

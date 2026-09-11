@@ -8,9 +8,12 @@ use TriCab\Core\Expense\Application\DTO\ExpenseActor;
 use TriCab\Core\Expense\Application\DTO\ExpenseReceiptDetails;
 use TriCab\Core\Expense\Application\Exception\ExpenseAccessDenied;
 use TriCab\Core\Expense\Application\Exception\ExpenseReceiptNotFound;
+use TriCab\Core\Expense\Application\ExpenseRowVersion;
 use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Contract\ExpenseNotificationPort;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
+use TriCab\Core\Expense\Domain\Entity\ExpenseProfile;
+use TriCab\Core\Expense\Domain\Entity\ExpenseReceipt;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
 use TriCab\Core\Shared\Time\Clock;
 
@@ -26,35 +29,35 @@ final class ExpenseApprovalService
     ) {
     }
 
-    public function approve(ExpenseActor $actor, string $publicId): ExpenseReceiptDetails
+    public function approve(ExpenseActor $actor, string $publicId, string $expectedRowVersion): ExpenseReceiptDetails
     {
         $profile = $this->access->requireActiveProfile($actor);
         $receipt = $this->requireReceipt($publicId);
         $this->assertCanActAsManager($actor, $profile, $receipt);
 
         $receipt->approve($this->clock->now());
-        $saved = $this->receipts->save($receipt);
+        $saved = $this->receipts->save($receipt, ExpenseRowVersion::require($expectedRowVersion));
         $this->audit->record($actor->userId, 'receipt_approved', $saved->publicId());
         $this->notifications->notifyApproved($saved);
 
         return $this->assembler->toDetails($saved);
     }
 
-    public function reject(ExpenseActor $actor, string $publicId, string $reason): ExpenseReceiptDetails
+    public function reject(ExpenseActor $actor, string $publicId, string $reason, string $expectedRowVersion): ExpenseReceiptDetails
     {
         $profile = $this->access->requireActiveProfile($actor);
         $receipt = $this->requireReceipt($publicId);
         $this->assertCanActAsManager($actor, $profile, $receipt);
 
         $receipt->reject($reason, $this->clock->now());
-        $saved = $this->receipts->save($receipt);
+        $saved = $this->receipts->save($receipt, ExpenseRowVersion::require($expectedRowVersion));
         $this->audit->record($actor->userId, 'receipt_rejected', $saved->publicId(), $reason);
         $this->notifications->notifyRejected($saved, $reason);
 
         return $this->assembler->toDetails($saved);
     }
 
-    public function sendBack(ExpenseActor $actor, string $publicId, string $note = ''): ExpenseReceiptDetails
+    public function sendBack(ExpenseActor $actor, string $publicId, string $expectedRowVersion, string $note = ''): ExpenseReceiptDetails
     {
         $profile = $this->access->requireActiveProfile($actor);
         if (!$this->access->hasFinanceCapability($actor, $profile)) {
@@ -63,14 +66,14 @@ final class ExpenseApprovalService
 
         $receipt = $this->requireReceipt($publicId);
         $receipt->sendBack($this->clock->now());
-        $saved = $this->receipts->save($receipt);
+        $saved = $this->receipts->save($receipt, ExpenseRowVersion::require($expectedRowVersion));
         $this->audit->record($actor->userId, 'receipt_sent_back', $saved->publicId(), $note !== '' ? $note : null);
         $this->notifications->notifySentBack($saved, $note);
 
         return $this->assembler->toDetails($saved);
     }
 
-    private function requireReceipt(string $publicId): \TriCab\Core\Expense\Domain\Entity\ExpenseReceipt
+    private function requireReceipt(string $publicId): ExpenseReceipt
     {
         $receipt = $this->receipts->findByPublicId(ExpenseReceiptPublicId::fromString($publicId));
         if ($receipt === null || $receipt->isDeleted()) {
@@ -80,14 +83,16 @@ final class ExpenseApprovalService
         return $receipt;
     }
 
-    private function assertCanActAsManager(
-        ExpenseActor $actor,
-        \TriCab\Core\Expense\Domain\Entity\ExpenseProfile $profile,
-        \TriCab\Core\Expense\Domain\Entity\ExpenseReceipt $receipt,
-    ): void {
+    private function assertCanActAsManager(ExpenseActor $actor, ExpenseProfile $profile, ExpenseReceipt $receipt): void
+    {
+        $isFinance = $this->access->hasFinanceCapability($actor, $profile);
+        $isOwner = $receipt->ownerUserId()->equals($actor->userId);
+        if ($isOwner && !$isFinance) {
+            throw ExpenseAccessDenied::selfApprovalForbidden();
+        }
+
         $isAssignedManager = $receipt->managerUserId() !== null
             && $receipt->managerUserId()->equals($actor->userId);
-        $isFinance = $this->access->hasFinanceCapability($actor, $profile);
         $isTeAdmin = $profile->isExpenseAdmin();
 
         if (!$isAssignedManager && !$isFinance && !$isTeAdmin) {

@@ -19,6 +19,8 @@ final class InMemoryExpenseReceiptRepository implements ExpenseReceiptRepository
 
     private int $nextId = 1;
 
+    private int $rowSeq = 1;
+
     public function save(ExpenseReceipt $receipt, ?RowVersionToken $expectedRowVersion = null): ExpenseReceipt
     {
         $key = $receipt->publicId()->toString();
@@ -32,6 +34,7 @@ final class InMemoryExpenseReceiptRepository implements ExpenseReceiptRepository
         }
 
         $saved = $receipt->id() === null ? $receipt->withId(ExpenseReceiptId::fromInt($this->nextId++)) : $receipt;
+        $saved = $saved->withRowVersion($this->nextRowVersion());
         $this->byPublicId[$saved->publicId()->toString()] = $saved;
 
         return $saved;
@@ -75,5 +78,26 @@ final class InMemoryExpenseReceiptRepository implements ExpenseReceiptRepository
         }
 
         return $out;
+    }
+
+    public function deletePermanently(ExpenseReceipt $receipt, ?RowVersionToken $expectedRowVersion = null): void
+    {
+        $key = $receipt->publicId()->toString();
+        $existing = $this->byPublicId[$key] ?? null;
+        if ($existing === null) {
+            throw ExpenseConcurrencyConflict::forReceipt();
+        }
+        if ($expectedRowVersion !== null) {
+            $current = $existing->rowVersion();
+            if ($current === null || !$current->equals($expectedRowVersion)) {
+                throw ExpenseConcurrencyConflict::forReceipt();
+            }
+        }
+        unset($this->byPublicId[$key]);
+    }
+
+    private function nextRowVersion(): RowVersionToken
+    {
+        return RowVersionToken::fromBinary(pack('NN', 0, $this->rowSeq++));
     }
 }

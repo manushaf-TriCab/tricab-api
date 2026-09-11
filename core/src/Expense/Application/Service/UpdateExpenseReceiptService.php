@@ -15,6 +15,9 @@ use TriCab\Core\Expense\Domain\ValueObject\ExpenseCategory;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseCurrency;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseMoney;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Application\ExpenseRowVersion;
+use TriCab\Core\Expense\Domain\Service\ExpenseGstCalculator;
+use TriCab\Core\Expense\Module;
 use TriCab\Core\Shared\Time\Clock;
 
 final class UpdateExpenseReceiptService
@@ -53,12 +56,21 @@ final class UpdateExpenseReceiptService
             $receiptDate = new DateTimeImmutable($payload['receiptDate']);
         }
 
+        $total = ExpenseMoney::fromString((string) ($payload['totalAmount'] ?? $receipt->totalAmount()->amount()));
+        $gstType = ExpenseGstCalculator::normalizeType((string) ($payload['gstType'] ?? $receipt->gstType()));
+        if ($gstType === Module::GST_INCLUSIVE && !array_key_exists('gstAmount', $payload)) {
+            $gst = ExpenseGstCalculator::inclusiveFromTotal($total);
+        } else {
+            $gst = ExpenseMoney::fromString((string) ($payload['gstAmount'] ?? $receipt->gstAmount()->amount()));
+        }
+        ExpenseGstCalculator::assertPossible($total, $gst);
+
         $receipt->updateDraftDetails(
             vendorName: (string) ($payload['vendorName'] ?? $receipt->vendorName()),
-            totalAmount: ExpenseMoney::fromString((string) ($payload['totalAmount'] ?? $receipt->totalAmount()->amount())),
-            gstAmount: ExpenseMoney::fromString((string) ($payload['gstAmount'] ?? $receipt->gstAmount()->amount())),
+            totalAmount: $total,
+            gstAmount: $gst,
             currency: ExpenseCurrency::fromString((string) ($payload['currency'] ?? $receipt->currency()->toString())),
-            gstType: (string) ($payload['gstType'] ?? $receipt->gstType()),
+            gstType: $gstType,
             receiptDate: $receiptDate,
             category: ExpenseCategory::fromLegacy(
                 isset($payload['category']) ? (string) $payload['category'] : $receipt->category()->rawValue(),
@@ -71,7 +83,7 @@ final class UpdateExpenseReceiptService
             now: $this->clock->now(),
         );
 
-        $saved = $this->receipts->save($receipt);
+        $saved = $this->receipts->save($receipt, ExpenseRowVersion::require($payload['expectedRowVersion'] ?? null));
         $this->audit->record($actor->userId, 'receipt_updated', $saved->publicId());
 
         return $this->assembler->toDetails($saved);

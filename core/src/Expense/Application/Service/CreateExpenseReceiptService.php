@@ -12,12 +12,14 @@ use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Contract\ExpenseManagerResolver;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\Entity\ExpenseReceipt;
+use TriCab\Core\Expense\Domain\Service\ExpenseGstCalculator;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseAttachmentRef;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseCategory;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseCurrency;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseMoney;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
 use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseIdentity;
+use TriCab\Core\Expense\Module;
 use TriCab\Core\Shared\Time\Clock;
 
 final class CreateExpenseReceiptService
@@ -42,6 +44,14 @@ final class CreateExpenseReceiptService
 
         $now = $this->clock->now();
         $managerUserId = $this->managers->resolveManagerUserId($profile);
+        $total = ExpenseMoney::fromString((string) ($payload['totalAmount'] ?? '0'));
+        $gstType = ExpenseGstCalculator::normalizeType((string) ($payload['gstType'] ?? Module::GST_UNKNOWN));
+        if ($gstType === Module::GST_INCLUSIVE && !array_key_exists('gstAmount', $payload)) {
+            $gst = ExpenseGstCalculator::inclusiveFromTotal($total);
+        } else {
+            $gst = ExpenseMoney::fromString((string) ($payload['gstAmount'] ?? '0'));
+        }
+        ExpenseGstCalculator::assertPossible($total, $gst);
 
         $attachment = null;
         if (isset($payload['attachmentUrl']) && is_string($payload['attachmentUrl']) && $payload['attachmentUrl'] !== '') {
@@ -62,10 +72,10 @@ final class CreateExpenseReceiptService
             publicId: ExpenseReceiptPublicId::generate(),
             ownerUserId: $actor->userId,
             vendorName: (string) ($payload['vendorName'] ?? ''),
-            totalAmount: ExpenseMoney::fromString((string) ($payload['totalAmount'] ?? '0')),
-            gstAmount: ExpenseMoney::fromString((string) ($payload['gstAmount'] ?? '0')),
+            totalAmount: $total,
+            gstAmount: $gst,
             currency: ExpenseCurrency::fromString((string) ($payload['currency'] ?? 'AUD')),
-            gstType: (string) ($payload['gstType'] ?? 'unknown'),
+            gstType: $gstType,
             receiptDate: $receiptDate,
             category: ExpenseCategory::fromLegacy(
                 isset($payload['category']) ? (string) $payload['category'] : null,

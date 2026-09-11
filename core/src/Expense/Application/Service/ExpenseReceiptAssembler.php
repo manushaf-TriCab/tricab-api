@@ -17,6 +17,7 @@ final class ExpenseReceiptAssembler
             $attachment = [
                 'storageSource' => $ref->storageSource(),
                 'fileName' => $ref->fileName(),
+                'dualReadClass' => $ref->dualReadClass(),
             ];
         }
 
@@ -52,6 +53,8 @@ final class ExpenseReceiptAssembler
             createdAt: $receipt->createdAt()->format(DATE_ATOM),
             submittedAt: $receipt->submittedAt()?->format(DATE_ATOM),
             updatedAt: $receipt->updatedAt()->format(DATE_ATOM),
+            deletedAt: $receipt->deletedAt()?->format(DATE_ATOM),
+            rowVersion: $receipt->rowVersion()?->toBase64(),
         );
     }
 }

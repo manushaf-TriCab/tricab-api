@@ -83,13 +83,19 @@ BEGIN
         [UpdatedAtUtc] DATETIME2(7) NOT NULL CONSTRAINT [DF_expense_ExpenseReceipts_UpdatedAtUtc] DEFAULT (SYSUTCDATETIME()),
         [DeletedAtUtc] DATETIME2(7) NULL,
         [DeletedBy] NVARCHAR(320) NULL,
+        [Resolution] NVARCHAR(64) NULL,
+        [ResolutionNote] NVARCHAR(MAX) NULL,
+        [ResolvedByUserId] BIGINT NULL,
+        [LegacyResolvedBy] NVARCHAR(320) NULL,
+        [ResolvedAtUtc] DATETIME2(7) NULL,
         [RowVersion] ROWVERSION NOT NULL,
         CONSTRAINT [PK_expense_ExpenseReceipts] PRIMARY KEY CLUSTERED ([ExpenseReceiptId]),
         CONSTRAINT [UQ_expense_ExpenseReceipts_PublicId] UNIQUE ([PublicId]),
         CONSTRAINT [CK_expense_ExpenseReceipts_Status] CHECK ([Status] IN (N'draft', N'pending', N'approved', N'rejected')),
         CONSTRAINT [FK_expense_ExpenseReceipts_OwnerUserId] FOREIGN KEY ([OwnerUserId]) REFERENCES [identity].[Users]([UserId]),
         CONSTRAINT [FK_expense_ExpenseReceipts_SubmittedByUserId] FOREIGN KEY ([SubmittedByUserId]) REFERENCES [identity].[Users]([UserId]),
-        CONSTRAINT [FK_expense_ExpenseReceipts_ManagerUserId] FOREIGN KEY ([ManagerUserId]) REFERENCES [identity].[Users]([UserId])
+        CONSTRAINT [FK_expense_ExpenseReceipts_ManagerUserId] FOREIGN KEY ([ManagerUserId]) REFERENCES [identity].[Users]([UserId]),
+        CONSTRAINT [FK_expense_ExpenseReceipts_ResolvedByUserId] FOREIGN KEY ([ResolvedByUserId]) REFERENCES [identity].[Users]([UserId])
     );
     CREATE UNIQUE NONCLUSTERED INDEX [UX_expense_ExpenseReceipts_LegacyReceiptId] ON [expense].[ExpenseReceipts]([LegacyReceiptId]) WHERE [LegacyReceiptId] IS NOT NULL;
     CREATE NONCLUSTERED INDEX [IX_expense_ExpenseReceipts_OwnerUserId] ON [expense].[ExpenseReceipts]([OwnerUserId]) WHERE [DeletedAtUtc] IS NULL;
@@ -108,6 +114,8 @@ BEGIN
         [Country] CHAR(2) NOT NULL,
         [PeriodStart] DATE NOT NULL,
         [PeriodEnd] DATE NOT NULL,
+        [TransactionStartDate] DATE NULL,
+        [TransactionEndDate] DATE NULL,
         [Status] NVARCHAR(16) NOT NULL,
         [ClosedAtUtc] DATETIME2(7) NULL,
         [ClosedByUserId] BIGINT NULL,
@@ -136,6 +144,23 @@ BEGIN
         [ExpenseReceiptId] BIGINT NULL,
         [ExpensePeriodId] BIGINT NULL,
         [Resolution] NVARCHAR(64) NULL,
+        [OffsetBankFeedEntryId] BIGINT NULL,
+        [ResolutionNote] NVARCHAR(MAX) NULL,
+        [ResolvedByUserId] BIGINT NULL,
+        [LegacyResolvedBy] NVARCHAR(320) NULL,
+        [ResolvedAtUtc] DATETIME2(7) NULL,
+        [PostingDate] DATE NULL,
+        [StatementDate] DATE NULL,
+        [MerchantCity] NVARCHAR(100) NULL,
+        [MerchantCountry] NVARCHAR(16) NULL,
+        [MerchantPostcode] NVARCHAR(20) NULL,
+        [ForeignAmount] DECIMAL(18,6) NULL,
+        [ForeignCurrency] NVARCHAR(16) NULL,
+        [NetAmount] DECIMAL(18,6) NULL,
+        [TaxAmount] DECIMAL(18,6) NULL,
+        [TransactionType] NVARCHAR(64) NULL,
+        [MerchantCategoryGroup] NVARCHAR(100) NULL,
+        [LegacyUploadedBy] NVARCHAR(320) NULL,
         [LegacyBankFeedId] INT NULL,
         [UploadedAtUtc] DATETIME2(7) NOT NULL CONSTRAINT [DF_expense_ExpenseBankFeedEntries_UploadedAtUtc] DEFAULT (SYSUTCDATETIME()),
         [RowVersion] ROWVERSION NOT NULL,
@@ -143,7 +168,9 @@ BEGIN
         CONSTRAINT [UQ_expense_ExpenseBankFeedEntries_BankReference] UNIQUE ([BankReference]),
         CONSTRAINT [CK_expense_ExpenseBankFeedEntries_MatchStatus] CHECK ([MatchStatus] IN (N'unmatched', N'matched', N'ambiguous')),
         CONSTRAINT [FK_expense_ExpenseBankFeedEntries_Receipt] FOREIGN KEY ([ExpenseReceiptId]) REFERENCES [expense].[ExpenseReceipts]([ExpenseReceiptId]),
-        CONSTRAINT [FK_expense_ExpenseBankFeedEntries_Period] FOREIGN KEY ([ExpensePeriodId]) REFERENCES [expense].[ExpensePeriods]([ExpensePeriodId])
+        CONSTRAINT [FK_expense_ExpenseBankFeedEntries_Period] FOREIGN KEY ([ExpensePeriodId]) REFERENCES [expense].[ExpensePeriods]([ExpensePeriodId]),
+        CONSTRAINT [FK_expense_ExpenseBankFeedEntries_Offset] FOREIGN KEY ([OffsetBankFeedEntryId]) REFERENCES [expense].[ExpenseBankFeedEntries]([ExpenseBankFeedEntryId]),
+        CONSTRAINT [FK_expense_ExpenseBankFeedEntries_ResolvedByUserId] FOREIGN KEY ([ResolvedByUserId]) REFERENCES [identity].[Users]([UserId])
     );
     CREATE UNIQUE NONCLUSTERED INDEX [UX_expense_ExpenseBankFeedEntries_LegacyBankFeedId] ON [expense].[ExpenseBankFeedEntries]([LegacyBankFeedId]) WHERE [LegacyBankFeedId] IS NOT NULL;
     CREATE NONCLUSTERED INDEX [IX_expense_ExpenseBankFeedEntries_MatchStatus] ON [expense].[ExpenseBankFeedEntries]([MatchStatus]);
@@ -167,3 +194,27 @@ BEGIN
     CREATE NONCLUSTERED INDEX [IX_expense_ExpenseAuditEvents_ReceiptPublicId] ON [expense].[ExpenseAuditEvents]([ExpenseReceiptPublicId]) WHERE [ExpenseReceiptPublicId] IS NOT NULL;
 END
 GO
+
+IF OBJECT_ID(N'[expense].[ExpenseReminderLog]', N'U') IS NULL
+BEGIN
+    CREATE TABLE [expense].[ExpenseReminderLog] (
+        [ExpenseReminderLogId] BIGINT IDENTITY(1,1) NOT NULL,
+        [PublicId] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [DF_expense_ExpenseReminderLog_PublicId] DEFAULT (NEWSEQUENTIALID()),
+        [RecipientUserId] BIGINT NULL,
+        [RecipientEmail] NVARCHAR(320) NOT NULL,
+        [SentByUserId] BIGINT NULL,
+        [LegacySentBy] NVARCHAR(320) NULL,
+        [SentAtUtc] DATETIME2(7) NOT NULL CONSTRAINT [DF_expense_ExpenseReminderLog_SentAtUtc] DEFAULT (SYSUTCDATETIME()),
+        [LegacyReminderLogId] INT NULL,
+        CONSTRAINT [PK_expense_ExpenseReminderLog] PRIMARY KEY CLUSTERED ([ExpenseReminderLogId]),
+        CONSTRAINT [UQ_expense_ExpenseReminderLog_PublicId] UNIQUE ([PublicId]),
+        CONSTRAINT [FK_expense_ExpenseReminderLog_RecipientUserId] FOREIGN KEY ([RecipientUserId]) REFERENCES [identity].[Users]([UserId]),
+        CONSTRAINT [FK_expense_ExpenseReminderLog_SentByUserId] FOREIGN KEY ([SentByUserId]) REFERENCES [identity].[Users]([UserId])
+    );
+    CREATE NONCLUSTERED INDEX [IX_expense_ExpenseReminderLog_RecipientEmail]
+        ON [expense].[ExpenseReminderLog]([RecipientEmail], [SentAtUtc] DESC);
+    CREATE UNIQUE NONCLUSTERED INDEX [UX_expense_ExpenseReminderLog_LegacyReminderLogId]
+        ON [expense].[ExpenseReminderLog]([LegacyReminderLogId]) WHERE [LegacyReminderLogId] IS NOT NULL;
+END
+GO
+

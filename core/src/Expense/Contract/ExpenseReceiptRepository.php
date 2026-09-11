@@ -27,4 +27,6 @@ interface ExpenseReceiptRepository
 
     /** @return list<ExpenseReceipt> */
     public function listPendingForManager(UserId $managerUserId): array;
+
+    public function deletePermanently(ExpenseReceipt $receipt, ?RowVersionToken $expectedRowVersion = null): void;
 }

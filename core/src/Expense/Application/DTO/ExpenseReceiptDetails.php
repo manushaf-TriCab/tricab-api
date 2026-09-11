@@ -30,6 +30,8 @@ final class ExpenseReceiptDetails
         public readonly string $createdAt,
         public readonly ?string $submittedAt,
         public readonly string $updatedAt,
+        public readonly ?string $deletedAt = null,
+        public readonly ?string $rowVersion = null,
     ) {
     }
 }

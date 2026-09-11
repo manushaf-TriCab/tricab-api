@@ -13,4 +13,19 @@ final class Module
 
     /** Existing launcher permission — module entry only; profile still required. */
     public const PERMISSION_ACCESS = 'TRIEXPENSE.ACCESS';
+
+    public const RECYCLE_DAYS = 30;
+    public const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+    /** @var list<string> */
+    public const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'heic', 'heif'];
+
+    public const GST_INCLUSIVE = 'inclusive';
+    public const GST_EXCLUSIVE = 'exclusive';
+    public const GST_UNKNOWN = 'unknown';
+
+    public const SUBMIT_DRAFT_THEN_SUBMIT = 'draft_then_submit';
+    public const SUBMIT_IMMEDIATE = 'immediate';
+
+    public const BLOB_CONTAINER = 'triexpense';
 }
