@@ -13,7 +13,9 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Customer\Application\Exception\CustomerNotFound;
 use TriCab\Core\Expense\Application\Exception\ExpenseAccessDenied;
 use TriCab\Core\Expense\Application\Exception\ExpenseAttachmentUnavailable;
+use TriCab\Core\Expense\Application\Exception\ExpenseBankFeedNotFound;
 use TriCab\Core\Expense\Application\Exception\ExpenseManagerRequired;
+use TriCab\Core\Expense\Application\Exception\ExpensePeriodNotFound;
 use TriCab\Core\Expense\Application\Exception\ExpenseReceiptNotFound;
 use TriCab\Core\Expense\Domain\Exception\ExpenseConcurrencyConflict;
 use TriCab\Core\Expense\Domain\Exception\InvalidExpenseStatusTransition;
@@ -43,6 +45,14 @@ final class ExpenseErrorMapper
 
         if ($exception instanceof ExpenseReceiptNotFound) {
             return $this->responder->error('TRIEXPENSE_RECEIPT_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof ExpenseBankFeedNotFound) {
+            return $this->responder->error('TRIEXPENSE_BANK_FEED_NOT_FOUND', $exception->getMessage(), 404);
+        }
+
+        if ($exception instanceof ExpensePeriodNotFound) {
+            return $this->responder->error('TRIEXPENSE_PERIOD_NOT_FOUND', $exception->getMessage(), 404);
         }
 
         if ($exception instanceof CustomerNotFound) {

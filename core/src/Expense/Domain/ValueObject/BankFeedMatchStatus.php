@@ -27,8 +27,43 @@ final class BankFeedMatchStatus
         return new self($normalized);
     }
 
+    public static function unmatched(): self
+    {
+        return new self(self::UNMATCHED);
+    }
+
+    public static function matched(): self
+    {
+        return new self(self::MATCHED);
+    }
+
+    public static function ambiguous(): self
+    {
+        return new self(self::AMBIGUOUS);
+    }
+
     public function toString(): string
     {
         return $this->value;
+    }
+
+    public function equals(self $other): bool
+    {
+        return $this->value === $other->value;
+    }
+
+    public function isUnmatched(): bool
+    {
+        return $this->value === self::UNMATCHED;
+    }
+
+    public function isMatched(): bool
+    {
+        return $this->value === self::MATCHED;
+    }
+
+    public function isAmbiguous(): bool
+    {
+        return $this->value === self::AMBIGUOUS;
     }
 }

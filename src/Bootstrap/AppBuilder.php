@@ -190,6 +190,28 @@ use TriCab\Api\Http\Action\TriExpense\ApproveExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\CheckExpenseDuplicateAction;
 use TriCab\Api\Http\Action\TriExpense\CompleteExpenseAttachmentAction;
 use TriCab\Api\Http\Action\TriExpense\CreateExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\CloseExpensePeriodAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ExportEmployeeReceiptsCsvAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ExportFinanceReconciliationCsvAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseFinanceEmployeeAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseReconciliationAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\GetOrCreateExpensePeriodAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ImportExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ListExpenseAuditAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ListExpenseBankFeedCandidatesAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ListExpensePeriodsAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ManualMatchExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\OffsetExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\PreCloseExpensePeriodAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\PrepareManagerReminderAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\PrepareMissingReceiptRemindersAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\RenderFinanceFullPdfAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\RenderFinanceSummaryPdfAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ResolveExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ResolveExpenseReceiptFinanceAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\RunExpenseBankFeedMatchingAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\UndoOffsetExpenseBankFeedAction;
 use TriCab\Api\Http\Action\TriExpense\GetExpenseAttachmentFileAction;
 use TriCab\Api\Http\Action\TriExpense\GetExpenseConfigAction;
 use TriCab\Api\Http\Action\TriExpense\GetExpenseCustomerContactsAction;
@@ -414,6 +436,35 @@ final class AppBuilder
         $app->get('/api/v1/tri-expense/customers', SearchExpenseCustomersAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/customers/{code}/contacts', GetExpenseCustomerContactsAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/duplicate-check', CheckExpenseDuplicateAction::class)->add(($require)($gate));
+
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/import', ImportExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/match', RunExpenseBankFeedMatchingAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/bank-feeds/{id}', GetExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/bank-feeds/{id}/candidates', ListExpenseBankFeedCandidatesAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/{id}/manual-match', ManualMatchExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/{id}/resolve', ResolveExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/offset', OffsetExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/{id}/undo-offset', UndoOffsetExpenseBankFeedAction::class)->add(($require)($gate));
+        // Suggested aliases from Phase 4 contract
+        $app->get('/api/v1/tri-expense/audit', ListExpenseAuditAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/exports/receipts.csv', ExportEmployeeReceiptsCsvAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/exports/reconciliation.csv', ExportFinanceReconciliationCsvAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/exports/summary.pdf', RenderFinanceSummaryPdfAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/exports/full.pdf', RenderFinanceFullPdfAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/receipts/{id}/resolve', ResolveExpenseReceiptFinanceAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/periods', ListExpensePeriodsAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/periods/get-or-create', GetOrCreateExpensePeriodAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/periods/{id}/pre-close', PreCloseExpensePeriodAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/periods/{id}/close', CloseExpensePeriodAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/reconciliation', GetExpenseReconciliationAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/employees/{userId}', GetExpenseFinanceEmployeeAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/reminders/missing-receipts', PrepareMissingReceiptRemindersAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/reminders/managers', PrepareManagerReminderAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/audit', ListExpenseAuditAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/export/employee-receipts', ExportEmployeeReceiptsCsvAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/export/reconciliation', ExportFinanceReconciliationCsvAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/pdf/summary', RenderFinanceSummaryPdfAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/pdf/full', RenderFinanceFullPdfAction::class)->add(($require)($gate));
     }
 
     /**

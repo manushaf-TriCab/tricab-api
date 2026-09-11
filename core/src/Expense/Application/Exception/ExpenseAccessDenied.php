@@ -57,4 +57,9 @@ final class ExpenseAccessDenied extends RuntimeException
     {
         return new self('Finance capability is required to permanently delete a receipt.');
     }
+
+    public static function financeRequired(): self
+    {
+        return new self('Finance capability is required for this Tri Expense finance operation.');
+    }
 }

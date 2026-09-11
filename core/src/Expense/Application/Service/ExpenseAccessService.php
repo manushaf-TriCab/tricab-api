@@ -47,6 +47,16 @@ final class ExpenseAccessService
         return $this->financeCapability->hasFinanceCapability($actor->userId, $profile);
     }
 
+    public function requireFinance(ExpenseActor $actor): ExpenseProfile
+    {
+        $profile = $this->requireActiveProfile($actor);
+        if (!$this->hasFinanceCapability($actor, $profile)) {
+            throw ExpenseAccessDenied::financeRequired();
+        }
+
+        return $profile;
+    }
+
     public function platformAdministratorIsNotExpenseAdmin(ExpenseActor $actor, ExpenseProfile $profile): bool
     {
         return $actor->isPlatformAdministrator() && !$profile->isExpenseAdmin();

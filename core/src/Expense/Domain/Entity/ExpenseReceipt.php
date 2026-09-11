@@ -10,6 +10,7 @@ use TriCab\Core\Expense\Domain\Exception\InvalidExpenseValue;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseAttachmentRef;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseCategory;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseCurrency;
+use TriCab\Core\Expense\Domain\ValueObject\ExpenseFinanceResolution;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseMoney;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptId;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
@@ -53,6 +54,11 @@ final class ExpenseReceipt
         private ?ExpenseAttachmentRef $attachment,
         private ?int $bankFeedEntryId,
         private ?int $periodId,
+        private ?ExpenseFinanceResolution $resolution,
+        private ?string $resolutionNote,
+        private ?UserId $resolvedByUserId,
+        private ?string $legacyResolvedBy,
+        private ?DateTimeImmutable $resolvedAtUtc,
         private LegacyExpenseIdentity $legacy,
         private readonly DateTimeImmutable $createdAt,
         private ?DateTimeImmutable $submittedAt,
@@ -122,6 +128,11 @@ final class ExpenseReceipt
             attachment: $attachment,
             bankFeedEntryId: null,
             periodId: null,
+            resolution: null,
+            resolutionNote: null,
+            resolvedByUserId: null,
+            legacyResolvedBy: null,
+            resolvedAtUtc: null,
             legacy: $legacy ?? LegacyExpenseIdentity::empty(),
             createdAt: $now,
             submittedAt: null,
@@ -168,6 +179,11 @@ final class ExpenseReceipt
         ?DateTimeImmutable $deletedAt,
         ?string $deletedBy,
         ?RowVersionToken $rowVersion = null,
+        ?ExpenseFinanceResolution $resolution = null,
+        ?string $resolutionNote = null,
+        ?UserId $resolvedByUserId = null,
+        ?string $legacyResolvedBy = null,
+        ?DateTimeImmutable $resolvedAtUtc = null,
     ): self {
         return new self(
             $id,
@@ -198,6 +214,11 @@ final class ExpenseReceipt
             $attachment,
             $bankFeedEntryId,
             $periodId,
+            $resolution,
+            $resolutionNote,
+            $resolvedByUserId,
+            $legacyResolvedBy,
+            $resolvedAtUtc,
             $legacy,
             $createdAt,
             $submittedAt,
@@ -369,6 +390,69 @@ final class ExpenseReceipt
         return true;
     }
 
+    public function linkBankFeed(int $bankFeedEntryId, DateTimeImmutable $now): void
+    {
+        $this->bankFeedEntryId = $bankFeedEntryId;
+        $this->updatedAt = $now;
+    }
+
+    public function unlinkBankFeed(DateTimeImmutable $now): void
+    {
+        $this->bankFeedEntryId = null;
+        $this->updatedAt = $now;
+    }
+
+    public function assignPeriod(int $periodId, DateTimeImmutable $now): void
+    {
+        $this->periodId = $periodId;
+        $this->updatedAt = $now;
+    }
+
+    /**
+     * Finance-only resolution. Does not introduce new receipt status values.
+     * force_approved / force_rejected also set status + managerStatus.
+     */
+    public function applyFinanceResolution(
+        ExpenseFinanceResolution $resolution,
+        ?string $note,
+        UserId $resolvedBy,
+        DateTimeImmutable $now,
+    ): void {
+        if ($this->deletedAt !== null) {
+            throw InvalidExpenseStatusTransition::notEditable($this->status);
+        }
+        if (!$resolution->isAllowedForReceipt()) {
+            throw InvalidExpenseValue::for('resolution', $resolution->toString());
+        }
+
+        $this->resolution = $resolution;
+        $this->resolutionNote = self::nullableTrim($note);
+        $this->resolvedByUserId = $resolvedBy;
+        $this->resolvedAtUtc = $now;
+        $this->updatedAt = $now;
+
+        if ($resolution->isForceApproved()) {
+            $this->status = ExpenseReceiptStatus::approved();
+            $this->managerStatus = ManagerApprovalStatus::approved();
+        } elseif ($resolution->isForceRejected()) {
+            $this->status = ExpenseReceiptStatus::rejected();
+            $this->managerStatus = ManagerApprovalStatus::rejected();
+            if ($this->managerReason === null || $this->managerReason === '') {
+                $this->managerReason = self::nullableTrim($note) ?? 'Force rejected by finance';
+            }
+        }
+    }
+
+    public function clearFinanceResolution(DateTimeImmutable $now): void
+    {
+        $this->resolution = null;
+        $this->resolutionNote = null;
+        $this->resolvedByUserId = null;
+        $this->legacyResolvedBy = null;
+        $this->resolvedAtUtc = null;
+        $this->updatedAt = $now;
+    }
+
     public function id(): ?ExpenseReceiptId { return $this->id; }
     public function publicId(): ExpenseReceiptPublicId { return $this->publicId; }
     public function ownerUserId(): UserId { return $this->ownerUserId; }
@@ -397,6 +481,11 @@ final class ExpenseReceipt
     public function attachment(): ?ExpenseAttachmentRef { return $this->attachment; }
     public function bankFeedEntryId(): ?int { return $this->bankFeedEntryId; }
     public function periodId(): ?int { return $this->periodId; }
+    public function resolution(): ?ExpenseFinanceResolution { return $this->resolution; }
+    public function resolutionNote(): ?string { return $this->resolutionNote; }
+    public function resolvedByUserId(): ?UserId { return $this->resolvedByUserId; }
+    public function legacyResolvedBy(): ?string { return $this->legacyResolvedBy; }
+    public function resolvedAtUtc(): ?DateTimeImmutable { return $this->resolvedAtUtc; }
     public function legacy(): LegacyExpenseIdentity { return $this->legacy; }
     public function createdAt(): DateTimeImmutable { return $this->createdAt; }
     public function submittedAt(): ?DateTimeImmutable { return $this->submittedAt; }

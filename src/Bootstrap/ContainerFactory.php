@@ -739,9 +739,13 @@ final class ContainerFactory
             Settings::class => $settings,
             JsonResponder::class => \DI\create(JsonResponder::class),
 
-            // Tri Expense Stage 2/3 — memory defaults; azure-sql branch overrides persistence below.
+            // Tri Expense Stage 2/3/4 — memory defaults; azure-sql branch overrides persistence below.
             \TriCab\Core\Expense\Contract\ExpenseReceiptRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReceiptRepository::class),
             \TriCab\Core\Expense\Contract\ExpenseProfileRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseProfileRepository::class),
+            \TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseBankFeedRepository::class),
+            \TriCab\Core\Expense\Contract\ExpensePeriodRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpensePeriodRepository::class),
+            \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
+            \TriCab\Core\Expense\Contract\ExpensePdfRenderer::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ExpenseDompdfRenderer::class),
             \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
             \TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\OrExpenseFinanceCapabilityResolver::class),
             \TriCab\Core\Expense\Contract\ExpenseManagerResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileManagerResolver::class),
@@ -769,6 +773,32 @@ final class ContainerFactory
             \TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class),
             \TriCab\Core\Expense\Application\Service\SearchExpenseCustomersService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\SearchExpenseCustomersService::class),
             \TriCab\Core\Expense\Application\Service\GetExpenseCustomerContactsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseCustomerContactsService::class),
+            \TriCab\Core\Expense\Application\Service\ImportExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ImportExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\ListExpenseBankFeedCandidatesService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseBankFeedCandidatesService::class),
+            \TriCab\Core\Expense\Application\Service\RunExpenseBankFeedMatchingService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RunExpenseBankFeedMatchingService::class),
+            \TriCab\Core\Expense\Application\Service\ManualMatchExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ManualMatchExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\ResolveExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ResolveExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\OffsetExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\OffsetExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\UndoOffsetExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\UndoOffsetExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\ResolveExpenseReceiptFinanceService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ResolveExpenseReceiptFinanceService::class),
+            \TriCab\Core\Expense\Application\Service\ListExpensePeriodsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpensePeriodsService::class),
+            \TriCab\Core\Expense\Application\Service\GetOrCreateExpensePeriodService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetOrCreateExpensePeriodService::class),
+            \TriCab\Core\Expense\Application\Service\PreCloseExpensePeriodService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PreCloseExpensePeriodService::class),
+            \TriCab\Core\Expense\Application\Service\CloseExpensePeriodService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CloseExpensePeriodService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseReconciliationService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReconciliationService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseFinanceEmployeeService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseFinanceEmployeeService::class),
+            \TriCab\Core\Expense\Application\Service\PrepareMissingReceiptRemindersService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PrepareMissingReceiptRemindersService::class),
+            \TriCab\Core\Expense\Application\Service\PrepareManagerReminderService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PrepareManagerReminderService::class),
+            \TriCab\Core\Expense\Application\Service\ListExpenseAuditService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseAuditService::class),
+            \TriCab\Core\Expense\Application\Service\ExportEmployeeReceiptsCsvService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExportEmployeeReceiptsCsvService::class),
+            \TriCab\Core\Expense\Application\Service\ExportFinanceReconciliationCsvService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExportFinanceReconciliationCsvService::class),
+            \TriCab\Core\Expense\Application\Service\RenderFinanceSummaryPdfService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RenderFinanceSummaryPdfService::class),
+            \TriCab\Core\Expense\Application\Service\RenderFinanceFullPdfService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RenderFinanceFullPdfService::class),
+            \TriCab\Core\Expense\Domain\Service\ExpenseAuBankFeedCsvParser::class => \DI\autowire(\TriCab\Core\Expense\Domain\Service\ExpenseAuBankFeedCsvParser::class),
+            \TriCab\Core\Expense\Domain\Service\ExpenseNzBankFeedCsvParser::class => \DI\autowire(\TriCab\Core\Expense\Domain\Service\ExpenseNzBankFeedCsvParser::class),
+            \TriCab\Core\Expense\Domain\Service\ExpenseBankFeedMatcher::class => \DI\autowire(\TriCab\Core\Expense\Domain\Service\ExpenseBankFeedMatcher::class),
+            \TriCab\Core\Expense\Domain\Service\ExpenseNearMissDiagnostics::class => \DI\autowire(\TriCab\Core\Expense\Domain\Service\ExpenseNearMissDiagnostics::class),
 
             \TriCab\Core\LogNote\Contract\LogNoteRepository::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\InMemoryLogNoteRepository::class),
             \TriCab\Core\LogNote\Contract\LogNoteAuditRecorder::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\InMemoryLogNoteAuditRecorder::class),
@@ -1854,6 +1884,9 @@ final class ContainerFactory
             };
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReceiptRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReceiptRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseProfileRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseProfileRepository::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseBankFeedRepository::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpensePeriodRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpensePeriodRepository::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReminderLogRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseNotificationPort::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseNotificationPort::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);

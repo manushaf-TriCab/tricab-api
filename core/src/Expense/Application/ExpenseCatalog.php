@@ -96,9 +96,10 @@ final class ExpenseCatalog
             'features' => [
                 'ocr' => false,
                 'emailNotifications' => false,
-                'bankReconciliation' => false,
-                'periodClose' => false,
+                'bankReconciliation' => true,
+                'periodClose' => true,
             ],
+
         ];
     }
 }

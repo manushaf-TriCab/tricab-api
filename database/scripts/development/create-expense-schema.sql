@@ -111,6 +111,7 @@ IF OBJECT_ID(N'[expense].[ExpensePeriods]', N'U') IS NULL
 BEGIN
     CREATE TABLE [expense].[ExpensePeriods] (
         [ExpensePeriodId] BIGINT IDENTITY(1,1) NOT NULL,
+        [PublicId] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [DF_expense_ExpensePeriods_PublicId] DEFAULT (NEWSEQUENTIALID()),
         [Country] CHAR(2) NOT NULL,
         [PeriodStart] DATE NOT NULL,
         [PeriodEnd] DATE NOT NULL,
@@ -123,9 +124,13 @@ BEGIN
         [LegacyPeriodId] INT NULL,
         [RowVersion] ROWVERSION NOT NULL,
         CONSTRAINT [PK_expense_ExpensePeriods] PRIMARY KEY CLUSTERED ([ExpensePeriodId]),
-        CONSTRAINT [CK_expense_ExpensePeriods_Status] CHECK ([Status] IN (N'open', N'closed'))
+        CONSTRAINT [UQ_expense_ExpensePeriods_PublicId] UNIQUE ([PublicId]),
+        CONSTRAINT [CK_expense_ExpensePeriods_Status] CHECK ([Status] IN (N'open', N'closed')),
+        CONSTRAINT [FK_expense_ExpensePeriods_ClosedByUserId] FOREIGN KEY ([ClosedByUserId]) REFERENCES [identity].[Users]([UserId])
     );
     CREATE UNIQUE NONCLUSTERED INDEX [UX_expense_ExpensePeriods_LegacyPeriodId] ON [expense].[ExpensePeriods]([LegacyPeriodId]) WHERE [LegacyPeriodId] IS NOT NULL;
+    CREATE NONCLUSTERED INDEX [IX_expense_ExpensePeriods_CountryStatus]
+        ON [expense].[ExpensePeriods]([Country], [Status], [PeriodEnd] DESC);
 END
 GO
 
@@ -133,8 +138,12 @@ IF OBJECT_ID(N'[expense].[ExpenseBankFeedEntries]', N'U') IS NULL
 BEGIN
     CREATE TABLE [expense].[ExpenseBankFeedEntries] (
         [ExpenseBankFeedEntryId] BIGINT IDENTITY(1,1) NOT NULL,
+        [PublicId] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [DF_expense_ExpenseBankFeedEntries_PublicId] DEFAULT (NEWSEQUENTIALID()),
         [BankReference] NVARCHAR(190) NOT NULL,
         [CardholderEmail] NVARCHAR(320) NOT NULL,
+        [CardholderUserId] BIGINT NULL,
+        [FirstName] NVARCHAR(100) NULL,
+        [LastName] NVARCHAR(100) NULL,
         [Country] CHAR(2) NOT NULL,
         [TransactionDate] DATE NULL,
         [MerchantName] NVARCHAR(255) NOT NULL,
@@ -165,16 +174,23 @@ BEGIN
         [UploadedAtUtc] DATETIME2(7) NOT NULL CONSTRAINT [DF_expense_ExpenseBankFeedEntries_UploadedAtUtc] DEFAULT (SYSUTCDATETIME()),
         [RowVersion] ROWVERSION NOT NULL,
         CONSTRAINT [PK_expense_ExpenseBankFeedEntries] PRIMARY KEY CLUSTERED ([ExpenseBankFeedEntryId]),
+        CONSTRAINT [UQ_expense_ExpenseBankFeedEntries_PublicId] UNIQUE ([PublicId]),
         CONSTRAINT [UQ_expense_ExpenseBankFeedEntries_BankReference] UNIQUE ([BankReference]),
         CONSTRAINT [CK_expense_ExpenseBankFeedEntries_MatchStatus] CHECK ([MatchStatus] IN (N'unmatched', N'matched', N'ambiguous')),
         CONSTRAINT [FK_expense_ExpenseBankFeedEntries_Receipt] FOREIGN KEY ([ExpenseReceiptId]) REFERENCES [expense].[ExpenseReceipts]([ExpenseReceiptId]),
         CONSTRAINT [FK_expense_ExpenseBankFeedEntries_Period] FOREIGN KEY ([ExpensePeriodId]) REFERENCES [expense].[ExpensePeriods]([ExpensePeriodId]),
         CONSTRAINT [FK_expense_ExpenseBankFeedEntries_Offset] FOREIGN KEY ([OffsetBankFeedEntryId]) REFERENCES [expense].[ExpenseBankFeedEntries]([ExpenseBankFeedEntryId]),
-        CONSTRAINT [FK_expense_ExpenseBankFeedEntries_ResolvedByUserId] FOREIGN KEY ([ResolvedByUserId]) REFERENCES [identity].[Users]([UserId])
+        CONSTRAINT [FK_expense_ExpenseBankFeedEntries_ResolvedByUserId] FOREIGN KEY ([ResolvedByUserId]) REFERENCES [identity].[Users]([UserId]),
+        CONSTRAINT [FK_expense_ExpenseBankFeedEntries_CardholderUserId] FOREIGN KEY ([CardholderUserId]) REFERENCES [identity].[Users]([UserId])
     );
     CREATE UNIQUE NONCLUSTERED INDEX [UX_expense_ExpenseBankFeedEntries_LegacyBankFeedId] ON [expense].[ExpenseBankFeedEntries]([LegacyBankFeedId]) WHERE [LegacyBankFeedId] IS NOT NULL;
     CREATE NONCLUSTERED INDEX [IX_expense_ExpenseBankFeedEntries_MatchStatus] ON [expense].[ExpenseBankFeedEntries]([MatchStatus]);
     CREATE NONCLUSTERED INDEX [IX_expense_ExpenseBankFeedEntries_CardholderEmail] ON [expense].[ExpenseBankFeedEntries]([CardholderEmail]);
+    CREATE NONCLUSTERED INDEX [IX_expense_ExpenseBankFeedEntries_PeriodMatch]
+        ON [expense].[ExpenseBankFeedEntries]([ExpensePeriodId], [MatchStatus], [Resolution])
+        WHERE [ExpensePeriodId] IS NOT NULL;
+    CREATE NONCLUSTERED INDEX [IX_expense_ExpenseBankFeedEntries_CountryTxDate]
+        ON [expense].[ExpenseBankFeedEntries]([Country], [TransactionDate]);
 END
 GO
 

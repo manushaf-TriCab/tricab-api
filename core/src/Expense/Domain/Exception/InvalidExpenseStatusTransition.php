@@ -22,4 +22,14 @@ final class InvalidExpenseStatusTransition extends DomainException
     {
         return new self(sprintf('Receipt in status %s cannot be edited.', $status->toString()));
     }
+
+    public static function periodAlreadyClosed(): self
+    {
+        return new self('Expense period is already closed and cannot be modified.');
+    }
+
+    public static function periodPreCloseBlocked(string $reason): self
+    {
+        return new self(sprintf('Expense period cannot be closed: %s', $reason));
+    }
 }
