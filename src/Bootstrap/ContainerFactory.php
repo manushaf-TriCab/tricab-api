@@ -747,11 +747,30 @@ final class ContainerFactory
             \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
             \TriCab\Core\Expense\Contract\ExpensePdfRenderer::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ExpenseDompdfRenderer::class),
             \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
-            \TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\OrExpenseFinanceCapabilityResolver::class),
+            // Profile-only by design: ExpenseProfile.IsFinance is authoritative at
+            // request time and the Graph Tricab-Finance group is diagnostic/sync
+            // only. See ExpenseAccessService for the full rationale.
+            \TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class),
             \TriCab\Core\Expense\Contract\ExpenseManagerResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileManagerResolver::class),
-            \TriCab\Core\Expense\Contract\ExpenseNotificationPort::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseNotificationPort::class),
+            \TriCab\Core\Expense\Contract\ExpenseNotificationPort::class => static function (Container $container) use ($settings): \TriCab\Core\Expense\Contract\ExpenseNotificationPort {
+                return self::createExpenseNotificationPort($settings, $container);
+            },
             \TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseAuditRecorder::class),
-            \TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort::class => \DI\autowire(\TriCab\Api\Expense\Persistence\DisabledExpenseCaptureAssistPort::class),
+            \TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort::class => static function (Container $container) use ($settings): \TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort {
+                return self::createExpenseCaptureAssistPort($settings, $container);
+            },
+            \TriCab\Api\Expense\Email\ExpenseEmailTemplates::class => static function () use ($settings): \TriCab\Api\Expense\Email\ExpenseEmailTemplates {
+                return new \TriCab\Api\Expense\Email\ExpenseEmailTemplates(
+                    $settings->triexpenseAppBaseUrl !== '' ? $settings->triexpenseAppBaseUrl : null,
+                );
+            },
+            \TriCab\Api\Expense\Observability\ExpenseEventLogger::class => \DI\create(\TriCab\Api\Expense\Observability\ExpenseEventLogger::class),
+            \TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags::class => static function () use ($settings): \TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags {
+                return new \TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags(
+                    ocr: $settings->isTriexpenseOcrConfigured(),
+                    emailNotifications: $settings->isTriexpenseEmailSendingEnabled(),
+                );
+            },
             \TriCab\Core\Expense\Contract\ExpenseAttachmentStore::class => \DI\autowire(\TriCab\Api\Expense\Persistence\AzureBlobExpenseAttachmentStore::class),
             \TriCab\Api\Http\Auth\ExpenseErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class),
             \TriCab\Core\Expense\Application\Service\ExpenseAccessService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class),
@@ -767,7 +786,10 @@ final class ContainerFactory
             \TriCab\Core\Expense\Application\Service\RestoreExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RestoreExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\PurgeExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PurgeExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\CheckExpenseDuplicateService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CheckExpenseDuplicateService::class),
-            \TriCab\Core\Expense\Application\Service\GetExpenseConfigService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseConfigService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseConfigService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseConfigService::class)
+                ->constructorParameter('features', \DI\get(\TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags::class)),
+            \TriCab\Core\Expense\Application\Service\RunExpenseReceiptOcrService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RunExpenseReceiptOcrService::class),
+            \TriCab\Core\Expense\Application\Service\MonthlyManagerDigestService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\MonthlyManagerDigestService::class),
             \TriCab\Core\Expense\Application\Service\InitiateExpenseAttachmentService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\InitiateExpenseAttachmentService::class),
             \TriCab\Core\Expense\Application\Service\CompleteExpenseAttachmentService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CompleteExpenseAttachmentService::class),
             \TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class),
@@ -1888,9 +1910,8 @@ final class ContainerFactory
             $definitions[\TriCab\Core\Expense\Contract\ExpensePeriodRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpensePeriodRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReminderLogRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
-            $definitions[\TriCab\Core\Expense\Contract\ExpenseNotificationPort::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseNotificationPort::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);
-            $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\OrExpenseFinanceCapabilityResolver::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class);
             $definitions[RegionRepository::class] = \DI\autowire(AzureSqlRegionRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
@@ -2287,6 +2308,61 @@ SQL,
         $definitions[ListPasskeysAction::class] = \DI\autowire(ListPasskeysAction::class);
         $definitions[RenamePasskeyAction::class] = \DI\autowire(RenamePasskeyAction::class);
         $definitions[RevokePasskeyAction::class] = \DI\autowire(RevokePasskeyAction::class);
+    }
+
+    /**
+     * Graph mail is wired whenever credentials exist, even with
+     * TRIEXPENSE_EMAIL_ENABLED=false: the adapter then resolves recipients and
+     * logs the intent without calling Graph, which is what makes a non-production
+     * run observable without mailing anyone. With no credentials at all there is
+     * nothing to log against, so the recording Null port stays — and that is also
+     * what tests get.
+     */
+    private static function createExpenseNotificationPort(
+        Settings $settings,
+        Container $container,
+    ): \TriCab\Core\Expense\Contract\ExpenseNotificationPort {
+        if (!$settings->triexpenseEmailEnabled && !$settings->isTriexpenseGraphConfigured()) {
+            return new \TriCab\Api\Expense\Persistence\NullExpenseNotificationPort();
+        }
+
+        return new \TriCab\Api\Expense\Persistence\GraphExpenseNotificationPort(
+            http: new StreamJsonHttpClient(
+                (float) $settings->triexpenseGraphRequestTimeoutSeconds,
+                (float) $settings->triexpenseGraphConnectTimeoutSeconds,
+            ),
+            profiles: self::get($container, \TriCab\Core\Expense\Contract\ExpenseProfileRepository::class),
+            templates: self::get($container, \TriCab\Api\Expense\Email\ExpenseEmailTemplates::class),
+            logger: self::get($container, \TriCab\Api\Expense\Observability\ExpenseEventLogger::class),
+            tenantId: $settings->graphTenantId,
+            clientId: $settings->graphClientId,
+            clientSecret: $settings->graphClientSecret,
+            mailFrom: $settings->triexpenseMailFrom,
+            sendingEnabled: $settings->isTriexpenseEmailSendingEnabled(),
+            testRecipient: $settings->triexpenseEmailTestRecipientOrNull(),
+        );
+    }
+
+    private static function createExpenseCaptureAssistPort(
+        Settings $settings,
+        Container $container,
+    ): \TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort {
+        if (!$settings->isTriexpenseOcrConfigured()) {
+            return new \TriCab\Api\Expense\Persistence\DisabledExpenseCaptureAssistPort();
+        }
+
+        return new \TriCab\Api\Expense\Persistence\AzureExpenseCaptureAssistPort(
+            http: new StreamJsonHttpClient(
+                (float) $settings->triexpenseOcrRequestTimeoutSeconds,
+                (float) $settings->triexpenseOcrConnectTimeoutSeconds,
+            ),
+            logger: self::get($container, \TriCab\Api\Expense\Observability\ExpenseEventLogger::class),
+            docIntelEndpoint: $settings->triexpenseDocIntelEndpoint,
+            docIntelKey: $settings->triexpenseDocIntelKey,
+            openAiEndpoint: $settings->triexpenseOpenAiEndpoint,
+            openAiKey: $settings->triexpenseOpenAiKey,
+            openAiDeployment: $settings->triexpenseOpenAiDeployment,
+        );
     }
 
     private static function createGuestPasskeyEmailSender(Settings $settings, Container $container): GuestPasskeyEmailSender

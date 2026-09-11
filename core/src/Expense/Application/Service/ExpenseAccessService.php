@@ -14,6 +14,18 @@ use TriCab\Core\Expense\Module;
 /**
  * Stage 2 access: authenticated + TRIEXPENSE.ACCESS + active ExpenseProfile.
  * Platform ADMINISTRATOR alone is insufficient.
+ *
+ * Finance authorization decision (Phase 5):
+ *   ExpenseProfile.IsFinance is authoritative at request time.
+ *   Graph Tricab-Finance group is diagnostic/sync only — not a live hard
+ *   dependency per request.
+ *
+ * Concretely: {@see ExpenseFinanceCapabilityResolver} is wired to the
+ * profile-only resolver, so no request ever waits on — or is denied by — a Graph
+ * call. The Graph group remains useful for reconciling who *should* carry
+ * IsFinance, and the group checker stays available for diagnostics and for
+ * provisioning jobs, but it must not be composed into the request path: a Graph
+ * outage or throttle would otherwise take Finance offline mid-period-close.
  */
 final class ExpenseAccessService
 {

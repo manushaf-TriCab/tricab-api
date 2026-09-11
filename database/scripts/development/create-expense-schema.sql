@@ -222,6 +222,8 @@ BEGIN
         [LegacySentBy] NVARCHAR(320) NULL,
         [SentAtUtc] DATETIME2(7) NOT NULL CONSTRAINT [DF_expense_ExpenseReminderLog_SentAtUtc] DEFAULT (SYSUTCDATETIME()),
         [LegacyReminderLogId] INT NULL,
+        [ReminderType] NVARCHAR(64) NULL,
+        [IdempotencyKey] NVARCHAR(200) NULL,
         CONSTRAINT [PK_expense_ExpenseReminderLog] PRIMARY KEY CLUSTERED ([ExpenseReminderLogId]),
         CONSTRAINT [UQ_expense_ExpenseReminderLog_PublicId] UNIQUE ([PublicId]),
         CONSTRAINT [FK_expense_ExpenseReminderLog_RecipientUserId] FOREIGN KEY ([RecipientUserId]) REFERENCES [identity].[Users]([UserId]),
@@ -231,6 +233,10 @@ BEGIN
         ON [expense].[ExpenseReminderLog]([RecipientEmail], [SentAtUtc] DESC);
     CREATE UNIQUE NONCLUSTERED INDEX [UX_expense_ExpenseReminderLog_LegacyReminderLogId]
         ON [expense].[ExpenseReminderLog]([LegacyReminderLogId]) WHERE [LegacyReminderLogId] IS NOT NULL;
+    CREATE UNIQUE NONCLUSTERED INDEX [UX_expense_ExpenseReminderLog_IdempotencyKey]
+        ON [expense].[ExpenseReminderLog]([IdempotencyKey]) WHERE [IdempotencyKey] IS NOT NULL;
+    CREATE NONCLUSTERED INDEX [IX_expense_ExpenseReminderLog_ReminderType]
+        ON [expense].[ExpenseReminderLog]([ReminderType], [SentAtUtc] DESC);
 END
 GO
 

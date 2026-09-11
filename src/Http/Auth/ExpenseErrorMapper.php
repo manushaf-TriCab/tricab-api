@@ -15,6 +15,8 @@ use TriCab\Core\Expense\Application\Exception\ExpenseAccessDenied;
 use TriCab\Core\Expense\Application\Exception\ExpenseAttachmentUnavailable;
 use TriCab\Core\Expense\Application\Exception\ExpenseBankFeedNotFound;
 use TriCab\Core\Expense\Application\Exception\ExpenseManagerRequired;
+use TriCab\Core\Expense\Application\Exception\ExpenseOcrFailed;
+use TriCab\Core\Expense\Application\Exception\ExpenseOcrUnavailable;
 use TriCab\Core\Expense\Application\Exception\ExpensePeriodNotFound;
 use TriCab\Core\Expense\Application\Exception\ExpenseReceiptNotFound;
 use TriCab\Core\Expense\Domain\Exception\ExpenseConcurrencyConflict;
@@ -90,6 +92,21 @@ final class ExpenseErrorMapper
             }
 
             return $this->responder->error('TRIEXPENSE_ATTACHMENT_UNAVAILABLE', $message, 503);
+        }
+
+        if ($exception instanceof ExpenseOcrUnavailable) {
+            $message = $exception->getMessage();
+            // "not enabled" is configuration (503); a rejected document is the
+            // caller's file and will never succeed on retry (422).
+            if (str_contains($message, 'cannot be processed')) {
+                return $this->responder->error('TRIEXPENSE_OCR_INPUT_REJECTED', $message, 422);
+            }
+
+            return $this->responder->error('TRIEXPENSE_OCR_DISABLED', $message, 503);
+        }
+
+        if ($exception instanceof ExpenseOcrFailed) {
+            return $this->responder->error('TRIEXPENSE_OCR_FAILED', $exception->getMessage(), 502);
         }
 
         if ($exception instanceof InvalidExpenseStatusTransition) {

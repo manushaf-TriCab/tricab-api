@@ -10,9 +10,16 @@ use TriCab\Core\Expense\Contract\ExpenseNotificationPort;
 use TriCab\Core\Expense\Contract\ExpenseProfileRepository;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Contract\ExpenseReminderLogRepository;
+use TriCab\Core\Expense\Module;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Shared\Time\Clock;
 
+/**
+ * On-demand manager digest triggered by a Finance user. The scheduled monthly
+ * variant lives in {@see MonthlyManagerDigestService}, which adds the day-1 gate
+ * and a manager+month idempotency key; this one sends whenever asked, because a
+ * human asked.
+ */
 final class PrepareManagerReminderService
 {
     public function __construct(
@@ -73,6 +80,8 @@ final class PrepareManagerReminderService
                 $managerProfile->userId(),
                 $actor->userId,
                 $now,
+                null,
+                Module::REMINDER_TYPE_MANAGER_PENDING,
             );
             $prepared++;
         }

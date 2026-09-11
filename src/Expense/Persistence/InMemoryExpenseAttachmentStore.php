@@ -13,7 +13,7 @@ use TriCab\Core\Expense\Module;
  */
 final class InMemoryExpenseAttachmentStore implements ExpenseAttachmentStore
 {
-    /** @var array<string, true> */
+    /** @var array<string, string> blob path => bytes */
     private array $objects = [];
 
     public function describe(ExpenseAttachmentRef $ref): array
@@ -68,8 +68,17 @@ final class InMemoryExpenseAttachmentStore implements ExpenseAttachmentStore
         }
     }
 
-    public function put(string $blobPath): void
+    public function readManagedBytes(ExpenseAttachmentRef $ref): ?string
     {
-        $this->objects[ltrim($blobPath, '/')] = true;
+        if (!$ref->isAzureBlobPath()) {
+            return null;
+        }
+
+        return $this->objects[ltrim($ref->reference(), '/')] ?? null;
+    }
+
+    public function put(string $blobPath, string $bytes = ''): void
+    {
+        $this->objects[ltrim($blobPath, '/')] = $bytes;
     }
 }

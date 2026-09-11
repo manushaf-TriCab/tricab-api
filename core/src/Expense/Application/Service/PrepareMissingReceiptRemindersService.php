@@ -10,8 +10,18 @@ use TriCab\Core\Expense\Contract\ExpenseBankFeedRepository;
 use TriCab\Core\Expense\Contract\ExpenseNotificationPort;
 use TriCab\Core\Expense\Contract\ExpenseProfileRepository;
 use TriCab\Core\Expense\Contract\ExpenseReminderLogRepository;
+use TriCab\Core\Expense\Module;
 use TriCab\Core\Shared\Time\Clock;
 
+/**
+ * Manual Finance action, by design. In legacy TriExpense, missing-receipt chasers
+ * were only ever sent when a Finance user clicked send while reconciling — there
+ * was no cron for them (unlike the monthly manager digest, which was automatic).
+ * Phase 5 keeps that split: this service requires a Finance actor and is reached
+ * from the Finance endpoint, never from a scheduler by default.
+ *
+ * @see MonthlyManagerDigestService for the automatic counterpart
+ */
 final class PrepareMissingReceiptRemindersService
 {
     public function __construct(
@@ -71,6 +81,8 @@ final class PrepareMissingReceiptRemindersService
                 $profile?->userId(),
                 $actor->userId,
                 $now,
+                null,
+                Module::REMINDER_TYPE_MISSING_RECEIPTS,
             );
             $prepared++;
         }

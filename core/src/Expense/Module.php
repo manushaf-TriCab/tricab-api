@@ -6,6 +6,14 @@ namespace TriCab\Core\Expense;
 
 /**
  * Marker for the Tri Expense bounded context (receipt-centric).
+ *
+ * Finance authorization decision (Phase 5):
+ *   ExpenseProfile.IsFinance is authoritative at request time.
+ *   The Graph Tricab-Finance group is diagnostic/sync only — not a live hard
+ *   dependency per request.
+ * Request-time authorization therefore resolves finance capability from the
+ * profile alone, so a Graph outage or throttle cannot lock Finance out of the
+ * module. See {@see \TriCab\Core\Expense\Application\Service\ExpenseAccessService}.
  */
 final class Module
 {
@@ -57,6 +65,30 @@ final class Module
 
     public const COUNTRY_AU = 'AU';
     public const COUNTRY_NZ = 'NZ';
+
+    /** OCR input ceiling — below MAX_UPLOAD_BYTES because the document is sent inline. */
+    public const OCR_MAX_BYTES = 6 * 1024 * 1024;
+
+    /** Multi-page statements are not receipts; refuse them rather than billing for pages. */
+    public const OCR_MAX_PDF_PAGES = 5;
+
+    /** @var array<string, string> extension => mime type accepted by OCR */
+    public const OCR_ALLOWED_MIME_TYPES = [
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'pdf' => 'application/pdf',
+        'heic' => 'image/heic',
+        'heif' => 'image/heif',
+    ];
+
+    /** Reminder-log types — part of the monthly digest idempotency key. */
+    public const REMINDER_TYPE_MANAGER_PENDING = 'manager_pending';
+    public const REMINDER_TYPE_MANAGER_MONTHLY_DIGEST = 'manager_monthly_digest';
+    public const REMINDER_TYPE_MISSING_RECEIPTS = 'missing_receipts';
+
+    /** Legacy cron ran the manager digest in Melbourne local time on day 1. */
+    public const SCHEDULER_TIMEZONE = 'Australia/Melbourne';
 
     /** @var list<string> */
     public const BANK_RESOLUTIONS = [

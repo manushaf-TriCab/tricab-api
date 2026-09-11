@@ -6,19 +6,23 @@ namespace TriCab\Api\Infrastructure\Http;
 
 /**
  * Minimal JSON / form HTTP client boundary for infrastructure adapters.
+ *
+ * `headers` is a lowercase-keyed map of response headers. It is optional so
+ * existing adapters and test doubles that only report status and body keep
+ * working; read it with `?? []`.
  */
 interface JsonHttpClient
 {
     /**
      * @param array<string, string> $headers
-     * @return array{status: int, body: string}
+     * @return array{status: int, body: string, headers?: array<string, string>}
      */
     public function getJson(string $url, array $headers = []): array;
 
     /**
      * @param array<string, string> $headers
      * @param array<string, mixed> $payload
-     * @return array{status: int, body: string}
+     * @return array{status: int, body: string, headers?: array<string, string>}
      */
     public function postJson(string $url, array $headers, array $payload): array;
 
@@ -27,7 +31,7 @@ interface JsonHttpClient
      *
      * @param array<string, string> $headers
      * @param array<string, string> $fields
-     * @return array{status: int, body: string}
+     * @return array{status: int, body: string, headers?: array<string, string>}
      */
     public function postForm(string $url, array $headers, array $fields): array;
 }

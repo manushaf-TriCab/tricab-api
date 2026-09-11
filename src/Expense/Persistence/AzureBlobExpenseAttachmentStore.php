@@ -83,6 +83,16 @@ final class AzureBlobExpenseAttachmentStore implements ExpenseAttachmentStore
         $this->blobs->deleteObject($this->container(), $path);
     }
 
+    public function readManagedBytes(ExpenseAttachmentRef $ref): ?string
+    {
+        $path = $this->managedBlobPath($ref);
+        if ($path === null) {
+            return null;
+        }
+
+        return $this->blobs->getObjectBinary($this->container(), $path);
+    }
+
     public function container(): string
     {
         $configured = trim($this->settings->blobContainerTriexpense);

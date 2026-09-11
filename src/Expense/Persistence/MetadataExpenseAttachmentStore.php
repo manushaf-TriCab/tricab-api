@@ -44,4 +44,11 @@ final class MetadataExpenseAttachmentStore implements ExpenseAttachmentStore
     {
         unset($ref);
     }
+
+    public function readManagedBytes(ExpenseAttachmentRef $ref): ?string
+    {
+        unset($ref);
+
+        return null;
+    }
 }

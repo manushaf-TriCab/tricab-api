@@ -156,7 +156,70 @@ final readonly class Settings
         public bool $productFinderEnabled = false,
         public string $productFinderBaseUrl = 'http://127.0.0.1:8001',
         public int $productFinderTimeoutSeconds = 20,
+        public string $triexpenseMailFrom = 'ap@tricab.com',
+        public bool $triexpenseEmailEnabled = false,
+        public string $triexpenseEmailTestRecipient = '',
+        public string $triexpenseAppBaseUrl = '',
+        public int $triexpenseGraphConnectTimeoutSeconds = 5,
+        public int $triexpenseGraphRequestTimeoutSeconds = 15,
+        public bool $triexpenseOcrEnabled = false,
+        public string $triexpenseDocIntelEndpoint = '',
+        public string $triexpenseDocIntelKey = '',
+        public string $triexpenseOpenAiEndpoint = '',
+        public string $triexpenseOpenAiKey = '',
+        public string $triexpenseOpenAiDeployment = 'gpt-4o-mini',
+        public int $triexpenseOcrConnectTimeoutSeconds = 5,
+        public int $triexpenseOcrRequestTimeoutSeconds = 30,
     ) {
+    }
+
+    /**
+     * Graph credentials are shared with guest OTP delivery; TriExpense only needs
+     * the client-credentials triple plus its own from-mailbox.
+     */
+    public function isTriexpenseGraphConfigured(): bool
+    {
+        return trim($this->graphTenantId) !== ''
+            && trim($this->graphClientId) !== ''
+            && trim($this->graphClientSecret) !== ''
+            && trim($this->triexpenseMailFrom) !== '';
+    }
+
+    /**
+     * True only when Graph can actually deliver. TRIEXPENSE_EMAIL_ENABLED alone
+     * never sends: the adapter records intent when credentials are absent.
+     */
+    public function isTriexpenseEmailSendingEnabled(): bool
+    {
+        return $this->triexpenseEmailEnabled && $this->isTriexpenseGraphConfigured();
+    }
+
+    public function triexpenseEmailTestRecipientOrNull(): ?string
+    {
+        $recipient = strtolower(trim($this->triexpenseEmailTestRecipient));
+
+        return $recipient !== '' ? $recipient : null;
+    }
+
+    public function isTriexpenseDocumentIntelligenceConfigured(): bool
+    {
+        return trim($this->triexpenseDocIntelEndpoint) !== '' && trim($this->triexpenseDocIntelKey) !== '';
+    }
+
+    public function isTriexpenseOpenAiConfigured(): bool
+    {
+        return trim($this->triexpenseOpenAiEndpoint) !== ''
+            && trim($this->triexpenseOpenAiKey) !== ''
+            && trim($this->triexpenseOpenAiDeployment) !== '';
+    }
+
+    /**
+     * OCR needs Document Intelligence. OpenAI normalisation is optional polish
+     * on top, so it is deliberately not part of this gate.
+     */
+    public function isTriexpenseOcrConfigured(): bool
+    {
+        return $this->triexpenseOcrEnabled && $this->isTriexpenseDocumentIntelligenceConfigured();
     }
 
     /**
@@ -725,6 +788,45 @@ final readonly class Settings
             }
         }
 
+        $triexpenseMailFrom = strtolower(trim(self::string($env, 'TRIEXPENSE_MAIL_FROM', 'ap@tricab.com')));
+        if ($triexpenseMailFrom === '' || !str_contains($triexpenseMailFrom, '@')) {
+            throw new InvalidArgumentException('TRIEXPENSE_MAIL_FROM must be a mailbox address.');
+        }
+        // Default false in every environment: an accidental deploy must not mail employees.
+        $triexpenseEmailEnabled = self::bool($env, 'TRIEXPENSE_EMAIL_ENABLED', false);
+        $triexpenseEmailTestRecipient = strtolower(trim(self::string($env, 'TRIEXPENSE_EMAIL_TEST_RECIPIENT', '')));
+        if ($triexpenseEmailTestRecipient !== '' && !str_contains($triexpenseEmailTestRecipient, '@')) {
+            throw new InvalidArgumentException('TRIEXPENSE_EMAIL_TEST_RECIPIENT must be a mailbox address when set.');
+        }
+        $triexpenseAppBaseUrl = rtrim(trim(self::string($env, 'TRIEXPENSE_APP_BASE_URL', '')), '/');
+        if ($triexpenseAppBaseUrl !== '' && !str_starts_with(strtolower($triexpenseAppBaseUrl), 'https://')) {
+            if ($appEnv === 'production' || !str_starts_with(strtolower($triexpenseAppBaseUrl), 'http://')) {
+                throw new InvalidArgumentException(
+                    'TRIEXPENSE_APP_BASE_URL must be an HTTPS URL (plain HTTP is accepted outside production only).',
+                );
+            }
+        }
+
+        $triexpenseOcrEnabled = self::bool($env, 'TRIEXPENSE_OCR_ENABLED', false);
+        $triexpenseDocIntelEndpoint = rtrim(trim(self::string($env, 'TRIEXPENSE_DOC_INTEL_ENDPOINT', '')), '/');
+        $triexpenseDocIntelKey = trim(self::string($env, 'TRIEXPENSE_DOC_INTEL_KEY', ''));
+        $triexpenseOpenAiEndpoint = rtrim(trim(self::string($env, 'TRIEXPENSE_OPENAI_ENDPOINT', '')), '/');
+        $triexpenseOpenAiKey = trim(self::string($env, 'TRIEXPENSE_OPENAI_KEY', ''));
+        $triexpenseOpenAiDeployment = trim(self::string($env, 'TRIEXPENSE_OPENAI_DEPLOYMENT', 'gpt-4o-mini'));
+        foreach ([
+            'TRIEXPENSE_DOC_INTEL_ENDPOINT' => $triexpenseDocIntelEndpoint,
+            'TRIEXPENSE_OPENAI_ENDPOINT' => $triexpenseOpenAiEndpoint,
+        ] as $key => $endpoint) {
+            if ($endpoint !== '' && !str_starts_with(strtolower($endpoint), 'https://')) {
+                throw new InvalidArgumentException($key . ' must be an HTTPS endpoint.');
+            }
+        }
+        if ($triexpenseOcrEnabled && ($triexpenseDocIntelEndpoint === '' || $triexpenseDocIntelKey === '')) {
+            throw new InvalidArgumentException(
+                'TRIEXPENSE_DOC_INTEL_ENDPOINT and TRIEXPENSE_DOC_INTEL_KEY are required when TRIEXPENSE_OCR_ENABLED=true.',
+            );
+        }
+
         return new self(
             appEnv: $appEnv,
             appName: self::string($env, 'APP_NAME', 'tricab-api'),
@@ -826,6 +928,20 @@ final readonly class Settings
             productFinderEnabled: $productFinderEnabled,
             productFinderBaseUrl: $productFinderBaseUrl,
             productFinderTimeoutSeconds: $productFinderTimeoutSeconds,
+            triexpenseMailFrom: $triexpenseMailFrom,
+            triexpenseEmailEnabled: $triexpenseEmailEnabled,
+            triexpenseEmailTestRecipient: $triexpenseEmailTestRecipient,
+            triexpenseAppBaseUrl: $triexpenseAppBaseUrl,
+            triexpenseGraphConnectTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_GRAPH_CONNECT_TIMEOUT_SECONDS', 5, 1, 30),
+            triexpenseGraphRequestTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_GRAPH_REQUEST_TIMEOUT_SECONDS', 15, 1, 60),
+            triexpenseOcrEnabled: $triexpenseOcrEnabled,
+            triexpenseDocIntelEndpoint: $triexpenseDocIntelEndpoint,
+            triexpenseDocIntelKey: $triexpenseDocIntelKey,
+            triexpenseOpenAiEndpoint: $triexpenseOpenAiEndpoint,
+            triexpenseOpenAiKey: $triexpenseOpenAiKey,
+            triexpenseOpenAiDeployment: $triexpenseOpenAiDeployment,
+            triexpenseOcrConnectTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_OCR_CONNECT_TIMEOUT_SECONDS', 5, 1, 30),
+            triexpenseOcrRequestTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_OCR_REQUEST_TIMEOUT_SECONDS', 30, 1, 120),
         );
     }
 

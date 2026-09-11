@@ -11,7 +11,7 @@ use TriCab\Core\Identity\Domain\ValueObject\UserId;
 
 final class InMemoryExpenseReminderLogRepository implements ExpenseReminderLogRepository
 {
-    /** @var list<array{id: int, publicId: string, recipientEmail: string, recipientUserId: ?int, sentByUserId: ?int, sentAtUtc: string}> */
+    /** @var list<array{id: int, publicId: string, recipientEmail: string, recipientUserId: ?int, sentByUserId: ?int, sentAtUtc: string, reminderType: ?string, idempotencyKey: ?string}> */
     private array $rows = [];
 
     private int $nextId = 1;
@@ -22,6 +22,8 @@ final class InMemoryExpenseReminderLogRepository implements ExpenseReminderLogRe
         ?UserId $sentByUserId,
         DateTimeImmutable $sentAtUtc,
         ?string $legacySentBy = null,
+        ?string $reminderType = null,
+        ?string $idempotencyKey = null,
     ): array {
         unset($legacySentBy);
         $id = $this->nextId++;
@@ -33,6 +35,8 @@ final class InMemoryExpenseReminderLogRepository implements ExpenseReminderLogRe
             'recipientUserId' => $recipientUserId?->toInt(),
             'sentByUserId' => $sentByUserId?->toInt(),
             'sentAtUtc' => $sentAtUtc->format(DATE_ATOM),
+            'reminderType' => $reminderType,
+            'idempotencyKey' => $idempotencyKey,
         ];
         $this->rows[] = $row;
 
@@ -42,6 +46,22 @@ final class InMemoryExpenseReminderLogRepository implements ExpenseReminderLogRe
             'recipientEmail' => $row['recipientEmail'],
             'sentAtUtc' => $row['sentAtUtc'],
         ];
+    }
+
+    public function existsByIdempotencyKey(string $idempotencyKey): bool
+    {
+        $key = trim($idempotencyKey);
+        if ($key === '') {
+            return false;
+        }
+
+        foreach ($this->rows as $row) {
+            if ($row['idempotencyKey'] === $key) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function listRecent(int $limit = 100): array

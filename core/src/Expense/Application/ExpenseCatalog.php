@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Expense\Application;
 
+use TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags;
 use TriCab\Core\Expense\Module;
 
 /**
@@ -78,8 +79,13 @@ final class ExpenseCatalog
         return ['AUD', 'USD', 'EUR', 'GBP', 'CAD', 'NZD', 'SGD', 'HKD', 'AED', 'SAR', 'QAR', 'KWD', 'BHD', 'INR', 'CNY', 'JPY', 'THB', 'MYR', 'PGK', 'Other'];
     }
 
-    /** @return array<string, mixed> */
-    public static function clientConfig(): array
+    /**
+     * @param ?ExpenseFeatureFlags $features runtime capability snapshot; when
+     *        omitted the integration-dependent features report off, which is the
+     *        correct answer for any caller that has no wiring to consult.
+     * @return array<string, mixed>
+     */
+    public static function clientConfig(?ExpenseFeatureFlags $features = null): array
     {
         $categories = [];
         foreach (self::categories() as $code => $name) {
@@ -93,13 +99,8 @@ final class ExpenseCatalog
             'maxUploadBytes' => Module::MAX_UPLOAD_BYTES,
             'gstModes' => [Module::GST_INCLUSIVE, Module::GST_EXCLUSIVE],
             'recycleDays' => Module::RECYCLE_DAYS,
-            'features' => [
-                'ocr' => false,
-                'emailNotifications' => false,
-                'bankReconciliation' => true,
-                'periodClose' => true,
-            ],
-
+            'ocrMaxBytes' => Module::OCR_MAX_BYTES,
+            'features' => ($features ?? ExpenseFeatureFlags::disabledIntegrations())->toArray(),
         ];
     }
 }
