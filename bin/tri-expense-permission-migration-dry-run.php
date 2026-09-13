@@ -443,9 +443,13 @@ $counts = [
     'ROLE_CONFLICTS' => 0,
     'PERMISSION_CONFLICTS' => 0,
     'MISMATCH_COUNT' => 0,
+    'INTENTIONAL_MISMATCH_COUNT' => 0,
+    'UNEXPLAINED_MISMATCH_COUNT' => 0,
 ];
 
 $mismatches = [];
+$intentionalMismatches = [];
+$unexplainedMismatches = [];
 $grantPreview = [];
 $roleConflicts = [];
 $permissionConflicts = [];
@@ -559,10 +563,11 @@ foreach ($subjects as $subject) {
             'approve' => [$legacyApprove, $permApprove],
             'audit' => [$legacyAudit, $permAudit],
         ];
+        $holdsFinanceRole = in_array(Module::ROLE_FINANCE, $heldRoles, true);
         foreach ($pairs as $capability => [$legacyFlag, $permissionFlag]) {
             if ($legacyFlag !== $permissionFlag) {
                 $counts['MISMATCH_COUNT']++;
-                $mismatches[] = [
+                $row = [
                     'user_id' => $userId,
                     'email_masked' => te_perm_mask_email($subject['email']),
                     'login_masked' => te_perm_mask_login($subject['login']),
@@ -570,6 +575,23 @@ foreach ($subjects as $subject) {
                     'legacy' => $legacyFlag,
                     'permission' => $permissionFlag,
                 ];
+                // TRIEXPENSE_FINANCE role composition includes APPROVE (+ AUDIT).
+                // Legacy Finance users were not necessarily managers — treat as intentional.
+                $intentionalFinanceComposition = $holdsFinanceRole
+                    && $capability === 'approve'
+                    && $legacyFlag === false
+                    && $permissionFlag === true;
+                if ($intentionalFinanceComposition) {
+                    $row['class'] = 'INTENTIONAL_ACCESS_CHANGE';
+                    $row['reason'] = 'TRIEXPENSE_FINANCE_INCLUDES_APPROVE';
+                    $counts['INTENTIONAL_MISMATCH_COUNT']++;
+                    $intentionalMismatches[] = $row;
+                } else {
+                    $row['class'] = 'UNEXPLAINED';
+                    $counts['UNEXPLAINED_MISMATCH_COUNT']++;
+                    $unexplainedMismatches[] = $row;
+                }
+                $mismatches[] = $row;
             }
         }
     }
@@ -580,6 +602,8 @@ echo 'PROFILE_COUNT=' . count($profiles) . "\n";
 echo 'LEGACY_USER_COUNT=' . $legacyUserCount . "\n";
 echo 'SUBJECT_COUNT=' . count($subjects) . "\n";
 echo 'MISMATCHES=' . json_encode($mismatches, JSON_UNESCAPED_SLASHES) . "\n";
+echo 'INTENTIONAL_MISMATCHES=' . json_encode($intentionalMismatches, JSON_UNESCAPED_SLASHES) . "\n";
+echo 'UNEXPLAINED_MISMATCHES=' . json_encode($unexplainedMismatches, JSON_UNESCAPED_SLASHES) . "\n";
 echo 'GRANTS_PREVIEW=' . json_encode(array_slice($grantPreview, 0, 200), JSON_UNESCAPED_SLASHES) . "\n";
 echo 'ROLE_CONFLICT_DETAIL=' . json_encode($roleConflicts, JSON_UNESCAPED_SLASHES) . "\n";
 echo 'PERMISSION_CONFLICT_DETAIL=' . json_encode($permissionConflicts, JSON_UNESCAPED_SLASHES) . "\n";
