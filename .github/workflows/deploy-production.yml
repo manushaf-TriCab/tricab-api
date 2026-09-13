@@ -23,12 +23,12 @@ jobs:
 
     steps:
       - name: Check out API
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: tricab-api
 
       - name: Check out website
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: tricab/tricab-website-v2
           ref: main
@@ -44,14 +44,14 @@ jobs:
           tools: composer:v2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: tricab-web/package-lock.json
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           cache: pip
@@ -67,6 +67,9 @@ jobs:
 
       - name: Run the main quality gate
         working-directory: tricab-api
+        env:
+          # The release builder deliberately rejects test caches in core/python.
+          PYTEST_ADDOPTS: -p no:cacheprovider
         run: composer check
 
       - name: Build the combined App Service package
