@@ -498,30 +498,30 @@
             "note": "Do not delete/rebuild existing CatalogueNodes."
         },
         {
-            "code": "MARINE-shipboard-BV",
-            "name": "BV 110C Flame Retardant",
-            "imageUrl": null,
+            "code": "MARINE-SHIPBOARD-BV",
+            "name": "BV 110C",
+            "imageUrl": "/assets/BH.png",
             "classification": "KEEP",
             "note": "Do not delete/rebuild existing CatalogueNodes."
         },
         {
-            "code": "MARINE-shipboard-DV",
-            "name": "DV 110C Braid, Flame Retardant",
-            "imageUrl": null,
+            "code": "MARINE-SHIPBOARD-DV",
+            "name": "DV 110C",
+            "imageUrl": "/assets/DV.png",
             "classification": "KEEP",
             "note": "Do not delete/rebuild existing CatalogueNodes."
         },
         {
-            "code": "MARINE-shipboard-RR",
-            "name": "RR 110C Fire Resistant",
-            "imageUrl": null,
+            "code": "MARINE-SHIPBOARD-RR",
+            "name": "RR 110C",
+            "imageUrl": "/assets/RR.png",
             "classification": "KEEP",
             "note": "Do not delete/rebuild existing CatalogueNodes."
         },
         {
-            "code": "MARINE-shipboard-BH",
-            "name": "BH 110C Braid, Fire Resistant",
-            "imageUrl": null,
+            "code": "MARINE-SHIPBOARD-BH",
+            "name": "BH 110C",
+            "imageUrl": "/assets/BV.png",
             "classification": "KEEP",
             "note": "Do not delete/rebuild existing CatalogueNodes."
         },
@@ -533,9 +533,9 @@
             "note": "Do not delete/rebuild existing CatalogueNodes."
         },
         {
-            "code": "MARINE-shipboard-RC",
-            "name": "RC 110C Flame Retardant",
-            "imageUrl": null,
+            "code": "MARINE-SHIPBOARD-RC",
+            "name": "RC 110C",
+            "imageUrl": "/assets/rc.png",
             "classification": "KEEP",
             "note": "Do not delete/rebuild existing CatalogueNodes."
         },
@@ -678,6 +678,174 @@
             "imageUrl": null,
             "classification": "KEEP",
             "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "TC-J-BOX-ASS",
+            "name": "J -Box Assemble",
+            "imageUrl": "/assets/J90-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "TC-PLUG",
+            "name": "Plug",
+            "imageUrl": "/assets/J91-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "TC-J92",
+            "name": "Socket",
+            "imageUrl": "/assets/J92-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "TC-J93",
+            "name": "Rapid Plug",
+            "imageUrl": "/assets/J93-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "TC-J94",
+            "name": "Rapid Socket",
+            "imageUrl": "/assets/J94-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "TC-J95",
+            "name": "Piercing Plug",
+            "imageUrl": "/assets/J95-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "TC-J96",
+            "name": "Piercing Socket",
+            "imageUrl": "/assets/J96-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "TC-J97",
+            "name": "J-BOX",
+            "imageUrl": "/assets/J97-gr.jpg",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "ALI-FLEX MARINE",
+            "name": "ALI FLEX Marine",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "AF-M-BV",
+            "name": "BV",
+            "imageUrl": "/assets/bval.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "AL-M-DV",
+            "name": "DV",
+            "imageUrl": "/assets/dval.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "AF-M-UP",
+            "name": "UP",
+            "imageUrl": "/assets/upal.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "AF-M- PJ",
+            "name": "PJ",
+            "imageUrl": "/assets/pjal.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "INS-110V",
+            "name": "110v",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "INS-450/750V",
+            "name": "450/750v",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "INS-0.6/1KV",
+            "name": "0.6/1kv",
+            "imageUrl": null,
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "110V-R1",
+            "name": "R1",
+            "imageUrl": "/assets/rc.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "110-R2",
+            "name": "R2",
+            "imageUrl": "/assets/r2.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "110-R3",
+            "name": "R3",
+            "imageUrl": "/assets/r3.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "110-R4",
+            "name": "R4",
+            "imageUrl": "/assets/r4.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "110-R5",
+            "name": "R5",
+            "imageUrl": "/assets/r5.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "110-R6",
+            "name": "R6",
+            "imageUrl": "/assests/r6.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "110-R7",
+            "name": "R7",
+            "imageUrl": "/assets/r7.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
+        },
+        {
+            "code": "110-R8",
+            "name": "R8",
+            "imageUrl": "/assets/r8.png",
+            "classification": "KEEP",
+            "note": "Do not delete/rebuild existing CatalogueNodes."
         }
     ],
     "proposedNodes": [
@@ -710,7 +878,7 @@
     ],
     "policy": "Do not transform WP taxonomy into Catalogue Navigation automatically.",
     "counts": {
-        "kept": 97,
+        "kept": 121,
         "proposedAdd": 2,
         "review": 2
     }

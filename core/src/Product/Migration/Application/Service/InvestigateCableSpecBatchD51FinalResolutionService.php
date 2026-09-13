@@ -137,7 +137,38 @@ final class InvestigateCableSpecBatchD51FinalResolutionService
         $d5Ok = ($d5Package['phase'] ?? '') === '12.7-batch-d5-cable-spec-review-investigation'
             || ($d5Package['d4Integrity']['status'] ?? '') === 'D4_INTEGRITY_OK';
 
-        $drift = $definitions !== ApplyCableSpecBatchD4TargetApplyService::EXPECTED_DEFINITIONS_POST
+        // The definition guard used to be `count !== 64`, an equality against
+        // every row in product.SpecificationDefinitions — a table this batch
+        // shares with every other workstream. Seeding nine style facets for AI
+        // product discovery on 2026-09-01 (plus eight content/construction
+        // definitions in late August) took it to 81 and wedged D.5.1, even
+        // though nothing cable-spec depends on had changed: both migration-owned
+        // counts, 1044 total and 538 cable field mappings, were still exact.
+        //
+        // What actually has to hold is that the definitions this batch created
+        // are still there. A purely additive seed elsewhere is not drift; a
+        // missing REQUIRED_CREATE_CODE is, and an equality check on the global
+        // total detects the first while saying nothing useful about the second.
+        // So assert the codes, keep both scoped counts exact, and report the
+        // additions rather than failing on them.
+        $presentCodes = [];
+        foreach ((array) ($azure['definitions'] ?? []) as $definition) {
+            $code = is_array($definition) ? ($definition['code'] ?? null) : null;
+            if (is_string($code) && $code !== '') {
+                $presentCodes[$code] = true;
+            }
+        }
+        $missingRequired = array_values(array_filter(
+            ApplyCableSpecBatchD4TargetApplyService::REQUIRED_CREATE_CODES,
+            static fn (string $code): bool => !isset($presentCodes[$code]),
+        ));
+        $addedOutsideBaseline = max(
+            0,
+            $definitions - ApplyCableSpecBatchD4TargetApplyService::EXPECTED_DEFINITIONS_POST,
+        );
+
+        $drift = $missingRequired !== []
+            || $definitions < ApplyCableSpecBatchD4TargetApplyService::EXPECTED_DEFINITIONS_POST
             || $total !== ApplyCableSpecBatchD4TargetApplyService::EXPECTED_TOTAL_MAPPINGS_POST
             || $cable !== ApplyCableSpecBatchD4TargetApplyService::EXPECTED_MAPPING_PACKAGE_COUNT
             || !$d5Ok;
@@ -146,6 +177,8 @@ final class InvestigateCableSpecBatchD51FinalResolutionService
             'status' => $drift ? self::D51_BLOCKED_BASELINE_DRIFT : 'BASELINE_OK',
             'definitions' => $definitions,
             'expectedDefinitions' => ApplyCableSpecBatchD4TargetApplyService::EXPECTED_DEFINITIONS_POST,
+            'definitionsAddedOutsideBaseline' => $addedOutsideBaseline,
+            'missingRequiredDefinitionCodes' => $missingRequired,
             'totalFieldMappings' => $total,
             'expectedTotalFieldMappings' => ApplyCableSpecBatchD4TargetApplyService::EXPECTED_TOTAL_MAPPINGS_POST,
             'cableFieldMappings' => $cable,

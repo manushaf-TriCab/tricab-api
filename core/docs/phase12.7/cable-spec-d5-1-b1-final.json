@@ -2,10 +2,10 @@
     "Af": {
         "meaning": "Unknown electrical scalar \u2014 not proven ampacity",
         "unit": null,
-        "evidenceClass": "DIRECT_EVIDENCE",
+        "evidenceClass": "NO_EVIDENCE",
         "confidence": "LOW",
         "resolution": "EXPLICITLY_UNRESOLVED",
-        "directEvidence": "'Af' => $this->b1FieldFinding('Af', $b1, $labels, $presence),",
+        "directEvidence": null,
         "b1Context": {
             "aggregate": {
                 "rows_cnt": 11,
@@ -176,10 +176,10 @@
     "r": {
         "meaning": "Resistance hypothesis \u2014 unit unproven",
         "unit": null,
-        "evidenceClass": "DIRECT_EVIDENCE",
+        "evidenceClass": "NO_EVIDENCE",
         "confidence": "LOW",
         "resolution": "EXPLICITLY_UNRESOLVED",
-        "directEvidence": "'r' => $this->b1FieldFinding('r', $b1, $labels, $presence),",
+        "directEvidence": null,
         "b1Context": {
             "aggregate": {
                 "rows_cnt": 11,
@@ -350,10 +350,10 @@
     "x50": {
         "meaning": "Reactance at 50 Hz hypothesis",
         "unit": null,
-        "evidenceClass": "DIRECT_EVIDENCE",
+        "evidenceClass": "NO_EVIDENCE",
         "confidence": "LOW",
         "resolution": "EXPLICITLY_UNRESOLVED",
-        "directEvidence": "'x50' => $this->b1FieldFinding('x50', $b1, $labels, $presence),",
+        "directEvidence": null,
         "b1Context": {
             "aggregate": {
                 "rows_cnt": 11,
@@ -524,10 +524,10 @@
     "x60": {
         "meaning": "Reactance at 60 Hz hypothesis",
         "unit": null,
-        "evidenceClass": "DIRECT_EVIDENCE",
+        "evidenceClass": "NO_EVIDENCE",
         "confidence": "LOW",
         "resolution": "EXPLICITLY_UNRESOLVED",
-        "directEvidence": "'x60' => $this->b1FieldFinding('x60', $b1, $labels, $presence),",
+        "directEvidence": null,
         "b1Context": {
             "aggregate": {
                 "rows_cnt": 11,
@@ -698,10 +698,10 @@
     "tension": {
         "meaning": "Mechanical/pulling tension hypothesis",
         "unit": null,
-        "evidenceClass": "DIRECT_EVIDENCE",
+        "evidenceClass": "NO_EVIDENCE",
         "confidence": "LOW",
         "resolution": "EXPLICITLY_UNRESOLVED",
-        "directEvidence": "'tension' => $this->b1FieldFinding('tension', $b1, $labels, $presence),",
+        "directEvidence": null,
         "b1Context": {
             "aggregate": {
                 "rows_cnt": 11,

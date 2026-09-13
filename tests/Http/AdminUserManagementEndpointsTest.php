@@ -152,7 +152,7 @@ final class AdminUserManagementEndpointsTest extends TestCase
         ]));
         $payload = TestAppFactory::json($response);
 
-        self::assertSame(409, $response->getStatusCode());
+        self::assertSame(409, $response->getStatusCode(), (string) $response->getBody());
         /** @var array<string, mixed> $error */
         $error = $payload['error'];
         self::assertSame('USER_EMAIL_CONFLICT', $error['code']);
@@ -261,13 +261,14 @@ final class AdminUserManagementEndpointsTest extends TestCase
         )
             ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_TENANT, 'development-tenant')
             ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_SUBJECT, 'ops-actor')
+            ->withHeader(DevelopmentAuthenticationMiddleware::HEADER_EMAIL, 'ops-actor@tricab.com')
             ->withHeader('Content-Type', 'application/json');
         $request->getBody()->write(json_encode(['status' => UserStatus::DISABLED], JSON_THROW_ON_ERROR));
 
         $response = $app->handle($request);
         $payload = TestAppFactory::json($response);
 
-        self::assertSame(409, $response->getStatusCode());
+        self::assertSame(409, $response->getStatusCode(), (string) $response->getBody());
         /** @var array<string, mixed> $error */
         $error = $payload['error'];
         self::assertSame('LAST_ADMIN_PROTECTION', $error['code']);

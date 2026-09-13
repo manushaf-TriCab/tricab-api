@@ -495,6 +495,10 @@ use TriCab\Api\LegacyMigration\Application\Service\StaffUserMigrationExecuteServ
 use TriCab\Api\LegacyMigration\Application\Service\StaffMigrationPreparationService;
 use TriCab\Api\LegacyMigration\Persistence\AzureSqlLegacyStaffUserMappingRepository;
 use TriCab\Api\LegacyMigration\Persistence\AzureSqlStaffIdentityUserCreator;
+use TriCab\Api\LegacyMigration\Persistence\DisabledLegacyStaffUserMappingRepository;
+use TriCab\Api\LegacyMigration\Persistence\DisabledStaffIdentityUserCreator;
+use TriCab\Api\LegacyMigration\Persistence\DisabledStaffMigrationWriteUnit;
+use TriCab\Api\LegacyMigration\Persistence\DisabledStaffEntraLinkWriteUnit;
 use TriCab\Api\LegacyMigration\Infrastructure\MicrosoftGraphEntraDirectoryReader;
 use TriCab\Api\LegacyMigration\Persistence\AzureSqlStaffEntraLinkWriteUnit;
 use TriCab\Api\LegacyMigration\Persistence\InMemoryLegacyMigrationStore;
@@ -1351,14 +1355,14 @@ final class ContainerFactory
             },
             LegacyStaffUserMappingRepository::class => static function (Container $container) use ($settings): LegacyStaffUserMappingRepository {
                 if (!$settings->usesAzureSqlUserRepository()) {
-                    throw new InvalidArgumentException('Legacy staff user mapping requires USER_REPOSITORY=azure-sql.');
+                    return new DisabledLegacyStaffUserMappingRepository();
                 }
 
                 return new AzureSqlLegacyStaffUserMappingRepository(self::get($container, SqlConnection::class));
             },
             StaffIdentityUserCreator::class => static function (Container $container) use ($settings): StaffIdentityUserCreator {
                 if (!$settings->usesAzureSqlUserRepository()) {
-                    throw new InvalidArgumentException('Staff identity user creator requires USER_REPOSITORY=azure-sql.');
+                    return new DisabledStaffIdentityUserCreator();
                 }
 
                 return new AzureSqlStaffIdentityUserCreator(
@@ -1366,7 +1370,12 @@ final class ContainerFactory
                     self::get($container, SqlConnection::class),
                 );
             },
-            StaffMigrationWriteUnit::class => static function (Container $container): StaffMigrationWriteUnit {
+            StaffMigrationWriteUnit::class => static function (Container $container) use ($settings): StaffMigrationWriteUnit {
+                if (!$settings->usesAzureSqlUserRepository()) {
+                    return new DisabledStaffMigrationWriteUnit();
+                }
+
+
                 return new AzureSqlStaffMigrationWriteUnit(
                     self::get($container, SqlConnection::class),
                     self::get($container, StaffIdentityUserCreator::class),
@@ -1398,7 +1407,7 @@ final class ContainerFactory
             },
             StaffEntraLinkWriteUnit::class => static function (Container $container) use ($settings): StaffEntraLinkWriteUnit {
                 if (!$settings->usesAzureSqlUserRepository()) {
-                    throw new InvalidArgumentException('Staff Entra link write unit requires USER_REPOSITORY=azure-sql.');
+                    return new DisabledStaffEntraLinkWriteUnit();
                 }
 
                 return new AzureSqlStaffEntraLinkWriteUnit(self::get($container, SqlConnection::class));

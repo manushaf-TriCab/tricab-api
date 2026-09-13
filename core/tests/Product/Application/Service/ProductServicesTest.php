@@ -332,7 +332,13 @@ final class ProductServicesTest extends TestCase
         $userId = UserId::fromInt(1);
         $mediaSummary = $this->store->media()->create(
             \TriCab\Core\Product\Domain\ValueObject\ProductPublicId::fromString($created->publicId),
-            ['mediaCategoryCode' => 'gallery', 'mediaTypeCode' => 'image', 'title' => 'Front', 'storagePath' => '/x'],
+            [
+                'mediaCategoryCode' => 'gallery',
+                'mediaTypeCode' => 'image',
+                'title' => 'Front',
+                'storagePath' => '/x',
+                'publicUrl' => 'https://cdn.test.local/front.jpg',
+            ],
             $userId,
         );
 
@@ -386,7 +392,10 @@ final class ProductServicesTest extends TestCase
         self::assertSame('199.995', $saved->baseCost);
 
         $entries = $this->store->auditEntries();
-        $pricingEntry = array_values(array_filter($entries, static fn ($entry) => $entry->actionCode === 'upserted'))[0];
+        $pricingEntry = array_values(array_filter(
+            $entries,
+            static fn ($entry) => $entry->entityTypeCode === 'product-pricing' && $entry->actionCode === 'created',
+        ))[0];
         self::assertStringContainsString('***', (string) $pricingEntry->newValuesJson);
         self::assertStringNotContainsString('199.995', (string) $pricingEntry->newValuesJson);
     }

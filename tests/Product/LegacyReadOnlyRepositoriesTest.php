@@ -83,7 +83,7 @@ final class LegacyReadOnlyRepositoriesTest extends TestCase
         $guard = new LegacyReadOnlySqlGuard();
         $logger = new InMemoryLegacySqlStatementLogger();
         $wpConn = new RecordingLegacyReadOnlyConnection($guard, $logger, [
-            'FROM `WP_POSTS` P' => [[
+            'FROM `WP_POSTS` P WHERE P.POST_TYPE IN' => [[
                 'ID' => 3812,
                 'post_title' => 'FLEXI-TUFF',
                 'post_name' => 'flexi-tuff',

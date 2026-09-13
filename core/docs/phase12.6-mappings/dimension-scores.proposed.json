@@ -1,6 +1,6 @@
 {
     "productIdentity": {
-        "percent": 5.4,
+        "percent": 4.7,
         "status": "NOT_READY"
     },
     "classification": {
@@ -9,7 +9,7 @@
         "status": "NOT_READY"
     },
     "series": {
-        "percent": 0,
+        "percent": 24.4,
         "proposed": 390,
         "status": "NOT_READY"
     },
@@ -37,7 +37,7 @@
     },
     "cataloguePlacement": {
         "percent": 0,
-        "existingKept": 97,
+        "existingKept": 121,
         "status": "NOT_READY"
     },
     "media": {
@@ -50,8 +50,8 @@
         "status": "BLOCKED"
     },
     "existingTargetCollision": {
-        "matchExisting": 24,
-        "createNew": 424,
+        "matchExisting": 21,
+        "createNew": 427,
         "reviewCollision": 0,
         "status": "REVIEW"
     }

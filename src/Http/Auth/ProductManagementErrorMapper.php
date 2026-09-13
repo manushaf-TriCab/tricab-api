@@ -378,6 +378,12 @@ final class ProductManagementErrorMapper
             return $this->responder->error('VALIDATION_FAILED', 'The request could not be processed.', 422);
         }
 
+        error_log(sprintf(
+            'Unhandled product-management exception [%s]: %s',
+            $exception::class,
+            $exception->getMessage(),
+        ));
+
         return $this->responder->error('INTERNAL_ERROR', 'An unexpected error occurred.', 500);
     }
 

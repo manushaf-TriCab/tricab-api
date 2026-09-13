@@ -157,7 +157,7 @@ final class ProductPersistenceTest extends TestCase
         $connection->queueFetch([[
             'PublicId' => '880e8400-e29b-41d4-a716-446655440999',
             'CurrencyCode' => 'AUD',
-            'UnitPrice' => '19.9900',
+            'BaseCost' => '19.9900',
             'MinimumQuantity' => '1.0000',
             'PriceListCode' => null,
             'EffectiveFromUtc' => null,
@@ -184,9 +184,9 @@ final class ProductPersistenceTest extends TestCase
 
         $insertCall = $connection->calls[3];
         self::assertStringContainsString('INSERT INTO [product].[ProductPrices]', $insertCall['sql']);
-        self::assertSame('19.99', $insertCall['params'][':unitPrice']);
+        self::assertSame('19.99', $insertCall['params'][':baseCost']);
         self::assertSame('1.0000', $insertCall['params'][':minimumQuantity']);
-        self::assertIsString($insertCall['params'][':unitPrice']);
+        self::assertIsString($insertCall['params'][':baseCost']);
     }
 
     public function test_search_suggest_does_not_use_unbound_top_parameter(): void

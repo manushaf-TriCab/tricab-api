@@ -1,8 +1,8 @@
 {
-    "tproRows": 92620,
+    "tproRows": 93428,
     "tproExtRows": 18995,
-    "joinedRows": 11383,
-    "tproOnlyRows": 81247,
+    "joinedRows": 11406,
+    "tproOnlyRows": 82032,
     "classificationRules": [
         {
             "rule": "HAS_TPRO_EXT",
@@ -20,6 +20,6 @@
             "defaultStatus": "INVALID"
         }
     ],
-    "excludedCandidateCount": 81247,
-    "reviewCandidateCount": 11383
+    "excludedCandidateCount": 82032,
+    "reviewCandidateCount": 11406
 }

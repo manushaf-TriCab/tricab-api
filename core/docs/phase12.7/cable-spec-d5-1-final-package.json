@@ -23,8 +23,10 @@
     },
     "baselineIntegrity": {
         "status": "BASELINE_OK",
-        "definitions": 64,
+        "definitions": 81,
         "expectedDefinitions": 64,
+        "definitionsAddedOutsideBaseline": 17,
+        "missingRequiredDefinitionCodes": [],
         "totalFieldMappings": 1044,
         "expectedTotalFieldMappings": 1044,
         "cableFieldMappings": 538,
@@ -35,27 +37,44 @@
     },
     "legacySourceScan": {
         "mode": "FILE_SCAN",
-        "hitCount": 121,
+        "hitCount": 120,
         "directCableSpecsFieldLabels": {
-            "cc": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
-            "ct": "'directEvidence' => ($labels['ct'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['ct'] : null,",
-            "walu": "'walu' => $this->weightFinding('walu', 'APPROX-WEIGHT-ALU', 'aluminium', $unitProof, $labels, $presence),",
-            "wbnz": "'wbnz' => $this->weightFinding('wbnz', 'APPROX-WEIGHT-BRONZE', 'bronze', $unitProof, $labels, $presence),",
-            "ins": "'ins' => $this->insFinding($insStyles, $labels, $presence),",
-            "Af": "'Af' => $this->b1FieldFinding('Af', $b1, $labels, $presence),",
-            "r": "'r' => $this->b1FieldFinding('r', $b1, $labels, $presence),",
-            "x50": "'x50' => $this->b1FieldFinding('x50', $b1, $labels, $presence),",
-            "x60": "'x60' => $this->b1FieldFinding('x60', $b1, $labels, $presence),",
-            "tension": "'tension' => $this->b1FieldFinding('tension', $b1, $labels, $presence),"
+            "cc": "NO_DIRECT_LABEL_IN_SCANNED_REPO",
+            "ct": "NO_DIRECT_LABEL_IN_SCANNED_REPO",
+            "walu": "NO_DIRECT_LABEL_IN_SCANNED_REPO",
+            "wbnz": "NO_DIRECT_LABEL_IN_SCANNED_REPO",
+            "ins": "NO_DIRECT_LABEL_IN_SCANNED_REPO",
+            "Af": "NO_DIRECT_LABEL_IN_SCANNED_REPO",
+            "r": "NO_DIRECT_LABEL_IN_SCANNED_REPO",
+            "x50": "NO_DIRECT_LABEL_IN_SCANNED_REPO",
+            "x60": "NO_DIRECT_LABEL_IN_SCANNED_REPO",
+            "tension": "NO_DIRECT_LABEL_IN_SCANNED_REPO"
         }
     },
     "targetMasterScan": {
-        "definitionCount": 9,
-        "conductorMatches": [],
+        "definitionCount": 81,
+        "conductorMatches": {
+            "CODE_CONDUCTOR": {
+                "code": "CODE_CONDUCTOR"
+            },
+            "CONDUCTORS": {
+                "code": "CONDUCTORS"
+            }
+        },
         "hasKgPerKm": true,
         "hasLbPer1000ft": false,
         "unitCodes": [
-            "KG_PER_KM"
+            "M",
+            "EA",
+            "FT",
+            "PK",
+            "MM",
+            "MM2",
+            "KG",
+            "KG_PER_KM",
+            "A",
+            "V",
+            "C"
         ]
     },
     "fieldFindings": {
@@ -101,7 +120,7 @@
                         "NR",
                         "NT"
                     ],
-                    "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                    "directEvidence": null,
                     "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
                     "confidence": "MEDIUM",
                     "evidenceClass": "STRONG_CORRELATION"
@@ -127,7 +146,7 @@
                         "RE",
                         "RS"
                     ],
-                    "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                    "directEvidence": null,
                     "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
                     "confidence": "MEDIUM",
                     "evidenceClass": "STRONG_CORRELATION"
@@ -153,7 +172,7 @@
                         "RE",
                         "RS"
                     ],
-                    "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                    "directEvidence": null,
                     "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
                     "confidence": "MEDIUM",
                     "evidenceClass": "STRONG_CORRELATION"
@@ -166,7 +185,7 @@
                     "styleSamples": [
                         "VUF"
                     ],
-                    "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                    "directEvidence": null,
                     "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
                     "confidence": "MEDIUM",
                     "evidenceClass": "STRONG_CORRELATION"
@@ -181,7 +200,7 @@
             "evidenceClass": "STRONG_CORRELATION",
             "confidence": "MEDIUM",
             "resolution": "EXPLICITLY_UNRESOLVED",
-            "directEvidence": "'directEvidence' => ($labels['ct'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['ct'] : null,",
+            "directEvidence": null,
             "correlationEvidence": "KL ct=a lower wght + larger OD vs ct=p; rating.ct uses C/A not p/a",
             "physicalComparisons": {
                 "klXa1": [],
@@ -468,7 +487,14 @@
                     }
                 ]
             },
-            "targetConductorModels": [],
+            "targetConductorModels": {
+                "CODE_CONDUCTOR": {
+                    "code": "CODE_CONDUCTOR"
+                },
+                "CONDUCTORS": {
+                    "code": "CONDUCTORS"
+                }
+            },
             "safeTargetRepresentation": "CONDUCTOR-MATERIAL with COPPER/ALUMINIUM options \u2014 requires operator approval at MEDIUM",
             "safeExclusion": false,
             "operatorExclusionNotRecommended": true,
@@ -480,7 +506,7 @@
         },
         "walu": {
             "meaning": "Approximate aluminium component weight (distinct from total wght)",
-            "meaningEvidenceClass": "DIRECT_EVIDENCE",
+            "meaningEvidenceClass": "STRONG_CORRELATION",
             "meaningConfidence": "HIGH",
             "resolution": "PROVEN_CREATE_DEFINITION",
             "unit": "LB_PER_1000FT",
@@ -499,7 +525,7 @@
         },
         "wbnz": {
             "meaning": "Approximate bronze component weight (distinct from total wght)",
-            "meaningEvidenceClass": "DIRECT_EVIDENCE",
+            "meaningEvidenceClass": "STRONG_CORRELATION",
             "meaningConfidence": "HIGH",
             "resolution": "PROVEN_CREATE_DEFINITION",
             "unit": "LB_PER_1000FT",
@@ -579,10 +605,10 @@
         "Af": {
             "meaning": "Unknown electrical scalar \u2014 not proven ampacity",
             "unit": null,
-            "evidenceClass": "DIRECT_EVIDENCE",
+            "evidenceClass": "NO_EVIDENCE",
             "confidence": "LOW",
             "resolution": "EXPLICITLY_UNRESOLVED",
-            "directEvidence": "'Af' => $this->b1FieldFinding('Af', $b1, $labels, $presence),",
+            "directEvidence": null,
             "b1Context": {
                 "aggregate": {
                     "rows_cnt": 11,
@@ -753,10 +779,10 @@
         "r": {
             "meaning": "Resistance hypothesis \u2014 unit unproven",
             "unit": null,
-            "evidenceClass": "DIRECT_EVIDENCE",
+            "evidenceClass": "NO_EVIDENCE",
             "confidence": "LOW",
             "resolution": "EXPLICITLY_UNRESOLVED",
-            "directEvidence": "'r' => $this->b1FieldFinding('r', $b1, $labels, $presence),",
+            "directEvidence": null,
             "b1Context": {
                 "aggregate": {
                     "rows_cnt": 11,
@@ -927,10 +953,10 @@
         "x50": {
             "meaning": "Reactance at 50 Hz hypothesis",
             "unit": null,
-            "evidenceClass": "DIRECT_EVIDENCE",
+            "evidenceClass": "NO_EVIDENCE",
             "confidence": "LOW",
             "resolution": "EXPLICITLY_UNRESOLVED",
-            "directEvidence": "'x50' => $this->b1FieldFinding('x50', $b1, $labels, $presence),",
+            "directEvidence": null,
             "b1Context": {
                 "aggregate": {
                     "rows_cnt": 11,
@@ -1101,10 +1127,10 @@
         "x60": {
             "meaning": "Reactance at 60 Hz hypothesis",
             "unit": null,
-            "evidenceClass": "DIRECT_EVIDENCE",
+            "evidenceClass": "NO_EVIDENCE",
             "confidence": "LOW",
             "resolution": "EXPLICITLY_UNRESOLVED",
-            "directEvidence": "'x60' => $this->b1FieldFinding('x60', $b1, $labels, $presence),",
+            "directEvidence": null,
             "b1Context": {
                 "aggregate": {
                     "rows_cnt": 11,
@@ -1275,10 +1301,10 @@
         "tension": {
             "meaning": "Mechanical/pulling tension hypothesis",
             "unit": null,
-            "evidenceClass": "DIRECT_EVIDENCE",
+            "evidenceClass": "NO_EVIDENCE",
             "confidence": "LOW",
             "resolution": "EXPLICITLY_UNRESOLVED",
-            "directEvidence": "'tension' => $this->b1FieldFinding('tension', $b1, $labels, $presence),",
+            "directEvidence": null,
             "b1Context": {
                 "aggregate": {
                     "rows_cnt": 11,
@@ -1492,7 +1518,7 @@
                             "NR",
                             "NT"
                         ],
-                        "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                        "directEvidence": null,
                         "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
                         "confidence": "MEDIUM",
                         "evidenceClass": "STRONG_CORRELATION"
@@ -1518,7 +1544,7 @@
                             "RE",
                             "RS"
                         ],
-                        "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                        "directEvidence": null,
                         "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
                         "confidence": "MEDIUM",
                         "evidenceClass": "STRONG_CORRELATION"
@@ -1544,7 +1570,7 @@
                             "RE",
                             "RS"
                         ],
-                        "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                        "directEvidence": null,
                         "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
                         "confidence": "MEDIUM",
                         "evidenceClass": "STRONG_CORRELATION"
@@ -1557,7 +1583,7 @@
                         "styleSamples": [
                             "VUF"
                         ],
-                        "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+                        "directEvidence": null,
                         "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
                         "confidence": "MEDIUM",
                         "evidenceClass": "STRONG_CORRELATION"
@@ -1592,7 +1618,7 @@
                 "evidenceClass": "STRONG_CORRELATION",
                 "confidence": "MEDIUM",
                 "resolution": "EXPLICITLY_UNRESOLVED",
-                "directEvidence": "'directEvidence' => ($labels['ct'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['ct'] : null,",
+                "directEvidence": null,
                 "correlationEvidence": "KL ct=a lower wght + larger OD vs ct=p; rating.ct uses C/A not p/a",
                 "physicalComparisons": {
                     "klXa1": [],
@@ -1879,7 +1905,14 @@
                         }
                     ]
                 },
-                "targetConductorModels": [],
+                "targetConductorModels": {
+                    "CODE_CONDUCTOR": {
+                        "code": "CODE_CONDUCTOR"
+                    },
+                    "CONDUCTORS": {
+                        "code": "CONDUCTORS"
+                    }
+                },
                 "safeTargetRepresentation": "CONDUCTOR-MATERIAL with COPPER/ALUMINIUM options \u2014 requires operator approval at MEDIUM",
                 "safeExclusion": false,
                 "operatorExclusionNotRecommended": true,
@@ -1911,7 +1944,7 @@
             "field": "walu",
             "finding": {
                 "meaning": "Approximate aluminium component weight (distinct from total wght)",
-                "meaningEvidenceClass": "DIRECT_EVIDENCE",
+                "meaningEvidenceClass": "STRONG_CORRELATION",
                 "meaningConfidence": "HIGH",
                 "resolution": "PROVEN_CREATE_DEFINITION",
                 "unit": "LB_PER_1000FT",
@@ -1945,7 +1978,7 @@
             "field": "wbnz",
             "finding": {
                 "meaning": "Approximate bronze component weight (distinct from total wght)",
-                "meaningEvidenceClass": "DIRECT_EVIDENCE",
+                "meaningEvidenceClass": "STRONG_CORRELATION",
                 "meaningConfidence": "HIGH",
                 "resolution": "PROVEN_CREATE_DEFINITION",
                 "unit": "LB_PER_1000FT",
@@ -2055,10 +2088,10 @@
             "finding": {
                 "meaning": "Unknown electrical scalar \u2014 not proven ampacity",
                 "unit": null,
-                "evidenceClass": "DIRECT_EVIDENCE",
+                "evidenceClass": "NO_EVIDENCE",
                 "confidence": "LOW",
                 "resolution": "EXPLICITLY_UNRESOLVED",
-                "directEvidence": "'Af' => $this->b1FieldFinding('Af', $b1, $labels, $presence),",
+                "directEvidence": null,
                 "b1Context": {
                     "aggregate": {
                         "rows_cnt": 11,
@@ -2244,10 +2277,10 @@
             "finding": {
                 "meaning": "Resistance hypothesis \u2014 unit unproven",
                 "unit": null,
-                "evidenceClass": "DIRECT_EVIDENCE",
+                "evidenceClass": "NO_EVIDENCE",
                 "confidence": "LOW",
                 "resolution": "EXPLICITLY_UNRESOLVED",
-                "directEvidence": "'r' => $this->b1FieldFinding('r', $b1, $labels, $presence),",
+                "directEvidence": null,
                 "b1Context": {
                     "aggregate": {
                         "rows_cnt": 11,
@@ -2433,10 +2466,10 @@
             "finding": {
                 "meaning": "Reactance at 50 Hz hypothesis",
                 "unit": null,
-                "evidenceClass": "DIRECT_EVIDENCE",
+                "evidenceClass": "NO_EVIDENCE",
                 "confidence": "LOW",
                 "resolution": "EXPLICITLY_UNRESOLVED",
-                "directEvidence": "'x50' => $this->b1FieldFinding('x50', $b1, $labels, $presence),",
+                "directEvidence": null,
                 "b1Context": {
                     "aggregate": {
                         "rows_cnt": 11,
@@ -2622,10 +2655,10 @@
             "finding": {
                 "meaning": "Reactance at 60 Hz hypothesis",
                 "unit": null,
-                "evidenceClass": "DIRECT_EVIDENCE",
+                "evidenceClass": "NO_EVIDENCE",
                 "confidence": "LOW",
                 "resolution": "EXPLICITLY_UNRESOLVED",
-                "directEvidence": "'x60' => $this->b1FieldFinding('x60', $b1, $labels, $presence),",
+                "directEvidence": null,
                 "b1Context": {
                     "aggregate": {
                         "rows_cnt": 11,
@@ -2811,10 +2844,10 @@
             "finding": {
                 "meaning": "Mechanical/pulling tension hypothesis",
                 "unit": null,
-                "evidenceClass": "DIRECT_EVIDENCE",
+                "evidenceClass": "NO_EVIDENCE",
                 "confidence": "LOW",
                 "resolution": "EXPLICITLY_UNRESOLVED",
-                "directEvidence": "'tension' => $this->b1FieldFinding('tension', $b1, $labels, $presence),",
+                "directEvidence": null,
                 "b1Context": {
                     "aggregate": {
                         "rows_cnt": 11,
@@ -3199,5 +3232,5 @@
         "cable-spec-d5-1-readiness-options.json",
         "cable-spec-d5-1-final-package.json"
     ],
-    "generatedAtUtc": "2026-08-24T00:51:20+00:00"
+    "generatedAtUtc": "2026-09-09T02:52:49+00:00"
 }

@@ -10,4 +10,5 @@
 /tmp/
 /output/
 /artifacts/
+.venv/
 *.p8

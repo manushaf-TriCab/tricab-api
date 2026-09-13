@@ -19,6 +19,11 @@ class DatabaseUnavailable extends RuntimeException
         return new self('Azure SQL query failed.', 0, $throwable);
     }
 
+    public static function fromConnectionThrowable(Throwable $throwable): self
+    {
+        return new self('Azure SQL connection failed.', 0, $throwable);
+    }
+
     public function sqlDriverCode(): ?int
     {
         $previous = $this->getPrevious();

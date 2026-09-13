@@ -66,7 +66,11 @@ final class ProductAuditRecorder
         $masked = [];
         foreach ($values as $key => $value) {
             $lower = strtolower((string) $key);
-            if (str_contains($lower, 'unitprice') || str_contains($lower, 'price')) {
+            if (
+                str_contains($lower, 'unitprice')
+                || str_contains($lower, 'price')
+                || str_contains($lower, 'basecost')
+            ) {
                 $masked[$key] = '***';
                 continue;
             }

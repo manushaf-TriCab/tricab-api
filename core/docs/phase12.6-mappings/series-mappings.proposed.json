@@ -5,10 +5,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 1302,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "BV",
         "proposedSeriesName": "BV",
         "proposedSeriesCode": "BV",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -17,10 +17,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 750,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "DV",
         "proposedSeriesName": "DV",
         "proposedSeriesCode": "DV",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -29,10 +29,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 367,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "RR",
         "proposedSeriesName": "RR",
         "proposedSeriesCode": "RR",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -41,10 +41,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 218,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "BH",
         "proposedSeriesName": "BH",
         "proposedSeriesCode": "BH",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -53,10 +53,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 205,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "RC",
         "proposedSeriesName": "RC",
         "proposedSeriesCode": "RC",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -65,10 +65,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 98,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "RS",
         "proposedSeriesName": "RS",
         "proposedSeriesCode": "RS",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -77,10 +77,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 89,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "ES",
         "proposedSeriesName": "ES",
         "proposedSeriesCode": "ES",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -89,10 +89,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 69,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "FJ",
         "proposedSeriesName": "FJ",
         "proposedSeriesCode": "FJ",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -101,10 +101,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 142,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "EW",
         "proposedSeriesName": "EW",
         "proposedSeriesCode": "EW",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -113,10 +113,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 94,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "EG",
         "proposedSeriesName": "EG",
         "proposedSeriesCode": "EG",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -125,10 +125,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 40,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "FC",
         "proposedSeriesName": "FC",
         "proposedSeriesCode": "FC",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -137,10 +137,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 60,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "FL",
         "proposedSeriesName": "FL",
         "proposedSeriesCode": "FL",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -149,10 +149,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 497,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "PJ",
         "proposedSeriesName": "PJ",
         "proposedSeriesCode": "PJ",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -161,10 +161,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 202,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "HT",
         "proposedSeriesName": "HT",
         "proposedSeriesCode": "HT",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -173,10 +173,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 153,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "RB",
         "proposedSeriesName": "RB",
         "proposedSeriesCode": "RB",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -185,10 +185,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 132,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "FK",
         "proposedSeriesName": "FK",
         "proposedSeriesCode": "FK",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -197,10 +197,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 202,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "FZ",
         "proposedSeriesName": "FZ",
         "proposedSeriesCode": "FZ",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -209,10 +209,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 146,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "FE",
         "proposedSeriesName": "FE",
         "proposedSeriesCode": "FE",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -245,10 +245,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 43,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "DF",
         "proposedSeriesName": "DF",
         "proposedSeriesCode": "DF",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -257,10 +257,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 43,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "DG",
         "proposedSeriesName": "DG",
         "proposedSeriesCode": "DG",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -269,10 +269,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 15,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "NV",
         "proposedSeriesName": "NV",
         "proposedSeriesCode": "NV",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -281,10 +281,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 14,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "NR",
         "proposedSeriesName": "NR",
         "proposedSeriesCode": "NR",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -293,10 +293,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 62,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "NJ",
         "proposedSeriesName": "NJ",
         "proposedSeriesCode": "NJ",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -305,10 +305,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 56,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "NT",
         "proposedSeriesName": "NT",
         "proposedSeriesCode": "NT",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -317,10 +317,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 12,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "NU",
         "proposedSeriesName": "NU",
         "proposedSeriesCode": "NU",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -329,10 +329,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 1,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "B1",
         "proposedSeriesName": "B1",
         "proposedSeriesCode": "B1",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -365,10 +365,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 334,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "KL",
         "proposedSeriesName": "KL",
         "proposedSeriesCode": "KL",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -377,10 +377,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 319,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "LS",
         "proposedSeriesName": "LS",
         "proposedSeriesCode": "LS",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -437,10 +437,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 125,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "LP",
         "proposedSeriesName": "LP",
         "proposedSeriesCode": "LP",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -725,10 +725,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 174,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "KA",
         "proposedSeriesName": "KA",
         "proposedSeriesCode": "KA",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -737,10 +737,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 346,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "XL",
         "proposedSeriesName": "XL",
         "proposedSeriesCode": "XL",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -761,10 +761,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 118,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "KC",
         "proposedSeriesName": "KC",
         "proposedSeriesCode": "KC",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -833,10 +833,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 240,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "C1",
         "proposedSeriesName": "C1",
         "proposedSeriesCode": "C1",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -941,10 +941,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 172,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "RE",
         "proposedSeriesName": "RE",
         "proposedSeriesCode": "RE",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1049,10 +1049,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 167,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "R1",
         "proposedSeriesName": "R1",
         "proposedSeriesCode": "R1",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1121,10 +1121,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 161,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "KN",
         "proposedSeriesName": "KN",
         "proposedSeriesCode": "KN",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1133,10 +1133,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 174,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "XN",
         "proposedSeriesName": "XN",
         "proposedSeriesCode": "XN",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1277,10 +1277,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 100,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "KU",
         "proposedSeriesName": "KU",
         "proposedSeriesCode": "KU",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1289,10 +1289,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 100,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "XU",
         "proposedSeriesName": "XU",
         "proposedSeriesCode": "XU",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1301,10 +1301,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 33,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "EA",
         "proposedSeriesName": "EA",
         "proposedSeriesCode": "EA",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1325,10 +1325,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 178,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "XA",
         "proposedSeriesName": "XA",
         "proposedSeriesCode": "XA",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1589,10 +1589,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 81,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "TP",
         "proposedSeriesName": "TP",
         "proposedSeriesCode": "TP",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1601,10 +1601,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 17,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "TR",
         "proposedSeriesName": "TR",
         "proposedSeriesCode": "TR",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1613,10 +1613,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 8,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "TV",
         "proposedSeriesName": "TV",
         "proposedSeriesCode": "TV",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1625,10 +1625,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "TK",
         "proposedSeriesName": "TK",
         "proposedSeriesCode": "TK",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1661,10 +1661,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 11,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "VP",
         "proposedSeriesName": "VP",
         "proposedSeriesCode": "VP",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1673,10 +1673,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 3,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "VR",
         "proposedSeriesName": "VR",
         "proposedSeriesCode": "VR",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1685,10 +1685,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "VS",
         "proposedSeriesName": "VS",
         "proposedSeriesCode": "VS",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1697,10 +1697,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 6,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "VV",
         "proposedSeriesName": "VV",
         "proposedSeriesCode": "VV",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1709,10 +1709,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 22,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "VW",
         "proposedSeriesName": "VW",
         "proposedSeriesCode": "VW",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1937,10 +1937,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "A35",
         "proposedSeriesName": "A35",
         "proposedSeriesCode": "A35",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -1949,10 +1949,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "A36",
         "proposedSeriesName": "A36",
         "proposedSeriesCode": "A36",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2009,10 +2009,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "D04",
         "proposedSeriesName": "D04",
         "proposedSeriesCode": "D04",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2021,10 +2021,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "D05",
         "proposedSeriesName": "D05",
         "proposedSeriesCode": "D05",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2045,10 +2045,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "D07",
         "proposedSeriesName": "D07",
         "proposedSeriesCode": "D07",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2069,10 +2069,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "D09",
         "proposedSeriesName": "D09",
         "proposedSeriesCode": "D09",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2081,10 +2081,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "D10",
         "proposedSeriesName": "D10",
         "proposedSeriesCode": "D10",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2153,10 +2153,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "A10",
         "proposedSeriesName": "A10",
         "proposedSeriesCode": "A10",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2177,10 +2177,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "A12",
         "proposedSeriesName": "A12",
         "proposedSeriesCode": "A12",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2189,10 +2189,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "A47",
         "proposedSeriesName": "A47",
         "proposedSeriesCode": "A47",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2201,10 +2201,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "A48",
         "proposedSeriesName": "A48",
         "proposedSeriesCode": "A48",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2477,10 +2477,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "NF",
         "proposedSeriesName": "NF",
         "proposedSeriesCode": "NF",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2489,10 +2489,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "X04",
         "proposedSeriesName": "X04",
         "proposedSeriesCode": "X04",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2909,10 +2909,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F20",
         "proposedSeriesName": "F20",
         "proposedSeriesCode": "F20",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2921,10 +2921,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F21",
         "proposedSeriesName": "F21",
         "proposedSeriesCode": "F21",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2933,10 +2933,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F07",
         "proposedSeriesName": "F07",
         "proposedSeriesCode": "F07",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2945,10 +2945,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F22",
         "proposedSeriesName": "F22",
         "proposedSeriesCode": "F22",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2957,10 +2957,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F08",
         "proposedSeriesName": "F08",
         "proposedSeriesCode": "F08",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2969,10 +2969,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F12",
         "proposedSeriesName": "F12",
         "proposedSeriesCode": "F12",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2981,10 +2981,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F09",
         "proposedSeriesName": "F09",
         "proposedSeriesCode": "F09",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -2993,10 +2993,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F14",
         "proposedSeriesName": "F14",
         "proposedSeriesCode": "F14",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3005,10 +3005,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F10",
         "proposedSeriesName": "F10",
         "proposedSeriesCode": "F10",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3041,10 +3041,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "D21",
         "proposedSeriesName": "D21",
         "proposedSeriesCode": "D21",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3053,10 +3053,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "D20",
         "proposedSeriesName": "D20",
         "proposedSeriesCode": "D20",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3065,10 +3065,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "D22",
         "proposedSeriesName": "D22",
         "proposedSeriesCode": "D22",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3101,10 +3101,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "B21",
         "proposedSeriesName": "B21",
         "proposedSeriesCode": "B21",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3137,10 +3137,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "TS",
         "proposedSeriesName": "TS",
         "proposedSeriesCode": "TS",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3149,10 +3149,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "TG",
         "proposedSeriesName": "TG",
         "proposedSeriesCode": "TG",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3233,10 +3233,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "B24",
         "proposedSeriesName": "B24",
         "proposedSeriesCode": "B24",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3653,10 +3653,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "B07",
         "proposedSeriesName": "B07",
         "proposedSeriesCode": "B07",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3749,10 +3749,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "PS1A",
         "proposedSeriesName": "PS1A",
         "proposedSeriesCode": "PS1A",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3761,10 +3761,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "PS1B",
         "proposedSeriesName": "PS1B",
         "proposedSeriesCode": "PS1B",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3773,10 +3773,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "PS1C",
         "proposedSeriesName": "PS1C",
         "proposedSeriesCode": "PS1C",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -3785,10 +3785,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "PS1D",
         "proposedSeriesName": "PS1D",
         "proposedSeriesCode": "PS1D",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4061,10 +4061,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "F25",
         "proposedSeriesName": "F25",
         "proposedSeriesCode": "F25",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4145,10 +4145,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "B36",
         "proposedSeriesName": "B36",
         "proposedSeriesCode": "B36",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4241,10 +4241,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "J90",
         "proposedSeriesName": "J90",
         "proposedSeriesCode": "J90",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4253,10 +4253,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "J91",
         "proposedSeriesName": "J91",
         "proposedSeriesCode": "J91",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4265,10 +4265,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "J92",
         "proposedSeriesName": "J92",
         "proposedSeriesCode": "J92",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4277,10 +4277,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "J93",
         "proposedSeriesName": "J93",
         "proposedSeriesCode": "J93",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4289,10 +4289,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "J94",
         "proposedSeriesName": "J94",
         "proposedSeriesCode": "J94",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4301,10 +4301,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "J95",
         "proposedSeriesName": "J95",
         "proposedSeriesCode": "J95",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4313,10 +4313,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "J96",
         "proposedSeriesName": "J96",
         "proposedSeriesCode": "J96",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4325,10 +4325,10 @@
         "family": "ACCESSORIES",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "J97",
         "proposedSeriesName": "J97",
         "proposedSeriesCode": "J97",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {
@@ -4529,10 +4529,10 @@
         "family": "CABLE",
         "category": null,
         "variantCount": 0,
-        "existingSeriesMatch": null,
+        "existingSeriesMatch": "VUF",
         "proposedSeriesName": "VUF",
         "proposedSeriesCode": "VUF",
-        "status": "REVIEW",
+        "status": "READY",
         "autoCreate": false
     },
     {

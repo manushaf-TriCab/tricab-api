@@ -3,7 +3,7 @@
     "evidenceClass": "STRONG_CORRELATION",
     "confidence": "MEDIUM",
     "resolution": "EXPLICITLY_UNRESOLVED",
-    "directEvidence": "'directEvidence' => ($labels['ct'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['ct'] : null,",
+    "directEvidence": null,
     "correlationEvidence": "KL ct=a lower wght + larger OD vs ct=p; rating.ct uses C/A not p/a",
     "physicalComparisons": {
         "klXa1": [],
@@ -290,7 +290,14 @@
             }
         ]
     },
-    "targetConductorModels": [],
+    "targetConductorModels": {
+        "CODE_CONDUCTOR": {
+            "code": "CODE_CONDUCTOR"
+        },
+        "CONDUCTORS": {
+            "code": "CONDUCTORS"
+        }
+    },
     "safeTargetRepresentation": "CONDUCTOR-MATERIAL with COPPER/ALUMINIUM options \u2014 requires operator approval at MEDIUM",
     "safeExclusion": false,
     "operatorExclusionNotRecommended": true,

@@ -40,7 +40,7 @@
                 "NR",
                 "NT"
             ],
-            "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+            "directEvidence": null,
             "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
             "confidence": "MEDIUM",
             "evidenceClass": "STRONG_CORRELATION"
@@ -66,7 +66,7 @@
                 "RE",
                 "RS"
             ],
-            "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+            "directEvidence": null,
             "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
             "confidence": "MEDIUM",
             "evidenceClass": "STRONG_CORRELATION"
@@ -92,7 +92,7 @@
                 "RE",
                 "RS"
             ],
-            "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+            "directEvidence": null,
             "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
             "confidence": "MEDIUM",
             "evidenceClass": "STRONG_CORRELATION"
@@ -105,7 +105,7 @@
             "styleSamples": [
                 "VUF"
             ],
-            "directEvidence": "'directEvidence' => ($labels['cc'] ?? '') !== 'NO_DIRECT_LABEL_IN_SCANNED_REPO' ? $labels['cc'] : null,",
+            "directEvidence": null,
             "correlationEvidence": "cc\u00d7nc distribution aligns with cores/pairs/triples interpretation",
             "confidence": "MEDIUM",
             "evidenceClass": "STRONG_CORRELATION"

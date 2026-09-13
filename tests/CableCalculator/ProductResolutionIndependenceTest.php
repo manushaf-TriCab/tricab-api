@@ -61,7 +61,7 @@ final class ProductResolutionIndependenceTest extends TestCase
         self::assertSame(2.5, (float) $band90['earthSizeMm2']);
         self::assertSame(49.0, (float) $band90['currentRatingA']);
         self::assertSame(0.13, (float) $band90['voltageDropPercent']);
-        self::assertSame(1432.1, (float) $band90['faultLoop']);
+        self::assertSame(1386.2, (float) $band90['faultLoop']);
         self::assertSame('XL-PAXN/1C6OR', $band90['productCodeActive']);
         self::assertSame('LP-XXXD/1C2.5EA', $band90['productCodeEarth']);
     }

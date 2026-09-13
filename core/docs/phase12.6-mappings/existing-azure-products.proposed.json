@@ -19,15 +19,6 @@
             "deletionPermission": "NONE \u2014 do not delete from classification"
         },
         {
-            "productPublicId": "02C38E34-8090-F111-B336-000D3AE079A8",
-            "productCode": "",
-            "name": "Dbg Markets",
-            "legacyProductId": null,
-            "mappingCount": 0,
-            "classification": "DEBUG",
-            "deletionPermission": "NONE \u2014 do not delete from classification"
-        },
-        {
             "productPublicId": "2921BD7D-8090-F111-B336-000D3AE079A8",
             "productCode": "",
             "name": "Phase85 Accessory 13967c",
@@ -37,57 +28,12 @@
             "deletionPermission": "NONE \u2014 do not delete from classification"
         },
         {
-            "productPublicId": "04DE2188-8090-F111-B336-000D3AE079A8",
-            "productCode": "",
-            "name": "Dbg Slug",
-            "legacyProductId": null,
-            "mappingCount": 0,
-            "classification": "DEBUG",
-            "deletionPermission": "NONE \u2014 do not delete from classification"
-        },
-        {
-            "productPublicId": "56B472C4-8090-F111-B336-000D3AE079A8",
-            "productCode": "",
-            "name": "Dbg Slug2",
-            "legacyProductId": null,
-            "mappingCount": 0,
-            "classification": "DEBUG",
-            "deletionPermission": "NONE \u2014 do not delete from classification"
-        },
-        {
             "productPublicId": "E8EF3CF4-8090-F111-B336-000D3AE079A8",
             "productCode": "",
             "name": "Phase85 Accessory b47e6e",
             "legacyProductId": null,
             "mappingCount": 0,
             "classification": "DEVELOPMENT_SAMPLE",
-            "deletionPermission": "NONE \u2014 do not delete from classification"
-        },
-        {
-            "productPublicId": "8CDF7DBD-8190-F111-B336-000D3AE079A8",
-            "productCode": "",
-            "name": "Phase85 Flex Cable b7f2ea Updated",
-            "legacyProductId": null,
-            "mappingCount": 0,
-            "classification": "DEVELOPMENT_SAMPLE",
-            "deletionPermission": "NONE \u2014 do not delete from classification"
-        },
-        {
-            "productPublicId": "5BD35CC9-8190-F111-B336-000D3AE079A8",
-            "productCode": "",
-            "name": "Dbg Spec",
-            "legacyProductId": null,
-            "mappingCount": 0,
-            "classification": "DEBUG",
-            "deletionPermission": "NONE \u2014 do not delete from classification"
-        },
-        {
-            "productPublicId": "DA10FCD5-8190-F111-B336-000D3AE079A8",
-            "productCode": "",
-            "name": "Dbg Var",
-            "legacyProductId": null,
-            "mappingCount": 0,
-            "classification": "DEBUG",
             "deletionPermission": "NONE \u2014 do not delete from classification"
         },
         {
@@ -106,33 +52,6 @@
             "legacyProductId": null,
             "mappingCount": 0,
             "classification": "DEVELOPMENT_SAMPLE",
-            "deletionPermission": "NONE \u2014 do not delete from classification"
-        },
-        {
-            "productPublicId": "2A13CD97-8290-F111-B336-000D3AE079A8",
-            "productCode": "",
-            "name": "Dbg VarSku",
-            "legacyProductId": null,
-            "mappingCount": 0,
-            "classification": "DEBUG",
-            "deletionPermission": "NONE \u2014 do not delete from classification"
-        },
-        {
-            "productPublicId": "7A4127C4-8290-F111-B336-000D3AE079A8",
-            "productCode": "",
-            "name": "Phase85 Flex Cable 7242dbc723d4 Updated",
-            "legacyProductId": null,
-            "mappingCount": 0,
-            "classification": "DEVELOPMENT_SAMPLE",
-            "deletionPermission": "NONE \u2014 do not delete from classification"
-        },
-        {
-            "productPublicId": "327CA7E8-8290-F111-B336-000D3AE079A8",
-            "productCode": "",
-            "name": "Dbg Media",
-            "legacyProductId": null,
-            "mappingCount": 0,
-            "classification": "DEBUG",
             "deletionPermission": "NONE \u2014 do not delete from classification"
         },
         {
@@ -1011,9 +930,9 @@
         {
             "productPublicId": "0EFDDED9-F691-F111-B337-000D3AE094E4",
             "productCode": "UP",
-            "name": "Shipboard & Offshore Switchboard/Panel Wire",
-            "legacyProductId": "UP",
-            "mappingCount": 1,
+            "name": "Shipboard & Offshore ALI-FLEX Switchboard/Panel Wire",
+            "legacyProductId": "wordpress:wp_posts:3126",
+            "mappingCount": 160,
             "classification": "REAL_OR_MIGRATED",
             "deletionPermission": "NONE \u2014 do not delete from classification"
         },
@@ -1061,12 +980,318 @@
             "mappingCount": 1,
             "classification": "REAL_OR_MIGRATED",
             "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "1FE90A80-AEA1-F111-9B32-002248E1BB32",
+            "productCode": "F12",
+            "name": "Inspection Tee",
+            "legacyProductId": "wordpress:wp_posts:5877",
+            "mappingCount": 3,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "0629DEA2-E0A1-F111-9B32-000D3AE078EE",
+            "productCode": "J90",
+            "name": "TECHNO Junction Box Assemblies",
+            "legacyProductId": "wordpress:wp_posts:7459",
+            "mappingCount": 4,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "1E29DEA2-E0A1-F111-9B32-000D3AE078EE",
+            "productCode": "J91",
+            "name": "TECHNO Plug Connector",
+            "legacyProductId": "wordpress:wp_posts:7460",
+            "mappingCount": 4,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "3629DEA2-E0A1-F111-9B32-000D3AE078EE",
+            "productCode": "J92",
+            "name": "TECHNO Socket Connector",
+            "legacyProductId": "wordpress:wp_posts:7461",
+            "mappingCount": 4,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "4E29DEA2-E0A1-F111-9B32-000D3AE078EE",
+            "productCode": "J93",
+            "name": "TECHNO Plug Rapid-Connector",
+            "legacyProductId": "wordpress:wp_posts:7462",
+            "mappingCount": 3,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "6029DEA2-E0A1-F111-9B32-000D3AE078EE",
+            "productCode": "J94",
+            "name": "TECHNO Socket Rapid-Connector",
+            "legacyProductId": "wordpress:wp_posts:7464",
+            "mappingCount": 3,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "7229DEA2-E0A1-F111-9B32-000D3AE078EE",
+            "productCode": "J95",
+            "name": "TECHNO Plug Piercing-Connector",
+            "legacyProductId": "wordpress:wp_posts:7466",
+            "mappingCount": 2,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "7E29DEA2-E0A1-F111-9B32-000D3AE078EE",
+            "productCode": "J96",
+            "name": "TECHNO Socket Piercing-Connector",
+            "legacyProductId": "wordpress:wp_posts:7467",
+            "mappingCount": 2,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "8A29DEA2-E0A1-F111-9B32-000D3AE078EE",
+            "productCode": "J97",
+            "name": "TECHNO Junction Boxes",
+            "legacyProductId": "wordpress:wp_posts:7469",
+            "mappingCount": 4,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "73CA08BC-71A2-F111-9B33-002248E27005",
+            "productCode": "B07",
+            "name": "Copper",
+            "legacyProductId": "wordpress:wp_posts:7080",
+            "mappingCount": 19,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "9DCA08BC-71A2-F111-9B33-002248E27005",
+            "productCode": "B21",
+            "name": "Bi-Metallic Reducing",
+            "legacyProductId": "wordpress:wp_posts:6136",
+            "mappingCount": 39,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "60B303C2-71A2-F111-9B33-002248E27005",
+            "productCode": "B24",
+            "name": "Aluminium",
+            "legacyProductId": "wordpress:wp_posts:6340",
+            "mappingCount": 15,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "82B303C2-71A2-F111-9B33-002248E27005",
+            "productCode": "B36",
+            "name": "Tin Plated Copper",
+            "legacyProductId": "wordpress:wp_posts:7427",
+            "mappingCount": 56,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "2141FCC7-71A2-F111-9B33-002248E27005",
+            "productCode": "D20",
+            "name": "Standard Nylon",
+            "legacyProductId": "wordpress:wp_posts:5907",
+            "mappingCount": 9,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "3741FCC7-71A2-F111-9B33-002248E27005",
+            "productCode": "D21",
+            "name": "Standard PG threaded Nylon",
+            "legacyProductId": "wordpress:wp_posts:5906",
+            "mappingCount": 11,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "5141FCC7-71A2-F111-9B33-002248E27005",
+            "productCode": "D22",
+            "name": "Standard NPT threaded Nylon",
+            "legacyProductId": "wordpress:wp_posts:5908",
+            "mappingCount": 7,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C86D02CE-71A2-F111-9B33-002248E27005",
+            "productCode": "F07",
+            "name": "Medium Duty",
+            "legacyProductId": "wordpress:wp_posts:5873",
+            "mappingCount": 9,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "DE6D02CE-71A2-F111-9B33-002248E27005",
+            "productCode": "F08",
+            "name": "Conduit",
+            "legacyProductId": "wordpress:wp_posts:5876",
+            "mappingCount": 17,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "046E02CE-71A2-F111-9B33-002248E27005",
+            "productCode": "F09",
+            "name": "Coupling",
+            "legacyProductId": "wordpress:wp_posts:5878",
+            "mappingCount": 6,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "146E02CE-71A2-F111-9B33-002248E27005",
+            "productCode": "F10",
+            "name": "Conduit",
+            "legacyProductId": "wordpress:wp_posts:5881",
+            "mappingCount": 4,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "DB9F08D4-71A2-F111-9B33-002248E27005",
+            "productCode": "F14",
+            "name": "Conduit Gland",
+            "legacyProductId": "wordpress:wp_posts:5879",
+            "mappingCount": 6,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "EB9F08D4-71A2-F111-9B33-002248E27005",
+            "productCode": "F20",
+            "name": "Split Loom",
+            "legacyProductId": "wordpress:wp_posts:5671",
+            "mappingCount": 10,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C45C20DA-71A2-F111-9B33-002248E27005",
+            "productCode": "F21",
+            "name": "Nylon Split Loom",
+            "legacyProductId": "wordpress:wp_posts:5672",
+            "mappingCount": 12,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "E05C20DA-71A2-F111-9B33-002248E27005",
+            "productCode": "F22",
+            "name": "Heavy Duty",
+            "legacyProductId": "wordpress:wp_posts:5875",
+            "mappingCount": 6,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "F05C20DA-71A2-F111-9B33-002248E27005",
+            "productCode": "F25",
+            "name": "Solar Conduit Heavy Duty",
+            "legacyProductId": "wordpress:wp_posts:7345",
+            "mappingCount": 6,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "005D20DA-71A2-F111-9B33-002248E27005",
+            "productCode": "PS1A",
+            "name": "INDUSTRIAL PLUG-SOCKET",
+            "legacyProductId": "wordpress:wp_posts:7266",
+            "mappingCount": 4,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "0C5D20DA-71A2-F111-9B33-002248E27005",
+            "productCode": "PS1B",
+            "name": "INDUSTRIAL PLUG-SOCKET",
+            "legacyProductId": "wordpress:wp_posts:7267",
+            "mappingCount": 10,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "511D18E0-71A2-F111-9B33-002248E27005",
+            "productCode": "PS1C",
+            "name": "INDUSTRIAL PLUG-SOCKET",
+            "legacyProductId": "wordpress:wp_posts:7268",
+            "mappingCount": 8,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "651D18E0-71A2-F111-9B33-002248E27005",
+            "productCode": "PS1D",
+            "name": "INDUSTRIAL PLUG-SOCKET",
+            "legacyProductId": "wordpress:wp_posts:7269",
+            "mappingCount": 3,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "6F1D18E0-71A2-F111-9B33-002248E27005",
+            "productCode": "X04",
+            "name": "Bushings",
+            "legacyProductId": "wordpress:wp_posts:5372",
+            "mappingCount": 6,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "3B2BC282-9CA2-F111-9B33-002248E27005",
+            "productCode": "B10",
+            "name": "ALIFLEX Aluminium Shear Bolt",
+            "legacyProductId": "wordpress:wp_posts:5345",
+            "mappingCount": 13,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "592BC282-9CA2-F111-9B33-002248E27005",
+            "productCode": "BV",
+            "name": "Shipboard ALI-FLEX Power Cable",
+            "legacyProductId": "wordpress:wp_posts:3090",
+            "mappingCount": 26,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "8F2BC282-9CA2-F111-9B33-002248E27005",
+            "productCode": "DV",
+            "name": "Shipboard ALI-FLEX Braided Power Cable",
+            "legacyProductId": "wordpress:wp_posts:3093",
+            "mappingCount": 27,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
+        },
+        {
+            "productPublicId": "C0D6BF88-9CA2-F111-9B33-002248E27005",
+            "productCode": "PJ",
+            "name": "Offshore ALI-FLEX Braided Armoured Power Cable",
+            "legacyProductId": "wordpress:wp_posts:3138",
+            "mappingCount": 77,
+            "classification": "REAL_OR_MIGRATED",
+            "deletionPermission": "NONE \u2014 do not delete from classification"
         }
     ],
     "counts": {
-        "REAL_OR_MIGRATED": 100,
-        "DEVELOPMENT_SAMPLE": 11,
-        "DEBUG": 7,
+        "REAL_OR_MIGRATED": 134,
+        "DEVELOPMENT_SAMPLE": 9,
+        "DEBUG": 0,
         "MANUAL_REAL": 0,
         "UNKNOWN": 0,
         "DELETED": 0

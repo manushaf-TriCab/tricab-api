@@ -44,6 +44,29 @@ final class BatchD51CableSpecFinalResolutionTest extends TestCase
         self::assertSame(InvestigateCableSpecBatchD51FinalResolutionService::D51_BLOCKED_BASELINE_DRIFT, $r['packageStatus']);
     }
 
+    public function testAdditiveDefinitionsOutsideTheBatchDoNotCountAsDrift(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['azure']['definitionCount'] = ApplyCableSpecBatchD4TargetApplyService::EXPECTED_DEFINITIONS_POST + 17;
+
+        $baseline = $this->service()->resolve($inputs)['baselineIntegrity'];
+
+        self::assertSame('BASELINE_OK', $baseline['status']);
+        self::assertSame(17, $baseline['definitionsAddedOutsideBaseline']);
+        self::assertSame([], $baseline['missingRequiredDefinitionCodes']);
+    }
+
+    public function testMissingRequiredDefinitionStillCountsAsDrift(): void
+    {
+        $inputs = $this->inputs();
+        array_pop($inputs['azure']['definitions']);
+
+        $report = $this->service()->resolve($inputs);
+
+        self::assertSame(InvestigateCableSpecBatchD51FinalResolutionService::D51_BLOCKED_BASELINE_DRIFT, $report['packageStatus']);
+        self::assertCount(1, $report['baselineIntegrity']['missingRequiredDefinitionCodes']);
+    }
+
     public function testDirectVsCorrelationConfidenceRules(): void
     {
         $cc = $this->finding('cc');

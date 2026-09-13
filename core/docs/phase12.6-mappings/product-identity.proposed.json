@@ -367,9 +367,9 @@
             "styleCodeRaw": "UP",
             "styleCodeNormalized": "UP",
             "tcSourceMatch": true,
-            "matchMethod": "EXPLICIT_MAPPING",
-            "targetProductIdentity": "0EFDDED9-F691-F111-B337-000D3AE094E4",
-            "status": "READY",
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:UP",
+            "status": "REVIEW",
             "issues": []
         },
         {
@@ -487,9 +487,9 @@
             "styleCodeRaw": "UP",
             "styleCodeNormalized": "UP",
             "tcSourceMatch": true,
-            "matchMethod": "EXPLICIT_MAPPING",
-            "targetProductIdentity": "0EFDDED9-F691-F111-B337-000D3AE094E4",
-            "status": "READY",
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:UP",
+            "status": "REVIEW",
             "issues": []
         },
         {
@@ -619,9 +619,9 @@
             "styleCodeRaw": "UP",
             "styleCodeNormalized": "UP",
             "tcSourceMatch": true,
-            "matchMethod": "EXPLICIT_MAPPING",
-            "targetProductIdentity": "0EFDDED9-F691-F111-B337-000D3AE094E4",
-            "status": "READY",
+            "matchMethod": "EXACT_STYLE",
+            "targetProductIdentity": "NEW:UP",
+            "status": "REVIEW",
             "issues": []
         },
         {
@@ -5828,14 +5828,14 @@
         }
     ],
     "counts": {
-        "READY": 24,
-        "REVIEW": 205,
+        "READY": 21,
+        "REVIEW": 208,
         "BLOCKED": 0,
         "SOURCE_ONLY": 211,
         "INVALID": 8,
         "EXCLUDED": 0
     },
-    "existingLegacyMappingsObserved": 100,
+    "existingLegacyMappingsObserved": 134,
     "forbiddenHeuristics": [
         "LEFT(tpro.ida, 3) prefix matching",
         "name-only matching"

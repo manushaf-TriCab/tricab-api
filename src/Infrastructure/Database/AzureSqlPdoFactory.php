@@ -243,7 +243,7 @@ final class AzureSqlPdoFactory
             return DatabaseAuthFailed::because('Unable to authenticate with Azure SQL.');
         }
 
-        return DatabaseUnavailable::fromThrowable($exception);
+        return DatabaseUnavailable::fromConnectionThrowable($exception);
     }
 
     private function maxConnectAttempts(): int

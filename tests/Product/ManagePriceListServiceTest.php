@@ -6,6 +6,7 @@ namespace TriCab\Api\Tests\Product;
 
 use PHPUnit\Framework\TestCase;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryPriceListRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductAuditRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductStore;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
 use TriCab\Core\Product\Application\Command\UpsertPriceListCommand;
@@ -27,7 +28,7 @@ final class ManagePriceListServiceTest extends TestCase
         $this->service = new ManagePriceListService(
             new InMemoryPriceListRepository(),
             new PassthroughApplicationTransaction(),
-            new ProductAuditRecorder($store->audit()),
+            new ProductAuditRecorder(new InMemoryProductAuditRepository($store)),
         );
         $this->actor = new ActorContext(userId: 1, publicId: 'actor-1', emailAddress: 'admin@test.local');
     }

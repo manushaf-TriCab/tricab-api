@@ -83,7 +83,7 @@ final class LegacyMigrationEndpointsTest extends TestCase
         self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
         $data = TestAppFactory::json($response)['data'];
         self::assertFalse($data['liveConnectionAttempted']);
-        self::assertSame('unconfigured', $data['health']);
+        self::assertSame('blocked', $data['health']);
     }
 
     public function test_user_workspace_is_available_without_live_extraction(): void

@@ -1,7 +1,7 @@
 {
     "walu": {
         "meaning": "Approximate aluminium component weight (distinct from total wght)",
-        "meaningEvidenceClass": "DIRECT_EVIDENCE",
+        "meaningEvidenceClass": "STRONG_CORRELATION",
         "meaningConfidence": "HIGH",
         "resolution": "PROVEN_CREATE_DEFINITION",
         "unit": "LB_PER_1000FT",
@@ -20,7 +20,7 @@
     },
     "wbnz": {
         "meaning": "Approximate bronze component weight (distinct from total wght)",
-        "meaningEvidenceClass": "DIRECT_EVIDENCE",
+        "meaningEvidenceClass": "STRONG_CORRELATION",
         "meaningConfidence": "HIGH",
         "resolution": "PROVEN_CREATE_DEFINITION",
         "unit": "LB_PER_1000FT",

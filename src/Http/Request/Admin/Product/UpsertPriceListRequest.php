@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Http\Request\Admin\Product;
 
-use TriCab\Api\Http\Request\RequestFields;
+use TriCab\Api\Http\Request\Admin\RequestFields;
 
 final readonly class UpsertPriceListRequest
 {
