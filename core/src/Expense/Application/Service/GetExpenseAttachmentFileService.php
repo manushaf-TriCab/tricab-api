@@ -34,9 +34,7 @@ final class GetExpenseAttachmentFileService
 
         $isOwner = $receipt->ownerUserId()->equals($actor->userId);
         $isManager = $receipt->managerUserId() !== null && $receipt->managerUserId()->equals($actor->userId);
-        $isFinance = $this->access->hasFinanceCapability($actor, $profile);
-        $isAdmin = $profile->isExpenseAdmin();
-        if (!$isOwner && !$isManager && !$isFinance && !$isAdmin) {
+        if (!$isOwner && !$isManager && !$this->access->canMutateOthersReceipts($actor, $profile)) {
             throw ExpenseAccessDenied::viewForbidden();
         }
 

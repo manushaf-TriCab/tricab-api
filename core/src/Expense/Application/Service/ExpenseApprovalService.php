@@ -12,7 +12,6 @@ use TriCab\Core\Expense\Application\ExpenseRowVersion;
 use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Contract\ExpenseNotificationPort;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
-use TriCab\Core\Expense\Domain\Entity\ExpenseProfile;
 use TriCab\Core\Expense\Domain\Entity\ExpenseReceipt;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
 use TriCab\Core\Shared\Time\Clock;
@@ -33,7 +32,7 @@ final class ExpenseApprovalService
     {
         $profile = $this->access->requireActiveProfile($actor);
         $receipt = $this->requireReceipt($publicId);
-        $this->assertCanActAsManager($actor, $profile, $receipt);
+        $this->access->assertCanActAsManager($actor, $profile, $receipt);
 
         $receipt->approve($this->clock->now());
         $saved = $this->receipts->save($receipt, ExpenseRowVersion::require($expectedRowVersion));
@@ -47,7 +46,7 @@ final class ExpenseApprovalService
     {
         $profile = $this->access->requireActiveProfile($actor);
         $receipt = $this->requireReceipt($publicId);
-        $this->assertCanActAsManager($actor, $profile, $receipt);
+        $this->access->assertCanActAsManager($actor, $profile, $receipt);
 
         $receipt->reject($reason, $this->clock->now());
         $saved = $this->receipts->save($receipt, ExpenseRowVersion::require($expectedRowVersion));
@@ -81,22 +80,5 @@ final class ExpenseApprovalService
         }
 
         return $receipt;
-    }
-
-    private function assertCanActAsManager(ExpenseActor $actor, ExpenseProfile $profile, ExpenseReceipt $receipt): void
-    {
-        $isFinance = $this->access->hasFinanceCapability($actor, $profile);
-        $isOwner = $receipt->ownerUserId()->equals($actor->userId);
-        if ($isOwner && !$isFinance) {
-            throw ExpenseAccessDenied::selfApprovalForbidden();
-        }
-
-        $isAssignedManager = $receipt->managerUserId() !== null
-            && $receipt->managerUserId()->equals($actor->userId);
-        $isTeAdmin = $profile->isExpenseAdmin();
-
-        if (!$isAssignedManager && !$isFinance && !$isTeAdmin) {
-            throw ExpenseAccessDenied::approvalForbidden();
-        }
     }
 }

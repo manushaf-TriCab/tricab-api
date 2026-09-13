@@ -773,7 +773,9 @@ final class ContainerFactory
             },
             \TriCab\Core\Expense\Contract\ExpenseAttachmentStore::class => \DI\autowire(\TriCab\Api\Expense\Persistence\AzureBlobExpenseAttachmentStore::class),
             \TriCab\Api\Http\Auth\ExpenseErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class),
-            \TriCab\Core\Expense\Application\Service\ExpenseAccessService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class),
+            \TriCab\Core\Expense\Application\ExpensePermissionMode::class => static fn () => \TriCab\Core\Expense\Application\ExpensePermissionMode::fromString($settings->triexpensePermissionMode),
+            \TriCab\Core\Expense\Application\Service\ExpenseAccessService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class)
+                ->constructorParameter('permissionMode', \DI\get(\TriCab\Core\Expense\Application\ExpensePermissionMode::class)),
             \TriCab\Core\Expense\Application\Service\ExpenseReceiptAssembler::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseReceiptAssembler::class),
             \TriCab\Core\Expense\Application\Service\CreateExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CreateExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\UpdateExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\UpdateExpenseReceiptService::class),

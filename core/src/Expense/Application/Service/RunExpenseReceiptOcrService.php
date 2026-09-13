@@ -52,8 +52,7 @@ final class RunExpenseReceiptOcrService
 
         $isOwner = $receipt->ownerUserId()->equals($actor->userId);
         $isManager = $receipt->managerUserId() !== null && $receipt->managerUserId()->equals($actor->userId);
-        $isFinance = $this->access->hasFinanceCapability($actor, $profile);
-        if (!$isOwner && !$isManager && !$isFinance && !$profile->isExpenseAdmin()) {
+        if (!$isOwner && !$isManager && !$this->access->canMutateOthersReceipts($actor, $profile)) {
             throw ExpenseAccessDenied::viewForbidden();
         }
 

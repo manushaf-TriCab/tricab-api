@@ -242,7 +242,7 @@ final class ExpenseDomainServicesTest extends TestCase
         $profile = $this->profiles->findByUserId(UserId::fromInt(999));
         self::assertNotNull($profile);
         self::assertTrue($this->access->platformAdministratorIsNotExpenseAdmin($this->platformAdminNoTeAdmin, $profile));
-        self::assertFalse($this->access->isExpenseAdmin($profile));
+        self::assertFalse($this->access->isExpenseAdmin($this->platformAdminNoTeAdmin, $profile));
     }
 
     public function test_financeCapabilityNotGrantedFromAccessPermissionAlone(): void

@@ -46,7 +46,7 @@ final class InitiateExpenseAttachmentService
         int $expiresInSeconds = 900,
     ): array {
         $profile = $this->access->requireActiveProfile($actor);
-        $receipt = $this->requireMutable($actor, $profile->isExpenseAdmin() || $this->access->hasFinanceCapability($actor, $profile), $publicId);
+        $receipt = $this->requireMutable($actor, $this->access->canMutateOthersReceipts($actor, $profile), $publicId);
 
         if ($declaredBytes < 1 || $declaredBytes > Module::MAX_UPLOAD_BYTES) {
             throw ExpenseAttachmentUnavailable::invalidFile();

@@ -30,10 +30,9 @@ final class GetExpenseReceiptService
 
         $isOwner = $receipt->ownerUserId()->equals($actor->userId);
         $isManager = $receipt->managerUserId() !== null && $receipt->managerUserId()->equals($actor->userId);
-        $isFinance = $this->access->hasFinanceCapability($actor, $profile);
-        $isAdmin = $profile->isExpenseAdmin();
+        $canViewPrivileged = $this->access->canMutateOthersReceipts($actor, $profile);
 
-        if (!$isOwner && !$isManager && !$isFinance && !$isAdmin) {
+        if (!$isOwner && !$isManager && !$canViewPrivileged) {
             throw ExpenseAccessDenied::viewForbidden();
         }
 

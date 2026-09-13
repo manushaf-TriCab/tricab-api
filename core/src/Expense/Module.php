@@ -7,20 +7,53 @@ namespace TriCab\Core\Expense;
 /**
  * Marker for the Tri Expense bounded context (receipt-centric).
  *
- * Finance authorization decision (Phase 5):
- *   ExpenseProfile.IsFinance is authoritative at request time.
- *   The Graph Tricab-Finance group is diagnostic/sync only — not a live hard
- *   dependency per request.
- * Request-time authorization therefore resolves finance capability from the
- * profile alone, so a Graph outage or throttle cannot lock Finance out of the
- * module. See {@see \TriCab\Core\Expense\Application\Service\ExpenseAccessService}.
+ * Authorization cutover ({@see \TriCab\Core\Expense\Application\ExpensePermissionMode}):
+ *   legacy / hybrid → ExpenseProfile.IsFinance / IsExpenseAdmin still consulted
+ *   permissions     → TRIEXPENSE.FINANCE / ADMIN / APPROVE / AUDIT are authoritative
+ *
+ * Graph Tricab-Finance remains diagnostic/sync only on the request path.
+ * See {@see \TriCab\Core\Expense\Application\Service\ExpenseAccessService}.
  */
 final class Module
 {
     public const NAME = 'Expense';
 
-    /** Existing launcher permission — module entry only; profile still required. */
+    /** Module entry — own receipts create/view/edit/submit/delete (status rules apply). */
     public const PERMISSION_ACCESS = 'TRIEXPENSE.ACCESS';
+
+    /** Manager approval features; receipt action still requires assignment (or Finance). */
+    public const PERMISSION_APPROVE = 'TRIEXPENSE.APPROVE';
+
+    /** Finance operations and Finance approval override. */
+    public const PERMISSION_FINANCE = 'TRIEXPENSE.FINANCE';
+
+    /** TriExpense access-configuration admin via User Management — not Finance. */
+    public const PERMISSION_ADMIN = 'TRIEXPENSE.ADMIN';
+
+    /** TriExpense audit read access. Prefer role composition with Finance. */
+    public const PERMISSION_AUDIT = 'TRIEXPENSE.AUDIT';
+
+    /** @var list<string> */
+    public const PERMISSIONS = [
+        self::PERMISSION_ACCESS,
+        self::PERMISSION_APPROVE,
+        self::PERMISSION_FINANCE,
+        self::PERMISSION_ADMIN,
+        self::PERMISSION_AUDIT,
+    ];
+
+    public const ROLE_USER = 'TRIEXPENSE_USER';
+    public const ROLE_APPROVER = 'TRIEXPENSE_APPROVER';
+    public const ROLE_FINANCE = 'TRIEXPENSE_FINANCE';
+    public const ROLE_ADMINISTRATOR = 'TRIEXPENSE_ADMINISTRATOR';
+
+    /** @var list<string> */
+    public const ROLES = [
+        self::ROLE_USER,
+        self::ROLE_APPROVER,
+        self::ROLE_FINANCE,
+        self::ROLE_ADMINISTRATOR,
+    ];
 
     public const RECYCLE_DAYS = 30;
     public const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;

@@ -90,6 +90,10 @@ final class DevelopmentUserManagementCatalog
             'CUSTOMER_NOTE.DELETE' => ['name' => 'Delete Customer Notes', 'module' => 'CUSTOMER_NOTE'],
             'ALIFLEX_ACCREDITATION.ACCESS' => ['name' => 'Access ALI-FLEX Accreditation', 'module' => 'ALIFLEX'],
             'TRIEXPENSE.ACCESS' => ['name' => 'Access Tri Expense', 'module' => 'TRIEXPENSE'],
+            'TRIEXPENSE.APPROVE' => ['name' => 'Access TriExpense Approvals', 'module' => 'TRIEXPENSE'],
+            'TRIEXPENSE.FINANCE' => ['name' => 'TriExpense Finance', 'module' => 'TRIEXPENSE'],
+            'TRIEXPENSE.ADMIN' => ['name' => 'Administer TriExpense Access', 'module' => 'TRIEXPENSE'],
+            'TRIEXPENSE.AUDIT' => ['name' => 'View TriExpense Audit', 'module' => 'TRIEXPENSE'],
             'CRM.ACCESS' => ['name' => 'Access CRM', 'module' => 'CRM'],
             'ERP.ACCESS' => ['name' => 'Access ERP', 'module' => 'ERP'],
         ];

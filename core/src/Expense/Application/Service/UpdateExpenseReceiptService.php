@@ -47,7 +47,7 @@ final class UpdateExpenseReceiptService
         if ($receipt === null || $receipt->isDeleted()) {
             throw ExpenseReceiptNotFound::forPublicId($publicId);
         }
-        if (!$receipt->ownerUserId()->equals($actor->userId) && !$profile->isExpenseAdmin()) {
+        if (!$receipt->ownerUserId()->equals($actor->userId) && !$this->access->canMutateOthersReceipts($actor, $profile)) {
             throw ExpenseAccessDenied::viewForbidden();
         }
 

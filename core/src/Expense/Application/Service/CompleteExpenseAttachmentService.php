@@ -41,7 +41,7 @@ final class CompleteExpenseAttachmentService
         if ($receipt === null || $receipt->isDeleted()) {
             throw ExpenseReceiptNotFound::forPublicId($publicId);
         }
-        $privileged = $profile->isExpenseAdmin() || $this->access->hasFinanceCapability($actor, $profile);
+        $privileged = $this->access->canMutateOthersReceipts($actor, $profile);
         if (!$receipt->ownerUserId()->equals($actor->userId) && !$privileged) {
             throw ExpenseAccessDenied::viewForbidden();
         }

@@ -20,7 +20,7 @@ final class ListExpenseAuditService
      */
     public function execute(ExpenseActor $actor, ?int $limit = null): array
     {
-        $this->access->requireFinance($actor);
+        $this->access->requireAudit($actor);
 
         return $this->audit->listRecent($limit ?? 200);
     }

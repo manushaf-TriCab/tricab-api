@@ -28,6 +28,10 @@ final class AdminBusinessModulePermissionsCatalogTest extends TestCase
             'CUSTOMER_NOTE.DELETE',
             'ALIFLEX_ACCREDITATION.ACCESS',
             'TRIEXPENSE.ACCESS',
+            'TRIEXPENSE.APPROVE',
+            'TRIEXPENSE.FINANCE',
+            'TRIEXPENSE.ADMIN',
+            'TRIEXPENSE.AUDIT',
             'CRM.ACCESS',
             'ERP.ACCESS',
             'REGION.READ',
@@ -68,6 +72,13 @@ final class AdminBusinessModulePermissionsCatalogTest extends TestCase
 
         foreach ($this->expectedBusinessPermissionCodes() as $code) {
             self::assertContains($code, $assigned, sprintf('ADMINISTRATOR missing %s', $code));
+        }
+
+        foreach (['TRIEXPENSE_USER', 'TRIEXPENSE_APPROVER', 'TRIEXPENSE_FINANCE', 'TRIEXPENSE_ADMINISTRATOR'] as $roleCode) {
+            self::assertNotNull(
+                $store->findRoleByCode(RoleCode::fromString($roleCode)),
+                sprintf('missing TriExpense role %s', $roleCode),
+            );
         }
     }
 }
