@@ -1,0 +1,94 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: tricab-ai-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  test-build-deploy:
+    name: Test, build, and deploy tricab.ai
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://tricab.ai
+
+    steps:
+      - name: Check out API
+        uses: actions/checkout@v4
+        with:
+          path: tricab-api
+
+      - name: Check out website
+        uses: actions/checkout@v4
+        with:
+          repository: tricab/tricab-website-v2
+          ref: main
+          token: ${{ secrets.TRICAB_WEB_READ_TOKEN }}
+          path: tricab-web
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlsrv, sqlsrv
+          coverage: none
+          tools: composer:v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tricab-web/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: tricab-api/core/python/requirements-dev.txt
+
+      - name: Install API dependencies
+        working-directory: tricab-api
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Install Python test dependencies
+        working-directory: tricab-api
+        run: python -m pip install --requirement core/python/requirements-dev.txt
+
+      - name: Run the main quality gate
+        working-directory: tricab-api
+        run: composer check
+
+      - name: Build the combined App Service package
+        working-directory: tricab-api
+        run: scripts/build-app-service-release.sh --web-origin https://tricab.ai
+
+      - name: Deploy to the production App Service slot
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: tc-web
+          slot-name: core
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: tricab-api/artifacts/app-service/tricab-app-service.zip
+
+      - name: Verify production health
+        shell: bash
+        run: |
+          for attempt in {1..12}; do
+            if curl --fail --silent --show-error --max-time 20 https://tricab.ai/health; then
+              exit 0
+            fi
+            echo "Health check attempt ${attempt} failed; retrying in 10 seconds."
+            sleep 10
+          done
+          exit 1
