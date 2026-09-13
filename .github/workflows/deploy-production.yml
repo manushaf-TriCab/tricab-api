@@ -74,7 +74,27 @@ jobs:
 
       - name: Build the combined App Service package
         working-directory: tricab-api
-        run: scripts/build-app-service-release.sh --web-origin https://tricab.ai
+        env:
+          VITE_ENTRA_CLIENT_ID: ${{ vars.VITE_ENTRA_CLIENT_ID }}
+          VITE_ENTRA_TENANT_ID: ${{ vars.VITE_ENTRA_TENANT_ID }}
+          VITE_ENTRA_API_SCOPE: ${{ vars.VITE_ENTRA_API_SCOPE }}
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+          VITE_APPLE_CLIENT_ID: ${{ vars.VITE_APPLE_CLIENT_ID }}
+          VITE_APPLE_REDIRECT_URI: ${{ vars.VITE_APPLE_REDIRECT_URI }}
+        shell: bash
+        run: |
+          required_variables=(
+            VITE_ENTRA_CLIENT_ID
+            VITE_ENTRA_TENANT_ID
+            VITE_ENTRA_API_SCOPE
+          )
+          for variable_name in "${required_variables[@]}"; do
+            if [ -z "${!variable_name:-}" ]; then
+              echo "Required production build variable is missing: ${variable_name}" >&2
+              exit 1
+            fi
+          done
+          scripts/build-app-service-release.sh --web-origin https://tricab.ai
 
       - name: Deploy to the production App Service slot
         uses: azure/webapps-deploy@v3
