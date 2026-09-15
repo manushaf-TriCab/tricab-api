@@ -16,6 +16,7 @@ use TriCab\Core\Expense\Contract\ExpenseNotificationPort;
 use TriCab\Core\Expense\Contract\ExpenseProfileRepository;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
 use TriCab\Core\Expense\Module;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Shared\Time\Clock;
@@ -40,6 +41,7 @@ final class SubmitExpenseReceiptService
         string $expectedRowVersion,
         string $submitMode = Module::SUBMIT_DRAFT_THEN_SUBMIT,
     ): ExpenseReceiptDetails {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         $profile = $this->access->requireActiveProfile($actor);
         $receipt = $this->receipts->findByPublicId(ExpenseReceiptPublicId::fromString($publicId));
         if ($receipt === null || $receipt->isDeleted()) {

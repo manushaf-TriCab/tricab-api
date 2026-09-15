@@ -12,6 +12,7 @@ use TriCab\Core\Expense\Application\ExpenseRowVersion;
 use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
 use TriCab\Core\Shared\Time\Clock;
 
 final class SoftDeleteExpenseReceiptService
@@ -27,6 +28,7 @@ final class SoftDeleteExpenseReceiptService
 
     public function execute(ExpenseActor $actor, string $publicId, string $expectedRowVersion): ExpenseReceiptDetails
     {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         $profile = $this->access->requireActiveProfile($actor);
         $receipt = $this->receipts->findByPublicId(ExpenseReceiptPublicId::fromString($publicId));
         if ($receipt === null || $receipt->isDeleted()) {

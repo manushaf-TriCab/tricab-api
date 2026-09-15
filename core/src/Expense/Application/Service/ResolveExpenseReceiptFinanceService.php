@@ -13,6 +13,7 @@ use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\Exception\InvalidExpenseValue;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseFinanceResolution;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
 use TriCab\Core\Expense\Module;
 use TriCab\Core\Shared\Time\Clock;
 
@@ -34,6 +35,7 @@ final class ResolveExpenseReceiptFinanceService
         ?string $note,
         string $expectedRowVersion,
     ): array {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         $this->access->requireFinance($actor);
 
         $normalized = strtolower(trim($resolution));

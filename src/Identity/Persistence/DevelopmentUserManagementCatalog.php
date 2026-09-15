@@ -94,6 +94,7 @@ final class DevelopmentUserManagementCatalog
             'TRIEXPENSE.FINANCE' => ['name' => 'TriExpense Finance', 'module' => 'TRIEXPENSE'],
             'TRIEXPENSE.ADMIN' => ['name' => 'Administer TriExpense Access', 'module' => 'TRIEXPENSE'],
             'TRIEXPENSE.AUDIT' => ['name' => 'View TriExpense Audit', 'module' => 'TRIEXPENSE'],
+            'TEL_DIRECTORY.ACCESS' => ['name' => 'Access Tel Directory', 'module' => 'TEL_DIRECTORY'],
             'CRM.ACCESS' => ['name' => 'Access CRM', 'module' => 'CRM'],
             'ERP.ACCESS' => ['name' => 'Access ERP', 'module' => 'ERP'],
         ];

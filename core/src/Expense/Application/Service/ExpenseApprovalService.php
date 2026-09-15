@@ -14,6 +14,7 @@ use TriCab\Core\Expense\Contract\ExpenseNotificationPort;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\Entity\ExpenseReceipt;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
 use TriCab\Core\Shared\Time\Clock;
 
 final class ExpenseApprovalService
@@ -30,6 +31,7 @@ final class ExpenseApprovalService
 
     public function approve(ExpenseActor $actor, string $publicId, string $expectedRowVersion): ExpenseReceiptDetails
     {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         $profile = $this->access->requireActiveProfile($actor);
         $receipt = $this->requireReceipt($publicId);
         $this->access->assertCanActAsManager($actor, $profile, $receipt);
@@ -44,6 +46,7 @@ final class ExpenseApprovalService
 
     public function reject(ExpenseActor $actor, string $publicId, string $reason, string $expectedRowVersion): ExpenseReceiptDetails
     {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         $profile = $this->access->requireActiveProfile($actor);
         $receipt = $this->requireReceipt($publicId);
         $this->access->assertCanActAsManager($actor, $profile, $receipt);
@@ -58,6 +61,7 @@ final class ExpenseApprovalService
 
     public function sendBack(ExpenseActor $actor, string $publicId, string $expectedRowVersion, string $note = ''): ExpenseReceiptDetails
     {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         $profile = $this->access->requireActiveProfile($actor);
         if (!$this->access->hasFinanceCapability($actor, $profile)) {
             throw ExpenseAccessDenied::sendBackForbidden();

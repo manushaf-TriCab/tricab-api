@@ -772,6 +772,24 @@ final class ContainerFactory
                 return new \TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags(
                     ocr: $settings->isTriexpenseOcrConfigured(),
                     emailNotifications: $settings->isTriexpenseEmailSendingEnabled(),
+                    legacyRead: $settings->triexpenseLegacyReadEnabled,
+                );
+            },
+            \TriCab\Core\Expense\Application\Service\LegacyExpenseIdentityResolver::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\LegacyExpenseIdentityResolver::class),
+            \TriCab\Core\Expense\Application\Service\LegacyExpenseReceiptAssembler::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\LegacyExpenseReceiptAssembler::class),
+            \TriCab\Core\Expense\Contract\LegacyExpenseReadRepository::class => static function (Container $container) use ($settings): \TriCab\Core\Expense\Contract\LegacyExpenseReadRepository {
+                if (!$settings->triexpenseLegacyReadEnabled) {
+                    return new \TriCab\Api\Expense\Legacy\NullLegacyExpenseReadRepository();
+                }
+                try {
+                    $connection = self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class);
+                } catch (\Throwable) {
+                    return new \TriCab\Api\Expense\Legacy\NullLegacyExpenseReadRepository();
+                }
+
+                return new \TriCab\Api\Expense\Legacy\MysqlLegacyExpenseReadRepository(
+                    $connection,
+                    new \TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard(),
                 );
             },
             \TriCab\Core\Expense\Contract\ExpenseAttachmentStore::class => \DI\autowire(\TriCab\Api\Expense\Persistence\AzureBlobExpenseAttachmentStore::class),
@@ -784,8 +802,10 @@ final class ContainerFactory
             \TriCab\Core\Expense\Application\Service\UpdateExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\UpdateExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\SubmitExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\SubmitExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\ExpenseApprovalService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseApprovalService::class),
-            \TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class),
-            \TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class),
+            \TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
+            \TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
             \TriCab\Core\Expense\Application\Service\ListExpenseApprovalsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseApprovalsService::class),
             \TriCab\Core\Expense\Application\Service\SoftDeleteExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\SoftDeleteExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\RestoreExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RestoreExpenseReceiptService::class),
@@ -797,7 +817,8 @@ final class ContainerFactory
             \TriCab\Core\Expense\Application\Service\MonthlyManagerDigestService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\MonthlyManagerDigestService::class),
             \TriCab\Core\Expense\Application\Service\InitiateExpenseAttachmentService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\InitiateExpenseAttachmentService::class),
             \TriCab\Core\Expense\Application\Service\CompleteExpenseAttachmentService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CompleteExpenseAttachmentService::class),
-            \TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
             \TriCab\Core\Expense\Application\Service\SearchExpenseCustomersService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\SearchExpenseCustomersService::class),
             \TriCab\Core\Expense\Application\Service\GetExpenseCustomerContactsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseCustomerContactsService::class),
             \TriCab\Core\Expense\Application\Service\ImportExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ImportExpenseBankFeedService::class),
@@ -1511,6 +1532,20 @@ final class ContainerFactory
                     $settings->graphClientSecret,
                 );
             },
+            \TriCab\Core\TelDirectory\Contract\TelDirectoryGraphReader::class => static function (Container $container) use ($settings): \TriCab\Core\TelDirectory\Contract\TelDirectoryGraphReader {
+                return new \TriCab\Api\TelDirectory\Infrastructure\MicrosoftGraphTelDirectoryReader(
+                    self::get($container, JsonHttpClient::class),
+                    $settings->graphTenantId,
+                    $settings->graphClientId,
+                    $settings->graphClientSecret,
+                );
+            },
+            \TriCab\Core\TelDirectory\Application\Service\ListTelDirectoryService::class => \DI\autowire(
+                \TriCab\Core\TelDirectory\Application\Service\ListTelDirectoryService::class,
+            ),
+            \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class => \DI\autowire(
+                \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class,
+            ),
             StaffEntraLinkWriteUnit::class => static function (Container $container) use ($settings): StaffEntraLinkWriteUnit {
                 if (!$settings->usesAzureSqlUserRepository()) {
                     throw new InvalidArgumentException('Staff Entra link write unit requires USER_REPOSITORY=azure-sql.');

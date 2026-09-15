@@ -55,6 +55,7 @@ final class ExpenseReceiptAssembler
             updatedAt: $receipt->updatedAt()->format(DATE_ATOM),
             deletedAt: $receipt->deletedAt()?->format(DATE_ATOM),
             rowVersion: $receipt->rowVersion()?->toBase64(),
+            source: ExpenseReceiptDetails::SOURCE_NEW,
         );
     }
 }

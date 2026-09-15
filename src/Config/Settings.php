@@ -171,6 +171,7 @@ final readonly class Settings
         public int $triexpenseOcrConnectTimeoutSeconds = 5,
         public int $triexpenseOcrRequestTimeoutSeconds = 30,
         public string $triexpensePermissionMode = 'hybrid',
+        public bool $triexpenseLegacyReadEnabled = false,
     ) {
     }
 
@@ -816,6 +817,7 @@ final readonly class Settings
         $triexpenseOpenAiDeployment = trim(self::string($env, 'TRIEXPENSE_OPENAI_DEPLOYMENT', 'gpt-4o-mini'));
         $triexpensePermissionMode = strtolower(trim(self::string($env, 'TRIEXPENSE_PERMISSION_MODE', 'hybrid')));
         \TriCab\Core\Expense\Application\ExpensePermissionMode::fromString($triexpensePermissionMode);
+        $triexpenseLegacyReadEnabled = self::bool($env, 'TRIEXPENSE_LEGACY_READ_ENABLED', false);
         foreach ([
             'TRIEXPENSE_DOC_INTEL_ENDPOINT' => $triexpenseDocIntelEndpoint,
             'TRIEXPENSE_OPENAI_ENDPOINT' => $triexpenseOpenAiEndpoint,
@@ -946,6 +948,7 @@ final readonly class Settings
             triexpenseOcrConnectTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_OCR_CONNECT_TIMEOUT_SECONDS', 5, 1, 30),
             triexpenseOcrRequestTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_OCR_REQUEST_TIMEOUT_SECONDS', 30, 1, 120),
             triexpensePermissionMode: $triexpensePermissionMode,
+            triexpenseLegacyReadEnabled: $triexpenseLegacyReadEnabled,
         );
     }
 

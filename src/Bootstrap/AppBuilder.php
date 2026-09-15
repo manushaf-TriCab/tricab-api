@@ -343,6 +343,7 @@ final class AppBuilder
         self::registerPublicProductRoutes($app);
         self::registerTriExpenseRoutes($app, $container);
         self::registerLogNoteRoutes($app, $container);
+        self::registerTelDirectoryRoutes($app, $container);
         $app->get('/api/v1/regions', PublicRegionAction::class);
         $app->get('/api/v1/regions/current', PublicRegionAction::class);
         $app->post('/api/v1/regions/select', PublicRegionAction::class);
@@ -490,6 +491,18 @@ final class AppBuilder
             ->add(($require)('CUSTOMER_NOTE.READ'));
         $app->get('/api/v1/customers/{customerPublicId}/log-notes', \TriCab\Api\Http\Action\LogNote\ListCustomerLogNotesAction::class)
             ->add(($require)('CUSTOMER_NOTE.READ'));
+    }
+
+    /**
+     * Staff telephone directory — Microsoft Graph / Entra ID (never stored in Azure SQL).
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerTelDirectoryRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $app->get('/api/v1/tel-directory', \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class)
+            ->add(($require)(\TriCab\Core\TelDirectory\Module::PERMISSION_ACCESS));
     }
 
     private static function registerAdminLegacyMigrationRoutes(App $app, RequirePermission $require): void

@@ -19,6 +19,7 @@ final class ExpenseFeatureFlags
         public readonly bool $emailNotifications = false,
         public readonly bool $bankReconciliation = true,
         public readonly bool $periodClose = true,
+        public readonly bool $legacyRead = false,
     ) {
     }
 
@@ -35,6 +36,7 @@ final class ExpenseFeatureFlags
             'emailNotifications' => $this->emailNotifications,
             'bankReconciliation' => $this->bankReconciliation,
             'periodClose' => $this->periodClose,
+            'legacyRead' => $this->legacyRead,
         ];
     }
 }

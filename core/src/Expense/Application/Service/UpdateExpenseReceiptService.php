@@ -15,6 +15,7 @@ use TriCab\Core\Expense\Domain\ValueObject\ExpenseCategory;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseCurrency;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseMoney;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
 use TriCab\Core\Expense\Application\ExpenseRowVersion;
 use TriCab\Core\Expense\Domain\Service\ExpenseGstCalculator;
 use TriCab\Core\Expense\Module;
@@ -36,6 +37,7 @@ final class UpdateExpenseReceiptService
      */
     public function execute(ExpenseActor $actor, string $publicId, array $payload): ExpenseReceiptDetails
     {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         foreach (['ownerUserId', 'createdBy', 'submittedBy', 'ownerEmail', 'userId'] as $forbidden) {
             if (array_key_exists($forbidden, $payload)) {
                 throw ExpenseAccessDenied::ownershipForbidden();

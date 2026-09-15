@@ -12,6 +12,7 @@ use TriCab\Core\Expense\Contract\ExpenseAttachmentStore;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\Entity\ExpenseReceipt;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
 use TriCab\Core\Expense\Module;
 
 final class InitiateExpenseAttachmentService
@@ -45,6 +46,7 @@ final class InitiateExpenseAttachmentService
         int $declaredBytes,
         int $expiresInSeconds = 900,
     ): array {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         $profile = $this->access->requireActiveProfile($actor);
         $receipt = $this->requireMutable($actor, $this->access->canMutateOthersReceipts($actor, $profile), $publicId);
 

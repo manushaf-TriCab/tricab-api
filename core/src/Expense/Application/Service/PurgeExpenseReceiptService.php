@@ -15,6 +15,7 @@ use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\Entity\ExpenseReceipt;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
 use TriCab\Core\Expense\Module;
 use TriCab\Core\Shared\Time\Clock;
 
@@ -31,6 +32,7 @@ final class PurgeExpenseReceiptService
 
     public function execute(ExpenseActor $actor, string $publicId, string $expectedRowVersion): void
     {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         $profile = $this->access->requireActiveProfile($actor);
         if (!$this->access->hasFinanceCapability($actor, $profile)) {
             throw ExpenseAccessDenied::purgeForbidden();

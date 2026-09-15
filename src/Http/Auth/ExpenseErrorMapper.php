@@ -14,6 +14,7 @@ use TriCab\Core\Customer\Application\Exception\CustomerNotFound;
 use TriCab\Core\Expense\Application\Exception\ExpenseAccessDenied;
 use TriCab\Core\Expense\Application\Exception\ExpenseAttachmentUnavailable;
 use TriCab\Core\Expense\Application\Exception\ExpenseBankFeedNotFound;
+use TriCab\Core\Expense\Application\Exception\ExpenseLegacyReadOnly;
 use TriCab\Core\Expense\Application\Exception\ExpenseManagerRequired;
 use TriCab\Core\Expense\Application\Exception\ExpenseOcrFailed;
 use TriCab\Core\Expense\Application\Exception\ExpenseOcrUnavailable;
@@ -43,6 +44,10 @@ final class ExpenseErrorMapper
             }
 
             return $this->responder->error($code, $message, 403);
+        }
+
+        if ($exception instanceof ExpenseLegacyReadOnly) {
+            return $this->responder->error('TRIEXPENSE_LEGACY_READ_ONLY', $exception->getMessage(), 422);
         }
 
         if ($exception instanceof ExpenseReceiptNotFound) {

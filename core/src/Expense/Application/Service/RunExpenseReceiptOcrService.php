@@ -20,6 +20,7 @@ use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\Service\ExpenseOcrGstClassifier;
 use TriCab\Core\Expense\Domain\Service\ExpenseOcrInputValidator;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
 
 /**
  * Runs assistive extraction over a receipt's own attachment and returns
@@ -43,6 +44,7 @@ final class RunExpenseReceiptOcrService
      */
     public function execute(ExpenseActor $actor, string $publicId): array
     {
+        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
         $profile = $this->access->requireActiveProfile($actor);
 
         $receipt = $this->receipts->findByPublicId(ExpenseReceiptPublicId::fromString($publicId));
