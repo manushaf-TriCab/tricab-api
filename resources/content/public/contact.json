@@ -1,0 +1,117 @@
+[
+  {
+    "id": "head-office",
+    "title": "Corporate Head Office",
+    "offices": [
+      {
+        "location": "Melbourne, Australia",
+        "phone": "+61 3 9081 7300",
+        "email": "melbourne@tricab.com",
+        "address": "33 Prohasky Street, Port Melbourne 3207"
+      }
+    ]
+  },
+  {
+    "id": "manufacturing",
+    "title": "Manufacturing Facilities",
+    "offices": [
+      {
+        "location": "Melbourne, Australia",
+        "email": "melbourne@tricab.com"
+      },
+      {
+        "location": "Worcester, MA USA",
+        "email": "worcester@tricab.com"
+      }
+    ]
+  },
+  {
+    "id": "trading",
+    "title": "TriCab Trading",
+    "offices": [
+      {
+        "location": "Melbourne, Australia",
+        "email": "trading@tricabtrading.com",
+        "address": "57 Freight Drive, Somerton 3062"
+      }
+    ]
+  },
+  {
+    "id": "asia",
+    "title": "TriCab Asia",
+    "offices": [
+      {
+        "location": "Singapore, Singapore",
+        "phone": "+65 9030 6921",
+        "email": "singapore@tricab.com",
+        "address": "29 Tuas Avenue 11, #02-02, Singapore 639089"
+      }
+    ]
+  },
+  {
+    "id": "sales",
+    "title": "Sales / Distribution",
+    "subsections": [
+      {
+        "title": "Australia",
+        "offices": [
+          {
+            "location": "Adelaide",
+            "phone": "+61 8 8423 9951",
+            "email": "adelaide@tricab.com"
+          },
+          {
+            "location": "Brisbane",
+            "phone": "+61 7 3193 6084",
+            "email": "brisbane@tricab.com"
+          },
+          {
+            "location": "Hobart",
+            "phone": "+61 3 6124 2120",
+            "email": "hobart@tricab.com"
+          },
+          {
+            "location": "Melbourne",
+            "phone": "+61 3 9081 5202",
+            "email": "melbourne@tricab.com"
+          },
+          {
+            "location": "Perth",
+            "phone": "+61 8 6146 0191",
+            "email": "perth@tricab.com"
+          },
+          {
+            "location": "Sydney",
+            "phone": "+61 2 8662 0098",
+            "email": "sydney@tricab.com"
+          }
+        ]
+      },
+      {
+        "title": "New Zealand",
+        "offices": [
+          {
+            "location": "Auckland",
+            "phone": "+64 9 887 1051",
+            "email": "sales@tricab.co.nz"
+          },
+          {
+            "location": "Christchurch",
+            "phone": "+64 3 381 0447",
+            "email": "sales@tricab.co.nz"
+          }
+        ]
+      },
+      {
+        "title": "North America",
+        "offices": [
+          {
+            "location": "Worcester, MA",
+            "phone": "+1 832 301 1899",
+            "email": "Sal.US@tricab.com"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,225 @@
+{
+  "hero": {
+    "eyebrow": "ABOUT TRICAB",
+    "title": "Powering progress with flexible cable solutions",
+    "paragraphs": [
+      "At TriCab, flexible wire and cable systems are at the core of everything we do.",
+      "Proudly Australian-owned and founded in 1978, we've grown from humble beginnings into a global enterprise, with vertically integrated manufacturing facilities and TriCab-owned distribution centres across Australia, New Zealand, Asia, and the United States. Our headquarters are in Port Melbourne, Australia."
+    ],
+    "imageKey": "melbourneFacility"
+  },
+  "facility": {
+    "blocks": [
+      {
+        "title": "Integrated for Flexibility and Precision",
+        "paragraphs": [
+          "Our vertical integration gives us full control over the manufacturing process — from producing our own copper conductors and compounds to final cable assembly. This level of control enables us to deliver precise, high-quality solutions tailored to meet unique customer requirements.",
+          "We specialise in flexible copper and aluminium cables, ranging from simple constructions to complex multicore designs. Our structure allows us greater agility and consistency than many comparable manufacturers, ensuring that both our products and services meet the highest standards."
+        ]
+      },
+      {
+        "title": "Innovation and Expertise",
+        "paragraphs": [
+          "With a dedicated Research & Development team, a highly skilled technical workforce, and a streamlined manufacturing model, TriCab delivers customised solutions with speed and reliability. Regular collaboration between our Sales, Manufacturing, and Technical teams ensures a deep understanding of customer needs at every level of the business."
+        ],
+        "highlightTitle": "Local Support, Global Reach",
+        "highlightParagraphs": [
+          "Our commitment to regional warehouses and local sales teams allows us to provide responsive, customer-focused service in every market we operate. This proximity supports rapid delivery, personal engagement, and seamless service across our global network."
+        ]
+      }
+    ]
+  },
+  "manufacturing": {
+    "eyebrow": "MANUFACTURING",
+    "title": "From conductor production to final cable assembly",
+    "caption": "From conductor production to final cable assembly",
+    "imageKey": "factoryGallery"
+  },
+  "systems": {
+    "eyebrow": "SYSTEMS",
+    "title": "Complete Cable Systems Accessories Included",
+    "paragraphs": [
+      "All accessories undergo rigorous in-house testing as part of a complete, integrated cable system. We routinely subject terminated cables to the harshest heat cycling and short circuit testing, witnessed and approved by global certification bodies such as Det Norske Veritas (DNV).",
+      "Our Engineering team regularly designs bespoke terminations, which we manufacture through trusted production partners. We also produce custom cable assemblies and harnesses."
+    ],
+    "imageKey": "productCollage"
+  },
+  "testing": {
+    "eyebrow": "QUALITY",
+    "title": "World-Class Testing and Certification",
+    "paragraphs": [
+      "Our on-site, state-of-the-art testing facilities allow us to test against international standards, including fire, low temperature, hydrostatic, flexing, vibration, heat cycle, and medium voltage testing.",
+      "TriCab marine cables are approved by four leading classification societies — Lloyd's Register, Bureau Veritas, DNV, and ABS. Our building and industrial cables are type-tested by TÜV Rheinland.",
+      "Cables with our proprietary E-RUBBER jacket meet the Green Building Council of Australia PVC Best Practice Guidelines. In the United States, TriCab USA offers UL-certified cables, including ABS and UL-approved Type P cables.",
+      "TriCab operates under a certified ISO 9001:2015 Quality Management System."
+    ],
+    "imageKey": "certifications"
+  },
+  "innovation": {
+    "eyebrow": "INNOVATION",
+    "title": "Innovation at the core",
+    "paragraphs": [
+      "Innovation drives everything we do at TriCab. It's a core company value, championed across all departments and embraced by our entire team. We actively encourage new ideas, fostering collaboration between Sales, Technical, and Manufacturing to continuously enhance our systems, product development, and customer offerings.",
+      "From launching new product ranges to creating custom solutions, innovation is embedded in our DNA. TriCab was the first to successfully develop and supply the Ali-Flex System — a high-performance range of flexible aluminium cables offering a lightweight alternative to traditional copper.",
+      "Our in-house IT team created an innovative app that allows customers to quickly access technical information, generate quotes, and perform complex cable sizing calculations."
+    ],
+    "calloutTitle": "Problem-solving",
+    "calloutParagraphs": [
+      "We don't just deliver products — we solve problems. When a prawn farm in Australia faced barnacle build-up on aerator cables, our Sales and Technical teams designed a custom nylon-sheathed cable resistant to marine growth, reducing maintenance and replacement costs."
+    ]
+  },
+  "whyTriCab": {
+    "eyebrow": "DIFFERENCE",
+    "title": "Why TriCab?",
+    "points": [
+      "Australian and American made cables, built to the highest standards",
+      "Advanced in-house testing facilities and rigorous quality control",
+      "High flexibility, premium performance, and consistent reliability",
+      "Short lead times, strong stock levels, and low minimum order quantities",
+      "Full-system solutions, including compatible accessories that save time and cost",
+      "Custom cable design, tailored to meet specific needs",
+      "Dedicated local teams, fast turnaround, and exceptional customer service"
+    ],
+    "imageKey": "wire"
+  },
+  "history": {
+    "eras": [
+      {
+        "id": "1978",
+        "period": "1978",
+        "accent": "orange",
+        "items": [
+          "Mr. Allan Greenfield founded Triangle Cables in a garage in Melbourne, Australia, starting with imported welding cables.",
+          "First-generation printlines were introduced for in-house custom text printing on cables."
+        ]
+      },
+      {
+        "id": "1980s",
+        "period": "1980s",
+        "accent": "olive",
+        "items": [
+          "Commenced toll manufacturing of flexible cables using locally developed compounds.",
+          "Expanded the range of flexible cables."
+        ]
+      },
+      {
+        "id": "1990s",
+        "period": "1990s",
+        "accent": "teal",
+        "items": [
+          "Started local manufacturing of flexible cables in a former wool store.",
+          "First overseas cable supply began.",
+          "Triangle Cables New Zealand was established."
+        ]
+      },
+      {
+        "id": "2000s",
+        "period": "2000s",
+        "accent": "gold",
+        "items": [
+          "Australian manufacturing relocated to the current Port Melbourne facility.",
+          "TriCab-owned distribution began expanding through Perth and Sydney."
+        ]
+      },
+      {
+        "id": "2008",
+        "period": "2008",
+        "accent": "brown",
+        "items": [
+          "TriCab USA was established with a manufacturing facility in Worcester, Massachusetts."
+        ]
+      },
+      {
+        "id": "2014",
+        "period": "2014",
+        "accent": "cyan",
+        "items": [
+          "The company name changed to TriCab.",
+          "A medium-voltage testing facility was established in Port Melbourne."
+        ]
+      },
+      {
+        "id": "2018",
+        "period": "2018",
+        "accent": "green",
+        "items": [
+          "Accessories and harnessing operations launched.",
+          "Flexible aluminium products were introduced."
+        ]
+      },
+      {
+        "id": "2019",
+        "period": "2019",
+        "accent": "red",
+        "items": [
+          "TriCab Thailand joint venture ended.",
+          "Cable production was redirected to the Australian factory."
+        ]
+      },
+      {
+        "id": "2021",
+        "period": "2021",
+        "accent": "orange",
+        "items": [
+          "Compound manufacturing facility established in Port Melbourne."
+        ]
+      },
+      {
+        "id": "2022-2025",
+        "period": "2022–2025",
+        "accent": "teal",
+        "items": [
+          "TriCab's Asia division was established in Malaysia in 2022 with a bonded warehouse at Port Klang.",
+          "In January 2025, office and warehouse operations relocated to Singapore to improve service delivery and regional logistics."
+        ]
+      }
+    ]
+  },
+  "network": {
+    "eyebrow": "NETWORK",
+    "title": "Warehouse locations",
+    "description": "Local stock, regional support, and global manufacturing capability.",
+    "imageKey": "warehouseMap"
+  },
+  "documentary": {
+    "eyebrow": "DOCUMENTARY",
+    "title": "Inside TriCab",
+    "description": "Watch the TriCab documentary — a look at our people, manufacturing, and commitment to flexible cable solutions.",
+    "externalUrl": "https://www.youtube.com/watch?v=MDwK6J5dD4s"
+  },
+  "cta": {
+    "title": "Built for demanding applications. Backed by people who understand cable.",
+    "description": "Talk to TriCab about your next cable, harness, accessory, or engineered solution.",
+    "contactLabel": "Contact TriCab"
+  },
+  "media": {
+    "melbourneFacility": {
+      "path": "/media/about/melbourne-facility.png",
+      "alt": "TriCab Port Melbourne manufacturing facility with city skyline beyond"
+    },
+    "factoryGallery": {
+      "path": "/media/about/factory-gallery.png",
+      "alt": "TriCab factory showing copper conductor reels, cable winding machinery, and warehouse floor"
+    },
+    "factoryInterior": {
+      "path": "/media/about/factory-interior.png",
+      "alt": "TriCab factory interior"
+    },
+    "productCollage": {
+      "path": "/media/about/product-collage.png",
+      "alt": "TriCab cables, glands, plugs, and accessories showing a complete cable system"
+    },
+    "certifications": {
+      "path": "/media/about/certification-logos.png",
+      "alt": "TriCab certification marks including ISO 9001, DNV-GL, ABS, Bureau Veritas, Lloyd's Register, UL, and TÜV"
+    },
+    "warehouseMap": {
+      "path": "/media/about/warehouse-map.png",
+      "alt": "World map showing TriCab warehouse locations across Australia, New Zealand, Asia, and the United States"
+    },
+    "wire": {
+      "path": "/media/about/wire.png",
+      "alt": "TriCab flexible wire and cable"
+    }
+  }
+}

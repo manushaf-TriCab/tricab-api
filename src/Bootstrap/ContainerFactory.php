@@ -93,6 +93,9 @@ use TriCab\Api\Http\Action\Admin\ListRolesAction;
 use TriCab\Api\Http\Action\Admin\ListUsersAction;
 use TriCab\Api\Http\Action\Admin\RegionAdminAction;
 use TriCab\Api\Http\Action\PublicRegionAction;
+use TriCab\Api\Http\Action\PublicContent\GetPublicAboutAction;
+use TriCab\Api\Http\Action\PublicContent\GetPublicContactAction;
+use TriCab\Api\Content\PublicContentRepository;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardAction;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardProductActivityAction;
 use TriCab\Api\Http\Action\Admin\PreviewProductCodeAction;
@@ -1047,6 +1050,11 @@ final class ContainerFactory
             ManageRegionService::class => \DI\autowire(ManageRegionService::class),
             RegionPreferenceResolver::class => \DI\autowire(RegionPreferenceResolver::class),
             PublicRegionAction::class => \DI\autowire(PublicRegionAction::class),
+            PublicContentRepository::class => static function (): PublicContentRepository {
+                return PublicContentRepository::fromProjectRoot(dirname(__DIR__, 2));
+            },
+            GetPublicAboutAction::class => \DI\autowire(GetPublicAboutAction::class),
+            GetPublicContactAction::class => \DI\autowire(GetPublicContactAction::class),
             RegionAdminAction::class => \DI\autowire(RegionAdminAction::class),
             ListProductsAction::class => \DI\autowire(ListProductsAction::class),
             GetProductAction::class => \DI\autowire(GetProductAction::class),

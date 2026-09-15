@@ -153,6 +153,8 @@ use TriCab\Api\Http\Action\PublicCart\PatchCartItemAction;
 use TriCab\Api\Http\Action\PublicCart\PostCartItemAction;
 use TriCab\Api\Http\Action\PublicCart\PostCartRepriceAction;
 use TriCab\Api\Http\Action\PublicRegionAction;
+use TriCab\Api\Http\Action\PublicContent\GetPublicAboutAction;
+use TriCab\Api\Http\Action\PublicContent\GetPublicContactAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\CableCalculator\PostCableCalculatorCalculateAction;
 use TriCab\Api\Http\Action\ProductFinder\FindProductAction;
@@ -344,6 +346,8 @@ final class AppBuilder
         $app->get('/api/v1/regions', PublicRegionAction::class);
         $app->get('/api/v1/regions/current', PublicRegionAction::class);
         $app->post('/api/v1/regions/select', PublicRegionAction::class);
+        $app->get('/api/v1/public/about', GetPublicAboutAction::class);
+        $app->get('/api/v1/public/contact', GetPublicContactAction::class);
         self::registerAdminRoutes($app, $container);
     }
 
