@@ -1,0 +1,80 @@
+{
+  "key": "fire-performance",
+  "slug": "fire-performance",
+  "title": "Fire Performance Testing",
+  "intro": "Shipboard / offshore fire performance tests covering flame retardancy, circuit integrity under fire, acid gas emission and smoke density (IEC and AS/NZS).",
+  "blocks": [
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "IEC 60332-3, AS/NZS 1660.5.1",
+        "IEC 60331, AS/NZS 1660.5.5",
+        "IEC 60754-1 & 2, AS/NZS 1660.5.3",
+        "IEC 61034-1 & 2, AS/NZS 1660.5.2"
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "IEC 60332-3, AS/NZS 1660.5.1 — Flame Retardant Test"
+    },
+    {
+      "type": "paragraph",
+      "body": "This test is conducted by placing cables together on a vertical ladder tray and then exposing them to the flames of a ribbon burner for the appropriate time (detailed below)."
+    },
+    {
+      "type": "paragraph",
+      "body": "After removal of the flame, the cables are wiped clean and the charring should not have exceeded 2.5 metres."
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "Category A: 7 litres of combustible material exposed to flame for 40 minutes",
+        "Category B: 3.5 litres of combustible material exposed to flame for 40 minutes",
+        "Category C: 1.5 litres of combustible material exposed to flame for 20 minutes"
+      ]
+    },
+    {
+      "type": "image",
+      "path": "fire-performance/fire-test.jpg",
+      "alt": "Flame retardant test apparatus for bunched cables"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "IEC 60331, AS/NZS 1660.5.5 — Fire Test"
+    },
+    {
+      "type": "paragraph",
+      "body": "This test is conducted by mounting a 1200 mm length of cable over a gas burner and energizing it to its rated voltage. Flames are applied for 90 minutes at a temperature of at least 750°C. After 90 minutes the gas is turned off. After a further 15 minutes the power is disconnected. To pass the requirements of this test, the cable must remain operational both during the 90 minute exposure and the 15 minute cooling period."
+    },
+    {
+      "type": "image",
+      "path": "fire-performance/fire-test-2.jpg",
+      "alt": "IEC 60331 fire test of cable over gas burner"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "IEC 60754-1 & 2, AS/NZS 1660.5.3 — Acid Gas Emission Test"
+    },
+    {
+      "type": "paragraph",
+      "body": "This test determines the amount of acid gas emitted by burning cables."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "IEC 61034-1 & 2, AS/NZS 1660.5.2 — Smoke Density Test"
+    },
+    {
+      "type": "paragraph",
+      "body": "This test measures the smoke emission from cables during fire. This test is carried out in a 3 m cubed enclosure where a cable sample is subjected to fire. The smoke emission and density are measured by a light beam emitted across the inside of the enclosure to a photocell, measuring the amount of luminous transmission received."
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-sbo_fire_performance_testing.php"
+  }
+}

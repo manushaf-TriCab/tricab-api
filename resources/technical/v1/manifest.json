@@ -1,0 +1,562 @@
+{
+  "version": "1",
+  "title": "Technical",
+  "description": "TriCab Technical tools, lookup tables, articles, and document libraries.",
+  "sections": [
+    {
+      "id": "general",
+      "slug": "general",
+      "title": "General",
+      "order": 1,
+      "items": [
+        {
+          "id": "lugging",
+          "slug": "lugging",
+          "title": "Lugging",
+          "description": "Recommended flexible conductor lugging procedure.",
+          "type": "ARTICLE",
+          "iconKey": "Plug",
+          "order": 1,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "lugging",
+          "keywords": [
+            "lug",
+            "crimp",
+            "conductor",
+            "termination"
+          ]
+        },
+        {
+          "id": "lszh",
+          "slug": "lszh",
+          "title": "LSZH",
+          "description": "Low Smoke Zero Halogen \u2014 what it means.",
+          "type": "ARTICLE",
+          "iconKey": "HelpCircle",
+          "order": 2,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "lszh",
+          "keywords": [
+            "halogen",
+            "smoke",
+            "LSFLEX"
+          ]
+        },
+        {
+          "id": "drum-handling",
+          "slug": "drum-handling",
+          "title": "Drum Handling",
+          "description": "Recommended cable drum handling procedures.",
+          "type": "ARTICLE",
+          "iconKey": "Circle",
+          "order": 3,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "drum-handling",
+          "keywords": [
+            "drum",
+            "reel",
+            "handling"
+          ]
+        },
+        {
+          "id": "conductor-data",
+          "slug": "conductor-data",
+          "title": "Conductor Data",
+          "description": "Conductor construction, DC resistance, short-circuit and voltage-drop tables (General + Industrial).",
+          "type": "LOOKUP_TABLE",
+          "iconKey": "Info",
+          "order": 4,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "tableKey": "conductor-data",
+          "keywords": [
+            "conductor",
+            "csa",
+            "strand"
+          ]
+        },
+        {
+          "id": "earth-conductor-size",
+          "slug": "earth-conductor-size",
+          "title": "Earth Conductor Size",
+          "description": "Minimum earthing conductor CSA lookup (static table \u2014 not the Cable Calculator).",
+          "type": "LOOKUP_TABLE",
+          "iconKey": "Cable",
+          "order": 5,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "tableKey": "earth-conductor-size",
+          "keywords": [
+            "earth",
+            "earthing",
+            "csa",
+            "AS/NZS3000"
+          ]
+        },
+        {
+          "id": "voltage-drop",
+          "slug": "voltage-drop",
+          "title": "Voltage Drop",
+          "description": "Published three-phase mV/A\u00b7m voltage-drop reference table (not a calculator).",
+          "type": "LOOKUP_TABLE",
+          "iconKey": "ArrowDown",
+          "order": 6,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "tableKey": "voltage-drop",
+          "keywords": [
+            "voltage drop",
+            "mV/A.m",
+            "impedance table"
+          ]
+        },
+        {
+          "id": "warranty-certificates",
+          "slug": "warranty-certificates",
+          "title": "Warranty Certificates",
+          "description": "TriCab warranty certificate library.",
+          "type": "DOCUMENT_LIBRARY",
+          "iconKey": "FileBadge",
+          "order": 7,
+          "enabled": true,
+          "status": "COMING_SOON",
+          "documentCategory": "warranty",
+          "keywords": [
+            "warranty",
+            "certificate"
+          ]
+        },
+        {
+          "id": "bep-pvc-disposal",
+          "slug": "bep-pvc-disposal",
+          "title": "BEP PVC Disposal",
+          "description": "Public notification \u2014 PVC disposal.",
+          "type": "DOCUMENT_LIBRARY",
+          "iconKey": "ClipboardCheck",
+          "order": 8,
+          "enabled": true,
+          "status": "COMING_SOON",
+          "documentCategory": "bep-pvc-disposal",
+          "keywords": [
+            "BEP",
+            "PVC",
+            "disposal"
+          ]
+        },
+        {
+          "id": "bep-pvc-certificate",
+          "slug": "bep-pvc-certificate",
+          "title": "BEP PVC Certificate",
+          "description": "BEP PVC certificate PDF.",
+          "type": "DOCUMENT_LIBRARY",
+          "iconKey": "FileCheck2",
+          "order": 9,
+          "enabled": true,
+          "status": "COMING_SOON",
+          "documentCategory": "bep-pvc-certificate",
+          "keywords": [
+            "BEP",
+            "PVC",
+            "certificate"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "industrial",
+      "slug": "industrial",
+      "title": "Industrial",
+      "order": 2,
+      "items": [
+        {
+          "id": "cable-calculator",
+          "slug": "cable-calculator",
+          "title": "Cable Calculator",
+          "description": "Size cables using the existing TriCab calculator.",
+          "type": "EXISTING_MODULE",
+          "iconKey": "Calculator",
+          "order": 1,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "existingModule": "cable-calculator",
+          "keywords": [
+            "calculator",
+            "sizing",
+            "ampacity"
+          ]
+        },
+        {
+          "id": "product-coding",
+          "slug": "product-coding",
+          "title": "Product Coding",
+          "description": "Explain TriCab industrial product code segments.",
+          "type": "EXISTING_MODULE",
+          "iconKey": "Grid3x3",
+          "order": 2,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "existingModule": "product-coding",
+          "codingMode": "industrial",
+          "keywords": [
+            "product code",
+            "style code",
+            "segments"
+          ]
+        },
+        {
+          "id": "general-installation",
+          "slug": "general-installation",
+          "title": "General Installation",
+          "description": "Installation recommendations and correction factors.",
+          "type": "ARTICLE",
+          "iconKey": "Wrench",
+          "order": 3,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "industrial-general-installation",
+          "keywords": [
+            "installation",
+            "derating",
+            "bending"
+          ]
+        },
+        {
+          "id": "fire-installation",
+          "slug": "fire-installation",
+          "title": "Fire Installation",
+          "description": "Installation recommendations for fire-resistant cables.",
+          "type": "ARTICLE",
+          "iconKey": "Flame",
+          "order": 4,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "fire-installation",
+          "keywords": [
+            "fire",
+            "installation"
+          ]
+        },
+        {
+          "id": "conduit-sizing",
+          "slug": "conduit-sizing",
+          "title": "Conduit Sizing",
+          "description": "Maximum single-core cables per conduit size.",
+          "type": "LOOKUP_TABLE",
+          "iconKey": "Circle",
+          "order": 5,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "tableKey": "conduit-sizing",
+          "keywords": [
+            "conduit",
+            "fill"
+          ]
+        },
+        {
+          "id": "fire-testing",
+          "slug": "fire-testing",
+          "title": "Fire Testing",
+          "description": "Fire testing and WS rating explanations.",
+          "type": "ARTICLE",
+          "iconKey": "Flame",
+          "order": 6,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "fire-testing",
+          "keywords": [
+            "fire",
+            "WS",
+            "AS/NZS 3013"
+          ]
+        },
+        {
+          "id": "standards",
+          "slug": "standards",
+          "title": "Standards",
+          "description": "Standards referenced within industrial Technical content.",
+          "type": "ARTICLE",
+          "iconKey": "ClipboardList",
+          "order": 7,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "industrial-standards",
+          "keywords": [
+            "standards",
+            "IEC",
+            "AS/NZS"
+          ]
+        },
+        {
+          "id": "impedance",
+          "slug": "impedance",
+          "title": "Impedance",
+          "description": "EU and XU impedance tables (published calculated values).",
+          "type": "LOOKUP_TABLE",
+          "iconKey": "Activity",
+          "order": 8,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "tableKey": "impedance",
+          "keywords": [
+            "impedance",
+            "EU",
+            "XU"
+          ]
+        },
+        {
+          "id": "certs",
+          "slug": "certs",
+          "title": "Certs",
+          "description": "Industrial certificate library (Product documents).",
+          "type": "DOCUMENT_LIBRARY",
+          "iconKey": "FileBadge",
+          "order": 9,
+          "enabled": true,
+          "status": "COMING_SOON",
+          "documentCategory": "industrial-certs",
+          "keywords": [
+            "certificate",
+            "approval"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sbo",
+      "slug": "shipboard-offshore-onshore",
+      "title": "Shipboard / Offshore / Onshore",
+      "order": 3,
+      "items": [
+        {
+          "id": "sbo-product-coding",
+          "slug": "sbo-product-coding",
+          "title": "Product Coding",
+          "description": "Shipboard / offshore product code segments.",
+          "type": "EXISTING_MODULE",
+          "iconKey": "Grid3x3",
+          "order": 1,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "existingModule": "product-coding",
+          "codingMode": "sbo",
+          "keywords": [
+            "SBO",
+            "product code",
+            "marine"
+          ]
+        },
+        {
+          "id": "current-iec",
+          "slug": "current-iec",
+          "title": "Current IEC",
+          "description": "IEC current carrying capacities table.",
+          "type": "LOOKUP_TABLE",
+          "iconKey": "Activity",
+          "order": 2,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "tableKey": "current-iec",
+          "keywords": [
+            "IEC",
+            "ampacity",
+            "current"
+          ]
+        },
+        {
+          "id": "current-ieee",
+          "slug": "current-ieee",
+          "title": "Current IEEE",
+          "description": "IEEE 45 Table 25 current carrying capacities.",
+          "type": "LOOKUP_TABLE",
+          "iconKey": "Activity",
+          "order": 3,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "tableKey": "current-ieee",
+          "keywords": [
+            "IEEE",
+            "ampacity"
+          ]
+        },
+        {
+          "id": "cable-designation",
+          "slug": "cable-designation",
+          "title": "Cable Designation",
+          "description": "Industry cable designation letter tables.",
+          "type": "LOOKUP_TABLE",
+          "iconKey": "Cable",
+          "order": 4,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "tableKey": "cable-designation",
+          "keywords": [
+            "designation",
+            "NEK"
+          ]
+        },
+        {
+          "id": "fire-perf",
+          "slug": "fire-performance",
+          "title": "Fire Performance",
+          "description": "Fire performance testing explanations.",
+          "type": "ARTICLE",
+          "iconKey": "Flame",
+          "order": 5,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "fire-performance",
+          "keywords": [
+            "fire",
+            "performance"
+          ]
+        },
+        {
+          "id": "sbo-general-installation",
+          "slug": "sbo-general-installation",
+          "title": "General Installation",
+          "description": "SBO installation recommendation / conductor data.",
+          "type": "ARTICLE",
+          "iconKey": "Wrench",
+          "order": 6,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "sbo-general-installation",
+          "keywords": [
+            "installation",
+            "SBO"
+          ]
+        },
+        {
+          "id": "sbo-standards",
+          "slug": "sbo-standards",
+          "title": "Standards",
+          "description": "International marine specifications.",
+          "type": "ARTICLE",
+          "iconKey": "BookMarked",
+          "order": 7,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "contentKey": "sbo-standards",
+          "keywords": [
+            "marine",
+            "standards"
+          ]
+        },
+        {
+          "id": "mud-immersion",
+          "slug": "mud-immersion",
+          "title": "MUD Immersion",
+          "description": "MUD fluid immersion test schedules.",
+          "type": "LOOKUP_TABLE",
+          "iconKey": "Landmark",
+          "order": 8,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "tableKey": "mud-immersion",
+          "keywords": [
+            "MUD",
+            "NEK",
+            "immersion"
+          ]
+        },
+        {
+          "id": "sbo-certs",
+          "slug": "sbo-certs",
+          "title": "Certs",
+          "description": "Shipboard / offshore certificate library.",
+          "type": "DOCUMENT_LIBRARY",
+          "iconKey": "BadgeCheck",
+          "order": 9,
+          "enabled": true,
+          "status": "COMING_SOON",
+          "documentCategory": "sbo-certs",
+          "keywords": [
+            "certificate",
+            "ABS",
+            "DNV",
+            "LR"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "accessories",
+      "slug": "accessories",
+      "title": "Accessories",
+      "order": 4,
+      "visibilityPolicy": "staff_or_sw_digit_market",
+      "items": [
+        {
+          "id": "acc-product-coding",
+          "slug": "acc-product-coding",
+          "title": "Product Coding",
+          "description": "Accessory product code segments.",
+          "type": "EXISTING_MODULE",
+          "iconKey": "Grid3x3",
+          "order": 1,
+          "enabled": true,
+          "status": "AVAILABLE",
+          "existingModule": "product-coding",
+          "codingMode": "accessories",
+          "keywords": [
+            "accessory",
+            "product code"
+          ]
+        },
+        {
+          "id": "acc-certs",
+          "slug": "acc-certs",
+          "title": "Certs",
+          "description": "Accessory certificate library.",
+          "type": "DOCUMENT_LIBRARY",
+          "iconKey": "FileBadge",
+          "order": 2,
+          "enabled": true,
+          "status": "COMING_SOON",
+          "documentCategory": "accessory-certs",
+          "keywords": [
+            "accessory",
+            "certificate"
+          ]
+        },
+        {
+          "id": "acc-warranty-certificates",
+          "slug": "acc-warranty-certificates",
+          "title": "Warranty Certificates",
+          "description": "Accessory warranty PDFs.",
+          "type": "DOCUMENT_LIBRARY",
+          "iconKey": "FileBadge",
+          "order": 3,
+          "enabled": true,
+          "status": "COMING_SOON",
+          "documentCategory": "accessory-warranty",
+          "keywords": [
+            "warranty",
+            "X07",
+            "X08"
+          ]
+        },
+        {
+          "id": "installation-guides",
+          "slug": "installation-guides",
+          "title": "Installation Guides",
+          "description": "Accessory installation guide PDFs.",
+          "type": "DOCUMENT_LIBRARY",
+          "iconKey": "Wrench",
+          "order": 4,
+          "enabled": true,
+          "status": "COMING_SOON",
+          "documentCategory": "installation-guides",
+          "keywords": [
+            "installation",
+            "guide",
+            "PDF"
+          ]
+        }
+      ]
+    }
+  ]
+}

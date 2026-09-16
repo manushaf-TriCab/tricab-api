@@ -1,0 +1,2289 @@
+{
+    "key": "conductor-data",
+    "slug": "conductor-data",
+    "title": "Conductor Data",
+    "description": "Conductor construction, DC resistance, short-circuit and voltage-drop reference tables (General DB-backed + Industrial static).",
+    "notes": [
+        "Do not blind-merge industrial and general sources \u2014 they are separate legacy pages.",
+        "Industrial (content-ind_conductor_data.php): static construction + DC resistance + correction factors.",
+        "General (content-conductor_data.php): values from MySQL tc.conductor_data (unit=M and unit=AWG), promoted Phase 4B.",
+        "Temperature correction factors match between both pages.",
+        "Legacy General construction/SCC UI skipped metric CSA > 630; all 24 metric source rows are retained here."
+    ],
+    "selectors": [
+        {
+            "id": "variant",
+            "label": "Source Page",
+            "options": [
+                {
+                    "id": "industrial",
+                    "label": "Industrial (static)"
+                },
+                {
+                    "id": "general",
+                    "label": "General"
+                }
+            ]
+        }
+    ],
+    "defaultSelector": {
+        "variant": "industrial"
+    },
+    "datasets": {
+        "industrial": {
+            "title": "Industrial Conductor Data",
+            "description": "Static tables from industrial technical page (construction + DC resistance).",
+            "tables": {
+                "construction": {
+                    "title": "Conductor - Construction",
+                    "description": "TriCab uses very fine 0.3mm copper wires to ensure maximum flexibility and ease of use. The following table from IEC 60228 provides a comparative analysis.",
+                    "columnGroups": [
+                        {
+                            "id": "construction",
+                            "label": "Construction",
+                            "columns": [
+                                {
+                                    "id": "tricab",
+                                    "label": "TriCab"
+                                },
+                                {
+                                    "id": "class_2",
+                                    "label": "Class 2"
+                                },
+                                {
+                                    "id": "class_5",
+                                    "label": "class 5"
+                                },
+                                {
+                                    "id": "class_6",
+                                    "label": "class 6"
+                                }
+                            ]
+                        }
+                    ],
+                    "rowHeader": {
+                        "id": "csa",
+                        "label": "Size",
+                        "unit": "mm\u00b2"
+                    },
+                    "rows": [
+                        {
+                            "csaMm2": 0.5,
+                            "values": {
+                                "tricab": "7 X 0.30",
+                                "class_2": "7 X 0.30",
+                                "class_5": "16 X 0.20",
+                                "class_6": "28 X 0.15"
+                            }
+                        },
+                        {
+                            "csaMm2": 0.75,
+                            "values": {
+                                "tricab": "11 X 0.30",
+                                "class_2": "7 X 0.37",
+                                "class_5": "24 X 0.20",
+                                "class_6": "42 X 0.15"
+                            }
+                        },
+                        {
+                            "csaMm2": 1,
+                            "values": {
+                                "tricab": "14 X 0.30",
+                                "class_2": "7 X 0.43",
+                                "class_5": "32 X 0.20",
+                                "class_6": "56 X 0.15"
+                            }
+                        },
+                        {
+                            "csaMm2": 1.5,
+                            "values": {
+                                "tricab": "21 X 0.30",
+                                "class_2": "7 X 0.52",
+                                "class_5": "30 X 0.25",
+                                "class_6": "84 X 0.15"
+                            }
+                        },
+                        {
+                            "csaMm2": 2.5,
+                            "values": {
+                                "tricab": "35 X 0.30",
+                                "class_2": "19 X 0.64",
+                                "class_5": "50 X 0.25",
+                                "class_6": "140 X 0.15"
+                            }
+                        },
+                        {
+                            "csaMm2": 4,
+                            "values": {
+                                "tricab": "56 X 0.30",
+                                "class_2": "19 X 0.51",
+                                "class_5": "56 X 0.30",
+                                "class_6": "224 X 0.15"
+                            }
+                        },
+                        {
+                            "csaMm2": 6,
+                            "values": {
+                                "tricab": "84 X 0.30",
+                                "class_2": "19 X 0.65",
+                                "class_5": "84 X 0.30",
+                                "class_6": "192 X 0.20"
+                            }
+                        },
+                        {
+                            "csaMm2": 10,
+                            "values": {
+                                "tricab": "144 X 0.30",
+                                "class_2": "49 X 0.62",
+                                "class_5": "80 X 0.40",
+                                "class_6": "320 X 0.20"
+                            }
+                        },
+                        {
+                            "csaMm2": 16,
+                            "values": {
+                                "tricab": "224 X 0.30",
+                                "class_2": "49 X 0.58",
+                                "class_5": "128 X 0.40",
+                                "class_6": "512 X 0.20"
+                            }
+                        },
+                        {
+                            "csaMm2": 25,
+                            "values": {
+                                "tricab": "350 X 0.30",
+                                "class_2": "84 X 0.69",
+                                "class_5": "200 X 0.40",
+                                "class_6": "800 X 0.20"
+                            }
+                        },
+                        {
+                            "csaMm2": 35,
+                            "values": {
+                                "tricab": "490 X 0.30",
+                                "class_2": "133 X 0.69",
+                                "class_5": "280 X 0.40",
+                                "class_6": "1120 X 0.20"
+                            }
+                        },
+                        {
+                            "csaMm2": 50,
+                            "values": {
+                                "tricab": "707 X 0.30",
+                                "class_2": "133 X 0.69",
+                                "class_5": "400 X 0.40",
+                                "class_6": "705 X 0.30"
+                            }
+                        },
+                        {
+                            "csaMm2": 70,
+                            "values": {
+                                "tricab": "980 X 0.30",
+                                "class_2": "189 X 0.69",
+                                "class_5": "356 X 0.50",
+                                "class_6": "999 X 0.30"
+                            }
+                        },
+                        {
+                            "csaMm2": 95,
+                            "values": {
+                                "tricab": "1344 X 0.30",
+                                "class_2": "259 X 0.69",
+                                "class_5": "485 X 0.50",
+                                "class_6": "1340 X 0.30"
+                            }
+                        },
+                        {
+                            "csaMm2": 120,
+                            "values": {
+                                "tricab": "1672 X 0.30",
+                                "class_2": "336 X 0.69",
+                                "class_5": "614 X 0.50",
+                                "class_6": "1699 X 0.30"
+                            }
+                        },
+                        {
+                            "csaMm2": 150,
+                            "values": {
+                                "tricab": "2090 X 0.30",
+                                "class_2": "400 X 0.69",
+                                "class_5": "765 X 0.50",
+                                "class_6": "2123 X 0.30"
+                            }
+                        },
+                        {
+                            "csaMm2": 185,
+                            "values": {
+                                "tricab": "2584 X 0.30",
+                                "class_2": "494 X 0.69",
+                                "class_5": "994 X 0.50",
+                                "class_6": "1470 X 0.40"
+                            }
+                        },
+                        {
+                            "csaMm2": 240,
+                            "values": {
+                                "tricab": "3344 X 0.30",
+                                "class_2": "627 X 0.70",
+                                "class_5": "1125 X 0.50",
+                                "class_6": "1905 X 0.40"
+                            }
+                        },
+                        {
+                            "csaMm2": 300,
+                            "values": {
+                                "tricab": "4144 X 0.30",
+                                "class_2": "61 X 2.50",
+                                "class_5": "1530 X 0.50",
+                                "class_6": "2385 X 0.40"
+                            }
+                        },
+                        {
+                            "csaMm2": 400,
+                            "values": {
+                                "tricab": "5488 X 0.30",
+                                "class_2": "61 X 2.89",
+                                "class_5": "2035 X 0.50",
+                                "class_6": "3200 X 0.40"
+                            }
+                        },
+                        {
+                            "csaMm2": 500,
+                            "values": {
+                                "tricab": "6944 X 0.30",
+                                "class_2": "61 X 3.20",
+                                "class_5": "1768 X 0.50",
+                                "class_6": "4010 X 0.40"
+                            }
+                        },
+                        {
+                            "csaMm2": 630,
+                            "values": {
+                                "tricab": "8736 X 0.30",
+                                "class_2": "59 X 3.70",
+                                "class_5": "3200 X 0.50",
+                                "class_6": "5020 X 0.40"
+                            }
+                        }
+                    ]
+                },
+                "dcResistance": {
+                    "title": "Conductor - DC Resistance",
+                    "description": "To calculate the DC Resistance of copper conductors for a given temperature (\u00b0C), the resistance at 20\u00b0C, as detailed must be multiplied by the appropriate correction factor below.",
+                    "units": "ohm/km",
+                    "notes": [
+                        "All information above is intended as a guide only."
+                    ],
+                    "columnGroups": [
+                        {
+                            "id": "dc_res",
+                            "label": "Maximum resistance of conductor at 20\u00b0C",
+                            "columns": [
+                                {
+                                    "id": "plain_cu",
+                                    "label": "Plain Copper",
+                                    "unit": "ohm/km",
+                                    "material": "Cu"
+                                },
+                                {
+                                    "id": "tinned_cu",
+                                    "label": "Tinned Copper",
+                                    "unit": "ohm/km",
+                                    "material": "Cu"
+                                },
+                                {
+                                    "id": "al",
+                                    "label": "Aluminium",
+                                    "unit": "ohm/km",
+                                    "material": "Al"
+                                }
+                            ]
+                        }
+                    ],
+                    "rowHeader": {
+                        "id": "csa",
+                        "label": "Nominal Cross-sectional area",
+                        "unit": "mm\u00b2"
+                    },
+                    "rows": [
+                        {
+                            "csaMm2": 0.5,
+                            "values": {
+                                "plain_cu": 38.4,
+                                "tinned_cu": 39.6,
+                                "al": null
+                            }
+                        },
+                        {
+                            "csaMm2": 0.75,
+                            "values": {
+                                "plain_cu": 25.3,
+                                "tinned_cu": 26,
+                                "al": null
+                            }
+                        },
+                        {
+                            "csaMm2": 1,
+                            "values": {
+                                "plain_cu": 21.2,
+                                "tinned_cu": 21.6,
+                                "al": null
+                            }
+                        },
+                        {
+                            "csaMm2": 1.5,
+                            "values": {
+                                "plain_cu": 13.6,
+                                "tinned_cu": 13.8,
+                                "al": null
+                            }
+                        },
+                        {
+                            "csaMm2": 2.5,
+                            "values": {
+                                "plain_cu": 7.41,
+                                "tinned_cu": 7.56,
+                                "al": null
+                            }
+                        },
+                        {
+                            "csaMm2": 4,
+                            "values": {
+                                "plain_cu": 4.95,
+                                "tinned_cu": 5.09,
+                                "al": null
+                            }
+                        },
+                        {
+                            "csaMm2": 6,
+                            "values": {
+                                "plain_cu": 3.3,
+                                "tinned_cu": 3.39,
+                                "al": null
+                            }
+                        },
+                        {
+                            "csaMm2": 10,
+                            "values": {
+                                "plain_cu": 1.91,
+                                "tinned_cu": 1.95,
+                                "al": 3.08
+                            }
+                        },
+                        {
+                            "csaMm2": 16,
+                            "values": {
+                                "plain_cu": 1.21,
+                                "tinned_cu": 1.24,
+                                "al": 1.91
+                            }
+                        },
+                        {
+                            "csaMm2": 25,
+                            "values": {
+                                "plain_cu": 0.78,
+                                "tinned_cu": 0.795,
+                                "al": 1.2
+                            }
+                        },
+                        {
+                            "csaMm2": 35,
+                            "values": {
+                                "plain_cu": 0.554,
+                                "tinned_cu": 0.565,
+                                "al": 0.868
+                            }
+                        },
+                        {
+                            "csaMm2": 50,
+                            "values": {
+                                "plain_cu": 0.386,
+                                "tinned_cu": 0.393,
+                                "al": 0.641
+                            }
+                        },
+                        {
+                            "csaMm2": 70,
+                            "values": {
+                                "plain_cu": 0.272,
+                                "tinned_cu": 0.277,
+                                "al": 0.443
+                            }
+                        },
+                        {
+                            "csaMm2": 95,
+                            "values": {
+                                "plain_cu": 0.206,
+                                "tinned_cu": 0.21,
+                                "al": 0.32
+                            }
+                        },
+                        {
+                            "csaMm2": 120,
+                            "values": {
+                                "plain_cu": 0.161,
+                                "tinned_cu": 0.164,
+                                "al": 0.253
+                            }
+                        },
+                        {
+                            "csaMm2": 150,
+                            "values": {
+                                "plain_cu": 0.129,
+                                "tinned_cu": 0.132,
+                                "al": 0.206
+                            }
+                        },
+                        {
+                            "csaMm2": 185,
+                            "values": {
+                                "plain_cu": 0.106,
+                                "tinned_cu": 0.108,
+                                "al": 0.164
+                            }
+                        },
+                        {
+                            "csaMm2": 240,
+                            "values": {
+                                "plain_cu": 0.0801,
+                                "tinned_cu": 0.0817,
+                                "al": 0.125
+                            }
+                        },
+                        {
+                            "csaMm2": 300,
+                            "values": {
+                                "plain_cu": 0.0641,
+                                "tinned_cu": 0.0654,
+                                "al": 0.1
+                            }
+                        },
+                        {
+                            "csaMm2": 400,
+                            "values": {
+                                "plain_cu": 0.0486,
+                                "tinned_cu": 0.0495,
+                                "al": 0.0778
+                            }
+                        },
+                        {
+                            "csaMm2": 500,
+                            "values": {
+                                "plain_cu": 0.0384,
+                                "tinned_cu": 0.0391,
+                                "al": 0.0605
+                            }
+                        },
+                        {
+                            "csaMm2": 630,
+                            "values": {
+                                "plain_cu": 0.0287,
+                                "tinned_cu": 0.0291,
+                                "al": 0.0469
+                            }
+                        },
+                        {
+                            "csaMm2": 800,
+                            "values": {
+                                "plain_cu": 0.0221,
+                                "tinned_cu": 0.0223,
+                                "al": 0.0367
+                            }
+                        },
+                        {
+                            "csaMm2": 1000,
+                            "values": {
+                                "plain_cu": null,
+                                "tinned_cu": null,
+                                "al": 0.0291
+                            }
+                        }
+                    ]
+                },
+                "temperatureCorrection": {
+                    "title": "Ambient Temperature Correction Factor",
+                    "columnGroups": [
+                        {
+                            "id": "corr",
+                            "label": "Correction",
+                            "columns": [
+                                {
+                                    "id": "factor",
+                                    "label": "Correction Factor"
+                                }
+                            ]
+                        }
+                    ],
+                    "rowHeader": {
+                        "id": "ambient",
+                        "label": "Ambient temperature",
+                        "unit": "\u00b0C"
+                    },
+                    "rows": [
+                        {
+                            "rowKey": "20",
+                            "ambientC": 20,
+                            "values": {
+                                "factor": 1
+                            }
+                        },
+                        {
+                            "rowKey": "25",
+                            "ambientC": 25,
+                            "values": {
+                                "factor": 1.02
+                            }
+                        },
+                        {
+                            "rowKey": "30",
+                            "ambientC": 30,
+                            "values": {
+                                "factor": 1.039
+                            }
+                        },
+                        {
+                            "rowKey": "35",
+                            "ambientC": 35,
+                            "values": {
+                                "factor": 1.059
+                            }
+                        },
+                        {
+                            "rowKey": "40",
+                            "ambientC": 40,
+                            "values": {
+                                "factor": 1.079
+                            }
+                        },
+                        {
+                            "rowKey": "45",
+                            "ambientC": 45,
+                            "values": {
+                                "factor": 1.098
+                            }
+                        },
+                        {
+                            "rowKey": "50",
+                            "ambientC": 50,
+                            "values": {
+                                "factor": 1.118
+                            }
+                        },
+                        {
+                            "rowKey": "55",
+                            "ambientC": 55,
+                            "values": {
+                                "factor": 1.138
+                            }
+                        },
+                        {
+                            "rowKey": "60",
+                            "ambientC": 60,
+                            "values": {
+                                "factor": 1.157
+                            }
+                        },
+                        {
+                            "rowKey": "65",
+                            "ambientC": 65,
+                            "values": {
+                                "factor": 1.177
+                            }
+                        },
+                        {
+                            "rowKey": "70",
+                            "ambientC": 70,
+                            "values": {
+                                "factor": 1.196
+                            }
+                        },
+                        {
+                            "rowKey": "75",
+                            "ambientC": 75,
+                            "values": {
+                                "factor": 1.216
+                            }
+                        },
+                        {
+                            "rowKey": "80",
+                            "ambientC": 80,
+                            "values": {
+                                "factor": 1.236
+                            }
+                        },
+                        {
+                            "rowKey": "85",
+                            "ambientC": 85,
+                            "values": {
+                                "factor": 1.255
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "general": {
+            "title": "General Conductor Data",
+            "description": "Legacy general Conductor Data page values from tc.conductor_data (Metric mm\u00b2 and AWG/MCM).",
+            "sourceRowCounts": {
+                "total": 46,
+                "metric": 24,
+                "awg": 22
+            },
+            "tables": {
+                "constructionMetric": {
+                    "title": "Conductor - Construction (Metric)",
+                    "description": "TriCab uses very fine 0.3mm copper wires to ensure maximum flexibility and ease of use. The following table from IEC 60228 provides a comparative analysis.",
+                    "columnGroups": [
+                        {
+                            "id": "construction",
+                            "label": "Construction",
+                            "columns": [
+                                {
+                                    "id": "tricab",
+                                    "label": "TriCab"
+                                },
+                                {
+                                    "id": "class_2",
+                                    "label": "Class 2"
+                                },
+                                {
+                                    "id": "class_5",
+                                    "label": "class 5"
+                                },
+                                {
+                                    "id": "class_6",
+                                    "label": "class 6"
+                                }
+                            ]
+                        }
+                    ],
+                    "rowHeader": {
+                        "id": "csa",
+                        "label": "Size",
+                        "unit": "mm\u00b2"
+                    },
+                    "rows": [
+                        {
+                            "rowKey": "0.50",
+                            "csa": "0.50",
+                            "values": {
+                                "tricab": "7 x 0.3",
+                                "class_2": "7 x 0.30",
+                                "class_5": "14 x 0.21",
+                                "class_6": "24 x 0.16"
+                            }
+                        },
+                        {
+                            "rowKey": "0.75",
+                            "csa": "0.75",
+                            "values": {
+                                "tricab": "11 x 0.3",
+                                "class_2": "7 x 0.36",
+                                "class_5": "21 x 0.21",
+                                "class_6": "37 x 0.16"
+                            }
+                        },
+                        {
+                            "rowKey": "1.00",
+                            "csa": "1.00",
+                            "values": {
+                                "tricab": "13 x 0.3",
+                                "class_2": "7 x 0.42",
+                                "class_5": "28 x 0.21",
+                                "class_6": "49 x 0.16"
+                            }
+                        },
+                        {
+                            "rowKey": "1.50",
+                            "csa": "1.50",
+                            "values": {
+                                "tricab": "19 x 0.3",
+                                "class_2": "7 x 0.52",
+                                "class_5": "28 x 0.26",
+                                "class_6": "74 x 0.16"
+                            }
+                        },
+                        {
+                            "rowKey": "2.50",
+                            "csa": "2.50",
+                            "values": {
+                                "tricab": "35 x 0.3",
+                                "class_2": "7 x 0.67",
+                                "class_5": "47 x 0.26",
+                                "class_6": "124 x 0.16"
+                            }
+                        },
+                        {
+                            "rowKey": "4.00",
+                            "csa": "4.00",
+                            "values": {
+                                "tricab": "51 x 0.3",
+                                "class_2": "7 x 0.85",
+                                "class_5": "52 x 0.31",
+                                "class_6": "198 x 0.16"
+                            }
+                        },
+                        {
+                            "rowKey": "6.00",
+                            "csa": "6.00",
+                            "values": {
+                                "tricab": "77 x 0.3",
+                                "class_2": "7 x 1.04",
+                                "class_5": "79 x 0.31",
+                                "class_6": "173 x 0.21"
+                            }
+                        },
+                        {
+                            "rowKey": "10.00",
+                            "csa": "10.00",
+                            "values": {
+                                "tricab": "136 x 0.3",
+                                "class_2": "7 x 1.34",
+                                "class_5": "75 x 0.41",
+                                "class_6": "288 x 0.21"
+                            }
+                        },
+                        {
+                            "rowKey": "16.00",
+                            "csa": "16.00",
+                            "values": {
+                                "tricab": "224 x 0.3",
+                                "class_2": "7 x 1.70",
+                                "class_5": "121 x 0.41",
+                                "class_6": "461 x 0.21"
+                            }
+                        },
+                        {
+                            "rowKey": "25.00",
+                            "csa": "25.00",
+                            "values": {
+                                "tricab": "329 x 0.3",
+                                "class_2": "7 x 2.13",
+                                "class_5": "189 x 0.41",
+                                "class_6": "721 x 0.21"
+                            }
+                        },
+                        {
+                            "rowKey": "35.00",
+                            "csa": "35.00",
+                            "values": {
+                                "tricab": "462 x 0.3",
+                                "class_2": "7 x 2.52",
+                                "class_5": "265 x 0.41",
+                                "class_6": "1010 x 0.21"
+                            }
+                        },
+                        {
+                            "rowKey": "50.00",
+                            "csa": "50.00",
+                            "values": {
+                                "tricab": "658 x 0.3",
+                                "class_2": "19 x 1.83",
+                                "class_5": "378 x 0.41",
+                                "class_6": "662 x 0.31"
+                            }
+                        },
+                        {
+                            "rowKey": "70.00",
+                            "csa": "70.00",
+                            "values": {
+                                "tricab": "969 x 0.3",
+                                "class_2": "19 x 2.16",
+                                "class_5": "342 x 0.51",
+                                "class_6": "927 x 0.31"
+                            }
+                        },
+                        {
+                            "rowKey": "95.00",
+                            "csa": "95.00",
+                            "values": {
+                                "tricab": "1216 x 0.3",
+                                "class_2": "19 x 2.52",
+                                "class_5": "465 x 0.51",
+                                "class_6": "1258 x 0.31"
+                            }
+                        },
+                        {
+                            "rowKey": "120.00",
+                            "csa": "120.00",
+                            "values": {
+                                "tricab": "1672 x 0.3",
+                                "class_2": "37 x 2.03",
+                                "class_5": "587 x 0.51",
+                                "class_6": "1589 x 0.31"
+                            }
+                        },
+                        {
+                            "rowKey": "150.00",
+                            "csa": "150.00",
+                            "values": {
+                                "tricab": "2052 x 0.3",
+                                "class_2": "37 x 2.27",
+                                "class_5": "734 x 0.51",
+                                "class_6": "1987 x 0.31"
+                            }
+                        },
+                        {
+                            "rowKey": "185.00",
+                            "csa": "185.00",
+                            "values": {
+                                "tricab": "2508 x 0.3",
+                                "class_2": "37 x 2.52",
+                                "class_5": "905 x 0.51",
+                                "class_6": "1401 x 0.41"
+                            }
+                        },
+                        {
+                            "rowKey": "240.00",
+                            "csa": "240.00",
+                            "values": {
+                                "tricab": "3256 x 0.3",
+                                "class_2": "37 x 2.87",
+                                "class_5": "1174 x 0.51",
+                                "class_6": "1817 x 0.41"
+                            }
+                        },
+                        {
+                            "rowKey": "300.00",
+                            "csa": "300.00",
+                            "values": {
+                                "tricab": "4144 x 0.3",
+                                "class_2": "61 x 2.50",
+                                "class_5": "1468 x 0.51",
+                                "class_6": "2272 x 0.41"
+                            }
+                        },
+                        {
+                            "rowKey": "400.00",
+                            "csa": "400.00",
+                            "values": {
+                                "tricab": "5368 x 0.3",
+                                "class_2": "61 x 2.88",
+                                "class_5": "1958 x 0.51",
+                                "class_6": null
+                            }
+                        },
+                        {
+                            "rowKey": "500.00",
+                            "csa": "500.00",
+                            "values": {
+                                "tricab": "6832 x 0.3",
+                                "class_2": "61 x 3.23",
+                                "class_5": "1710 x 0.61",
+                                "class_6": null
+                            }
+                        },
+                        {
+                            "rowKey": "630.00",
+                            "csa": "630.00",
+                            "values": {
+                                "tricab": "8784 x 0.3",
+                                "class_2": "61 x 3.62",
+                                "class_5": "2155 x 0.61",
+                                "class_6": null
+                            }
+                        },
+                        {
+                            "rowKey": "800.00",
+                            "csa": "800.00",
+                            "values": {
+                                "tricab": null,
+                                "class_2": null,
+                                "class_5": null,
+                                "class_6": null
+                            }
+                        },
+                        {
+                            "rowKey": "1000.00",
+                            "csa": "1000.00",
+                            "values": {
+                                "tricab": null,
+                                "class_2": null,
+                                "class_5": null,
+                                "class_6": null
+                            }
+                        }
+                    ]
+                },
+                "dcResistanceMetric": {
+                    "title": "Conductor - DC Resistance (Metric)",
+                    "description": "To calculate the DC Resistance of conductors for a given temperature (\u00b0C), the resistance at 20\u00b0C, as detailed must be multiplied by the appropriate correction factor below.",
+                    "columnGroups": [
+                        {
+                            "id": "dc",
+                            "label": "Maximum resistance of conductor at 20\u00b0C (ohm/km)",
+                            "columns": [
+                                {
+                                    "id": "dc_res_cu",
+                                    "label": "Plain Copper",
+                                    "unit": "ohm/km"
+                                },
+                                {
+                                    "id": "dc_res_tcu",
+                                    "label": "Tinned Copper",
+                                    "unit": "ohm/km"
+                                },
+                                {
+                                    "id": "dc_res_al",
+                                    "label": "Aluminium",
+                                    "unit": "ohm/km"
+                                }
+                            ]
+                        }
+                    ],
+                    "rowHeader": {
+                        "id": "csa",
+                        "label": "Nominal Cross-sectional area",
+                        "unit": "mm\u00b2"
+                    },
+                    "rows": [
+                        {
+                            "rowKey": "0.50",
+                            "csa": "0.50",
+                            "values": {
+                                "dc_res_cu": "38.4000",
+                                "dc_res_tcu": "39.6000",
+                                "dc_res_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "0.75",
+                            "csa": "0.75",
+                            "values": {
+                                "dc_res_cu": "25.3000",
+                                "dc_res_tcu": "26.0000",
+                                "dc_res_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "1.00",
+                            "csa": "1.00",
+                            "values": {
+                                "dc_res_cu": "21.2000",
+                                "dc_res_tcu": "21.6000",
+                                "dc_res_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "1.50",
+                            "csa": "1.50",
+                            "values": {
+                                "dc_res_cu": "13.6000",
+                                "dc_res_tcu": "13.8000",
+                                "dc_res_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "2.50",
+                            "csa": "2.50",
+                            "values": {
+                                "dc_res_cu": "7.4100",
+                                "dc_res_tcu": "7.5600",
+                                "dc_res_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "4.00",
+                            "csa": "4.00",
+                            "values": {
+                                "dc_res_cu": "4.9500",
+                                "dc_res_tcu": "5.0900",
+                                "dc_res_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "6.00",
+                            "csa": "6.00",
+                            "values": {
+                                "dc_res_cu": "3.3000",
+                                "dc_res_tcu": "3.3900",
+                                "dc_res_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "10.00",
+                            "csa": "10.00",
+                            "values": {
+                                "dc_res_cu": "1.9100",
+                                "dc_res_tcu": "1.9500",
+                                "dc_res_al": "3.0800"
+                            }
+                        },
+                        {
+                            "rowKey": "16.00",
+                            "csa": "16.00",
+                            "values": {
+                                "dc_res_cu": "1.2100",
+                                "dc_res_tcu": "1.2400",
+                                "dc_res_al": "1.9100"
+                            }
+                        },
+                        {
+                            "rowKey": "25.00",
+                            "csa": "25.00",
+                            "values": {
+                                "dc_res_cu": "0.7800",
+                                "dc_res_tcu": "0.7950",
+                                "dc_res_al": "1.2000"
+                            }
+                        },
+                        {
+                            "rowKey": "35.00",
+                            "csa": "35.00",
+                            "values": {
+                                "dc_res_cu": "0.5540",
+                                "dc_res_tcu": "0.5650",
+                                "dc_res_al": "0.8680"
+                            }
+                        },
+                        {
+                            "rowKey": "50.00",
+                            "csa": "50.00",
+                            "values": {
+                                "dc_res_cu": "0.3860",
+                                "dc_res_tcu": "0.3930",
+                                "dc_res_al": "0.6410"
+                            }
+                        },
+                        {
+                            "rowKey": "70.00",
+                            "csa": "70.00",
+                            "values": {
+                                "dc_res_cu": "0.2720",
+                                "dc_res_tcu": "0.2770",
+                                "dc_res_al": "0.4430"
+                            }
+                        },
+                        {
+                            "rowKey": "95.00",
+                            "csa": "95.00",
+                            "values": {
+                                "dc_res_cu": "0.2060",
+                                "dc_res_tcu": "0.2100",
+                                "dc_res_al": "0.3200"
+                            }
+                        },
+                        {
+                            "rowKey": "120.00",
+                            "csa": "120.00",
+                            "values": {
+                                "dc_res_cu": "0.1610",
+                                "dc_res_tcu": "0.1640",
+                                "dc_res_al": "0.2530"
+                            }
+                        },
+                        {
+                            "rowKey": "150.00",
+                            "csa": "150.00",
+                            "values": {
+                                "dc_res_cu": "0.1290",
+                                "dc_res_tcu": "0.1320",
+                                "dc_res_al": "0.2060"
+                            }
+                        },
+                        {
+                            "rowKey": "185.00",
+                            "csa": "185.00",
+                            "values": {
+                                "dc_res_cu": "0.1060",
+                                "dc_res_tcu": "0.1080",
+                                "dc_res_al": "0.1640"
+                            }
+                        },
+                        {
+                            "rowKey": "240.00",
+                            "csa": "240.00",
+                            "values": {
+                                "dc_res_cu": "0.0801",
+                                "dc_res_tcu": "0.0817",
+                                "dc_res_al": "0.1250"
+                            }
+                        },
+                        {
+                            "rowKey": "300.00",
+                            "csa": "300.00",
+                            "values": {
+                                "dc_res_cu": "0.0641",
+                                "dc_res_tcu": "0.0654",
+                                "dc_res_al": "0.1000"
+                            }
+                        },
+                        {
+                            "rowKey": "400.00",
+                            "csa": "400.00",
+                            "values": {
+                                "dc_res_cu": "0.0486",
+                                "dc_res_tcu": "0.0495",
+                                "dc_res_al": "0.0778"
+                            }
+                        },
+                        {
+                            "rowKey": "500.00",
+                            "csa": "500.00",
+                            "values": {
+                                "dc_res_cu": "0.0384",
+                                "dc_res_tcu": "0.0391",
+                                "dc_res_al": "0.0605"
+                            }
+                        },
+                        {
+                            "rowKey": "630.00",
+                            "csa": "630.00",
+                            "values": {
+                                "dc_res_cu": "0.0287",
+                                "dc_res_tcu": "0.0291",
+                                "dc_res_al": "0.0469"
+                            }
+                        },
+                        {
+                            "rowKey": "800.00",
+                            "csa": "800.00",
+                            "values": {
+                                "dc_res_cu": "0.0221",
+                                "dc_res_tcu": "0.0223",
+                                "dc_res_al": "0.0367"
+                            }
+                        },
+                        {
+                            "rowKey": "1000.00",
+                            "csa": "1000.00",
+                            "values": {
+                                "dc_res_cu": null,
+                                "dc_res_tcu": null,
+                                "dc_res_al": "0.0291"
+                            }
+                        }
+                    ]
+                },
+                "shortCircuitCopperMetric": {
+                    "title": "Short Circuit Rating - mm\u00b2 Copper",
+                    "description": "AS/NZS3008.1.1:2009, Table 46 and Table 48. To determine the single-phase Voltage drop, multiply the three-phase value by 1.155.",
+                    "columnGroups": [
+                        {
+                            "id": "scc",
+                            "label": "Short Circuit Current (Amps for 1 sec)",
+                            "columns": [
+                                {
+                                    "id": "scc_90_cu",
+                                    "label": "90\u00b0C"
+                                },
+                                {
+                                    "id": "scc_110_cu",
+                                    "label": "110\u00b0C"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "vd_sdi",
+                            "label": "Voltage Drop at 50Hz \u2014 single core",
+                            "columns": [
+                                {
+                                    "id": "vd_sdi_90_cu",
+                                    "label": "90\u00b0C"
+                                },
+                                {
+                                    "id": "vd_sdi_110_cu",
+                                    "label": "110\u00b0C"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "vd_mul",
+                            "label": "Voltage Drop at 50Hz \u2014 MultiCore",
+                            "columns": [
+                                {
+                                    "id": "vd_mul_90_cu",
+                                    "label": "90\u00b0C"
+                                },
+                                {
+                                    "id": "vd_mul_110_cu",
+                                    "label": "110\u00b0C"
+                                }
+                            ]
+                        }
+                    ],
+                    "rowHeader": {
+                        "id": "csa",
+                        "label": "Cross Sectional Area",
+                        "unit": "mm\u00b2"
+                    },
+                    "rows": [
+                        {
+                            "rowKey": "0.50",
+                            "csa": "0.50",
+                            "values": {
+                                "scc_90_cu": 72,
+                                "scc_110_cu": 66,
+                                "vd_sdi_90_cu": "86.100",
+                                "vd_sdi_110_cu": "91.400",
+                                "vd_mul_90_cu": "86.100",
+                                "vd_mul_110_cu": "91.400"
+                            }
+                        },
+                        {
+                            "rowKey": "0.75",
+                            "csa": "0.75",
+                            "values": {
+                                "scc_90_cu": 107,
+                                "scc_110_cu": 99,
+                                "vd_sdi_90_cu": "57.400",
+                                "vd_sdi_110_cu": "61.000",
+                                "vd_mul_90_cu": "57.400",
+                                "vd_mul_110_cu": "61.000"
+                            }
+                        },
+                        {
+                            "rowKey": "1.00",
+                            "csa": "1.00",
+                            "values": {
+                                "scc_90_cu": 143,
+                                "scc_110_cu": 132,
+                                "vd_sdi_90_cu": "43.100",
+                                "vd_sdi_110_cu": "45.700",
+                                "vd_mul_90_cu": "43.100",
+                                "vd_mul_110_cu": "45.700"
+                            }
+                        },
+                        {
+                            "rowKey": "1.50",
+                            "csa": "1.50",
+                            "values": {
+                                "scc_90_cu": 215,
+                                "scc_110_cu": 198,
+                                "vd_sdi_90_cu": "29.400",
+                                "vd_sdi_110_cu": "31.200",
+                                "vd_mul_90_cu": "29.400",
+                                "vd_mul_110_cu": "31.200"
+                            }
+                        },
+                        {
+                            "rowKey": "2.50",
+                            "csa": "2.50",
+                            "values": {
+                                "scc_90_cu": 358,
+                                "scc_110_cu": 330,
+                                "vd_sdi_90_cu": "17.600",
+                                "vd_sdi_110_cu": "18.700",
+                                "vd_mul_90_cu": "17.600",
+                                "vd_mul_110_cu": "18.700"
+                            }
+                        },
+                        {
+                            "rowKey": "4.00",
+                            "csa": "4.00",
+                            "values": {
+                                "scc_90_cu": 572,
+                                "scc_110_cu": 528,
+                                "vd_sdi_90_cu": "10.900",
+                                "vd_sdi_110_cu": "11.600",
+                                "vd_mul_90_cu": "10.900",
+                                "vd_mul_110_cu": "11.600"
+                            }
+                        },
+                        {
+                            "rowKey": "6.00",
+                            "csa": "6.00",
+                            "values": {
+                                "scc_90_cu": 858,
+                                "scc_110_cu": 792,
+                                "vd_sdi_90_cu": "7.290",
+                                "vd_sdi_110_cu": "7.740",
+                                "vd_mul_90_cu": "7.290",
+                                "vd_mul_110_cu": "7.740"
+                            }
+                        },
+                        {
+                            "rowKey": "10.00",
+                            "csa": "10.00",
+                            "values": {
+                                "scc_90_cu": 1430,
+                                "scc_110_cu": 1320,
+                                "vd_sdi_90_cu": "4.220",
+                                "vd_sdi_110_cu": "4.480",
+                                "vd_mul_90_cu": "4.220",
+                                "vd_mul_110_cu": "4.480"
+                            }
+                        },
+                        {
+                            "rowKey": "16.00",
+                            "csa": "16.00",
+                            "values": {
+                                "scc_90_cu": 2288,
+                                "scc_110_cu": 2112,
+                                "vd_sdi_90_cu": "2.680",
+                                "vd_sdi_110_cu": "2.840",
+                                "vd_mul_90_cu": "2.680",
+                                "vd_mul_110_cu": "2.840"
+                            }
+                        },
+                        {
+                            "rowKey": "25.00",
+                            "csa": "25.00",
+                            "values": {
+                                "scc_90_cu": 3575,
+                                "scc_110_cu": 3300,
+                                "vd_sdi_90_cu": "1.730",
+                                "vd_sdi_110_cu": "1.840",
+                                "vd_mul_90_cu": "1.730",
+                                "vd_mul_110_cu": "1.840"
+                            }
+                        },
+                        {
+                            "rowKey": "35.00",
+                            "csa": "35.00",
+                            "values": {
+                                "scc_90_cu": 5005,
+                                "scc_110_cu": 4620,
+                                "vd_sdi_90_cu": "1.240",
+                                "vd_sdi_110_cu": "1.310",
+                                "vd_mul_90_cu": "1.230",
+                                "vd_mul_110_cu": "1.310"
+                            }
+                        },
+                        {
+                            "rowKey": "50.00",
+                            "csa": "50.00",
+                            "values": {
+                                "scc_90_cu": 7150,
+                                "scc_110_cu": 6600,
+                                "vd_sdi_90_cu": "0.869",
+                                "vd_sdi_110_cu": "0.921",
+                                "vd_mul_90_cu": "0.866",
+                                "vd_mul_110_cu": "0.917"
+                            }
+                        },
+                        {
+                            "rowKey": "70.00",
+                            "csa": "70.00",
+                            "values": {
+                                "scc_90_cu": 10010,
+                                "scc_110_cu": 9240,
+                                "vd_sdi_90_cu": "0.622",
+                                "vd_sdi_110_cu": "0.658",
+                                "vd_mul_90_cu": "0.618",
+                                "vd_mul_110_cu": "0.654"
+                            }
+                        },
+                        {
+                            "rowKey": "95.00",
+                            "csa": "95.00",
+                            "values": {
+                                "scc_90_cu": 13585,
+                                "scc_110_cu": 12540,
+                                "vd_sdi_90_cu": "0.483",
+                                "vd_sdi_110_cu": "0.509",
+                                "vd_mul_90_cu": "0.477",
+                                "vd_mul_110_cu": "0.504"
+                            }
+                        },
+                        {
+                            "rowKey": "120.00",
+                            "csa": "120.00",
+                            "values": {
+                                "scc_90_cu": 17160,
+                                "scc_110_cu": 15840,
+                                "vd_sdi_90_cu": "0.388",
+                                "vd_sdi_110_cu": "0.408",
+                                "vd_mul_90_cu": "0.383",
+                                "vd_mul_110_cu": "0.403"
+                            }
+                        },
+                        {
+                            "rowKey": "150.00",
+                            "csa": "150.00",
+                            "values": {
+                                "scc_90_cu": 21450,
+                                "scc_110_cu": 19800,
+                                "vd_sdi_90_cu": "0.325",
+                                "vd_sdi_110_cu": "0.340",
+                                "vd_mul_90_cu": "0.318",
+                                "vd_mul_110_cu": "0.334"
+                            }
+                        },
+                        {
+                            "rowKey": "185.00",
+                            "csa": "185.00",
+                            "values": {
+                                "scc_90_cu": 26455,
+                                "scc_110_cu": 24420,
+                                "vd_sdi_90_cu": "0.280",
+                                "vd_sdi_110_cu": "0.293",
+                                "vd_mul_90_cu": "0.273",
+                                "vd_mul_110_cu": "0.286"
+                            }
+                        },
+                        {
+                            "rowKey": "240.00",
+                            "csa": "240.00",
+                            "values": {
+                                "scc_90_cu": 34320,
+                                "scc_110_cu": 31680,
+                                "vd_sdi_90_cu": "0.233",
+                                "vd_sdi_110_cu": "0.242",
+                                "vd_mul_90_cu": "0.225",
+                                "vd_mul_110_cu": "0.234"
+                            }
+                        },
+                        {
+                            "rowKey": "300.00",
+                            "csa": "300.00",
+                            "values": {
+                                "scc_90_cu": 42900,
+                                "scc_110_cu": 39600,
+                                "vd_sdi_90_cu": "0.207",
+                                "vd_sdi_110_cu": "0.213",
+                                "vd_mul_90_cu": "0.198",
+                                "vd_mul_110_cu": "0.205"
+                            }
+                        },
+                        {
+                            "rowKey": "400.00",
+                            "csa": "400.00",
+                            "values": {
+                                "scc_90_cu": 57200,
+                                "scc_110_cu": 52800,
+                                "vd_sdi_90_cu": "0.183",
+                                "vd_sdi_110_cu": "0.187",
+                                "vd_mul_90_cu": "0.174",
+                                "vd_mul_110_cu": "0.178"
+                            }
+                        },
+                        {
+                            "rowKey": "500.00",
+                            "csa": "500.00",
+                            "values": {
+                                "scc_90_cu": 71500,
+                                "scc_110_cu": 66000,
+                                "vd_sdi_90_cu": "0.169",
+                                "vd_sdi_110_cu": "0.172",
+                                "vd_mul_90_cu": "0.160",
+                                "vd_mul_110_cu": "0.163"
+                            }
+                        },
+                        {
+                            "rowKey": "630.00",
+                            "csa": "630.00",
+                            "values": {
+                                "scc_90_cu": 90090,
+                                "scc_110_cu": 83160,
+                                "vd_sdi_90_cu": "0.157",
+                                "vd_sdi_110_cu": "0.159",
+                                "vd_mul_90_cu": null,
+                                "vd_mul_110_cu": null
+                            }
+                        },
+                        {
+                            "rowKey": "800.00",
+                            "csa": "800.00",
+                            "values": {
+                                "scc_90_cu": null,
+                                "scc_110_cu": null,
+                                "vd_sdi_90_cu": null,
+                                "vd_sdi_110_cu": null,
+                                "vd_mul_90_cu": null,
+                                "vd_mul_110_cu": null
+                            }
+                        },
+                        {
+                            "rowKey": "1000.00",
+                            "csa": "1000.00",
+                            "values": {
+                                "scc_90_cu": null,
+                                "scc_110_cu": null,
+                                "vd_sdi_90_cu": null,
+                                "vd_sdi_110_cu": null,
+                                "vd_mul_90_cu": null,
+                                "vd_mul_110_cu": null
+                            }
+                        }
+                    ]
+                },
+                "shortCircuitAluminiumMetric": {
+                    "title": "Short Circuit Rating - mm\u00b2 Aluminium",
+                    "description": "To determine the single-phase Voltage drop, multiply the three-phase value by 1.155.",
+                    "columnGroups": [
+                        {
+                            "id": "scc",
+                            "label": "Short Circuit Current (Amps for 1 sec)",
+                            "columns": [
+                                {
+                                    "id": "scc_90_al",
+                                    "label": "90\u00b0C"
+                                },
+                                {
+                                    "id": "scc_110_al",
+                                    "label": "110\u00b0C"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "vd_sdi",
+                            "label": "Voltage Drop at 50Hz \u2014 single core",
+                            "columns": [
+                                {
+                                    "id": "vd_sdi_90_al",
+                                    "label": "90\u00b0C"
+                                },
+                                {
+                                    "id": "vd_sdi_110_al",
+                                    "label": "110\u00b0C"
+                                }
+                            ]
+                        }
+                    ],
+                    "rowHeader": {
+                        "id": "csa",
+                        "label": "Cross Sectional Area",
+                        "unit": "mm\u00b2"
+                    },
+                    "rows": [
+                        {
+                            "rowKey": "0.50",
+                            "csa": "0.50",
+                            "values": {
+                                "scc_90_al": null,
+                                "scc_110_al": null,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "0.75",
+                            "csa": "0.75",
+                            "values": {
+                                "scc_90_al": null,
+                                "scc_110_al": null,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "1.00",
+                            "csa": "1.00",
+                            "values": {
+                                "scc_90_al": null,
+                                "scc_110_al": null,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "1.50",
+                            "csa": "1.50",
+                            "values": {
+                                "scc_90_al": null,
+                                "scc_110_al": null,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "2.50",
+                            "csa": "2.50",
+                            "values": {
+                                "scc_90_al": null,
+                                "scc_110_al": null,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "4.00",
+                            "csa": "4.00",
+                            "values": {
+                                "scc_90_al": null,
+                                "scc_110_al": null,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "6.00",
+                            "csa": "6.00",
+                            "values": {
+                                "scc_90_al": null,
+                                "scc_110_al": null,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "10.00",
+                            "csa": "10.00",
+                            "values": {
+                                "scc_90_al": 945,
+                                "scc_110_al": 871,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "16.00",
+                            "csa": "16.00",
+                            "values": {
+                                "scc_90_al": 1512,
+                                "scc_110_al": 1394,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "25.00",
+                            "csa": "25.00",
+                            "values": {
+                                "scc_90_al": 2362,
+                                "scc_110_al": 2178,
+                                "vd_sdi_90_al": "2.660",
+                                "vd_sdi_110_al": "2.820"
+                            }
+                        },
+                        {
+                            "rowKey": "35.00",
+                            "csa": "35.00",
+                            "values": {
+                                "scc_90_al": 3307,
+                                "scc_110_al": 3049,
+                                "vd_sdi_90_al": "1.920",
+                                "vd_sdi_110_al": "2.040"
+                            }
+                        },
+                        {
+                            "rowKey": "50.00",
+                            "csa": "50.00",
+                            "values": {
+                                "scc_90_al": 4724,
+                                "scc_110_al": 4356,
+                                "vd_sdi_90_al": "1.420",
+                                "vd_sdi_110_al": "1.510"
+                            }
+                        },
+                        {
+                            "rowKey": "70.00",
+                            "csa": "70.00",
+                            "values": {
+                                "scc_90_al": 6614,
+                                "scc_110_al": 6099,
+                                "vd_sdi_90_al": "0.989",
+                                "vd_sdi_110_al": "1.049"
+                            }
+                        },
+                        {
+                            "rowKey": "95.00",
+                            "csa": "95.00",
+                            "values": {
+                                "scc_90_al": 8976,
+                                "scc_110_al": 8277,
+                                "vd_sdi_90_al": "0.721",
+                                "vd_sdi_110_al": "0.764"
+                            }
+                        },
+                        {
+                            "rowKey": "120.00",
+                            "csa": "120.00",
+                            "values": {
+                                "scc_90_al": 11338,
+                                "scc_110_al": 10455,
+                                "vd_sdi_90_al": "0.577",
+                                "vd_sdi_110_al": "0.610"
+                            }
+                        },
+                        {
+                            "rowKey": "150.00",
+                            "csa": "150.00",
+                            "values": {
+                                "scc_90_al": 14173,
+                                "scc_110_al": 13069,
+                                "vd_sdi_90_al": "0.477",
+                                "vd_sdi_110_al": "0.504"
+                            }
+                        },
+                        {
+                            "rowKey": "185.00",
+                            "csa": "185.00",
+                            "values": {
+                                "scc_90_al": 17479,
+                                "scc_110_al": 16119,
+                                "vd_sdi_90_al": "0.389",
+                                "vd_sdi_110_al": "0.410"
+                            }
+                        },
+                        {
+                            "rowKey": "240.00",
+                            "csa": "240.00",
+                            "values": {
+                                "scc_90_al": 22676,
+                                "scc_110_al": 20911,
+                                "vd_sdi_90_al": "0.310",
+                                "vd_sdi_110_al": "0.325"
+                            }
+                        },
+                        {
+                            "rowKey": "300.00",
+                            "csa": "300.00",
+                            "values": {
+                                "scc_90_al": 28345,
+                                "scc_110_al": 26138,
+                                "vd_sdi_90_al": "0.261",
+                                "vd_sdi_110_al": "0.272"
+                            }
+                        },
+                        {
+                            "rowKey": "400.00",
+                            "csa": "400.00",
+                            "values": {
+                                "scc_90_al": 37794,
+                                "scc_110_al": 34851,
+                                "vd_sdi_90_al": "0.220",
+                                "vd_sdi_110_al": "0.229"
+                            }
+                        },
+                        {
+                            "rowKey": "500.00",
+                            "csa": "500.00",
+                            "values": {
+                                "scc_90_al": 47242,
+                                "scc_110_al": 43564,
+                                "vd_sdi_90_al": "0.191",
+                                "vd_sdi_110_al": "0.197"
+                            }
+                        },
+                        {
+                            "rowKey": "630.00",
+                            "csa": "630.00",
+                            "values": {
+                                "scc_90_al": 59525,
+                                "scc_110_al": 54890,
+                                "vd_sdi_90_al": "0.171",
+                                "vd_sdi_110_al": "0.175"
+                            }
+                        },
+                        {
+                            "rowKey": "800.00",
+                            "csa": "800.00",
+                            "values": {
+                                "scc_90_al": null,
+                                "scc_110_al": null,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        },
+                        {
+                            "rowKey": "1000.00",
+                            "csa": "1000.00",
+                            "values": {
+                                "scc_90_al": null,
+                                "scc_110_al": null,
+                                "vd_sdi_90_al": null,
+                                "vd_sdi_110_al": null
+                            }
+                        }
+                    ]
+                },
+                "shortCircuitAwg": {
+                    "title": "Short Circuit Rating - AWG/MCM",
+                    "description": "Calculated Values. Three-Phase Voltage Drop at 60Hz (mV/A\u00b7ft). To determine the single-phase Voltage drop, multiply the three-phase value by 1.155.",
+                    "columnGroups": [
+                        {
+                            "id": "scc",
+                            "label": "Short Circuit (Amps for 1 sec)",
+                            "columns": [
+                                {
+                                    "id": "scc_90_cu",
+                                    "label": "90\u00b0C"
+                                },
+                                {
+                                    "id": "scc_110_cu",
+                                    "label": "110\u00b0C"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "vd_sdi",
+                            "label": "Three-Phase VD 60Hz \u2014 single core (mV/A\u00b7ft)",
+                            "columns": [
+                                {
+                                    "id": "vd_sdi_90_cu",
+                                    "label": "90\u00b0C"
+                                },
+                                {
+                                    "id": "vd_sdi_110_cu",
+                                    "label": "110\u00b0C"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "vd_mul",
+                            "label": "Three-Phase VD 60Hz \u2014 MultiCore (mV/A\u00b7ft)",
+                            "columns": [
+                                {
+                                    "id": "vd_mul_90_cu",
+                                    "label": "90\u00b0C"
+                                },
+                                {
+                                    "id": "vd_mul_110_cu",
+                                    "label": "110\u00b0C"
+                                }
+                            ]
+                        }
+                    ],
+                    "rowHeader": {
+                        "id": "csa",
+                        "label": "Conductor Size",
+                        "unit": "AWG/MCM"
+                    },
+                    "rows": [
+                        {
+                            "rowKey": "20",
+                            "csa": "20",
+                            "values": {
+                                "scc_90_cu": 74,
+                                "scc_110_cu": 68,
+                                "vd_sdi_90_cu": "22.500",
+                                "vd_sdi_110_cu": "23.900",
+                                "vd_mul_90_cu": "23.000",
+                                "vd_mul_110_cu": "24.400"
+                            }
+                        },
+                        {
+                            "rowKey": "18",
+                            "csa": "18",
+                            "values": {
+                                "scc_90_cu": 117,
+                                "scc_110_cu": 108,
+                                "vd_sdi_90_cu": "13.800",
+                                "vd_sdi_110_cu": "14.700",
+                                "vd_mul_90_cu": "14.100",
+                                "vd_mul_110_cu": "15.000"
+                            }
+                        },
+                        {
+                            "rowKey": "16",
+                            "csa": "16",
+                            "values": {
+                                "scc_90_cu": 187,
+                                "scc_110_cu": 173,
+                                "vd_sdi_90_cu": "8.990",
+                                "vd_sdi_110_cu": "9.540",
+                                "vd_mul_90_cu": "9.170",
+                                "vd_mul_110_cu": "9.730"
+                            }
+                        },
+                        {
+                            "rowKey": "14",
+                            "csa": "14",
+                            "values": {
+                                "scc_90_cu": 297,
+                                "scc_110_cu": 275,
+                                "vd_sdi_90_cu": "5.570",
+                                "vd_sdi_110_cu": "5.910",
+                                "vd_mul_90_cu": "5.570",
+                                "vd_mul_110_cu": "5.910"
+                            }
+                        },
+                        {
+                            "rowKey": "12",
+                            "csa": "12",
+                            "values": {
+                                "scc_90_cu": 473,
+                                "scc_110_cu": 437,
+                                "vd_sdi_90_cu": "3.600",
+                                "vd_sdi_110_cu": "3.820",
+                                "vd_mul_90_cu": "3.670",
+                                "vd_mul_110_cu": "3.900"
+                            }
+                        },
+                        {
+                            "rowKey": "10",
+                            "csa": "10",
+                            "values": {
+                                "scc_90_cu": 752,
+                                "scc_110_cu": 694,
+                                "vd_sdi_90_cu": "2.250",
+                                "vd_sdi_110_cu": "2.390",
+                                "vd_mul_90_cu": "2.300",
+                                "vd_mul_110_cu": "2.440"
+                            }
+                        },
+                        {
+                            "rowKey": "8",
+                            "csa": "8",
+                            "values": {
+                                "scc_90_cu": 1197,
+                                "scc_110_cu": 1105,
+                                "vd_sdi_90_cu": "1.410",
+                                "vd_sdi_110_cu": "1.490",
+                                "vd_mul_90_cu": "1.430",
+                                "vd_mul_110_cu": "1.520"
+                            }
+                        },
+                        {
+                            "rowKey": "6",
+                            "csa": "6",
+                            "values": {
+                                "scc_90_cu": 1902,
+                                "scc_110_cu": 1756,
+                                "vd_sdi_90_cu": "0.875",
+                                "vd_sdi_110_cu": "0.929",
+                                "vd_mul_90_cu": "0.892",
+                                "vd_mul_110_cu": "0.946"
+                            }
+                        },
+                        {
+                            "rowKey": "4",
+                            "csa": "4",
+                            "values": {
+                                "scc_90_cu": 3032,
+                                "scc_110_cu": 2798,
+                                "vd_sdi_90_cu": "0.562",
+                                "vd_sdi_110_cu": "0.597",
+                                "vd_mul_90_cu": "0.572",
+                                "vd_mul_110_cu": "0.607"
+                            }
+                        },
+                        {
+                            "rowKey": "2",
+                            "csa": "2",
+                            "values": {
+                                "scc_90_cu": 4805,
+                                "scc_110_cu": 4435,
+                                "vd_sdi_90_cu": "0.356",
+                                "vd_sdi_110_cu": "0.378",
+                                "vd_mul_90_cu": "0.362",
+                                "vd_mul_110_cu": "0.384"
+                            }
+                        },
+                        {
+                            "rowKey": "1",
+                            "csa": "1",
+                            "values": {
+                                "scc_90_cu": 6063,
+                                "scc_110_cu": 5597,
+                                "vd_sdi_90_cu": "0.285",
+                                "vd_sdi_110_cu": "0.302",
+                                "vd_mul_90_cu": "0.288",
+                                "vd_mul_110_cu": "0.306"
+                            }
+                        },
+                        {
+                            "rowKey": "1/0",
+                            "csa": "1/0",
+                            "values": {
+                                "scc_90_cu": 7651,
+                                "scc_110_cu": 7062,
+                                "vd_sdi_90_cu": "0.229",
+                                "vd_sdi_110_cu": "0.242",
+                                "vd_mul_90_cu": "0.231",
+                                "vd_mul_110_cu": "0.244"
+                            }
+                        },
+                        {
+                            "rowKey": "2/0",
+                            "csa": "2/0",
+                            "values": {
+                                "scc_90_cu": 9638,
+                                "scc_110_cu": 8897,
+                                "vd_sdi_90_cu": "0.185",
+                                "vd_sdi_110_cu": "0.196",
+                                "vd_mul_90_cu": "0.186",
+                                "vd_mul_110_cu": "0.197"
+                            }
+                        },
+                        {
+                            "rowKey": "3/0",
+                            "csa": "3/0",
+                            "values": {
+                                "scc_90_cu": 12155,
+                                "scc_110_cu": 11220,
+                                "vd_sdi_90_cu": "0.151",
+                                "vd_sdi_110_cu": "0.159",
+                                "vd_mul_90_cu": "0.150",
+                                "vd_mul_110_cu": "0.159"
+                            }
+                        },
+                        {
+                            "rowKey": "4/0",
+                            "csa": "4/0",
+                            "values": {
+                                "scc_90_cu": 15330,
+                                "scc_110_cu": 14150,
+                                "vd_sdi_90_cu": "0.121",
+                                "vd_sdi_110_cu": "0.127",
+                                "vd_mul_90_cu": "0.120",
+                                "vd_mul_110_cu": "0.127"
+                            }
+                        },
+                        {
+                            "rowKey": "262",
+                            "csa": "262",
+                            "values": {
+                                "scc_90_cu": 19033,
+                                "scc_110_cu": 17569,
+                                "vd_sdi_90_cu": "0.104",
+                                "vd_sdi_110_cu": "0.109",
+                                "vd_mul_90_cu": "0.102",
+                                "vd_mul_110_cu": "0.107"
+                            }
+                        },
+                        {
+                            "rowKey": "313",
+                            "csa": "313",
+                            "values": {
+                                "scc_90_cu": 22694,
+                                "scc_110_cu": 20948,
+                                "vd_sdi_90_cu": "0.091",
+                                "vd_sdi_110_cu": "0.094",
+                                "vd_mul_90_cu": "0.088",
+                                "vd_mul_110_cu": "0.092"
+                            }
+                        },
+                        {
+                            "rowKey": "373",
+                            "csa": "373",
+                            "values": {
+                                "scc_90_cu": 27084,
+                                "scc_110_cu": 25001,
+                                "vd_sdi_90_cu": "0.080",
+                                "vd_sdi_110_cu": "0.083",
+                                "vd_mul_90_cu": "0.077",
+                                "vd_mul_110_cu": "0.080"
+                            }
+                        },
+                        {
+                            "rowKey": "444",
+                            "csa": "444",
+                            "values": {
+                                "scc_90_cu": 32204,
+                                "scc_110_cu": 29726,
+                                "vd_sdi_90_cu": "0.074",
+                                "vd_sdi_110_cu": "0.076",
+                                "vd_mul_90_cu": "0.070",
+                                "vd_mul_110_cu": "0.073"
+                            }
+                        },
+                        {
+                            "rowKey": "535",
+                            "csa": "535",
+                            "values": {
+                                "scc_90_cu": 38796,
+                                "scc_110_cu": 35812,
+                                "vd_sdi_90_cu": "0.068",
+                                "vd_sdi_110_cu": "0.070",
+                                "vd_mul_90_cu": "0.064",
+                                "vd_mul_110_cu": "0.066"
+                            }
+                        },
+                        {
+                            "rowKey": "646",
+                            "csa": "646",
+                            "values": {
+                                "scc_90_cu": 46847,
+                                "scc_110_cu": 43243,
+                                "vd_sdi_90_cu": "0.064",
+                                "vd_sdi_110_cu": "0.065",
+                                "vd_mul_90_cu": "0.060",
+                                "vd_mul_110_cu": "0.061"
+                            }
+                        },
+                        {
+                            "rowKey": "777",
+                            "csa": "777",
+                            "values": {
+                                "scc_90_cu": 56371,
+                                "scc_110_cu": 52034,
+                                "vd_sdi_90_cu": "0.060",
+                                "vd_sdi_110_cu": "0.061",
+                                "vd_mul_90_cu": null,
+                                "vd_mul_110_cu": null
+                            }
+                        }
+                    ]
+                },
+                "temperatureCorrection": {
+                    "title": "Ambient Temperature Correction Factor",
+                    "columnGroups": [
+                        {
+                            "id": "corr",
+                            "label": "Correction",
+                            "columns": [
+                                {
+                                    "id": "factor",
+                                    "label": "Correction Factor"
+                                }
+                            ]
+                        }
+                    ],
+                    "rowHeader": {
+                        "id": "ambient",
+                        "label": "Ambient temperature",
+                        "unit": "\u00b0C"
+                    },
+                    "rows": [
+                        {
+                            "rowKey": "20",
+                            "ambientC": 20,
+                            "values": {
+                                "factor": 1
+                            }
+                        },
+                        {
+                            "rowKey": "25",
+                            "ambientC": 25,
+                            "values": {
+                                "factor": 1.02
+                            }
+                        },
+                        {
+                            "rowKey": "30",
+                            "ambientC": 30,
+                            "values": {
+                                "factor": 1.039
+                            }
+                        },
+                        {
+                            "rowKey": "35",
+                            "ambientC": 35,
+                            "values": {
+                                "factor": 1.059
+                            }
+                        },
+                        {
+                            "rowKey": "40",
+                            "ambientC": 40,
+                            "values": {
+                                "factor": 1.079
+                            }
+                        },
+                        {
+                            "rowKey": "45",
+                            "ambientC": 45,
+                            "values": {
+                                "factor": 1.098
+                            }
+                        },
+                        {
+                            "rowKey": "50",
+                            "ambientC": 50,
+                            "values": {
+                                "factor": 1.118
+                            }
+                        },
+                        {
+                            "rowKey": "55",
+                            "ambientC": 55,
+                            "values": {
+                                "factor": 1.138
+                            }
+                        },
+                        {
+                            "rowKey": "60",
+                            "ambientC": 60,
+                            "values": {
+                                "factor": 1.157
+                            }
+                        },
+                        {
+                            "rowKey": "65",
+                            "ambientC": 65,
+                            "values": {
+                                "factor": 1.177
+                            }
+                        },
+                        {
+                            "rowKey": "70",
+                            "ambientC": 70,
+                            "values": {
+                                "factor": 1.196
+                            }
+                        },
+                        {
+                            "rowKey": "75",
+                            "ambientC": 75,
+                            "values": {
+                                "factor": 1.216
+                            }
+                        },
+                        {
+                            "rowKey": "80",
+                            "ambientC": 80,
+                            "values": {
+                                "factor": 1.236
+                            }
+                        },
+                        {
+                            "rowKey": "85",
+                            "ambientC": 85,
+                            "values": {
+                                "factor": 1.255
+                            }
+                        }
+                    ]
+                },
+                "shortCircuitFormulas": {
+                    "title": "Conductor Size - Short Circuit Rating",
+                    "description": "The short circuit current ratings in this catalogue are based on a one second duration. To calculate the maximum permissible short circuit ratings, the following formulas should be applied.",
+                    "formulas": [
+                        {
+                            "id": "mm2_90",
+                            "label": "mm\u00b2 @ 90\u00b0C",
+                            "expression": "C \u00d7 143 / \u221at",
+                            "temperatureC": 90,
+                            "cUnit": "mm\u00b2",
+                            "tUnit": "seconds"
+                        },
+                        {
+                            "id": "mm2_110",
+                            "label": "mm\u00b2 @ 110\u00b0C",
+                            "expression": "C \u00d7 132 / \u221at",
+                            "temperatureC": 110,
+                            "cUnit": "mm\u00b2",
+                            "tUnit": "seconds"
+                        },
+                        {
+                            "id": "mcm_90",
+                            "label": "MCM @ 90\u00b0C",
+                            "expression": "C \u00d7 72.5 / \u221at",
+                            "temperatureC": 90,
+                            "cUnit": "MCM",
+                            "tUnit": "seconds"
+                        },
+                        {
+                            "id": "mcm_110",
+                            "label": "MCM @ 110\u00b0C",
+                            "expression": "C \u00d7 66.9 / \u221at",
+                            "temperatureC": 110,
+                            "cUnit": "MCM",
+                            "tUnit": "seconds"
+                        }
+                    ],
+                    "notes": [
+                        "C = cross section area of conductor in mm\u00b2 (or MCM for MCM formulas)",
+                        "t = short circuit time in seconds"
+                    ]
+                }
+            },
+            "notes": [
+                "AS/NZS3008.1.1:2009, Table 46 and Table 48 referenced on short-circuit / voltage-drop copper table footer.",
+                "To determine the single-phase Voltage drop, multiply the three-phase value by 1.155.",
+                "All information above is intended as a guide only.",
+                "Source: tc.conductor_data (46 rows: 24 Metric + 22 AWG), Phase 4B."
+            ]
+        }
+    },
+    "source": {
+        "legacyFiles": [
+            "wp-content/themes/tricab/content-includes/content-ind_conductor_data.php",
+            "wp-content/themes/tricab/content-includes/content-conductor_data.php"
+        ],
+        "kind": "static_lookup_table",
+        "relationship": "Two legacy pages. Industrial embeds static HTML tables. General loads numeric rows from MySQL tc.conductor_data (unit=M and unit=AWG).",
+        "generalSource": {
+            "table": "tc.conductor_data",
+            "rows": 46,
+            "metric": 24,
+            "awg": 22,
+            "promoted": "Phase 4B",
+            "order": "my_row_id"
+        }
+    }
+}

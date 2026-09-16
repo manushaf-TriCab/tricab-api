@@ -261,7 +261,10 @@ final class Phase137f1SelectedCustomerPricingTest extends TestCase
         };
 
         $selfContext = new \TriCab\Core\Product\Application\Pricing\ResolveCustomerPricingContextService(
-            new \TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerContextService($links),
+            new \TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerContextService(
+                $links,
+                new \TriCab\Core\Customer\Application\Service\ResolveAuthenticatedMarketCodesService($customers),
+            ),
             $customers,
         );
 

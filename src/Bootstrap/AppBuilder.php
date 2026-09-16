@@ -155,6 +155,11 @@ use TriCab\Api\Http\Action\PublicCart\PostCartRepriceAction;
 use TriCab\Api\Http\Action\PublicRegionAction;
 use TriCab\Api\Http\Action\PublicContent\GetPublicAboutAction;
 use TriCab\Api\Http\Action\PublicContent\GetPublicContactAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalArticleAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalProductCodingAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalTableAction;
+use TriCab\Api\Http\Action\Technical\ListTechnicalDocumentsAction;
+use TriCab\Api\Http\Action\Technical\ListTechnicalSectionsAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\CableCalculator\PostCableCalculatorCalculateAction;
 use TriCab\Api\Http\Action\ProductFinder\FindProductAction;
@@ -344,6 +349,7 @@ final class AppBuilder
         self::registerTriExpenseRoutes($app, $container);
         self::registerLogNoteRoutes($app, $container);
         self::registerTelDirectoryRoutes($app, $container);
+        self::registerTechnicalRoutes($app, $container);
         $app->get('/api/v1/regions', PublicRegionAction::class);
         $app->get('/api/v1/regions/current', PublicRegionAction::class);
         $app->post('/api/v1/regions/select', PublicRegionAction::class);
@@ -503,6 +509,23 @@ final class AppBuilder
         $require = new RequirePermission($container);
         $app->get('/api/v1/tel-directory', \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class)
             ->add(($require)(\TriCab\Core\TelDirectory\Module::PERMISSION_ACCESS));
+    }
+
+    /**
+     * Technical hub — versioned JSON content packs (manifest / articles / lookup tables).
+     * Login required (ACCOUNT.LOGIN). Cable Calculator remains on its existing public route.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerTechnicalRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $gate = 'ACCOUNT.LOGIN';
+        $app->get('/api/v1/technical/sections', ListTechnicalSectionsAction::class)->add(($require)($gate));
+        $app->get('/api/v1/technical/articles/{slug}', GetTechnicalArticleAction::class)->add(($require)($gate));
+        $app->get('/api/v1/technical/tables/{key}', GetTechnicalTableAction::class)->add(($require)($gate));
+        $app->get('/api/v1/technical/product-coding/{mode}', GetTechnicalProductCodingAction::class)->add(($require)($gate));
+        $app->get('/api/v1/technical/documents', ListTechnicalDocumentsAction::class)->add(($require)($gate));
     }
 
     private static function registerAdminLegacyMigrationRoutes(App $app, RequirePermission $require): void

@@ -1,0 +1,298 @@
+{
+  "key": "cable-designation",
+  "slug": "cable-designation",
+  "title": "Industry Cable Designations",
+  "description": "ADDITIONAL ABBREVIATION FOR INSTRUMENTATION CABLES: (C) COLLECTIVE SCREEN, (I) INDIVIDUAL PAIR OR TRIPLE SCREEN",
+  "variant": "reference_rows",
+  "notes": [
+    "1st Letter = Insulation",
+    "2nd Letter = Bedding/inner jacket",
+    "3rd Letter = Armouring/screen",
+    "4th Letter = Outer jacket",
+    "Letter meanings copied from the desktop (non-xs) legacy table."
+  ],
+  "columns": [
+    {
+      "id": "letter",
+      "label": "Letter"
+    },
+    {
+      "id": "insulation",
+      "label": "1st Letter Insulation"
+    },
+    {
+      "id": "bedding",
+      "label": "2nd Letter Bedding/inner jacket"
+    },
+    {
+      "id": "armour",
+      "label": "3rd Letter Armouring/screen"
+    },
+    {
+      "id": "outerJacket",
+      "label": "4th Letter Outer jacket"
+    }
+  ],
+  "groups": [
+    {
+      "id": "designation-letters",
+      "label": "Cable designation letters",
+      "rows": [
+        {
+          "rowKey": "A",
+          "values": {
+            "letter": "A",
+            "insulation": "Fibre, tight Cladded",
+            "bedding": "Aluminium (optional with corrosion protection)",
+            "armour": "Strength member yarn",
+            "outerJacket": "Yarn + bitumen"
+          }
+        },
+        {
+          "rowKey": "B",
+          "values": {
+            "letter": "B",
+            "insulation": "Fire resistant tape + insulation (Halogen-free)",
+            "bedding": "Corrogated aluminium (o.w.c.p.)",
+            "armour": "Steel tapes, 2 off",
+            "outerJacket": "Hydrocarbon resistant jacket"
+          }
+        },
+        {
+          "rowKey": "C",
+          "values": {
+            "letter": "C",
+            "insulation": "Polychloroprene (Neoprene) PCP, or chlorinated polyethylene - CPE",
+            "bedding": "Polychloroprene (Neoprene) PCP, or chlorinated polyethylene - CPE",
+            "armour": "Galvanized steel wire braid",
+            "outerJacket": "Polychloroprene Neoprene) PCP, or chlorinated polyethylene CPE"
+          }
+        },
+        {
+          "rowKey": "D",
+          "values": {
+            "letter": "D",
+            "insulation": "Impregnated paper Drip free",
+            "bedding": "-",
+            "armour": "Oil filled cable reinforcement (Longitudinal / Transverse)",
+            "outerJacket": "-"
+          }
+        },
+        {
+          "rowKey": "E",
+          "values": {
+            "letter": "E",
+            "insulation": "Polyethylene - PE Polypropylene - PP",
+            "bedding": "Polyethylene - PE Polypropylene - PP",
+            "armour": "Oil filled cable reinforcement (Transverse only)",
+            "outerJacket": "Polyethylene - PE Polypropylene - PP"
+          }
+        },
+        {
+          "rowKey": "F",
+          "values": {
+            "letter": "F",
+            "insulation": "PE or PP + filling compound",
+            "bedding": "Bedding or taping (Halogen-free)",
+            "armour": "Flat steel wire armour",
+            "outerJacket": "Semi-conducting PE"
+          }
+        },
+        {
+          "rowKey": "G",
+          "values": {
+            "letter": "G",
+            "insulation": "Polyamid - PA",
+            "bedding": "-",
+            "armour": "-",
+            "outerJacket": "PE + PA"
+          }
+        },
+        {
+          "rowKey": "H",
+          "values": {
+            "letter": "H",
+            "insulation": "Chlorosulphonated polyethylene - CSP",
+            "bedding": "Chlorosulphonated polyethylene - CSP",
+            "armour": "Steel tape +steel wires",
+            "outerJacket": "Chlorosulphonated polyethylene - CSP"
+          }
+        },
+        {
+          "rowKey": "I",
+          "values": {
+            "letter": "I",
+            "insulation": "Thermoplastic compound (Halogen-free)",
+            "bedding": "Thermoplastic compound (Halogen-free)",
+            "armour": "Steel tapes, 4 off",
+            "outerJacket": "Thermoplastic compound (Halogen-free)"
+          }
+        },
+        {
+          "rowKey": "K",
+          "values": {
+            "letter": "K",
+            "insulation": "Paper",
+            "bedding": "Lead",
+            "armour": "Steel wire, plastics or rubber coated",
+            "outerJacket": "Lead"
+          }
+        },
+        {
+          "rowKey": "L",
+          "values": {
+            "letter": "L",
+            "insulation": "Air + plastics (Coaxial cable)",
+            "bedding": "Aluminium laminate + plastics jacket",
+            "armour": "Aluminium (laminated to outer jacket)",
+            "outerJacket": "-"
+          }
+        },
+        {
+          "rowKey": "M",
+          "values": {
+            "letter": "M",
+            "insulation": "Expanded PE or PP + filling compound",
+            "bedding": "Polyester",
+            "armour": "-",
+            "outerJacket": "Polyester"
+          }
+        },
+        {
+          "rowKey": "N",
+          "values": {
+            "letter": "N",
+            "insulation": "Impregnated paper",
+            "bedding": "Polyurethane",
+            "armour": "Steel (laminated to outer jacket)",
+            "outerJacket": "Polyurethane"
+          }
+        },
+        {
+          "rowKey": "O",
+          "values": {
+            "letter": "O",
+            "insulation": "Impregnated paper, oilfilled cable",
+            "bedding": "Lead + Plastics",
+            "armour": "Copper wire braid (Tinned or bare)",
+            "outerJacket": "-"
+          }
+        },
+        {
+          "rowKey": "P",
+          "values": {
+            "letter": "P",
+            "insulation": "Polyvinylchloride - PVC",
+            "bedding": "Polyvinylchloride - PVC",
+            "armour": "Phosphorbronze wire braid",
+            "outerJacket": "Polyvinylchloride - PVC"
+          }
+        },
+        {
+          "rowKey": "Q",
+          "values": {
+            "letter": "Q",
+            "insulation": "Fibre in loose tube",
+            "bedding": "-",
+            "armour": "Steel wires + counter steel tape (optional)",
+            "outerJacket": "-"
+          }
+        },
+        {
+          "rowKey": "R",
+          "values": {
+            "letter": "R",
+            "insulation": "Ethylenepropylene rubber - EPR",
+            "bedding": "Ethylenepropylene rubber - EPR",
+            "armour": "Steel wires (round) + filling compound",
+            "outerJacket": "Ethylenepropylene rubber - EPR"
+          }
+        },
+        {
+          "rowKey": "S",
+          "values": {
+            "letter": "S",
+            "insulation": "Silicone rubber",
+            "bedding": "Bedding or taping + concentric conductor",
+            "armour": "Concentric conductor (Screen)",
+            "outerJacket": "Silicone rubber"
+          }
+        },
+        {
+          "rowKey": "T",
+          "values": {
+            "letter": "T",
+            "insulation": "Cross-linked polyethylene XLPE",
+            "bedding": "PE + aluminium wire + steel tape",
+            "armour": "-",
+            "outerJacket": "Cross-linked polyethylene XLPE"
+          }
+        },
+        {
+          "rowKey": "U",
+          "values": {
+            "letter": "U",
+            "insulation": "Halogen-free thermoset compound EMA or EVA",
+            "bedding": "Halogen-free thermoset compound EMA or EVA",
+            "armour": "-",
+            "outerJacket": "Halogen-free thermoset compound EMA or EVA"
+          }
+        },
+        {
+          "rowKey": "V",
+          "values": {
+            "letter": "V",
+            "insulation": "Fibre, slotted core",
+            "bedding": "Aluminium screen",
+            "armour": "Double wire armour (two layers)",
+            "outerJacket": "Other halogen-free thermoset materials"
+          }
+        },
+        {
+          "rowKey": "W",
+          "values": {
+            "letter": "W",
+            "insulation": "Other materials",
+            "bedding": "Other materials",
+            "armour": "Catenary wire",
+            "outerJacket": "Other materials"
+          }
+        },
+        {
+          "rowKey": "X",
+          "values": {
+            "letter": "X",
+            "insulation": "No insulation",
+            "bedding": "No bedding or equivalent",
+            "armour": "No armour",
+            "outerJacket": "No jacket"
+          }
+        },
+        {
+          "rowKey": "Y",
+          "values": {
+            "letter": "Y",
+            "insulation": "-",
+            "bedding": "Screen",
+            "armour": "-",
+            "outerJacket": "-"
+          }
+        },
+        {
+          "rowKey": "Z",
+          "values": {
+            "letter": "Z",
+            "insulation": "Four plastics PTFE/FEP",
+            "bedding": "Four plastics",
+            "armour": "-",
+            "outerJacket": "Four plastics"
+          }
+        }
+      ]
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-sbo_industrycable_designations.php",
+    "kind": "static_lookup_table"
+  }
+}

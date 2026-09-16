@@ -1,0 +1,166 @@
+{
+  "key": "sbo-general-installation",
+  "slug": "sbo-general-installation",
+  "title": "SBO General Installation / Conductor Data",
+  "intro": "Correction factors, bending radii, voltage-drop formulas and maximum installation tension for shipboard / offshore / onshore cables.",
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Correction Factors for Cable Current Rating"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Bunching of cable"
+    },
+    {
+      "type": "paragraph",
+      "body": "Where more than six cables are bunched together and operating at their maximum capacity, a correction factor of 0.85 should be applied (assuming insufficient free air circulation). Single core cables are exempted from this requirement."
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Ambient temperature"
+    },
+    {
+      "type": "paragraph",
+      "body": "The maximum current ratings in this catalogue are based on an ambient temperature of 45°C. For other ambient temperatures, the correction factors shown below should be applied."
+    },
+    {
+      "type": "table",
+      "caption": "Ambient air temperature correction factors (base 45°C)",
+      "columns": [
+        "Max. conductor temp. (°C)",
+        "35°C",
+        "40°C",
+        "45°C",
+        "50°C",
+        "55°C",
+        "60°C",
+        "65°C"
+      ],
+      "rows": [
+        ["90", "1.10", "1.05", "1.00", "0.94", "0.88", "0.82", "0.74"],
+        ["110*", "1.04", "1.00", "0.96", "0.93", "0.89", "0.85", "0.81"]
+      ]
+    },
+    {
+      "type": "note",
+      "tone": "info",
+      "body": "* Shorepower cable only."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Installation"
+    },
+    {
+      "type": "paragraph",
+      "body": "Cable runs should be fixed in straight lines as far as practicable. The minimum bending radius for cable should be selected in accordance with the table below."
+    },
+    {
+      "type": "table",
+      "caption": "Minimum bending radius",
+      "columns": ["Cable construction", "Cable OD", "Min. bending radius"],
+      "rows": [
+        ["Unbraided", "all sizes", "3×"],
+        ["Unbraided, Fire Resistant", "all sizes", "6×"],
+        ["Braided", "all sizes", "4×"],
+        ["Braided, Fire Resistant", "all sizes", "6×"]
+      ]
+    },
+    {
+      "type": "paragraph",
+      "body": "The installation of cables across expansion joints in any structure should be avoided. Where this is not feasible, a loop of cable sufficient to accommodate the expansion of the joint should be provided. The internal radius of the loop is to be at least 12 times the overall diameter of the cable."
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables should be installed away from heat sources as far as practicable. If this cannot be avoided and there is possibility of damage to the cable, then suitable shields, insulation or other protective measures should be installed."
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables are not to be coated or painted with materials which may adversely affect their jacket or fire performance."
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables should be installed away from sources of mechanical damage, as far as is practicable. If this cannot be avoided the cables should be protected with suitable metallic casing."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Maximum Installation Tension"
+    },
+    {
+      "type": "paragraph",
+      "body": "To calculate the allowable tension of cables during installation the following formula should be applied:"
+    },
+    {
+      "type": "paragraph",
+      "body": "t = L × W × C × N"
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "t = pulling tension in N",
+        "L = length of cable in m",
+        "W = weight of cable in kg/m",
+        "C = 0.5 without lubricant, 0.09 with lubricant",
+        "N = number of cables"
+      ]
+    },
+    {
+      "type": "note",
+      "tone": "warning",
+      "body": "Maximum tension must not exceed 20,000 N (kg = N / 9.8)."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Voltage Drop"
+    },
+    {
+      "type": "paragraph",
+      "body": "When selecting cable size, consideration must be given to voltage drop. Refer to formulas below."
+    },
+    {
+      "type": "paragraph",
+      "body": "VD = (L × I × mV/Am) / 1000"
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "Vd = voltage drop in volts",
+        "L = route length of cable in metres",
+        "I = current to be carried in amps",
+        "mV/Am = millivolts per ampere metre value",
+        "The drop in voltage shall not exceed 5% of supply voltage"
+      ]
+    },
+    {
+      "type": "paragraph",
+      "body": "VD = (L × I × mV/Aft) / 1000"
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "Vd = voltage drop in volts",
+        "L = route length of cable in feet",
+        "I = current to be carried in amps",
+        "mV/Aft = millivolts per ampere foot value",
+        "The drop in voltage shall not exceed 5% of supply voltage"
+      ]
+    },
+    {
+      "type": "note",
+      "tone": "info",
+      "body": "All information above is intended as a guide only. Tricab Cables is not liable for any errors, omissions, etc., and reserves the right to modify specifications at any time."
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-sbo_install_recommendation_cond_data.php"
+  }
+}

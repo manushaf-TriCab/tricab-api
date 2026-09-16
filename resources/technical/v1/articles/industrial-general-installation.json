@@ -1,0 +1,267 @@
+{
+  "key": "industrial-general-installation",
+  "slug": "industrial-general-installation",
+  "title": "Industrial General Installation",
+  "intro": "Correction factors (AU/NZ air and soil), bending radii, installation guidance, voltage drop, short-circuit rating formulas and maximum installation tension for industrial cables. Values aligned with tricab-web installationData.ts / legacy content-ind_install_recommendation.php.",
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Correction Factors for Cable Current Rating"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Ambient temperature — Australia"
+    },
+    {
+      "type": "paragraph",
+      "body": "Australia: 40°C air, 25°C soil."
+    },
+    {
+      "type": "table",
+      "caption": "Australia — ambient air temperature correction factors (reference 40°C)",
+      "columns": [
+        "Max. conductor temp. (°C)",
+        "25°C",
+        "30°C",
+        "35°C",
+        "40°C",
+        "45°C",
+        "50°C",
+        "55°C"
+      ],
+      "rows": [
+        ["110", "1.10", "1.07", "1.04", "1.00", "0.96", "0.93", "0.89"],
+        ["90", "1.15", "1.10", "1.05", "1.00", "0.94", "0.88", "0.81"]
+      ]
+    },
+    {
+      "type": "table",
+      "caption": "Australia — ambient soil temperature correction factors (reference 25°C)",
+      "columns": [
+        "Max. conductor temp. (°C)",
+        "10°C",
+        "15°C",
+        "20°C",
+        "25°C",
+        "30°C",
+        "35°C",
+        "40°C"
+      ],
+      "rows": [
+        ["110", "1.08", "1.06", "1.03", "1.00", "0.97", "0.94", "0.91"],
+        ["90", "1.11", "1.07", "1.03", "1.00", "0.97", "0.93", "0.89"]
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Ambient temperature — New Zealand"
+    },
+    {
+      "type": "paragraph",
+      "body": "New Zealand: 30°C air, 15°C soil."
+    },
+    {
+      "type": "table",
+      "caption": "New Zealand — ambient air temperature correction factors (reference 30°C)",
+      "columns": [
+        "Max. conductor temp. (°C)",
+        "15°C",
+        "20°C",
+        "25°C",
+        "30°C",
+        "35°C",
+        "40°C",
+        "45°C"
+      ],
+      "rows": [
+        ["110", "1.08", "1.06", "1.03", "1.00", "0.97", "0.93", "0.90"],
+        ["90", "1.15", "1.09", "1.05", "1.00", "0.95", "0.91", "0.85"]
+      ]
+    },
+    {
+      "type": "table",
+      "caption": "New Zealand — ambient soil temperature correction factors (reference 15°C)",
+      "columns": [
+        "Max. conductor temp. (°C)",
+        "10°C",
+        "15°C",
+        "20°C",
+        "25°C",
+        "30°C",
+        "35°C",
+        "40°C"
+      ],
+      "rows": [
+        ["110", "1.02", "1.00", "0.97", "0.95", "0.92", "0.89", "0.86"],
+        ["90", "1.04", "1.00", "0.96", "0.93", "0.91", "0.87", "0.83"]
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Installation"
+    },
+    {
+      "type": "paragraph",
+      "body": "Cable runs should be fixed in straight lines as far as practicable. The minimum bending radius for cable should be selected in accordance with the table below."
+    },
+    {
+      "type": "table",
+      "caption": "Minimum bending radius",
+      "columns": ["Cable construction", "Cable OD", "Min. bending radius"],
+      "rows": [
+        ["Unbraided", "all sizes", "3×"],
+        ["Unbraided, Fire Resistant", "all sizes", "8×"],
+        ["Braided", "all sizes", "4×"],
+        ["Braided, Fire Resistant", "all sizes", "10×"],
+        ["Nylon Protected", "all sizes", "8×"],
+        ["Steel Wire Armoured", "all sizes", "6×"]
+      ]
+    },
+    {
+      "type": "paragraph",
+      "body": "The installation of cables across expansion joints in any structure should be avoided. Where this is not feasible, a loop of cable sufficient to accommodate the expansion of the joint should be provided. The internal radius of the loop is to be at least 12 times the overall diameter of the cable."
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables should be installed away from heat sources as far as practicable. If this cannot be avoided and there is possibility of damage to the cable, then suitable shields, insulation or other protective measures should be installed."
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables are not to be coated or painted with materials which may adversely affect their jacket or fire performance."
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables should be installed away from sources of mechanical damage, as far as is practicable. If this cannot be avoided the cables should be protected with suitable metallic casing."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Voltage Drop"
+    },
+    {
+      "type": "paragraph",
+      "body": "When selecting cable size, consideration must be given to voltage drop. Refer to formula and table below:"
+    },
+    {
+      "type": "paragraph",
+      "body": "VD = (L × I × mV/Am) / 1000"
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "Vd = voltage drop in volts",
+        "L = route length of cable in metres",
+        "I = current to be carried in amps",
+        "mV/Am = millivolts per ampere metre value",
+        "The drop in voltage shall not exceed 5% of supply voltage"
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Conductor Size — Short Circuit Rating"
+    },
+    {
+      "type": "paragraph",
+      "body": "The short circuit current ratings in this catalogue are based on a one second duration. To calculate the maximum permissible short circuit ratings, the following formulas should be applied:"
+    },
+    {
+      "type": "paragraph",
+      "body": "I = (C × 143) / √t   (90°C)"
+    },
+    {
+      "type": "paragraph",
+      "body": "I = (C × 132) / √t   (110°C)"
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "C = cross section area of conductor in mm²",
+        "t = short circuit time in seconds"
+      ]
+    },
+    {
+      "type": "table",
+      "caption": "Short-circuit current (amps for 1 second) and three-phase voltage drop at 50 Hz (mV/A·m)*",
+      "columns": [
+        "CSA (mm²)",
+        "SC Cu 90°C",
+        "SC Cu 110°C",
+        "SC Al 90°C",
+        "SC Al 110°C",
+        "VD Cu trefoil 90°C",
+        "VD Cu trefoil 110°C",
+        "VD Cu multicore 90°C",
+        "VD Cu multicore 110°C",
+        "VD Al trefoil 90°C",
+        "VD Al trefoil 110°C"
+      ],
+      "rows": [
+        ["0.5", "72", "66", "—", "—", "86.1", "91.4", "86.1", "91.4", "—", "—"],
+        ["0.75", "107", "99", "—", "—", "57.4", "61.0", "57.4", "61.0", "—", "—"],
+        ["1", "143", "132", "—", "—", "43.1", "45.7", "43.1", "45.7", "—", "—"],
+        ["1.5", "215", "198", "—", "—", "29.4", "31.2", "29.4", "31.2", "—", "—"],
+        ["2.5", "358", "330", "—", "—", "17.6", "18.7", "17.6", "18.7", "—", "—"],
+        ["4", "572", "528", "—", "—", "10.9", "11.6", "10.9", "11.6", "—", "—"],
+        ["6", "858", "792", "—", "—", "7.29", "7.74", "7.29", "7.74", "—", "—"],
+        ["10", "1430", "1320", "945", "871", "4.22", "4.48", "4.22", "4.48", "—", "—"],
+        ["16", "2288", "2112", "1512", "1394", "2.68", "2.84", "2.68", "2.84", "—", "—"],
+        ["25", "3575", "3300", "2362", "2178", "1.73", "1.84", "1.73", "1.84", "2.66", "2.82"],
+        ["35", "5005", "4620", "3307", "3049", "1.24", "1.31", "1.23", "1.31", "1.92", "2.04"],
+        ["50", "7150", "6600", "4724", "4356", "0.869", "0.921", "0.866", "0.917", "1.42", "1.51"],
+        ["70", "10010", "9240", "6614", "6099", "0.622", "0.658", "0.618", "0.654", "0.989", "1.049"],
+        ["95", "13585", "12540", "8976", "8277", "0.483", "0.509", "0.477", "0.504", "0.721", "0.764"],
+        ["120", "17160", "15840", "11338", "10455", "0.388", "0.408", "0.383", "0.403", "0.577", "0.610"],
+        ["150", "21450", "19800", "14173", "13069", "0.325", "0.340", "0.318", "0.334", "0.477", "0.504"],
+        ["185", "26455", "24420", "17479", "16119", "0.280", "0.293", "0.273", "0.286", "0.389", "0.410"],
+        ["240", "34320", "31680", "22676", "20911", "0.233", "0.242", "0.225", "0.234", "0.310", "0.325"],
+        ["300", "42900", "39600", "28345", "26138", "0.207", "0.213", "0.198", "0.205", "0.261", "0.272"],
+        ["400", "57200", "52800", "37794", "34851", "0.183", "0.187", "0.174", "0.178", "0.220", "0.229"],
+        ["500", "71500", "66000", "47242", "43564", "0.169", "0.172", "0.160", "0.163", "0.191", "0.197"],
+        ["630", "90090", "83160", "59525", "54890", "0.157", "0.159", "—", "—", "0.171", "0.175"],
+        ["800", "114400", "105600", "75587", "69702", "0.134", "0.135", "—", "—", "0.157", "0.160"],
+        ["1000", "—", "—", "94484", "87127", "—", "—", "—", "—", "0.148", "0.150"]
+      ]
+    },
+    {
+      "type": "note",
+      "tone": "info",
+      "body": "* AS/NZS 3008.1.1:2009, Table 46 and Table 48. To determine the single-phase voltage drop, multiply the three-phase value by 1.155. All information above is intended as a guide only."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Maximum Installation Tension"
+    },
+    {
+      "type": "paragraph",
+      "body": "To calculate the maximum allowable tension of cables during installation the following formula should be applied:"
+    },
+    {
+      "type": "paragraph",
+      "body": "50 × C × Nc"
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "C = cross section area of conductor in mm²",
+        "Nc = total number of cores"
+      ]
+    },
+    {
+      "type": "note",
+      "tone": "warning",
+      "body": "Maximum tension must not exceed 20,000 N (kg = N / 9.81)."
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-ind_install_recommendation.php"
+  }
+}

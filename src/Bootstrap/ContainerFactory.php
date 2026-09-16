@@ -96,6 +96,17 @@ use TriCab\Api\Http\Action\PublicRegionAction;
 use TriCab\Api\Http\Action\PublicContent\GetPublicAboutAction;
 use TriCab\Api\Http\Action\PublicContent\GetPublicContactAction;
 use TriCab\Api\Content\PublicContentRepository;
+use TriCab\Api\Http\Action\Technical\GetTechnicalArticleAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalProductCodingAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalTableAction;
+use TriCab\Api\Http\Action\Technical\ListTechnicalDocumentsAction;
+use TriCab\Api\Http\Action\Technical\ListTechnicalSectionsAction;
+use TriCab\Api\Technical\TechnicalContentRepository;
+use TriCab\Api\Technical\Document\TechnicalDocumentLibraryRepository;
+use TriCab\Api\Technical\Document\EmptyTechnicalDocumentLibraryRepository;
+use TriCab\Api\Technical\Document\InMemoryTechnicalDocumentLibraryRepository;
+use TriCab\Api\Technical\Document\ResolveTechnicalDocumentsQuery;
+use TriCab\Api\Technical\Persistence\AzureSqlTechnicalDocumentLibraryRepository;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardAction;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardProductActivityAction;
 use TriCab\Api\Http\Action\Admin\PreviewProductCodeAction;
@@ -340,6 +351,8 @@ use TriCab\Core\Customer\Application\Service\LinkCustomerContactToUserService;
 use TriCab\Core\Customer\Application\Service\ListCustomerContactsService;
 use TriCab\Core\Customer\Application\Service\ListCustomersService;
 use TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerContextService;
+use TriCab\Api\Technical\ResolveTechnicalAccessoriesAccessService;
+use TriCab\Core\Customer\Application\Service\ResolveAuthenticatedMarketCodesService;
 use TriCab\Core\Customer\Application\Service\UnlinkCustomerContactFromUserService;
 use TriCab\Core\Customer\Application\Service\UpdateCustomerContactService;
 use TriCab\Core\Customer\Application\Service\UpdateCustomerService;
@@ -1048,6 +1061,8 @@ final class ContainerFactory
             UnlinkCustomerContactFromUserService::class => \DI\autowire(UnlinkCustomerContactFromUserService::class),
             CreateCustomerPortalUserService::class => \DI\autowire(CreateCustomerPortalUserService::class),
             ResolveAuthenticatedCustomerContextService::class => \DI\autowire(ResolveAuthenticatedCustomerContextService::class),
+            ResolveAuthenticatedMarketCodesService::class => \DI\autowire(ResolveAuthenticatedMarketCodesService::class),
+            ResolveTechnicalAccessoriesAccessService::class => \DI\autowire(ResolveTechnicalAccessoriesAccessService::class),
             EnableCustomerPortalAccessService::class => \DI\autowire(EnableCustomerPortalAccessService::class),
             DisableCustomerPortalAccessService::class => \DI\autowire(DisableCustomerPortalAccessService::class),
             CustomerManagementErrorMapper::class => \DI\autowire(CustomerManagementErrorMapper::class),
@@ -1074,6 +1089,15 @@ final class ContainerFactory
             PublicContentRepository::class => static function (): PublicContentRepository {
                 return PublicContentRepository::fromProjectRoot(dirname(__DIR__, 2));
             },
+            TechnicalContentRepository::class => static function (): TechnicalContentRepository {
+                return TechnicalContentRepository::fromProjectRoot(dirname(__DIR__, 2));
+            },
+            ResolveTechnicalDocumentsQuery::class => \DI\autowire(ResolveTechnicalDocumentsQuery::class),
+            ListTechnicalSectionsAction::class => \DI\autowire(ListTechnicalSectionsAction::class),
+            GetTechnicalArticleAction::class => \DI\autowire(GetTechnicalArticleAction::class),
+            GetTechnicalTableAction::class => \DI\autowire(GetTechnicalTableAction::class),
+            GetTechnicalProductCodingAction::class => \DI\autowire(GetTechnicalProductCodingAction::class),
+            ListTechnicalDocumentsAction::class => \DI\autowire(ListTechnicalDocumentsAction::class),
             GetPublicAboutAction::class => \DI\autowire(GetPublicAboutAction::class),
             GetPublicContactAction::class => \DI\autowire(GetPublicContactAction::class),
             RegionAdminAction::class => \DI\autowire(RegionAdminAction::class),
@@ -1977,6 +2001,7 @@ final class ContainerFactory
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(AzureSqlProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(AzureSqlProductMediaRepository::class);
             $definitions[ProductDocumentRepository::class] = \DI\autowire(AzureSqlProductDocumentRepository::class);
+            $definitions[TechnicalDocumentLibraryRepository::class] = \DI\autowire(AzureSqlTechnicalDocumentLibraryRepository::class);
             $definitions[Product360Repository::class] = \DI\autowire(AzureSqlProduct360Repository::class);
             $definitions[ProductArModelRepository::class] = \DI\autowire(AzureSqlProductArModelRepository::class);
             $definitions[Product3DModelRepository::class] = \DI\autowire(AzureSqlProduct3DModelRepository::class);
@@ -2119,6 +2144,7 @@ SQL,
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(InMemoryProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(InMemoryProductMediaRepository::class);
             $definitions[ProductDocumentRepository::class] = \DI\autowire(InMemoryProductDocumentRepository::class);
+            $definitions[TechnicalDocumentLibraryRepository::class] = \DI\autowire(InMemoryTechnicalDocumentLibraryRepository::class);
             $definitions[Product360Repository::class] = \DI\autowire(InMemoryProduct360Repository::class);
             $definitions[ProductArModelRepository::class] = \DI\autowire(InMemoryProductArModelRepository::class);
             $definitions[ProductMarketRepository::class] = \DI\autowire(InMemoryProductMarketRepository::class);

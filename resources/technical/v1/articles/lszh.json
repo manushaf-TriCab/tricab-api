@@ -1,0 +1,89 @@
+{
+  "key": "lszh",
+  "slug": "lszh",
+  "title": "LSZH — What Does It Mean?",
+  "intro": "LSZH means Low Smoke Zero Halogen and describes how cable compounds behave when combusted — specifically smoke quantity and emission toxicity.",
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "LSZH"
+    },
+    {
+      "type": "paragraph",
+      "body": "LSZH simply translates to Low Smoke Zero Halogen and refers to the behaviour of chemical compounds when combusted — specifically the quantity of smoke generated and the toxicity of the emissions."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Halogens — What Are They?"
+    },
+    {
+      "type": "paragraph",
+      "body": "Halogens are a group of five elements comprising Fluorine, Chlorine, Bromine, Iodine and Astatine."
+    },
+    {
+      "type": "image",
+      "path": "lszh/lszh-element-chart.jpg",
+      "alt": "Periodic table highlighting the halogen elements"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "Halogens — And the Effect of Combustion"
+    },
+    {
+      "type": "paragraph",
+      "body": "In their basic form, Halogens are very toxic, strong oxidizers and very chemically reactive. In the event of combustion, LSZH and non-LSZH cables behave in very different ways."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "What's the Difference Between LSZH and Non-LSZH Cables?"
+    },
+    {
+      "type": "paragraph",
+      "body": "LSZH cables have a zero Halogen content, emit no toxic fumes, generate very little smoke and produce no corrosive or caustic acids. LSZH cables are therefore ideally suited for all applications where personnel safety and protection of valuable equipment are of paramount importance."
+    },
+    {
+      "type": "paragraph",
+      "body": "Non-LSZH cables, or Halogenated Cables, are typically manufactured from thermoplastic compounds, such as PVC. On combustion, these compounds generate highly toxic fumes that cause severe irritation to the eyes, nose, mouth, throat and lungs. Increased concentrations are considered fatal to humans."
+    },
+    {
+      "type": "paragraph",
+      "body": "They also generate large volumes of dense black smoke that blocks visibility and severely disrupts evacuation procedures. The smoke and fumes can also lead to suffocation from smoke inhalation. A one metre length of burning cable that contains 0.85 kg of PVC will completely obscure a room of 1000 m³ with black toxic smoke in less than five minutes."
+    },
+    {
+      "type": "paragraph",
+      "body": "When combusted, Halogens combine with moisture to form Hydrochloric Acid. This extremely corrosive acid is potentially deadly to humans and always causes extensive property damage. Acids of this nature aggressively attack electrical switchboards, motors, fixtures, furnishings, floor coverings, paint surfaces, etc."
+    },
+    {
+      "type": "note",
+      "tone": "warning",
+      "body": "In many cases the effects of acid corrosion after a fire are much more severe than the actual fire damage itself."
+    },
+    {
+      "type": "image",
+      "path": "lszh/lszh-tri-comparison.jpg",
+      "alt": "Comparison of LSZH versus non-LSZH cable combustion behaviour"
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "TriCab LSFLEX® LSZH Cables"
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "Are halogen free",
+        "Do not form corrosive acids",
+        "Emit low smoke",
+        "Have an extremely low fuel element"
+      ]
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-lszh_whatdoesitmean.php"
+  }
+}

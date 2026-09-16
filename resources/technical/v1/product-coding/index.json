@@ -1,0 +1,20 @@
+{
+  "version": "1",
+  "modes": [
+    {
+      "id": "industrial",
+      "title": "Industrial",
+      "path": "industrial.json"
+    },
+    {
+      "id": "sbo",
+      "title": "Shipboard / Offshore",
+      "path": "sbo.json"
+    },
+    {
+      "id": "accessories",
+      "title": "Accessories",
+      "path": "accessories.json"
+    }
+  ]
+}

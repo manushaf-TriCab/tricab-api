@@ -93,6 +93,7 @@ final class GetAuthenticatedUserAction
                 'customerPublicIds' => $customerContext->customerPublicIds,
                 'contactPublicIds' => $customerContext->contactPublicIds,
                 'isCustomerAdmin' => $customerContext->isCustomerAdmin,
+                'marketCodes' => $customerContext->marketCodes,
             ],
         ];
     }

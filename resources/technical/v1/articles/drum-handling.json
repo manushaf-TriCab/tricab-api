@@ -1,0 +1,96 @@
+{
+  "key": "drum-handling",
+  "slug": "drum-handling",
+  "title": "Drum Handling",
+  "intro": "Recommended practices for lifting, moving and storing cable reels — wrong methods versus correct methods.",
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "1. Lifting with a forklift"
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_1_no.png",
+      "alt": "Incorrect — lifting by top flange",
+      "caption": "Do not lift by top flange; cable or reel will be damaged."
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_1_yes.png",
+      "alt": "Correct — cradle both reel flanges between forks",
+      "caption": "Cradle both reel flanges between forks."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "2. Hoisting reels"
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_2_no.png",
+      "alt": "Incorrect — hoisting without a spreader bar",
+      "caption": "Use a spreader bar to prevent bending the reel flanges and mashing the cable."
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_2_yes.png",
+      "alt": "Correct — hoist with shaft through both flanges",
+      "caption": "Reels can be hoisted with a shaft extended through both flanges."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3. Upended / stacked reels"
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_3_no.png",
+      "alt": "Incorrect — upended heavy reels without inspection",
+      "caption": "Upended heavy reels will often arrive damaged. Refuse or receive subject to inspection for hidden damage."
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_3_yes.png",
+      "alt": "Correct — place spacers under flanges for fork access",
+      "caption": "Place spacers under the bottom flange and between reels to create a space to insert the forks."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4. Unloading from truck"
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_4_no.png",
+      "alt": "Incorrect — dropping reels",
+      "caption": "Never drop reels."
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_4_yes.png",
+      "alt": "Correct — lower reels carefully with hydraulic gate, hoist or fork lift",
+      "caption": "Lower reels from truck using hydraulic gate, hoist or fork lift. Lower carefully."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "5. Loading and securing"
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_5_no.png",
+      "alt": "Incorrect — fork tynes touching cable surface",
+      "caption": "Never allow fork tynes to touch cable surface or reel wrap."
+    },
+    {
+      "type": "image",
+      "path": "drum-handling/drumhandle_5_yes.png",
+      "alt": "Correct — load with flanges on edge and chock securely",
+      "caption": "Always load with flanges on edge and chock and block securely."
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-drum_handling.php"
+  }
+}

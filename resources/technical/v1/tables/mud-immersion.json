@@ -1,0 +1,86 @@
+{
+  "key": "mud-immersion",
+  "slug": "mud-immersion",
+  "title": "MUD Fluid Immersion Tests",
+  "description": "Specific grades of our Cable Jackets have been tested by Underwriters Laboratories and meet or exceed the Fluid Immersion schedules as listed in NEK-TS-606:2009 - MUD and IEC 600092-350-SHF-2 / MUD Annex G",
+  "variant": "reference_rows",
+  "notes": [
+    "NEK-TS-606:2009 - MUD",
+    "IEC 600092-350-SHF-2 / MUD Annex G"
+  ],
+  "columns": [
+    {
+      "id": "testFluid",
+      "label": "Test Fluid"
+    },
+    {
+      "id": "temperature",
+      "label": "Temperature"
+    },
+    {
+      "id": "duration",
+      "label": "Duration"
+    },
+    {
+      "id": "tensileMaxVariation",
+      "label": "Tensile strength MAX variation from original"
+    },
+    {
+      "id": "elongationMaxVariation",
+      "label": "Elongation at break MAX variation from original"
+    },
+    {
+      "id": "volumeSwellMaxVariation",
+      "label": "Volume swell MAX Variation from original"
+    },
+    {
+      "id": "weightIncreaseMaxVariation",
+      "label": "Weight increase MAX variation from original"
+    }
+  ],
+  "groups": [
+    {
+      "id": "immersion",
+      "label": "Fluid Immersion Schedules",
+      "rows": [
+        {
+          "values": {
+            "testFluid": "Mineral Oil type IRM 903",
+            "temperature": "100°C",
+            "duration": "7 Days",
+            "tensileMaxVariation": "30%",
+            "elongationMaxVariation": "30%",
+            "volumeSwellMaxVariation": "30%",
+            "weightIncreaseMaxVariation": "30%"
+          }
+        },
+        {
+          "values": {
+            "testFluid": "Calcium Bromide Brine (Water Based)",
+            "temperature": "70°C",
+            "duration": "7 Days",
+            "tensileMaxVariation": "25%",
+            "elongationMaxVariation": "25%",
+            "volumeSwellMaxVariation": "20%",
+            "weightIncreaseMaxVariation": "15%"
+          }
+        },
+        {
+          "values": {
+            "testFluid": "Carbo Sea (Oil based)",
+            "temperature": "70°C",
+            "duration": "56 Days",
+            "tensileMaxVariation": "25%",
+            "elongationMaxVariation": "25%",
+            "volumeSwellMaxVariation": "25%",
+            "weightIncreaseMaxVariation": "15%"
+          }
+        }
+      ]
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-sbo_mud_fluid_immersion_tests.php",
+    "kind": "static_lookup_table"
+  }
+}

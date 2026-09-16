@@ -1,0 +1,837 @@
+{
+  "key": "current-ieee",
+  "slug": "current-ieee",
+  "title": "Current Carrying Capacities (IEEE 45 Table 25)",
+  "description": "IEEE Std 45-2002 Table 25 – Distribution, control, and signal cable – single banked, maximum current carrying capacity (90°C types T/N, E, X, LSE, and LSX) @ 40°C, 45°C, and 50°C ambient",
+  "units": "A",
+  "conductorTemperatureC": 90,
+  "notes": [
+    "The table on the previous page is extracted from IEEE 45 Table 25 except that values for 75°C for type T insulated cables and 100°C for types S and P insulated cables are not included. Instead, values adjusted for 40°C and 50°C ambient have been included in addition to the values at 45°C ambient.",
+    "Current ratings are for ac or dc.",
+    "For service voltage 1001 V to 5000 V, Type T, T/N, LSE, and LSX should not be used.",
+    "Current-carrying capacity of four-conductor cables, where one conductor does not act as a normal current-carrying conductor (e.g., grounded neutral or grounding conductor), is the same as three-conductor cables listed in Table 25.",
+    "Table 25 is based on an ambient temperature of 45°C and maximum conductor temperature not exceeding: 75°C for type T insulated cables, 90°C for types T/N, X, E, LSE, and LSX insulated cables, and 100°C for types S and P insulated cables.",
+    "The current-carrying capacities in this table are for marine installations with cables arranged in a single bank per hanger and are 85% of the ICEA calculated values. Double banking of distribution-type cables should be avoided. For those instances in which cable must be double banked, the current-carrying capacities in Table 25 should be multiplied by 0.8.",
+    "The ICEA calculated current capacities of these cables are based on cables installed in free air, that is, at least one cable diameter spacing between adjacent cables. See IEEE Std 835-1994.",
+    "For cables with maintained spacing of at least 1 cable diameter apart, the values from this table may be divided by 0.85.",
+    "Legacy HTML cell values preserved exactly as published in content-sbo_current_carrying_capacities_ieee.php."
+  ],
+  "columnGroups": [
+    {
+      "id": "c1",
+      "label": "1 conductor 90°C",
+      "columns": [
+        {
+          "id": "c1_40",
+          "label": "Ambient 40°C",
+          "conductors": 1,
+          "ambientC": 40
+        },
+        {
+          "id": "c1_45",
+          "label": "Ambient 45°C",
+          "conductors": 1,
+          "ambientC": 45
+        },
+        {
+          "id": "c1_50",
+          "label": "Ambient 50°C",
+          "conductors": 1,
+          "ambientC": 50
+        }
+      ]
+    },
+    {
+      "id": "c2",
+      "label": "2 conductor 90°C",
+      "columns": [
+        {
+          "id": "c2_40",
+          "label": "Ambient 40°C",
+          "conductors": 2,
+          "ambientC": 40
+        },
+        {
+          "id": "c2_45",
+          "label": "Ambient 45°C",
+          "conductors": 2,
+          "ambientC": 45
+        },
+        {
+          "id": "c2_50",
+          "label": "Ambient 50°C",
+          "conductors": 2,
+          "ambientC": 50
+        }
+      ]
+    },
+    {
+      "id": "c3",
+      "label": "3 conductor 90°C",
+      "columns": [
+        {
+          "id": "c3_40",
+          "label": "Ambient 40°C",
+          "conductors": 3,
+          "ambientC": 40
+        },
+        {
+          "id": "c3_45",
+          "label": "Ambient 45°C",
+          "conductors": 3,
+          "ambientC": 45
+        },
+        {
+          "id": "c3_50",
+          "label": "Ambient 50°C",
+          "conductors": 3,
+          "ambientC": 50
+        }
+      ]
+    }
+  ],
+  "rowHeader": {
+    "id": "awg",
+    "label": "AWG / kcmil"
+  },
+  "rows": [
+    {
+      "rowKey": "20",
+      "awgKcmil": "20",
+      "csaMm2": 0.517,
+      "circularMils": 1020,
+      "values": {
+        "c1_40": 11,
+        "c1_45": 11,
+        "c1_50": 10,
+        "c2_40": 9,
+        "c2_45": 9,
+        "c2_50": 8,
+        "c3_40": 8,
+        "c3_45": 8,
+        "c3_50": 7
+      }
+    },
+    {
+      "rowKey": "18",
+      "awgKcmil": "18",
+      "csaMm2": 0.821,
+      "circularMils": 1620,
+      "values": {
+        "c1_40": 15,
+        "c1_45": 15,
+        "c1_50": 14,
+        "c2_40": 13,
+        "c2_45": 13,
+        "c2_50": 12,
+        "c3_40": 11,
+        "c3_45": 11,
+        "c3_50": 10
+      }
+    },
+    {
+      "rowKey": "16",
+      "awgKcmil": "16",
+      "csaMm2": 1.31,
+      "circularMils": 2580,
+      "values": {
+        "c1_40": 22,
+        "c1_45": 21,
+        "c1_50": 19,
+        "c2_40": 18,
+        "c2_45": 18,
+        "c2_50": 16,
+        "c3_40": 15,
+        "c3_45": 15,
+        "c3_50": 14
+      }
+    },
+    {
+      "rowKey": "mm2-1.5",
+      "awgKcmil": null,
+      "csaMm2": 1.5,
+      "circularMils": 2960,
+      "values": {
+        "c1_40": 25,
+        "c1_45": 24,
+        "c1_50": 22,
+        "c2_40": 21,
+        "c2_45": 20,
+        "c2_50": 18,
+        "c3_40": 17,
+        "c3_45": 17,
+        "c3_50": 15
+      }
+    },
+    {
+      "rowKey": "14",
+      "awgKcmil": "14",
+      "csaMm2": 2.08,
+      "circularMils": 4110,
+      "values": {
+        "c1_40": 35,
+        "c1_45": 34,
+        "c1_50": 31,
+        "c2_40": 28,
+        "c2_45": 27,
+        "c2_50": 25,
+        "c3_40": 25,
+        "c3_45": 24,
+        "c3_50": 22
+      }
+    },
+    {
+      "rowKey": "12",
+      "awgKcmil": "12",
+      "csaMm2": 3.31,
+      "circularMils": 6530,
+      "values": {
+        "c1_40": 45,
+        "c1_45": 43,
+        "c1_50": 40,
+        "c2_40": 37,
+        "c2_45": 36,
+        "c2_50": 33,
+        "c3_40": 30,
+        "c3_45": 29,
+        "c3_50": 27
+      }
+    },
+    {
+      "rowKey": "10",
+      "awgKcmil": "10",
+      "csaMm2": 5.26,
+      "circularMils": 10400,
+      "values": {
+        "c1_40": 56,
+        "c1_45": 54,
+        "c1_50": 50,
+        "c2_40": 48,
+        "c2_45": 46,
+        "c2_50": 43,
+        "c3_40": 39,
+        "c3_45": 38,
+        "c3_50": 35
+      }
+    },
+    {
+      "rowKey": "8",
+      "awgKcmil": "8",
+      "csaMm2": 8.37,
+      "circularMils": 16500,
+      "values": {
+        "c1_40": 71,
+        "c1_45": 68,
+        "c1_50": 63,
+        "c2_40": 63,
+        "c2_45": 60,
+        "c2_50": 56,
+        "c3_40": 50,
+        "c3_45": 48,
+        "c3_50": 45
+      }
+    },
+    {
+      "rowKey": "6",
+      "awgKcmil": "6",
+      "csaMm2": 13.3,
+      "circularMils": 26300,
+      "values": {
+        "c1_40": 92,
+        "c1_45": 88,
+        "c1_50": 82,
+        "c2_40": 82,
+        "c2_45": 79,
+        "c2_50": 74,
+        "c3_40": 68,
+        "c3_45": 65,
+        "c3_50": 61
+      }
+    },
+    {
+      "rowKey": "4",
+      "awgKcmil": "4",
+      "csaMm2": 21.2,
+      "circularMils": 41700,
+      "values": {
+        "c1_40": 123,
+        "c1_45": 118,
+        "c1_50": 110,
+        "c2_40": 106,
+        "c2_45": 101,
+        "c2_50": 94,
+        "c3_40": 87,
+        "c3_45": 83,
+        "c3_50": 78
+      }
+    },
+    {
+      "rowKey": "2",
+      "awgKcmil": "2",
+      "csaMm2": 33.6,
+      "circularMils": 66400,
+      "values": {
+        "c1_40": 163,
+        "c1_45": 156,
+        "c1_50": 146,
+        "c2_40": 143,
+        "c2_45": 137,
+        "c2_50": 128,
+        "c3_40": 116,
+        "c3_45": 11,
+        "c3_50": 104
+      }
+    },
+    {
+      "rowKey": "1",
+      "awgKcmil": "1",
+      "csaMm2": 42.4,
+      "circularMils": 83700,
+      "values": {
+        "c1_40": 189,
+        "c1_45": 180,
+        "c1_50": 169,
+        "c2_40": 169,
+        "c2_45": 161,
+        "c2_50": 151,
+        "c3_40": 137,
+        "c3_45": 131,
+        "c3_50": 123
+      }
+    },
+    {
+      "rowKey": "1/0",
+      "awgKcmil": "1/0",
+      "csaMm2": 53.5,
+      "circularMils": 106000,
+      "values": {
+        "c1_40": 217,
+        "c1_45": 207,
+        "c1_50": 194,
+        "c2_40": 192,
+        "c2_45": 183,
+        "c2_50": 172,
+        "c3_40": 157,
+        "c3_45": 150,
+        "c3_50": 141
+      }
+    },
+    {
+      "rowKey": "2/0",
+      "awgKcmil": "2/0",
+      "csaMm2": 67.4,
+      "circularMils": 133000,
+      "values": {
+        "c1_40": 252,
+        "c1_45": 240,
+        "c1_50": 225,
+        "c2_40": 244,
+        "c2_45": 233,
+        "c2_50": 219,
+        "c3_40": 181,
+        "c3_45": 173,
+        "c3_50": 162
+      }
+    },
+    {
+      "rowKey": "3/0",
+      "awgKcmil": "3/0",
+      "csaMm2": 85.0,
+      "circularMils": 16800,
+      "values": {
+        "c1_40": 291,
+        "c1_45": 278,
+        "c1_50": 261,
+        "c2_40": 257,
+        "c2_45": 245,
+        "c2_50": 230,
+        "c3_40": 211,
+        "c3_45": 201,
+        "c3_50": 188
+      }
+    },
+    {
+      "rowKey": "4/0",
+      "awgKcmil": "4/0",
+      "csaMm2": 107.2,
+      "circularMils": 212000,
+      "values": {
+        "c1_40": 340,
+        "c1_45": 324,
+        "c1_50": 304,
+        "c2_40": 298,
+        "c2_45": 284,
+        "c2_50": 266,
+        "c3_40": 243,
+        "c3_45": 232,
+        "c3_50": 218
+      }
+    },
+    {
+      "rowKey": "250",
+      "awgKcmil": "250",
+      "csaMm2": 126.7,
+      "circularMils": 250000,
+      "values": {
+        "c1_40": 376,
+        "c1_45": 359,
+        "c1_50": 337,
+        "c2_40": 331,
+        "c2_45": 316,
+        "c2_50": 297,
+        "c3_40": 271,
+        "c3_45": 259,
+        "c3_50": 243
+      }
+    },
+    {
+      "rowKey": "262",
+      "awgKcmil": "262",
+      "csaMm2": 133.1,
+      "circularMils": 262600,
+      "values": {
+        "c1_40": 396,
+        "c1_45": 378,
+        "c1_50": 355,
+        "c2_40": 249,
+        "c2_45": 33,
+        "c2_50": 313,
+        "c3_40": 286,
+        "c3_45": 273,
+        "c3_50": 256
+      }
+    },
+    {
+      "rowKey": "300",
+      "awgKcmil": "300",
+      "csaMm2": 152.0,
+      "circularMils": 300000,
+      "values": {
+        "c1_40": 432,
+        "c1_45": 412,
+        "c1_50": 387,
+        "c2_40": 371,
+        "c2_45": 354,
+        "c2_50": 332,
+        "c3_40": 304,
+        "c3_45": 290,
+        "c3_50": 272
+      }
+    },
+    {
+      "rowKey": "313",
+      "awgKcmil": "313",
+      "csaMm2": 158.7,
+      "circularMils": 313100,
+      "values": {
+        "c1_40": 444,
+        "c1_45": 423,
+        "c1_50": 397,
+        "c2_40": 381,
+        "c2_45": 363,
+        "c2_50": 341,
+        "c3_40": 312,
+        "c3_45": 298,
+        "c3_50": 280
+      }
+    },
+    {
+      "rowKey": "350",
+      "awgKcmil": "350",
+      "csaMm2": 177.3,
+      "circularMils": 350000,
+      "values": {
+        "c1_40": 468,
+        "c1_45": 446,
+        "c1_50": 419,
+        "c2_40": 406,
+        "c2_45": 387,
+        "c2_50": 363,
+        "c3_40": 332,
+        "c3_45": 317,
+        "c3_50": 297
+      }
+    },
+    {
+      "rowKey": "373",
+      "awgKcmil": "373",
+      "csaMm2": 189.4,
+      "circularMils": 373700,
+      "values": {
+        "c1_40": 497,
+        "c1_45": 474,
+        "c1_50": 445,
+        "c2_40": 426,
+        "c2_45": 406,
+        "c2_50": 381,
+        "c3_40": 348,
+        "c3_45": 332,
+        "c3_50": 312
+      }
+    },
+    {
+      "rowKey": "400",
+      "awgKcmil": "400",
+      "csaMm2": 203.0,
+      "circularMils": 400000,
+      "values": {
+        "c1_40": 513,
+        "c1_45": 489,
+        "c1_50": 459,
+        "c2_40": 439,
+        "c2_45": 419,
+        "c2_50": 393,
+        "c3_40": 359,
+        "c3_45": 342,
+        "c3_50": 321
+      }
+    },
+    {
+      "rowKey": "444",
+      "awgKcmil": "444",
+      "csaMm2": 225.2,
+      "circularMils": 444400,
+      "values": {
+        "c1_40": 573,
+        "c1_45": 546,
+        "c1_50": 513,
+        "c2_40": 491,
+        "c2_45": 468,
+        "c2_50": 439,
+        "c3_40": 401,
+        "c3_45": 382,
+        "c3_50": 359
+      }
+    },
+    {
+      "rowKey": "500",
+      "awgKcmil": "500",
+      "csaMm2": 253.3,
+      "circularMils": 500000,
+      "values": {
+        "c1_40": 588,
+        "c1_45": 560,
+        "c1_50": 526,
+        "c2_40": 502,
+        "c2_45": 479,
+        "c2_50": 450,
+        "c3_40": 412,
+        "c3_45": 393,
+        "c3_50": 369
+      }
+    },
+    {
+      "rowKey": "535",
+      "awgKcmil": "535",
+      "csaMm2": 271.3,
+      "circularMils": 535000,
+      "values": {
+        "c1_40": 607,
+        "c1_45": 579,
+        "c1_50": 544,
+        "c2_40": 520,
+        "c2_45": 496,
+        "c2_50": 466,
+        "c3_40": 427,
+        "c3_45": 407,
+        "c3_50": 382
+      }
+    },
+    {
+      "rowKey": "600",
+      "awgKcmil": "600",
+      "csaMm2": 304.0,
+      "circularMils": 600000,
+      "values": {
+        "c1_40": 654,
+        "c1_45": 623,
+        "c1_50": 585,
+        "c2_40": 565,
+        "c2_45": 539,
+        "c2_50": 506,
+        "c3_40": 462,
+        "c3_45": 440,
+        "c3_50": 413
+      }
+    },
+    {
+      "rowKey": "646",
+      "awgKcmil": "646",
+      "csaMm2": 327.6,
+      "circularMils": 646000,
+      "values": {
+        "c1_40": 704,
+        "c1_45": 671,
+        "c1_50": 630,
+        "c2_40": 610,
+        "c2_45": 581,
+        "c2_50": 546,
+        "c3_40": 497,
+        "c3_45": 474,
+        "c3_50": 445
+      }
+    },
+    {
+      "rowKey": "750",
+      "awgKcmil": "750",
+      "csaMm2": 380.0,
+      "circularMils": 750000,
+      "values": {
+        "c1_40": 759,
+        "c1_45": 723,
+        "c1_50": 679,
+        "c2_40": 632,
+        "c2_45": 602,
+        "c2_50": 565,
+        "c3_40": 518,
+        "c3_45": 494,
+        "c3_50": 464
+      }
+    },
+    {
+      "rowKey": "777",
+      "awgKcmil": "777",
+      "csaMm2": 394.2,
+      "circularMils": 777000,
+      "values": {
+        "c1_40": 792,
+        "c1_45": 755,
+        "c1_50": 709,
+        "c2_40": 660,
+        "c2_45": 629,
+        "c2_50": 591,
+        "c3_40": 541,
+        "c3_45": 516,
+        "c3_50": 485
+      }
+    },
+    {
+      "rowKey": "1000",
+      "awgKcmil": "1000",
+      "csaMm2": 506.7,
+      "circularMils": 1000000,
+      "values": {
+        "c1_40": 910,
+        "c1_45": 867,
+        "c1_50": 814,
+        "c2_40": 757,
+        "c2_45": 721,
+        "c2_50": 677,
+        "c3_40": 621,
+        "c3_45": 592,
+        "c3_50": 556
+      }
+    },
+    {
+      "rowKey": "1111",
+      "awgKcmil": "1111",
+      "csaMm2": 563.1,
+      "circularMils": 1111000,
+      "values": {
+        "c1_40": 989,
+        "c1_45": 942,
+        "c1_50": 885,
+        "c2_40": 823,
+        "c2_45": 784,
+        "c2_50": 736,
+        "c3_40": 676,
+        "c3_45": 644,
+        "c3_50": 605
+      }
+    },
+    {
+      "rowKey": "1250",
+      "awgKcmil": "1250",
+      "csaMm2": 635.0,
+      "circularMils": 1250000,
+      "values": {
+        "c1_40": 1039,
+        "c1_45": 990,
+        "c1_50": 930,
+        "c2_40": null,
+        "c2_45": null,
+        "c2_50": null,
+        "c3_40": null,
+        "c3_45": null,
+        "c3_50": null
+      }
+    },
+    {
+      "rowKey": "1500",
+      "awgKcmil": "1500",
+      "csaMm2": 761.0,
+      "circularMils": 1500000,
+      "values": {
+        "c1_40": 1155,
+        "c1_45": 1100,
+        "c1_50": 1034,
+        "c2_40": null,
+        "c2_45": null,
+        "c2_50": null,
+        "c3_40": null,
+        "c3_45": null,
+        "c3_50": null
+      }
+    },
+    {
+      "rowKey": "2000",
+      "awgKcmil": "2000",
+      "csaMm2": 1013.0,
+      "circularMils": 2000000,
+      "values": {
+        "c1_40": 1356,
+        "c1_45": 1292,
+        "c1_50": 1214,
+        "c2_40": null,
+        "c2_45": null,
+        "c2_50": null,
+        "c3_40": null,
+        "c3_45": null,
+        "c3_50": null
+      }
+    }
+  ],
+  "ampacityAdjustmentFactors": {
+    "title": "Ampacity adjustment factors for more than three conductors in a cable with no load diversity",
+    "description": "Percent of values in Table 25 for Three Conductor Cable as adjusted.",
+    "columnGroups": [
+      {
+        "id": "pct",
+        "label": "Percent",
+        "columns": [
+          {
+            "id": "percent",
+            "label": "Percent"
+          }
+        ]
+      }
+    ],
+    "rowHeader": {
+      "id": "conductors",
+      "label": "Conductors"
+    },
+    "rows": [
+      {
+        "rowKey": "4-through-6",
+        "label": "4 through 6",
+        "values": {
+          "percent": "80%"
+        }
+      },
+      {
+        "rowKey": "7-through-9",
+        "label": "7 through 9",
+        "values": {
+          "percent": "70%"
+        }
+      },
+      {
+        "rowKey": "10-through-20",
+        "label": "10 through 20",
+        "values": {
+          "percent": "50%"
+        }
+      },
+      {
+        "rowKey": "21-through-30",
+        "label": "21 through 30",
+        "values": {
+          "percent": "45%"
+        }
+      },
+      {
+        "rowKey": "31-through-40",
+        "label": "31 through 40",
+        "values": {
+          "percent": "40%"
+        }
+      },
+      {
+        "rowKey": "41-through-60",
+        "label": "41 through 60",
+        "values": {
+          "percent": "35%"
+        }
+      }
+    ]
+  },
+  "ambientTemperatureFactors": {
+    "title": "Ambient temperature adjustment factors (if ambient differs from 45°C)",
+    "columnGroups": [
+      {
+        "id": "types",
+        "label": "Insulation types",
+        "columns": [
+          {
+            "id": "type_t",
+            "label": "Type T insulated cables"
+          },
+          {
+            "id": "type_tn_x_e_lse_lsd",
+            "label": "Type T/N, X, E, LSE, LSD insulated cables"
+          },
+          {
+            "id": "type_s_p",
+            "label": "Type S and P insulated cables"
+          }
+        ]
+      }
+    ],
+    "rowHeader": {
+      "id": "ambient",
+      "label": "Ambient Temperature",
+      "unit": "°C"
+    },
+    "rows": [
+      {
+        "rowKey": "30",
+        "ambientC": 30,
+        "values": {
+          "type_t": 1.22,
+          "type_tn_x_e_lse_lsd": 1.15,
+          "type_s_p": 1.05
+        }
+      },
+      {
+        "rowKey": "40",
+        "ambientC": 40,
+        "values": {
+          "type_t": 1.08,
+          "type_tn_x_e_lse_lsd": 1.05,
+          "type_s_p": 1.04
+        }
+      },
+      {
+        "rowKey": "50",
+        "ambientC": 50,
+        "values": {
+          "type_t": 0.91,
+          "type_tn_x_e_lse_lsd": 0.94,
+          "type_s_p": 0.95
+        }
+      },
+      {
+        "rowKey": "60",
+        "ambientC": 60,
+        "values": {
+          "type_t": null,
+          "type_tn_x_e_lse_lsd": 0.82,
+          "type_s_p": 0.85
+        }
+      },
+      {
+        "rowKey": "70",
+        "ambientC": 70,
+        "values": {
+          "type_t": null,
+          "type_tn_x_e_lse_lsd": 0.74,
+          "type_s_p": 0.74
+        }
+      }
+    ]
+  },
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-sbo_current_carrying_capacities_ieee.php",
+    "kind": "static_lookup_table"
+  }
+}
