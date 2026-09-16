@@ -1,0 +1,47 @@
+{
+  "key": "industrial-standards",
+  "slug": "industrial-standards",
+  "title": "Industrial Standards Reference",
+  "intro": "Standards referenced within TriCab industrial Technical content (AS/NZS, BS, IEEE and IEC).",
+  "blocks": [
+    {
+      "type": "table",
+      "caption": "Industrial standards reference",
+      "columns": ["Standards", "Description"],
+      "rows": [
+        ["AS/NZS 1125", "Copper construction"],
+        ["AS/NZS 1660.5.1", "Fire tests — bunched cables"],
+        ["AS/NZS 1660.5.2", "Fire tests — smoke density"],
+        ["AS/NZS 1660.5.4", "Determination of degree of acidity of gases evolved during the combustion of materials taken from electric cables by measuring the pH and conductivity"],
+        ["AS/NZS 1660.5.6", "Fire tests — combustion propagation"],
+        ["AS/NZS 1995", "Welding cables"],
+        ["AS/NZS 3013", "Electric installation — classification of fire and mechanical performance"],
+        ["AS/NZS 3191", "Electric flexible cords"],
+        ["AS/NZS 4961", "Electric cables — polymeric insulated. For distribution and service applications"],
+        ["AS/NZS 5000.1", "Electric cables — polymeric insulated Part 1: For working voltages up to and including 0.6/1 (1.2) kV"],
+        ["AS/NZS 5000.2", "Electric cables — polymeric insulated Part 2: For working voltages up to and including 450/750 V"],
+        ["AS/NZS 5000.3", "Electric cables — polymeric insulated Part 3: Multi-core control cables"],
+        ["AS/NZS 5033", "Installation of photovoltaic (PV) arrays"],
+        ["BS 6387", "Performance requirements for cables under fire conditions"],
+        ["BS 5467", "Cables with thermoset insulation up to 3.3 kV"],
+        ["BS EN 61034", "Measurement of smoke density of cables burning under defined conditions"],
+        ["BS EN 50267", "Common test methods for cables under fire conditions"],
+        ["IEEE 45", "Electrical installations on shipboard"],
+        ["IEEE 1580", "Marine cable for use on shipboard and fixed or floating platforms"],
+        ["IEC 60092-350", "General construction and test requirements"],
+        ["IEC 60092-353", "Single and multi-core cables with extruded solid insulation for rated voltages 1 kV and 3 kV"],
+        ["IEC 60092-375", "General instrumentation, control and communication cables"],
+        ["IEC 60228", "Conductors for insulated cables"],
+        ["IEC 60331", "Fire resisting characteristics of electric cables"],
+        ["IEC 60332-1", "Flame retardancy testing on electric cables (test on a single vertical cable)"],
+        ["IEC 60332-3-22", "Flame retardancy testing on electric cables (test on bunched wires or cable)"],
+        ["IEC 60502-1", "Cables for rated voltages of 1 kV"],
+        ["IEC 60754-1 & 2", "Tests determining the amount of acid gas emitted by combustion"],
+        ["IEC 61034-1 & 2", "Tests measuring the amount of smoke emitted during combustion"]
+      ]
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-ind_standards_ref.php"
+  }
+}

@@ -1,0 +1,310 @@
+{
+  "key": "current-iec",
+  "slug": "current-iec",
+  "title": "Current Carrying Capacities (IEC)",
+  "description": "Table B.4 - Current carrying capacities in continuous service at maximum rated conductor temperature of 90°C",
+  "units": "A",
+  "conductorTemperatureC": 90,
+  "ambientAirTemperatureC": 45,
+  "notes": [
+    "Ambient air temperature 45°C",
+    "For CSA ≤ 300 mm² legacy shows a single shared value spanning d.c./a.c. columns; for 400–630 mm² d.c. and a.c. are listed separately.",
+    "Industrial current-tables/ under content-includes are for the separate Current Ratings tool (not this SBO IEC page) and were not merged."
+  ],
+  "columnGroups": [
+    {
+      "id": "single",
+      "label": "Single core A",
+      "columns": [
+        {
+          "id": "single_dc",
+          "label": "d.c.",
+          "cores": 1,
+          "currentType": "dc"
+        },
+        {
+          "id": "single_ac",
+          "label": "a.c.",
+          "cores": 1,
+          "currentType": "ac"
+        }
+      ]
+    },
+    {
+      "id": "two",
+      "label": "2 core A",
+      "columns": [
+        {
+          "id": "two_dc",
+          "label": "d.c.",
+          "cores": 2,
+          "currentType": "dc"
+        },
+        {
+          "id": "two_ac",
+          "label": "a.c.",
+          "cores": 2,
+          "currentType": "ac"
+        }
+      ]
+    },
+    {
+      "id": "three",
+      "label": "3 or 4 core A",
+      "columns": [
+        {
+          "id": "three_dc",
+          "label": "d.c.",
+          "cores": "3or4",
+          "currentType": "dc"
+        },
+        {
+          "id": "three_ac",
+          "label": "a.c.",
+          "cores": "3or4",
+          "currentType": "ac"
+        }
+      ]
+    }
+  ],
+  "rowHeader": {
+    "id": "csa",
+    "label": "Nominal cross-sectional area",
+    "unit": "mm²"
+  },
+  "rows": [
+    {
+      "csaMm2": 1.5,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 23,
+        "single_ac": 23,
+        "two_dc": 20,
+        "two_ac": 20,
+        "three_dc": 16,
+        "three_ac": 16
+      }
+    },
+    {
+      "csaMm2": 2.5,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 30,
+        "single_ac": 30,
+        "two_dc": 26,
+        "two_ac": 26,
+        "three_dc": 21,
+        "three_ac": 21
+      }
+    },
+    {
+      "csaMm2": 4,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 40,
+        "single_ac": 40,
+        "two_dc": 34,
+        "two_ac": 34,
+        "three_dc": 28,
+        "three_ac": 28
+      }
+    },
+    {
+      "csaMm2": 6,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 52,
+        "single_ac": 52,
+        "two_dc": 44,
+        "two_ac": 44,
+        "three_dc": 36,
+        "three_ac": 36
+      }
+    },
+    {
+      "csaMm2": 10,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 72,
+        "single_ac": 72,
+        "two_dc": 61,
+        "two_ac": 61,
+        "three_dc": 50,
+        "three_ac": 50
+      }
+    },
+    {
+      "csaMm2": 16,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 96,
+        "single_ac": 96,
+        "two_dc": 82,
+        "two_ac": 82,
+        "three_dc": 67,
+        "three_ac": 67
+      }
+    },
+    {
+      "csaMm2": 25,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 127,
+        "single_ac": 127,
+        "two_dc": 108,
+        "two_ac": 108,
+        "three_dc": 89,
+        "three_ac": 89
+      }
+    },
+    {
+      "csaMm2": 35,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 157,
+        "single_ac": 157,
+        "two_dc": 133,
+        "two_ac": 133,
+        "three_dc": 110,
+        "three_ac": 110
+      }
+    },
+    {
+      "csaMm2": 50,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 196,
+        "single_ac": 196,
+        "two_dc": 167,
+        "two_ac": 167,
+        "three_dc": 137,
+        "three_ac": 137
+      }
+    },
+    {
+      "csaMm2": 70,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 242,
+        "single_ac": 242,
+        "two_dc": 208,
+        "two_ac": 208,
+        "three_dc": 169,
+        "three_ac": 169
+      }
+    },
+    {
+      "csaMm2": 95,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 293,
+        "single_ac": 293,
+        "two_dc": 249,
+        "two_ac": 249,
+        "three_dc": 205,
+        "three_ac": 205
+      }
+    },
+    {
+      "csaMm2": 120,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 339,
+        "single_ac": 339,
+        "two_dc": 288,
+        "two_ac": 288,
+        "three_dc": 237,
+        "three_ac": 237
+      }
+    },
+    {
+      "csaMm2": 150,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 389,
+        "single_ac": 389,
+        "two_dc": 331,
+        "two_ac": 331,
+        "three_dc": 272,
+        "three_ac": 272
+      }
+    },
+    {
+      "csaMm2": 185,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 444,
+        "single_ac": 444,
+        "two_dc": 377,
+        "two_ac": 377,
+        "three_dc": 311,
+        "three_ac": 311
+      }
+    },
+    {
+      "csaMm2": 240,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 522,
+        "single_ac": 522,
+        "two_dc": 444,
+        "two_ac": 444,
+        "three_dc": 365,
+        "three_ac": 365
+      }
+    },
+    {
+      "csaMm2": 300,
+      "sharedAcDc": true,
+      "values": {
+        "single_dc": 601,
+        "single_ac": 601,
+        "two_dc": 511,
+        "two_ac": 511,
+        "three_dc": 421,
+        "three_ac": 421
+      }
+    },
+    {
+      "csaMm2": 400,
+      "sharedAcDc": false,
+      "values": {
+        "single_dc": 690,
+        "single_ac": 670,
+        "two_dc": 587,
+        "two_ac": 570,
+        "three_dc": 483,
+        "three_ac": 469
+      }
+    },
+    {
+      "csaMm2": 500,
+      "sharedAcDc": false,
+      "values": {
+        "single_dc": 780,
+        "single_ac": 720,
+        "two_dc": 663,
+        "two_ac": 612,
+        "three_dc": 546,
+        "three_ac": 504
+      }
+    },
+    {
+      "csaMm2": 630,
+      "sharedAcDc": false,
+      "values": {
+        "single_dc": 890,
+        "single_ac": 780,
+        "two_dc": 757,
+        "two_ac": 663,
+        "three_dc": 623,
+        "three_ac": 546
+      }
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-sbo_current_carrying_capacities.php",
+    "kind": "static_lookup_table",
+    "relatedNotIncluded": "wp-content/themes/tricab/content-includes/current-tables/ (industrial Current Ratings)"
+  }
+}

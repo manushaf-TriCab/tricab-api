@@ -1,0 +1,128 @@
+{
+  "key": "fire-installation",
+  "slug": "fire-installation",
+  "title": "Fire-Resistant Cable Installation Recommendations",
+  "intro": "Minimum installation requirements for fire-resistant cables. Local statutory requirements, building codes and product guidelines must also be taken into account.",
+  "blocks": [
+    {
+      "type": "note",
+      "tone": "info",
+      "body": "The following installation recommendations are minimum requirements only. Local statutory, building code, and guidelines for the installation of associated products should also be taken into account."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "1. Installed on cable tray or ladder"
+    },
+    {
+      "type": "image",
+      "path": "fire-installation/fire-res-1.png",
+      "alt": "Fire-resistant cable secured on cable tray or ladder"
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables should be secured with metal fixings such as stainless steel cable ties, strapping, or cable clamps, with the following minimum fixing distances:"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Horizontal"
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables should be secured with cable ties every 350 mm and with stainless steel cable ties every 1000 mm."
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Vertical, inclined or unsupported"
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables should be secured with cable ties every 300 mm and with stainless steel cable ties every 600 mm."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "2. Installed by direct fixing to walls, ceilings and in conduit"
+    },
+    {
+      "type": "image",
+      "path": "fire-installation/fire-res-2.png",
+      "alt": "Fire-resistant cable fixed directly to wall or ceiling"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Horizontal"
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables should be secured with cable ties every 350 mm and with stainless steel cable ties every 1000 mm."
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Vertical, inclined or unsupported"
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "For cables or cable bunches with an overall diameter < 25 mm: fix every 600 mm with metal saddles or clamps.",
+        "For cables or cable bunches with an overall diameter > 25 mm: fix every 300 mm with metal saddles or clamps."
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "3. Installed using unsupported spans"
+    },
+    {
+      "type": "paragraph",
+      "body": "Unsupported spans over 600 mm are not recommended for cable or cable bunches with overall diameters < 25 mm, and spans over 300 mm are not recommended for cable or cable bunches with overall diameters > 25 mm."
+    },
+    {
+      "type": "note",
+      "tone": "warning",
+      "body": "Steel expanding bolts or similar systems should be used to fix trays and ladders to the fire-rated elements of the building structure. Refer to the manufacturer's recommendation for fire conditions for the loading of trays and fixing."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "4. Installed on catenary wire"
+    },
+    {
+      "type": "paragraph",
+      "body": "Cables must be secured to catenary wires using metal fixings such as stainless steel cable ties or strapping with the following recommended fixing distances:"
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        "For cables or cable bunches with an overall diameter < 25 mm: fix every 600 mm.",
+        "For cables or cable bunches with an overall diameter > 25 mm: fix every 300 mm."
+      ]
+    },
+    {
+      "type": "paragraph",
+      "body": "Catenary wires should be secured to fire-rated elements of the building structure and should only be loaded to 50% of the manufacturer's recommended maximum."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "5. Installation must also comply with AS/NZS 3000:2018 wiring rules"
+    },
+    {
+      "type": "paragraph",
+      "body": "\"Wiring systems shall be installed in accordance with the generally accepted principles of safe and sound practice, using methods that will protect the electrical installation against mechanical or electrical failure under ordinary use, wear and tear, and any abnormal conditions that may reasonably be anticipated.\""
+    },
+    {
+      "type": "paragraph",
+      "body": "\"Wiring systems shall be supported by suitable means, in accordance with Clause 3.3.2.8. Wiring systems shall be fixed in position, in accordance with this Standard, by suitable clips, saddles or clamps or by means that will not damage the wiring system and that will not be affected by the wiring system material or any external influences. For wiring systems installed in building elements, the positioning and size of openings and checks shall not reduce the structural strength of those building elements below the levels required by National Building Codes.\""
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-ind_install_recommendation_fire_resistant_cables.php"
+  }
+}

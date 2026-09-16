@@ -19,6 +19,7 @@ final class ResolveAuthenticatedCustomerContextService
 {
     public function __construct(
         private readonly CustomerContactUserRepository $links,
+        private readonly ResolveAuthenticatedMarketCodesService $resolveMarketCodes,
     ) {
     }
 
@@ -40,6 +41,8 @@ final class ResolveAuthenticatedCustomerContextService
             $contactPublicIds[$link->contactPublicId] = true;
         }
 
+        $linkedCustomerPublicIds = array_keys($customerPublicIds);
+
         $isCustomerAdmin = false;
         foreach ($roleCodes as $roleCode) {
             if (ProtectedIdentityCatalog::isCustomerFacingRole(RoleCode::fromString($roleCode))
@@ -52,9 +55,10 @@ final class ResolveAuthenticatedCustomerContextService
 
         return new AuthenticatedCustomerContext(
             userPublicId: $userPublicId,
-            customerPublicIds: array_keys($customerPublicIds),
+            customerPublicIds: $linkedCustomerPublicIds,
             contactPublicIds: array_keys($contactPublicIds),
             isCustomerAdmin: $isCustomerAdmin,
+            marketCodes: $this->resolveMarketCodes->execute($linkedCustomerPublicIds),
         );
     }
 }

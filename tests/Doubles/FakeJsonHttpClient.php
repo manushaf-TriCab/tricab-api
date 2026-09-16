@@ -26,7 +26,7 @@ final class FakeJsonHttpClient implements JsonHttpClient
 
     public ?RuntimeException $transportError = null;
 
-    /** @var list<array{status: int, body: string}|RuntimeException> */
+    /** @var list<array{status: int, body: string, headers?: array<string, string>}|RuntimeException> */
     public array $queue = [];
 
     public function getJson(string $url, array $headers = []): array
@@ -69,7 +69,7 @@ final class FakeJsonHttpClient implements JsonHttpClient
     }
 
     /**
-     * @return array{status: int, body: string}
+     * @return array{status: int, body: string, headers?: array<string, string>}
      */
     private function nextResponse(): array
     {

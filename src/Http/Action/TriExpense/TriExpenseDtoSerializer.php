@@ -31,6 +31,9 @@ final class TriExpenseDtoSerializer
             'createdAt' => $details->createdAt,
             'submittedAt' => $details->submittedAt,
             'updatedAt' => $details->updatedAt,
+            'deletedAt' => $details->deletedAt,
+            'rowVersion' => $details->rowVersion,
+            'source' => $details->source,
         ];
     }
 

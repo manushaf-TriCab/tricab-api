@@ -1,0 +1,338 @@
+{
+  "key": "accessories",
+  "mode": "accessories",
+  "title": "Accessories Product Coding",
+  "description": "Educational breakdown of TriCab accessory product codes.",
+  "example": {
+    "display": "A01-AGXX/25B95RE",
+    "composed": "A01-AGXX/25B95RE",
+    "defaults": {
+      "styleCode": "A01",
+      "jacketType": "A",
+      "coreColour": "G",
+      "braidArmourScreen": "X",
+      "conductor": "X",
+      "conductorCount": "25",
+      "coreType": "B",
+      "crossSection": "95",
+      "jacketColour": "RE"
+    }
+  },
+  "segments": [
+    {
+      "id": 1,
+      "key": "styleCode",
+      "label": "Style Code",
+      "shortDescription": "Accessory product series.",
+      "accent": "#FF5722",
+      "background": "#FFF0E7",
+      "optionGroup": "styles"
+    },
+    {
+      "id": 2,
+      "key": "jacketType",
+      "label": "Accessories",
+      "shortDescription": "Accessory class marker (legacy segment 2 heading).",
+      "accent": "#102A72",
+      "background": "#E4EAF7",
+      "optionGroup": "accessoryMarker"
+    },
+    {
+      "id": 3,
+      "key": "coreColour",
+      "label": "Pack Quantity",
+      "shortDescription": "Pack quantity letter code.",
+      "accent": "#C62828",
+      "background": "#FDECEA",
+      "optionGroup": "packQuantity"
+    },
+    {
+      "id": 4,
+      "key": "braidArmourScreen",
+      "label": "Unused",
+      "shortDescription": "Reserved / unused accessory segment.",
+      "accent": "#2E7D32",
+      "background": "#E8F5E9",
+      "optionGroup": "unused"
+    },
+    {
+      "id": 5,
+      "key": "conductor",
+      "label": "Form Factor",
+      "shortDescription": "Small / Medium / Large form factor.",
+      "accent": "#C9A227",
+      "background": "#FFF8E1",
+      "optionGroup": "formFactor"
+    },
+    {
+      "id": 6,
+      "key": "conductorCount",
+      "label": "First Dimension",
+      "shortDescription": "Primary dimension value.",
+      "accent": "#0288D1",
+      "background": "#E1F5FE",
+      "optionGroup": "freeText"
+    },
+    {
+      "id": 7,
+      "key": "coreType",
+      "label": "Dimension Specifier",
+      "shortDescription": "How dimensions are interpreted.",
+      "accent": "#6D4C41",
+      "background": "#EFEBE9",
+      "optionGroup": "dimensionSpecifier"
+    },
+    {
+      "id": 8,
+      "key": "crossSection",
+      "label": "Second Dimension",
+      "shortDescription": "Secondary dimension value.",
+      "accent": "#1565C0",
+      "background": "#E3F2FD",
+      "optionGroup": "freeText"
+    },
+    {
+      "id": 9,
+      "key": "jacketColour",
+      "label": "Jacket Colour",
+      "shortDescription": "Colour identification.",
+      "accent": "#1B5E20",
+      "background": "#E8F5E9",
+      "optionGroup": "jacketColours"
+    }
+  ],
+  "dictionaries": {
+    "styles": [
+      {
+        "code": "A01",
+        "label": "Accessory example series A01"
+      }
+    ],
+    "accessoryMarker": [
+      {
+        "code": "A",
+        "label": "Accessories"
+      }
+    ],
+    "packQuantity": [
+      {
+        "code": "A",
+        "label": "Qty 1"
+      },
+      {
+        "code": "B",
+        "label": "Qty 2"
+      },
+      {
+        "code": "C",
+        "label": "Qty 3"
+      },
+      {
+        "code": "D",
+        "label": "Qty 4"
+      },
+      {
+        "code": "E",
+        "label": "Qty 5"
+      },
+      {
+        "code": "F",
+        "label": "Qty 6"
+      },
+      {
+        "code": "G",
+        "label": "Qty 8"
+      },
+      {
+        "code": "H",
+        "label": "Qty 10"
+      },
+      {
+        "code": "I",
+        "label": "Qty 12"
+      },
+      {
+        "code": "J",
+        "label": "Qty 15"
+      },
+      {
+        "code": "K",
+        "label": "Qty 20"
+      },
+      {
+        "code": "L",
+        "label": "Qty 25"
+      },
+      {
+        "code": "M",
+        "label": "Qty 30"
+      },
+      {
+        "code": "N",
+        "label": "Qty 40"
+      },
+      {
+        "code": "O",
+        "label": "Qty 50"
+      },
+      {
+        "code": "P",
+        "label": "Qty 60"
+      },
+      {
+        "code": "Q",
+        "label": "Qty 75"
+      },
+      {
+        "code": "R",
+        "label": "Qty 100"
+      },
+      {
+        "code": "S",
+        "label": "Qty 150"
+      },
+      {
+        "code": "T",
+        "label": "Qty 300"
+      }
+    ],
+    "unused": [
+      {
+        "code": "X",
+        "label": "Unused"
+      }
+    ],
+    "formFactor": [
+      {
+        "code": "S",
+        "label": "Small"
+      },
+      {
+        "code": "M",
+        "label": "Medium"
+      },
+      {
+        "code": "L",
+        "label": "Large"
+      },
+      {
+        "code": "X",
+        "label": "Not specified (legacy hero)"
+      }
+    ],
+    "freeText": [],
+    "dimensionSpecifier": [
+      {
+        "code": "B",
+        "label": "length by CSA"
+      },
+      {
+        "code": "D",
+        "label": "length by diameter"
+      },
+      {
+        "code": "F",
+        "label": "length by length"
+      },
+      {
+        "code": "H",
+        "label": "hex AF by length"
+      },
+      {
+        "code": "M",
+        "label": "metric thread by length"
+      },
+      {
+        "code": "J",
+        "label": "jaw opening by length"
+      },
+      {
+        "code": "N",
+        "label": "nominal size by length"
+      },
+      {
+        "code": "P",
+        "label": "pitch circle by holes"
+      },
+      {
+        "code": "R",
+        "label": "radius by angle"
+      }
+    ],
+    "jacketColours": [
+      {
+        "code": "BK",
+        "label": "Black",
+        "hex": "#111111"
+      },
+      {
+        "code": "BL",
+        "label": "Blue",
+        "hex": "#1f84d8"
+      },
+      {
+        "code": "BR",
+        "label": "Brown",
+        "hex": "#9a6d3f"
+      },
+      {
+        "code": "EA",
+        "label": "Earth Green/Yellow",
+        "hex": "#19ab64"
+      },
+      {
+        "code": "GR",
+        "label": "Green",
+        "hex": "#19ab64"
+      },
+      {
+        "code": "GY",
+        "label": "Grey",
+        "hex": "#666666"
+      },
+      {
+        "code": "OR",
+        "label": "Orange",
+        "hex": "#F58220"
+      },
+      {
+        "code": "RE",
+        "label": "Red",
+        "hex": "#e53935"
+      },
+      {
+        "code": "WH",
+        "label": "White",
+        "hex": "#ffffff"
+      },
+      {
+        "code": "YE",
+        "label": "Yellow",
+        "hex": "#feee4a"
+      },
+      {
+        "code": "PI",
+        "label": "Pink",
+        "hex": "#f48fb1"
+      },
+      {
+        "code": "PU",
+        "label": "Purple",
+        "hex": "#da70d6"
+      },
+      {
+        "code": "LB",
+        "label": "Light Blue",
+        "hex": "#b6eeff"
+      },
+      {
+        "code": "RB",
+        "label": "Red/Blue",
+        "hex": "#e53935"
+      }
+    ]
+  },
+  "source": {
+    "legacy": "content-product_coding.php (?accessories=true)"
+  }
+}

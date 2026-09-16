@@ -57,6 +57,36 @@ final class ExpenseAttachmentRef
         return new self($source, $ref, $name);
     }
 
+    public static function azureBlob(string $blobPath, ?string $fileName = null): self
+    {
+        $path = trim($blobPath, '/');
+        if ($path === '') {
+            throw InvalidExpenseValue::for('ExpenseAttachmentRef', $blobPath);
+        }
+
+        return new self(self::SOURCE_AZURE_BLOB, $path, $fileName !== null && trim($fileName) !== '' ? trim($fileName) : null);
+    }
+
+    public function isAzureBlobPath(): bool
+    {
+        return $this->storageSource === self::SOURCE_AZURE_BLOB && !str_starts_with($this->reference, 'http');
+    }
+
+    public function dualReadClass(): string
+    {
+        if ($this->isAzureBlobPath()) {
+            return 'new_azure';
+        }
+        if ($this->storageSource === self::SOURCE_AZURE_BLOB) {
+            return 'legacy_azure_url';
+        }
+        if ($this->storageSource === self::SOURCE_WORDPRESS) {
+            return 'legacy_wordpress';
+        }
+
+        return 'unknown';
+    }
+
     public function storageSource(): string
     {
         return $this->storageSource;

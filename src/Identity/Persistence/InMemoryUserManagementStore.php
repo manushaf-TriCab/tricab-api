@@ -288,6 +288,8 @@ final class InMemoryUserManagementStore
             );
         }
 
+        $this->seedTriExpenseRoles($actorUserId);
+
         // Minimal permission set so customer-facing role validation
         // (ProtectedIdentityCatalog::isCustomerFacingRole) and any
         // downstream customer-portal authorization checks have a role to
@@ -338,6 +340,61 @@ final class InMemoryUserManagementStore
         $this->users[$userId]['publicId'] = $publicId;
 
         return $this->buildUserDetails($userId);
+    }
+
+    /**
+     * TriExpense capability roles (RoleCode uppercase underscore, not dots).
+     * ADMINISTRATOR already receives every catalog permission above (including
+     * TRIEXPENSE.ADMIN / ACCESS); these roles are the intended grant vehicle
+     * for non-admin operators. FINANCE/APPROVE/AUDIT are not inferred from
+     * platform ADMINISTRATOR by design — they ride on TRIEXPENSE_FINANCE.
+     */
+    private function seedTriExpenseRoles(int $actorUserId): void
+    {
+        $actor = UserId::fromInt($actorUserId);
+        $rolePermissionMap = [
+            \TriCab\Core\Expense\Module::ROLE_USER => [
+                'name' => 'TriExpense User',
+                'description' => 'Submit and manage own TriExpense receipts.',
+                'permissions' => [
+                    \TriCab\Core\Expense\Module::PERMISSION_ACCESS,
+                ],
+            ],
+            \TriCab\Core\Expense\Module::ROLE_APPROVER => [
+                'name' => 'TriExpense Approver',
+                'description' => 'Approve assigned TriExpense receipts.',
+                'permissions' => [
+                    \TriCab\Core\Expense\Module::PERMISSION_ACCESS,
+                    \TriCab\Core\Expense\Module::PERMISSION_APPROVE,
+                ],
+            ],
+            \TriCab\Core\Expense\Module::ROLE_FINANCE => [
+                'name' => 'TriExpense Finance',
+                'description' => 'TriExpense finance operations, approval override, and audit.',
+                'permissions' => [
+                    \TriCab\Core\Expense\Module::PERMISSION_ACCESS,
+                    \TriCab\Core\Expense\Module::PERMISSION_APPROVE,
+                    \TriCab\Core\Expense\Module::PERMISSION_FINANCE,
+                    \TriCab\Core\Expense\Module::PERMISSION_AUDIT,
+                ],
+            ],
+            \TriCab\Core\Expense\Module::ROLE_ADMINISTRATOR => [
+                'name' => 'TriExpense Administrator',
+                'description' => 'Administer TriExpense access via User Management (not Finance).',
+                'permissions' => [
+                    \TriCab\Core\Expense\Module::PERMISSION_ACCESS,
+                    \TriCab\Core\Expense\Module::PERMISSION_ADMIN,
+                ],
+            ],
+        ];
+
+        foreach ($rolePermissionMap as $roleCode => $meta) {
+            $this->seedRole($roleCode, $meta['name'], $meta['description'], true, $actorUserId);
+            $role = RoleCode::fromString($roleCode);
+            foreach ($meta['permissions'] as $permissionCode) {
+                $this->assignPermission($role, PermissionCode::fromString($permissionCode), $actor);
+            }
+        }
     }
 
     public function seedRole(

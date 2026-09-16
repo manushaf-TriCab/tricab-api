@@ -1,0 +1,61 @@
+{
+  "key": "lugging",
+  "slug": "lugging",
+  "title": "Lugging Recommendation",
+  "intro": "Recommended procedure for terminating flexible conductors with standard lugs.",
+  "blocks": [
+    {
+      "type": "steps",
+      "items": [
+        {
+          "number": 1,
+          "body": "Cut at required length and remove.",
+          "image": {
+            "path": "lugging/lugging-1.jpg",
+            "alt": "Step 1 — cut conductor to length"
+          }
+        },
+        {
+          "number": 2,
+          "body": "Cut section and slide towards the end of the conductor (allow 5mm clearance).",
+          "image": {
+            "path": "lugging/lugging-2.jpg",
+            "alt": "Step 2 — slide cut section toward conductor end"
+          }
+        },
+        {
+          "number": 3,
+          "body": "Place standard lug at the end of conductor.",
+          "image": {
+            "path": "lugging/lugging-3.jpg",
+            "alt": "Step 3 — place standard lug"
+          }
+        },
+        {
+          "number": 4,
+          "body": "Gently push both lug and section until they meet the jacket. Cut and remove section.",
+          "image": {
+            "path": "lugging/lugging-4.jpg",
+            "alt": "Step 4 — seat lug and remove section"
+          }
+        },
+        {
+          "number": 5,
+          "body": "Compress lug using hexagonal die and hydraulic crimper.",
+          "image": {
+            "path": "lugging/lugging-5.jpg",
+            "alt": "Step 5 — crimp with hexagonal die"
+          }
+        }
+      ]
+    },
+    {
+      "type": "note",
+      "tone": "info",
+      "body": "Stripping at 25mm maximum lengths is recommended. For longer lengths cutting and stripping in 25mm sections is advised."
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-lugging_recommendation.php"
+  }
+}

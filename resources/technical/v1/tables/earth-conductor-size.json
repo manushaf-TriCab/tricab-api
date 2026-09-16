@@ -1,0 +1,372 @@
+{
+  "key": "earth-conductor-size",
+  "slug": "earth-conductor-size",
+  "title": "Earth Conductor Size",
+  "description": "Minimum nominal earthing conductor CSA for copper and aluminium active conductors (AS/NZS3000:2018). Static lookup — not the Cable Calculator.",
+  "units": "mm²",
+  "notes": [
+    "AS/NZS3000:2018",
+    "Copper earthing conductor shall be of high conductivity copper and shall be in the form of: stranded conductors; or circular braided conductors; or solid conductors having a cross-sectional area not less than 10mm² and thickness not less than 1.5mm.",
+    "Aluminium conductors may be used as earthing conductors, provided that they comply with the following conditions: Conductors of 10mm² or less shall be solid conductors. Minimum 16mm² conductors shall be used for main earthing conductors. Necessary care shall be taken to provide satisfactory terminations. Necessary care shall be taken to prevent corrosion of the conductor. Conductors shall not be installed underground or in other damp situations.",
+    "Exception: Aluminium earthing conductors may be installed underground or in other damp environments when the cable is designed and suitable for such use."
+  ],
+  "selectors": [
+    {
+      "id": "activeMaterial",
+      "label": "Active Conductor",
+      "options": [
+        {
+          "id": "cu",
+          "label": "Copper Active Conductor"
+        },
+        {
+          "id": "al",
+          "label": "Aluminium Active Conductor"
+        }
+      ]
+    }
+  ],
+  "defaultSelector": {
+    "activeMaterial": "cu"
+  },
+  "datasets": {
+    "cu": {
+      "title": "Copper Active Conductor",
+      "columnGroups": [
+        {
+          "id": "earth",
+          "label": "Nominal Cross-Sectional Area of Earthing Conductor",
+          "columns": [
+            {
+              "id": "earth_cu",
+              "label": "Copper",
+              "unit": "mm²",
+              "material": "Cu"
+            },
+            {
+              "id": "earth_al",
+              "label": "Aluminium",
+              "unit": "mm²",
+              "material": "Al"
+            }
+          ]
+        }
+      ],
+      "rowHeader": {
+        "id": "csa",
+        "label": "Nominal Cross-sectional area of Copper Active Conductor",
+        "unit": "mm²"
+      },
+      "rows": [
+        {
+          "csaMm2": 0.75,
+          "values": {
+            "earth_cu": 0.75,
+            "earth_al": "-"
+          }
+        },
+        {
+          "csaMm2": 1,
+          "values": {
+            "earth_cu": null,
+            "earth_al": "-"
+          }
+        },
+        {
+          "csaMm2": 1.5,
+          "values": {
+            "earth_cu": 1.5,
+            "earth_al": "-"
+          }
+        },
+        {
+          "csaMm2": 2.5,
+          "values": {
+            "earth_cu": 2.5,
+            "earth_al": null
+          }
+        },
+        {
+          "csaMm2": 4,
+          "values": {
+            "earth_cu": 2.5,
+            "earth_al": "-"
+          }
+        },
+        {
+          "csaMm2": 6,
+          "values": {
+            "earth_cu": 2.5,
+            "earth_al": "-"
+          }
+        },
+        {
+          "csaMm2": 10,
+          "values": {
+            "earth_cu": 4,
+            "earth_al": "-"
+          }
+        },
+        {
+          "csaMm2": 16,
+          "values": {
+            "earth_cu": 6,
+            "earth_al": "-"
+          }
+        },
+        {
+          "csaMm2": 25,
+          "values": {
+            "earth_cu": 6,
+            "earth_al": "-"
+          }
+        },
+        {
+          "csaMm2": 35,
+          "values": {
+            "earth_cu": 10,
+            "earth_al": "-"
+          }
+        },
+        {
+          "csaMm2": 50,
+          "values": {
+            "earth_cu": 16,
+            "earth_al": 35
+          }
+        },
+        {
+          "csaMm2": 70,
+          "values": {
+            "earth_cu": 25,
+            "earth_al": 50
+          }
+        },
+        {
+          "csaMm2": 95,
+          "values": {
+            "earth_cu": 25,
+            "earth_al": 50
+          }
+        },
+        {
+          "csaMm2": 120,
+          "values": {
+            "earth_cu": 35,
+            "earth_al": 70
+          }
+        },
+        {
+          "csaMm2": 150,
+          "values": {
+            "earth_cu": 50,
+            "earth_al": 95
+          }
+        },
+        {
+          "csaMm2": 185,
+          "values": {
+            "earth_cu": 70,
+            "earth_al": 120
+          }
+        },
+        {
+          "csaMm2": 240,
+          "values": {
+            "earth_cu": 95,
+            "earth_al": 150
+          }
+        },
+        {
+          "csaMm2": 300,
+          "values": {
+            "earth_cu": 120,
+            "earth_al": 185
+          }
+        },
+        {
+          "csaMm2": 400,
+          "values": {
+            "earth_cu": "≥120",
+            "earth_al": "≥185"
+          }
+        },
+        {
+          "csaMm2": 500,
+          "values": {
+            "earth_cu": "≥120",
+            "earth_al": "≥185"
+          }
+        },
+        {
+          "csaMm2": 630,
+          "values": {
+            "earth_cu": "≥120",
+            "earth_al": "≥185"
+          }
+        },
+        {
+          "csaMm2": 800,
+          "values": {
+            "earth_cu": "≥240",
+            "earth_al": "≥400"
+          }
+        },
+        {
+          "csaMm2": 1000,
+          "values": {
+            "earth_cu": "≥300",
+            "earth_al": "≥500"
+          }
+        }
+      ]
+    },
+    "al": {
+      "title": "Aluminium Active Conductor",
+      "columnGroups": [
+        {
+          "id": "earth",
+          "label": "Nominal Cross-Sectional Area of Earthing Conductor",
+          "columns": [
+            {
+              "id": "earth_cu",
+              "label": "Copper",
+              "unit": "mm²",
+              "material": "Cu"
+            },
+            {
+              "id": "earth_al",
+              "label": "Aluminium",
+              "unit": "mm²",
+              "material": "Al"
+            }
+          ]
+        }
+      ],
+      "rowHeader": {
+        "id": "csa",
+        "label": "Nominal Cross-sectional area of Aluminium Active Conductor",
+        "unit": "mm²"
+      },
+      "rows": [
+        {
+          "csaMm2": 16,
+          "values": {
+            "earth_cu": 4,
+            "earth_al": 16
+          }
+        },
+        {
+          "csaMm2": 25,
+          "values": {
+            "earth_cu": 6,
+            "earth_al": 16
+          }
+        },
+        {
+          "csaMm2": 35,
+          "values": {
+            "earth_cu": 6,
+            "earth_al": 16
+          }
+        },
+        {
+          "csaMm2": 50,
+          "values": {
+            "earth_cu": 10,
+            "earth_al": 25
+          }
+        },
+        {
+          "csaMm2": 70,
+          "values": {
+            "earth_cu": 10,
+            "earth_al": 25
+          }
+        },
+        {
+          "csaMm2": 95,
+          "values": {
+            "earth_cu": 16,
+            "earth_al": 35
+          }
+        },
+        {
+          "csaMm2": 120,
+          "values": {
+            "earth_cu": 25,
+            "earth_al": 50
+          }
+        },
+        {
+          "csaMm2": 150,
+          "values": {
+            "earth_cu": 25,
+            "earth_al": 50
+          }
+        },
+        {
+          "csaMm2": 185,
+          "values": {
+            "earth_cu": 35,
+            "earth_al": 70
+          }
+        },
+        {
+          "csaMm2": 240,
+          "values": {
+            "earth_cu": 50,
+            "earth_al": 95
+          }
+        },
+        {
+          "csaMm2": 300,
+          "values": {
+            "earth_cu": 70,
+            "earth_al": 120
+          }
+        },
+        {
+          "csaMm2": 400,
+          "values": {
+            "earth_cu": "≥95",
+            "earth_al": "≥150"
+          }
+        },
+        {
+          "csaMm2": 500,
+          "values": {
+            "earth_cu": "≥95",
+            "earth_al": "≥150"
+          }
+        },
+        {
+          "csaMm2": 630,
+          "values": {
+            "earth_cu": "≥120",
+            "earth_al": "≥185"
+          }
+        },
+        {
+          "csaMm2": 800,
+          "values": {
+            "earth_cu": "≥150",
+            "earth_al": "≥240"
+          }
+        },
+        {
+          "csaMm2": 1000,
+          "values": {
+            "earth_cu": "≥185",
+            "earth_al": "≥300"
+          }
+        }
+      ]
+    }
+  },
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-conductor_earth.php",
+    "kind": "static_lookup_table",
+    "notACalculator": true
+  }
+}

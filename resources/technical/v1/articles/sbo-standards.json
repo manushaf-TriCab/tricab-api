@@ -1,0 +1,40 @@
+{
+  "key": "sbo-standards",
+  "slug": "sbo-standards",
+  "title": "International Marine Specifications",
+  "intro": "Standards and test titles commonly referenced for shipboard / offshore / onshore cable specifications.",
+  "blocks": [
+    {
+      "type": "table",
+      "caption": "International marine specifications",
+      "columns": ["Standard", "Title of test"],
+      "rows": [
+        ["ASTM B 3", "Soft or annealed copper wire"],
+        ["ASTM B 33", "Tinned soft or annealed copper wire"],
+        ["ASTM B 172", "Rope-lay-stranded copper conductors having bunch-stranded members, for electrical conductors"],
+        ["ASTM B 174", "Bunch-stranded copper conductors for electrical conductors"],
+        ["CSA C22.2 No. 245", "Marine shipboard cable"],
+        ["IEC 60092-350", "General construction and test requirements"],
+        ["IEC 60092-352", "Choice and installation of electrical cables"],
+        ["IEC 60092-353", "Single and multicore cables with extruded solid insulation for rated voltages 1 kV and 3 kV"],
+        ["IEC 60092-354", "Single and three-core power cables with extruded solid insulation for rated voltages 6 kV (Um = 7.2 kV) up to 30 kV (Um = 36 kV)"],
+        ["IEC 60092-360", "Insulating and sheathing materials for shipboard and offshore units, power, control, instrumentation and telecommunication cables"],
+        ["IEC 60092-376", "Cables for control and instrumentation circuits 150/250 V (300 V)"],
+        ["IEC 60228", "Conductors for insulated cables"],
+        ["IEC 60331", "Fire resisting characteristics of electric cables"],
+        ["IEC 60332-1", "Flame retardancy testing on electric cables (test on a single vertical cable)"],
+        ["IEC 60332-3", "Flame retardancy testing on electric cables (test on bunched wires or cable)"],
+        ["IEC 60754", "Tests determining the amount of acid gas emitted by combustion"],
+        ["IEC 61034", "Tests measuring the amount of smoke emitted during combustion"],
+        ["IEEE 45", "Electrical installations on shipboard"],
+        ["IEEE 1580", "Marine cable for use on shipboard and fixed or floating platforms"],
+        ["IEEE 1202", "Flame testing of cables for use in cable tray in industrial and commercial occupancies"],
+        ["NEK TS 606", "Cables for offshore installations halogen-free and/or mud resistant technical specification"],
+        ["UL 1309", "Marine shipboard cable"]
+      ]
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-sbo_international_marine_specifications.php"
+  }
+}

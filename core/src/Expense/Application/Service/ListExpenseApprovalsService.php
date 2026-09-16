@@ -24,7 +24,7 @@ final class ListExpenseApprovalsService
      */
     public function execute(ExpenseActor $actor): array
     {
-        $this->access->requireActiveProfile($actor);
+        $this->access->requireApproveCapability($actor);
 
         $items = [];
         foreach ($this->receipts->listPendingForManager($actor->userId) as $receipt) {

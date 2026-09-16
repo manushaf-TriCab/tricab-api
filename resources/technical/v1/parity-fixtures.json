@@ -1,0 +1,135 @@
+{
+    "version": "1",
+    "description": "Parity fixtures for Technical lookup tables \u2014 assert against published legacy values.",
+    "fixtures": [
+        {
+            "id": "voltage-drop-cu-sct-90-50",
+            "tableKey": "voltage-drop",
+            "path": "rows[csaMm2=50].values.cu_sct_90",
+            "expected": 0.869,
+            "note": "50 mm\u00b2 Cu Single-Core Trefoil 90\u00b0C"
+        },
+        {
+            "id": "earth-cu-active-70",
+            "tableKey": "earth-conductor-size",
+            "path": "datasets.cu.rows[csaMm2=70].values",
+            "expected": {
+                "earth_cu": 25,
+                "earth_al": 50
+            },
+            "note": "Cu active 70 \u2192 Earth Cu 25, Earth Al 50"
+        },
+        {
+            "id": "conduit-xl-1c95-50",
+            "tableKey": "conduit-sizing",
+            "path": "datasets.xl.rows[rowKey=1C95].values.c50",
+            "expected": 3,
+            "note": "XL family, 1C95, 50 mm conduit = 3"
+        },
+        {
+            "id": "impedance-eu-50-10e-r",
+            "tableKey": "impedance",
+            "path": "datasets.eu.rows[productCode='EU 3C 50+3C 10E'].values.r",
+            "expected": 0.523,
+            "note": "EU, 3C 50 + 3C 10E, R = 0.5230"
+        },
+        {
+            "id": "mud-irm903-limits",
+            "tableKey": "mud-immersion",
+            "path": "groups[0].rows[testFluid='Mineral Oil type IRM 903'].values",
+            "expected": {
+                "testFluid": "Mineral Oil type IRM 903",
+                "temperature": "100\u00b0C",
+                "duration": "7 Days",
+                "tensileMaxVariation": "30%",
+                "elongationMaxVariation": "30%",
+                "volumeSwellMaxVariation": "30%",
+                "weightIncreaseMaxVariation": "30%"
+            },
+            "note": "Mineral Oil IRM 903, 100\u00b0C, 7 days, 30% limits"
+        },
+        {
+            "id": "conductor-general-metric-first-construction",
+            "tableKey": "conductor-data",
+            "path": "datasets.general.tables.constructionMetric.rows[rowKey='0.50'].values",
+            "expected": {
+                "tricab": "7 x 0.3",
+                "class_2": "7 x 0.30",
+                "class_5": "14 x 0.21",
+                "class_6": "24 x 0.16"
+            },
+            "note": "Metric smallest CSA 0.50 construction"
+        },
+        {
+            "id": "conductor-general-metric-mid-dc",
+            "tableKey": "conductor-data",
+            "path": "datasets.general.tables.dcResistanceMetric.rows[rowKey='50.00'].values",
+            "expected": {
+                "dc_res_cu": "0.3860",
+                "dc_res_tcu": "0.3930",
+                "dc_res_al": "0.6410"
+            },
+            "note": "Metric mid CSA 50.00 DC resistance"
+        },
+        {
+            "id": "conductor-general-metric-last-scc-cu",
+            "tableKey": "conductor-data",
+            "path": "datasets.general.tables.shortCircuitCopperMetric.rows[rowKey='1000.00'].values",
+            "expected": {
+                "scc_90_cu": null,
+                "scc_110_cu": null,
+                "vd_sdi_90_cu": null,
+                "vd_sdi_110_cu": null,
+                "vd_mul_90_cu": null,
+                "vd_mul_110_cu": null
+            },
+            "note": "Metric largest CSA 1000.00 short-circuit Cu"
+        },
+        {
+            "id": "conductor-general-awg-first",
+            "tableKey": "conductor-data",
+            "path": "datasets.general.tables.shortCircuitAwg.rows[rowKey='20'].values",
+            "expected": {
+                "scc_90_cu": 74,
+                "scc_110_cu": 68,
+                "vd_sdi_90_cu": "22.500",
+                "vd_sdi_110_cu": "23.900",
+                "vd_mul_90_cu": "23.000",
+                "vd_mul_110_cu": "24.400"
+            },
+            "note": "AWG first 20"
+        },
+        {
+            "id": "conductor-general-awg-mid",
+            "tableKey": "conductor-data",
+            "path": "datasets.general.tables.shortCircuitAwg.rows[rowKey='1'].values",
+            "expected": {
+                "scc_90_cu": 6063,
+                "scc_110_cu": 5597,
+                "vd_sdi_90_cu": "0.285",
+                "vd_sdi_110_cu": "0.302",
+                "vd_mul_90_cu": "0.288",
+                "vd_mul_110_cu": "0.306"
+            },
+            "note": "AWG mid 1"
+        },
+        {
+            "id": "conductor-general-awg-last",
+            "tableKey": "conductor-data",
+            "path": "datasets.general.tables.shortCircuitAwg.rows[rowKey='777'].values",
+            "expected": {
+                "scc_90_cu": 56371,
+                "scc_110_cu": 52034,
+                "vd_sdi_90_cu": "0.060",
+                "vd_sdi_110_cu": "0.061",
+                "vd_mul_90_cu": null,
+                "vd_mul_110_cu": null
+            },
+            "note": "AWG last 777"
+        }
+    ],
+    "source": {
+        "kind": "parity_fixtures",
+        "tablesDir": "resources/technical/v1/tables/"
+    }
+}

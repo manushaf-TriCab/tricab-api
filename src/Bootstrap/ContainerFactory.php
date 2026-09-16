@@ -93,6 +93,20 @@ use TriCab\Api\Http\Action\Admin\ListRolesAction;
 use TriCab\Api\Http\Action\Admin\ListUsersAction;
 use TriCab\Api\Http\Action\Admin\RegionAdminAction;
 use TriCab\Api\Http\Action\PublicRegionAction;
+use TriCab\Api\Http\Action\PublicContent\GetPublicAboutAction;
+use TriCab\Api\Http\Action\PublicContent\GetPublicContactAction;
+use TriCab\Api\Content\PublicContentRepository;
+use TriCab\Api\Http\Action\Technical\GetTechnicalArticleAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalProductCodingAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalTableAction;
+use TriCab\Api\Http\Action\Technical\ListTechnicalDocumentsAction;
+use TriCab\Api\Http\Action\Technical\ListTechnicalSectionsAction;
+use TriCab\Api\Technical\TechnicalContentRepository;
+use TriCab\Api\Technical\Document\TechnicalDocumentLibraryRepository;
+use TriCab\Api\Technical\Document\EmptyTechnicalDocumentLibraryRepository;
+use TriCab\Api\Technical\Document\InMemoryTechnicalDocumentLibraryRepository;
+use TriCab\Api\Technical\Document\ResolveTechnicalDocumentsQuery;
+use TriCab\Api\Technical\Persistence\AzureSqlTechnicalDocumentLibraryRepository;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardAction;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardProductActivityAction;
 use TriCab\Api\Http\Action\Admin\PreviewProductCodeAction;
@@ -144,6 +158,9 @@ use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
+use TriCab\Api\Http\Action\TrustedDevice\ExchangeTrustedDeviceSessionAction;
+use TriCab\Api\Http\Action\TrustedDevice\RegisterTrustedDeviceAction;
+use TriCab\Api\Http\Action\TrustedDevice\RevokeTrustedDeviceAction;
 use TriCab\Api\Http\Action\Passkey\ListPasskeysAction;
 use TriCab\Api\Http\Action\Passkey\PasskeyAuthenticationCompleteAction;
 use TriCab\Api\Http\Action\Passkey\PasskeyAuthenticationOptionsAction;
@@ -163,11 +180,14 @@ use TriCab\Api\Http\Auth\AdminMutationTransaction;
 use TriCab\Api\Http\Auth\CustomerManagementErrorMapper;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthErrorMapper;
+use TriCab\Api\Http\Auth\TrustedDeviceAuthErrorMapper;
 use TriCab\Api\Http\Auth\GoogleAuthErrorMapper;
 use TriCab\Api\Http\Auth\AppleAuthErrorMapper;
 use TriCab\Api\Http\Auth\GuestAuthEventLogger;
 use TriCab\Api\Http\Auth\GuestAuthRateLimiter;
+use TriCab\Api\Http\Auth\GuestAuthRateLimited;
 use TriCab\Api\Http\Auth\NoOpGuestAuthRateLimiter;
+use TriCab\Api\Http\Auth\WindowedGuestAuthRateLimiter;
 use TriCab\Api\Http\Auth\UserManagementErrorMapper;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
@@ -283,6 +303,7 @@ use TriCab\Api\Identity\Persistence\AzureSqlPasskeyRegistrationSessionRepository
 use TriCab\Api\Identity\Persistence\AzureSqlUserPasskeyRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlGuestLoginEligibilityLookup;
 use TriCab\Api\Identity\Persistence\AzureSqlGuestSessionRepository;
+use TriCab\Api\Identity\Persistence\AzureSqlTrustedDeviceRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlPermissionManagementRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlRoleManagementRepository;
 use TriCab\Api\Identity\Persistence\AzureSqlUserManagementAuditRepository;
@@ -293,6 +314,7 @@ use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Identity\Persistence\InMemoryEmailOtpChallengeRepository;
 use TriCab\Api\Identity\Persistence\InMemoryGuestPasskeySetupTokenRepository;
 use TriCab\Api\Identity\Persistence\InMemoryGuestSessionRepository;
+use TriCab\Api\Identity\Persistence\InMemoryTrustedDeviceRepository;
 use TriCab\Api\Identity\Persistence\InMemoryPasskeyChallengeRepository;
 use TriCab\Api\Identity\Persistence\InMemoryPasskeyRegistrationSessionRepository;
 use TriCab\Api\Identity\Persistence\InMemoryUserPasskeyRepository;
@@ -329,6 +351,8 @@ use TriCab\Core\Customer\Application\Service\LinkCustomerContactToUserService;
 use TriCab\Core\Customer\Application\Service\ListCustomerContactsService;
 use TriCab\Core\Customer\Application\Service\ListCustomersService;
 use TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerContextService;
+use TriCab\Api\Technical\ResolveTechnicalAccessoriesAccessService;
+use TriCab\Core\Customer\Application\Service\ResolveAuthenticatedMarketCodesService;
 use TriCab\Core\Customer\Application\Service\UnlinkCustomerContactFromUserService;
 use TriCab\Core\Customer\Application\Service\UpdateCustomerContactService;
 use TriCab\Core\Customer\Application\Service\UpdateCustomerService;
@@ -346,6 +370,9 @@ use TriCab\Core\Identity\Application\Service\CreateGuestSessionService;
 use TriCab\Core\Identity\Application\Service\GuestLoginEligibilityService;
 use TriCab\Core\Identity\Application\Service\GuestUserProvisioningService;
 use TriCab\Core\Identity\Application\Service\IssueGuestSessionService;
+use TriCab\Core\Identity\Application\Service\ExchangeTrustedDeviceSessionService;
+use TriCab\Core\Identity\Application\Service\RegisterTrustedDeviceService;
+use TriCab\Core\Identity\Application\Service\RevokeTrustedDeviceService;
 use TriCab\Core\Identity\Application\Service\ManageUserPasskeysService;
 use TriCab\Core\Identity\Application\Service\CompletePasskeyAuthenticationService;
 use TriCab\Core\Identity\Application\Service\CompletePasskeyRegistrationService;
@@ -389,6 +416,7 @@ use TriCab\Core\Identity\Contract\GuestOtpEmailSender;
 use TriCab\Core\Identity\Contract\GuestPasskeyEmailSender;
 use TriCab\Core\Identity\Contract\GuestPasskeySetupTokenRepository;
 use TriCab\Core\Identity\Contract\GuestSessionRepository;
+use TriCab\Core\Identity\Contract\TrustedDeviceRepository;
 use TriCab\Core\Identity\Contract\PasskeyAuthRateLimiter;
 use TriCab\Core\Identity\Contract\PasskeyCeremony;
 use TriCab\Core\Identity\Contract\PasskeyChallengeRepository;
@@ -407,6 +435,7 @@ use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Identity\Domain\Service\PasswordOtpHasher;
 use TriCab\Core\Identity\Domain\Service\SecureOtpGenerator;
 use TriCab\Core\Identity\Domain\Service\Sha256SessionTokenHasher;
+use TriCab\Core\Identity\Domain\Service\TrustedDeviceCredentialGenerator;
 use TriCab\Core\Product\Application\Service\AddProductDocumentService;
 use TriCab\Core\Product\Application\Service\AddProductMediaService;
 use TriCab\Api\Http\Action\Admin\ProductSeriesAdminAction;
@@ -730,26 +759,139 @@ final class ContainerFactory
             Settings::class => $settings,
             JsonResponder::class => \DI\create(JsonResponder::class),
 
-            // Tri Expense Stage 2/3 — memory defaults; azure-sql branch overrides persistence below.
+            // Tri Expense Stage 2/3/4 — memory defaults; azure-sql branch overrides persistence below.
             \TriCab\Core\Expense\Contract\ExpenseReceiptRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReceiptRepository::class),
             \TriCab\Core\Expense\Contract\ExpenseProfileRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseProfileRepository::class),
+            \TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseBankFeedRepository::class),
+            \TriCab\Core\Expense\Contract\ExpensePeriodRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpensePeriodRepository::class),
+            \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
+            \TriCab\Core\Expense\Contract\ExpensePdfRenderer::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ExpenseDompdfRenderer::class),
             \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
-            \TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\OrExpenseFinanceCapabilityResolver::class),
+            // Profile-only by design: ExpenseProfile.IsFinance is authoritative at
+            // request time and the Graph Tricab-Finance group is diagnostic/sync
+            // only. See ExpenseAccessService for the full rationale.
+            \TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class),
             \TriCab\Core\Expense\Contract\ExpenseManagerResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileManagerResolver::class),
-            \TriCab\Core\Expense\Contract\ExpenseNotificationPort::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseNotificationPort::class),
+            \TriCab\Core\Expense\Contract\ExpenseNotificationPort::class => static function (Container $container) use ($settings): \TriCab\Core\Expense\Contract\ExpenseNotificationPort {
+                return self::createExpenseNotificationPort($settings, $container);
+            },
             \TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseAuditRecorder::class),
-            \TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort::class => \DI\autowire(\TriCab\Api\Expense\Persistence\DisabledExpenseCaptureAssistPort::class),
-            \TriCab\Core\Expense\Contract\ExpenseAttachmentStore::class => \DI\autowire(\TriCab\Api\Expense\Persistence\MetadataExpenseAttachmentStore::class),
+            \TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort::class => static function (Container $container) use ($settings): \TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort {
+                return self::createExpenseCaptureAssistPort($settings, $container);
+            },
+            \TriCab\Api\Expense\Email\ExpenseEmailTemplates::class => static function () use ($settings): \TriCab\Api\Expense\Email\ExpenseEmailTemplates {
+                return new \TriCab\Api\Expense\Email\ExpenseEmailTemplates(
+                    $settings->triexpenseAppBaseUrl !== '' ? $settings->triexpenseAppBaseUrl : null,
+                );
+            },
+            \TriCab\Api\Expense\Observability\ExpenseEventLogger::class => \DI\create(\TriCab\Api\Expense\Observability\ExpenseEventLogger::class),
+            \TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags::class => static function () use ($settings): \TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags {
+                return new \TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags(
+                    ocr: $settings->isTriexpenseOcrConfigured(),
+                    emailNotifications: $settings->isTriexpenseEmailSendingEnabled(),
+                    legacyRead: $settings->triexpenseLegacyReadEnabled,
+                );
+            },
+            \TriCab\Core\Expense\Application\Service\LegacyExpenseIdentityResolver::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\LegacyExpenseIdentityResolver::class),
+            \TriCab\Core\Expense\Application\Service\LegacyExpenseReceiptAssembler::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\LegacyExpenseReceiptAssembler::class),
+            \TriCab\Core\Expense\Contract\LegacyExpenseReadRepository::class => static function (Container $container) use ($settings): \TriCab\Core\Expense\Contract\LegacyExpenseReadRepository {
+                if (!$settings->triexpenseLegacyReadEnabled) {
+                    return new \TriCab\Api\Expense\Legacy\NullLegacyExpenseReadRepository();
+                }
+                try {
+                    $connection = self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class);
+                } catch (\Throwable) {
+                    return new \TriCab\Api\Expense\Legacy\NullLegacyExpenseReadRepository();
+                }
+
+                return new \TriCab\Api\Expense\Legacy\MysqlLegacyExpenseReadRepository(
+                    $connection,
+                    new \TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard(),
+                );
+            },
+            \TriCab\Core\Expense\Contract\ExpenseAttachmentStore::class => \DI\autowire(\TriCab\Api\Expense\Persistence\AzureBlobExpenseAttachmentStore::class),
             \TriCab\Api\Http\Auth\ExpenseErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class),
-            \TriCab\Core\Expense\Application\Service\ExpenseAccessService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class),
+            \TriCab\Core\Expense\Application\ExpensePermissionMode::class => static fn () => \TriCab\Core\Expense\Application\ExpensePermissionMode::fromString($settings->triexpensePermissionMode),
+            \TriCab\Core\Expense\Application\Service\ExpenseAccessService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class)
+                ->constructorParameter('permissionMode', \DI\get(\TriCab\Core\Expense\Application\ExpensePermissionMode::class)),
             \TriCab\Core\Expense\Application\Service\ExpenseReceiptAssembler::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseReceiptAssembler::class),
             \TriCab\Core\Expense\Application\Service\CreateExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CreateExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\UpdateExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\UpdateExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\SubmitExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\SubmitExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\ExpenseApprovalService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExpenseApprovalService::class),
-            \TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class),
-            \TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class),
+            \TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListMyExpenseReceiptsService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
+            \TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReceiptService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
             \TriCab\Core\Expense\Application\Service\ListExpenseApprovalsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseApprovalsService::class),
+            \TriCab\Core\Expense\Application\Service\SoftDeleteExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\SoftDeleteExpenseReceiptService::class),
+            \TriCab\Core\Expense\Application\Service\RestoreExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RestoreExpenseReceiptService::class),
+            \TriCab\Core\Expense\Application\Service\PurgeExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PurgeExpenseReceiptService::class),
+            \TriCab\Core\Expense\Application\Service\CheckExpenseDuplicateService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CheckExpenseDuplicateService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseConfigService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseConfigService::class)
+                ->constructorParameter('features', \DI\get(\TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags::class)),
+            \TriCab\Core\Expense\Application\Service\RunExpenseReceiptOcrService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RunExpenseReceiptOcrService::class),
+            \TriCab\Core\Expense\Application\Service\MonthlyManagerDigestService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\MonthlyManagerDigestService::class),
+            \TriCab\Core\Expense\Application\Service\InitiateExpenseAttachmentService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\InitiateExpenseAttachmentService::class),
+            \TriCab\Core\Expense\Application\Service\CompleteExpenseAttachmentService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CompleteExpenseAttachmentService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseAttachmentFileService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
+            \TriCab\Core\Expense\Application\Service\SearchExpenseCustomersService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\SearchExpenseCustomersService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseCustomerContactsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseCustomerContactsService::class),
+            \TriCab\Core\Expense\Application\Service\ImportExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ImportExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\ListExpenseBankFeedCandidatesService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseBankFeedCandidatesService::class),
+            \TriCab\Core\Expense\Application\Service\RunExpenseBankFeedMatchingService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RunExpenseBankFeedMatchingService::class),
+            \TriCab\Core\Expense\Application\Service\ManualMatchExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ManualMatchExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\ResolveExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ResolveExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\OffsetExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\OffsetExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\UndoOffsetExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\UndoOffsetExpenseBankFeedService::class),
+            \TriCab\Core\Expense\Application\Service\ResolveExpenseReceiptFinanceService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ResolveExpenseReceiptFinanceService::class),
+            \TriCab\Core\Expense\Application\Service\ListExpensePeriodsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpensePeriodsService::class),
+            \TriCab\Core\Expense\Application\Service\GetOrCreateExpensePeriodService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetOrCreateExpensePeriodService::class),
+            \TriCab\Core\Expense\Application\Service\PreCloseExpensePeriodService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PreCloseExpensePeriodService::class),
+            \TriCab\Core\Expense\Application\Service\CloseExpensePeriodService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CloseExpensePeriodService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseReconciliationService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReconciliationService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseFinanceEmployeeService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseFinanceEmployeeService::class),
+            \TriCab\Core\Expense\Application\Service\PrepareMissingReceiptRemindersService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PrepareMissingReceiptRemindersService::class),
+            \TriCab\Core\Expense\Application\Service\PrepareManagerReminderService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PrepareManagerReminderService::class),
+            \TriCab\Core\Expense\Application\Service\ListExpenseAuditService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseAuditService::class),
+            \TriCab\Core\Expense\Application\Service\ExportEmployeeReceiptsCsvService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExportEmployeeReceiptsCsvService::class),
+            \TriCab\Core\Expense\Application\Service\ExportFinanceReconciliationCsvService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExportFinanceReconciliationCsvService::class),
+            \TriCab\Core\Expense\Application\Service\RenderFinanceSummaryPdfService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RenderFinanceSummaryPdfService::class),
+            \TriCab\Core\Expense\Application\Service\RenderFinanceFullPdfService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RenderFinanceFullPdfService::class),
+            \TriCab\Core\Expense\Domain\Service\ExpenseAuBankFeedCsvParser::class => \DI\autowire(\TriCab\Core\Expense\Domain\Service\ExpenseAuBankFeedCsvParser::class),
+            \TriCab\Core\Expense\Domain\Service\ExpenseNzBankFeedCsvParser::class => \DI\autowire(\TriCab\Core\Expense\Domain\Service\ExpenseNzBankFeedCsvParser::class),
+            \TriCab\Core\Expense\Domain\Service\ExpenseBankFeedMatcher::class => \DI\autowire(\TriCab\Core\Expense\Domain\Service\ExpenseBankFeedMatcher::class),
+            \TriCab\Core\Expense\Domain\Service\ExpenseNearMissDiagnostics::class => \DI\autowire(\TriCab\Core\Expense\Domain\Service\ExpenseNearMissDiagnostics::class),
+
+            \TriCab\Core\LogNote\Contract\LogNoteRepository::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\InMemoryLogNoteRepository::class),
+            \TriCab\Core\LogNote\Contract\LogNoteAuditRecorder::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\InMemoryLogNoteAuditRecorder::class),
+            \TriCab\Core\LogNote\Contract\CustomerNoteExternalSync::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\DisabledCustomerNoteExternalSync::class),
+            \TriCab\Api\LogNote\Infrastructure\DeterministicLogNoteSummariser::class => \DI\autowire(\TriCab\Api\LogNote\Infrastructure\DeterministicLogNoteSummariser::class),
+            \TriCab\Core\LogNote\Contract\LogNoteSummariser::class => static function (Container $container) use ($settings): \TriCab\Core\LogNote\Contract\LogNoteSummariser {
+                $fallback = self::get($container, \TriCab\Api\LogNote\Infrastructure\DeterministicLogNoteSummariser::class);
+                if (!$settings->isFoundryConfigured()) {
+                    return $fallback;
+                }
+
+                $http = new StreamJsonHttpClient((float) $settings->foundryTimeoutSeconds);
+                $primary = new \TriCab\Api\LogNote\Infrastructure\FoundryLogNoteSummariser(
+                    http: $http,
+                    accessTokens: new ManagedIdentityFoundryAccessTokenProvider($http),
+                    endpoint: $settings->foundryEndpoint,
+                    deployment: $settings->foundryModelDeployment,
+                    authMode: $settings->foundryAuthMode,
+                    apiKey: $settings->foundryApiKey,
+                );
+
+                return new \TriCab\Api\LogNote\Infrastructure\FallbackLogNoteSummariser($primary, $fallback);
+            },
+            \TriCab\Api\Http\Auth\LogNoteErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\LogNoteErrorMapper::class),
+            \TriCab\Core\LogNote\Application\Service\CreateLogNoteService::class => \DI\autowire(\TriCab\Core\LogNote\Application\Service\CreateLogNoteService::class),
+            \TriCab\Core\LogNote\Application\Service\ListLogNotesService::class => \DI\autowire(\TriCab\Core\LogNote\Application\Service\ListLogNotesService::class),
+            \TriCab\Core\LogNote\Application\Service\GetLogNoteService::class => \DI\autowire(\TriCab\Core\LogNote\Application\Service\GetLogNoteService::class),
+            \TriCab\Core\LogNote\Application\Service\SummariseLogNoteService::class => \DI\autowire(\TriCab\Core\LogNote\Application\Service\SummariseLogNoteService::class),
 
             AssistantQueryInterpreter::class => static function () use ($settings, $prompts): AssistantQueryInterpreter {
                 unset($prompts);
@@ -849,7 +991,9 @@ final class ContainerFactory
             Clock::class => \DI\autowire(SystemClock::class),
             GuestAuthEventLogger::class => \DI\create(GuestAuthEventLogger::class),
             GuestAuthErrorMapper::class => \DI\autowire(GuestAuthErrorMapper::class),
-            GuestAuthRateLimiter::class => \DI\autowire(NoOpGuestAuthRateLimiter::class),
+            GuestAuthRateLimiter::class => static function (Container $container): GuestAuthRateLimiter {
+                return new WindowedGuestAuthRateLimiter(self::get($container, ApplicationCache::class));
+            },
             GuestOtpEmailSender::class => static function (Container $container) use ($settings): GuestOtpEmailSender {
                 return self::createGuestOtpEmailSender($settings, $container);
             },
@@ -921,6 +1065,8 @@ final class ContainerFactory
             UnlinkCustomerContactFromUserService::class => \DI\autowire(UnlinkCustomerContactFromUserService::class),
             CreateCustomerPortalUserService::class => \DI\autowire(CreateCustomerPortalUserService::class),
             ResolveAuthenticatedCustomerContextService::class => \DI\autowire(ResolveAuthenticatedCustomerContextService::class),
+            ResolveAuthenticatedMarketCodesService::class => \DI\autowire(ResolveAuthenticatedMarketCodesService::class),
+            ResolveTechnicalAccessoriesAccessService::class => \DI\autowire(ResolveTechnicalAccessoriesAccessService::class),
             EnableCustomerPortalAccessService::class => \DI\autowire(EnableCustomerPortalAccessService::class),
             DisableCustomerPortalAccessService::class => \DI\autowire(DisableCustomerPortalAccessService::class),
             CustomerManagementErrorMapper::class => \DI\autowire(CustomerManagementErrorMapper::class),
@@ -944,6 +1090,20 @@ final class ContainerFactory
             ManageRegionService::class => \DI\autowire(ManageRegionService::class),
             RegionPreferenceResolver::class => \DI\autowire(RegionPreferenceResolver::class),
             PublicRegionAction::class => \DI\autowire(PublicRegionAction::class),
+            PublicContentRepository::class => static function (): PublicContentRepository {
+                return PublicContentRepository::fromProjectRoot(dirname(__DIR__, 2));
+            },
+            TechnicalContentRepository::class => static function (): TechnicalContentRepository {
+                return TechnicalContentRepository::fromProjectRoot(dirname(__DIR__, 2));
+            },
+            ResolveTechnicalDocumentsQuery::class => \DI\autowire(ResolveTechnicalDocumentsQuery::class),
+            ListTechnicalSectionsAction::class => \DI\autowire(ListTechnicalSectionsAction::class),
+            GetTechnicalArticleAction::class => \DI\autowire(GetTechnicalArticleAction::class),
+            GetTechnicalTableAction::class => \DI\autowire(GetTechnicalTableAction::class),
+            GetTechnicalProductCodingAction::class => \DI\autowire(GetTechnicalProductCodingAction::class),
+            ListTechnicalDocumentsAction::class => \DI\autowire(ListTechnicalDocumentsAction::class),
+            GetPublicAboutAction::class => \DI\autowire(GetPublicAboutAction::class),
+            GetPublicContactAction::class => \DI\autowire(GetPublicContactAction::class),
             RegionAdminAction::class => \DI\autowire(RegionAdminAction::class),
             ListProductsAction::class => \DI\autowire(ListProductsAction::class),
             GetProductAction::class => \DI\autowire(GetProductAction::class),
@@ -1405,6 +1565,20 @@ final class ContainerFactory
                     $settings->graphClientSecret,
                 );
             },
+            \TriCab\Core\TelDirectory\Contract\TelDirectoryGraphReader::class => static function (Container $container) use ($settings): \TriCab\Core\TelDirectory\Contract\TelDirectoryGraphReader {
+                return new \TriCab\Api\TelDirectory\Infrastructure\MicrosoftGraphTelDirectoryReader(
+                    self::get($container, JsonHttpClient::class),
+                    $settings->graphTenantId,
+                    $settings->graphClientId,
+                    $settings->graphClientSecret,
+                );
+            },
+            \TriCab\Core\TelDirectory\Application\Service\ListTelDirectoryService::class => \DI\autowire(
+                \TriCab\Core\TelDirectory\Application\Service\ListTelDirectoryService::class,
+            ),
+            \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class => \DI\autowire(
+                \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class,
+            ),
             StaffEntraLinkWriteUnit::class => static function (Container $container) use ($settings): StaffEntraLinkWriteUnit {
                 if (!$settings->usesAzureSqlUserRepository()) {
                     return new DisabledStaffEntraLinkWriteUnit();
@@ -1782,6 +1956,7 @@ final class ContainerFactory
             $definitions[UserRepository::class] = \DI\autowire(AzureSqlUserRepository::class);
             $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(AzureSqlEmailOtpChallengeRepository::class);
             $definitions[GuestSessionRepository::class] = \DI\autowire(AzureSqlGuestSessionRepository::class);
+            $definitions[TrustedDeviceRepository::class] = \DI\autowire(AzureSqlTrustedDeviceRepository::class);
             $definitions[UserPasskeyRepository::class] = \DI\autowire(AzureSqlUserPasskeyRepository::class);
             $definitions[GuestPasskeySetupTokenRepository::class] = \DI\autowire(AzureSqlGuestPasskeySetupTokenRepository::class);
             $definitions[PasskeyChallengeRepository::class] = \DI\autowire(AzureSqlPasskeyChallengeRepository::class);
@@ -1793,6 +1968,8 @@ final class ContainerFactory
             $definitions[UserManagementAuditRepository::class] = \DI\autowire(AzureSqlUserManagementAuditRepository::class);
             $definitions[AdminMutationTransaction::class] = \DI\autowire(AdminMutationTransaction::class);
             $definitions[CustomerRepository::class] = \DI\autowire(AzureSqlCustomerRepository::class);
+            $definitions[\TriCab\Core\LogNote\Contract\LogNoteRepository::class] = \DI\autowire(\TriCab\Api\LogNote\Persistence\AzureSqlLogNoteRepository::class);
+            $definitions[\TriCab\Core\LogNote\Contract\LogNoteAuditRecorder::class] = \DI\autowire(\TriCab\Api\LogNote\Persistence\AzureSqlLogNoteAuditRecorder::class);
             $definitions[CustomerContactRepository::class] = \DI\autowire(AzureSqlCustomerContactRepository::class);
             $definitions[CustomerContactUserRepository::class] = \DI\autowire(AzureSqlCustomerContactUserRepository::class);
             $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);
@@ -1807,10 +1984,12 @@ final class ContainerFactory
             };
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReceiptRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReceiptRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseProfileRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseProfileRepository::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseBankFeedRepository::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpensePeriodRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpensePeriodRepository::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReminderLogRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
-            $definitions[\TriCab\Core\Expense\Contract\ExpenseNotificationPort::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseNotificationPort::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);
-            $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\OrExpenseFinanceCapabilityResolver::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class);
             $definitions[RegionRepository::class] = \DI\autowire(AzureSqlRegionRepository::class);
             $definitions[ProductVariantRepository::class] = \DI\autowire(AzureSqlProductVariantRepository::class);
             $definitions[ProductAdminQueryRepository::class] = \DI\autowire(AzureSqlProductAdminQueryRepository::class);
@@ -1831,6 +2010,7 @@ final class ContainerFactory
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(AzureSqlProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(AzureSqlProductMediaRepository::class);
             $definitions[ProductDocumentRepository::class] = \DI\autowire(AzureSqlProductDocumentRepository::class);
+            $definitions[TechnicalDocumentLibraryRepository::class] = \DI\autowire(AzureSqlTechnicalDocumentLibraryRepository::class);
             $definitions[Product360Repository::class] = \DI\autowire(AzureSqlProduct360Repository::class);
             $definitions[ProductArModelRepository::class] = \DI\autowire(AzureSqlProductArModelRepository::class);
             $definitions[Product3DModelRepository::class] = \DI\autowire(AzureSqlProduct3DModelRepository::class);
@@ -1902,6 +2082,7 @@ SQL,
             if ($settings->isGuestJwtConfigured()) {
                 $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(InMemoryEmailOtpChallengeRepository::class);
                 $definitions[GuestSessionRepository::class] = \DI\autowire(InMemoryGuestSessionRepository::class);
+                $definitions[TrustedDeviceRepository::class] = \DI\autowire(InMemoryTrustedDeviceRepository::class);
                 $definitions[UserPasskeyRepository::class] = \DI\autowire(InMemoryUserPasskeyRepository::class);
                 $definitions[GuestPasskeySetupTokenRepository::class] = \DI\autowire(InMemoryGuestPasskeySetupTokenRepository::class);
                 $definitions[PasskeyChallengeRepository::class] = \DI\autowire(InMemoryPasskeyChallengeRepository::class);
@@ -1972,6 +2153,7 @@ SQL,
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(InMemoryProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(InMemoryProductMediaRepository::class);
             $definitions[ProductDocumentRepository::class] = \DI\autowire(InMemoryProductDocumentRepository::class);
+            $definitions[TechnicalDocumentLibraryRepository::class] = \DI\autowire(InMemoryTechnicalDocumentLibraryRepository::class);
             $definitions[Product360Repository::class] = \DI\autowire(InMemoryProduct360Repository::class);
             $definitions[ProductArModelRepository::class] = \DI\autowire(InMemoryProductArModelRepository::class);
             $definitions[ProductMarketRepository::class] = \DI\autowire(InMemoryProductMarketRepository::class);
@@ -2051,6 +2233,22 @@ SQL,
         $definitions[RequestGuestOtpAction::class] = \DI\autowire(RequestGuestOtpAction::class);
         $definitions[VerifyGuestOtpAction::class] = \DI\autowire(VerifyGuestOtpAction::class);
         $definitions[LogoutGuestAction::class] = \DI\autowire(LogoutGuestAction::class);
+
+        $definitions[TrustedDeviceCredentialGenerator::class] = \DI\autowire(TrustedDeviceCredentialGenerator::class);
+        $definitions[RegisterTrustedDeviceService::class] = static function (Container $container) use ($settings): RegisterTrustedDeviceService {
+            return new RegisterTrustedDeviceService(
+                devices: self::get($container, TrustedDeviceRepository::class),
+                credentials: self::get($container, TrustedDeviceCredentialGenerator::class),
+                clock: self::get($container, Clock::class),
+                ttlDays: $settings->trustedDeviceTtlDays,
+            );
+        };
+        $definitions[ExchangeTrustedDeviceSessionService::class] = \DI\autowire(ExchangeTrustedDeviceSessionService::class);
+        $definitions[RevokeTrustedDeviceService::class] = \DI\autowire(RevokeTrustedDeviceService::class);
+        $definitions[TrustedDeviceAuthErrorMapper::class] = \DI\autowire(TrustedDeviceAuthErrorMapper::class);
+        $definitions[RegisterTrustedDeviceAction::class] = \DI\autowire(RegisterTrustedDeviceAction::class);
+        $definitions[ExchangeTrustedDeviceSessionAction::class] = \DI\autowire(ExchangeTrustedDeviceSessionAction::class);
+        $definitions[RevokeTrustedDeviceAction::class] = \DI\autowire(RevokeTrustedDeviceAction::class);
 
         $definitions[GoogleJwksClient::class] = \DI\create(GoogleJwksClient::class);
         $definitions[GoogleIdTokenValidator::class] = static function (Container $container) use ($settings): GoogleIdTokenValidator {
@@ -2190,6 +2388,61 @@ SQL,
         $definitions[ListPasskeysAction::class] = \DI\autowire(ListPasskeysAction::class);
         $definitions[RenamePasskeyAction::class] = \DI\autowire(RenamePasskeyAction::class);
         $definitions[RevokePasskeyAction::class] = \DI\autowire(RevokePasskeyAction::class);
+    }
+
+    /**
+     * Graph mail is wired whenever credentials exist, even with
+     * TRIEXPENSE_EMAIL_ENABLED=false: the adapter then resolves recipients and
+     * logs the intent without calling Graph, which is what makes a non-production
+     * run observable without mailing anyone. With no credentials at all there is
+     * nothing to log against, so the recording Null port stays — and that is also
+     * what tests get.
+     */
+    private static function createExpenseNotificationPort(
+        Settings $settings,
+        Container $container,
+    ): \TriCab\Core\Expense\Contract\ExpenseNotificationPort {
+        if (!$settings->triexpenseEmailEnabled && !$settings->isTriexpenseGraphConfigured()) {
+            return new \TriCab\Api\Expense\Persistence\NullExpenseNotificationPort();
+        }
+
+        return new \TriCab\Api\Expense\Persistence\GraphExpenseNotificationPort(
+            http: new StreamJsonHttpClient(
+                (float) $settings->triexpenseGraphRequestTimeoutSeconds,
+                (float) $settings->triexpenseGraphConnectTimeoutSeconds,
+            ),
+            profiles: self::get($container, \TriCab\Core\Expense\Contract\ExpenseProfileRepository::class),
+            templates: self::get($container, \TriCab\Api\Expense\Email\ExpenseEmailTemplates::class),
+            logger: self::get($container, \TriCab\Api\Expense\Observability\ExpenseEventLogger::class),
+            tenantId: $settings->graphTenantId,
+            clientId: $settings->graphClientId,
+            clientSecret: $settings->graphClientSecret,
+            mailFrom: $settings->triexpenseMailFrom,
+            sendingEnabled: $settings->isTriexpenseEmailSendingEnabled(),
+            testRecipient: $settings->triexpenseEmailTestRecipientOrNull(),
+        );
+    }
+
+    private static function createExpenseCaptureAssistPort(
+        Settings $settings,
+        Container $container,
+    ): \TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort {
+        if (!$settings->isTriexpenseOcrConfigured()) {
+            return new \TriCab\Api\Expense\Persistence\DisabledExpenseCaptureAssistPort();
+        }
+
+        return new \TriCab\Api\Expense\Persistence\AzureExpenseCaptureAssistPort(
+            http: new StreamJsonHttpClient(
+                (float) $settings->triexpenseOcrRequestTimeoutSeconds,
+                (float) $settings->triexpenseOcrConnectTimeoutSeconds,
+            ),
+            logger: self::get($container, \TriCab\Api\Expense\Observability\ExpenseEventLogger::class),
+            docIntelEndpoint: $settings->triexpenseDocIntelEndpoint,
+            docIntelKey: $settings->triexpenseDocIntelKey,
+            openAiEndpoint: $settings->triexpenseOpenAiEndpoint,
+            openAiKey: $settings->triexpenseOpenAiKey,
+            openAiDeployment: $settings->triexpenseOpenAiDeployment,
+        );
     }
 
     private static function createGuestPasskeyEmailSender(Settings $settings, Container $container): GuestPasskeyEmailSender

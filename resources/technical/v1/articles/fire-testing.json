@@ -1,0 +1,118 @@
+{
+  "key": "fire-testing",
+  "slug": "fire-testing",
+  "title": "Fire Testing and WS Rating",
+  "intro": "Overview of AS/NZS and IEC fire, mechanical, smoke and acid-gas tests used for TriCab fire-resistant cables, including WS rating under AS/NZS 3013.",
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "AS/NZS 3013 — Classification of the Fire and Mechanical Performance of Wiring System Elements"
+    },
+    {
+      "type": "paragraph",
+      "body": "This test is conducted in three parts:"
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "First test method (fire)"
+    },
+    {
+      "type": "paragraph",
+      "body": "Cable specimens are placed in a furnace which is programmed to follow a standard time-temperature curve, in order to determine the ability of the cable to maintain circuit integrity under fire conditions. The cable is deemed to have passed when the specimen has been exposed to the test for the appropriate minimum time requested by the submitter without a failure."
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Water test method"
+    },
+    {
+      "type": "paragraph",
+      "body": "After the cable specimen has passed the fire test, it is removed from the furnace and exposed to a water spray for 3 minutes. The cable is deemed to have achieved the desired degree of protection when it has been exposed to the fire test for the appropriate time and has sustained the effects of the water spray."
+    },
+    {
+      "type": "heading",
+      "level": 3,
+      "text": "Mechanical test method"
+    },
+    {
+      "type": "table",
+      "caption": "AS/NZS 3013 mechanical tests",
+      "columns": ["Test", "Description"],
+      "rows": [
+        [
+          "Impact test",
+          "The cable specimen is conditioned, placed on the test apparatus anvil, and connected to the circuit integrity monitoring system. The impactor which is set at the prescribed drop height, is dropped 3 times onto the specimen. The cable is deemed to have passed when it has been exposed to the specified level of impact energy without failure."
+        ],
+        [
+          "Cutting test",
+          "A wedge shaped indentor is forced against the cable specimen and loaded until it cuts through the insulation in order to determine the ability of the cable to withstand cutting action. The cable is deemed to have passed when it has been exposed to the specified level of cutting force without failure."
+        ]
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "IEC 60332-3, AS/NZS 1660.5.1 — Flame Retardant Test"
+    },
+    {
+      "type": "paragraph",
+      "body": "This test is conducted by placing cables together on a vertical ladder tray and then exposing them to the flames of a ribbon burner for the appropriate time (detailed below). After removal of the flame, the cables are wiped clean and the charring should not have exceeded 2.5 metres."
+    },
+    {
+      "type": "table",
+      "caption": "IEC 60332-3 / AS/NZS 1660.5.1 categories",
+      "columns": ["Category", "Requirement"],
+      "rows": [
+        ["Category A", "7 litres of combustible material exposed to flame for 40 minutes"],
+        ["Category B", "3.5 litres of combustible material exposed to flame for 40 minutes"],
+        ["Category C", "1.5 litres of combustible material exposed to flame for 20 minutes"]
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "IEC 60331, AS/NZS 1660.5.5 — Fire Test"
+    },
+    {
+      "type": "paragraph",
+      "body": "This test is conducted by mounting a 1200 mm length of cable over a gas burner and energizing it to its rated voltage. Flames are applied for 90 minutes at a temperature of at least 750°C. After 90 minutes the gas is turned off. After a further 15 minutes the power is disconnected. To pass the requirements of this test, the cable must remain operational both during the 90 minute exposure and the 15 minute cooling period."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "IEC 60754-1 & 2, AS/NZS 1660.5.3 — Acid Gas Emission Test"
+    },
+    {
+      "type": "paragraph",
+      "body": "This test determines the amount of acid gas emitted by burning cables. The criteria of this test states that the weighted pH value should not be less than 4.3 when related to 1 litre of water. The weighted value of conductivity should not exceed 10 μS/mm."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "IEC 61034-1 & 2, AS/NZS 1660.5.2 — Smoke Density Test"
+    },
+    {
+      "type": "paragraph",
+      "body": "This test measures the smoke emission from cables during fire. This test is carried out in a 3 m cubed enclosure where a cable sample is subjected to fire. The smoke emission and density are measured by a light beam emitted across the inside of the enclosure to a photocell, measuring the amount of luminous transmission received."
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "text": "WS Rating"
+    },
+    {
+      "type": "paragraph",
+      "body": "All our fire resistant cables are WS rated to AS/NZS 3013. A rating that defines the performance of a Wiring System. The rating consists of the designation \"WS\" (Wiring System), followed by two numbers and a letter."
+    },
+    {
+      "type": "image",
+      "path": "fire-testing/ws_rating.png",
+      "alt": "WS rating designation breakdown under AS/NZS 3013"
+    }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-ind_firetest_wsrate.php"
+  }
+}

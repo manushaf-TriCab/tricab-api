@@ -10,24 +10,35 @@ use TriCab\Core\Identity\Domain\ValueObject\UserId;
 
 final class InMemoryExpenseAuditRecorder implements ExpenseAuditRecorder
 {
-    /** @var list<array{actor:int,action:string,receipt:string,detail:?string}> */
+    /** @var list<array{actorUserId: int, action: string, receiptPublicId: ?string, detail: ?string, createdAtUtc?: string}> */
     private array $events = [];
 
     public function record(
         UserId $actorUserId,
         string $action,
-        ExpenseReceiptPublicId $receiptPublicId,
+        ?ExpenseReceiptPublicId $receiptPublicId = null,
         ?string $detail = null,
     ): void {
         $this->events[] = [
-            'actor' => $actorUserId->toInt(),
+            'actorUserId' => $actorUserId->toInt(),
             'action' => $action,
-            'receipt' => $receiptPublicId->toString(),
+            'receiptPublicId' => $receiptPublicId?->toString(),
             'detail' => $detail,
+            'createdAtUtc' => (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(DATE_ATOM),
         ];
     }
 
-    /** @return list<array{actor:int,action:string,receipt:string,detail:?string}> */
+    public function listRecent(int $limit = 200): array
+    {
+        $limit = max(1, min(1000, $limit));
+        $events = array_reverse($this->events);
+
+        return array_slice($events, 0, $limit);
+    }
+
+    /**
+     * @return list<array{actorUserId: int, action: string, receiptPublicId: ?string, detail: ?string, createdAtUtc?: string}>
+     */
     public function events(): array
     {
         return $this->events;

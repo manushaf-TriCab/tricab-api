@@ -12,7 +12,12 @@ interface ExpenseAuditRecorder
     public function record(
         UserId $actorUserId,
         string $action,
-        ExpenseReceiptPublicId $receiptPublicId,
+        ?ExpenseReceiptPublicId $receiptPublicId = null,
         ?string $detail = null,
     ): void;
+
+    /**
+     * @return list<array{actorUserId: int, action: string, receiptPublicId: ?string, detail: ?string, createdAtUtc?: string}>
+     */
+    public function listRecent(int $limit = 200): array;
 }

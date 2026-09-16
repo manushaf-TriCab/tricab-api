@@ -1,0 +1,71 @@
+{
+  "key": "voltage-drop",
+  "slug": "voltage-drop",
+  "title": "Three-Phase Voltage Drop at 50Hz",
+  "description": "Published TriCab reference values in mV/A·m. This is a static lookup table — not the Cable Calculator.",
+  "units": "mV/A·m",
+  "frequencyHz": 50,
+  "notes": [
+    "To determine the single-phase Voltage drop, multiply the three-phase value by 1.155. All information above is intended as a guide only.",
+    "Special Note: Applicable to TriCab products only."
+  ],
+  "columnGroups": [
+    {
+      "id": "cu",
+      "label": "Copper",
+      "columns": [
+        { "id": "cu_sct_90", "label": "Single-Core Trefoil 90°C", "material": "Cu", "construction": "single-core-trefoil", "temperatureC": 90 },
+        { "id": "cu_sct_110", "label": "Single-Core Trefoil 110°C", "material": "Cu", "construction": "single-core-trefoil", "temperatureC": 110 },
+        { "id": "cu_multi_90", "label": "Multicore 90°C", "material": "Cu", "construction": "multicore", "temperatureC": 90 },
+        { "id": "cu_multi_110", "label": "Multicore 110°C", "material": "Cu", "construction": "multicore", "temperatureC": 110 }
+      ]
+    },
+    {
+      "id": "al",
+      "label": "Aluminium",
+      "columns": [
+        { "id": "al_sct_90", "label": "Single-Core Trefoil 90°C", "material": "Al", "construction": "single-core-trefoil", "temperatureC": 90 },
+        { "id": "al_sct_110", "label": "Single-Core Trefoil 110°C", "material": "Al", "construction": "single-core-trefoil", "temperatureC": 110 },
+        { "id": "al_multi_90", "label": "Multicore 90°C", "material": "Al", "construction": "multicore", "temperatureC": 90 },
+        { "id": "al_multi_110", "label": "Multicore 110°C", "material": "Al", "construction": "multicore", "temperatureC": 110 }
+      ]
+    }
+  ],
+  "rowHeader": {
+    "id": "csa",
+    "label": "Nominal Cross-Sectional Area",
+    "unit": "mm²"
+  },
+  "singlePhaseFactor": 1.155,
+  "rows": [
+    { "csaMm2": 0.5, "values": { "cu_sct_90": 86.1, "cu_sct_110": 91.4, "cu_multi_90": 86.1, "cu_multi_110": 91.4, "al_sct_90": null, "al_sct_110": null, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 0.75, "values": { "cu_sct_90": 57.4, "cu_sct_110": 61.0, "cu_multi_90": 57.4, "cu_multi_110": 61.0, "al_sct_90": null, "al_sct_110": null, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 1, "values": { "cu_sct_90": 43.1, "cu_sct_110": 45.7, "cu_multi_90": 43.1, "cu_multi_110": 45.7, "al_sct_90": null, "al_sct_110": null, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 1.5, "values": { "cu_sct_90": 29.4, "cu_sct_110": 31.2, "cu_multi_90": 29.4, "cu_multi_110": 31.2, "al_sct_90": null, "al_sct_110": null, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 2.5, "values": { "cu_sct_90": 17.6, "cu_sct_110": 18.7, "cu_multi_90": 17.6, "cu_multi_110": 18.7, "al_sct_90": null, "al_sct_110": null, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 4, "values": { "cu_sct_90": 10.9, "cu_sct_110": 11.6, "cu_multi_90": 10.9, "cu_multi_110": 11.6, "al_sct_90": null, "al_sct_110": null, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 6, "values": { "cu_sct_90": 7.29, "cu_sct_110": 7.74, "cu_multi_90": 7.29, "cu_multi_110": 7.74, "al_sct_90": null, "al_sct_110": null, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 10, "values": { "cu_sct_90": 4.22, "cu_sct_110": 4.48, "cu_multi_90": 4.22, "cu_multi_110": 4.48, "al_sct_90": null, "al_sct_110": null, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 16, "values": { "cu_sct_90": 2.68, "cu_sct_110": 2.84, "cu_multi_90": 2.68, "cu_multi_110": 2.84, "al_sct_90": 4.24, "al_sct_110": 4.51, "al_multi_90": 4.33, "al_multi_110": 4.60 } },
+    { "csaMm2": 25, "values": { "cu_sct_90": 1.73, "cu_sct_110": 1.84, "cu_multi_90": 1.73, "cu_multi_110": 1.84, "al_sct_90": 2.66, "al_sct_110": 2.82, "al_multi_90": 2.72, "al_multi_110": 2.89 } },
+    { "csaMm2": 35, "values": { "cu_sct_90": 1.24, "cu_sct_110": 1.31, "cu_multi_90": 1.23, "cu_multi_110": 1.31, "al_sct_90": 1.92, "al_sct_110": 2.04, "al_multi_90": 1.97, "al_multi_110": 2.09 } },
+    { "csaMm2": 50, "values": { "cu_sct_90": 0.869, "cu_sct_110": 0.921, "cu_multi_90": 0.866, "cu_multi_110": 0.917, "al_sct_90": 1.42, "al_sct_110": 1.51, "al_multi_90": 1.46, "al_multi_110": 1.55 } },
+    { "csaMm2": 70, "values": { "cu_sct_90": 0.622, "cu_sct_110": 0.658, "cu_multi_90": 0.618, "cu_multi_110": 0.654, "al_sct_90": 0.989, "al_sct_110": 1.049, "al_multi_90": 1.01, "al_multi_110": 1.07 } },
+    { "csaMm2": 95, "values": { "cu_sct_90": 0.483, "cu_sct_110": 0.509, "cu_multi_90": 0.477, "cu_multi_110": 0.504, "al_sct_90": 0.721, "al_sct_110": 0.764, "al_multi_90": 0.736, "al_multi_110": 0.781 } },
+    { "csaMm2": 120, "values": { "cu_sct_90": 0.388, "cu_sct_110": 0.408, "cu_multi_90": 0.383, "cu_multi_110": 0.403, "al_sct_90": 0.577, "al_sct_110": 0.610, "al_multi_90": 0.587, "al_multi_110": 0.622 } },
+    { "csaMm2": 150, "values": { "cu_sct_90": 0.325, "cu_sct_110": 0.340, "cu_multi_90": 0.318, "cu_multi_110": 0.334, "al_sct_90": 0.477, "al_sct_110": 0.504, "al_multi_90": 0.484, "al_multi_110": 0.512 } },
+    { "csaMm2": 185, "values": { "cu_sct_90": 0.280, "cu_sct_110": 0.293, "cu_multi_90": 0.273, "cu_multi_110": 0.286, "al_sct_90": 0.389, "al_sct_110": 0.410, "al_multi_90": 0.393, "al_multi_110": 0.415 } },
+    { "csaMm2": 240, "values": { "cu_sct_90": 0.233, "cu_sct_110": 0.242, "cu_multi_90": 0.225, "cu_multi_110": 0.234, "al_sct_90": 0.310, "al_sct_110": 0.325, "al_multi_90": 0.311, "al_multi_110": 0.327 } },
+    { "csaMm2": 300, "values": { "cu_sct_90": 0.207, "cu_sct_110": 0.213, "cu_multi_90": 0.198, "cu_multi_110": 0.205, "al_sct_90": 0.261, "al_sct_110": 0.272, "al_multi_90": 0.260, "al_multi_110": 0.273 } },
+    { "csaMm2": 400, "values": { "cu_sct_90": 0.183, "cu_sct_110": 0.187, "cu_multi_90": 0.174, "cu_multi_110": 0.178, "al_sct_90": 0.220, "al_sct_110": 0.229, "al_multi_90": 0.218, "al_multi_110": 0.227 } },
+    { "csaMm2": 500, "values": { "cu_sct_90": 0.169, "cu_sct_110": 0.172, "cu_multi_90": 0.160, "cu_multi_110": 0.163, "al_sct_90": 0.191, "al_sct_110": 0.197, "al_multi_90": 0.187, "al_multi_110": 0.193 } },
+    { "csaMm2": 630, "values": { "cu_sct_90": 0.157, "cu_sct_110": 0.159, "cu_multi_90": null, "cu_multi_110": null, "al_sct_90": 0.171, "al_sct_110": 0.175, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 800, "values": { "cu_sct_90": 0.134, "cu_sct_110": 0.135, "cu_multi_90": null, "cu_multi_110": null, "al_sct_90": 0.157, "al_sct_110": 0.160, "al_multi_90": null, "al_multi_110": null } },
+    { "csaMm2": 1000, "values": { "cu_sct_90": null, "cu_sct_110": null, "cu_multi_90": null, "cu_multi_110": null, "al_sct_90": 0.148, "al_sct_110": 0.150, "al_multi_90": null, "al_multi_110": null } }
+  ],
+  "source": {
+    "legacyFile": "wp-content/themes/tricab/content-includes/content-voltage_drop.php",
+    "kind": "static_lookup_table",
+    "notACalculator": true
+  }
+}

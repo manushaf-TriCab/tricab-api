@@ -12,8 +12,16 @@ use RuntimeException;
  */
 final class StreamJsonHttpClient implements JsonHttpClient
 {
+    /**
+     * @param ?float $connectTimeoutSeconds PHP's HTTP stream wrapper takes the
+     *        connect bound from `default_socket_timeout` rather than the context,
+     *        so it is applied around the request and restored afterwards. Leave
+     *        null to inherit the ini value, which is what every existing caller
+     *        does.
+     */
     public function __construct(
         private readonly float $timeoutSeconds = 10.0,
+        private readonly ?float $connectTimeoutSeconds = null,
     ) {
     }
 
@@ -69,7 +77,7 @@ final class StreamJsonHttpClient implements JsonHttpClient
 
     /**
      * @param array<string, string> $headers
-     * @return array{status: int, body: string}
+     * @return array{status: int, body: string, headers: array<string, string>}
      */
     private function request(string $method, string $url, array $headers, ?string $body): array
     {
@@ -96,7 +104,20 @@ final class StreamJsonHttpClient implements JsonHttpClient
             'ssl' => $this->sslOptions(),
         ]);
 
-        $responseBody = @file_get_contents($url, false, $context);
+        $previousSocketTimeout = null;
+        if ($this->connectTimeoutSeconds !== null) {
+            $previousSocketTimeout = (string) ini_get('default_socket_timeout');
+            ini_set('default_socket_timeout', (string) $this->connectTimeoutSeconds);
+        }
+
+        try {
+            $responseBody = @file_get_contents($url, false, $context);
+        } finally {
+            if ($previousSocketTimeout !== null) {
+                ini_set('default_socket_timeout', $previousSocketTimeout);
+            }
+        }
+
         if ($responseBody === false) {
             throw new RuntimeException('HTTP request failed.');
         }
@@ -112,7 +133,30 @@ final class StreamJsonHttpClient implements JsonHttpClient
         return [
             'status' => self::statusFromResponseHeaders($responseHeaders),
             'body' => $responseBody,
+            'headers' => self::parseHeaderMap($responseHeaders),
         ];
+    }
+
+    /**
+     * @param list<string> $headers
+     * @return array<string, string>
+     */
+    private static function parseHeaderMap(array $headers): array
+    {
+        $map = [];
+        foreach ($headers as $line) {
+            $separator = strpos($line, ':');
+            if ($separator === false) {
+                continue;
+            }
+            $name = strtolower(trim(substr($line, 0, $separator)));
+            if ($name === '') {
+                continue;
+            }
+            $map[$name] = trim(substr($line, $separator + 1));
+        }
+
+        return $map;
     }
 
     /**

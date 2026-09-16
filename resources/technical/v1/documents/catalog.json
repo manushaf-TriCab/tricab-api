@@ -1,0 +1,358 @@
+{
+  "version": "1",
+  "architecture": "Technical Document Library (technical.Documents) is the authoritative store for Technical-browse documents. catalog.json retains family/IA configuration only. product.ProductDocuments remain product-owned and are not required for shared Technical certificates.",
+  "families": {
+    "warranty": {
+      "title": "Warranty Certificates",
+      "section": "general",
+      "documentCategory": "warranty",
+      "items": [],
+      "inventory": {
+        "cpt": {
+          "source": "core/docs/phase12.6-mappings/certificates.proposed.json",
+          "total": 290,
+          "byClassification": {
+            "SHARED_DOCUMENT": 261,
+            "APPROVAL_EVIDENCE": 20,
+            "UNRESOLVED": 9
+          },
+          "status": "EXCLUDED_FROM_PRODUCT_MIGRATION",
+          "indCount": "UNKNOWN",
+          "sboCount": "UNKNOWN",
+          "accessoryCount": "UNKNOWN",
+          "warrantyCount": "UNKNOWN",
+          "note": "Snapshot lacks industrial_or_shipboard / issuing_organisation. Live WP ACF inventory required (LEGACY_WP_DSN). Do not fabricate."
+        },
+        "migrationStatus": "BLOCKED",
+        "reason": "Live WP CPT read required for WARRANTY issuer filter."
+      }
+    },
+    "bep-pvc-disposal": {
+      "title": "BEP PVC Disposal",
+      "section": "general",
+      "documentCategory": "bep-pvc-disposal",
+      "items": [
+        {
+          "id": "bep-pvc-disposal",
+          "title": "Public Notification \u2014 PVC Disposal",
+          "filename": "Public_Notification_PVC.pdf",
+          "legacyPath": "/wp-content/uploads/cert/tsd/Public_Notification_PVC.pdf",
+          "documentTypeCode": "other",
+          "family": "bep-pvc-disposal",
+          "migrationStatus": "BLOCKED",
+          "reason": "Legacy PDF bytes not present in local repo; Azure write required to import."
+        }
+      ]
+    },
+    "bep-pvc-certificate": {
+      "title": "BEP PVC Certificate",
+      "section": "general",
+      "documentCategory": "bep-pvc-certificate",
+      "items": [
+        {
+          "id": "bep-pvc-certificate",
+          "title": "BEP PVC Certificate",
+          "filename": "BEP_PVC_Certificate.pdf",
+          "legacyPath": "/wp-content/uploads/cert/tsd/BEP_PVC_Certificate.pdf",
+          "documentTypeCode": "certificate",
+          "family": "bep-pvc-certificate",
+          "migrationStatus": "BLOCKED",
+          "reason": "Legacy PDF bytes not present in local repo; Azure write required to import."
+        }
+      ]
+    },
+    "industrial-certs": {
+      "title": "Industrial Certificates",
+      "section": "industrial",
+      "documentCategory": "industrial-certs",
+      "items": [],
+      "inventory": {
+        "cpt": {
+          "source": "core/docs/phase12.6-mappings/certificates.proposed.json",
+          "total": 290,
+          "byClassification": {
+            "SHARED_DOCUMENT": 261,
+            "APPROVAL_EVIDENCE": 20,
+            "UNRESOLVED": 9
+          },
+          "status": "EXCLUDED_FROM_PRODUCT_MIGRATION",
+          "indCount": "UNKNOWN",
+          "sboCount": "UNKNOWN",
+          "accessoryCount": "UNKNOWN",
+          "warrantyCount": "UNKNOWN",
+          "note": "Snapshot lacks industrial_or_shipboard / issuing_organisation. Live WP ACF inventory required (LEGACY_WP_DSN). Do not fabricate."
+        },
+        "migrationStatus": "BLOCKED",
+        "reason": "IND classification requires live ACF industrial_or_shipboard."
+      }
+    },
+    "sbo-certs": {
+      "title": "Shipboard Certificates",
+      "section": "sbo",
+      "documentCategory": "sbo-certs",
+      "items": [],
+      "inventory": {
+        "cpt": {
+          "source": "core/docs/phase12.6-mappings/certificates.proposed.json",
+          "total": 290,
+          "byClassification": {
+            "SHARED_DOCUMENT": 261,
+            "APPROVAL_EVIDENCE": 20,
+            "UNRESOLVED": 9
+          },
+          "status": "EXCLUDED_FROM_PRODUCT_MIGRATION",
+          "indCount": "UNKNOWN",
+          "sboCount": "UNKNOWN",
+          "accessoryCount": "UNKNOWN",
+          "warrantyCount": "UNKNOWN",
+          "note": "Snapshot lacks industrial_or_shipboard / issuing_organisation. Live WP ACF inventory required (LEGACY_WP_DSN). Do not fabricate."
+        },
+        "migrationStatus": "BLOCKED",
+        "reason": "SBO classification requires live ACF industrial_or_shipboard."
+      }
+    },
+    "accessory-certs": {
+      "title": "Accessory Certificates",
+      "section": "accessories",
+      "documentCategory": "accessory-certs",
+      "items": [],
+      "inventory": {
+        "migrationStatus": "BLOCKED",
+        "reason": "Hardcoded ACC cert thumbs not in local repo."
+      }
+    },
+    "accessory-warranty": {
+      "title": "Accessory Warranty Certificates",
+      "section": "accessories",
+      "documentCategory": "accessory-warranty",
+      "items": [
+        {
+          "id": "acc-warranty-x07-x08",
+          "title": "TriCab Warranty X07/X08",
+          "filename": "TriCab Warranty X07_X08.pdf",
+          "legacyPath": "/thumbs/certificates/warranty/TriCab Warranty X07_X08.pdf",
+          "documentTypeCode": "certificate",
+          "family": "accessory-warranty",
+          "association": "X07,X08",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/ gitignored; file bytes unavailable locally."
+        }
+      ]
+    },
+    "installation-guides": {
+      "title": "Installation Guides",
+      "section": "accessories",
+      "documentCategory": "installation-guides",
+      "items": [
+        {
+          "id": "install-b06",
+          "title": "Installation Guide B06",
+          "filename": "TCIM-ACC-B06.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-B06.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "B06",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-b10",
+          "title": "Installation Guide B10",
+          "filename": "TCIM-ACC-B10.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-B10.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "B10",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-b12",
+          "title": "Installation Guide B12",
+          "filename": "TCIM-ACC-B12.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-B12.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "B12",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-b27",
+          "title": "Installation Guide B27",
+          "filename": "TCIM-ACC-B27.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-B27.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "B27",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-b36",
+          "title": "Installation Guide B36",
+          "filename": "TCIM-ACC-B36.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-B36.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "B36",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-d19",
+          "title": "Installation Guide D19",
+          "filename": "TCIM-ACC-D19.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-D19.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "D19",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j01-002",
+          "title": "Installation Guide J01",
+          "filename": "TCIM-ACC-J01-002.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J01-002.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J01",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j03-r01",
+          "title": "Installation Guide J03",
+          "filename": "TCIM-ACC-J03_R01.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J03_R01.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J03",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j05-r00",
+          "title": "Installation Guide J05",
+          "filename": "TCIM-ACC-J05_R00.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J05_R00.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J05",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j07-r00",
+          "title": "Installation Guide J07",
+          "filename": "TCIM-ACC-J07_R00.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J07_R00.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J07",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j17",
+          "title": "Installation Guide J17",
+          "filename": "TCIM-ACC-J17.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J17.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J17",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j30-r01",
+          "title": "Installation Guide J30",
+          "filename": "TCIM-ACC-J30_R01.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J30_R01.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J30",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j31-r01",
+          "title": "Installation Guide J31",
+          "filename": "TCIM-ACC-J31_R01.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J31_R01.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J31",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j32-r01",
+          "title": "Installation Guide J32",
+          "filename": "TCIM-ACC-J32_R01.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J32_R01.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J32",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j33-r01",
+          "title": "Installation Guide J33",
+          "filename": "TCIM-ACC-J33_R01.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J33_R01.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J33",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j54-500a",
+          "title": "Installation Guide J54",
+          "filename": "TCIM-ACC-J54-500A.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J54-500A.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J54",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-j54-800a",
+          "title": "Installation Guide J54",
+          "filename": "TCIM-ACC-J54-800A.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-J54-800A.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "J54",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        },
+        {
+          "id": "install-001-d11-r00",
+          "title": "Installation Guide D11",
+          "filename": "TCIM-ACC-001_D11_R00.pdf",
+          "legacyPath": "/thumbs/installation/TCIM-ACC-001_D11_R00.pdf",
+          "documentTypeCode": "installation-guide",
+          "family": "installation-guides",
+          "association": "D11",
+          "migrationStatus": "BLOCKED",
+          "reason": "thumbs/installation absent locally; LEGACY_FILES_ROOT empty."
+        }
+      ]
+    }
+  },
+  "totals": {
+    "legacyFilesDiscovered": 21,
+    "existingMatches": 0,
+    "proposedCreates": 21,
+    "duplicates": 0,
+    "missingFiles": 21,
+    "cptPostsKnown": 290,
+    "blockedFamilies": 8
+  },
+  "dryRunPolicy": "DISCOVERY only \u2014 no Azure/Product Document writes in Phase 3."
+}

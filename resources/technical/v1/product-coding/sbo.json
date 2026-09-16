@@ -1,0 +1,1416 @@
+{
+  "key": "sbo",
+  "mode": "sbo",
+  "title": "Shipboard / Offshore Product Coding",
+  "description": "Educational breakdown of TriCab shipboard/offshore cable product codes.",
+  "example": {
+    "display": "DV-A-PFTD/4A14BK",
+    "composed": "DVA-PFTD/4A14BK",
+    "defaults": {
+      "styleCode": "DV",
+      "jacketType": "A",
+      "coreColour": "PF",
+      "braidArmourScreen": "T",
+      "conductor": "D",
+      "conductorCount": "4",
+      "coreType": "A",
+      "crossSection": "14",
+      "jacketColour": "BK"
+    }
+  },
+  "segments": [
+    {
+      "id": 1,
+      "key": "styleCode",
+      "label": "Style Code",
+      "shortDescription": "Defines the cable product series.",
+      "accent": "#FF5722",
+      "background": "#FFF0E7",
+      "optionGroup": "styles"
+    },
+    {
+      "id": 2,
+      "key": "jacketType",
+      "label": "Jacket Type",
+      "shortDescription": "Defines the outer jacket material or protection.",
+      "accent": "#102A72",
+      "background": "#E4EAF7",
+      "optionGroup": "jacketTypes"
+    },
+    {
+      "id": 3,
+      "key": "coreColour",
+      "label": "Core Colour Configuration",
+      "shortDescription": "Defines core colour sets for power, control and instrumentation.",
+      "accent": "#C62828",
+      "background": "#FDECEA",
+      "optionGroup": "coreColour"
+    },
+    {
+      "id": 4,
+      "key": "braidArmourScreen",
+      "label": "Braid / Armour / Screen",
+      "shortDescription": "Defines metallic braid, armour or screen construction.",
+      "accent": "#2E7D32",
+      "background": "#E8F5E9",
+      "optionGroup": "braidArmourScreens"
+    },
+    {
+      "id": 5,
+      "key": "conductor",
+      "label": "Conductor",
+      "shortDescription": "Defines conductor material.",
+      "accent": "#C9A227",
+      "background": "#FFF8E1",
+      "optionGroup": "conductors"
+    },
+    {
+      "id": 6,
+      "key": "conductorCount",
+      "label": "Number of Conductors",
+      "shortDescription": "Number of conductors, pairs or triads.",
+      "accent": "#0288D1",
+      "background": "#E1F5FE",
+      "optionGroup": "conductorCounts"
+    },
+    {
+      "id": 7,
+      "key": "coreType",
+      "label": "Core Type",
+      "shortDescription": "Power/control, pair, quad or triad construction.",
+      "accent": "#6D4C41",
+      "background": "#EFEBE9",
+      "optionGroup": "coreTypes"
+    },
+    {
+      "id": 8,
+      "key": "crossSection",
+      "label": "Cross Section Area",
+      "shortDescription": "Conductor size in mm\u00b2 or AWG/MCM.",
+      "accent": "#1565C0",
+      "background": "#E3F2FD",
+      "optionGroup": "crossSection"
+    },
+    {
+      "id": 9,
+      "key": "jacketColour",
+      "label": "Jacket Colour",
+      "shortDescription": "Outer jacket colour identification.",
+      "accent": "#1B5E20",
+      "background": "#E8F5E9",
+      "optionGroup": "jacketColours"
+    }
+  ],
+  "dictionaries": {
+    "styles": [
+      {
+        "code": "DV",
+        "label": "Shipboard / marine example style"
+      },
+      {
+        "code": "C1",
+        "label": "Flexible Control"
+      },
+      {
+        "code": "C2",
+        "label": "Flexible Control Braid"
+      },
+      {
+        "code": "C3",
+        "label": "Flexible Control SWA"
+      },
+      {
+        "code": "C4",
+        "label": "Flexible LSZH Control"
+      },
+      {
+        "code": "C5",
+        "label": "Flexible LSZH Control Braid"
+      },
+      {
+        "code": "C6",
+        "label": "Flexible LSZH Control SWA"
+      },
+      {
+        "code": "CA",
+        "label": "Flexible LSZH AWA/SWA"
+      },
+      {
+        "code": "CC",
+        "label": "Flexible LSZH (Fixed Wiring)"
+      },
+      {
+        "code": "CDT",
+        "label": "Flexible LSZH Nylon Termite / Vermin Resistant SDI"
+      },
+      {
+        "code": "CF",
+        "label": "Flexible LSZH Control (Fixed Wiring)"
+      },
+      {
+        "code": "CN",
+        "label": "Flexible LSZH Nylon Extruded Termite Resistant"
+      },
+      {
+        "code": "DC",
+        "label": "Flexible LSZH Battery/DC SDI"
+      },
+      {
+        "code": "DL",
+        "label": "Flexible Rubber Battery/DC SDI"
+      },
+      {
+        "code": "DP",
+        "label": "Flexible Rubber Coll. Scr. & Braid EMC"
+      },
+      {
+        "code": "DW",
+        "label": "Flexible Rubber Welding/Battery"
+      },
+      {
+        "code": "E3",
+        "label": "Flexible LSZH MV Power"
+      },
+      {
+        "code": "E4",
+        "label": "Flexible LSZH MV Power"
+      },
+      {
+        "code": "E6",
+        "label": "Flexible LSZH MV Power"
+      },
+      {
+        "code": "EA",
+        "label": "Flexible Rubber Coll. Scr. & braid VSD/VFD with SWA"
+      },
+      {
+        "code": "EH",
+        "label": "Flexible LSZH SDI(Fixed Wiring)"
+      },
+      {
+        "code": "EU",
+        "label": "Flexible LSZH Coll. Scr. & braid VSD/VFD"
+      },
+      {
+        "code": "EZ",
+        "label": "Flexible Rubber Flexing/Heavy Duty"
+      },
+      {
+        "code": "FD",
+        "label": "Flexible LSZH Flat"
+      },
+      {
+        "code": "FH",
+        "label": "Flexible LSZH Fire Res.Braid VSD/VFD"
+      },
+      {
+        "code": "FP",
+        "label": "Flexible Battery/DC SDI"
+      },
+      {
+        "code": "FR",
+        "label": "Flexible LSZH Fire Resistant"
+      },
+      {
+        "code": "FW",
+        "label": "Flexible LSZH Welding Cable"
+      },
+      {
+        "code": "HB",
+        "label": "Flexible LSZH Battery/DC"
+      },
+      {
+        "code": "IA",
+        "label": "Flexible Rubber Instrumentation SWA Individual & Coll. Scr."
+      },
+      {
+        "code": "KA",
+        "label": "Flexible Rubber Armoured"
+      },
+      {
+        "code": "KB",
+        "label": "Flexible Rubber Battery/DC"
+      },
+      {
+        "code": "KC",
+        "label": "Flexible Rubber Control"
+      },
+      {
+        "code": "KDT",
+        "label": "Flexible Nylon Termite / Vermin Resistant SDI"
+      },
+      {
+        "code": "KE",
+        "label": "Flexible Rubber Instrumentation Braid Coll. Scr."
+      },
+      {
+        "code": "KF",
+        "label": "Flexible LSZH Submersible (Potable Water)"
+      },
+      {
+        "code": "KG",
+        "label": "Flexible Rubber Braid/Armoured Power and Control"
+      },
+      {
+        "code": "KH",
+        "label": "Flexible Rubber Instrumentation Braid Individual and Coll. Scr."
+      },
+      {
+        "code": "KK",
+        "label": "Flexible Rubber Submersible Pump"
+      },
+      {
+        "code": "KL",
+        "label": "Flexible Rubber (Fixed Wiring)"
+      },
+      {
+        "code": "KN",
+        "label": "Flexible Nylon Extruded Termite Resistant"
+      },
+      {
+        "code": "KP",
+        "label": "Flexible Rubber Submersible Pump with Pilots"
+      },
+      {
+        "code": "KU",
+        "label": "Flexible Rubber Coll. Scr. & Braid VSD/VFD"
+      },
+      {
+        "code": "LN",
+        "label": "Flexible Nylon Extruded Termite Resistant SDI"
+      },
+      {
+        "code": "LP",
+        "label": "Flexible Rubber Building Wire"
+      },
+      {
+        "code": "LS",
+        "label": "Flexible LSZH Switchboard/ Panel Wire"
+      },
+      {
+        "code": "N2",
+        "label": "Flexible Rubber MV Power with Nylon"
+      },
+      {
+        "code": "N3",
+        "label": "Flexible Rubber MV Power with Nylon"
+      },
+      {
+        "code": "N4",
+        "label": "Flexible Rubber MV Power with Nylon"
+      },
+      {
+        "code": "N6",
+        "label": "Flexible Rubber MV Power with Nylon"
+      },
+      {
+        "code": "N7",
+        "label": "Flexible Rubber MV Power with Nylon"
+      },
+      {
+        "code": "OD",
+        "label": "Flexible Rubber Braid Submersible Pump with Pilots"
+      },
+      {
+        "code": "R1",
+        "label": "Flexible Instrumentation Coll. Scr."
+      },
+      {
+        "code": "R2",
+        "label": "Flexible Instrumentation SWA Coll. Scr."
+      },
+      {
+        "code": "R3",
+        "label": "Flexible Instrumentation Individual & Coll. Scr."
+      },
+      {
+        "code": "R4",
+        "label": "Flexible Instrumentation SWA Individual & Coll. Scr."
+      },
+      {
+        "code": "R5",
+        "label": "Flexible LSZH Instrumentation Coll. Scr."
+      },
+      {
+        "code": "R6",
+        "label": "Flexible LSZH Instrumentation SWA Coll. Scr."
+      },
+      {
+        "code": "R7",
+        "label": "Flexible LSZH Instrumentation Individual & Coll. Scr."
+      },
+      {
+        "code": "R8",
+        "label": "Flexible LSZH Instrumentation SWA Individual & Coll. Scr."
+      },
+      {
+        "code": "RA",
+        "label": "Flexible Rubber Instrumentation SWA Coll. Scr."
+      },
+      {
+        "code": "RD",
+        "label": "Collective Screened Instrumentation"
+      },
+      {
+        "code": "RE",
+        "label": "Flexible Rubber Instrumentation Coll. Scr."
+      },
+      {
+        "code": "RF",
+        "label": "Flexible LSZH Instrumentation Coll. Scr."
+      },
+      {
+        "code": "RG",
+        "label": "Flexible LSZH Instrumentation Individual & Coll. Scr."
+      },
+      {
+        "code": "RH",
+        "label": "Flexible Rubber Instrumentation Individual & Coll. Scr."
+      },
+      {
+        "code": "RL",
+        "label": "Flexible Rubber Battery/DC SDI"
+      },
+      {
+        "code": "RW",
+        "label": "Flexible Rubber Welding/Battery"
+      },
+      {
+        "code": "S2",
+        "label": "Flexible Rubber MV Power with SWA"
+      },
+      {
+        "code": "S3",
+        "label": "Flexible Rubber MV Power with SWA"
+      },
+      {
+        "code": "S4",
+        "label": "Flexible Rubber MV Power with SWA"
+      },
+      {
+        "code": "S6",
+        "label": "Flexible Rubber MV Power with SWA"
+      },
+      {
+        "code": "S7",
+        "label": "Flexible Rubber MV Power with SWA"
+      },
+      {
+        "code": "SJ",
+        "label": "Flexible LSZH SDI - for Solar Applications"
+      },
+      {
+        "code": "SK",
+        "label": "Aluminium Flexible Rubber(Fixed Wiring)"
+      },
+      {
+        "code": "SX",
+        "label": "Aluminium Flexible Rubber(Fixed Wiring)"
+      },
+      {
+        "code": "SY",
+        "label": "Flexible LSZH - for Solar Applications"
+      },
+      {
+        "code": "V1",
+        "label": "Flexible Rubber SDI (Fixed Wiring)"
+      },
+      {
+        "code": "V2",
+        "label": "Flexible LSZH MV Power"
+      },
+      {
+        "code": "V3",
+        "label": "Flexible Rubber MV Power"
+      },
+      {
+        "code": "V4",
+        "label": "Flexible Rubber MV Power"
+      },
+      {
+        "code": "V6",
+        "label": "Flexible Rubber MV Power"
+      },
+      {
+        "code": "V7",
+        "label": "Flexible Rubber MV Power"
+      },
+      {
+        "code": "WG",
+        "label": "Flexible Alarm/Signal Fire Resistant"
+      },
+      {
+        "code": "WH",
+        "label": "Flexible LSZH Instrumentation Fire Res. Coll. Scr."
+      },
+      {
+        "code": "XA",
+        "label": "Flexible Rubber Armoured"
+      },
+      {
+        "code": "XDT",
+        "label": "Flexible Nylon Vermin Resistant SDI"
+      },
+      {
+        "code": "XL",
+        "label": "Flexible Rubber(Fixed Wiring)"
+      },
+      {
+        "code": "XN",
+        "label": "Flexible Nylon Extruded Termite Resistant"
+      },
+      {
+        "code": "XU",
+        "label": "Flexible Rubber Coll. Scr. & Braid VSD/VFD"
+      },
+      {
+        "code": "PJ",
+        "label": "Asia industrial/SBO example style"
+      }
+    ],
+    "jacketTypes": [
+      {
+        "code": "A",
+        "label": "SHF 1"
+      },
+      {
+        "code": "B",
+        "label": "SHF 2"
+      },
+      {
+        "code": "C",
+        "label": "NEK606 SHF-2"
+      },
+      {
+        "code": "D",
+        "label": "SW4"
+      },
+      {
+        "code": "E",
+        "label": "TPE"
+      },
+      {
+        "code": "F",
+        "label": "PVC"
+      },
+      {
+        "code": "M",
+        "label": "NEK606 MUD"
+      },
+      {
+        "code": "T",
+        "label": "Anti Termite / Anti Rodent"
+      }
+    ],
+    "braidArmourScreens": [
+      {
+        "code": "1",
+        "label": "Plexus Tinned Copper Tape + Drain Wire"
+      },
+      {
+        "code": "2",
+        "label": "Ripcord or Ripcord + TCWB"
+      },
+      {
+        "code": "3",
+        "label": "Ripcord + GSWB"
+      },
+      {
+        "code": "A",
+        "label": "Alum Braid"
+      },
+      {
+        "code": "B",
+        "label": "Bronze Braid"
+      },
+      {
+        "code": "C",
+        "label": "GSWB + Al/lam"
+      },
+      {
+        "code": "D",
+        "label": "Alum/Lam + d/w + Aluminium Overbraid"
+      },
+      {
+        "code": "E",
+        "label": "TCWB + Al/lam"
+      },
+      {
+        "code": "F",
+        "label": "TCWB + Alum Braid"
+      },
+      {
+        "code": "G",
+        "label": "GSWB"
+      },
+      {
+        "code": "H",
+        "label": "Cu Tape"
+      },
+      {
+        "code": "I",
+        "label": "TCWB + TCWB"
+      },
+      {
+        "code": "J",
+        "label": "AWA"
+      },
+      {
+        "code": "K",
+        "label": "PCWB + d/w"
+      },
+      {
+        "code": "L",
+        "label": "TCWB + d/w"
+      },
+      {
+        "code": "M",
+        "label": "PCWB + GSWB"
+      },
+      {
+        "code": "N",
+        "label": "Plain Copper Wire Screen for MV Cable"
+      },
+      {
+        "code": "O",
+        "label": "Concentric Conductor for Tram Feeder Cable"
+      },
+      {
+        "code": "P",
+        "label": "PCWB"
+      },
+      {
+        "code": "Q",
+        "label": "Alum/Lam Tape + Drain + Bronze Braid"
+      },
+      {
+        "code": "R",
+        "label": "Alum/Lam + d/w"
+      },
+      {
+        "code": "S",
+        "label": "SWA"
+      },
+      {
+        "code": "T",
+        "label": "TCWB"
+      },
+      {
+        "code": "U",
+        "label": "Individually Screened Units + TCWB"
+      },
+      {
+        "code": "V",
+        "label": "Tinned Copper Wire Armour for MV Cable Screening"
+      },
+      {
+        "code": "W",
+        "label": "TCWB + Bronze Overbraid"
+      },
+      {
+        "code": "X",
+        "label": "Not Applicable"
+      },
+      {
+        "code": "Y",
+        "label": "Individually Screened Units + GSWB"
+      },
+      {
+        "code": "Z",
+        "label": "Copper Laminate Tape + TCWB"
+      }
+    ],
+    "conductors": [
+      {
+        "code": "A",
+        "label": "Aluminium"
+      },
+      {
+        "code": "D",
+        "label": "Tinned Annealed Copper"
+      },
+      {
+        "code": "K",
+        "label": "Thermocouple"
+      },
+      {
+        "code": "N",
+        "label": "Plain Annealed Copper"
+      }
+    ],
+    "coreTypes": [
+      {
+        "code": "A",
+        "label": "Power / Control AWG/MCM"
+      },
+      {
+        "code": "C",
+        "label": "Power / Control mm\u00b2"
+      },
+      {
+        "code": "P",
+        "label": "Pair"
+      },
+      {
+        "code": "Q",
+        "label": "Quad"
+      },
+      {
+        "code": "T",
+        "label": "Triad"
+      }
+    ],
+    "conductorCounts": [
+      {
+        "code": "1",
+        "label": "1"
+      },
+      {
+        "code": "2",
+        "label": "2"
+      },
+      {
+        "code": "3",
+        "label": "3"
+      },
+      {
+        "code": "4",
+        "label": "4"
+      },
+      {
+        "code": "5",
+        "label": "5"
+      },
+      {
+        "code": "6",
+        "label": "6"
+      },
+      {
+        "code": "7",
+        "label": "7"
+      },
+      {
+        "code": "8",
+        "label": "8"
+      },
+      {
+        "code": "9",
+        "label": "9"
+      },
+      {
+        "code": "10",
+        "label": "10"
+      },
+      {
+        "code": "11",
+        "label": "11"
+      },
+      {
+        "code": "12",
+        "label": "12"
+      },
+      {
+        "code": "13",
+        "label": "13"
+      },
+      {
+        "code": "14",
+        "label": "14"
+      },
+      {
+        "code": "15",
+        "label": "15"
+      },
+      {
+        "code": "16",
+        "label": "16"
+      },
+      {
+        "code": "17",
+        "label": "17"
+      },
+      {
+        "code": "18",
+        "label": "18"
+      },
+      {
+        "code": "19",
+        "label": "19"
+      },
+      {
+        "code": "20",
+        "label": "20"
+      },
+      {
+        "code": "21",
+        "label": "21"
+      },
+      {
+        "code": "22",
+        "label": "22"
+      },
+      {
+        "code": "23",
+        "label": "23"
+      },
+      {
+        "code": "24",
+        "label": "24"
+      },
+      {
+        "code": "25",
+        "label": "25"
+      },
+      {
+        "code": "26",
+        "label": "26"
+      },
+      {
+        "code": "27",
+        "label": "27"
+      },
+      {
+        "code": "28",
+        "label": "28"
+      },
+      {
+        "code": "29",
+        "label": "29"
+      },
+      {
+        "code": "30",
+        "label": "30"
+      },
+      {
+        "code": "31",
+        "label": "31"
+      },
+      {
+        "code": "32",
+        "label": "32"
+      },
+      {
+        "code": "33",
+        "label": "33"
+      },
+      {
+        "code": "34",
+        "label": "34"
+      },
+      {
+        "code": "35",
+        "label": "35"
+      },
+      {
+        "code": "36",
+        "label": "36"
+      },
+      {
+        "code": "37",
+        "label": "37"
+      },
+      {
+        "code": "38",
+        "label": "38"
+      },
+      {
+        "code": "39",
+        "label": "39"
+      },
+      {
+        "code": "40",
+        "label": "40"
+      },
+      {
+        "code": "41",
+        "label": "41"
+      },
+      {
+        "code": "42",
+        "label": "42"
+      },
+      {
+        "code": "43",
+        "label": "43"
+      },
+      {
+        "code": "44",
+        "label": "44"
+      },
+      {
+        "code": "45",
+        "label": "45"
+      },
+      {
+        "code": "46",
+        "label": "46"
+      },
+      {
+        "code": "47",
+        "label": "47"
+      },
+      {
+        "code": "48",
+        "label": "48"
+      }
+    ],
+    "jacketColours": [
+      {
+        "code": "BK",
+        "label": "Black",
+        "hex": "#111111"
+      },
+      {
+        "code": "BL",
+        "label": "Blue",
+        "hex": "#1f84d8"
+      },
+      {
+        "code": "BR",
+        "label": "Brown",
+        "hex": "#9a6d3f"
+      },
+      {
+        "code": "EA",
+        "label": "Earth Green/Yellow",
+        "hex": "#19ab64"
+      },
+      {
+        "code": "GR",
+        "label": "Green",
+        "hex": "#19ab64"
+      },
+      {
+        "code": "GY",
+        "label": "Grey",
+        "hex": "#666666"
+      },
+      {
+        "code": "OR",
+        "label": "Orange",
+        "hex": "#F58220"
+      },
+      {
+        "code": "RE",
+        "label": "Red",
+        "hex": "#e53935"
+      },
+      {
+        "code": "WH",
+        "label": "White",
+        "hex": "#ffffff"
+      },
+      {
+        "code": "YE",
+        "label": "Yellow",
+        "hex": "#feee4a"
+      },
+      {
+        "code": "PI",
+        "label": "Pink",
+        "hex": "#f48fb1"
+      },
+      {
+        "code": "PU",
+        "label": "Purple",
+        "hex": "#da70d6"
+      },
+      {
+        "code": "LB",
+        "label": "Light Blue",
+        "hex": "#b6eeff"
+      },
+      {
+        "code": "RB",
+        "label": "Red/Blue",
+        "hex": "#e53935"
+      }
+    ],
+    "powerCoreConfigs": [
+      {
+        "code": "PA",
+        "standard": "Australia/NZ (Fixed) with reduced earth",
+        "colours": {
+          "1C": [
+            "WH"
+          ],
+          "2C": [
+            "RE",
+            "BK"
+          ],
+          "3C": [
+            "RE",
+            "BK",
+            "EA"
+          ],
+          "4C": [
+            "RE",
+            "WH",
+            "BL",
+            "EA"
+          ],
+          "5C": [
+            "RE",
+            "WH",
+            "BL",
+            "BK",
+            "EA"
+          ]
+        }
+      },
+      {
+        "code": "PB",
+        "standard": "Australia/NZ (Fixed) no earth",
+        "colours": {
+          "1C": [
+            "WH"
+          ],
+          "2C": [
+            "RE",
+            "BK"
+          ],
+          "3C": [
+            "RE",
+            "WH",
+            "BL"
+          ],
+          "4C": [
+            "RE",
+            "WH",
+            "BL",
+            "BK"
+          ]
+        }
+      },
+      {
+        "code": "PD",
+        "standard": "Australia (Flexible)",
+        "colours": {
+          "1C": [
+            "WH"
+          ],
+          "2C": [
+            "BR",
+            "BL"
+          ],
+          "3C": [
+            "BR",
+            "BL",
+            "EA"
+          ],
+          "4C": [
+            "BR",
+            "BK",
+            "BL",
+            "EA"
+          ],
+          "5C": [
+            "BR",
+            "BK",
+            "WH",
+            "BL",
+            "EA"
+          ]
+        }
+      },
+      {
+        "code": "PF",
+        "standard": "IEEE 1580",
+        "colours": {
+          "1C": [
+            "BK"
+          ],
+          "2C": [
+            "BK",
+            "WH"
+          ],
+          "3C": [
+            "BK",
+            "WH",
+            "RE"
+          ],
+          "4C": [
+            "BK",
+            "WH",
+            "RE",
+            "GN"
+          ],
+          "5C": [
+            "BK",
+            "WH",
+            "RE",
+            "OR",
+            "GN"
+          ]
+        }
+      },
+      {
+        "code": "PJ",
+        "standard": "Europe (inc UK) with earth",
+        "colours": {
+          "1C": [
+            "WH"
+          ],
+          "2C": [
+            "BR",
+            "BL"
+          ],
+          "3C": [
+            "BR",
+            "BL",
+            "EA"
+          ],
+          "4C": [
+            "BR",
+            "BK",
+            "GY",
+            "EA"
+          ],
+          "5C": [
+            "BR",
+            "BK",
+            "GY",
+            "BL",
+            "EA"
+          ]
+        }
+      },
+      {
+        "code": "P9",
+        "standard": "Australia (Fixed) with full earth",
+        "colours": {
+          "1C": [
+            "WH"
+          ],
+          "2C": [
+            "RE",
+            "BK"
+          ],
+          "3C": [
+            "RE",
+            "BK",
+            "EA"
+          ],
+          "4C": [
+            "RE",
+            "WH",
+            "BL",
+            "EA"
+          ],
+          "5C": [
+            "RE",
+            "WH",
+            "BL",
+            "BK",
+            "EA"
+          ]
+        }
+      },
+      {
+        "code": "XX",
+        "standard": "Single insulated \u2014 jacket colour from segment 9",
+        "colours": {}
+      }
+    ],
+    "controlCoreConfigs": [
+      {
+        "code": "CA",
+        "label": "White numbered 1\u20134 + EA"
+      },
+      {
+        "code": "CB",
+        "label": "White numbered 1\u20134 (no earth)"
+      },
+      {
+        "code": "CC",
+        "label": "Black numbered 1\u20134 + EA"
+      },
+      {
+        "code": "CD",
+        "label": "Black numbered 1\u20134 (no earth)"
+      },
+      {
+        "code": "CE",
+        "label": "Black / White / Red / Green / Orange"
+      },
+      {
+        "code": "CF",
+        "label": "IEEE 1580 Type P coloured cores"
+      },
+      {
+        "code": "CG",
+        "label": "White numbered 1\u20134 + green earth"
+      },
+      {
+        "code": "CH",
+        "label": "Blue numbered 1\u20134 + EA"
+      },
+      {
+        "code": "CJ",
+        "label": "Red numbered 1\u20134 + EA"
+      },
+      {
+        "code": "CK",
+        "label": "Orange numbered 1\u20134 + EA"
+      }
+    ],
+    "instrumentationCoreConfigs": [
+      {
+        "code": "DA",
+        "label": "WH/BK pairs \u00b7 WH/BK/RE triads"
+      },
+      {
+        "code": "DB",
+        "label": "All white numbered pairs/triads"
+      },
+      {
+        "code": "DD",
+        "label": "BL/BK pairs \u00b7 BK/BL/BR triads"
+      },
+      {
+        "code": "DE",
+        "label": "Matched WH/BK pairs \u00b7 WH/BK/RE triads"
+      },
+      {
+        "code": "DF",
+        "label": "WH/BL matched-number pairs"
+      },
+      {
+        "code": "DG",
+        "label": "RE/WH pairs \u00b7 RE/WH/BL triads"
+      },
+      {
+        "code": "DH",
+        "label": "BL/RE matched-number pairs"
+      },
+      {
+        "code": "DJ",
+        "label": "BL/BK pairs \u00b7 BK/BL/BR triads"
+      },
+      {
+        "code": "DK",
+        "label": "RD/BK lettered pairs"
+      },
+      {
+        "code": "DM",
+        "label": "RE/BK sequential pairs"
+      },
+      {
+        "code": "DP",
+        "label": "RE/WH sequential pairs"
+      },
+      {
+        "code": "DT",
+        "label": "RE/BK matched-number pairs"
+      },
+      {
+        "code": "DW",
+        "label": "GN/WH matched-number pairs"
+      }
+    ],
+    "mm2Sizes": [
+      {
+        "code": "0.5",
+        "label": "0.5 mm\u00b2"
+      },
+      {
+        "code": "0.75",
+        "label": "0.75 mm\u00b2"
+      },
+      {
+        "code": "1",
+        "label": "1 mm\u00b2"
+      },
+      {
+        "code": "1.5",
+        "label": "1.5 mm\u00b2"
+      },
+      {
+        "code": "2.5",
+        "label": "2.5 mm\u00b2"
+      },
+      {
+        "code": "4",
+        "label": "4 mm\u00b2"
+      },
+      {
+        "code": "6",
+        "label": "6 mm\u00b2"
+      },
+      {
+        "code": "10",
+        "label": "10 mm\u00b2"
+      },
+      {
+        "code": "16",
+        "label": "16 mm\u00b2"
+      },
+      {
+        "code": "25",
+        "label": "25 mm\u00b2"
+      },
+      {
+        "code": "35",
+        "label": "35 mm\u00b2"
+      },
+      {
+        "code": "50",
+        "label": "50 mm\u00b2"
+      },
+      {
+        "code": "70",
+        "label": "70 mm\u00b2"
+      },
+      {
+        "code": "95",
+        "label": "95 mm\u00b2"
+      },
+      {
+        "code": "120",
+        "label": "120 mm\u00b2"
+      },
+      {
+        "code": "150",
+        "label": "150 mm\u00b2"
+      },
+      {
+        "code": "185",
+        "label": "185 mm\u00b2"
+      },
+      {
+        "code": "240",
+        "label": "240 mm\u00b2"
+      },
+      {
+        "code": "300",
+        "label": "300 mm\u00b2"
+      },
+      {
+        "code": "400",
+        "label": "400 mm\u00b2"
+      },
+      {
+        "code": "500",
+        "label": "500 mm\u00b2"
+      },
+      {
+        "code": "630",
+        "label": "630 mm\u00b2"
+      }
+    ],
+    "awgToMm2": [
+      {
+        "awg": "20",
+        "mcm": "1.02",
+        "mm2": "0.52"
+      },
+      {
+        "awg": "18",
+        "mcm": "1.62",
+        "mm2": "0.82"
+      },
+      {
+        "awg": "16",
+        "mcm": "2.58",
+        "mm2": "1.31"
+      },
+      {
+        "awg": "14",
+        "mcm": "4.11",
+        "mm2": "2.08"
+      },
+      {
+        "awg": "12",
+        "mcm": "6.53",
+        "mm2": "3.31"
+      },
+      {
+        "awg": "10",
+        "mcm": "10.4",
+        "mm2": "5.27"
+      },
+      {
+        "awg": "8",
+        "mcm": "16.5",
+        "mm2": "8.36"
+      },
+      {
+        "awg": "6",
+        "mcm": "26.3",
+        "mm2": "13.3"
+      },
+      {
+        "awg": "4",
+        "mcm": "41.7",
+        "mm2": "21.1"
+      },
+      {
+        "awg": "2",
+        "mcm": "66.4",
+        "mm2": "33.6"
+      },
+      {
+        "awg": "1",
+        "mcm": "83.7",
+        "mm2": "42.4"
+      },
+      {
+        "awg": "1/0",
+        "mcm": "106",
+        "mm2": "53.7"
+      },
+      {
+        "awg": "2/0",
+        "mcm": "133",
+        "mm2": "67.4"
+      },
+      {
+        "awg": "3/0",
+        "mcm": "168",
+        "mm2": "85.1"
+      },
+      {
+        "awg": "4/0",
+        "mcm": "212",
+        "mm2": "107"
+      }
+    ],
+    "mcmToMm2": [
+      {
+        "mcm": "250",
+        "mm2": "127"
+      },
+      {
+        "mcm": "300",
+        "mm2": "152"
+      },
+      {
+        "mcm": "350",
+        "mm2": "177"
+      },
+      {
+        "mcm": "400",
+        "mm2": "203"
+      },
+      {
+        "mcm": "500",
+        "mm2": "253"
+      },
+      {
+        "mcm": "600",
+        "mm2": "304"
+      },
+      {
+        "mcm": "750",
+        "mm2": "380"
+      },
+      {
+        "mcm": "1000",
+        "mm2": "507"
+      }
+    ]
+  },
+  "source": {
+    "legacy": "content-product_coding.php (?sbo=true / US region)"
+  }
+}

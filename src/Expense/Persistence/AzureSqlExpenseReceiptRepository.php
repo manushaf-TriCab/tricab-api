@@ -15,6 +15,7 @@ use TriCab\Core\Expense\Domain\Exception\ExpenseConcurrencyConflict;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseAttachmentRef;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseCategory;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseCurrency;
+use TriCab\Core\Expense\Domain\ValueObject\ExpenseFinanceResolution;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseMoney;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptId;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
@@ -69,6 +70,11 @@ final class AzureSqlExpenseReceiptRepository implements ExpenseReceiptRepository
     CONVERT(VARCHAR(33), r.[UpdatedAtUtc], 127) AS [UpdatedAtUtc],
     CONVERT(VARCHAR(33), r.[DeletedAtUtc], 127) AS [DeletedAtUtc],
     r.[DeletedBy],
+    r.[Resolution],
+    r.[ResolutionNote],
+    r.[ResolvedByUserId],
+    r.[LegacyResolvedBy],
+    CONVERT(VARCHAR(33), r.[ResolvedAtUtc], 127) AS [ResolvedAtUtc],
     CONVERT(VARBINARY(8), r.[RowVersion]) AS [RowVersion]
 SQL;
 
@@ -95,6 +101,18 @@ SQL;
 FROM [expense].[ExpenseReceipts] r
 WHERE r.[PublicId] = :publicId',
             [':publicId' => $publicId->toString()],
+        );
+
+        return $rows === [] ? null : $this->hydrate($rows[0]);
+    }
+
+    public function findById(int $id): ?ExpenseReceipt
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT ' . self::SELECT_COLUMNS . '
+FROM [expense].[ExpenseReceipts] r
+WHERE r.[ExpenseReceiptId] = :id',
+            [':id' => $id],
         );
 
         return $rows === [] ? null : $this->hydrate($rows[0]);
@@ -128,6 +146,73 @@ ORDER BY r.[ExpenseReceiptId] DESC',
         );
 
         return array_map(fn (array $row): ExpenseReceipt => $this->hydrate($row), $rows);
+    }
+
+    public function listMatchCandidates(): array
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT ' . self::SELECT_COLUMNS . '
+FROM [expense].[ExpenseReceipts] r
+WHERE r.[BankFeedEntryId] IS NULL
+  AND r.[Status] <> N\'draft\'
+  AND r.[DeletedAtUtc] IS NULL
+ORDER BY r.[ExpenseReceiptId] DESC',
+        );
+
+        return array_map(fn (array $row): ExpenseReceipt => $this->hydrate($row), $rows);
+    }
+
+    public function listInReceiptDateRange(
+        DateTimeImmutable $start,
+        DateTimeImmutable $end,
+        bool $includeDeleted = false,
+    ): array {
+        $sql = 'SELECT ' . self::SELECT_COLUMNS . '
+FROM [expense].[ExpenseReceipts] r
+WHERE r.[ReceiptDate] >= :startDate
+  AND r.[ReceiptDate] <= :endDate';
+        if (!$includeDeleted) {
+            $sql .= ' AND r.[DeletedAtUtc] IS NULL';
+        }
+        $sql .= ' ORDER BY r.[ExpenseReceiptId] DESC';
+
+        $rows = $this->connection->fetchAll($sql, [
+            ':startDate' => $start->format('Y-m-d'),
+            ':endDate' => $end->format('Y-m-d'),
+        ]);
+
+        return array_map(fn (array $row): ExpenseReceipt => $this->hydrate($row), $rows);
+    }
+
+    public function listAll(bool $includeDeleted = false): array
+    {
+        $sql = 'SELECT ' . self::SELECT_COLUMNS . '
+FROM [expense].[ExpenseReceipts] r';
+        if (!$includeDeleted) {
+            $sql .= ' WHERE r.[DeletedAtUtc] IS NULL';
+        }
+        $sql .= ' ORDER BY r.[ExpenseReceiptId] DESC';
+
+        $rows = $this->connection->fetchAll($sql);
+
+        return array_map(fn (array $row): ExpenseReceipt => $this->hydrate($row), $rows);
+    }
+
+    public function deletePermanently(ExpenseReceipt $receipt, ?RowVersionToken $expectedRowVersion = null): void
+    {
+        $sql = 'DELETE FROM [expense].[ExpenseReceipts]
+OUTPUT DELETED.[ExpenseReceiptId]
+WHERE [PublicId] = :publicId AND [DeletedAtUtc] IS NOT NULL';
+        $params = [':publicId' => $receipt->publicId()->toString()];
+        if ($expectedRowVersion !== null) {
+            $sql .= ' AND [RowVersion] = :expectedRowVersion';
+            $params[':expectedRowVersion'] = ProductRowVersionMapper::toSqlBinary($expectedRowVersion);
+        }
+
+        $rows = $this->connection->fetchAll($sql, $params);
+        if ($rows === []) {
+            throw ExpenseConcurrencyConflict::forReceipt();
+        }
     }
 
     private function insert(ExpenseReceipt $receipt): ExpenseReceipt
@@ -176,7 +261,12 @@ INSERT INTO [expense].[ExpenseReceipts] (
     [SubmittedAtUtc],
     [UpdatedAtUtc],
     [DeletedAtUtc],
-    [DeletedBy]
+    [DeletedBy],
+    [Resolution],
+    [ResolutionNote],
+    [ResolvedByUserId],
+    [LegacyResolvedBy],
+    [ResolvedAtUtc]
 )
 OUTPUT
     INSERTED.[ExpenseReceiptId],
@@ -219,6 +309,11 @@ OUTPUT
     CONVERT(VARCHAR(33), INSERTED.[UpdatedAtUtc], 127) AS [UpdatedAtUtc],
     CONVERT(VARCHAR(33), INSERTED.[DeletedAtUtc], 127) AS [DeletedAtUtc],
     INSERTED.[DeletedBy],
+    INSERTED.[Resolution],
+    INSERTED.[ResolutionNote],
+    INSERTED.[ResolvedByUserId],
+    INSERTED.[LegacyResolvedBy],
+    CONVERT(VARCHAR(33), INSERTED.[ResolvedAtUtc], 127) AS [ResolvedAtUtc],
     CONVERT(VARBINARY(8), INSERTED.[RowVersion]) AS [RowVersion]
 VALUES (
     :publicId,
@@ -259,7 +354,12 @@ VALUES (
     :submittedAtUtc,
     :updatedAtUtc,
     :deletedAtUtc,
-    :deletedBy
+    :deletedBy,
+    :resolution,
+    :resolutionNote,
+    :resolvedByUserId,
+    :legacyResolvedBy,
+    :resolvedAtUtc
 )
 SQL,
             $this->writeParams($receipt, $attachment, $legacy),
@@ -314,7 +414,12 @@ SET
     [SubmittedAtUtc] = :submittedAtUtc,
     [UpdatedAtUtc] = :updatedAtUtc,
     [DeletedAtUtc] = :deletedAtUtc,
-    [DeletedBy] = :deletedBy
+    [DeletedBy] = :deletedBy,
+    [Resolution] = :resolution,
+    [ResolutionNote] = :resolutionNote,
+    [ResolvedByUserId] = :resolvedByUserId,
+    [LegacyResolvedBy] = :legacyResolvedBy,
+    [ResolvedAtUtc] = :resolvedAtUtc
 OUTPUT
     INSERTED.[ExpenseReceiptId],
     CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId],
@@ -356,6 +461,11 @@ OUTPUT
     CONVERT(VARCHAR(33), INSERTED.[UpdatedAtUtc], 127) AS [UpdatedAtUtc],
     CONVERT(VARCHAR(33), INSERTED.[DeletedAtUtc], 127) AS [DeletedAtUtc],
     INSERTED.[DeletedBy],
+    INSERTED.[Resolution],
+    INSERTED.[ResolutionNote],
+    INSERTED.[ResolvedByUserId],
+    INSERTED.[LegacyResolvedBy],
+    CONVERT(VARCHAR(33), INSERTED.[ResolvedAtUtc], 127) AS [ResolvedAtUtc],
     CONVERT(VARBINARY(8), INSERTED.[RowVersion]) AS [RowVersion]
 WHERE [ExpenseReceiptId] = :expenseReceiptId
 SQL;
@@ -429,6 +539,13 @@ SQL;
                 ? AzureSqlValueMapper::formatDateTime($receipt->deletedAt())
                 : null,
             ':deletedBy' => $receipt->deletedBy(),
+            ':resolution' => $receipt->resolution()?->toString(),
+            ':resolutionNote' => $receipt->resolutionNote(),
+            ':resolvedByUserId' => $receipt->resolvedByUserId()?->toInt(),
+            ':legacyResolvedBy' => $receipt->legacyResolvedBy(),
+            ':resolvedAtUtc' => $receipt->resolvedAtUtc() !== null
+                ? AzureSqlValueMapper::formatDateTime($receipt->resolvedAtUtc())
+                : null,
         ];
     }
 
@@ -437,6 +554,8 @@ SQL;
     {
         $submittedBy = AzureSqlValueMapper::nullableInt($row['SubmittedByUserId'] ?? null);
         $managerUserId = AzureSqlValueMapper::nullableInt($row['ManagerUserId'] ?? null);
+        $resolvedByUserId = AzureSqlValueMapper::nullableInt($row['ResolvedByUserId'] ?? null);
+        $resolutionRaw = AzureSqlValueMapper::nullableString($row['Resolution'] ?? null);
         $receiptDateRaw = AzureSqlValueMapper::nullableString($row['ReceiptDate'] ?? null);
         $receiptDate = null;
         if ($receiptDateRaw !== null) {
@@ -490,6 +609,11 @@ SQL;
             deletedAt: AzureSqlValueMapper::nullableDateTime($row['DeletedAtUtc'] ?? null),
             deletedBy: AzureSqlValueMapper::nullableString($row['DeletedBy'] ?? null),
             rowVersion: ProductRowVersionMapper::toToken($row['RowVersion'] ?? null),
+            resolution: $resolutionRaw !== null ? ExpenseFinanceResolution::fromString($resolutionRaw) : null,
+            resolutionNote: AzureSqlValueMapper::nullableString($row['ResolutionNote'] ?? null),
+            resolvedByUserId: $resolvedByUserId !== null ? UserId::fromInt($resolvedByUserId) : null,
+            legacyResolvedBy: AzureSqlValueMapper::nullableString($row['LegacyResolvedBy'] ?? null),
+            resolvedAtUtc: AzureSqlValueMapper::nullableDateTime($row['ResolvedAtUtc'] ?? null),
         );
     }
 

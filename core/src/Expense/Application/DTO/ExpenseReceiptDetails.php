@@ -6,6 +6,9 @@ namespace TriCab\Core\Expense\Application\DTO;
 
 final class ExpenseReceiptDetails
 {
+    public const SOURCE_NEW = 'new';
+    public const SOURCE_LEGACY = 'legacy';
+
     /**
      * @param array<string, mixed>|null $attachment
      * @param array<string, mixed>|null $customer
@@ -30,6 +33,14 @@ final class ExpenseReceiptDetails
         public readonly string $createdAt,
         public readonly ?string $submittedAt,
         public readonly string $updatedAt,
+        public readonly ?string $deletedAt = null,
+        public readonly ?string $rowVersion = null,
+        public readonly string $source = self::SOURCE_NEW,
     ) {
+    }
+
+    public function isLegacy(): bool
+    {
+        return $this->source === self::SOURCE_LEGACY;
     }
 }

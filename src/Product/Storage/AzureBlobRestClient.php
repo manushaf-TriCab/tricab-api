@@ -44,6 +44,25 @@ final class AzureBlobRestClient
         ];
     }
 
+    /**
+     * Create a container if missing (PUT container?restype=container).
+     * Idempotent: HTTP 409 ContainerAlreadyExists is treated as success.
+     */
+    public function ensureContainer(string $container): void
+    {
+        $response = $this->requestContainer('PUT', $container, [
+            'restype' => 'container',
+        ]);
+        if ($response['status'] === 409) {
+            return;
+        }
+        if ($response['status'] < 200 || $response['status'] >= 300) {
+            throw new RuntimeException(
+                'Blob container create failed with HTTP ' . $response['status'] . ': ' . $response['body'],
+            );
+        }
+    }
+
     public function put(string $container, string $blobPath, string $contentType, string $binary): void
     {
         $response = $this->request('PUT', $container, $blobPath, $binary, [
@@ -104,6 +123,33 @@ final class AzureBlobRestClient
     }
 
     /**
+     * @param array<string, string> $query
+     * @param array<string, string> $extraHeaders
+     * @return array{status: int, headers: array<string, string>, body: string}
+     */
+    private function requestContainer(
+        string $method,
+        string $container,
+        array $query = [],
+        array $extraHeaders = [],
+    ): array {
+        $canonicalizedResource = '/' . $this->accountName . '/' . $container;
+        if ($query !== []) {
+            ksort($query);
+            foreach ($query as $name => $value) {
+                $canonicalizedResource .= "\n" . strtolower($name) . ':' . $value;
+            }
+        }
+
+        $url = rtrim($this->blobEndpoint, '/') . '/' . rawurlencode($container);
+        if ($query !== []) {
+            $url .= '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        }
+
+        return $this->signedRequest($method, $url, $canonicalizedResource, null, $extraHeaders);
+    }
+
+    /**
      * @param array<string, string> $extraHeaders
      * @return array{status: int, headers: array<string, string>, body: string}
      */
@@ -115,6 +161,26 @@ final class AzureBlobRestClient
         array $extraHeaders = [],
     ): array {
         $url = $this->objectUrl($container, $blobPath);
+        // Must match URL encoding exactly (e.g. spaces as %20). Unencoded spaces
+        // in CanonicalizedResource cause SharedKey HTTP 403 while SAS PUT still works.
+        $canonicalizedResource = '/' . $this->accountName
+            . '/' . $container
+            . '/' . $this->encodeBlobPath(ltrim($blobPath, '/'));
+
+        return $this->signedRequest($method, $url, $canonicalizedResource, $body, $extraHeaders);
+    }
+
+    /**
+     * @param array<string, string> $extraHeaders
+     * @return array{status: int, headers: array<string, string>, body: string}
+     */
+    private function signedRequest(
+        string $method,
+        string $url,
+        string $canonicalizedResource,
+        ?string $body = null,
+        array $extraHeaders = [],
+    ): array {
         $date = gmdate('D, d M Y H:i:s T');
         $contentLength = $body === null ? 0 : strlen($body);
         $contentType = $extraHeaders['Content-Type'] ?? '';
@@ -123,11 +189,6 @@ final class AzureBlobRestClient
             'x-ms-date' => $date,
             'x-ms-version' => '2022-11-02',
         ]));
-        // Must match URL encoding exactly (e.g. spaces as %20). Unencoded spaces
-        // in CanonicalizedResource cause SharedKey HTTP 403 while SAS PUT still works.
-        $canonicalizedResource = '/' . $this->accountName
-            . '/' . $container
-            . '/' . $this->encodeBlobPath(ltrim($blobPath, '/'));
 
         $stringToSign = implode("\n", [
             strtoupper($method),
@@ -161,6 +222,8 @@ final class AzureBlobRestClient
 
         if ($body !== null) {
             $headers['Content-Length'] = (string) $contentLength;
+        } elseif (strtoupper($method) === 'PUT' && !isset($headers['Content-Length'])) {
+            $headers['Content-Length'] = '0';
         }
 
         $headerLines = [];

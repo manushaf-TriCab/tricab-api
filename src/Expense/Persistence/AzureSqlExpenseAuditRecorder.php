@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Expense\Persistence;
 
+use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
@@ -19,7 +20,7 @@ final class AzureSqlExpenseAuditRecorder implements ExpenseAuditRecorder
     public function record(
         UserId $actorUserId,
         string $action,
-        ExpenseReceiptPublicId $receiptPublicId,
+        ?ExpenseReceiptPublicId $receiptPublicId = null,
         ?string $detail = null,
     ): void {
         $this->connection->execute(
@@ -42,9 +43,36 @@ SQL,
             [
                 ':actorUserId' => $actorUserId->toInt(),
                 ':actionCode' => trim($action),
-                ':receiptPublicId' => $receiptPublicId->toString(),
+                ':receiptPublicId' => $receiptPublicId?->toString(),
                 ':detail' => $detail,
             ],
         );
+    }
+
+    public function listRecent(int $limit = 200): array
+    {
+        $limit = max(1, min(1000, $limit));
+        $rows = $this->connection->fetchAll(
+            <<<SQL
+SELECT TOP ({$limit})
+    e.[ActorUserId],
+    e.[ActionCode],
+    CONVERT(NVARCHAR(36), e.[ExpenseReceiptPublicId]) AS [ExpenseReceiptPublicId],
+    e.[Detail],
+    CONVERT(VARCHAR(33), e.[CreatedAtUtc], 127) AS [CreatedAtUtc]
+FROM [expense].[ExpenseAuditEvents] e
+ORDER BY e.[ExpenseAuditEventId] DESC
+SQL,
+        );
+
+        return array_map(static function (array $row): array {
+            return [
+                'actorUserId' => AzureSqlValueMapper::intValue($row['ActorUserId'] ?? 0),
+                'action' => AzureSqlValueMapper::stringValue($row['ActionCode'] ?? ''),
+                'receiptPublicId' => AzureSqlValueMapper::nullableString($row['ExpenseReceiptPublicId'] ?? null),
+                'detail' => AzureSqlValueMapper::nullableString($row['Detail'] ?? null),
+                'createdAtUtc' => AzureSqlValueMapper::stringValue($row['CreatedAtUtc'] ?? ''),
+            ];
+        }, $rows);
     }
 }

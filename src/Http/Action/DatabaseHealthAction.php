@@ -49,10 +49,7 @@ final class DatabaseHealthAction
         try {
             $pdo = $this->pdoFactory->create();
             $connection = new PdoSqlConnection($pdo, $this->metrics);
-            $rows = $connection->fetchAll('SELECT DB_NAME() AS [DatabaseName]');
-            $databaseName = isset($rows[0]['DatabaseName']) && is_scalar($rows[0]['DatabaseName'])
-                ? (string) $rows[0]['DatabaseName']
-                : $this->settings->dbDatabase;
+            $connection->fetchAll('SELECT 1 AS [Ok]');
             \TriCab\Api\Infrastructure\Database\DatabaseAuthDiagnostics::log('database_health.first_query.success', [
                 'firstSqlQuerySuccess' => true,
                 'authMode' => $this->settings->dbAuthMode,
@@ -119,15 +116,12 @@ final class DatabaseHealthAction
             throw $exception;
         }
 
+        // Public-safe payload only — no host, database name, or auth mode.
         return $this->responder->payload([
             'success' => true,
             'service' => $this->settings->appName,
             'database' => [
                 'configured' => true,
-                'driver' => $this->settings->dbDriver,
-                'authMode' => $this->settings->dbAuthMode,
-                'host' => $this->settings->dbHost,
-                'database' => $databaseName,
                 'status' => 'healthy',
             ],
         ]);

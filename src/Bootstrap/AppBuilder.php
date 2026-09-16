@@ -153,6 +153,13 @@ use TriCab\Api\Http\Action\PublicCart\PatchCartItemAction;
 use TriCab\Api\Http\Action\PublicCart\PostCartItemAction;
 use TriCab\Api\Http\Action\PublicCart\PostCartRepriceAction;
 use TriCab\Api\Http\Action\PublicRegionAction;
+use TriCab\Api\Http\Action\PublicContent\GetPublicAboutAction;
+use TriCab\Api\Http\Action\PublicContent\GetPublicContactAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalArticleAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalProductCodingAction;
+use TriCab\Api\Http\Action\Technical\GetTechnicalTableAction;
+use TriCab\Api\Http\Action\Technical\ListTechnicalDocumentsAction;
+use TriCab\Api\Http\Action\Technical\ListTechnicalSectionsAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\CableCalculator\PostCableCalculatorCalculateAction;
 use TriCab\Api\Http\Action\ProductFinder\FindProductAction;
@@ -166,6 +173,9 @@ use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
+use TriCab\Api\Http\Action\TrustedDevice\ExchangeTrustedDeviceSessionAction;
+use TriCab\Api\Http\Action\TrustedDevice\RegisterTrustedDeviceAction;
+use TriCab\Api\Http\Action\TrustedDevice\RevokeTrustedDeviceAction;
 use TriCab\Api\Http\Action\RequestGuestOtpAction;
 use TriCab\Api\Http\Action\AuthenticateGoogleAction;
 use TriCab\Api\Http\Action\AppleAuthChallengeAction;
@@ -184,12 +194,45 @@ use TriCab\Api\Http\Action\Passkey\RevokePasskeyAction;
 use TriCab\Api\Http\Action\Passkey\VerifyPasskeySetupLinkAction;
 use TriCab\Api\Http\Auth\RequirePermission;
 use TriCab\Api\Http\Action\TriExpense\ApproveExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\CheckExpenseDuplicateAction;
+use TriCab\Api\Http\Action\TriExpense\CompleteExpenseAttachmentAction;
 use TriCab\Api\Http\Action\TriExpense\CreateExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\CloseExpensePeriodAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ExportEmployeeReceiptsCsvAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ExportFinanceReconciliationCsvAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseFinanceEmployeeAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseReconciliationAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\GetOrCreateExpensePeriodAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ImportExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ListExpenseAuditAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ListExpenseBankFeedCandidatesAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ListExpensePeriodsAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ManualMatchExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\OffsetExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\PreCloseExpensePeriodAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\PrepareManagerReminderAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\PrepareMissingReceiptRemindersAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\RenderFinanceFullPdfAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\RenderFinanceSummaryPdfAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ResolveExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ResolveExpenseReceiptFinanceAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\RunExpenseBankFeedMatchingAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\UndoOffsetExpenseBankFeedAction;
+use TriCab\Api\Http\Action\TriExpense\GetExpenseAttachmentFileAction;
+use TriCab\Api\Http\Action\TriExpense\GetExpenseConfigAction;
+use TriCab\Api\Http\Action\TriExpense\GetExpenseCustomerContactsAction;
 use TriCab\Api\Http\Action\TriExpense\GetExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\InitiateExpenseAttachmentAction;
 use TriCab\Api\Http\Action\TriExpense\ListExpenseApprovalsAction;
 use TriCab\Api\Http\Action\TriExpense\ListExpenseReceiptsAction;
+use TriCab\Api\Http\Action\TriExpense\PurgeExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\RejectExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\RestoreExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\RunExpenseReceiptOcrAction;
+use TriCab\Api\Http\Action\TriExpense\SearchExpenseCustomersAction;
 use TriCab\Api\Http\Action\TriExpense\SendBackExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\SoftDeleteExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\SubmitExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\UpdateExpenseReceiptAction;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
@@ -260,6 +303,13 @@ final class AppBuilder
             $app->post('/api/v1/auth/guest/request-otp', RequestGuestOtpAction::class);
             $app->post('/api/v1/auth/guest/verify-otp', VerifyGuestOtpAction::class);
             $app->post('/api/v1/auth/guest/logout', LogoutGuestAction::class);
+
+            $requireGuest = new RequirePermission($container);
+            $app->post('/api/v1/auth/devices/register', RegisterTrustedDeviceAction::class)
+                ->add(($requireGuest)('ACCOUNT.LOGIN'));
+            $app->post('/api/v1/auth/devices/session', ExchangeTrustedDeviceSessionAction::class);
+            $app->delete('/api/v1/auth/devices/current', RevokeTrustedDeviceAction::class)
+                ->add(($requireGuest)('ACCOUNT.LOGIN'));
         }
 
         if ($settings->isGoogleAuthConfigured()) {
@@ -297,9 +347,14 @@ final class AppBuilder
 
         self::registerPublicProductRoutes($app);
         self::registerTriExpenseRoutes($app, $container);
+        self::registerLogNoteRoutes($app, $container);
+        self::registerTelDirectoryRoutes($app, $container);
+        self::registerTechnicalRoutes($app, $container);
         $app->get('/api/v1/regions', PublicRegionAction::class);
         $app->get('/api/v1/regions/current', PublicRegionAction::class);
         $app->post('/api/v1/regions/select', PublicRegionAction::class);
+        $app->get('/api/v1/public/about', GetPublicAboutAction::class);
+        $app->get('/api/v1/public/contact', GetPublicContactAction::class);
         self::registerAdminRoutes($app, $container);
     }
 
@@ -374,6 +429,7 @@ final class AppBuilder
         $require = new RequirePermission($container);
         $gate = 'TRIEXPENSE.ACCESS';
 
+        $app->get('/api/v1/tri-expense/config', GetExpenseConfigAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/receipts', ListExpenseReceiptsAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/receipts', CreateExpenseReceiptAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/receipts/{id}', GetExpenseReceiptAction::class)->add(($require)($gate));
@@ -382,7 +438,94 @@ final class AppBuilder
         $app->post('/api/v1/tri-expense/receipts/{id}/approve', ApproveExpenseReceiptAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/receipts/{id}/reject', RejectExpenseReceiptAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/receipts/{id}/send-back', SendBackExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/delete', SoftDeleteExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/restore', RestoreExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/purge', PurgeExpenseReceiptAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/attachment/initiate', InitiateExpenseAttachmentAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/attachment/complete', CompleteExpenseAttachmentAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/receipts/{id}/file', GetExpenseAttachmentFileAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/receipts/{id}/ocr', RunExpenseReceiptOcrAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/approvals', ListExpenseApprovalsAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/customers', SearchExpenseCustomersAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/customers/{code}/contacts', GetExpenseCustomerContactsAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/duplicate-check', CheckExpenseDuplicateAction::class)->add(($require)($gate));
+
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/import', ImportExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/match', RunExpenseBankFeedMatchingAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/bank-feeds/{id}', GetExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/bank-feeds/{id}/candidates', ListExpenseBankFeedCandidatesAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/{id}/manual-match', ManualMatchExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/{id}/resolve', ResolveExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/offset', OffsetExpenseBankFeedAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/bank-feeds/{id}/undo-offset', UndoOffsetExpenseBankFeedAction::class)->add(($require)($gate));
+        // Suggested aliases from Phase 4 contract
+        $app->get('/api/v1/tri-expense/audit', ListExpenseAuditAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/exports/receipts.csv', ExportEmployeeReceiptsCsvAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/exports/reconciliation.csv', ExportFinanceReconciliationCsvAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/exports/summary.pdf', RenderFinanceSummaryPdfAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/exports/full.pdf', RenderFinanceFullPdfAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/receipts/{id}/resolve', ResolveExpenseReceiptFinanceAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/periods', ListExpensePeriodsAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/periods/get-or-create', GetOrCreateExpensePeriodAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/periods/{id}/pre-close', PreCloseExpensePeriodAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/periods/{id}/close', CloseExpensePeriodAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/reconciliation', GetExpenseReconciliationAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/employees/{userId}', GetExpenseFinanceEmployeeAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/reminders/missing-receipts', PrepareMissingReceiptRemindersAction::class)->add(($require)($gate));
+        $app->post('/api/v1/tri-expense/finance/reminders/managers', PrepareManagerReminderAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/audit', ListExpenseAuditAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/export/employee-receipts', ExportEmployeeReceiptsCsvAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/export/reconciliation', ExportFinanceReconciliationCsvAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/pdf/summary', RenderFinanceSummaryPdfAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/pdf/full', RenderFinanceFullPdfAction::class)->add(($require)($gate));
+    }
+
+    /**
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerLogNoteRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+
+        $app->post('/api/v1/log-notes/summarise', \TriCab\Api\Http\Action\LogNote\SummariseLogNoteAction::class)
+            ->add(($require)('CUSTOMER_NOTE.CREATE'));
+        $app->get('/api/v1/log-notes', \TriCab\Api\Http\Action\LogNote\ListLogNotesAction::class)
+            ->add(($require)('CUSTOMER_NOTE.READ'));
+        $app->post('/api/v1/log-notes', \TriCab\Api\Http\Action\LogNote\CreateLogNoteAction::class)
+            ->add(($require)('CUSTOMER_NOTE.CREATE'));
+        $app->get('/api/v1/log-notes/{publicId}', \TriCab\Api\Http\Action\LogNote\GetLogNoteAction::class)
+            ->add(($require)('CUSTOMER_NOTE.READ'));
+        $app->get('/api/v1/customers/{customerPublicId}/log-notes', \TriCab\Api\Http\Action\LogNote\ListCustomerLogNotesAction::class)
+            ->add(($require)('CUSTOMER_NOTE.READ'));
+    }
+
+    /**
+     * Staff telephone directory — Microsoft Graph / Entra ID (never stored in Azure SQL).
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerTelDirectoryRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $app->get('/api/v1/tel-directory', \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class)
+            ->add(($require)(\TriCab\Core\TelDirectory\Module::PERMISSION_ACCESS));
+    }
+
+    /**
+     * Technical hub — versioned JSON content packs (manifest / articles / lookup tables).
+     * Login required (ACCOUNT.LOGIN). Cable Calculator remains on its existing public route.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerTechnicalRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $gate = 'ACCOUNT.LOGIN';
+        $app->get('/api/v1/technical/sections', ListTechnicalSectionsAction::class)->add(($require)($gate));
+        $app->get('/api/v1/technical/articles/{slug}', GetTechnicalArticleAction::class)->add(($require)($gate));
+        $app->get('/api/v1/technical/tables/{key}', GetTechnicalTableAction::class)->add(($require)($gate));
+        $app->get('/api/v1/technical/product-coding/{mode}', GetTechnicalProductCodingAction::class)->add(($require)($gate));
+        $app->get('/api/v1/technical/documents', ListTechnicalDocumentsAction::class)->add(($require)($gate));
     }
 
     private static function registerAdminLegacyMigrationRoutes(App $app, RequirePermission $require): void
