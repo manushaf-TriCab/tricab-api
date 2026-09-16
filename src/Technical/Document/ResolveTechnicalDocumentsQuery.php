@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Technical\Document;
 
+use TriCab\Api\Support\JsonValue;
 use TriCab\Api\Technical\TechnicalContentRepository;
 
 /**
@@ -47,11 +48,12 @@ final class ResolveTechnicalDocumentsQuery
         }
 
         $merged = [];
-        foreach ($families as $key => $family) {
-            if (!is_string($key) || !is_array($family)) {
+        foreach ($families as $key => $familyRaw) {
+            if (!is_string($key) || !is_array($familyRaw)) {
                 continue;
             }
-            $categoryCode = (string) ($family['documentCategory'] ?? $key);
+            $family = JsonValue::toObject($familyRaw);
+            $categoryCode = JsonValue::string($family, 'documentCategory', $key);
             $libraryItems = $this->libraryItemsForCategory($categoryCode);
             if ($libraryItems !== []) {
                 $family['items'] = $libraryItems;

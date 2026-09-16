@@ -10,6 +10,7 @@ use Slim\App;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\TelDirectory\Infrastructure\MicrosoftGraphTelDirectoryReader;
 use TriCab\Api\Tests\Doubles\FakeJsonHttpClient;
+use TriCab\Api\Tests\Payload;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\TelDirectory\Contract\TelDirectoryGraphReader;
@@ -24,7 +25,7 @@ final class TelDirectoryEndpointsTest extends TestCase
         $payload = TestAppFactory::json($response);
 
         self::assertSame(401, $response->getStatusCode());
-        self::assertSame('UNAUTHENTICATED', $payload['error']['code']);
+        self::assertSame('UNAUTHENTICATED', Payload::obj($payload['error'])['code']);
     }
 
     public function test_authenticated_without_permission_is_forbidden(): void
@@ -36,7 +37,7 @@ final class TelDirectoryEndpointsTest extends TestCase
         $payload = TestAppFactory::json($response);
 
         self::assertSame(403, $response->getStatusCode());
-        self::assertSame('INSUFFICIENT_PERMISSION', $payload['error']['code']);
+        self::assertSame('INSUFFICIENT_PERMISSION', Payload::obj($payload['error'])['code']);
     }
 
     public function test_permission_allows_and_returns_filtered_dto(): void
@@ -88,9 +89,9 @@ final class TelDirectoryEndpointsTest extends TestCase
 
         self::assertSame(200, $response->getStatusCode());
         self::assertTrue($payload['success']);
-        self::assertSame(1, $payload['data']['count']);
-        self::assertCount(1, $payload['data']['items']);
-        $item = $payload['data']['items'][0];
+        self::assertSame(1, Payload::obj($payload['data'])['count']);
+        self::assertCount(1, Payload::list(Payload::obj($payload['data'])['items']));
+        $item = Payload::obj(Payload::list(Payload::obj($payload['data'])['items'])[0]);
         self::assertSame('Included', $item['name']);
         self::assertSame('Engineer', $item['jobTitle']);
         self::assertSame('included@tricab.com', $item['email']);
@@ -104,7 +105,7 @@ final class TelDirectoryEndpointsTest extends TestCase
         $app = TestAppFactory::create();
         $this->replacePermissions($app, ['ACCOUNT.LOGIN', Module::PERMISSION_ACCESS]);
 
-        /** @var ContainerInterface $container */
+        /** @var \DI\Container $container */
         $container = $app->getContainer();
         $http = new FakeJsonHttpClient();
         $http->queue = [
@@ -132,8 +133,8 @@ final class TelDirectoryEndpointsTest extends TestCase
 
         self::assertSame(503, $response->getStatusCode());
         self::assertFalse($payload['success']);
-        self::assertSame('TEL_DIRECTORY_UNAVAILABLE', $payload['error']['code']);
-        self::assertSame('Unable to load the telephone directory right now.', $payload['error']['message']);
+        self::assertSame('TEL_DIRECTORY_UNAVAILABLE', Payload::obj($payload['error'])['code']);
+        self::assertSame('Unable to load the telephone directory right now.', Payload::obj($payload['error'])['message']);
         self::assertStringNotContainsString('Invalid filter', json_encode($payload, JSON_THROW_ON_ERROR));
         self::assertStringNotContainsString('secret-details', json_encode($payload, JSON_THROW_ON_ERROR));
         self::assertStringNotContainsString('HTTP 400', json_encode($payload, JSON_THROW_ON_ERROR));
@@ -141,15 +142,19 @@ final class TelDirectoryEndpointsTest extends TestCase
 
     /**
      * @param list<string> $permissionCodes
+     * @param App<ContainerInterface> $app
      */
     private function replacePermissions(App $app, array $permissionCodes): void
     {
         $this->userRepository($app)->replacePermissions(1, $permissionCodes, ['EMPLOYEE']);
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function userRepository(App $app): InMemoryApiUserRepository
     {
-        /** @var ContainerInterface $container */
+        /** @var \DI\Container $container */
         $container = $app->getContainer();
         $repo = $container->get(UserRepository::class);
         self::assertInstanceOf(InMemoryApiUserRepository::class, $repo);
@@ -159,10 +164,11 @@ final class TelDirectoryEndpointsTest extends TestCase
 
     /**
      * @param list<array<string, mixed>> $users
+     * @param App<ContainerInterface> $app
      */
     private function bindGraphFixture(App $app, array $users): void
     {
-        /** @var ContainerInterface $container */
+        /** @var \DI\Container $container */
         $container = $app->getContainer();
         $http = new FakeJsonHttpClient();
         $http->queue = [

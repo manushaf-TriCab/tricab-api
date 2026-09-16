@@ -39,8 +39,16 @@ final class ListMyExpenseReceiptsService
             throw ExpenseAccessDenied::viewForbidden();
         }
 
-        // Profile is operational metadata for legacy mapping — not an auth gate for listing.
+        // permissions mode: ACCESS alone is authoritative and the profile is only
+        // operational metadata for legacy mapping. legacy + hybrid: an inactive or
+        // missing profile is still a denial.
         $profile = $this->profiles->findByUserId($actor->userId);
+        if ($profile !== null
+            && !$profile->isActive()
+            && !$this->access->permissionMode()->isPermissions()
+        ) {
+            throw ExpenseAccessDenied::inactiveOrMissingProfile();
+        }
 
         $items = [];
         $migratedLegacyIds = [];

@@ -11,6 +11,7 @@ use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\Service\ExpenseApprovalService;
 
 final class RejectExpenseReceiptAction
@@ -22,19 +23,22 @@ final class RejectExpenseReceiptAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response);
         try {
             $body = JsonRequestBody::requireObject($request);
-            $reason = isset($body['reason']) ? (string) $body['reason'] : '';
+            $reason = JsonValue::string($body, 'reason');
 
             return $this->responder->success(TriExpenseDtoSerializer::receipt(
                 $this->service->reject(
                     ExpenseActorFactory::fromRequest($request),
-                    (string) ($args['id'] ?? ''),
+                    $args['id'] ?? '',
                     $reason,
-                    isset($body['expectedRowVersion']) ? (string) $body['expectedRowVersion'] : '',
+                    JsonValue::string($body, 'expectedRowVersion'),
                 ),
             ));
         } catch (Throwable $e) {

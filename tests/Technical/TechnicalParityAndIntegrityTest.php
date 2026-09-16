@@ -6,6 +6,7 @@ namespace TriCab\Api\Tests\Technical;
 
 use PHPUnit\Framework\TestCase;
 use TriCab\Api\Technical\TechnicalContentRepository;
+use TriCab\Api\Tests\Payload;
 
 /**
  * Phase 2 content integrity + legacy parity fixtures for Technical lookup tables.
@@ -28,13 +29,13 @@ final class TechnicalParityAndIntegrityTest extends TestCase
 
         foreach ($fixtures['fixtures'] as $fixture) {
             self::assertIsArray($fixture);
-            $tableKey = (string) $fixture['tableKey'];
+            $tableKey = Payload::str($fixture['tableKey']);
             $table = $this->repo->table($tableKey);
-            $actual = $this->resolveFixturePath($table, (string) $fixture['path']);
+            $actual = $this->resolveFixturePath($table, Payload::str($fixture['path']));
             self::assertEquals(
                 $fixture['expected'],
                 $actual,
-                'Parity fixture failed: ' . (string) ($fixture['id'] ?? $tableKey),
+                'Parity fixture failed: ' . Payload::str($fixture['id'] ?? $tableKey),
             );
         }
     }
@@ -111,7 +112,7 @@ final class TechnicalParityAndIntegrityTest extends TestCase
                     if (($grid['variant'] ?? null) === 'reference_rows' || isset($grid['formulas'])) {
                         continue;
                     }
-                    $columnIds = $this->flatColumnIds($grid);
+                    $columnIds = $this->flatColumnIds(Payload::obj($grid));
                     if ($columnIds === [] && isset($grid['columns']) && is_array($grid['columns'])) {
                         foreach ($grid['columns'] as $column) {
                             if (is_array($column) && isset($column['id']) && is_string($column['id'])) {
@@ -152,8 +153,8 @@ final class TechnicalParityAndIntegrityTest extends TestCase
         $sections = $this->repo->sections();
         $byId = [];
         foreach ($sections['sections'] as $section) {
-            foreach ($section['items'] as $item) {
-                $byId[$item['id']] = $item;
+            foreach (Payload::objList($section['items']) as $item) {
+                $byId[Payload::str($item['id'])] = $item;
             }
         }
 
@@ -166,12 +167,12 @@ final class TechnicalParityAndIntegrityTest extends TestCase
             'mud-immersion',
             'fire-perf',
         ] as $id) {
-            self::assertSame('AVAILABLE', $byId[$id]['status'], $id);
+            self::assertSame('AVAILABLE', Payload::obj($byId[$id])['status'], $id);
         }
 
-        self::assertSame('COMING_SOON', $byId['certs']['status']);
-        self::assertSame('industrial-standards', $byId['standards']['contentKey']);
-        self::assertSame('impedance', $byId['impedance']['tableKey']);
+        self::assertSame('COMING_SOON', Payload::obj($byId['certs'])['status']);
+        self::assertSame('industrial-standards', Payload::obj($byId['standards'])['contentKey']);
+        self::assertSame('impedance', Payload::obj($byId['impedance'])['tableKey']);
     }
 
     /**
@@ -184,11 +185,11 @@ final class TechnicalParityAndIntegrityTest extends TestCase
             $row = $this->findRowByCsa($table['rows'] ?? [], (float) $m[1]);
             self::assertNotNull($row, $path);
 
-            return $row['values'][$m[2]] ?? null;
+            return Payload::obj($row['values'])[$m[2]] ?? null;
         }
 
         if (preg_match('/^datasets\.([a-z0-9_]+)\.rows\[csaMm2=([0-9.]+)\]\.values$/', $path, $m) === 1) {
-            $dataset = $table['datasets'][$m[1]] ?? null;
+            $dataset = Payload::obj($table['datasets'])[$m[1]] ?? null;
             self::assertIsArray($dataset, $path);
             $row = $this->findRowByCsa($dataset['rows'] ?? [], (float) $m[2]);
             self::assertNotNull($row, $path);
@@ -197,27 +198,27 @@ final class TechnicalParityAndIntegrityTest extends TestCase
         }
 
         if (preg_match('/^datasets\.([a-z0-9_]+)\.rows\[rowKey=([A-Za-z0-9]+)\]\.values\.([a-z0-9_]+)$/', $path, $m) === 1) {
-            $dataset = $table['datasets'][$m[1]] ?? null;
+            $dataset = Payload::obj($table['datasets'])[$m[1]] ?? null;
             self::assertIsArray($dataset, $path);
             $row = $this->findRowByKey($dataset['rows'] ?? [], $m[2]);
             self::assertNotNull($row, $path);
 
-            return $row['values'][$m[3]] ?? null;
+            return Payload::obj($row['values'])[$m[3]] ?? null;
         }
 
         if (preg_match("/^datasets\\.([a-z0-9_]+)\\.rows\\[productCode='([^']+)'\\]\\.values\\.([a-z0-9_]+)$/", $path, $m) === 1) {
-            $dataset = $table['datasets'][$m[1]] ?? null;
+            $dataset = Payload::obj($table['datasets'])[$m[1]] ?? null;
             self::assertIsArray($dataset, $path);
             $row = $this->findRowByProductCode($dataset['rows'] ?? [], $m[2]);
             self::assertNotNull($row, $path);
 
-            return $row['values'][$m[3]] ?? null;
+            return Payload::obj($row['values'])[$m[3]] ?? null;
         }
 
         if (preg_match("/^groups\\[(\\d+)\\]\\.rows\\[testFluid='([^']+)'\\]\\.values$/", $path, $m) === 1) {
-            $group = $table['groups'][(int) $m[1]] ?? null;
+            $group = Payload::list($table['groups'])[(int) $m[1]] ?? null;
             self::assertIsArray($group, $path);
-            foreach ($group['rows'] ?? [] as $row) {
+            foreach (Payload::list($group['rows'] ?? []) as $row) {
                 if (!is_array($row)) {
                     continue;
                 }
@@ -238,9 +239,9 @@ final class TechnicalParityAndIntegrityTest extends TestCase
             $path,
             $m,
         ) === 1) {
-            $dataset = $table['datasets'][$m[1]] ?? null;
+            $dataset = Payload::obj($table['datasets'])[$m[1]] ?? null;
             self::assertIsArray($dataset, $path);
-            $nested = $dataset['tables'][$m[2]] ?? null;
+            $nested = Payload::obj($dataset['tables'])[$m[2]] ?? null;
             self::assertIsArray($nested, $path);
             $row = $this->findRowByKey($nested['rows'] ?? [], $m[3]);
             self::assertNotNull($row, $path);
@@ -254,22 +255,22 @@ final class TechnicalParityAndIntegrityTest extends TestCase
     public function test_general_conductor_data_row_counts_and_partition(): void
     {
         $table = $this->repo->table('conductor-data');
-        $general = $table['datasets']['general'] ?? null;
+        $general = Payload::obj($table['datasets'])['general'] ?? null;
         self::assertIsArray($general);
         self::assertArrayNotHasKey('blockedTables', $general);
 
         $counts = $general['sourceRowCounts'] ?? null;
         self::assertIsArray($counts);
-        self::assertSame(46, (int) $counts['total']);
-        self::assertSame(24, (int) $counts['metric']);
-        self::assertSame(22, (int) $counts['awg']);
-        self::assertSame(46, (int) $counts['metric'] + (int) $counts['awg']);
+        self::assertSame(46, Payload::int($counts['total']));
+        self::assertSame(24, Payload::int($counts['metric']));
+        self::assertSame(22, Payload::int($counts['awg']));
+        self::assertSame(46, Payload::int($counts['metric']) + Payload::int($counts['awg']));
 
-        $construction = $general['tables']['constructionMetric']['rows'] ?? null;
-        $dc = $general['tables']['dcResistanceMetric']['rows'] ?? null;
-        $sccCu = $general['tables']['shortCircuitCopperMetric']['rows'] ?? null;
-        $sccAl = $general['tables']['shortCircuitAluminiumMetric']['rows'] ?? null;
-        $awg = $general['tables']['shortCircuitAwg']['rows'] ?? null;
+        $construction = Payload::obj(Payload::obj($general['tables'])['constructionMetric'])['rows'] ?? null;
+        $dc = Payload::obj(Payload::obj($general['tables'])['dcResistanceMetric'])['rows'] ?? null;
+        $sccCu = Payload::obj(Payload::obj($general['tables'])['shortCircuitCopperMetric'])['rows'] ?? null;
+        $sccAl = Payload::obj(Payload::obj($general['tables'])['shortCircuitAluminiumMetric'])['rows'] ?? null;
+        $awg = Payload::obj(Payload::obj($general['tables'])['shortCircuitAwg'])['rows'] ?? null;
         self::assertIsArray($construction);
         self::assertIsArray($dc);
         self::assertIsArray($sccCu);
@@ -284,7 +285,7 @@ final class TechnicalParityAndIntegrityTest extends TestCase
         $metricKeys = [];
         foreach ($construction as $row) {
             self::assertIsArray($row);
-            $key = (string) ($row['rowKey'] ?? '');
+            $key = Payload::str($row['rowKey'] ?? '');
             self::assertNotSame('', $key);
             self::assertArrayNotHasKey($key, $metricKeys, 'duplicate metric rowKey ' . $key);
             $metricKeys[$key] = true;
@@ -294,7 +295,7 @@ final class TechnicalParityAndIntegrityTest extends TestCase
         $awgKeys = [];
         foreach ($awg as $row) {
             self::assertIsArray($row);
-            $key = (string) ($row['rowKey'] ?? '');
+            $key = Payload::str($row['rowKey'] ?? '');
             self::assertNotSame('', $key);
             self::assertArrayNotHasKey($key, $awgKeys, 'duplicate awg rowKey ' . $key);
             $awgKeys[$key] = true;
@@ -302,7 +303,7 @@ final class TechnicalParityAndIntegrityTest extends TestCase
         self::assertCount(22, $awgKeys);
 
         // Industrial dataset must remain present and non-empty.
-        $industrial = $table['datasets']['industrial'] ?? null;
+        $industrial = Payload::obj($table['datasets'])['industrial'] ?? null;
         self::assertIsArray($industrial);
         self::assertNotEmpty($industrial['tables'] ?? []);
     }
@@ -317,8 +318,8 @@ final class TechnicalParityAndIntegrityTest extends TestCase
             return null;
         }
         foreach ($rows as $row) {
-            if (is_array($row) && (float) ($row['csaMm2'] ?? NAN) === $csa) {
-                return $row;
+            if (is_array($row) && Payload::float($row['csaMm2'] ?? NAN) === $csa) {
+                return Payload::obj($row);
             }
         }
 
@@ -335,8 +336,8 @@ final class TechnicalParityAndIntegrityTest extends TestCase
             return null;
         }
         foreach ($rows as $row) {
-            if (is_array($row) && (string) ($row['rowKey'] ?? '') === $rowKey) {
-                return $row;
+            if (is_array($row) && Payload::str($row['rowKey'] ?? '') === $rowKey) {
+                return Payload::obj($row);
             }
         }
 
@@ -356,14 +357,14 @@ final class TechnicalParityAndIntegrityTest extends TestCase
             if (!is_array($row)) {
                 continue;
             }
-            if ((string) ($row['productCode'] ?? '') === $code) {
-                return $row;
+            if (Payload::str($row['productCode'] ?? '') === $code) {
+                return Payload::obj($row);
             }
-            if ((string) ($row['label'] ?? '') === $code) {
-                return $row;
+            if (Payload::str($row['label'] ?? '') === $code) {
+                return Payload::obj($row);
             }
-            if ((string) ($row['rowKey'] ?? '') === $code) {
-                return $row;
+            if (Payload::str($row['rowKey'] ?? '') === $code) {
+                return Payload::obj($row);
             }
         }
 

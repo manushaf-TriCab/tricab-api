@@ -11,6 +11,9 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Expense\Application\Service\UpdateExpenseReceiptService;
 final class UpdateExpenseReceiptAction {
     public function __construct(private readonly UpdateExpenseReceiptService $service, private readonly JsonResponder $responder, private readonly ExpenseErrorMapper $errors) {}
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface {
         unset($response);
         try {

@@ -45,7 +45,15 @@ final class InMemoryApiUserRepository implements UserRepository, UserProvisionin
     {
         $this->uuids = new UuidV4Generator();
 
-        $permissionCodes = ['account.login', ...DevelopmentUserManagementCatalog::managementPermissionCodes()];
+        $notInheritedByPlatformAdmin = [
+            \TriCab\Core\Expense\Module::PERMISSION_FINANCE,
+            \TriCab\Core\Expense\Module::PERMISSION_APPROVE,
+            \TriCab\Core\Expense\Module::PERMISSION_AUDIT,
+        ];
+        $permissionCodes = ['account.login', ...array_values(array_filter(
+            DevelopmentUserManagementCatalog::managementPermissionCodes(),
+            static fn (string $code): bool => !in_array($code, $notInheritedByPlatformAdmin, true),
+        ))];
 
         $employee = new User(
             UserId::fromInt(1),

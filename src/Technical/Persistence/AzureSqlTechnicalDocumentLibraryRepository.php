@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Technical\Persistence;
 
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Api\Technical\Document\TechnicalDocumentLibraryRepository;
 use TriCab\Api\Technical\Document\TechnicalDocumentRecord;
 
@@ -140,7 +141,7 @@ SQL,
         /** @var list<int> $documentIds */
         $documentIds = [];
         foreach ($rows as $row) {
-            $documentIds[] = (int) $row['DocumentId'];
+            $documentIds[] = JsonValue::int($row, 'DocumentId');
         }
         $documentIds = array_values(array_unique($documentIds));
 
@@ -150,12 +151,12 @@ SQL,
 
         $out = [];
         foreach ($rows as $row) {
-            $id = (int) $row['DocumentId'];
+            $id = JsonValue::int($row, 'DocumentId');
             $out[] = new TechnicalDocumentRecord(
-                publicId: (string) $row['PublicId'],
-                title: (string) $row['Title'],
-                originalFileName: (string) $row['OriginalFileName'],
-                documentTypeCode: (string) $row['DocumentTypeCode'],
+                publicId: JsonValue::string($row, 'PublicId'),
+                title: JsonValue::string($row, 'Title'),
+                originalFileName: JsonValue::string($row, 'OriginalFileName'),
+                documentTypeCode: JsonValue::string($row, 'DocumentTypeCode'),
                 categoryCodes: $categoriesById[$id] ?? [],
                 issuer: $this->nullableString($row['Issuer'] ?? null),
                 storagePath: $this->nullableString($row['StoragePath'] ?? null),
@@ -164,7 +165,7 @@ SQL,
                 sourceLegacyId: $this->nullableString($row['SourceLegacyId'] ?? null),
                 productPublicIds: $productsById[$id] ?? [],
                 stylePublicIds: $stylesById[$id] ?? [],
-                isActive: ((int) ($row['IsActive'] ?? 1)) === 1,
+                isActive: (JsonValue::int($row, 'IsActive', 1)) === 1,
             );
         }
 
@@ -267,7 +268,7 @@ SQL,
     {
         $params = [];
         $parts = [];
-        foreach (array_values($ids) as $i => $id) {
+        foreach ($ids as $i => $id) {
             $key = ':' . $prefix . $i;
             $parts[] = $key;
             $params[$key] = $id;
@@ -284,8 +285,8 @@ SQL,
     {
         $out = [];
         foreach ($rows as $row) {
-            $id = (int) $row[$idKey];
-            $value = trim((string) ($row[$valueKey] ?? ''));
+            $id = JsonValue::int($row, $idKey);
+            $value = trim(JsonValue::string($row, $valueKey));
             if ($value === '') {
                 continue;
             }
@@ -300,7 +301,7 @@ SQL,
 
     private function nullableString(mixed $value): ?string
     {
-        if ($value === null) {
+        if (!is_scalar($value)) {
             return null;
         }
         $text = trim((string) $value);

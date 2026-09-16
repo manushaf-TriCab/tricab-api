@@ -24,6 +24,9 @@ final class GetExpenseCustomerContactsAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response);
@@ -31,7 +34,7 @@ final class GetExpenseCustomerContactsAction
             $criteria = ContactListQuery::fromQueryParams(QueryParams::normalize($request->getQueryParams()));
             $result = $this->service->execute(
                 ExpenseActorFactory::fromRequest($request),
-                (string) ($args['code'] ?? ''),
+                $args['code'] ?? '',
                 $criteria,
             );
 

@@ -6,6 +6,7 @@ namespace TriCab\Api\Technical\Migration;
 
 use RuntimeException;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Api\Technical\Document\TechnicalDocumentPathBuilder;
 use TriCab\Api\Technical\Persistence\AzureSqlTechnicalDocumentLibraryRepository;
 use TriCab\Core\Product\Contract\ProductBlobStore;
@@ -38,20 +39,20 @@ final class Phase4HTechnicalDocumentMigrator
      */
     public function migrateOne(array $candidate, bool $dryRun = false): array
     {
-        $legacyId = (string) $candidate['legacyId'];
-        $shaExpected = strtolower((string) $candidate['sha256']);
-        $filename = (string) $candidate['filename'];
-        $title = $this->cleanTitle((string) ($candidate['legacyTitle'] ?? $filename));
-        $typeCode = (string) ($candidate['targetDocumentType'] ?? 'certificate');
-        $categories = $candidate['technicalCategories'] ?? [];
-        if (!is_array($categories) || $categories === []) {
-            $fam = (string) ($candidate['family'] ?? '');
+        $legacyId = JsonValue::string($candidate, 'legacyId');
+        $shaExpected = strtolower(JsonValue::string($candidate, 'sha256'));
+        $filename = JsonValue::string($candidate, 'filename');
+        $title = $this->cleanTitle(JsonValue::string($candidate, 'legacyTitle', $filename));
+        $typeCode = JsonValue::string($candidate, 'targetDocumentType', 'certificate');
+        $categories = JsonValue::stringList($candidate, 'technicalCategories');
+        if ($categories === []) {
+            $fam = JsonValue::string($candidate, 'family');
             $categories = $fam === '' ? [] : array_values(array_filter(explode('+', $fam)));
         }
-        $v2Action = (string) ($candidate['v2Action'] ?? '');
+        $v2Action = JsonValue::string($candidate, 'v2Action');
         $stylePublicIds = array_values(array_filter(array_map(
-            static fn ($v): string => strtolower((string) $v),
-            is_array($candidate['newProductStyleIds'] ?? null) ? $candidate['newProductStyleIds'] : [],
+            static fn (string $v): string => strtolower($v),
+            JsonValue::stringList($candidate, 'newProductStyleIds'),
         )));
         $wantStyle = str_contains($v2Action, 'CREATE_STYLE_LINK');
         $wantProduct = str_contains($v2Action, 'CREATE_PRODUCT_LINK');
@@ -207,6 +208,7 @@ final class Phase4HTechnicalDocumentMigrator
 
     /**
      * @param array<string, mixed> $candidate
+     * @return array<string, mixed>
      */
     public function revalidateSource(array $candidate): array
     {
@@ -214,20 +216,20 @@ final class Phase4HTechnicalDocumentMigrator
             $bytes = $this->loadValidatedBytes($candidate);
         } catch (\Throwable $e) {
             return [
-                'legacyId' => (string) $candidate['legacyId'],
+                'legacyId' => JsonValue::string($candidate, 'legacyId'),
                 'ok' => false,
                 'reason' => $e->getMessage(),
             ];
         }
-        $expectedSha = strtolower((string) $candidate['sha256']);
-        $expectedSize = (int) ($candidate['size'] ?? 0);
+        $expectedSha = strtolower(JsonValue::string($candidate, 'sha256'));
+        $expectedSize = JsonValue::int($candidate, 'size');
         $actualSha = hash('sha256', $bytes);
         $actualSize = strlen($bytes);
         $pdfValid = str_starts_with($bytes, '%PDF');
         $ok = $pdfValid && $actualSha === $expectedSha && ($expectedSize === 0 || $actualSize === $expectedSize);
 
         return [
-            'legacyId' => (string) $candidate['legacyId'],
+            'legacyId' => JsonValue::string($candidate, 'legacyId'),
             'ok' => $ok,
             'pdfValid' => $pdfValid,
             'expectedSha' => $expectedSha,
@@ -243,7 +245,7 @@ final class Phase4HTechnicalDocumentMigrator
      */
     private function loadValidatedBytes(array $candidate): string
     {
-        $sha = strtolower((string) $candidate['sha256']);
+        $sha = strtolower(JsonValue::string($candidate, 'sha256'));
         $cacheFile = rtrim($this->sourceCacheDir, '/') . '/' . $sha . '.pdf';
         if (is_file($cacheFile)) {
             $bytes = file_get_contents($cacheFile);
@@ -252,7 +254,7 @@ final class Phase4HTechnicalDocumentMigrator
             }
         }
 
-        $url = (string) ($candidate['sourceUrl'] ?? '');
+        $url = JsonValue::string($candidate, 'sourceUrl');
         if ($url === '' || !str_starts_with($url, 'https://www.tricab.com/')) {
             throw new RuntimeException('Missing or non-TriCab sourceUrl');
         }
@@ -305,7 +307,7 @@ final class Phase4HTechnicalDocumentMigrator
         if ($doc === []) {
             throw new RuntimeException('Existing document publicId not found in DB');
         }
-        $docId = (int) $doc[0]['DocumentId'];
+        $docId = JsonValue::int($doc[0], 'DocumentId');
         $addedCat = 0;
         $addedStyle = 0;
         $addedProd = 0;
@@ -387,7 +389,7 @@ SQL,
             ],
         );
 
-        return (int) $rows[0]['DocumentId'];
+        return JsonValue::int($rows[0], 'DocumentId');
     }
 
     private function insertCategoryLink(int $documentId, int $categoryId): int
@@ -397,7 +399,7 @@ SQL,
             [':d' => $documentId, ':c' => $categoryId],
         );
 
-        return (int) $rows[0]['Id'];
+        return JsonValue::int($rows[0], 'Id');
     }
 
     private function insertStyleLink(int $documentId, int $styleId): int
@@ -407,7 +409,7 @@ SQL,
             [':d' => $documentId, ':s' => $styleId],
         );
 
-        return (int) $rows[0]['Id'];
+        return JsonValue::int($rows[0], 'Id');
     }
 
     private function insertProductLink(int $documentId, int $productId): int
@@ -417,7 +419,7 @@ SQL,
             [':d' => $documentId, ':p' => $productId],
         );
 
-        return (int) $rows[0]['Id'];
+        return JsonValue::int($rows[0], 'Id');
     }
 
     private function requireDocumentTypeId(string $code): int
@@ -430,18 +432,17 @@ SQL,
             throw new RuntimeException('Missing DocumentTypeCode: ' . $code);
         }
 
-        return (int) $rows[0]['DocumentTypeId'];
+        return JsonValue::int($rows[0], 'DocumentTypeId');
     }
 
     /**
-     * @param list<string>|array<int, mixed> $codes
+     * @param list<string> $codes
      * @return list<int>
      */
     private function requireCategoryIds(array $codes): array
     {
         $ids = [];
         foreach ($codes as $code) {
-            $code = (string) $code;
             $rows = $this->db->fetchAll(
                 'SELECT [DocumentCategoryId] FROM [technical].[DocumentCategories] WHERE [CategoryCode]=:c AND [DeletedAtUtc] IS NULL AND [IsActive]=1',
                 [':c' => $code],
@@ -449,7 +450,7 @@ SQL,
             if ($rows === []) {
                 throw new RuntimeException('Missing DocumentCategory: ' . $code);
             }
-            $ids[] = (int) $rows[0]['DocumentCategoryId'];
+            $ids[] = JsonValue::int($rows[0], 'DocumentCategoryId');
         }
 
         return $ids;
@@ -470,7 +471,7 @@ SQL,
             if ($rows === []) {
                 throw new RuntimeException('Missing ProductStyle PublicId: ' . $publicId);
             }
-            $ids[] = (int) $rows[0]['ProductStyleId'];
+            $ids[] = JsonValue::int($rows[0], 'ProductStyleId');
         }
 
         return array_values(array_unique($ids));
@@ -495,7 +496,7 @@ SQL,
                 [':p' => $publicId],
             );
             foreach ($rows as $row) {
-                $productIds[] = (int) $row['ProductId'];
+                $productIds[] = JsonValue::int($row, 'ProductId');
             }
         }
 
@@ -539,7 +540,7 @@ SQL,
 
     private function nullableString(mixed $value): ?string
     {
-        if ($value === null) {
+        if (!is_scalar($value)) {
             return null;
         }
         $text = trim((string) $value);

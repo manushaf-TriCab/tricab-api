@@ -29,7 +29,7 @@ final class ResolveTechnicalAccessoriesAccessService
             $user->roles,
         );
 
-        $marketCodes = $customerContext?->marketCodes ?? [];
+        $marketCodes = $customerContext->marketCodes ?? [];
 
         return TechnicalAccessoriesVisibility::allows($user->roles, $marketCodes);
     }

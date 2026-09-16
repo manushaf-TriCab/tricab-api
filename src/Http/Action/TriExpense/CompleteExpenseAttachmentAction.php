@@ -11,6 +11,7 @@ use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\Service\CompleteExpenseAttachmentService;
 
 final class CompleteExpenseAttachmentAction
@@ -22,6 +23,9 @@ final class CompleteExpenseAttachmentAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response);
@@ -31,10 +35,10 @@ final class CompleteExpenseAttachmentAction
             return $this->responder->success(TriExpenseDtoSerializer::receipt(
                 $this->service->execute(
                     ExpenseActorFactory::fromRequest($request),
-                    (string) ($args['id'] ?? ''),
-                    isset($body['blobPath']) ? (string) $body['blobPath'] : '',
-                    isset($body['fileName']) ? (string) $body['fileName'] : '',
-                    isset($body['expectedRowVersion']) ? (string) $body['expectedRowVersion'] : '',
+                    $args['id'] ?? '',
+                    JsonValue::string($body, 'blobPath'),
+                    JsonValue::string($body, 'fileName'),
+                    JsonValue::string($body, 'expectedRowVersion'),
                 ),
             ));
         } catch (Throwable $e) {

@@ -22,7 +22,8 @@ final class GetTechnicalArticleAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         unset($response);
-        $slug = (string) $request->getAttribute('slug', '');
+        $slugAttribute = $request->getAttribute('slug', '');
+        $slug = is_string($slugAttribute) ? $slugAttribute : '';
         try {
             return $this->responder->success(
                 $this->content->article($slug),

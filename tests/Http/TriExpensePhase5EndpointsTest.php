@@ -13,6 +13,7 @@ use TriCab\Api\Expense\Persistence\InMemoryExpenseProfileRepository;
 use TriCab\Api\Expense\Persistence\NullExpenseNotificationPort;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Product\Storage\InMemoryProductBlobStore;
+use TriCab\Api\Tests\Payload;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Product\Contract\ProductBlobStore;
 use TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort;
@@ -43,7 +44,7 @@ final class TriExpensePhase5EndpointsTest extends TestCase
         $response = $app->handle(TestAppFactory::request('POST', '/api/v1/tri-expense/receipts/x/ocr'));
 
         self::assertSame(401, $response->getStatusCode());
-        self::assertSame('UNAUTHENTICATED', TestAppFactory::json($response)['error']['code']);
+        self::assertSame('UNAUTHENTICATED', Payload::obj(TestAppFactory::json($response)['error'])['code']);
     }
 
     public function test_ocrEndpointRefusesCleanlyWhenOcrIsNotConfigured(): void
@@ -54,7 +55,7 @@ final class TriExpensePhase5EndpointsTest extends TestCase
         $response = $app->handle($this->jsonRequest('POST', '/api/v1/tri-expense/receipts/' . $publicId . '/ocr', []));
 
         self::assertSame(503, $response->getStatusCode(), (string) $response->getBody());
-        self::assertSame('TRIEXPENSE_OCR_DISABLED', TestAppFactory::json($response)['error']['code']);
+        self::assertSame('TRIEXPENSE_OCR_DISABLED', Payload::obj(TestAppFactory::json($response)['error'])['code']);
     }
 
     public function test_ocrEndpointDeniesAUserWhoCannotSeeTheReceipt(): void
@@ -71,7 +72,7 @@ final class TriExpensePhase5EndpointsTest extends TestCase
         ));
 
         self::assertSame(403, $response->getStatusCode(), (string) $response->getBody());
-        self::assertSame('TRIEXPENSE_ACCESS_DENIED', TestAppFactory::json($response)['error']['code']);
+        self::assertSame('TRIEXPENSE_ACCESS_DENIED', Payload::obj(TestAppFactory::json($response)['error'])['code']);
     }
 
     public function test_ocrEndpointReturns404ForAnUnknownReceipt(): void
@@ -90,9 +91,9 @@ final class TriExpensePhase5EndpointsTest extends TestCase
     public function test_configReportsIntegrationsOffUntilTheyAreConfigured(): void
     {
         $app = $this->appWithWorld();
-        $features = TestAppFactory::json($app->handle(
+        $features = Payload::obj(Payload::obj(TestAppFactory::json($app->handle(
             TestAppFactory::request('GET', '/api/v1/tri-expense/config'),
-        ))['data']['features'];
+        ))['data'])['features']);
 
         self::assertFalse($features['ocr']);
         self::assertFalse($features['emailNotifications']);
@@ -113,9 +114,9 @@ final class TriExpensePhase5EndpointsTest extends TestCase
             'GRAPH_CLIENT_SECRET' => 'secret',
         ]);
 
-        $features = TestAppFactory::json($app->handle(
+        $features = Payload::obj(Payload::obj(TestAppFactory::json($app->handle(
             TestAppFactory::request('GET', '/api/v1/tri-expense/config'),
-        ))['data']['features'];
+        ))['data'])['features']);
 
         self::assertTrue($features['ocr']);
         self::assertTrue($features['emailNotifications']);
@@ -126,9 +127,9 @@ final class TriExpensePhase5EndpointsTest extends TestCase
         // The flag alone must not promise the client that mail will arrive.
         $app = $this->appWithWorld(['TRIEXPENSE_EMAIL_ENABLED' => 'true']);
 
-        $features = TestAppFactory::json($app->handle(
+        $features = Payload::obj(Payload::obj(TestAppFactory::json($app->handle(
             TestAppFactory::request('GET', '/api/v1/tri-expense/config'),
-        ))['data']['features'];
+        ))['data'])['features']);
 
         self::assertFalse($features['emailNotifications']);
     }
@@ -178,35 +179,35 @@ final class TriExpensePhase5EndpointsTest extends TestCase
      */
     private function createDraftWithAttachment(App $app): string
     {
-        $created = TestAppFactory::json($app->handle($this->jsonRequest('POST', '/api/v1/tri-expense/receipts', [
+        $created = Payload::obj(TestAppFactory::json($app->handle($this->jsonRequest('POST', '/api/v1/tri-expense/receipts', [
             'vendorName' => 'Cafe',
             'totalAmount' => '20.00',
             'gstAmount' => '1.82',
             'currency' => 'AUD',
             'category' => '66700',
-        ])))['data'];
+        ])))['data']);
 
-        $ticket = TestAppFactory::json($app->handle($this->jsonRequest(
+        $ticket = Payload::obj(TestAppFactory::json($app->handle($this->jsonRequest(
             'POST',
-            '/api/v1/tri-expense/receipts/' . $created['publicId'] . '/attachment/initiate',
+            '/api/v1/tri-expense/receipts/' . Payload::str($created['publicId']) . '/attachment/initiate',
             ['fileName' => 'lunch.jpg', 'contentType' => 'image/jpeg', 'byteSize' => 2048],
-        )))['data'];
+        )))['data']);
 
         // Stand in for the client's direct-to-blob upload.
-        $this->blobStore($app)->putObject($ticket['container'], $ticket['blobPath'], 'image/jpeg', 'fake-bytes');
+        $this->blobStore($app)->putObject(Payload::str($ticket['container']), Payload::str($ticket['blobPath']), 'image/jpeg', 'fake-bytes');
 
         $completed = TestAppFactory::json($app->handle($this->jsonRequest(
             'POST',
-            '/api/v1/tri-expense/receipts/' . $created['publicId'] . '/attachment/complete',
+            '/api/v1/tri-expense/receipts/' . Payload::str($created['publicId']) . '/attachment/complete',
             [
                 'blobPath' => $ticket['blobPath'],
                 'fileName' => 'lunch.jpg',
                 'expectedRowVersion' => $created['rowVersion'],
             ],
         )));
-        self::assertSame('new_azure', $completed['data']['attachment']['dualReadClass']);
+        self::assertSame('new_azure', Payload::obj(Payload::obj($completed['data'])['attachment'])['dualReadClass']);
 
-        return (string) $created['publicId'];
+        return Payload::str($created['publicId']);
     }
 
     /**

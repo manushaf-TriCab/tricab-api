@@ -7,6 +7,7 @@ namespace TriCab\Api\Product\Pricing;
 use JsonException;
 use Throwable;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Product\Application\Pricing\CostResolution;
 use TriCab\Core\Product\Application\Pricing\CustomerSellPriceStatus;
 use TriCab\Core\Product\Application\Pricing\LegacyCostCalculationGateway;
@@ -92,8 +93,8 @@ final class HttpLegacyCostCalculationGateway implements LegacyCostCalculationGat
     {
         $url = $this->buildUrl($productCode, $dbco, $requestedLength);
         $response = $this->http->getJson($url);
-        $statusCode = (int) ($response['status'] ?? 0);
-        $body = (string) ($response['body'] ?? '');
+        $statusCode = JsonValue::int($response, 'status');
+        $body = JsonValue::string($response, 'body');
 
         if ($statusCode >= 500 || $statusCode === 0) {
             $resolution = CostResolution::failure(
@@ -152,10 +153,11 @@ final class HttpLegacyCostCalculationGateway implements LegacyCostCalculationGat
 
             return ['resolution' => $resolution, 'retryable' => false];
         }
+        $data = JsonValue::toObject($data);
 
-        $responseProduct = trim((string) ($data['productCode'] ?? ''));
-        $responseDbco = trim((string) ($data['dbco'] ?? $data['DBCO'] ?? ''));
-        $status = strtoupper(trim((string) ($data['status'] ?? '')));
+        $responseProduct = trim(JsonValue::string($data, 'productCode'));
+        $responseDbco = trim(JsonValue::string($data, 'dbco', JsonValue::string($data, 'DBCO')));
+        $status = strtoupper(trim(JsonValue::string($data, 'status')));
 
         if ($responseProduct === '' || strcasecmp($responseProduct, $productCode) !== 0) {
             $resolution = CostResolution::failure($productCode, $dbco, 'PRODUCT_CODE_MISMATCH', $status !== '' ? $status : CustomerSellPriceStatus::AVAILABILITY_UNKNOWN, $requestedLength);
@@ -180,10 +182,9 @@ final class HttpLegacyCostCalculationGateway implements LegacyCostCalculationGat
 
         $defaultCost = $this->nullableNumericString($data['defaultCost'] ?? null);
         $calculated = $this->nullableNumericString($data['calculatedCostPerMeter'] ?? null);
-        $defaultLength = isset($data['defaultLength']) ? (string) $data['defaultLength'] : null;
-        $legacyUnit = isset($data['legacyUnitCode'])
-            ? (string) $data['legacyUnitCode']
-            : (isset($data['unitCode']) ? (string) $data['unitCode'] : null);
+        $defaultLength = JsonValue::stringOrNull($data, 'defaultLength');
+        $legacyUnit = JsonValue::stringOrNull($data, 'legacyUnitCode')
+            ?? JsonValue::stringOrNull($data, 'unitCode');
 
         $resolution = new CostResolution(
             productCode: $productCode,

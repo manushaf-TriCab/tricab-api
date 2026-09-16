@@ -9,7 +9,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
+use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\Service\ListExpensePeriodsService;
 
 final class ListExpensePeriodsAction
@@ -21,12 +23,15 @@ final class ListExpensePeriodsAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response, $args);
         try {
-            $params = $request->getQueryParams();
-            $country = isset($params['country']) ? (string) $params['country'] : null;
+            $params = QueryParams::normalize($request->getQueryParams());
+            $country = JsonValue::stringOrNull($params, 'country');
 
             return $this->responder->success([
                 'items' => $this->service->execute(

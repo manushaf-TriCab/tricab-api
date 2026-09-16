@@ -10,6 +10,7 @@ use RuntimeException;
 use Throwable;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Api\Technical\ResolveTechnicalAccessoriesAccessService;
 use TriCab\Api\Technical\TechnicalAccessoriesVisibility;
 use TriCab\Api\Technical\Document\ResolveTechnicalDocumentsQuery;
@@ -81,12 +82,13 @@ final class ListTechnicalDocumentsAction
         }
 
         $filtered = [];
-        foreach ($families as $key => $family) {
-            if (!is_array($family)) {
+        foreach ($families as $key => $familyRaw) {
+            if (!is_array($familyRaw)) {
                 continue;
             }
-            $section = strtolower((string) ($family['section'] ?? ''));
-            $documentCategory = strtolower((string) ($family['documentCategory'] ?? $key));
+            $family = JsonValue::toObject($familyRaw);
+            $section = strtolower(JsonValue::string($family, 'section'));
+            $documentCategory = strtolower(JsonValue::string($family, 'documentCategory', (string) $key));
             if ($section === TechnicalAccessoriesVisibility::SECTION_ID
                 || TechnicalAccessoriesVisibility::isAccessoryDocumentCategory($documentCategory)
                 || (is_string($key) && TechnicalAccessoriesVisibility::isAccessoryDocumentCategory($key))

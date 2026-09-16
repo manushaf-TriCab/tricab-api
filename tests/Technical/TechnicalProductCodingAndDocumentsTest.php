@@ -7,6 +7,7 @@ namespace TriCab\Api\Tests\Technical;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use TriCab\Api\Technical\TechnicalContentRepository;
+use TriCab\Api\Tests\Payload;
 
 /**
  * Phase 3 product-coding packs + blocked document catalog inventory.
@@ -25,7 +26,7 @@ final class TechnicalProductCodingAndDocumentsTest extends TestCase
         $pack = $this->repo->productCoding('industrial');
 
         self::assertSame('industrial', $pack['mode']);
-        self::assertCount(9, $pack['segments']);
+        self::assertCount(9, Payload::list($pack['segments']));
         self::assertSame(
             [
                 'styleCode' => 'KL',
@@ -38,7 +39,7 @@ final class TechnicalProductCodingAndDocumentsTest extends TestCase
                 'crossSection' => '240',
                 'jacketColour' => 'OR',
             ],
-            $pack['example']['defaults'],
+            Payload::obj($pack['example'])['defaults'],
         );
     }
 
@@ -59,7 +60,7 @@ final class TechnicalProductCodingAndDocumentsTest extends TestCase
                 'crossSection' => '14',
                 'jacketColour' => 'BK',
             ],
-            $pack['example']['defaults'],
+            Payload::obj($pack['example'])['defaults'],
         );
     }
 
@@ -68,18 +69,19 @@ final class TechnicalProductCodingAndDocumentsTest extends TestCase
         $pack = $this->repo->productCoding('accessories');
 
         self::assertSame('accessories', $pack['mode']);
-        self::assertSame('A01', $pack['example']['defaults']['styleCode']);
+        self::assertSame('A01', Payload::obj(Payload::obj($pack['example'])['defaults'])['styleCode']);
 
         $packQuantity = null;
-        foreach ($pack['segments'] as $segment) {
+        foreach (Payload::objList($pack['segments']) as $segment) {
             if (($segment['key'] ?? '') === 'coreColour') {
-                $packQuantity = $segment;
+                $packQuantity = Payload::obj($segment);
                 break;
             }
         }
         self::assertNotNull($packQuantity);
-        self::assertSame('Pack Quantity', $packQuantity['label']);
-        self::assertSame('packQuantity', $packQuantity['optionGroup']);
+        $packQuantityData = Payload::obj($packQuantity);
+        self::assertSame('Pack Quantity', $packQuantityData['label']);
+        self::assertSame('packQuantity', $packQuantityData['optionGroup']);
     }
 
     public function test_documents_bep_pvc_disposal_returns_one_blocked_item(): void
@@ -87,8 +89,8 @@ final class TechnicalProductCodingAndDocumentsTest extends TestCase
         $docs = $this->repo->documents('bep-pvc-disposal');
 
         self::assertSame('bep-pvc-disposal', $docs['category']);
-        self::assertCount(1, $docs['items']);
-        self::assertSame('BLOCKED', $docs['items'][0]['migrationStatus']);
+        self::assertCount(1, Payload::list($docs['items']));
+        self::assertSame('BLOCKED', Payload::obj(Payload::list($docs['items'])[0])['migrationStatus']);
     }
 
     public function test_documents_installation_guides_returns_eighteen_items(): void
@@ -96,7 +98,7 @@ final class TechnicalProductCodingAndDocumentsTest extends TestCase
         $docs = $this->repo->documents('installation-guides');
 
         self::assertSame('installation-guides', $docs['category']);
-        self::assertCount(18, $docs['items']);
+        self::assertCount(18, Payload::list($docs['items']));
     }
 
     public function test_invalid_product_coding_mode_throws(): void

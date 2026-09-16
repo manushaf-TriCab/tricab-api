@@ -23,13 +23,16 @@ final class GetExpenseAttachmentFileAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response);
         try {
             $ticket = $this->service->execute(
                 ExpenseActorFactory::fromRequest($request),
-                (string) ($args['id'] ?? ''),
+                $args['id'] ?? '',
                 $this->settings->blobDownloadSasTtlSeconds,
             );
 

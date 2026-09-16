@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Api\Technical\ResolveTechnicalAccessoriesAccessService;
 use TriCab\Api\Technical\TechnicalAccessoriesVisibility;
 use TriCab\Api\Technical\TechnicalContentRepository;
@@ -33,7 +34,7 @@ final class ListTechnicalSectionsAction
                 && !$this->accessoriesAccess->allows($user)
             ) {
                 $payload = $this->withoutAccessoriesSection($payload);
-            } elseif (isset($payload['sections']) && is_array($payload['sections'])) {
+            } elseif (is_array($payload['sections'])) {
                 $payload['sections'] = $this->withResolvedAccessoriesPolicy($payload['sections']);
             }
 
@@ -84,10 +85,11 @@ final class ListTechnicalSectionsAction
     private function withResolvedAccessoriesPolicy(array $sections): array
     {
         $out = [];
-        foreach ($sections as $section) {
-            if (!is_array($section)) {
+        foreach ($sections as $sectionRaw) {
+            if (!is_array($sectionRaw)) {
                 continue;
             }
+            $section = JsonValue::toObject($sectionRaw);
             if (($section['id'] ?? null) === TechnicalAccessoriesVisibility::SECTION_ID) {
                 $section['visibilityPolicy'] = TechnicalAccessoriesVisibility::VISIBILITY_POLICY;
                 unset($section['visibilityNote']);

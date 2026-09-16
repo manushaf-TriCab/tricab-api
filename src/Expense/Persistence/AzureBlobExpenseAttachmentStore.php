@@ -23,6 +23,9 @@ final class AzureBlobExpenseAttachmentStore implements ExpenseAttachmentStore
     ) {
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function describe(ExpenseAttachmentRef $ref): array
     {
         return [

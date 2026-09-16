@@ -21,12 +21,15 @@ final class ListExpenseBankFeedCandidatesAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response);
         try {
             return $this->responder->success(
-                $this->service->execute(ExpenseActorFactory::fromRequest($request), (string) ($args['id'] ?? '')),
+                $this->service->execute(ExpenseActorFactory::fromRequest($request), $args['id'] ?? ''),
             );
         } catch (Throwable $e) {
             return $this->errors->map($e);

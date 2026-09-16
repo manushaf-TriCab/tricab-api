@@ -21,6 +21,9 @@ final class PreCloseExpensePeriodAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response);
@@ -28,7 +31,7 @@ final class PreCloseExpensePeriodAction
             return $this->responder->success(
                 $this->service->execute(
                     ExpenseActorFactory::fromRequest($request),
-                    (string) ($args['id'] ?? ''),
+                    $args['id'] ?? '',
                 ),
             );
         } catch (Throwable $e) {

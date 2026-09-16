@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
 use TriCab\Api\Identity\Persistence\DevelopmentUserManagementCatalog;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
+use TriCab\Api\Tests\Payload;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Identity\Contract\UserRepository;
 
@@ -22,7 +23,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
         $app = TestAppFactory::create();
         $payload = $this->sections($app);
 
-        $ids = array_map(static fn (array $s): string => (string) $s['id'], $payload['sections']);
+        $ids = array_map(static fn (array $s): string => Payload::str($s['id']), Payload::objList($payload['sections']));
         self::assertContains('accessories', $ids);
         $accessories = $this->sectionById($payload, 'accessories');
         self::assertSame('staff_or_sw_digit_market', $accessories['visibilityPolicy']);
@@ -33,28 +34,28 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
     {
         $app = $this->customerWorld('SW0');
         $payload = $this->sections($app);
-        self::assertContains('accessories', array_column($payload['sections'], 'id'));
+        self::assertContains('accessories', array_column(Payload::objList($payload['sections']), 'id'));
     }
 
     public function test_sw3_customer_sees_accessories(): void
     {
         $app = $this->customerWorld('SW3');
         $payload = $this->sections($app);
-        self::assertContains('accessories', array_column($payload['sections'], 'id'));
+        self::assertContains('accessories', array_column(Payload::objList($payload['sections']), 'id'));
     }
 
     public function test_sw5_customer_sees_accessories(): void
     {
         $app = $this->customerWorld('SW5');
         $payload = $this->sections($app);
-        self::assertContains('accessories', array_column($payload['sections'], 'id'));
+        self::assertContains('accessories', array_column(Payload::objList($payload['sections']), 'id'));
     }
 
     public function test_non_sw_market_hides_accessories(): void
     {
         $app = $this->customerWorld('ENERGY');
         $payload = $this->sections($app);
-        $ids = array_column($payload['sections'], 'id');
+        $ids = array_column(Payload::objList($payload['sections']), 'id');
         self::assertNotContains('accessories', $ids);
         self::assertContains('general', $ids);
         self::assertContains('industrial', $ids);
@@ -65,7 +66,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
     {
         $app = $this->customerWorld(null);
         $payload = $this->sections($app);
-        self::assertNotContains('accessories', array_column($payload['sections'], 'id'));
+        self::assertNotContains('accessories', array_column(Payload::objList($payload['sections']), 'id'));
     }
 
     public function test_multi_customer_with_sw_market_sees_accessories(): void
@@ -80,18 +81,18 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
         $this->asCustomerUser($app);
 
         $me = $this->me($app);
-        self::assertContains('SW1', $me['customerContext']['marketCodes']);
-        self::assertContains('ENERGY', $me['customerContext']['marketCodes']);
+        self::assertContains('SW1', Payload::list(Payload::obj($me['customerContext'])['marketCodes']));
+        self::assertContains('ENERGY', Payload::list(Payload::obj($me['customerContext'])['marketCodes']));
 
         $payload = $this->sections($app);
-        self::assertContains('accessories', array_column($payload['sections'], 'id'));
+        self::assertContains('accessories', array_column(Payload::objList($payload['sections']), 'id'));
     }
 
     public function test_me_exposes_market_codes_for_linked_customer(): void
     {
         $app = $this->customerWorld('SW4');
         $me = $this->me($app);
-        self::assertSame(['SW4'], $me['customerContext']['marketCodes']);
+        self::assertSame(['SW4'], Payload::obj($me['customerContext'])['marketCodes']);
     }
 
     public function test_unauthenticated_technical_still_requires_auth(): void
@@ -100,7 +101,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
         $response = $app->handle(TestAppFactory::request('GET', '/api/v1/technical/sections'));
         $payload = TestAppFactory::json($response);
         self::assertSame(401, $response->getStatusCode());
-        self::assertSame('UNAUTHENTICATED', $payload['error']['code']);
+        self::assertSame('UNAUTHENTICATED', Payload::obj($payload['error'])['code']);
     }
 
     public function test_unauthorized_accessories_product_coding_is_not_found(): void
@@ -109,7 +110,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
         $response = $app->handle(TestAppFactory::request('GET', '/api/v1/technical/product-coding/accessories'));
         $payload = TestAppFactory::json($response);
         self::assertSame(404, $response->getStatusCode());
-        self::assertSame('TECHNICAL_PRODUCT_CODING_NOT_FOUND', $payload['error']['code']);
+        self::assertSame('TECHNICAL_PRODUCT_CODING_NOT_FOUND', Payload::obj($payload['error'])['code']);
     }
 
     public function test_authorized_accessories_product_coding_ok(): void
@@ -118,7 +119,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
         $response = $app->handle(TestAppFactory::request('GET', '/api/v1/technical/product-coding/accessories'));
         $payload = TestAppFactory::json($response);
         self::assertSame(200, $response->getStatusCode());
-        self::assertSame('accessories', $payload['data']['mode']);
+        self::assertSame('accessories', Payload::obj($payload['data'])['mode']);
     }
 
     public function test_unauthorized_accessory_document_category_is_not_found(): void
@@ -130,7 +131,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
             );
             $payload = TestAppFactory::json($response);
             self::assertSame(404, $response->getStatusCode(), $category);
-            self::assertSame('TECHNICAL_DOCUMENTS_NOT_FOUND', $payload['error']['code'], $category);
+            self::assertSame('TECHNICAL_DOCUMENTS_NOT_FOUND', Payload::obj($payload['error'])['code'], $category);
         }
     }
 
@@ -140,7 +141,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
         $response = $app->handle(TestAppFactory::request('GET', '/api/v1/technical/documents'));
         $payload = TestAppFactory::json($response);
         self::assertSame(200, $response->getStatusCode());
-        $families = $payload['data']['families'];
+        $families = Payload::obj(Payload::obj($payload['data'])['families']);
         self::assertArrayNotHasKey('accessory-certs', $families);
         self::assertArrayNotHasKey('accessory-warranty', $families);
         self::assertArrayNotHasKey('installation-guides', $families);
@@ -153,7 +154,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
         $response = $app->handle(TestAppFactory::request('GET', '/api/v1/technical/product-coding/industrial'));
         $payload = TestAppFactory::json($response);
         self::assertSame(200, $response->getStatusCode());
-        self::assertSame('industrial', $payload['data']['mode']);
+        self::assertSame('industrial', Payload::obj($payload['data'])['mode']);
     }
 
     /**
@@ -225,7 +226,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
      */
     private function sectionById(array $payload, string $id): array
     {
-        foreach ($payload['sections'] as $section) {
+        foreach (Payload::objList($payload['sections']) as $section) {
             if (($section['id'] ?? null) === $id) {
                 return $section;
             }
@@ -252,7 +253,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
         /** @var array<string, mixed> $data */
         $data = $payload['data'];
 
-        return (string) $data['publicId'];
+        return Payload::str($data['publicId']);
     }
 
     /**
@@ -270,7 +271,7 @@ final class TechnicalAccessoriesVisibilityEndpointsTest extends TestCase
         /** @var array<string, mixed> $data */
         $data = $payload['data'];
 
-        return (string) $data['publicId'];
+        return Payload::str($data['publicId']);
     }
 
     /**

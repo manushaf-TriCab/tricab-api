@@ -35,7 +35,7 @@ final class ResolveExpenseReceiptFinanceService
         ?string $note,
         string $expectedRowVersion,
     ): array {
-        LegacyExpenseReceiptRef::assertNotLegacy($publicId);
+        LegacyExpenseReceiptRef::assertNotLegacy($receiptPublicId);
         $this->access->requireFinance($actor);
 
         $normalized = strtolower(trim($resolution));

@@ -841,84 +841,6 @@ parameters:
 			path: src/Http/Action/PublicProduct/PostPricingMarginOverrideAction.php
 
 		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: src/Http/Action/TriExpense/ApproveExpenseReceiptAction.php
-
-		-
-			message: '#^Method TriCab\\Api\\Http\\Action\\TriExpense\\ApproveExpenseReceiptAction\:\:__invoke\(\) has parameter \$args with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Action/TriExpense/ApproveExpenseReceiptAction.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: src/Http/Action/TriExpense/GetExpenseReceiptAction.php
-
-		-
-			message: '#^Method TriCab\\Api\\Http\\Action\\TriExpense\\GetExpenseReceiptAction\:\:__invoke\(\) has parameter \$args with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Action/TriExpense/GetExpenseReceiptAction.php
-
-		-
-			message: '#^Cannot cast mixed to int\.$#'
-			identifier: cast.int
-			count: 1
-			path: src/Http/Action/TriExpense/ListExpenseReceiptsAction.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 2
-			path: src/Http/Action/TriExpense/RejectExpenseReceiptAction.php
-
-		-
-			message: '#^Method TriCab\\Api\\Http\\Action\\TriExpense\\RejectExpenseReceiptAction\:\:__invoke\(\) has parameter \$args with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Action/TriExpense/RejectExpenseReceiptAction.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 2
-			path: src/Http/Action/TriExpense/SendBackExpenseReceiptAction.php
-
-		-
-			message: '#^Method TriCab\\Api\\Http\\Action\\TriExpense\\SendBackExpenseReceiptAction\:\:__invoke\(\) has parameter \$args with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Action/TriExpense/SendBackExpenseReceiptAction.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: src/Http/Action/TriExpense/SubmitExpenseReceiptAction.php
-
-		-
-			message: '#^Method TriCab\\Api\\Http\\Action\\TriExpense\\SubmitExpenseReceiptAction\:\:__invoke\(\) has parameter \$args with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Action/TriExpense/SubmitExpenseReceiptAction.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 1
-			path: src/Http/Action/TriExpense/UpdateExpenseReceiptAction.php
-
-		-
-			message: '#^Method TriCab\\Api\\Http\\Action\\TriExpense\\UpdateExpenseReceiptAction\:\:__invoke\(\) has parameter \$args with no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: src/Http/Action/TriExpense/UpdateExpenseReceiptAction.php
-
-		-
 			message: '#^Method TriCab\\Api\\Http\\Middleware\\RequirePermissionMiddleware\:\:mapAuthenticationNotAllowed\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
@@ -971,12 +893,6 @@ parameters:
 			identifier: cast.string
 			count: 1
 			path: src/Identity/Persistence/AzureSqlUserProvisioningRepository.php
-
-		-
-			message: '#^Parameter \#1 \$headers of static method TriCab\\Api\\Infrastructure\\Http\\StreamJsonHttpClient\:\:statusFromResponseHeaders\(\) expects list\<string\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Infrastructure/Http/StreamJsonHttpClient.php
 
 		-
 			message: '#^Call to function is_array\(\) with array\{name\: string, ms\: float, rows\: int\} will always evaluate to true\.$#'
@@ -3371,24 +3287,6 @@ parameters:
 			identifier: cast.string
 			count: 3
 			path: src/Product/Pricing/AzureSqlVariantCommercialCatalogRepository.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 6
-			path: src/Product/Pricing/HttpLegacyCostCalculationGateway.php
-
-		-
-			message: '#^Offset ''body'' on array\{status\: int, body\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Product/Pricing/HttpLegacyCostCalculationGateway.php
-
-		-
-			message: '#^Offset ''status'' on array\{status\: int, body\: string\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/Product/Pricing/HttpLegacyCostCalculationGateway.php
 
 		-
 			message: '#^Cannot cast mixed to string\.$#'

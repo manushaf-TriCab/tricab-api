@@ -355,7 +355,7 @@ final class GraphExpenseNotificationPort implements ExpenseNotificationPort
             throw new GraphExpenseNotificationException('Graph token response had no access_token.');
         }
 
-        $expiresIn = is_array($decoded) ? ($decoded['expires_in'] ?? 3600) : 3600;
+        $expiresIn = $decoded['expires_in'] ?? 3600;
         $ttl = is_int($expiresIn) || (is_string($expiresIn) && is_numeric($expiresIn))
             ? (int) $expiresIn
             : 3600;

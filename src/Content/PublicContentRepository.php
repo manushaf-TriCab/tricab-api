@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Content;
 
 use RuntimeException;
+use TriCab\Api\Support\JsonValue;
 
 /**
  * Loads version-controlled public marketing content (About / Contact) from JSON files.
@@ -31,11 +32,11 @@ final class PublicContentRepository
      */
     public function about(): array
     {
-        $payload = $this->decodeJsonFile($this->contentRoot . '/about.json');
-        $media = is_array($payload['media'] ?? null) ? $payload['media'] : [];
+        $payload = JsonValue::toObject($this->decodeJsonFile($this->contentRoot . '/about.json'));
+        $media = JsonValue::object($payload, 'media');
         $resolvedMedia = [];
         foreach ($media as $key => $item) {
-            if (!is_string($key) || !is_array($item)) {
+            if (!is_array($item)) {
                 continue;
             }
             $path = isset($item['path']) && is_string($item['path']) ? $item['path'] : null;
@@ -69,7 +70,7 @@ final class PublicContentRepository
             if (!is_array($section)) {
                 continue;
             }
-            $normalized[] = $this->normalizeContactSection($section);
+            $normalized[] = $this->normalizeContactSection(JsonValue::toObject($section));
         }
 
         return [
@@ -85,22 +86,23 @@ final class PublicContentRepository
     private function normalizeContactSection(array $section): array
     {
         $out = [
-            'id' => (string) ($section['id'] ?? ''),
-            'title' => (string) ($section['title'] ?? ''),
+            'id' => JsonValue::string($section, 'id'),
+            'title' => JsonValue::string($section, 'title'),
         ];
-        if (isset($section['offices']) && is_array($section['offices'])) {
-            $out['offices'] = $this->normalizeOffices($section['offices']);
+        if (is_array($section['offices'] ?? null)) {
+            $out['offices'] = $this->normalizeOffices(array_values($section['offices']));
         }
         if (isset($section['subsections']) && is_array($section['subsections'])) {
             $subs = [];
-            foreach ($section['subsections'] as $sub) {
-                if (!is_array($sub)) {
+            foreach ($section['subsections'] as $subRaw) {
+                if (!is_array($subRaw)) {
                     continue;
                 }
+                $sub = JsonValue::toObject($subRaw);
                 $subs[] = [
-                    'title' => (string) ($sub['title'] ?? ''),
-                    'offices' => isset($sub['offices']) && is_array($sub['offices'])
-                        ? $this->normalizeOffices($sub['offices'])
+                    'title' => JsonValue::string($sub, 'title'),
+                    'offices' => is_array($sub['offices'] ?? null)
+                        ? $this->normalizeOffices(array_values($sub['offices']))
                         : [],
                 ];
             }
@@ -145,7 +147,7 @@ final class PublicContentRepository
     }
 
     /**
-     * @return array<string, mixed>|list<mixed>
+     * @return array<array-key, mixed>
      */
     private function decodeJsonFile(string $path): array
     {
@@ -160,7 +162,7 @@ final class PublicContentRepository
         if (!is_array($decoded)) {
             throw new RuntimeException('Public content file is not valid JSON: ' . $path);
         }
-        return $decoded;
+        return JsonValue::toObject($decoded);
     }
 
     private function publicMediaUrl(string $path): string

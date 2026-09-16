@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
 use TriCab\Api\Expense\Persistence\InMemoryExpenseProfileRepository;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
+use TriCab\Api\Tests\Payload;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Expense\Contract\ExpenseProfileRepository;
 use TriCab\Core\Expense\Domain\Entity\ExpenseProfile;
@@ -43,7 +44,7 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         ));
         self::assertSame(403, $teAdminDenied->getStatusCode());
         $deniedPayload = TestAppFactory::json($teAdminDenied);
-        self::assertSame('TRIEXPENSE_ACCESS_DENIED', $deniedPayload['error']['code']);
+        self::assertSame('TRIEXPENSE_ACCESS_DENIED', Payload::obj($deniedPayload['error'])['code']);
 
         $import = $app->handle($this->jsonRequest(
             'POST',
@@ -53,7 +54,7 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         ));
         $importPayload = TestAppFactory::json($import);
         self::assertSame(200, $import->getStatusCode(), (string) $import->getBody());
-        self::assertSame(1, $importPayload['data']['imported']);
+        self::assertSame(1, Payload::obj($importPayload['data'])['imported']);
 
         $match = $app->handle($this->jsonRequest(
             'POST',
@@ -63,8 +64,8 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         ));
         self::assertSame(200, $match->getStatusCode());
         $matchPayload = TestAppFactory::json($match);
-        self::assertArrayHasKey('matched', $matchPayload['data']);
-        self::assertArrayHasKey('nearMisses', $matchPayload['data']);
+        self::assertArrayHasKey('matched', Payload::obj($matchPayload['data']));
+        self::assertArrayHasKey('nearMisses', Payload::obj($matchPayload['data']));
 
         $period = $app->handle($this->jsonRequest(
             'POST',
@@ -74,8 +75,8 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         ));
         self::assertSame(200, $period->getStatusCode(), (string) $period->getBody());
         $periodPayload = TestAppFactory::json($period);
-        self::assertSame('AU', $periodPayload['data']['country']);
-        self::assertSame('open', $periodPayload['data']['status']);
+        self::assertSame('AU', Payload::obj($periodPayload['data'])['country']);
+        self::assertSame('open', Payload::obj($periodPayload['data'])['status']);
 
         $export = $app->handle(
             TestAppFactory::request('GET', '/api/v1/tri-expense/finance/export/reconciliation?country=AU')
@@ -95,10 +96,13 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         $response = $app->handle(TestAppFactory::request('GET', '/api/v1/tri-expense/config'));
         $payload = TestAppFactory::json($response);
         self::assertSame(200, $response->getStatusCode());
-        self::assertTrue($payload['data']['features']['bankReconciliation']);
-        self::assertTrue($payload['data']['features']['periodClose']);
+        self::assertTrue(Payload::obj(Payload::obj($payload['data'])['features'])['bankReconciliation']);
+        self::assertTrue(Payload::obj(Payload::obj($payload['data'])['features'])['periodClose']);
     }
 
+    /**
+     * @return App<ContainerInterface>
+     */
     private function appWithWorld(): App
     {
         $app = TestAppFactory::create();
@@ -117,6 +121,7 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
 
     /**
      * @return array<string, array{userId:int,email:string,subject:string}>
+     * @param App<ContainerInterface> $app
      */
     private function worldUsers(App $app): array
     {
@@ -148,6 +153,9 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         );
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function seedProfile(
         App $app,
         int $userId,
@@ -171,6 +179,9 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         ));
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function users(App $app): InMemoryApiUserRepository
     {
         $container = $app->getContainer();
@@ -181,6 +192,9 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         return $repository;
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function profiles(App $app): InMemoryExpenseProfileRepository
     {
         $container = $app->getContainer();

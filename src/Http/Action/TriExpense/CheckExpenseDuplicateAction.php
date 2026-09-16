@@ -11,6 +11,7 @@ use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\Service\CheckExpenseDuplicateService;
 
 final class CheckExpenseDuplicateAction
@@ -30,7 +31,7 @@ final class CheckExpenseDuplicateAction
             $body = JsonRequestBody::requireObject($request);
             $matches = $this->service->execute(
                 $actor,
-                isset($body['vendorName']) ? (string) $body['vendorName'] : '',
+                JsonValue::string($body, 'vendorName'),
                 isset($body['receiptDate']) && is_string($body['receiptDate']) ? $body['receiptDate'] : null,
                 isset($body['excludePublicId']) && is_string($body['excludePublicId']) ? $body['excludePublicId'] : null,
             );

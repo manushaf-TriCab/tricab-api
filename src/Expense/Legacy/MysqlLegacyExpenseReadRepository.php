@@ -95,7 +95,7 @@ SQL;
     {
         $placeholders = [];
         $params = [];
-        foreach (array_values($keys) as $i => $key) {
+        foreach ($keys as $i => $key) {
             $name = ':k' . $i;
             $placeholders[] = $name;
             $params[$name] = $key;

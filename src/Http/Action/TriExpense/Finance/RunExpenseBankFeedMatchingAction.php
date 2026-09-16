@@ -11,6 +11,7 @@ use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\Service\RunExpenseBankFeedMatchingService;
 
 final class RunExpenseBankFeedMatchingAction
@@ -22,12 +23,15 @@ final class RunExpenseBankFeedMatchingAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response, $args);
         try {
-            $body = JsonRequestBody::optionalObject($request);
-            $country = isset($body['country']) ? (string) $body['country'] : null;
+            $body = JsonRequestBody::optionalObject($request) ?? [];
+            $country = JsonValue::stringOrNull($body, 'country');
 
             return $this->responder->success(
                 $this->service->execute(

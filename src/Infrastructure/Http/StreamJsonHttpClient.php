@@ -125,9 +125,13 @@ final class StreamJsonHttpClient implements JsonHttpClient
         if (function_exists('http_get_last_response_headers')) {
             $http_response_header = http_get_last_response_headers();
         }
-        $responseHeaders = $http_response_header;
-        if (!is_array($responseHeaders)) {
-            $responseHeaders = [];
+        $responseHeaders = [];
+        if (is_array($http_response_header)) {
+            foreach ($http_response_header as $header) {
+                if (is_string($header)) {
+                    $responseHeaders[] = $header;
+                }
+            }
         }
 
         return [

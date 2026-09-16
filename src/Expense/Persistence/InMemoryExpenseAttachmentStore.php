@@ -16,6 +16,9 @@ final class InMemoryExpenseAttachmentStore implements ExpenseAttachmentStore
     /** @var array<string, string> blob path => bytes */
     private array $objects = [];
 
+    /**
+     * @return array<string, mixed>
+     */
     public function describe(ExpenseAttachmentRef $ref): array
     {
         return [

@@ -7,6 +7,7 @@ namespace TriCab\Api\TelDirectory\Infrastructure;
 use JsonException;
 use Throwable;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\TelDirectory\Application\Exception\TelDirectoryUnavailable;
 use TriCab\Core\TelDirectory\Contract\TelDirectoryGraphReader;
 
@@ -85,11 +86,10 @@ final class MicrosoftGraphTelDirectoryReader implements TelDirectoryGraphReader
             if (!is_array($decoded)) {
                 break;
             }
+            $decoded = JsonValue::toObject($decoded);
 
-            foreach (is_array($decoded['value'] ?? null) ? $decoded['value'] : [] as $row) {
-                if (is_array($row)) {
-                    $users[] = $row;
-                }
+            foreach (JsonValue::objectList($decoded, 'value') as $row) {
+                $users[] = $row;
             }
 
             $next = $decoded['@odata.nextLink'] ?? null;

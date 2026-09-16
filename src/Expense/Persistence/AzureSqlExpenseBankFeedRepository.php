@@ -399,7 +399,7 @@ SQL;
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, bool|float|int|string|\TriCab\Api\Infrastructure\Database\SqlBinary|null>
      */
     private function writeParams(ExpenseBankFeedEntry $entry): array
     {

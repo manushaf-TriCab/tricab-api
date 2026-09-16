@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
+use TriCab\Api\Http\Request\Admin\RequestFields;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Expense\Application\Service\ManualMatchExpenseBankFeedService;
@@ -22,6 +23,9 @@ final class ManualMatchExpenseBankFeedAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response);
@@ -31,10 +35,10 @@ final class ManualMatchExpenseBankFeedAction
             return $this->responder->success(
                 $this->service->execute(
                     ExpenseActorFactory::fromRequest($request),
-                    (string) ($args['id'] ?? ''),
-                    (string) ($body['receiptPublicId'] ?? ''),
-                    (string) ($body['expectedBankRowVersion'] ?? ''),
-                    (string) ($body['expectedReceiptRowVersion'] ?? ''),
+                    $args['id'] ?? '',
+                    RequestFields::stringOrDefault($body, 'receiptPublicId', ''),
+                    RequestFields::stringOrDefault($body, 'expectedBankRowVersion', ''),
+                    RequestFields::stringOrDefault($body, 'expectedReceiptRowVersion', ''),
                 ),
             );
         } catch (Throwable $e) {

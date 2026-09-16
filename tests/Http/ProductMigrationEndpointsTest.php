@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Http;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Api\Tests\Payload;
 use TriCab\Core\Product\Migration\Support\MigrationPayload;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;

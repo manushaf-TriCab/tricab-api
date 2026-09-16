@@ -27,7 +27,8 @@ final class GetTechnicalProductCodingAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         unset($response);
-        $mode = (string) $request->getAttribute('mode', '');
+        $modeAttribute = $request->getAttribute('mode', '');
+        $mode = is_string($modeAttribute) ? $modeAttribute : '';
 
         if (strcasecmp($mode, TechnicalAccessoriesVisibility::PRODUCT_CODING_MODE) === 0) {
             $user = $request->getAttribute(AuthenticatedUserAttribute::KEY);

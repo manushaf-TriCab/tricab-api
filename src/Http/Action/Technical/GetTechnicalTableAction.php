@@ -22,7 +22,8 @@ final class GetTechnicalTableAction
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         unset($response);
-        $key = (string) $request->getAttribute('key', '');
+        $keyAttribute = $request->getAttribute('key', '');
+        $key = is_string($keyAttribute) ? $keyAttribute : '';
         try {
             return $this->responder->success(
                 $this->content->table($key),

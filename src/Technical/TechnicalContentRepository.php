@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Technical;
 
 use RuntimeException;
+use TriCab\Api\Support\JsonValue;
 
 /**
  * Version-controlled Technical module content (manifest, articles, lookup tables).
@@ -50,18 +51,18 @@ final class TechnicalContentRepository
             if (!is_array($section)) {
                 continue;
             }
-            $normalized[] = $this->normalizeSection($section);
+            $normalized[] = $this->normalizeSection(JsonValue::toObject($section));
         }
 
         usort(
             $normalized,
-            static fn (array $a, array $b): int => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)),
+            static fn (array $a, array $b): int => (JsonValue::int($a, 'order')) <=> (JsonValue::int($b, 'order')),
         );
 
         return [
-            'version' => (string) ($manifest['version'] ?? '1'),
-            'title' => (string) ($manifest['title'] ?? 'Technical'),
-            'description' => (string) ($manifest['description'] ?? ''),
+            'version' => JsonValue::string($manifest, 'version', '1'),
+            'title' => JsonValue::string($manifest, 'title', 'Technical'),
+            'description' => JsonValue::string($manifest, 'description'),
             'sections' => $normalized,
         ];
     }
@@ -84,14 +85,14 @@ final class TechnicalContentRepository
             if (!is_array($block)) {
                 continue;
             }
-            $resolvedBlocks[] = $this->resolveArticleBlock($block);
+            $resolvedBlocks[] = $this->resolveArticleBlock(JsonValue::toObject($block));
         }
 
         return [
-            'key' => (string) ($article['key'] ?? $key),
-            'slug' => (string) ($article['slug'] ?? $key),
-            'title' => (string) ($article['title'] ?? ''),
-            'intro' => (string) ($article['intro'] ?? ''),
+            'key' => JsonValue::string($article, 'key', $key),
+            'slug' => JsonValue::string($article, 'slug', $key),
+            'title' => JsonValue::string($article, 'title'),
+            'intro' => JsonValue::string($article, 'intro'),
             'blocks' => $resolvedBlocks,
             'source' => is_array($article['source'] ?? null) ? $article['source'] : null,
         ];
@@ -143,7 +144,7 @@ final class TechnicalContentRepository
 
         $normalizedCategory = $category !== null ? trim($category) : '';
         if ($normalizedCategory !== '') {
-            $family = $this->findDocumentFamily($familiesRaw, $normalizedCategory);
+            $family = $this->findDocumentFamily(JsonValue::toObject($familiesRaw), $normalizedCategory);
             if ($family === null) {
                 throw new RuntimeException('Technical document category missing: ' . $normalizedCategory);
             }
@@ -151,12 +152,12 @@ final class TechnicalContentRepository
             $items = isset($family['items']) && is_array($family['items']) ? $family['items'] : [];
 
             $out = [
-                'version' => (string) ($catalog['version'] ?? '1'),
+                'version' => JsonValue::string($catalog, 'version', '1'),
                 'category' => $normalizedCategory,
-                'key' => (string) ($family['_key'] ?? $normalizedCategory),
-                'title' => (string) ($family['title'] ?? ''),
-                'section' => (string) ($family['section'] ?? ''),
-                'documentCategory' => (string) ($family['documentCategory'] ?? $normalizedCategory),
+                'key' => JsonValue::string($family, '_key', $normalizedCategory),
+                'title' => JsonValue::string($family, 'title'),
+                'section' => JsonValue::string($family, 'section'),
+                'documentCategory' => JsonValue::string($family, 'documentCategory', $normalizedCategory),
                 'items' => $items,
             ];
             if (isset($family['inventory']) && is_array($family['inventory'])) {
@@ -168,16 +169,17 @@ final class TechnicalContentRepository
 
         /** @var array<string, array<string, mixed>> $families */
         $families = [];
-        foreach ($familiesRaw as $key => $family) {
-            if (!is_string($key) || !is_array($family)) {
+        foreach ($familiesRaw as $key => $familyRaw) {
+            if (!is_string($key) || !is_array($familyRaw)) {
                 continue;
             }
-            $items = isset($family['items']) && is_array($family['items']) ? $family['items'] : [];
+            $family = JsonValue::toObject($familyRaw);
+            $items = JsonValue::objectList($family, 'items');
             $entry = [
                 'key' => $key,
-                'title' => (string) ($family['title'] ?? ''),
-                'section' => (string) ($family['section'] ?? ''),
-                'documentCategory' => (string) ($family['documentCategory'] ?? $key),
+                'title' => JsonValue::string($family, 'title'),
+                'section' => JsonValue::string($family, 'section'),
+                'documentCategory' => JsonValue::string($family, 'documentCategory', $key),
                 'itemCount' => count($items),
                 'items' => $items,
             ];
@@ -188,11 +190,11 @@ final class TechnicalContentRepository
         }
 
         return [
-            'version' => (string) ($catalog['version'] ?? '1'),
-            'architecture' => (string) ($catalog['architecture'] ?? ''),
+            'version' => JsonValue::string($catalog, 'version', '1'),
+            'architecture' => JsonValue::string($catalog, 'architecture'),
             'families' => $families,
             'totals' => is_array($catalog['totals'] ?? null) ? $catalog['totals'] : [],
-            'dryRunPolicy' => (string) ($catalog['dryRunPolicy'] ?? ''),
+            'dryRunPolicy' => JsonValue::string($catalog, 'dryRunPolicy'),
         ];
     }
 
@@ -202,21 +204,19 @@ final class TechnicalContentRepository
      */
     private function findDocumentFamily(array $families, string $category): ?array
     {
-        if (isset($families[$category]) && is_array($families[$category])) {
-            $family = $families[$category];
+        if (is_array($families[$category] ?? null)) {
+            $family = JsonValue::toObject($families[$category]);
             $family['_key'] = $category;
 
             return $family;
         }
 
-        foreach ($families as $key => $family) {
-            if (!is_string($key) || !is_array($family)) {
+        foreach ($families as $key => $familyRaw) {
+            if (!is_array($familyRaw)) {
                 continue;
             }
-            $docCategory = isset($family['documentCategory']) && is_string($family['documentCategory'])
-                ? $family['documentCategory']
-                : '';
-            if ($docCategory === $category) {
+            $family = JsonValue::toObject($familyRaw);
+            if (JsonValue::string($family, 'documentCategory') === $category) {
                 $family['_key'] = $key;
 
                 return $family;
@@ -244,20 +244,20 @@ final class TechnicalContentRepository
                 if (($item['id'] ?? '') === 'current-ratings' || ($item['enabled'] ?? true) === false) {
                     continue;
                 }
-                $items[] = $this->normalizeItem($item);
+                $items[] = $this->normalizeItem(JsonValue::toObject($item));
             }
         }
 
         usort(
             $items,
-            static fn (array $a, array $b): int => ((int) ($a['order'] ?? 0)) <=> ((int) ($b['order'] ?? 0)),
+            static fn (array $a, array $b): int => (JsonValue::int($a, 'order')) <=> (JsonValue::int($b, 'order')),
         );
 
         $out = [
-            'id' => (string) ($section['id'] ?? ''),
-            'slug' => (string) ($section['slug'] ?? $section['id'] ?? ''),
-            'title' => (string) ($section['title'] ?? ''),
-            'order' => (int) ($section['order'] ?? 0),
+            'id' => JsonValue::string($section, 'id'),
+            'slug' => JsonValue::string($section, 'slug', JsonValue::string($section, 'id')),
+            'title' => JsonValue::string($section, 'title'),
+            'order' => JsonValue::int($section, 'order'),
             'items' => $items,
         ];
 
@@ -278,15 +278,15 @@ final class TechnicalContentRepository
     private function normalizeItem(array $item): array
     {
         $out = [
-            'id' => (string) ($item['id'] ?? ''),
-            'slug' => (string) ($item['slug'] ?? $item['id'] ?? ''),
-            'title' => (string) ($item['title'] ?? ''),
-            'description' => (string) ($item['description'] ?? ''),
-            'type' => (string) ($item['type'] ?? 'ARTICLE'),
-            'iconKey' => (string) ($item['iconKey'] ?? 'Wrench'),
-            'order' => (int) ($item['order'] ?? 0),
-            'enabled' => (bool) ($item['enabled'] ?? true),
-            'status' => (string) ($item['status'] ?? 'COMING_SOON'),
+            'id' => JsonValue::string($item, 'id'),
+            'slug' => JsonValue::string($item, 'slug', JsonValue::string($item, 'id')),
+            'title' => JsonValue::string($item, 'title'),
+            'description' => JsonValue::string($item, 'description'),
+            'type' => JsonValue::string($item, 'type', 'ARTICLE'),
+            'iconKey' => JsonValue::string($item, 'iconKey', 'Wrench'),
+            'order' => JsonValue::int($item, 'order'),
+            'enabled' => JsonValue::bool($item, 'enabled', true),
+            'status' => JsonValue::string($item, 'status', 'COMING_SOON'),
             'keywords' => [],
         ];
 
@@ -315,19 +315,20 @@ final class TechnicalContentRepository
      */
     private function resolveArticleBlock(array $block): array
     {
-        $type = (string) ($block['type'] ?? '');
+        $type = JsonValue::string($block, 'type');
         if ($type === 'steps' && isset($block['items']) && is_array($block['items'])) {
             $items = [];
             foreach ($block['items'] as $step) {
                 if (!is_array($step)) {
                     continue;
                 }
+                $stepData = JsonValue::toObject($step);
                 $row = [
-                    'number' => (int) ($step['number'] ?? 0),
-                    'body' => (string) ($step['body'] ?? ''),
+                    'number' => JsonValue::int($stepData, 'number'),
+                    'body' => JsonValue::string($stepData, 'body'),
                 ];
-                if (isset($step['image']) && is_array($step['image'])) {
-                    $resolved = $this->resolveMediaRef($step['image']);
+                if (is_array($stepData['image'] ?? null)) {
+                    $resolved = $this->resolveMediaRef(JsonValue::toObject($stepData['image']));
                     if ($resolved !== null) {
                         $row['image'] = $resolved;
                     }
@@ -418,6 +419,6 @@ final class TechnicalContentRepository
             throw new RuntimeException('Technical content file must be a JSON object: ' . $path);
         }
 
-        return $decoded;
+        return JsonValue::toObject($decoded);
     }
 }

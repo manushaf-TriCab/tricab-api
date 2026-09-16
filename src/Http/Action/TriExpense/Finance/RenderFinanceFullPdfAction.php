@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
+use TriCab\Api\Http\Request\Admin\QueryParams;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\Service\RenderFinanceFullPdfService;
 
 final class RenderFinanceFullPdfAction
@@ -19,12 +21,15 @@ final class RenderFinanceFullPdfAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($args);
         try {
-            $params = $request->getQueryParams();
-            $country = isset($params['country']) ? (string) $params['country'] : null;
+            $params = QueryParams::normalize($request->getQueryParams());
+            $country = JsonValue::stringOrNull($params, 'country');
 
             $pdf = $this->service->execute(
                 ExpenseActorFactory::fromRequest($request),

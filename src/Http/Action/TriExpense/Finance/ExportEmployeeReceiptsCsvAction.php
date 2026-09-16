@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
+use TriCab\Api\Http\Request\Admin\QueryParams;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\Service\ExportEmployeeReceiptsCsvService;
 
 final class ExportEmployeeReceiptsCsvAction
@@ -19,14 +21,17 @@ final class ExportEmployeeReceiptsCsvAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($args);
         try {
-            $params = $request->getQueryParams();
+            $params = QueryParams::normalize($request->getQueryParams());
             $csv = $this->service->execute(
                 ExpenseActorFactory::fromRequest($request),
-                (int) ($params['ownerUserId'] ?? 0),
+                JsonValue::int($params, 'ownerUserId'),
             );
 
             $response->getBody()->write($csv);

@@ -8,6 +8,7 @@ use JsonException;
 use Throwable;
 use TriCab\Api\Expense\Observability\ExpenseEventLogger;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\DTO\ExpenseOcrSuggestion;
 use TriCab\Core\Expense\Application\Exception\ExpenseOcrFailed;
 use TriCab\Core\Expense\Contract\ExpenseCaptureAssistPort;
@@ -75,7 +76,7 @@ final class AzureExpenseCaptureAssistPort implements ExpenseCaptureAssistPort
             }
 
             $payload = self::mapAnalysis($analysis, $model);
-            if (($payload['fields'] ?? []) === []) {
+            if ($payload['fields'] === []) {
                 continue;
             }
 
@@ -83,7 +84,7 @@ final class AzureExpenseCaptureAssistPort implements ExpenseCaptureAssistPort
 
             $this->logger->log('expense.ocr.completed', [
                 'model' => $model,
-                'fieldCount' => count($payload['fields']),
+                'fieldCount' => count(JsonValue::object($payload, 'fields')),
             ]);
 
             return $payload;
@@ -178,7 +179,7 @@ final class AzureExpenseCaptureAssistPort implements ExpenseCaptureAssistPort
             if ($status === 'succeeded') {
                 $result = $decoded['analyzeResult'] ?? null;
 
-                return is_array($result) ? $result : [];
+                return is_array($result) ? JsonValue::toObject($result) : [];
             }
             if ($status === 'failed') {
                 throw ExpenseOcrFailed::extraction();
@@ -214,15 +215,16 @@ final class AzureExpenseCaptureAssistPort implements ExpenseCaptureAssistPort
                 if (!is_array($raw)) {
                     continue;
                 }
+                $field = JsonValue::toObject($raw);
                 $value = $target === 'currency'
-                    ? self::currencyOf($raw)
-                    : self::scalarOf($raw);
+                    ? self::currencyOf($field)
+                    : self::scalarOf($field);
                 if ($value === null) {
                     continue;
                 }
                 $fields[$target] = [
                     'value' => $value,
-                    'confidence' => self::confidenceOf($raw),
+                    'confidence' => self::confidenceOf($field),
                     'source' => ExpenseOcrSuggestion::SOURCE_DOCUMENT_INTELLIGENCE,
                 ];
                 break;
@@ -386,8 +388,8 @@ final class AzureExpenseCaptureAssistPort implements ExpenseCaptureAssistPort
         }
 
         $decoded = self::decode($response['body']);
-        $choices = is_array($decoded['choices'] ?? null) ? $decoded['choices'] : [];
-        $message = is_array($choices[0]['message'] ?? null) ? $choices[0]['message'] : [];
+        $choices = JsonValue::objectList($decoded, 'choices');
+        $message = JsonValue::object($choices[0] ?? [], 'message');
         $content = $message['content'] ?? null;
 
         return is_string($content) && trim($content) !== '' ? trim($content) : null;
@@ -405,7 +407,7 @@ final class AzureExpenseCaptureAssistPort implements ExpenseCaptureAssistPort
             return [];
         }
 
-        return is_array($decoded) ? $decoded : [];
+        return is_array($decoded) ? JsonValue::toObject($decoded) : [];
     }
 
     /**

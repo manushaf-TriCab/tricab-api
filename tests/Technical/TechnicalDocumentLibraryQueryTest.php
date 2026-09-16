@@ -12,6 +12,7 @@ use TriCab\Api\Technical\Document\TechnicalDocumentPathBuilder;
 use TriCab\Api\Technical\Document\TechnicalDocumentRecord;
 use TriCab\Api\Technical\TechnicalAccessoriesVisibility;
 use TriCab\Api\Technical\TechnicalContentRepository;
+use TriCab\Api\Tests\Payload;
 
 final class TechnicalDocumentLibraryQueryTest extends TestCase
 {
@@ -59,13 +60,13 @@ final class TechnicalDocumentLibraryQueryTest extends TestCase
 
         $industrial = $query->execute(TechnicalDocumentCategoryCodes::INDUSTRIAL_CERTS);
         self::assertSame('technical-document-library', $industrial['itemSource']);
-        self::assertCount(1, $industrial['items']);
-        self::assertSame('Industrial shared certificate', $industrial['items'][0]['title']);
-        self::assertSame('certificate', $industrial['items'][0]['documentTypeCode']);
+        self::assertCount(1, Payload::list($industrial['items']));
+        self::assertSame('Industrial shared certificate', Payload::obj(Payload::list($industrial['items'])[0])['title']);
+        self::assertSame('certificate', Payload::obj(Payload::list($industrial['items'])[0])['documentTypeCode']);
 
         $sbo = $query->execute(TechnicalDocumentCategoryCodes::SBO_CERTS);
         self::assertSame('technical-document-library', $sbo['itemSource']);
-        self::assertSame('SBO shared certificate', $sbo['items'][0]['title']);
+        self::assertSame('SBO shared certificate', Payload::obj(Payload::list($sbo['items'])[0])['title']);
     }
 
     public function test_query_returns_product_associated_and_multi_product_shared(): void
@@ -92,10 +93,10 @@ final class TechnicalDocumentLibraryQueryTest extends TestCase
             sourceLegacyId: '4338',
         ));
 
-        $items = $this->query($library)->execute(TechnicalDocumentCategoryCodes::SBO_CERTS)['items'];
+        $items = Payload::list($this->query($library)->execute(TechnicalDocumentCategoryCodes::SBO_CERTS)['items']);
         self::assertCount(2, $items);
-        self::assertSame(['product-public-1'], $items[0]['productPublicIds']);
-        self::assertSame(['product-public-1', 'product-public-2'], $items[1]['productPublicIds']);
+        self::assertSame(['product-public-1'], Payload::obj($items[0])['productPublicIds']);
+        self::assertSame(['product-public-1', 'product-public-2'], Payload::obj($items[1])['productPublicIds']);
     }
 
     public function test_query_returns_accessory_warranty_and_installation_guide(): void
@@ -121,9 +122,9 @@ final class TechnicalDocumentLibraryQueryTest extends TestCase
 
         $query = $this->query($library);
         $warranty = $query->execute(TechnicalDocumentCategoryCodes::ACCESSORY_WARRANTY);
-        self::assertSame('Accessory warranty', $warranty['items'][0]['title']);
+        self::assertSame('Accessory warranty', Payload::obj(Payload::list($warranty['items'])[0])['title']);
         $guides = $query->execute(TechnicalDocumentCategoryCodes::INSTALLATION_GUIDES);
-        self::assertSame('installation-guide', $guides['items'][0]['documentTypeCode']);
+        self::assertSame('installation-guide', Payload::obj(Payload::list($guides['items'])[0])['documentTypeCode']);
     }
 
     public function test_empty_library_preserves_catalog_json_items(): void
@@ -132,8 +133,8 @@ final class TechnicalDocumentLibraryQueryTest extends TestCase
         $docs = $query->execute('bep-pvc-disposal');
 
         self::assertSame('catalog-json', $docs['itemSource']);
-        self::assertCount(1, $docs['items']);
-        self::assertSame('BLOCKED', $docs['items'][0]['migrationStatus']);
+        self::assertCount(1, Payload::list($docs['items']));
+        self::assertSame('BLOCKED', Payload::obj(Payload::list($docs['items'])[0])['migrationStatus']);
     }
 
     public function test_accessory_category_codes_remain_server_gated(): void

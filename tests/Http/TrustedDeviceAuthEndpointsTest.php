@@ -9,6 +9,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
 use TriCab\Api\Identity\Email\DevelopmentGuestOtpEmailSender;
+use TriCab\Api\Tests\Payload;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Identity\Contract\GuestOtpEmailSender;
 use TriCab\Core\Identity\Contract\UserProvisioningRepository;
@@ -72,7 +73,7 @@ final class TrustedDeviceAuthEndpointsTest extends TestCase
 
         $me = $app->handle(
             TestAppFactory::request('GET', '/api/v1/me')
-                ->withHeader('Authorization', 'Bearer ' . $sessionData['accessToken']),
+                ->withHeader('Authorization', 'Bearer ' . Payload::str($sessionData['accessToken'])),
         );
         self::assertSame(200, $me->getStatusCode());
 
@@ -89,7 +90,7 @@ final class TrustedDeviceAuthEndpointsTest extends TestCase
         $revoke = $app->handle(
             $this->jsonRequest('DELETE', '/api/v1/auth/devices/current', [
                 'publicId' => $device['publicId'],
-            ])->withHeader('Authorization', 'Bearer ' . $sessionData['accessToken']),
+            ])->withHeader('Authorization', 'Bearer ' . Payload::str($sessionData['accessToken'])),
         );
         self::assertSame(200, $revoke->getStatusCode(), (string) $revoke->getBody());
 
@@ -101,6 +102,9 @@ final class TrustedDeviceAuthEndpointsTest extends TestCase
         self::assertSame(401, $afterRevoke->getStatusCode());
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function signInWithOtp(App $app, string $email): string
     {
         [$challengeId, $otp] = $this->requestOtp($app, $email);
@@ -113,11 +117,12 @@ final class TrustedDeviceAuthEndpointsTest extends TestCase
         self::assertSame(200, $verify->getStatusCode());
         self::assertIsArray($payload['data']);
 
-        return (string) $payload['data']['accessToken'];
+        return Payload::str(Payload::obj($payload['data'])['accessToken']);
     }
 
     /**
      * @return array{0: string, 1: string}
+     * @param App<ContainerInterface> $app
      */
     private function requestOtp(App $app, string $email): array
     {
@@ -143,6 +148,9 @@ final class TrustedDeviceAuthEndpointsTest extends TestCase
         return [$data['challengeId'], $last['otpCode']];
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function seedEligiblePortalUser(App $app, string $email): void
     {
         $container = $app->getContainer();

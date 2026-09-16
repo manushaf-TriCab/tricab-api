@@ -12,6 +12,7 @@ use TriCab\Api\Technical\Document\ResolveTechnicalDocumentsQuery;
 use TriCab\Api\Technical\Document\TechnicalDocumentCategoryCodes;
 use TriCab\Api\Technical\Persistence\AzureSqlTechnicalDocumentLibraryRepository;
 use TriCab\Api\Technical\TechnicalContentRepository;
+use TriCab\Api\Tests\Payload;
 use TriCab\Api\Tests\TestAppFactory;
 
 /**
@@ -28,7 +29,9 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
         if (!$settings->usesAzureSqlUserRepository() || $settings->appEnv === 'production') {
             self::markTestSkipped('Azure SQL non-production repository required.');
         }
-        $this->connection = ContainerFactory::create($settings)->get(SqlConnection::class);
+        $connection = ContainerFactory::create($settings)->get(SqlConnection::class);
+        self::assertInstanceOf(SqlConnection::class, $connection);
+        $this->connection = $connection;
     }
 
     public function test_list_by_category_returns_shared_style_product_and_multi_links_in_order(): void
@@ -172,7 +175,7 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
             );
             $payload = $query->execute(TechnicalDocumentCategoryCodes::INDUSTRIAL_CERTS);
             self::assertSame('technical-document-library', $payload['itemSource']);
-            $titles = array_map(static fn (array $item): string => (string) ($item['title'] ?? ''), $payload['items']);
+            $titles = array_map(static fn (array $item): string => Payload::str($item['title'] ?? ''), Payload::objList($payload['items']));
             self::assertContains('AAA Shared Industrial', $titles);
         } finally {
             if ($db->inTransaction()) {
@@ -194,8 +197,8 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
         );
         $docs = $query->execute('bep-pvc-disposal');
         self::assertSame('catalog-json', $docs['itemSource']);
-        self::assertCount(1, $docs['items']);
-        self::assertSame('BLOCKED', $docs['items'][0]['migrationStatus']);
+        self::assertCount(1, Payload::list($docs['items']));
+        self::assertSame('BLOCKED', Payload::obj(Payload::list($docs['items'])[0])['migrationStatus']);
     }
 
     public function test_http_documents_endpoint_uses_catalog_fallback_when_library_empty(): void
@@ -205,14 +208,14 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
         $payload = TestAppFactory::json($response);
         self::assertSame(200, $response->getStatusCode());
         self::assertTrue($payload['success']);
-        self::assertSame('catalog-json', $payload['data']['itemSource']);
-        self::assertCount(1, $payload['data']['items']);
+        self::assertSame('catalog-json', Payload::obj($payload['data'])['itemSource']);
+        self::assertCount(1, Payload::list(Payload::obj($payload['data'])['items']));
     }
 
     public function test_fixture_rollback_does_not_leave_orphan_rows(): void
     {
         $db = $this->requireConnection();
-        $before = (int) $db->fetchAll('SELECT COUNT(*) AS c FROM [technical].[Documents]')[0]['c'];
+        $before = Payload::int(Payload::obj($db->fetchAll('SELECT COUNT(*) AS c FROM [technical].[Documents]')[0])['c']);
         self::assertGreaterThanOrEqual(204, $before);
 
         $db->beginTransaction();
@@ -228,7 +231,7 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
                 'legacyId' => 'legacy-orphan-probe',
             ]);
             $this->linkCategory($db, $docId, $catId);
-            $mid = (int) $db->fetchAll('SELECT COUNT(*) AS c FROM [technical].[Documents]')[0]['c'];
+            $mid = Payload::int(Payload::obj($db->fetchAll('SELECT COUNT(*) AS c FROM [technical].[Documents]')[0])['c']);
             self::assertSame($before + 1, $mid);
         } finally {
             if ($db->inTransaction()) {
@@ -236,7 +239,7 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
             }
         }
 
-        $after = (int) $db->fetchAll('SELECT COUNT(*) AS c FROM [technical].[Documents]')[0]['c'];
+        $after = Payload::int(Payload::obj($db->fetchAll('SELECT COUNT(*) AS c FROM [technical].[Documents]')[0])['c']);
         self::assertSame($before, $after);
         self::assertNull(
             (new AzureSqlTechnicalDocumentLibraryRepository($db))
@@ -259,7 +262,7 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
         );
         self::assertNotSame([], $rows, 'Missing DocumentTypeCode ' . $code);
 
-        return (int) $rows[0]['DocumentTypeId'];
+        return Payload::int(Payload::obj($rows[0])['DocumentTypeId']);
     }
 
     private function categoryId(SqlConnection $db, string $code): int
@@ -270,7 +273,7 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
         );
         self::assertNotSame([], $rows, 'Missing category ' . $code);
 
-        return (int) $rows[0]['DocumentCategoryId'];
+        return Payload::int(Payload::obj($rows[0])['DocumentCategoryId']);
     }
 
     /**
@@ -282,8 +285,9 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
             'SELECT TOP 1 [ProductId], CONVERT(NVARCHAR(36), [PublicId]) AS [PublicId] FROM [product].[Products] WHERE [DeletedAtUtc] IS NULL ORDER BY [ProductId]',
         );
         self::assertNotSame([], $rows);
+        $row = Payload::obj($rows[0]);
 
-        return $rows[0];
+        return ['ProductId' => Payload::int($row['ProductId']), 'PublicId' => Payload::str($row['PublicId'])];
     }
 
     /**
@@ -296,8 +300,9 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
             [':id' => $excludeId],
         );
         self::assertNotSame([], $rows);
+        $row = Payload::obj($rows[0]);
 
-        return $rows[0];
+        return ['ProductId' => Payload::int($row['ProductId']), 'PublicId' => Payload::str($row['PublicId'])];
     }
 
     /**
@@ -309,8 +314,9 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
             'SELECT TOP 1 [ProductStyleId], CONVERT(NVARCHAR(36), [PublicId]) AS [PublicId] FROM [product].[ProductStyles] WHERE [DeletedAtUtc] IS NULL ORDER BY [ProductStyleId]',
         );
         self::assertNotSame([], $rows);
+        $row = Payload::obj($rows[0]);
 
-        return $rows[0];
+        return ['ProductStyleId' => Payload::int($row['ProductStyleId']), 'PublicId' => Payload::str($row['PublicId'])];
     }
 
     /**
@@ -323,8 +329,9 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
             [':id' => $excludeId],
         );
         self::assertNotSame([], $rows);
+        $row = Payload::obj($rows[0]);
 
-        return $rows[0];
+        return ['ProductStyleId' => Payload::int($row['ProductStyleId']), 'PublicId' => Payload::str($row['PublicId'])];
     }
 
     /**
@@ -366,7 +373,7 @@ SQL,
             ],
         );
 
-        return (int) $rows[0]['DocumentId'];
+        return Payload::int(Payload::obj($rows[0])['DocumentId']);
     }
 
     private function linkCategory(SqlConnection $db, int $documentId, int $categoryId): void

@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\Service\InitiateExpenseAttachmentService;
 
 final class InitiateExpenseAttachmentAction
@@ -24,6 +25,9 @@ final class InitiateExpenseAttachmentAction
     ) {
     }
 
+    /**
+     * @param array<string, string> $args
+     */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
     {
         unset($response);
@@ -31,10 +35,10 @@ final class InitiateExpenseAttachmentAction
             $body = JsonRequestBody::requireObject($request);
             $ticket = $this->service->execute(
                 ExpenseActorFactory::fromRequest($request),
-                (string) ($args['id'] ?? ''),
-                isset($body['fileName']) ? (string) $body['fileName'] : '',
-                isset($body['contentType']) ? (string) $body['contentType'] : '',
-                isset($body['byteSize']) ? (int) $body['byteSize'] : (isset($body['declaredBytes']) ? (int) $body['declaredBytes'] : 0),
+                $args['id'] ?? '',
+                JsonValue::string($body, 'fileName'),
+                JsonValue::string($body, 'contentType'),
+                JsonValue::intOrNull($body, 'byteSize') ?? JsonValue::int($body, 'declaredBytes', 0),
                 $this->settings->blobUploadSasTtlSeconds,
             );
 
