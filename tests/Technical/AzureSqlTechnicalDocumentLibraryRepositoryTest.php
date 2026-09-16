@@ -173,8 +173,7 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
             $query = new ResolveTechnicalDocumentsQuery(
                 TechnicalContentRepository::fromProjectRoot(dirname(__DIR__, 2)),
                 $repo,
-                ContainerFactory::create(Environment::settings(dirname(__DIR__, 2)))
-                    ->get(TechnicalDocumentClientUrlResolver::class),
+                $this->technicalDocumentClientUrlResolver(),
             );
             $payload = $query->execute(TechnicalDocumentCategoryCodes::INDUSTRIAL_CERTS);
             self::assertSame('technical-document-library', $payload['itemSource']);
@@ -197,8 +196,7 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
         $query = new ResolveTechnicalDocumentsQuery(
             TechnicalContentRepository::fromProjectRoot(dirname(__DIR__, 2)),
             $repo,
-            ContainerFactory::create(Environment::settings(dirname(__DIR__, 2)))
-                ->get(TechnicalDocumentClientUrlResolver::class),
+            $this->technicalDocumentClientUrlResolver(),
         );
         $docs = $query->execute('bep-pvc-disposal');
         self::assertSame('catalog-json', $docs['itemSource']);
@@ -257,6 +255,19 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
         self::assertNotNull($this->connection);
 
         return $this->connection;
+    }
+
+    /**
+     * ContainerInterface::get() is typed mixed — narrow before construction
+     * (same pattern as SqlConnection in setUp).
+     */
+    private function technicalDocumentClientUrlResolver(): TechnicalDocumentClientUrlResolver
+    {
+        $clientUrls = ContainerFactory::create(Environment::settings(dirname(__DIR__, 2)))
+            ->get(TechnicalDocumentClientUrlResolver::class);
+        self::assertInstanceOf(TechnicalDocumentClientUrlResolver::class, $clientUrls);
+
+        return $clientUrls;
     }
 
     private function documentTypeId(SqlConnection $db, string $code): int
