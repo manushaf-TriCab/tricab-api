@@ -170,7 +170,19 @@ final class TechnicalParityAndIntegrityTest extends TestCase
             self::assertSame('AVAILABLE', Payload::obj($byId[$id])['status'], $id);
         }
 
-        self::assertSame('COMING_SOON', Payload::obj($byId['certs'])['status']);
+        // Phase 4H migrated document libraries are AVAILABLE in the manifest.
+        foreach ([
+            'warranty-certificates',
+            'certs',
+            'sbo-certs',
+            'acc-warranty-certificates',
+            'installation-guides',
+        ] as $id) {
+            self::assertSame('AVAILABLE', Payload::obj($byId[$id])['status'], $id);
+        }
+        foreach (['bep-pvc-disposal', 'bep-pvc-certificate', 'acc-certs'] as $id) {
+            self::assertSame('COMING_SOON', Payload::obj($byId[$id])['status'], $id);
+        }
         self::assertSame('industrial-standards', Payload::obj($byId['standards'])['contentKey']);
         self::assertSame('impedance', Payload::obj($byId['impedance'])['tableKey']);
     }

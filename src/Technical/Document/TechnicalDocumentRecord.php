@@ -21,6 +21,7 @@ final class TechnicalDocumentRecord
         public readonly string $documentTypeCode,
         public readonly array $categoryCodes,
         public readonly ?string $issuer = null,
+        public readonly ?string $storageContainer = null,
         public readonly ?string $storagePath = null,
         public readonly ?string $publicUrl = null,
         public readonly ?string $checksumSha256 = null,
@@ -34,9 +35,12 @@ final class TechnicalDocumentRecord
     /**
      * API item shape compatible with existing TechnicalDocumentBrowser clients.
      *
+     * Client-accessible `url` is resolved at response time (short-lived SAS) by
+     * ResolveTechnicalDocumentsQuery — never from persisted PublicUrl alone.
+     *
      * @return array<string, mixed>
      */
-    public function toCatalogItem(string $primaryCategory): array
+    public function toCatalogItem(string $primaryCategory, ?string $clientUrl = null): array
     {
         $item = [
             'id' => $this->publicId,
@@ -50,8 +54,8 @@ final class TechnicalDocumentRecord
         if ($this->issuer !== null && $this->issuer !== '') {
             $item['issuer'] = $this->issuer;
         }
-        if ($this->publicUrl !== null && $this->publicUrl !== '') {
-            $item['url'] = $this->publicUrl;
+        if ($clientUrl !== null && $clientUrl !== '') {
+            $item['url'] = $clientUrl;
         }
         if ($this->storagePath !== null && $this->storagePath !== '') {
             $item['storagePath'] = $this->storagePath;

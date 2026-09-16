@@ -9,6 +9,7 @@ use TriCab\Api\Bootstrap\ContainerFactory;
 use TriCab\Api\Bootstrap\Environment;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Api\Technical\Document\ResolveTechnicalDocumentsQuery;
+use TriCab\Api\Technical\Document\TechnicalDocumentClientUrlResolver;
 use TriCab\Api\Technical\Document\TechnicalDocumentCategoryCodes;
 use TriCab\Api\Technical\Persistence\AzureSqlTechnicalDocumentLibraryRepository;
 use TriCab\Api\Technical\TechnicalContentRepository;
@@ -172,6 +173,8 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
             $query = new ResolveTechnicalDocumentsQuery(
                 TechnicalContentRepository::fromProjectRoot(dirname(__DIR__, 2)),
                 $repo,
+                ContainerFactory::create(Environment::settings(dirname(__DIR__, 2)))
+                    ->get(TechnicalDocumentClientUrlResolver::class),
             );
             $payload = $query->execute(TechnicalDocumentCategoryCodes::INDUSTRIAL_CERTS);
             self::assertSame('technical-document-library', $payload['itemSource']);
@@ -194,6 +197,8 @@ final class AzureSqlTechnicalDocumentLibraryRepositoryTest extends TestCase
         $query = new ResolveTechnicalDocumentsQuery(
             TechnicalContentRepository::fromProjectRoot(dirname(__DIR__, 2)),
             $repo,
+            ContainerFactory::create(Environment::settings(dirname(__DIR__, 2)))
+                ->get(TechnicalDocumentClientUrlResolver::class),
         );
         $docs = $query->execute('bep-pvc-disposal');
         self::assertSame('catalog-json', $docs['itemSource']);

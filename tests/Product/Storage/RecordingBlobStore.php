@@ -16,6 +16,7 @@ final class RecordingBlobStore implements ProductBlobStore
     public ?int $lastTtl = null;
     public ?string $lastContainer = null;
     public ?string $lastPath = null;
+    public bool $failNextIssueReadDownload = false;
 
     public function issueWriteUpload(
         string $container,
@@ -33,6 +34,11 @@ final class RecordingBlobStore implements ProductBlobStore
         string $blobPath,
         int $expiresInSeconds,
     ): ProductBlobWriteTicket {
+        if ($this->failNextIssueReadDownload) {
+            $this->failNextIssueReadDownload = false;
+            throw new \RuntimeException('simulated read SAS failure');
+        }
+
         $this->lastContainer = $container;
         $this->lastPath = $blobPath;
         $this->lastTtl = $expiresInSeconds;

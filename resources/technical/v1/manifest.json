@@ -122,7 +122,7 @@
           "iconKey": "FileBadge",
           "order": 7,
           "enabled": true,
-          "status": "COMING_SOON",
+          "status": "AVAILABLE",
           "documentCategory": "warranty",
           "keywords": [
             "warranty",
@@ -315,7 +315,7 @@
           "iconKey": "FileBadge",
           "order": 9,
           "enabled": true,
-          "status": "COMING_SOON",
+          "status": "AVAILABLE",
           "documentCategory": "industrial-certs",
           "keywords": [
             "certificate",
@@ -471,7 +471,7 @@
           "iconKey": "BadgeCheck",
           "order": 9,
           "enabled": true,
-          "status": "COMING_SOON",
+          "status": "AVAILABLE",
           "documentCategory": "sbo-certs",
           "keywords": [
             "certificate",
@@ -531,7 +531,7 @@
           "iconKey": "FileBadge",
           "order": 3,
           "enabled": true,
-          "status": "COMING_SOON",
+          "status": "AVAILABLE",
           "documentCategory": "accessory-warranty",
           "keywords": [
             "warranty",
@@ -548,7 +548,7 @@
           "iconKey": "Wrench",
           "order": 4,
           "enabled": true,
-          "status": "COMING_SOON",
+          "status": "AVAILABLE",
           "documentCategory": "installation-guides",
           "keywords": [
             "installation",

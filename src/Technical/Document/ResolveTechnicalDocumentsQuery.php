@@ -13,12 +13,16 @@ use TriCab\Api\Technical\TechnicalContentRepository;
  * catalog.json supplies family / IA configuration.
  * technical.Documents (via repository) supplies authoritative document records
  * when present. Empty library ⇒ catalog inventory items remain (pre-migration).
+ *
+ * Library item `url` is a short-lived client-accessible READ URL resolved at
+ * response time from StorageContainer + StoragePath (never persisted SAS).
  */
 final class ResolveTechnicalDocumentsQuery
 {
     public function __construct(
         private readonly TechnicalContentRepository $content,
         private readonly TechnicalDocumentLibraryRepository $library,
+        private readonly TechnicalDocumentClientUrlResolver $clientUrls,
     ) {
     }
 
@@ -78,7 +82,7 @@ final class ResolveTechnicalDocumentsQuery
         $records = $this->library->listActiveByCategory($categoryCode);
         $items = [];
         foreach ($records as $record) {
-            $items[] = $record->toCatalogItem($categoryCode);
+            $items[] = $record->toCatalogItem($categoryCode, $this->clientUrls->resolve($record));
         }
 
         return $items;

@@ -106,6 +106,7 @@ use TriCab\Api\Technical\Document\TechnicalDocumentLibraryRepository;
 use TriCab\Api\Technical\Document\EmptyTechnicalDocumentLibraryRepository;
 use TriCab\Api\Technical\Document\InMemoryTechnicalDocumentLibraryRepository;
 use TriCab\Api\Technical\Document\ResolveTechnicalDocumentsQuery;
+use TriCab\Api\Technical\Document\TechnicalDocumentClientUrlResolver;
 use TriCab\Api\Technical\Persistence\AzureSqlTechnicalDocumentLibraryRepository;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardAction;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardProductActivityAction;
@@ -1096,6 +1097,7 @@ final class ContainerFactory
             TechnicalContentRepository::class => static function (): TechnicalContentRepository {
                 return TechnicalContentRepository::fromProjectRoot(dirname(__DIR__, 2));
             },
+            TechnicalDocumentClientUrlResolver::class => \DI\autowire(TechnicalDocumentClientUrlResolver::class),
             ResolveTechnicalDocumentsQuery::class => \DI\autowire(ResolveTechnicalDocumentsQuery::class),
             ListTechnicalSectionsAction::class => \DI\autowire(ListTechnicalSectionsAction::class),
             GetTechnicalArticleAction::class => \DI\autowire(GetTechnicalArticleAction::class),

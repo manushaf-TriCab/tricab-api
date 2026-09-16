@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Technical;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Api\Config\Settings;
+use TriCab\Api\Product\Storage\AzureProductBlobStore;
 use TriCab\Api\Technical\Document\InMemoryTechnicalDocumentLibraryRepository;
 use TriCab\Api\Technical\Document\ResolveTechnicalDocumentsQuery;
 use TriCab\Api\Technical\Document\TechnicalDocumentCategoryCodes;
+use TriCab\Api\Technical\Document\TechnicalDocumentClientUrlResolver;
 use TriCab\Api\Technical\Document\TechnicalDocumentPathBuilder;
 use TriCab\Api\Technical\Document\TechnicalDocumentRecord;
 use TriCab\Api\Technical\TechnicalAccessoriesVisibility;
 use TriCab\Api\Technical\TechnicalContentRepository;
 use TriCab\Api\Tests\Payload;
+use TriCab\Api\Tests\Product\Storage\RecordingBlobStore;
 
 final class TechnicalDocumentLibraryQueryTest extends TestCase
 {
@@ -67,6 +71,68 @@ final class TechnicalDocumentLibraryQueryTest extends TestCase
         $sbo = $query->execute(TechnicalDocumentCategoryCodes::SBO_CERTS);
         self::assertSame('technical-document-library', $sbo['itemSource']);
         self::assertSame('SBO shared certificate', Payload::obj(Payload::list($sbo['items'])[0])['title']);
+    }
+
+    public function test_library_document_url_is_signed_read_only_and_not_persisted_public_url(): void
+    {
+        $canonical = 'https://tricabv2.blob.core.windows.net/products/products/technical/documents/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/TriCab%20Warranty.pdf';
+        $path = 'products/technical/documents/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/TriCab Warranty.pdf';
+        $library = new InMemoryTechnicalDocumentLibraryRepository();
+        $library->seed(new TechnicalDocumentRecord(
+            publicId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            title: 'Warranty with spaces',
+            originalFileName: 'TriCab Warranty.pdf',
+            documentTypeCode: 'certificate',
+            categoryCodes: [TechnicalDocumentCategoryCodes::WARRANTY],
+            storageContainer: 'products',
+            storagePath: $path,
+            publicUrl: $canonical,
+        ));
+
+        $query = $this->query($library, $this->azureClientUrls());
+        $item = Payload::obj(Payload::list($query->execute(TechnicalDocumentCategoryCodes::WARRANTY)['items'])[0]);
+
+        self::assertArrayHasKey('url', $item);
+        self::assertIsString($item['url']);
+        self::assertStringStartsWith(
+            'https://tricabv2.blob.core.windows.net/products/products/technical/documents/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/',
+            (string) $item['url'],
+        );
+        self::assertStringContainsString('TriCab%20Warranty.pdf', (string) $item['url']);
+        self::assertStringContainsString('?', (string) $item['url']);
+        parse_str((string) parse_url((string) $item['url'], PHP_URL_QUERY), $sas);
+        self::assertSame('r', $sas['sp'] ?? null);
+        self::assertSame('b', $sas['sr'] ?? null);
+        self::assertSame('https', $sas['spr'] ?? null);
+        self::assertNotSame('', $sas['se'] ?? '');
+        self::assertArrayHasKey('sig', $sas);
+        // Persisted PublicUrl must remain unsigned (resolver never writes back).
+        self::assertSame($canonical, $library->listActiveByCategory(TechnicalDocumentCategoryCodes::WARRANTY)[0]->publicUrl);
+        self::assertStringNotContainsString('sig=', (string) $library->listActiveByCategory(TechnicalDocumentCategoryCodes::WARRANTY)[0]->publicUrl);
+    }
+
+    public function test_signing_failure_omits_url_instead_of_unsigned_private_blob(): void
+    {
+        $library = new InMemoryTechnicalDocumentLibraryRepository();
+        $library->seed(new TechnicalDocumentRecord(
+            publicId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            title: 'Unsigned trap',
+            originalFileName: 'trap.pdf',
+            documentTypeCode: 'certificate',
+            categoryCodes: [TechnicalDocumentCategoryCodes::INDUSTRIAL_CERTS],
+            storageContainer: 'products',
+            storagePath: 'products/technical/documents/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/trap.pdf',
+            publicUrl: 'https://tricabv2.blob.core.windows.net/products/products/technical/documents/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/trap.pdf',
+        ));
+
+        $broken = new RecordingBlobStore();
+        $broken->failNextIssueReadDownload = true;
+        $settings = $this->azureSettings();
+        $resolver = new TechnicalDocumentClientUrlResolver($settings, $broken);
+        $query = $this->query($library, $resolver);
+        $item = Payload::obj(Payload::list($query->execute(TechnicalDocumentCategoryCodes::INDUSTRIAL_CERTS)['items'])[0]);
+
+        self::assertArrayNotHasKey('url', $item);
     }
 
     public function test_query_returns_product_associated_and_multi_product_shared(): void
@@ -135,6 +201,7 @@ final class TechnicalDocumentLibraryQueryTest extends TestCase
         self::assertSame('catalog-json', $docs['itemSource']);
         self::assertCount(1, Payload::list($docs['items']));
         self::assertSame('BLOCKED', Payload::obj(Payload::list($docs['items'])[0])['migrationStatus']);
+        self::assertArrayNotHasKey('url', Payload::obj(Payload::list($docs['items'])[0]));
     }
 
     public function test_accessory_category_codes_remain_server_gated(): void
@@ -150,11 +217,52 @@ final class TechnicalDocumentLibraryQueryTest extends TestCase
         ));
     }
 
-    private function query(InMemoryTechnicalDocumentLibraryRepository $library): ResolveTechnicalDocumentsQuery
-    {
+    private function query(
+        InMemoryTechnicalDocumentLibraryRepository $library,
+        ?TechnicalDocumentClientUrlResolver $clientUrls = null,
+    ): ResolveTechnicalDocumentsQuery {
         return new ResolveTechnicalDocumentsQuery(
             TechnicalContentRepository::fromProjectRoot(dirname(__DIR__, 2)),
             $library,
+            $clientUrls ?? new TechnicalDocumentClientUrlResolver(
+                Settings::fromEnvironment([
+                    'APP_ENV' => 'development',
+                    'USER_REPOSITORY' => 'memory',
+                    'BLOB_AUTH_MODE' => 'disabled',
+                ]),
+                new RecordingBlobStore(),
+            ),
         );
+    }
+
+    private function azureClientUrls(): TechnicalDocumentClientUrlResolver
+    {
+        return new TechnicalDocumentClientUrlResolver(
+            $this->azureSettings(),
+            new AzureProductBlobStore($this->azureSettings()),
+        );
+    }
+
+    private function azureSettings(): Settings
+    {
+        $key = base64_encode(str_repeat('d', 32));
+
+        return Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'APP_DEBUG' => 'true',
+            'DEV_AUTH_ENABLED' => 'true',
+            'USER_REPOSITORY' => 'memory',
+            'GUEST_EMAIL_PROVIDER' => 'development',
+            'GUEST_JWT_ISSUER' => 'https://api.tricab.local',
+            'GUEST_JWT_AUDIENCE' => 'tricab-api',
+            'GUEST_JWT_SECRET' => 'local-development-guest-jwt-secret-32b',
+            'BLOB_AUTH_MODE' => 'connection-string',
+            'BLOB_ACCOUNT_NAME' => 'tricabv2',
+            'BLOB_ACCOUNT_KEY' => $key,
+            'BLOB_ENDPOINT' => 'https://tricabv2.blob.core.windows.net',
+            'BLOB_CONTAINER_PRODUCTS' => 'products',
+            'BLOB_CDN_BASE_URL' => '',
+            'BLOB_DOWNLOAD_SAS_TTL_SECONDS' => '300',
+        ]);
     }
 }
