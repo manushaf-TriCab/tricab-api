@@ -157,7 +157,7 @@ final class AzureSqlQuoteWriteIdempotencyStore implements QuoteWriteIdempotencyS
             idempotencyKey: AzureSqlValueMapper::stringValue($row['IdempotencyKey'] ?? ''),
             requestHash: AzureSqlValueMapper::stringValue($row['RequestHash'] ?? ''),
             state: AzureSqlValueMapper::stringValue($row['State'] ?? QuoteWriteIdempotencyState::IN_PROGRESS),
-            platformOperationId: AzureSqlValueMapper::stringValue($row['PlatformOperationId'] ?? ''),
+            platformOperationId: strtolower(trim(AzureSqlValueMapper::stringValue($row['PlatformOperationId'] ?? ''), '{}')),
             quoteId: AzureSqlValueMapper::nullableString($row['QuoteId'] ?? null),
             cartPublicId: AzureSqlValueMapper::nullableString($row['CartPublicId'] ?? null),
             reconciliationFingerprint: AzureSqlValueMapper::nullableString($row['ReconciliationFingerprint'] ?? null),

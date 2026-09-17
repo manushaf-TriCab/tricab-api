@@ -1633,12 +1633,34 @@ final class ContainerFactory
             \TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig::class => static function () use ($settings): \TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig {
                 return $settings->legacyQuoteWriteConfig();
             },
-            \TriCab\Core\QuoteOrder\Contract\QuoteWriteIdempotencyStore::class => \DI\autowire(
-                \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteIdempotencyStore::class,
-            ),
-            \TriCab\Core\QuoteOrder\Contract\QuoteWriteCorrelationRepository::class => \DI\autowire(
-                \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteCorrelationRepository::class,
-            ),
+            \TriCab\Core\QuoteOrder\Contract\QuoteWriteIdempotencyStore::class => static function (Container $container) use ($settings): \TriCab\Core\QuoteOrder\Contract\QuoteWriteIdempotencyStore {
+                if (!$settings->usesAzureSqlUserRepository()) {
+                    return new \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteIdempotencyStore();
+                }
+
+                return new \TriCab\Api\QuoteOrder\Persistence\AzureSqlQuoteWriteIdempotencyStore(
+                    self::get($container, SqlConnection::class),
+                );
+            },
+            \TriCab\Api\QuoteOrder\Legacy\PdoLegacyQuoteWriteConnection::class => static function () use ($settings): \TriCab\Api\QuoteOrder\Legacy\PdoLegacyQuoteWriteConnection {
+                $config = $settings->legacyQuoteWriteConfig();
+                if (!$config->isConfigured()) {
+                    throw new \RuntimeException('Quote write connection requested without QUOTES_ORDERS_LEGACY_WRITE_* credentials.');
+                }
+
+                return new \TriCab\Api\QuoteOrder\Legacy\PdoLegacyQuoteWriteConnection($config);
+            },
+            \TriCab\Core\QuoteOrder\Contract\QuoteWriteCorrelationRepository::class => static function (Container $container) use ($settings): \TriCab\Core\QuoteOrder\Contract\QuoteWriteCorrelationRepository {
+                $config = $settings->legacyQuoteWriteConfig();
+                if (!$config->isConfigured()) {
+                    return new \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteCorrelationRepository();
+                }
+
+                return new \TriCab\Api\QuoteOrder\Legacy\PdoQuoteWriteCorrelationRepository(
+                    self::get($container, \TriCab\Api\QuoteOrder\Legacy\PdoLegacyQuoteWriteConnection::class),
+                    $config,
+                );
+            },
             \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteAuditLogger::class => \DI\autowire(
                 \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteAuditLogger::class,
             ),
@@ -1648,11 +1670,20 @@ final class ContainerFactory
             \TriCab\Core\QuoteOrder\Domain\Policy\QuoteValidityPolicy::class => \DI\autowire(
                 \TriCab\Core\QuoteOrder\Domain\Policy\ProvisionalPlusTwoDayQuoteValidityPolicy::class,
             ),
-            \TriCab\Core\QuoteOrder\Contract\QuoteLegacyOperatorIdResolver::class => \DI\autowire(
-                \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteLegacyOperatorIdResolver::class,
-            ),
+            \TriCab\Core\QuoteOrder\Contract\QuoteLegacyOperatorIdResolver::class => static function (Container $container) use ($settings): \TriCab\Core\QuoteOrder\Contract\QuoteLegacyOperatorIdResolver {
+                try {
+                    $legacy = self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class);
+                    $azure = $settings->usesAzureSqlUserRepository()
+                        ? self::get($container, SqlConnection::class)
+                        : null;
+
+                    return new \TriCab\Api\QuoteOrder\Legacy\AzureLinkedDescriptQuoteLegacyOperatorIdResolver($legacy, $azure);
+                } catch (\Throwable) {
+                    return new \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteLegacyOperatorIdResolver();
+                }
+            },
             \TriCab\Core\QuoteOrder\Contract\QuoteLineLegacyMappingResolver::class => \DI\autowire(
-                \TriCab\Core\QuoteOrder\Infrastructure\VariantCodeOnlyQuoteLineLegacyMappingResolver::class,
+                \TriCab\Core\QuoteOrder\Infrastructure\SimpleCableQuoteLineLegacyMappingResolver::class,
             ),
             \TriCab\Core\QuoteOrder\Application\Service\QuoteCreateCustomerEligibilityService::class => \DI\autowire(
                 \TriCab\Core\QuoteOrder\Application\Service\QuoteCreateCustomerEligibilityService::class,
@@ -1660,11 +1691,14 @@ final class ContainerFactory
             \TriCab\Core\QuoteOrder\Application\Service\CartQuoteDraftMapper::class => \DI\autowire(
                 \TriCab\Core\QuoteOrder\Application\Service\CartQuoteDraftMapper::class,
             ),
+            \TriCab\Core\QuoteOrder\Application\Service\QuoteWritePreflightService::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Application\Service\QuoteWritePreflightService::class,
+            ),
             \TriCab\Core\QuoteOrder\Application\Service\SaveQuoteService::class => \DI\autowire(
                 \TriCab\Core\QuoteOrder\Application\Service\SaveQuoteService::class,
             ),
             \TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository::class => static function (Container $container) use ($settings): \TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository {
-                // Phase 4C1: still disabled by default. No HTTP write route is registered.
+                // Phase 4C2: still disabled by default. No HTTP write route is registered.
                 if (!$settings->quotesOrdersLegacyWriteEnabled) {
                     return new \TriCab\Core\QuoteOrder\Infrastructure\DisabledQuoteWriteRepository();
                 }
@@ -1673,13 +1707,10 @@ final class ContainerFactory
                 $config->assertExecutable();
                 (new \TriCab\Core\QuoteOrder\Live\NonProductionQuoteWriteSafety())->assertDevTableSuffixRequired($config);
 
-                $connection = new \TriCab\Api\QuoteOrder\Legacy\PdoLegacyQuoteWriteConnection($config);
-                $correlation = new \TriCab\Api\QuoteOrder\Legacy\PdoQuoteWriteCorrelationRepository($connection, $config);
-
                 return new \TriCab\Core\QuoteOrder\Infrastructure\TransactionalLegacyQuoteWriteRepository(
                     $config,
-                    $connection,
-                    $correlation,
+                    self::get($container, \TriCab\Api\QuoteOrder\Legacy\PdoLegacyQuoteWriteConnection::class),
+                    self::get($container, \TriCab\Core\QuoteOrder\Contract\QuoteWriteCorrelationRepository::class),
                     new \TriCab\Core\QuoteOrder\Domain\Mapping\PersistQuoteDraftMapper(),
                     self::get($container, \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteAuditLogger::class),
                 );

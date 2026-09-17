@@ -9,6 +9,7 @@ use DateTimeZone;
 use TriCab\Core\QuoteOrder\Application\Command\PersistQuoteDraft;
 use TriCab\Core\QuoteOrder\Application\Command\PersistQuoteDraftExtendedLine;
 use TriCab\Core\QuoteOrder\Application\Command\PersistQuoteDraftLine;
+use TriCab\Core\QuoteOrder\Domain\Mapping\LegacyQuoteLineTypeDefaults;
 
 /**
  * Pure NEW → legacy column mapping. No SQL execution.
@@ -132,6 +133,28 @@ final class PersistQuoteDraftMapper
      */
     private function mapLine(PersistQuoteDraftLine $line, int $lineNo): array
     {
+        // Simple cable (no pack/reel ext): legacy QuoteManagement writes getNoUnits() to BOTH qty and qotqty.
+        $isSimpleCable = $line->categoryType === LegacyQuoteLineTypeDefaults::CABLE_CATEGORY_TYPE
+            && $line->extended === [];
+        if ($isSimpleCable) {
+            $totalUnits = bcmul($line->packCount, $line->unitsOrLength, 4);
+
+            return [
+                'itm' => $lineNo,
+                'cata' => $line->productCode,
+                'catdt' => $line->categoryType,
+                'col' => $line->colourId,
+                'qty' => $this->decimal($totalUnits, 4),
+                'pm' => $line->packMatrixId,
+                'nprc' => $this->money($line->sellUnitPrice),
+                'net' => $this->money($line->lineNet),
+                'cprc' => $this->money($line->costUnitPrice),
+                'cval' => $this->money($line->costValue),
+                'qotqty' => $this->decimal($totalUnits, 4),
+                'ref' => $line->reference,
+            ];
+        }
+
         return [
             'itm' => $lineNo,
             'cata' => $line->productCode,
