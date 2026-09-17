@@ -173,6 +173,13 @@ final readonly class Settings
         public string $triexpensePermissionMode = 'hybrid',
         public bool $triexpenseLegacyReadEnabled = false,
         public bool $quotesOrdersLegacyReadEnabled = false,
+        public bool $quotesOrdersLegacyWriteEnabled = false,
+        public ?string $quotesOrdersLegacyWriteDsn = null,
+        public ?string $quotesOrdersLegacyWriteUser = null,
+        public ?string $quotesOrdersLegacyWritePassword = null,
+        public ?string $quotesOrdersLegacyWriteSslMode = null,
+        public ?string $quotesOrdersLegacyWriteTableSuffix = null,
+        public bool $quotesOrdersLegacyWriteTableSuffixConfigured = false,
     ) {
     }
 
@@ -820,6 +827,8 @@ final readonly class Settings
         \TriCab\Core\Expense\Application\ExpensePermissionMode::fromString($triexpensePermissionMode);
         $triexpenseLegacyReadEnabled = self::bool($env, 'TRIEXPENSE_LEGACY_READ_ENABLED', false);
         $quotesOrdersLegacyReadEnabled = self::bool($env, 'QUOTES_ORDERS_LEGACY_READ_ENABLED', false);
+        $writeConfig = \TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig::fromEnvironment($env);
+        // Fail-closed when write enabled + incomplete credentials/suffix (throws from fromEnvironment).
         foreach ([
             'TRIEXPENSE_DOC_INTEL_ENDPOINT' => $triexpenseDocIntelEndpoint,
             'TRIEXPENSE_OPENAI_ENDPOINT' => $triexpenseOpenAiEndpoint,
@@ -952,6 +961,26 @@ final readonly class Settings
             triexpensePermissionMode: $triexpensePermissionMode,
             triexpenseLegacyReadEnabled: $triexpenseLegacyReadEnabled,
             quotesOrdersLegacyReadEnabled: $quotesOrdersLegacyReadEnabled,
+            quotesOrdersLegacyWriteEnabled: $writeConfig->enabled,
+            quotesOrdersLegacyWriteDsn: $writeConfig->dsn,
+            quotesOrdersLegacyWriteUser: $writeConfig->user,
+            quotesOrdersLegacyWritePassword: $writeConfig->password,
+            quotesOrdersLegacyWriteSslMode: $writeConfig->sslMode,
+            quotesOrdersLegacyWriteTableSuffix: $writeConfig->tableSuffix,
+            quotesOrdersLegacyWriteTableSuffixConfigured: $writeConfig->tableSuffixConfigured,
+        );
+    }
+
+    public function legacyQuoteWriteConfig(): \TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig
+    {
+        return new \TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig(
+            enabled: $this->quotesOrdersLegacyWriteEnabled,
+            dsn: $this->quotesOrdersLegacyWriteDsn,
+            user: $this->quotesOrdersLegacyWriteUser,
+            password: $this->quotesOrdersLegacyWritePassword,
+            sslMode: $this->quotesOrdersLegacyWriteSslMode,
+            tableSuffix: $this->quotesOrdersLegacyWriteTableSuffix,
+            tableSuffixConfigured: $this->quotesOrdersLegacyWriteTableSuffixConfigured,
         );
     }
 

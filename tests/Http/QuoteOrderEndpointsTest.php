@@ -86,6 +86,24 @@ final class QuoteOrderEndpointsTest extends TestCase
         self::assertSame('QUOTE_ORDER_SOURCE_UNAVAILABLE', Payload::obj($payload['error'])['code']);
     }
 
+    public function test_no_quote_write_http_route(): void
+    {
+        $app = TestAppFactory::create([
+            'QUOTES_ORDERS_LEGACY_READ_ENABLED' => 'true',
+            'QUOTES_ORDERS_LEGACY_WRITE_ENABLED' => 'false',
+        ]);
+        $this->replacePermissions($app, ['ACCOUNT.LOGIN', Module::PERMISSION_READ, Module::PERMISSION_CREATE]);
+
+        $post = $app->handle(TestAppFactory::request('POST', '/api/v1/quotes'));
+        self::assertSame(404, $post->getStatusCode());
+
+        $finalize = $app->handle(TestAppFactory::request('POST', '/api/v1/quotes/1001/finalize'));
+        self::assertSame(404, $finalize->getStatusCode());
+
+        $email = $app->handle(TestAppFactory::request('POST', '/api/v1/quotes/1001/email'));
+        self::assertSame(404, $email->getStatusCode());
+    }
+
     /**
      * @param list<string> $permissionCodes
      * @param App<ContainerInterface> $app

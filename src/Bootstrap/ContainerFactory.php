@@ -1630,6 +1630,34 @@ final class ContainerFactory
             \TriCab\Api\Http\Action\QuoteOrder\GetOrderAction::class => \DI\autowire(
                 \TriCab\Api\Http\Action\QuoteOrder\GetOrderAction::class,
             ),
+            \TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig::class => static function () use ($settings): \TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig {
+                return $settings->legacyQuoteWriteConfig();
+            },
+            \TriCab\Core\QuoteOrder\Contract\QuoteWriteIdempotencyStore::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteIdempotencyStore::class,
+            ),
+            \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteAuditLogger::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteAuditLogger::class,
+            ),
+            \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteDryRunService::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteDryRunService::class,
+            ),
+            \TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository::class => static function (Container $container) use ($settings): \TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository {
+                // Phase 4B: always disabled by default. No HTTP write route is registered.
+                if (!$settings->quotesOrdersLegacyWriteEnabled) {
+                    return new \TriCab\Core\QuoteOrder\Infrastructure\DisabledQuoteWriteRepository();
+                }
+
+                $config = $settings->legacyQuoteWriteConfig();
+                $config->assertExecutable();
+
+                return new \TriCab\Core\QuoteOrder\Infrastructure\TransactionalLegacyQuoteWriteRepository(
+                    $config,
+                    new \TriCab\Api\QuoteOrder\Legacy\PdoLegacyQuoteWriteConnection($config),
+                    new \TriCab\Core\QuoteOrder\Domain\Mapping\PersistQuoteDraftMapper(),
+                    self::get($container, \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteAuditLogger::class),
+                );
+            },
             StaffEntraLinkWriteUnit::class => static function (Container $container) use ($settings): StaffEntraLinkWriteUnit {
                 if (!$settings->usesAzureSqlUserRepository()) {
                     return new DisabledStaffEntraLinkWriteUnit();
