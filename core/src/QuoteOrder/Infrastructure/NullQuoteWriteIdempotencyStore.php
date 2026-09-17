@@ -8,7 +8,7 @@ use TriCab\Core\QuoteOrder\Application\DTO\QuoteWriteIdempotencyRecord;
 use TriCab\Core\QuoteOrder\Contract\QuoteWriteIdempotencyStore;
 
 /**
- * No-op store until Azure schema is approved (Phase 4C).
+ * No-op until Azure migration is approved and applied.
  */
 final class NullQuoteWriteIdempotencyStore implements QuoteWriteIdempotencyStore
 {
@@ -20,7 +20,29 @@ final class NullQuoteWriteIdempotencyStore implements QuoteWriteIdempotencyStore
         return null;
     }
 
-    public function record(QuoteWriteIdempotencyRecord $record): void
+    public function tryAcquire(QuoteWriteIdempotencyRecord $record): QuoteWriteIdempotencyRecord
     {
+        return $record;
+    }
+
+    public function markCompleted(
+        string $actorKey,
+        string $operation,
+        string $idempotencyKey,
+        string $quoteId,
+    ): void {
+    }
+
+    public function markFailed(
+        string $actorKey,
+        string $operation,
+        string $idempotencyKey,
+        string $failureReason,
+    ): void {
+    }
+
+    public function findByPlatformOperationId(string $platformOperationId): ?QuoteWriteIdempotencyRecord
+    {
+        return null;
     }
 }

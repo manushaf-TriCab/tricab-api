@@ -33,4 +33,11 @@ final class QuoteWriteMisconfiguredException extends RuntimeException
             ),
         );
     }
+
+    public static function firstWriteRequiresDevSuffix(): self
+    {
+        return new self(
+            'First non-production quote write requires QUOTES_ORDERS_LEGACY_WRITE_TABLE_SUFFIX=_dev.',
+        );
+    }
 }

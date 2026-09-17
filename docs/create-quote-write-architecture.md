@@ -1,78 +1,37 @@
-# Create Quote write architecture (Phase 4B)
+# Create Quote write architecture (Phase 4B + 4C0)
 
 ## Decision
 
 **Hybrid:** Azure Commerce Cart (draft) → tricab-api Save Quote → transactional write to legacy MySQL `tc.tqoth` / `tqoti` / `tqote`.
 
-MySQL `AUTO_INCREMENT` quote id remains authoritative. No Azure quote-number sequence. No Azure operational quote store.
+MySQL `AUTO_INCREMENT` quote id remains authoritative.
 
 ## Flow
 
 ```
 Web ─┐
-     ├→ tricab-api → Commerce Cart (Azure)
+     ├→ tricab-api → Commerce Cart (Azure, OPEN)
 Mobile┘               ↓
-                 Save Quote (future Phase 4C)
+                 SaveQuoteService (Phase 4C0 prepared; HTTP not registered)
                      ↓
-              QUOTE.CREATE + customer eligibility
+              QUOTE.CREATE + QuoteCreateCustomerEligibilityService
                      ↓
-               server pricing (no client totals)
+               force server reprice (diagnostic costs)
                      ↓
              PersistQuoteDraft (validated command)
                      ↓
-          QuoteWriteRepository
+          QuoteWriteIdempotencyStore (Azure; migration NOT applied)
                      ↓
-             MySQL transaction
+          QuoteWriteRepository (disabled by default)
                      ↓
-          tqoth / tqoti / tqote
-                     ↓
-              quote number (lastInsertId)
+             MySQL transaction → quote number
                      ↓
               existing GET read APIs
 ```
 
-No client connects to MySQL.
+## Phase 4C0 status
 
-## Feature flag
-
-| Key | Default |
-|-----|---------|
-| `QUOTES_ORDERS_LEGACY_WRITE_ENABLED` | **false** |
-
-Write credentials are **separate** from `LEGACY_TC_*` RO bridge:
-
-- `QUOTES_ORDERS_LEGACY_WRITE_DSN` (or HOST/DATABASE/PORT)
-- `QUOTES_ORDERS_LEGACY_WRITE_USER`
-- `QUOTES_ORDERS_LEGACY_WRITE_PASSWORD`
-- `QUOTES_ORDERS_LEGACY_WRITE_TABLE_SUFFIX` — required when enabled: `_dev` or `""`
-
-When the flag is false, `DisabledQuoteWriteRepository` is wired and throws `QuoteWriteDisabledException` before any SQL.
-
-## HTTP
-
-**No write routes** in Phase 4B. Only:
-
-- `GET /api/v1/quotes-orders`
-- `GET /api/v1/quotes/{id}`
-- `GET /api/v1/orders/{id}`
-
-## Authorization boundary
-
-Repository accepts only an already-authorized `PersistQuoteDraft`. It does **not** decide customer eligibility. Do not use `QUOTE.READ` / `staffSearchAll` for create.
-
-## Idempotency (Phase 4C)
-
-Prefer Azure-side store (see `docs/quote-write-idempotency-schema-proposal.md`). Do not add columns to `tqoth`.
-
-## Transaction
-
-```
-BEGIN
-  INSERT tqoth → lastInsertId
-  foreach line: INSERT tqoti → lastInsertId
-    foreach ext: INSERT tqote
-  UPDATE tqoth.tnet
-COMMIT
-```
-
-Failure → `ROLLBACK`.
+- Eligibility + SaveQuoteService + validity policy + header defaults + idempotency design: **done**
+- `POST /api/v1/quotes`: **NOT registered**
+- `QUOTES_ORDERS_LEGACY_WRITE_ENABLED`: **false**
+- First non-prod write: **NOT READY** (see Phase 4C0 report blockers)

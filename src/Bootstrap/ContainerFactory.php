@@ -1642,6 +1642,24 @@ final class ContainerFactory
             \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteDryRunService::class => \DI\autowire(
                 \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteDryRunService::class,
             ),
+            \TriCab\Core\QuoteOrder\Domain\Policy\QuoteValidityPolicy::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Domain\Policy\ProvisionalPlusTwoDayQuoteValidityPolicy::class,
+            ),
+            \TriCab\Core\QuoteOrder\Contract\QuoteLegacyOperatorIdResolver::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteLegacyOperatorIdResolver::class,
+            ),
+            \TriCab\Core\QuoteOrder\Contract\QuoteLineLegacyMappingResolver::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Infrastructure\VariantCodeOnlyQuoteLineLegacyMappingResolver::class,
+            ),
+            \TriCab\Core\QuoteOrder\Application\Service\QuoteCreateCustomerEligibilityService::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Application\Service\QuoteCreateCustomerEligibilityService::class,
+            ),
+            \TriCab\Core\QuoteOrder\Application\Service\CartQuoteDraftMapper::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Application\Service\CartQuoteDraftMapper::class,
+            ),
+            \TriCab\Core\QuoteOrder\Application\Service\SaveQuoteService::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Application\Service\SaveQuoteService::class,
+            ),
             \TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository::class => static function (Container $container) use ($settings): \TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository {
                 // Phase 4B: always disabled by default. No HTTP write route is registered.
                 if (!$settings->quotesOrdersLegacyWriteEnabled) {
