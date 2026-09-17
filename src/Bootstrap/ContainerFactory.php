@@ -1581,6 +1581,52 @@ final class ContainerFactory
             \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class => \DI\autowire(
                 \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class,
             ),
+            \TriCab\Api\QuoteOrder\Mapping\LegacyQuoteOrderMapper::class => \DI\autowire(
+                \TriCab\Api\QuoteOrder\Mapping\LegacyQuoteOrderMapper::class,
+            ),
+            \TriCab\Core\QuoteOrder\Contract\QuoteOrderRepository::class => static function (Container $container) use ($settings): \TriCab\Core\QuoteOrder\Contract\QuoteOrderRepository {
+                if (!$settings->quotesOrdersLegacyReadEnabled) {
+                    return new \TriCab\Api\QuoteOrder\Legacy\NullQuoteOrderRepository();
+                }
+                try {
+                    $connection = self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class);
+                } catch (\Throwable) {
+                    return new \TriCab\Api\QuoteOrder\Legacy\NullQuoteOrderRepository();
+                }
+
+                return new \TriCab\Api\QuoteOrder\Legacy\MysqlLegacyQuoteOrderRepository(
+                    $connection,
+                    new \TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard(),
+                    self::get($container, \TriCab\Api\QuoteOrder\Mapping\LegacyQuoteOrderMapper::class),
+                );
+            },
+            \TriCab\Core\QuoteOrder\Application\Service\QuoteOrderAccessService::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Application\Service\QuoteOrderAccessService::class,
+            ),
+            \TriCab\Core\QuoteOrder\Application\Service\SearchQuoteOrdersService::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Application\Service\SearchQuoteOrdersService::class,
+            )->constructorParameter('legacyReadEnabled', $settings->quotesOrdersLegacyReadEnabled),
+            \TriCab\Core\QuoteOrder\Application\Service\GetQuoteService::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Application\Service\GetQuoteService::class,
+            )->constructorParameter('legacyReadEnabled', $settings->quotesOrdersLegacyReadEnabled),
+            \TriCab\Core\QuoteOrder\Application\Service\GetOrderService::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Application\Service\GetOrderService::class,
+            )->constructorParameter('legacyReadEnabled', $settings->quotesOrdersLegacyReadEnabled),
+            \TriCab\Api\Http\Auth\ResolveQuoteOrderActorService::class => \DI\autowire(
+                \TriCab\Api\Http\Auth\ResolveQuoteOrderActorService::class,
+            ),
+            \TriCab\Api\Http\Auth\QuoteOrderErrorMapper::class => \DI\autowire(
+                \TriCab\Api\Http\Auth\QuoteOrderErrorMapper::class,
+            ),
+            \TriCab\Api\Http\Action\QuoteOrder\ListQuoteOrdersAction::class => \DI\autowire(
+                \TriCab\Api\Http\Action\QuoteOrder\ListQuoteOrdersAction::class,
+            ),
+            \TriCab\Api\Http\Action\QuoteOrder\GetQuoteAction::class => \DI\autowire(
+                \TriCab\Api\Http\Action\QuoteOrder\GetQuoteAction::class,
+            ),
+            \TriCab\Api\Http\Action\QuoteOrder\GetOrderAction::class => \DI\autowire(
+                \TriCab\Api\Http\Action\QuoteOrder\GetOrderAction::class,
+            ),
             StaffEntraLinkWriteUnit::class => static function (Container $container) use ($settings): StaffEntraLinkWriteUnit {
                 if (!$settings->usesAzureSqlUserRepository()) {
                     return new DisabledStaffEntraLinkWriteUnit();

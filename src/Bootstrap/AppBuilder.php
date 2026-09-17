@@ -347,6 +347,7 @@ final class AppBuilder
 
         self::registerPublicProductRoutes($app);
         self::registerTriExpenseRoutes($app, $container);
+        self::registerQuoteOrderRoutes($app, $container);
         self::registerLogNoteRoutes($app, $container);
         self::registerTelDirectoryRoutes($app, $container);
         self::registerTechnicalRoutes($app, $container);
@@ -478,6 +479,24 @@ final class AppBuilder
         $app->get('/api/v1/tri-expense/finance/export/reconciliation', ExportFinanceReconciliationCsvAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/finance/pdf/summary', RenderFinanceSummaryPdfAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/finance/pdf/full', RenderFinanceFullPdfAction::class)->add(($require)($gate));
+    }
+
+    /**
+     * Quotes & Orders — Phase 1 read-only (legacy tc MySQL). No POST/PATCH/DELETE.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerQuoteOrderRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $gate = \TriCab\Core\QuoteOrder\Module::PERMISSION_READ;
+
+        $app->get('/api/v1/quotes-orders', \TriCab\Api\Http\Action\QuoteOrder\ListQuoteOrdersAction::class)
+            ->add(($require)($gate));
+        $app->get('/api/v1/quotes/{id}', \TriCab\Api\Http\Action\QuoteOrder\GetQuoteAction::class)
+            ->add(($require)($gate));
+        $app->get('/api/v1/orders/{id}', \TriCab\Api\Http\Action\QuoteOrder\GetOrderAction::class)
+            ->add(($require)($gate));
     }
 
     /**

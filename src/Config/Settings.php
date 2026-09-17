@@ -172,6 +172,7 @@ final readonly class Settings
         public int $triexpenseOcrRequestTimeoutSeconds = 30,
         public string $triexpensePermissionMode = 'hybrid',
         public bool $triexpenseLegacyReadEnabled = false,
+        public bool $quotesOrdersLegacyReadEnabled = false,
     ) {
     }
 
@@ -818,6 +819,7 @@ final readonly class Settings
         $triexpensePermissionMode = strtolower(trim(self::string($env, 'TRIEXPENSE_PERMISSION_MODE', 'hybrid')));
         \TriCab\Core\Expense\Application\ExpensePermissionMode::fromString($triexpensePermissionMode);
         $triexpenseLegacyReadEnabled = self::bool($env, 'TRIEXPENSE_LEGACY_READ_ENABLED', false);
+        $quotesOrdersLegacyReadEnabled = self::bool($env, 'QUOTES_ORDERS_LEGACY_READ_ENABLED', false);
         foreach ([
             'TRIEXPENSE_DOC_INTEL_ENDPOINT' => $triexpenseDocIntelEndpoint,
             'TRIEXPENSE_OPENAI_ENDPOINT' => $triexpenseOpenAiEndpoint,
@@ -949,6 +951,7 @@ final readonly class Settings
             triexpenseOcrRequestTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_OCR_REQUEST_TIMEOUT_SECONDS', 30, 1, 120),
             triexpensePermissionMode: $triexpensePermissionMode,
             triexpenseLegacyReadEnabled: $triexpenseLegacyReadEnabled,
+            quotesOrdersLegacyReadEnabled: $quotesOrdersLegacyReadEnabled,
         );
     }
 
