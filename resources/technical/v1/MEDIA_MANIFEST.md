@@ -71,6 +71,8 @@ Optional UI glyphs present in legacy (not referenced by article JSON): `wrong.pn
 - `sbo-standards.json`
 - `industrial-general-installation.json`
 
-## Not copied yet
+## Deploy note
 
-Media files have **not** been copied into `public/media/technical/`. Paths above are the required copy plan only.
+Media files live under `public/media/technical/` in this repository. The App
+Service release builder stages them to both `app/public/media` (PHP
+`available` checks) and site-root `/media` (nginx static serving).

@@ -142,6 +142,29 @@ for file in composer.json composer.lock; do
     cp "$api_root/$file" "$app_root/$file"
 done
 
+# Public content images (About / Technical / catalogue static copies) live under
+# public/media. PHP availability checks read app/public/media; nginx must also
+# serve the same tree at the site-root /media/ path (not under /api/v1).
+echo "==> Staging public media"
+media_src="$api_root/public/media"
+if [ ! -d "$media_src" ]; then
+    echo "Required public media directory is missing: $media_src" >&2
+    exit 1
+fi
+mkdir -p "$app_root/public"
+cp -R "$media_src" "$app_root/public/media"
+cp -R "$media_src" "$release_root/media"
+for required_media in \
+    "$app_root/public/media/about/melbourne-facility.png" \
+    "$release_root/media/about/melbourne-facility.png" \
+    "$release_root/media/technical/lugging/lugging-1.jpg"
+do
+    if [ ! -f "$required_media" ]; then
+        echo "Release media missing: $required_media" >&2
+        exit 1
+    fi
+done
+
 for directory in var/cache/app var/cache/apple-jwks var/cache/entra-jwks var/cache/google-jwks var/log; do
     mkdir -p "$app_root/$directory"
 done

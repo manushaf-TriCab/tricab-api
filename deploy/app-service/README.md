@@ -16,5 +16,7 @@ cp /home/site/wwwroot/default /etc/nginx/sites-available/default && service ngin
 ```
 
 The generated ZIP is ready to deploy without App Service build automation. It
-contains the Vite output at the web root, the Slim application under `app/`, and
-an Azure-specific front controller under `api/`.
+contains the Vite output at the web root, the Slim application under `app/`,
+public content media at site-root `/media/` (and mirrored under
+`app/public/media` for PHP availability checks), and an Azure-specific front
+controller under `api/`.

@@ -84,6 +84,13 @@ server {
         add_header Cache-Control "no-store" always;
     }
 
+    # About / Technical / catalogue static media. Must NOT fall through to the
+    # Vite SPA — clients expect image Content-Types, not index.html.
+    location ^~ /media/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=86400" always;
+    }
+
     location / {
         try_files $uri $uri/ /index.html;
     }

@@ -147,6 +147,27 @@ foreach ($file in @('composer.json', 'composer.lock')) {
     Copy-Item -LiteralPath (Join-Path $apiRoot $file) -Destination (Join-Path $appRoot $file) -Force
 }
 
+# Public content images (About / Technical / catalogue static copies) live under
+# public/media. PHP availability checks read app/public/media; nginx must also
+# serve the same tree at the site-root /media/ path (not under /api/v1).
+Write-Host '==> Staging public media'
+$mediaSrc = Join-Path $apiRoot 'public\media'
+if (-not (Test-Path -LiteralPath $mediaSrc -PathType Container)) {
+    throw "Required public media directory is missing: $mediaSrc"
+}
+New-Item -ItemType Directory -Path (Join-Path $appRoot 'public') -Force | Out-Null
+Copy-Item -LiteralPath $mediaSrc -Destination (Join-Path $appRoot 'public\media') -Recurse -Force
+Copy-Item -LiteralPath $mediaSrc -Destination (Join-Path $releaseRoot 'media') -Recurse -Force
+foreach ($requiredMedia in @(
+    (Join-Path $appRoot 'public\media\about\melbourne-facility.png'),
+    (Join-Path $releaseRoot 'media\about\melbourne-facility.png'),
+    (Join-Path $releaseRoot 'media\technical\lugging\lugging-1.jpg')
+)) {
+    if (-not (Test-Path -LiteralPath $requiredMedia -PathType Leaf)) {
+        throw "Release media missing: $requiredMedia"
+    }
+}
+
 foreach ($directory in @('var\cache\app', 'var\cache\apple-jwks', 'var\cache\entra-jwks', 'var\cache\google-jwks', 'var\log')) {
     New-Item -ItemType Directory -Path (Join-Path $appRoot $directory) -Force | Out-Null
 }
