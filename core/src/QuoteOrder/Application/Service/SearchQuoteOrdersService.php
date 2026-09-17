@@ -33,7 +33,9 @@ final class SearchQuoteOrdersService
             );
         }
 
-        return $this->repository->search($criteria, $scope);
+        $constrained = $this->access->constrainCriteria($criteria, $scope);
+
+        return $this->repository->search($constrained, $scope);
     }
 
     private function assertSourceEnabled(): void

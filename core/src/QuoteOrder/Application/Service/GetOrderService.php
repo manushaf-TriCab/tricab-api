@@ -27,7 +27,7 @@ final class GetOrderService
         }
 
         $id = trim($orderId);
-        if ($id === '') {
+        if ($id === '' || !ctype_digit($id)) {
             throw OrderNotFound::forId($orderId);
         }
 
@@ -41,7 +41,9 @@ final class GetOrderService
         }
 
         $customerCode = $details->quote?->customerCode;
-        $this->access->assertCanViewCustomerCode($scope, $customerCode);
+        if (!$this->access->canViewCustomerCode($scope, $customerCode)) {
+            throw OrderNotFound::forId($id);
+        }
 
         return $details;
     }

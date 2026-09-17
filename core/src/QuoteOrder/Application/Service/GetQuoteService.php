@@ -27,7 +27,7 @@ final class GetQuoteService
         }
 
         $id = trim($quoteId);
-        if ($id === '') {
+        if ($id === '' || !ctype_digit($id)) {
             throw QuoteNotFound::forId($quoteId);
         }
 
@@ -40,7 +40,10 @@ final class GetQuoteService
             throw QuoteNotFound::forId($id);
         }
 
-        $this->access->assertCanViewCustomerCode($scope, $details->customerCode);
+        // Enumeration-safe: unauthorized codes look like not found.
+        if (!$this->access->canViewCustomerCode($scope, $details->customerCode)) {
+            throw QuoteNotFound::forId($id);
+        }
 
         return $details;
     }

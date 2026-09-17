@@ -7,19 +7,21 @@ namespace TriCab\Core\QuoteOrder\Application\DTO;
 /**
  * Server-side visibility for Quotes & Orders. Never trust client-only filters.
  *
- * Phase 1B: Azure customerPublicId → legacy customer code resolution is unknown
- * when allowedCustomerCodes is not supplied by the caller.
+ * Filters may only narrow this scope; they must never expand it.
  */
 final readonly class QuoteOrderVisibilityScope
 {
     /**
-     * @param list<string> $allowedCustomerCodes
+     * @param list<string> $allowedCustomerCodes portal (and constrained) customer codes
+     * @param list<string> $allowedCountryCodes reserved for future staff region parity (empty = unused)
      */
     public function __construct(
         public bool $canSearch,
         public bool $isCustomerPortalScoped,
         public bool $isAdministrator,
+        public bool $staffSearchAll,
         public array $allowedCustomerCodes = [],
+        public array $allowedCountryCodes = [],
         public ?string $regionCode = null,
     ) {
     }

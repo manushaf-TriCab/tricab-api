@@ -189,6 +189,103 @@ final class QuoteOrderServicesTest extends TestCase
         }
     }
 
+    public function test_portal_cannot_expand_scope_via_customer_code_filter(): void
+    {
+        $portal = new QuoteOrderActor(
+            userId: 4,
+            publicId: 'u-4',
+            emailAddress: 'acme@example.com',
+            permissions: [Module::PERMISSION_READ],
+            roles: ['CUSTOMER_USER'],
+            customerPublicIds: ['cust-public-acme'],
+            allowedCustomerCodes: ['ACME01'],
+        );
+
+        $result = $this->search->execute(
+            $portal,
+            new QuoteOrderSearchCriteria(customerCode: 'BETA'),
+        );
+        self::assertSame(0, $result->total);
+        self::assertSame([], $result->items);
+    }
+
+    public function test_portal_id_enumeration_returns_not_found_for_foreign_quote(): void
+    {
+        $portal = new QuoteOrderActor(
+            userId: 4,
+            publicId: 'u-4',
+            emailAddress: 'acme@example.com',
+            permissions: [Module::PERMISSION_READ],
+            roles: ['CUSTOMER_USER'],
+            customerPublicIds: ['cust-public-acme'],
+            allowedCustomerCodes: ['ACME01'],
+        );
+
+        // Own quote OK.
+        $own = $this->getQuote->execute($portal, '1001');
+        self::assertSame('ACME01', $own->customerCode);
+
+        // Foreign quote / order look like not found (no existence leak via 403).
+        try {
+            $this->getQuote->execute($portal, '1003');
+            self::fail('Expected QuoteNotFound for foreign quote');
+        } catch (QuoteNotFound) {
+            self::assertTrue(true);
+        }
+
+        try {
+            $this->getOrder->execute($portal, '9001');
+            // 9001 is ACME — should succeed
+            self::assertTrue(true);
+        } catch (QuoteNotFound) {
+            self::fail('Own order should be visible');
+        }
+
+        // Malformed IDs
+        $this->expectException(QuoteNotFound::class);
+        $this->getQuote->execute($portal, 'not-a-number');
+    }
+
+    public function test_portal_foreign_order_id_enumeration(): void
+    {
+        $portal = new QuoteOrderActor(
+            userId: 5,
+            publicId: 'u-5',
+            emailAddress: 'beta@example.com',
+            permissions: [Module::PERMISSION_READ],
+            roles: ['CUSTOMER_USER'],
+            customerPublicIds: ['cust-public-beta'],
+            allowedCustomerCodes: ['BETA01'],
+        );
+
+        $this->expectException(\TriCab\Core\QuoteOrder\Application\Exception\OrderNotFound::class);
+        $this->getOrder->execute($portal, '9001');
+    }
+
+    public function test_administrator_staff_search_all_scope(): void
+    {
+        $admin = new QuoteOrderActor(
+            userId: 9,
+            publicId: 'u-admin',
+            emailAddress: 'admin@tricab.com',
+            permissions: [Module::PERMISSION_READ],
+            roles: ['ADMINISTRATOR'],
+        );
+        $scope = $this->access->resolveVisibility($admin);
+        self::assertTrue($scope->staffSearchAll);
+        self::assertFalse($scope->isCustomerPortalScoped);
+
+        $result = $this->search->execute($admin, new QuoteOrderSearchCriteria());
+        self::assertSame(4, $result->total);
+    }
+
+    public function test_employee_with_quote_read_has_staff_search_all_until_territory_assignment(): void
+    {
+        $scope = $this->access->resolveVisibility($this->staffActor());
+        self::assertTrue($scope->staffSearchAll);
+        self::assertTrue($scope->isAdministrator === false);
+    }
+
     public function test_mapper_currency_and_status_from_legacy_row(): void
     {
         $mapper = new LegacyQuoteOrderMapper();

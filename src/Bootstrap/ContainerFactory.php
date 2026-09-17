@@ -1067,6 +1067,9 @@ final class ContainerFactory
             CreateCustomerPortalUserService::class => \DI\autowire(CreateCustomerPortalUserService::class),
             ResolveAuthenticatedCustomerContextService::class => \DI\autowire(ResolveAuthenticatedCustomerContextService::class),
             ResolveAuthenticatedMarketCodesService::class => \DI\autowire(ResolveAuthenticatedMarketCodesService::class),
+            \TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerCodesService::class => \DI\autowire(
+                \TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerCodesService::class,
+            ),
             ResolveTechnicalAccessoriesAccessService::class => \DI\autowire(ResolveTechnicalAccessoriesAccessService::class),
             EnableCustomerPortalAccessService::class => \DI\autowire(EnableCustomerPortalAccessService::class),
             DisableCustomerPortalAccessService::class => \DI\autowire(DisableCustomerPortalAccessService::class),

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace TriCab\Core\QuoteOrder;
 
 /**
- * Quotes & Orders — Phase 1 read-only search and detail over legacy tc MySQL.
- * Authoritative history is NOT copied to Azure SQL.
+ * Quotes & Orders — read-only search and detail over legacy tc MySQL.
+ *
+ * Permissions: QUOTE.READ (existing catalog). No QUOTE.READ_ALL — staff breadth
+ * uses EMPLOYEE/ADMINISTRATOR roles. Authoritative history is NOT on Azure SQL.
  */
 final class Module
 {
