@@ -30,7 +30,15 @@ Current prompts:
   `search_product_codes` facets are exact code segments and not words
   (`jacketColour` wants `OR`, not "orange"), and confines the sizing caveat to
   answers that actually carry sizing.
-- `product-assistant-response-v6.md` is current. It makes `list_style_options` the tool for a
+- `product-assistant-response-v6.md` makes `list_style_options` the tool for a
   style-level question, tells the agent to search it by what a cable is *for* rather than only by
   style code, and requires it to read the new `pagination` / `coverage` fields before concluding
   that a style or a whole category does not exist.
+- `product-assistant-response-v7.md` is current. It closes four gaps found testing v6 against the
+  cable register: a quotation must come from a tool result received this turn (v6 let the agent
+  reconstruct a plausible application sentence for one style out of a structurally equivalent
+  style's wording); a record that does not carry the property asked about is reported as not
+  stated rather than inferred from a neighbour; `SERVER_AUTHORIZED_REQUEST_CONTEXT` and the
+  session's catalogue visibility are never narrated to the customer; and an answer stops once the
+  question is answered, adding only a property the customer would otherwise wrongly assume. It also
+  requires an application's qualifying condition to travel in the same sentence as the verdict.
