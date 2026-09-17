@@ -18,15 +18,44 @@ use TriCab\Core\QuoteOrder\Module;
 /**
  * Readiness check for Phase 4C first non-prod write. Never mutates quote tables.
  *
+ * Distinguishes:
+ * - infrastructureReady (creds, _dev suffix, idempotency, correlation)
+ * - domainReady (operator, QUOTE.CREATE, line mapping, customer fixture)
+ * - writeEnabled (flag)
+ * - readyForControlledEnablement = infrastructureReady && domainReady && !writeEnabled
+ *
  * @phpstan-type PreflightResult array{
+ *   infrastructureReady: bool,
+ *   domainReady: bool,
+ *   writeEnabled: bool,
+ *   readyForControlledEnablement: bool,
  *   readyExceptWriteFlag: bool,
  *   writeFlagEnabled: bool,
  *   tableSuffix: string|null,
- *   checks: array<string, array{status: string, detail: string}>
+ *   checks: array<string, array{status: string, detail: string}>,
+ *   blocking: list<string>,
+ *   infrastructureBlocking: list<string>,
+ *   domainBlocking: list<string>
  * }
  */
 final class QuoteWritePreflightService
 {
+    private const INFRASTRUCTURE_CHECKS = [
+        'WRITE_CREDENTIALS',
+        'TABLE_SUFFIX',
+        'DEV_GUARD',
+        'IDEMPOTENCY_STORE',
+        'CORRELATION',
+    ];
+
+    private const DOMAIN_CHECKS = [
+        'QUOTE_CREATE',
+        'OPERATOR',
+        'LINE_MAPPING',
+        'PM_NOT_MARGIN',
+        'CUSTOMER_FIXTURE',
+    ];
+
     public function __construct(
         private readonly LegacyQuoteWriteConfig $writeConfig,
         private readonly QuoteWriteIdempotencyStore $idempotency,
@@ -51,17 +80,22 @@ final class QuoteWritePreflightService
         $checks = [];
 
         $checks['WRITE_FLAG'] = [
-            'status' => $this->writeConfig->enabled ? 'ON' : 'OFF',
-            'detail' => 'Phase 4C2 leaves flag OFF; Phase 4C enables temporarily.',
+            'status' => $this->writeConfig->enabled ? 'ON' : 'OFF_INTENTIONALLY',
+            'detail' => $this->writeConfig->enabled
+                ? 'Write flag is ON'
+                : 'Intentionally disabled until Phase 4C controlled enablement',
         ];
 
         $suffix = $this->writeConfig->tableSuffixConfigured
             ? (string) $this->writeConfig->tableSuffix
             : null;
+        // For controlled enablement prep, suffix must be configured as _dev even while flag is OFF.
         $suffixOk = $suffix === '_dev';
         $checks['TABLE_SUFFIX'] = [
             'status' => $suffixOk ? 'READY' : 'NOT_READY',
-            'detail' => $suffix === null ? 'not configured' : ('configured=' . $suffix),
+            'detail' => $suffix === null
+                ? 'QUOTES_ORDERS_LEGACY_WRITE_TABLE_SUFFIX not configured (need _dev)'
+                : ('configured=' . $suffix),
         ];
 
         $credsOk = $this->writeConfig->isConfigured();
@@ -72,7 +106,6 @@ final class QuoteWritePreflightService
                 : 'dedicated WRITE_* credentials unset; LEGACY_TC_* must not be reused',
         ];
 
-        $devGuardOk = false;
         try {
             if ($this->writeConfig->enabled) {
                 $this->writeSafety->assertDevTableSuffixRequired($this->writeConfig);
@@ -96,7 +129,7 @@ final class QuoteWritePreflightService
         ];
 
         $corrOk = !($this->correlation instanceof NullQuoteWriteCorrelationRepository);
-        $probeDetail = 'not wired';
+        $probeDetail = 'not wired (requires WRITE_* + quote_write_correlation_dev)';
         if ($corrOk) {
             try {
                 $found = $this->correlation->findQuoteIdByPlatformOperationId(
@@ -168,22 +201,43 @@ final class QuoteWritePreflightService
             'detail' => $customer !== '' ? 'customerPublicId supplied for fixture' : 'customerPublicId missing',
         ];
 
-        $blocking = [];
-        foreach ($checks as $name => $row) {
-            if ($name === 'WRITE_FLAG') {
-                continue; // intentionally OFF in 4C2
-            }
-            if ($row['status'] !== 'READY') {
-                $blocking[] = $name;
+        $infrastructureBlocking = [];
+        foreach (self::INFRASTRUCTURE_CHECKS as $name) {
+            if (($checks[$name]['status'] ?? '') !== 'READY') {
+                $infrastructureBlocking[] = $name;
             }
         }
 
+        $domainBlocking = [];
+        foreach (self::DOMAIN_CHECKS as $name) {
+            if (($checks[$name]['status'] ?? '') !== 'READY') {
+                $domainBlocking[] = $name;
+            }
+        }
+
+        $infrastructureReady = $infrastructureBlocking === [];
+        $domainReady = $domainBlocking === [];
+        $writeEnabled = $this->writeConfig->enabled;
+        $readyExceptWriteFlag = $infrastructureReady && $domainReady;
+        $readyForControlledEnablement = $readyExceptWriteFlag && !$writeEnabled;
+
+        $blocking = array_values(array_merge($infrastructureBlocking, $domainBlocking));
+        if ($writeEnabled) {
+            // Flag ON is not a blocker for "ready except flag"; tracked separately.
+        }
+
         return [
-            'readyExceptWriteFlag' => $blocking === [],
-            'writeFlagEnabled' => $this->writeConfig->enabled,
+            'infrastructureReady' => $infrastructureReady,
+            'domainReady' => $domainReady,
+            'writeEnabled' => $writeEnabled,
+            'readyForControlledEnablement' => $readyForControlledEnablement,
+            'readyExceptWriteFlag' => $readyExceptWriteFlag,
+            'writeFlagEnabled' => $writeEnabled,
             'tableSuffix' => $suffix,
             'checks' => $checks,
             'blocking' => $blocking,
+            'infrastructureBlocking' => $infrastructureBlocking,
+            'domainBlocking' => $domainBlocking,
         ];
     }
 }

@@ -236,14 +236,20 @@ final class QuoteLegacyMappingAndPreflightTest extends TestCase
             'customerPublicId' => '11111111-1111-1111-1111-111111111111',
         ]);
         self::assertFalse($result['writeFlagEnabled']);
-        self::assertSame('OFF', $result['checks']['WRITE_FLAG']['status']);
+        self::assertFalse($result['writeEnabled']);
+        self::assertFalse($result['infrastructureReady']);
+        self::assertFalse($result['domainReady']);
+        self::assertFalse($result['readyForControlledEnablement']);
+        self::assertSame('OFF_INTENTIONALLY', $result['checks']['WRITE_FLAG']['status']);
         self::assertSame('READY', $result['checks']['LINE_MAPPING']['status']);
         self::assertSame('READY', $result['checks']['PM_NOT_MARGIN']['status']);
         self::assertContains('WRITE_CREDENTIALS', $result['blocking']);
         self::assertContains('OPERATOR', $result['blocking']);
+        self::assertContains('WRITE_CREDENTIALS', $result['infrastructureBlocking']);
+        self::assertContains('OPERATOR', $result['domainBlocking']);
     }
 
-    public function test_preflightReadyExceptFlagWhenDepsPresent(): void
+    public function test_preflightReadyForControlledEnablementWhenDepsPresentAndFlagOff(): void
     {
         $correlation = new InMemoryQuoteWriteCorrelationRepository();
         $service = new QuoteWritePreflightService(
@@ -280,8 +286,56 @@ final class QuoteLegacyMappingAndPreflightTest extends TestCase
             'length' => '100',
             'customerPublicId' => '11111111-1111-1111-1111-111111111111',
         ]);
+        self::assertTrue($result['infrastructureReady']);
+        self::assertTrue($result['domainReady']);
+        self::assertFalse($result['writeEnabled']);
+        self::assertTrue($result['readyForControlledEnablement']);
         self::assertTrue($result['readyExceptWriteFlag']);
         self::assertSame([], $result['blocking']);
+        self::assertSame('OFF_INTENTIONALLY', $result['checks']['WRITE_FLAG']['status']);
+    }
+
+    public function test_preflightFlagOnDoesNotCountAsControlledEnablementReady(): void
+    {
+        $correlation = new InMemoryQuoteWriteCorrelationRepository();
+        $service = new QuoteWritePreflightService(
+            writeConfig: new LegacyQuoteWriteConfig(
+                enabled: true,
+                dsn: 'mysql:host=test;dbname=tc',
+                user: 'writer',
+                password: 'x',
+                sslMode: null,
+                tableSuffix: '_dev',
+                tableSuffixConfigured: true,
+            ),
+            idempotency: new InMemoryQuoteWriteIdempotencyStore(),
+            correlation: $correlation,
+            operators: new class implements \TriCab\Core\QuoteOrder\Contract\QuoteLegacyOperatorIdResolver {
+                public function resolveRaisedByOperatorId(AuthenticatedUser $actor, bool $customerGenerated): ?int
+                {
+                    return 1023235;
+                }
+            },
+            lineMapping: new SimpleCableQuoteLineLegacyMappingResolver(),
+        );
+        $actor = new AuthenticatedUser(
+            userId: 1,
+            publicId: '99999999-9999-9999-9999-999999999999',
+            emailAddress: 'mapped@tricab.com',
+            displayName: 'Mapped',
+            status: 'ACTIVE',
+            roles: ['ADMINISTRATOR'],
+            permissions: [Module::PERMISSION_CREATE],
+        );
+        $result = $service->run($actor, [
+            'variantCode' => 'XL-PAXN/1C25OR',
+            'length' => '100',
+            'customerPublicId' => '11111111-1111-1111-1111-111111111111',
+        ]);
+        self::assertTrue($result['infrastructureReady']);
+        self::assertTrue($result['domainReady']);
+        self::assertTrue($result['writeEnabled']);
+        self::assertFalse($result['readyForControlledEnablement']);
     }
 
     public function test_defaultsCatalogue(): void
