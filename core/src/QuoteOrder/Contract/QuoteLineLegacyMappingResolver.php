@@ -11,7 +11,7 @@ namespace TriCab\Core\QuoteOrder\Contract;
 interface QuoteLineLegacyMappingResolver
 {
     /**
-     * @return array{productCode: string, categoryType: int, colourId: ?int}|null
+     * @return array{productCode: string, categoryType: int, colourId: ?int, packMatrixId: ?int}|null
      */
     public function resolve(string $variantPublicId, ?string $variantCode, ?string $length): ?array;
 }

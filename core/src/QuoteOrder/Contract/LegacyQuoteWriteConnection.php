@@ -23,5 +23,11 @@ interface LegacyQuoteWriteConnection
      */
     public function execute(string $sql, array $params = []): int;
 
+    /**
+     * @param array<string, scalar|null> $params
+     * @return list<array<string, mixed>>
+     */
+    public function query(string $sql, array $params = []): array;
+
     public function lastInsertId(): string;
 }

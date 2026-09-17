@@ -90,6 +90,11 @@ final class LegacyQuoteWriteConfig
         return 'tc.tqote' . $this->resolvedTableSuffix();
     }
 
+    public function correlationTable(): string
+    {
+        return 'tc.quote_write_correlation' . $this->resolvedTableSuffix();
+    }
+
     /** @return array<string, mixed> */
     public function toPublicArray(): array
     {

@@ -11,21 +11,26 @@ use TriCab\Core\QuoteOrder\Application\Exception\QuoteWriteDisabledException;
 use TriCab\Core\QuoteOrder\Application\Exception\QuoteWriteFailedException;
 use TriCab\Core\QuoteOrder\Application\Service\QuoteWriteAuditLogger;
 use TriCab\Core\QuoteOrder\Contract\LegacyQuoteWriteConnection;
+use TriCab\Core\QuoteOrder\Contract\QuoteWriteCorrelationRepository;
 use TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository;
 use TriCab\Core\QuoteOrder\Domain\Mapping\PersistQuoteDraftMapper;
 use TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig;
+use TriCab\Core\QuoteOrder\Live\NonProductionQuoteWriteSafety;
 
 /**
- * Transactional persist: tqoth → tqoti (+ tqote) → tqoth.tnet.
+ * Transactional persist: tqoth → correlation → tqoti (+ tqote) → tqoth.tnet.
  * Quote id from AUTO_INCREMENT / lastInsertId only.
+ * PlatformOperationId correlation is written in the same MySQL TX.
  */
 final class TransactionalLegacyQuoteWriteRepository implements QuoteWriteRepository
 {
     public function __construct(
         private readonly LegacyQuoteWriteConfig $config,
         private readonly LegacyQuoteWriteConnection $connection,
+        private readonly QuoteWriteCorrelationRepository $correlation,
         private readonly PersistQuoteDraftMapper $mapper = new PersistQuoteDraftMapper(),
         private readonly QuoteWriteAuditLogger $audit = new NullQuoteWriteAuditLogger(),
+        private readonly NonProductionQuoteWriteSafety $writeSafety = new NonProductionQuoteWriteSafety(),
     ) {
     }
 
@@ -41,6 +46,14 @@ final class TransactionalLegacyQuoteWriteRepository implements QuoteWriteReposit
         }
 
         $this->config->assertExecutable();
+        $this->writeSafety->assertDevTableSuffixRequired($this->config);
+
+        $operationId = trim((string) $draft->platformOperationId);
+        if ($operationId === '') {
+            throw QuoteWriteFailedException::because(
+                'platformOperationId is required before MySQL persist for crash recovery.',
+            );
+        }
 
         try {
             $mapped = $this->mapper->map($draft);
@@ -89,6 +102,8 @@ final class TransactionalLegacyQuoteWriteRepository implements QuoteWriteReposit
             if ($quoteId === '' || $quoteId === '0') {
                 throw QuoteWriteFailedException::because('MySQL did not return an AUTO_INCREMENT quote id.');
             }
+
+            $this->correlation->insert($operationId, $quoteId);
 
             $lineIds = [];
             foreach ($mapped['lines'] as $entry) {

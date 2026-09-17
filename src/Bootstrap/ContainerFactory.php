@@ -1636,6 +1636,9 @@ final class ContainerFactory
             \TriCab\Core\QuoteOrder\Contract\QuoteWriteIdempotencyStore::class => \DI\autowire(
                 \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteIdempotencyStore::class,
             ),
+            \TriCab\Core\QuoteOrder\Contract\QuoteWriteCorrelationRepository::class => \DI\autowire(
+                \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteCorrelationRepository::class,
+            ),
             \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteAuditLogger::class => \DI\autowire(
                 \TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteAuditLogger::class,
             ),
@@ -1661,17 +1664,22 @@ final class ContainerFactory
                 \TriCab\Core\QuoteOrder\Application\Service\SaveQuoteService::class,
             ),
             \TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository::class => static function (Container $container) use ($settings): \TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository {
-                // Phase 4B: always disabled by default. No HTTP write route is registered.
+                // Phase 4C1: still disabled by default. No HTTP write route is registered.
                 if (!$settings->quotesOrdersLegacyWriteEnabled) {
                     return new \TriCab\Core\QuoteOrder\Infrastructure\DisabledQuoteWriteRepository();
                 }
 
                 $config = $settings->legacyQuoteWriteConfig();
                 $config->assertExecutable();
+                (new \TriCab\Core\QuoteOrder\Live\NonProductionQuoteWriteSafety())->assertDevTableSuffixRequired($config);
+
+                $connection = new \TriCab\Api\QuoteOrder\Legacy\PdoLegacyQuoteWriteConnection($config);
+                $correlation = new \TriCab\Api\QuoteOrder\Legacy\PdoQuoteWriteCorrelationRepository($connection, $config);
 
                 return new \TriCab\Core\QuoteOrder\Infrastructure\TransactionalLegacyQuoteWriteRepository(
                     $config,
-                    new \TriCab\Api\QuoteOrder\Legacy\PdoLegacyQuoteWriteConnection($config),
+                    $connection,
+                    $correlation,
                     new \TriCab\Core\QuoteOrder\Domain\Mapping\PersistQuoteDraftMapper(),
                     self::get($container, \TriCab\Core\QuoteOrder\Application\Service\QuoteWriteAuditLogger::class),
                 );

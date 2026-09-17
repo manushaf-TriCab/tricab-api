@@ -69,6 +69,31 @@ final class PdoLegacyQuoteWriteConnection implements LegacyQuoteWriteConnection
         }
     }
 
+    public function query(string $sql, array $params = []): array
+    {
+        try {
+            $statement = $this->pdo()->prepare($sql);
+            foreach ($params as $name => $value) {
+                $key = is_string($name) && !str_starts_with($name, ':') ? ':' . $name : (string) $name;
+                if ($value === null) {
+                    $statement->bindValue($key, null, PDO::PARAM_NULL);
+                } elseif (is_bool($value)) {
+                    $statement->bindValue($key, $value, PDO::PARAM_BOOL);
+                } elseif (is_int($value)) {
+                    $statement->bindValue($key, $value, PDO::PARAM_INT);
+                } else {
+                    $statement->bindValue($key, (string) $value, PDO::PARAM_STR);
+                }
+            }
+            $statement->execute();
+            $fetched = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+            return is_array($fetched) ? $fetched : [];
+        } catch (PDOException $e) {
+            throw QuoteWriteFailedException::because('SQL query failed.', $e);
+        }
+    }
+
     public function lastInsertId(): string
     {
         return (string) $this->pdo()->lastInsertId();

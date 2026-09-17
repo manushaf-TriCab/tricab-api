@@ -24,7 +24,8 @@ final readonly class PersistQuoteDraftLine
         public string $costUnitPrice,
         public string $costValue,
         public ?int $colourId = null,
-        public ?string $margin = null,
+        /** Legacy tqoti.pm = pack-matrix descript id (e.g. 1501), NOT margin %. */
+        public ?int $packMatrixId = null,
         public ?string $reference = null,
         public array $extended = [],
     ) {

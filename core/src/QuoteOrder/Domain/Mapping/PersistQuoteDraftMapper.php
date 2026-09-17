@@ -138,7 +138,7 @@ final class PersistQuoteDraftMapper
             'catdt' => $line->categoryType,
             'col' => $line->colourId,
             'qty' => $this->decimal($line->packCount, 4),
-            'pm' => $line->margin !== null ? $this->decimal($line->margin, 4) : null,
+            'pm' => $line->packMatrixId,
             'nprc' => $this->money($line->sellUnitPrice),
             'net' => $this->money($line->lineNet),
             'cprc' => $this->money($line->costUnitPrice),

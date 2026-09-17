@@ -37,6 +37,8 @@ final readonly class PersistQuoteDraft
         public array $lines,
         public ?int $recipientContactId = null,
         public string $totalCostValue = '0.00',
+        /** Stable UUID recorded in MySQL correlation TX + Azure idempotency. */
+        public ?string $platformOperationId = null,
     ) {
     }
 

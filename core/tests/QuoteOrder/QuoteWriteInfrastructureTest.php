@@ -21,9 +21,11 @@ use TriCab\Core\QuoteOrder\Domain\Mapping\LegacyQuoteStatusMapper;
 use TriCab\Core\QuoteOrder\Domain\Mapping\PersistQuoteDraftMapper;
 use TriCab\Core\QuoteOrder\Infrastructure\DisabledQuoteWriteRepository;
 use TriCab\Core\QuoteOrder\Infrastructure\InMemoryLegacyQuoteWriteConnection;
+use TriCab\Core\QuoteOrder\Infrastructure\InMemoryQuoteWriteCorrelationRepository;
 use TriCab\Core\QuoteOrder\Infrastructure\RecordingQuoteWriteAuditLogger;
 use TriCab\Core\QuoteOrder\Infrastructure\TransactionalLegacyQuoteWriteRepository;
 use TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig;
+use TriCab\Core\QuoteOrder\Live\NonProductionQuoteWriteSafety;
 use TriCab\Core\Product\Migration\Pricing\LegacyCyrteMappingContract;
 
 final class QuoteWriteInfrastructureTest extends TestCase
@@ -89,6 +91,7 @@ final class QuoteWriteInfrastructureTest extends TestCase
         $repo = new TransactionalLegacyQuoteWriteRepository(
             new LegacyQuoteWriteConfig(false, null, null, null, null, '_dev', true),
             $connection,
+            new InMemoryQuoteWriteCorrelationRepository(),
         );
         try {
             $repo->persistDraft($this->sampleDraft());
@@ -111,12 +114,55 @@ final class QuoteWriteInfrastructureTest extends TestCase
         self::assertSame('1705', $result->statusCode);
         self::assertSame('250.00', $result->totalNet);
         self::assertCount(2, $result->lineIds);
-        self::assertSame(4, $connection->committedInsertCount()); // header + 2 lines + 1 ext
+        self::assertSame(4, $connection->committedInsertCount()); // header + 2 lines + 1 ext (correlation is in-memory repo)
         $ops = $connection->committedOperations();
         self::assertCount(5, $ops); // + total UPDATE
         self::assertStringContainsString('UPDATE', $ops[4]['sql']);
         self::assertSame('250.00', $ops[4]['params']['tnet']);
         self::assertTrue($audit->events()[0]['success']);
+    }
+
+    public function test_emptySuffixRejectedByNonProductionSafety(): void
+    {
+        $this->expectException(QuoteWriteMisconfiguredException::class);
+        (new NonProductionQuoteWriteSafety())->assertDevTableSuffixRequired(
+            new LegacyQuoteWriteConfig(
+                enabled: true,
+                dsn: 'mysql:host=test;dbname=tc',
+                user: 'writer',
+                password: 'x',
+                sslMode: null,
+                tableSuffix: '',
+                tableSuffixConfigured: true,
+            ),
+        );
+    }
+
+    public function test_platformOperationIdRequiredBeforePersist(): void
+    {
+        $connection = new InMemoryLegacyQuoteWriteConnection();
+        $repo = $this->enabledRepo($connection);
+        $draft = $this->sampleDraft();
+        $draft = new PersistQuoteDraft(
+            documentType: $draft->documentType,
+            statusCode: $draft->statusCode,
+            createdAt: $draft->createdAt,
+            validUntil: $draft->validUntil,
+            companyCode: $draft->companyCode,
+            officeId: $draft->officeId,
+            raisedByOperatorId: $draft->raisedByOperatorId,
+            metricType: $draft->metricType,
+            customerId: $draft->customerId,
+            paymentTermsId: $draft->paymentTermsId,
+            currencyCode: $draft->currencyCode,
+            reference: $draft->reference,
+            customerGenerated: $draft->customerGenerated,
+            lines: $draft->lines,
+            recipientContactId: $draft->recipientContactId,
+            platformOperationId: null,
+        );
+        $this->expectException(QuoteWriteFailedException::class);
+        $repo->persistDraft($draft);
     }
 
     public function test_lineNumbersAreDeterministicFromCommandOrder(): void
@@ -173,6 +219,7 @@ final class QuoteWriteInfrastructureTest extends TestCase
                 tableSuffixConfigured: true,
             ),
             $connection,
+            new InMemoryQuoteWriteCorrelationRepository(),
             new PersistQuoteDraftMapper(),
             new RecordingQuoteWriteAuditLogger(),
         );
@@ -262,6 +309,7 @@ final class QuoteWriteInfrastructureTest extends TestCase
             reference: 'REF',
             customerGenerated: false,
             lines: [],
+            platformOperationId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
         );
 
         try {
@@ -353,6 +401,7 @@ final class QuoteWriteInfrastructureTest extends TestCase
                 tableSuffixConfigured: true,
             ),
             $connection,
+            new InMemoryQuoteWriteCorrelationRepository(),
             new PersistQuoteDraftMapper(),
             $audit ?? new RecordingQuoteWriteAuditLogger(),
         );
@@ -393,7 +442,7 @@ final class QuoteWriteInfrastructureTest extends TestCase
                     costUnitPrice: '0.05',
                     costValue: '50.00',
                     colourId: 1,
-                    margin: '50',
+                    packMatrixId: 1501,
                     reference: 'L1',
                     extended: $ext,
                 ),
@@ -406,9 +455,11 @@ final class QuoteWriteInfrastructureTest extends TestCase
                     lineNet: $secondLineNet,
                     costUnitPrice: '75.00',
                     costValue: '75.00',
+                    packMatrixId: 1501,
                 ),
             ],
             recipientContactId: 99,
+            platformOperationId: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee',
         );
     }
 }
@@ -456,6 +507,11 @@ final class CountingFailLegacyQuoteWriteConnection implements \TriCab\Core\Quote
         }
 
         return $this->inner->execute($sql, $params);
+    }
+
+    public function query(string $sql, array $params = []): array
+    {
+        return $this->inner->query($sql, $params);
     }
 
     public function lastInsertId(): string

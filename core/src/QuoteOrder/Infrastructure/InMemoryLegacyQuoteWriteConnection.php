@@ -115,6 +115,12 @@ final class InMemoryLegacyQuoteWriteConnection implements LegacyQuoteWriteConnec
         return 1;
     }
 
+    public function query(string $sql, array $params = []): array
+    {
+        // In-memory harness does not implement SELECT; correlation probe uses InMemoryQuoteWriteCorrelationRepository.
+        return [];
+    }
+
     public function lastInsertId(): string
     {
         return $this->lastInsertId ?? '0';

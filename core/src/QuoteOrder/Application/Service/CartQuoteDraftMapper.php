@@ -39,6 +39,7 @@ final class CartQuoteDraftMapper
         int $raisedByOperatorId,
         ?int $recipientContactId,
         array $snapshots,
+        ?string $platformOperationId = null,
     ): PersistQuoteDraft {
         $createdAt = $this->clock->now()->setTimezone(new DateTimeZone(PersistQuoteDraftMapper::MELBOURNE_TZ));
         $validUntil = $this->validity->validUntil($createdAt);
@@ -61,7 +62,7 @@ final class CartQuoteDraftMapper
                 costUnitPrice: $costUnit,
                 costValue: $costVal,
                 colourId: $snap->colourId,
-                margin: $snap->marginPercent,
+                packMatrixId: $snap->packMatrixId,
                 reference: $snap->reference,
                 extended: [],
             );
@@ -84,6 +85,7 @@ final class CartQuoteDraftMapper
             lines: $lines,
             recipientContactId: $recipientContactId,
             totalCostValue: QuoteHeaderDefaults::TOTAL_COST_VALUE,
+            platformOperationId: $platformOperationId,
         );
     }
 

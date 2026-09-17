@@ -6,8 +6,8 @@ namespace TriCab\Core\QuoteOrder\Application\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Throwable;
 use TriCab\Core\Commerce\Contract\CartRepository;
-use TriCab\Core\Commerce\Domain\Entity\Cart;
 use TriCab\Core\Commerce\Domain\Exception\CartAccessDenied;
 use TriCab\Core\Commerce\Domain\ValueObject\CartPublicId;
 use TriCab\Core\Customer\Contract\CustomerRepository;
@@ -18,28 +18,40 @@ use TriCab\Core\Product\Application\Pricing\CustomerSellPriceStatus;
 use TriCab\Core\Product\Application\Pricing\CustomerVariantSellPriceDiagnostic;
 use TriCab\Core\Product\Application\Pricing\PricingActorContextResolver;
 use TriCab\Core\Product\Application\Pricing\ResolveCustomerSellPriceService;
+use TriCab\Core\QuoteOrder\Application\Command\PersistQuoteDraft;
 use TriCab\Core\QuoteOrder\Application\Command\SaveQuoteCommand;
 use TriCab\Core\QuoteOrder\Application\DTO\PersistedQuote;
+use TriCab\Core\QuoteOrder\Application\DTO\QuoteWriteIdempotencyRecord;
 use TriCab\Core\QuoteOrder\Application\DTO\SaveQuoteLinePricingSnapshot;
 use TriCab\Core\QuoteOrder\Application\DTO\SaveQuotePreparationResult;
-use TriCab\Core\QuoteOrder\Application\DTO\QuoteWriteIdempotencyRecord;
 use TriCab\Core\QuoteOrder\Application\Exception\QuoteCreateAuthorizationException;
 use TriCab\Core\QuoteOrder\Application\Exception\QuoteWriteDisabledException;
 use TriCab\Core\QuoteOrder\Application\Exception\SaveQuoteValidationException;
 use TriCab\Core\QuoteOrder\Contract\QuoteLegacyOperatorIdResolver;
 use TriCab\Core\QuoteOrder\Contract\QuoteLineLegacyMappingResolver;
+use TriCab\Core\QuoteOrder\Contract\QuoteWriteCorrelationRepository;
 use TriCab\Core\QuoteOrder\Contract\QuoteWriteIdempotencyStore;
 use TriCab\Core\QuoteOrder\Contract\QuoteWriteRepository;
 use TriCab\Core\QuoteOrder\Domain\Mapping\LegacyQuoteStatusMapper;
 use TriCab\Core\QuoteOrder\Domain\Policy\QuoteValidityPolicy;
 use TriCab\Core\QuoteOrder\Domain\ValueObject\QuoteWriteIdempotencyState;
+use TriCab\Core\QuoteOrder\Infrastructure\NullQuoteWriteCorrelationRepository;
 use TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig;
 use TriCab\Core\QuoteOrder\Live\NonProductionQuoteWriteSafety;
 use TriCab\Core\Shared\Time\Clock;
 use TriCab\Core\Shared\Time\SystemClock;
 
 /**
- * Save Quote orchestration. Phase 4C0: prepare/dry-run only against DisabledQuoteWriteRepository.
+ * Save Quote orchestration.
+ *
+ * State machine (conceptual; not all states are DB-persisted):
+ * VALIDATING → PRICING → IDEMPOTENCY_ACQUIRED → PERSISTING_LEGACY →
+ * LEGACY_COMMITTED → IDEMPOTENCY_COMPLETED → CART_SUBMITTED → COMPLETED
+ *
+ * Critical boundaries:
+ * - LEGACY_COMMITTED but IDEMPOTENCY_COMPLETED failed → recover via MySQL correlation
+ * - IDEMPOTENCY_COMPLETED but CART_SUBMITTED failed → return quote; do not create duplicate
+ *
  * Does NOT register HTTP routes.
  */
 final class SaveQuoteService
@@ -57,6 +69,7 @@ final class SaveQuoteService
         private readonly QuoteWriteRepository $writes,
         private readonly QuoteWriteIdempotencyStore $idempotency,
         private readonly LegacyQuoteWriteConfig $writeConfig,
+        private readonly QuoteWriteCorrelationRepository $correlation = new NullQuoteWriteCorrelationRepository(),
         private readonly NonProductionQuoteWriteSafety $writeSafety = new NonProductionQuoteWriteSafety(),
         private readonly Clock $clock = new SystemClock(),
         private readonly LegacyQuoteStatusMapper $statusMapper = new LegacyQuoteStatusMapper(),
@@ -108,7 +121,6 @@ final class SaveQuoteService
             $blockers[] = 'PRICING_CONTEXT_CUSTOMER_MISMATCH';
         }
 
-        // Cart effective customer must match requested customer when both known.
         if ($customer->legacyCustomerId === null || $customer->legacyCustomerId <= 0) {
             $blockers[] = 'MISSING_LEGACY_CUSTOMER_ID';
         }
@@ -164,6 +176,7 @@ final class SaveQuoteService
                     pricingStatus: 'TBC',
                     marginSource: 'TBC',
                     colourId: $legacy['colourId'],
+                    packMatrixId: $legacy['packMatrixId'] ?? null,
                 );
                 continue;
             }
@@ -208,6 +221,7 @@ final class SaveQuoteService
                 pricingStatus: 'RESOLVED',
                 marginSource: $diagnostic?->marginSource ?? $line->marginSource(),
                 colourId: $legacy['colourId'],
+                packMatrixId: $legacy['packMatrixId'] ?? null,
             );
         }
 
@@ -272,7 +286,7 @@ final class SaveQuoteService
     }
 
     /**
-     * Persist path. Phase 4C0 keeps dryRun=true by default; write repo is disabled.
+     * Persist path. Default dryRun=true. Write flag + _dev safety enforced before mutation.
      */
     public function execute(SaveQuoteCommand $command): SaveQuotePreparationResult|PersistedQuote
     {
@@ -281,6 +295,16 @@ final class SaveQuoteService
             return $prepared;
         }
 
+        return $this->persistPrepared($command, $prepared);
+    }
+
+    /**
+     * Persist an already-prepared draft (used by execute + crash-recovery tests).
+     */
+    public function persistPrepared(
+        SaveQuoteCommand $command,
+        SaveQuotePreparationResult $prepared,
+    ): PersistedQuote {
         if (!$prepared->readyToPersist || $prepared->draft === null) {
             throw SaveQuoteValidationException::because(
                 'Save Quote is not ready to persist.',
@@ -314,7 +338,13 @@ final class SaveQuoteService
             updatedAtUtc: $now,
         ));
 
+        // Always use the acquired PlatformOperationId (stable across retries).
+        $operationId = $acquire->platformOperationId;
+        $draft = $this->draftWithPlatformOperationId($prepared->draft, $operationId);
+
         if ($acquire->stateVo()->isCompleted() && $acquire->quoteId !== null) {
+            $this->tryMarkCartSubmitted($command);
+
             return new PersistedQuote(
                 quoteId: $acquire->quoteId,
                 statusCode: $prepared->statusCode,
@@ -323,17 +353,47 @@ final class SaveQuoteService
             );
         }
 
+        // Cross-DB crash: Azure IN_PROGRESS, MySQL already committed + correlated.
+        if ($acquire->stateVo()->isInProgress()) {
+            $recoveredId = $this->correlation->findQuoteIdByPlatformOperationId($operationId);
+            if ($recoveredId !== null && $recoveredId !== '' && $recoveredId !== '0') {
+                $this->idempotency->markCompleted(
+                    $actorKey,
+                    QuoteWriteIdempotencyStore::OPERATION_PERSIST_DRAFT,
+                    $idemKey,
+                    $recoveredId,
+                );
+                $this->tryMarkCartSubmitted($command);
+
+                return new PersistedQuote(
+                    quoteId: $recoveredId,
+                    statusCode: $prepared->statusCode,
+                    totalNet: $prepared->totalNet,
+                    lineIds: [],
+                );
+            }
+        }
+
         try {
-            $persisted = $this->writes->persistDraft($prepared->draft);
-            $this->idempotency->markCompleted(
-                $actorKey,
-                QuoteWriteIdempotencyStore::OPERATION_PERSIST_DRAFT,
-                $idemKey,
-                $persisted->quoteId,
-            );
-            // Cart remains OPEN until Phase 4C wires markSubmitted after confirmed write.
-            return $persisted;
-        } catch (\Throwable $e) {
+            $persisted = $this->writes->persistDraft($draft);
+        } catch (Throwable $e) {
+            $recoveredId = $this->correlation->findQuoteIdByPlatformOperationId($operationId);
+            if ($recoveredId !== null && $recoveredId !== '' && $recoveredId !== '0') {
+                $this->idempotency->markCompleted(
+                    $actorKey,
+                    QuoteWriteIdempotencyStore::OPERATION_PERSIST_DRAFT,
+                    $idemKey,
+                    $recoveredId,
+                );
+                $this->tryMarkCartSubmitted($command);
+
+                return new PersistedQuote(
+                    quoteId: $recoveredId,
+                    statusCode: $prepared->statusCode,
+                    totalNet: $prepared->totalNet,
+                    lineIds: [],
+                );
+            }
             $this->idempotency->markFailed(
                 $actorKey,
                 QuoteWriteIdempotencyStore::OPERATION_PERSIST_DRAFT,
@@ -342,6 +402,22 @@ final class SaveQuoteService
             );
             throw $e;
         }
+
+        // LEGACY_COMMITTED — never markFailed after this point.
+        try {
+            $this->idempotency->markCompleted(
+                $actorKey,
+                QuoteWriteIdempotencyStore::OPERATION_PERSIST_DRAFT,
+                $idemKey,
+                $persisted->quoteId,
+            );
+        } catch (Throwable) {
+            // Leave IN_PROGRESS; retry uses correlation probe.
+        }
+
+        $this->tryMarkCartSubmitted($command);
+
+        return $persisted;
     }
 
     /**
@@ -366,6 +442,7 @@ final class SaveQuoteService
         $statusCode = $this->statusMapper->draftStatusCode($customerGenerated);
         $createdAt = $this->clock->now();
         $validUntil = $this->validity->validUntil($createdAt)->format('Y-m-d');
+        $platformOperationId = $this->newUuid();
 
         if ($blockers === [] && $legacyCustomerId !== null && $raisedBy !== null && $snapshots !== []) {
             $draft = $this->draftMapper->toDraft(
@@ -376,6 +453,7 @@ final class SaveQuoteService
                 raisedByOperatorId: $raisedBy,
                 recipientContactId: $command->recipientContactLegacyIdOverride,
                 snapshots: $snapshots,
+                platformOperationId: $platformOperationId,
             );
             $preview = $this->draftMapper->preview($draft);
             $totalNet = $draft->derivedTotalNet();
@@ -384,7 +462,6 @@ final class SaveQuoteService
             $validUntil = $draft->validUntil->format('Y-m-d');
         }
 
-        $platformOperationId = $this->newUuid();
         $requestHash = hash('sha256', json_encode([
             'customerPublicId' => strtolower($command->customerPublicId),
             'cartPublicId' => strtolower($command->cartPublicId),
@@ -431,6 +508,56 @@ final class SaveQuoteService
             requestHash: $requestHash,
             reconciliationFingerprint: $fingerprint,
         );
+    }
+
+    private function draftWithPlatformOperationId(PersistQuoteDraft $draft, string $platformOperationId): PersistQuoteDraft
+    {
+        if ($draft->platformOperationId === $platformOperationId) {
+            return $draft;
+        }
+
+        return new PersistQuoteDraft(
+            documentType: $draft->documentType,
+            statusCode: $draft->statusCode,
+            createdAt: $draft->createdAt,
+            validUntil: $draft->validUntil,
+            companyCode: $draft->companyCode,
+            officeId: $draft->officeId,
+            raisedByOperatorId: $draft->raisedByOperatorId,
+            metricType: $draft->metricType,
+            customerId: $draft->customerId,
+            paymentTermsId: $draft->paymentTermsId,
+            currencyCode: $draft->currencyCode,
+            reference: $draft->reference,
+            customerGenerated: $draft->customerGenerated,
+            lines: $draft->lines,
+            recipientContactId: $draft->recipientContactId,
+            totalCostValue: $draft->totalCostValue,
+            platformOperationId: $platformOperationId,
+        );
+    }
+
+    /**
+     * Cart failure after quote commit must not create a second quote on retry.
+     * QuoteId association lives in Azure idempotency / MySQL correlation (cart has no quote FK yet).
+     */
+    private function tryMarkCartSubmitted(SaveQuoteCommand $command): void
+    {
+        try {
+            $cart = $this->carts->getByPublicId(
+                CartPublicId::fromString($command->cartPublicId),
+                $command->actor->userId,
+            );
+            if ($cart === null || $cart->id() === null) {
+                return;
+            }
+            if (!$cart->status()->isOpen()) {
+                return;
+            }
+            $this->carts->markSubmitted($cart->id(), $command->actor->userId);
+        } catch (Throwable) {
+            // Swallow: idempotency COMPLETED + correlation already guarantee no duplicate quote.
+        }
     }
 
     private function isPortalActor(\TriCab\Core\Identity\Application\DTO\AuthenticatedUser $actor): bool

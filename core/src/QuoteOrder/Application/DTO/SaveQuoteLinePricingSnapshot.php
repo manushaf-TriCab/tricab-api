@@ -23,6 +23,7 @@ final readonly class SaveQuoteLinePricingSnapshot
         public string $pricingStatus,
         public ?string $marginSource,
         public ?int $colourId = null,
+        public ?int $packMatrixId = null,
         public ?string $reference = null,
     ) {
     }
