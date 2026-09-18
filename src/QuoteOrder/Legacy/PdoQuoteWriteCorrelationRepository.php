@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\QuoteOrder\Legacy;
 
+use TriCab\Api\QuoteOrder\Support\LegacyRowValue;
 use TriCab\Core\QuoteOrder\Contract\LegacyQuoteWriteConnection;
 use TriCab\Core\QuoteOrder\Contract\QuoteWriteCorrelationRepository;
 use TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig;
@@ -42,6 +43,6 @@ final class PdoQuoteWriteCorrelationRepository implements QuoteWriteCorrelationR
             return null;
         }
 
-        return (string) ($rows[0]['quote_id'] ?? '');
+        return LegacyRowValue::string($rows[0]['quote_id'] ?? null);
     }
 }

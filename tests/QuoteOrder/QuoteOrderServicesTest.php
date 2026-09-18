@@ -45,15 +45,23 @@ final class QuoteOrderServicesTest extends TestCase
         $staff = $this->staffActor();
         $result = $this->search->execute($staff, new QuoteOrderSearchCriteria(type: QuoteOrderType::ALL));
 
-        $byId = [];
+        $quoteSummary = null;
+        $orderSummary = null;
         foreach ($result->items as $item) {
-            $byId[$item->id] = $item;
+            if ($item->id === '1001') {
+                $quoteSummary = $item;
+            }
+            if ($item->id === '9001') {
+                $orderSummary = $item;
+            }
         }
 
-        self::assertSame(QuoteOrderType::QUOTE, $byId['1001']->type);
-        self::assertNull($byId['1001']->orderId);
-        self::assertSame(QuoteOrderType::ORDER, $byId['9001']->type);
-        self::assertSame('1002', $byId['9001']->quoteId);
+        self::assertInstanceOf(QuoteOrderSummary::class, $quoteSummary);
+        self::assertInstanceOf(QuoteOrderSummary::class, $orderSummary);
+        self::assertSame(QuoteOrderType::QUOTE, $quoteSummary->type);
+        self::assertNull($quoteSummary->orderId);
+        self::assertSame(QuoteOrderType::ORDER, $orderSummary->type);
+        self::assertSame('1002', $orderSummary->quoteId);
     }
 
     public function test_tbc_total_in_search(): void
@@ -226,20 +234,16 @@ final class QuoteOrderServicesTest extends TestCase
         self::assertSame('ACME01', $own->customerCode);
 
         // Foreign quote / order look like not found (no existence leak via 403).
+        $foreignQuoteHidden = false;
         try {
             $this->getQuote->execute($portal, '1003');
-            self::fail('Expected QuoteNotFound for foreign quote');
         } catch (QuoteNotFound) {
-            self::assertTrue(true);
+            $foreignQuoteHidden = true;
         }
+        self::assertTrue($foreignQuoteHidden, 'Expected QuoteNotFound for foreign quote');
 
-        try {
-            $this->getOrder->execute($portal, '9001');
-            // 9001 is ACME — should succeed
-            self::assertTrue(true);
-        } catch (QuoteNotFound) {
-            self::fail('Own order should be visible');
-        }
+        $ownOrder = $this->getOrder->execute($portal, '9001');
+        self::assertSame('9001', $ownOrder->orderId);
 
         // Malformed IDs
         $this->expectException(QuoteNotFound::class);

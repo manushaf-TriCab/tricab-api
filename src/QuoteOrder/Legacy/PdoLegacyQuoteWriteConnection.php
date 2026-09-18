@@ -6,6 +6,7 @@ namespace TriCab\Api\QuoteOrder\Legacy;
 
 use PDO;
 use PDOException;
+use TriCab\Api\QuoteOrder\Support\LegacyRowValue;
 use TriCab\Core\QuoteOrder\Application\Exception\QuoteWriteFailedException;
 use TriCab\Core\QuoteOrder\Contract\LegacyQuoteWriteConnection;
 use TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig;
@@ -49,18 +50,7 @@ final class PdoLegacyQuoteWriteConnection implements LegacyQuoteWriteConnection
     {
         try {
             $statement = $this->pdo()->prepare($sql);
-            foreach ($params as $name => $value) {
-                $key = is_string($name) && !str_starts_with($name, ':') ? ':' . $name : (string) $name;
-                if ($value === null) {
-                    $statement->bindValue($key, null, PDO::PARAM_NULL);
-                } elseif (is_bool($value)) {
-                    $statement->bindValue($key, $value, PDO::PARAM_BOOL);
-                } elseif (is_int($value)) {
-                    $statement->bindValue($key, $value, PDO::PARAM_INT);
-                } else {
-                    $statement->bindValue($key, (string) $value, PDO::PARAM_STR);
-                }
-            }
+            $this->bindParams($statement, $params);
             $statement->execute();
 
             return $statement->rowCount();
@@ -73,22 +63,10 @@ final class PdoLegacyQuoteWriteConnection implements LegacyQuoteWriteConnection
     {
         try {
             $statement = $this->pdo()->prepare($sql);
-            foreach ($params as $name => $value) {
-                $key = is_string($name) && !str_starts_with($name, ':') ? ':' . $name : (string) $name;
-                if ($value === null) {
-                    $statement->bindValue($key, null, PDO::PARAM_NULL);
-                } elseif (is_bool($value)) {
-                    $statement->bindValue($key, $value, PDO::PARAM_BOOL);
-                } elseif (is_int($value)) {
-                    $statement->bindValue($key, $value, PDO::PARAM_INT);
-                } else {
-                    $statement->bindValue($key, (string) $value, PDO::PARAM_STR);
-                }
-            }
+            $this->bindParams($statement, $params);
             $statement->execute();
-            $fetched = $statement->fetchAll(PDO::FETCH_ASSOC);
 
-            return is_array($fetched) ? $fetched : [];
+            return LegacyRowValue::assocRows($statement->fetchAll(PDO::FETCH_ASSOC));
         } catch (PDOException $e) {
             throw QuoteWriteFailedException::because('SQL query failed.', $e);
         }
@@ -97,6 +75,26 @@ final class PdoLegacyQuoteWriteConnection implements LegacyQuoteWriteConnection
     public function lastInsertId(): string
     {
         return (string) $this->pdo()->lastInsertId();
+    }
+
+    /**
+     * @param array<string, scalar|null> $params
+     */
+    private function bindParams(\PDOStatement $statement, array $params): void
+    {
+        foreach ($params as $name => $value) {
+            $key = str_starts_with($name, ':') ? $name : ':' . $name;
+            if ($value === null) {
+                $statement->bindValue($key, null, PDO::PARAM_NULL);
+            } elseif (is_bool($value)) {
+                $statement->bindValue($key, $value, PDO::PARAM_BOOL);
+            } elseif (is_int($value)) {
+                $statement->bindValue($key, $value, PDO::PARAM_INT);
+            } else {
+                // Remaining contract: string|float
+                $statement->bindValue($key, (string) $value, PDO::PARAM_STR);
+            }
+        }
     }
 
     private function pdo(): PDO

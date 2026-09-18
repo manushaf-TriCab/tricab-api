@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\QuoteOrder\Legacy;
 
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Api\QuoteOrder\Support\LegacyRowValue;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection;
 use TriCab\Core\QuoteOrder\Contract\QuoteLegacyOperatorIdResolver;
@@ -41,8 +42,8 @@ final class AzureLinkedDescriptQuoteLegacyOperatorIdResolver implements QuoteLeg
                     [':email' => strtolower(trim($actor->emailAddress))],
                 );
                 foreach ($rows as $row) {
-                    $login = trim((string) ($row['LegacyUserLogin'] ?? ''));
-                    if ($login === '') {
+                    $login = LegacyRowValue::stringOrNull($row['LegacyUserLogin'] ?? null);
+                    if ($login === null) {
                         continue;
                     }
                     $id = $this->lookupDescriptId($login);
@@ -71,7 +72,7 @@ final class AzureLinkedDescriptQuoteLegacyOperatorIdResolver implements QuoteLeg
         if (count($rows) !== 1) {
             return null;
         }
-        $id = (int) ($rows[0]['desc_id'] ?? 0);
+        $id = LegacyRowValue::int($rows[0]['desc_id'] ?? null);
 
         return $id > 0 ? $id : null;
     }

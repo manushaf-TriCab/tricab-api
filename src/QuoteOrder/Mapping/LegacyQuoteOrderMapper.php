@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\QuoteOrder\Mapping;
 
+use TriCab\Api\QuoteOrder\Support\LegacyRowValue;
 use TriCab\Core\Product\Migration\Pricing\LegacyCyrteMappingContract;
 use TriCab\Core\QuoteOrder\Application\DTO\OrderDetails;
 use TriCab\Core\QuoteOrder\Application\DTO\QuoteDetails;
@@ -35,8 +36,8 @@ final class LegacyQuoteOrderMapper
         $orderId = $this->nullableString($row['order_id'] ?? $row['po_id'] ?? null);
         $isOrder = $orderId !== null && $orderId !== '';
         $type = $isOrder ? QuoteOrderType::ORDER : QuoteOrderType::QUOTE;
-        $status = QuoteStatus::fromCode($row['status_code'] ?? $row['st'] ?? null);
-        $money = MoneyTotal::fromLegacyNet($row['total_net'] ?? $row['tnet'] ?? null);
+        $status = QuoteStatus::fromCode(LegacyRowValue::statusCode($row['status_code'] ?? $row['st'] ?? null));
+        $money = MoneyTotal::fromLegacyNet(LegacyRowValue::moneyNet($row['total_net'] ?? $row['tnet'] ?? null));
         $raisedBy = $this->resolveRaisedBy($row);
 
         return new QuoteOrderSummary(
@@ -146,7 +147,7 @@ final class LegacyQuoteOrderMapper
             return null;
         }
 
-        $id = (int) $currencyId;
+        $id = LegacyRowValue::int($currencyId);
         if ($id <= 0) {
             return null;
         }
@@ -159,7 +160,7 @@ final class LegacyQuoteOrderMapper
      */
     private function resolveRaisedBy(array $row): ?string
     {
-        $cusGen = (int) ($row['cus_gen'] ?? 0);
+        $cusGen = LegacyRowValue::int($row['cus_gen'] ?? null);
         if ($cusGen === 1) {
             return $this->nullableString($row['contact_name'] ?? $row['raised_by'] ?? null);
         }
@@ -186,17 +187,11 @@ final class LegacyQuoteOrderMapper
 
     private function string(mixed $value): string
     {
-        return trim((string) $value);
+        return trim(LegacyRowValue::string($value));
     }
 
     private function nullableString(mixed $value): ?string
     {
-        if ($value === null) {
-            return null;
-        }
-
-        $trimmed = trim((string) $value);
-
-        return $trimmed === '' ? null : $trimmed;
+        return LegacyRowValue::stringOrNull($value);
     }
 }

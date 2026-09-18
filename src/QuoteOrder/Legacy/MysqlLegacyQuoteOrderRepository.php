@@ -6,6 +6,7 @@ namespace TriCab\Api\QuoteOrder\Legacy;
 
 use Throwable;
 use TriCab\Api\QuoteOrder\Mapping\LegacyQuoteOrderMapper;
+use TriCab\Api\QuoteOrder\Support\LegacyRowValue;
 use TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection;
 use TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard;
 use TriCab\Core\QuoteOrder\Application\DTO\OrderDetails;
@@ -47,7 +48,7 @@ final class MysqlLegacyQuoteOrderRepository implements QuoteOrderRepository
         $countSql = 'SELECT COUNT(*) AS cnt FROM ' . $from . $whereSql;
         $this->guard->assertReadOnly($countSql);
         $countRows = $this->safeQuery($countSql, $params, 'searchCount');
-        $total = (int) ($countRows[0]['cnt'] ?? 0);
+        $total = LegacyRowValue::int($countRows[0]['cnt'] ?? null);
 
         $offset = ($criteria->page - 1) * $criteria->pageSize;
         $limit = $criteria->pageSize;
@@ -117,7 +118,7 @@ final class MysqlLegacyQuoteOrderRepository implements QuoteOrderRepository
             return null;
         }
 
-        $items = $this->loadItems((string) $rows[0]['quote_id']);
+        $items = $this->loadItems(LegacyRowValue::string($rows[0]['quote_id'] ?? null));
 
         return $this->mapper->mapQuoteDetails($rows[0], $items);
     }
@@ -137,7 +138,7 @@ final class MysqlLegacyQuoteOrderRepository implements QuoteOrderRepository
             return null;
         }
 
-        $quoteId = isset($rows[0]['quote_id']) ? (string) $rows[0]['quote_id'] : '';
+        $quoteId = LegacyRowValue::string($rows[0]['quote_id'] ?? null);
         $quote = $quoteId !== '' ? $this->findQuoteById($quoteId, $scope) : null;
         if ($quote === null && $scope->isCustomerPortalScoped) {
             return null;
@@ -160,7 +161,7 @@ final class MysqlLegacyQuoteOrderRepository implements QuoteOrderRepository
 
         $items = [];
         foreach ($rows as $row) {
-            $packs = $this->loadPacks((string) $row['item_id']);
+            $packs = $this->loadPacks(LegacyRowValue::string($row['item_id'] ?? null));
             $items[] = $this->mapper->mapItem($row, $packs);
         }
 

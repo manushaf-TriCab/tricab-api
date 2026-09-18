@@ -57,7 +57,7 @@ final class QuoteOrderEndpointsTest extends TestCase
         self::assertArrayHasKey('page', $data);
         self::assertArrayHasKey('pageSize', $data);
         self::assertArrayHasKey('total', $data);
-        self::assertGreaterThanOrEqual(1, (int) $data['total']);
+        self::assertGreaterThanOrEqual(1, Payload::int($data['total']));
 
         $item = Payload::obj(Payload::list($data['items'])[0]);
         self::assertArrayHasKey('totalStatus', $item);
