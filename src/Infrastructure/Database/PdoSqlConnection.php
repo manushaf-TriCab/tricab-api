@@ -36,10 +36,10 @@ final class PdoSqlConnection implements SqlConnection
             return $rows;
         } catch (PDOException $exception) {
             $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started));
-            throw DatabaseUnavailable::fromThrowable($exception);
+            throw DatabaseUnavailable::fromQueryThrowable($exception, $sql);
         } catch (Throwable $exception) {
             $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started));
-            throw DatabaseUnavailable::fromThrowable($exception);
+            throw DatabaseUnavailable::fromQueryThrowable($exception, $sql);
         }
     }
 
@@ -53,10 +53,10 @@ final class PdoSqlConnection implements SqlConnection
             $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started), 0, self::queryName($sql));
         } catch (PDOException $exception) {
             $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started), 0, self::queryName($sql));
-            throw DatabaseUnavailable::fromThrowable($exception);
+            throw DatabaseUnavailable::fromQueryThrowable($exception, $sql);
         } catch (Throwable $exception) {
             $this->metrics->recordSql(RequestPerformanceMetrics::durationMs($started), 0, self::queryName($sql));
-            throw DatabaseUnavailable::fromThrowable($exception);
+            throw DatabaseUnavailable::fromQueryThrowable($exception, $sql);
         }
     }
 

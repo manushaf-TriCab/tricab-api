@@ -143,15 +143,36 @@ if ($permissionCount < 8) {
     exit(3);
 }
 
+/* What the role must hold is ADMIN_ROLE_PERMISSIONS — the five administrative
+   ones — and not all eight. Since 21 Sep 2026 ONBOARDING_ADMIN carries no
+   self-service permission, because TriCab's admins have no induction of their
+   own; an admin who somehow needs one gets it from `employee` like everybody
+   else. Counting ONBOARDING.% here instead would fail this script the moment
+   the narrowing seed is re-run.
+
+   The list is built from the constant rather than written out, so the script and
+   the module cannot disagree about what the role means. Each value gets its own
+   parameter name: PDO_SQLSRV rewrites named parameters to positional markers, so
+   a name used twice leaves a marker unbound. */
+$requiredPermissions = Module::ADMIN_ROLE_PERMISSIONS;
+$permissionParams = [];
+foreach ($requiredPermissions as $index => $code) {
+    $permissionParams[':perm' . $index] = strtoupper($code);
+}
+$permissionPlaceholders = implode(', ', array_keys($permissionParams));
+
 $roleRow = $db->fetchAll(
-    'SELECT r.RoleId, r.IsActive,
-            (SELECT COUNT(*) FROM [identity].[RolePermissions] rp
-               JOIN [identity].[Permissions] p ON p.PermissionId = rp.PermissionId
-              WHERE rp.RoleId = r.RoleId AND rp.IsActive = 1
-                AND UPPER(p.PermissionCode) LIKE N\'ONBOARDING.%\') AS GrantedPermissions
-     FROM [identity].[Roles] r
-     WHERE UPPER(r.RoleCode) = :roleCode',
-    [':roleCode' => strtoupper($role)],
+    sprintf(
+        'SELECT r.RoleId, r.IsActive,
+                (SELECT COUNT(*) FROM [identity].[RolePermissions] rp
+                   JOIN [identity].[Permissions] p ON p.PermissionId = rp.PermissionId
+                  WHERE rp.RoleId = r.RoleId AND rp.IsActive = 1
+                    AND UPPER(p.PermissionCode) IN (%s)) AS GrantedPermissions
+         FROM [identity].[Roles] r
+         WHERE UPPER(r.RoleCode) = :roleCode',
+        $permissionPlaceholders,
+    ),
+    $permissionParams + [':roleCode' => strtoupper($role)],
 );
 
 if ($roleRow === []) {
@@ -164,13 +185,15 @@ if ((int) $roleRow[0]['IsActive'] !== 1) {
 }
 
 $granted = (int) $roleRow[0]['GrantedPermissions'];
-$out(sprintf('Role holds %d of 8 ONBOARDING permissions.', $granted));
+$required = count($requiredPermissions);
+$out(sprintf('Role holds %d of %d administrative ONBOARDING permissions.', $granted, $required));
 
-if ($granted !== 8) {
+if ($granted !== $required) {
     fwrite(STDERR, sprintf(
-        "ROLE_INCOMPLETE: %s holds %d of 8 ONBOARDING permissions. Re-run seed-onboarding-roles.sql.\n",
+        "ROLE_INCOMPLETE: %s holds %d of %d administrative ONBOARDING permissions. Re-run seed-onboarding-roles.sql.\n",
         $role,
         $granted,
+        $required,
     ));
     exit(4);
 }
@@ -211,7 +234,7 @@ $sql = $hasEmailAddressTable
                 WHERE uea.UserId = u.UserId
                   AND uea.IsActive = 1
                   AND uea.VerifiedAtUtc IS NOT NULL
-                  AND LOWER(uea.NormalizedEmailAddress) = :email
+                  AND LOWER(uea.NormalizedEmailAddress) = :emailVerified
            )
         ORDER BY u.UserId'
     : 'SELECT TOP 2
@@ -236,7 +259,19 @@ if ($only !== []) {
 $plans = [];
 foreach ($selected as $email => $name) {
     $normalized = strtolower(trim($email));
-    $rows = $db->fetchAll($sql, [':email' => $normalized]);
+
+    // :email and :emailVerified carry the same value, and they are two
+    // parameters rather than one because PDO_SQLSRV rewrites named parameters
+    // to positional markers and binds each occurrence separately. A name used
+    // twice leaves the second marker unbound and the driver answers
+    // "COUNT field incorrect or syntax error", which names neither the
+    // parameter nor the query. See the trap list in the implementation plan.
+    $params = [':email' => $normalized];
+    if ($hasEmailAddressTable) {
+        $params[':emailVerified'] = $normalized;
+    }
+
+    $rows = $db->fetchAll($sql, $params);
 
     if ($rows === []) {
         $plans[] = ['email' => $email, 'name' => $name, 'state' => 'NO_ACCOUNT'];
