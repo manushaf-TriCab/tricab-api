@@ -284,8 +284,54 @@ follow the platform pattern — with one qualification:
 
 The platform has a working precedent in `bin/tri-expense-purge-expired-receipts.php`: dry-run by
 default, `--apply` to act, and an additional `--i-understand-this-deletes-data` flag in production.
-Onboarding retention jobs follow it. Nothing is deleted automatically, and the retention classification
-per class is an owner decision that the leaver policy (§9) partly determines.
+Onboarding retention jobs follow it. Nothing is deleted automatically.
+
+`onboarding.RetentionClasses` is where a retention period is stated, one row per class C0–C5, and
+**every row is seeded with `RetentionDays = NULL`** — "no figure decided; keep". The job reads the
+table, finds NULL everywhere and deletes nothing. Setting a figure is a deliberate act recorded
+against whoever made it: `CK_onboarding_RetentionClasses_Decided` refuses a period without a
+`DecidedByUserId` and a date.
+
+#### The leaver policy — decided 21 September 2026
+
+**A departed person keeps read access to their own onboarding records for fourteen days.**
+
+That is the whole decision, and it answers the leaver question in §9. Two clocks were at risk of being
+confused here, so state them apart:
+
+| | What it is | Figure |
+|---|---|---|
+| **Departure grace window** | How long a leaver may still *read* their own records | **14 days**, decided |
+| **Record retention** | How long the records are *kept* | Not decided; measured in years, not days |
+
+Fourteen days serves two people: a leaver who wants their own signed induction paperwork on the way
+out, and HR, who would otherwise field that request by hand every time. It is **read-only** —
+submitting stops at the departure instant, because evidence dated after somebody's last day is worse
+than no evidence, since it looks like evidence.
+
+It is emphatically **not** a deletion schedule. Onboarding holds employee records, and the Fair Work
+Act 2009 (Cth) s.535 requires an employer to keep those for seven years. A retention job that removed
+an induction a fortnight after somebody left would destroy evidence the business is obliged to hold,
+in exactly the case where it is most likely to be asked for.
+
+The rule lives in `TriCab\Core\Onboarding\Domain\Service\LeaverPolicy` (pure, 16 tests) and in
+`onboarding.TraineeProfiles`: `DepartedAtUtc`, plus a persisted computed `AccessEndsAtUtc` so "whose
+window has closed" is an index seek. The constant is stated in both places, so
+`OnboardingSchemaTest::test_the_computed_access_window_matches_the_leaver_policy` fails if they ever
+drift — a grace period changed in one place and not the other is a silent authorization change that no
+ordinary test would catch.
+
+A future `DepartedAtUtc` means *serving out notice*, not *gone*: HR records a last day as soon as it is
+known, and somebody working their notice is a current employee who may still be finishing their
+induction.
+
+**What is not built.** A grace window needs the person to be able to sign in during it, and today they
+cannot: deactivating an account sets `identity.Users` to `disabled`, `AllowsLogin = 0`, and
+`assertAuthenticationAllowed()` refuses the login before any Onboarding permission is consulted. Closing
+that needs a platform identity change — a departed person who keeps login while holding nothing but the
+self-service three — which is a change to shared authentication and is not made unasked. Until it
+lands, the fourteen days bind HR rather than the leaver: they are the window in which HR must still be
+able to produce a leaver's records, and the window retention tooling must never shorten.
 
 ---
 
@@ -390,9 +436,10 @@ Gaps found while writing this, feeding the Phase 0.7 gap list:
 
 Decisions owed by the owner (also at the foot of the implementation plan):
 
-- **Leaver policy.** When a person is deactivated, do they keep read access to their own onboarding
-  documents? `assertAuthenticationAllowed()` currently blocks login outright, which answers "no" by
-  accident rather than by decision. Shapes retention for C2–C5.
+- ~~**Leaver policy.**~~ **Answered 21 Sep 2026: fourteen days of read access after departure**, read
+  only, and separate from how long records are kept — see §5. What it leaves owed is narrower: the
+  platform identity change that lets a departed person sign in during the window, and the record
+  retention figure per class, which is measured in years and needs advice behind it.
 - **Cohort semantics.** Work order invariant 8 says cohorts allocate nothing; the source re-derives
   assignments when `trainees.cohort_id` changes. Confirm which is intended before porting `cohorts`.
 - **SAS versus streamed download for C3/C4** (§5).
