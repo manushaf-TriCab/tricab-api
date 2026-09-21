@@ -185,12 +185,50 @@ final class OnboardingSchemaTest extends TestCase
         );
     }
 
-    public function test_only_payroll_and_restricted_fields_are_routed_to_the_hr_schema(): void
+    /**
+     * C2 is a recordable answer — "somebody decided this field is ordinary" —
+     * and that is what closes the fail-open gap: on a payroll or restricted
+     * form every field must have a row, so absence means unclassified rather
+     * than silently ordinary. C0 and C1 are content and workflow, which a
+     * submitted field never is.
+     *
+     * Only C3 and C4 are stored in the restricted schema; a C2 row is a
+     * classification decision, not a payload.
+     */
+    public function test_a_field_may_be_classified_ordinary_payroll_or_restricted(): void
     {
         $sql = $this->sql(self::HR_SCHEMA);
 
         self::assertStringContainsString('CK_onboarding_hr_FieldClassifications_Class', $sql);
-        self::assertStringContainsString('CHECK ([RetentionClassId] IN (3, 4))', $sql);
+        self::assertStringContainsString('CHECK ([RetentionClassId] IN (2, 3, 4))', $sql);
+
+        // The split payload itself still admits only the two restricted classes.
+        self::assertStringContainsString('CK_onboarding_hr_RestrictedSubmissionData_Class', $sql);
+        self::assertMatchesRegularExpression(
+            '/CK_onboarding_hr_RestrictedSubmissionData_Class\]\s*\n?\s*CHECK \(\[RetentionClassId\] IN \(3, 4\)\)/',
+            $sql,
+        );
+    }
+
+    /**
+     * The author says, per version, whether a new version supersedes work in
+     * progress. Default 0: a default that resets people's inductions is one
+     * that will be regretted, and ticking a box is cheaper than un-resetting.
+     */
+    public function test_every_version_table_carries_the_reissue_flag(): void
+    {
+        $sql = $this->sql(self::WORKFLOW_SCHEMA);
+
+        foreach (['TrainingModuleVersions', 'PolicyVersions', 'FormDefinitionVersions'] as $table) {
+            $body = $this->tableBody($sql, $table);
+
+            self::assertMatchesRegularExpression(
+                '/\[SupersedesWorkInProgress\] BIT NOT NULL/',
+                $body,
+                $table . ' must record whether publishing disturbs work in progress.',
+            );
+            self::assertStringContainsString('_Supersedes] DEFAULT (0)', $body);
+        }
     }
 
     /**

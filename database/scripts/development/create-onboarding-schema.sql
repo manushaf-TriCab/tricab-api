@@ -216,6 +216,14 @@ BEGIN
         [PassMarkPercent]         TINYINT NULL,
         [IsPublished]             BIT NOT NULL
             CONSTRAINT [DF_onboarding_TrainingModuleVersions_IsPublished] DEFAULT (0),
+        /* Does this version supersede work already in progress?
+           Owner decision, 21 Sep 2026: the author says, per version. A typo fix
+           leaves people alone; a substantive rewrite moves everyone unfinished
+           onto this version and clears their progress. A blanket rule gets one of
+           those two wrong every time, and only the author knows which it is.
+           Never affects a COMPLETED assignment — see SupersessionPolicy. */
+        [SupersedesWorkInProgress] BIT NOT NULL
+            CONSTRAINT [DF_onboarding_TrainingModuleVersions_Supersedes] DEFAULT (0),
         [PublishedAtUtc]          DATETIME2(7) NULL,
         [PublishedByUserId]       BIGINT NULL,
         [RetiredAtUtc]            DATETIME2(7) NULL,
@@ -316,6 +324,14 @@ BEGIN
         [EffectiveFrom]     DATE NULL,
         [IsPublished]       BIT NOT NULL
             CONSTRAINT [DF_onboarding_PolicyVersions_IsPublished] DEFAULT (0),
+        /* Does this version supersede work already in progress?
+           Owner decision, 21 Sep 2026: the author says, per version. A typo fix
+           leaves people alone; a substantive rewrite moves everyone unfinished
+           onto this version and clears their progress. A blanket rule gets one of
+           those two wrong every time, and only the author knows which it is.
+           Never affects a COMPLETED assignment — see SupersessionPolicy. */
+        [SupersedesWorkInProgress] BIT NOT NULL
+            CONSTRAINT [DF_onboarding_PolicyVersions_Supersedes] DEFAULT (0),
         [PublishedAtUtc]    DATETIME2(7) NULL,
         [PublishedByUserId] BIGINT NULL,
         [SupersededAtUtc]   DATETIME2(7) NULL,
@@ -386,6 +402,14 @@ BEGIN
         [SchemaJson]              NVARCHAR(MAX) NOT NULL,
         [IsPublished]             BIT NOT NULL
             CONSTRAINT [DF_onboarding_FormDefinitionVersions_IsPublished] DEFAULT (0),
+        /* Does this version supersede work already in progress?
+           Owner decision, 21 Sep 2026: the author says, per version. A typo fix
+           leaves people alone; a substantive rewrite moves everyone unfinished
+           onto this version and clears their progress. A blanket rule gets one of
+           those two wrong every time, and only the author knows which it is.
+           Never affects a COMPLETED assignment — see SupersessionPolicy. */
+        [SupersedesWorkInProgress] BIT NOT NULL
+            CONSTRAINT [DF_onboarding_FormDefinitionVersions_Supersedes] DEFAULT (0),
         [PublishedAtUtc]          DATETIME2(7) NULL,
         [PublishedByUserId]       BIGINT NULL,
         [RetiredAtUtc]            DATETIME2(7) NULL,

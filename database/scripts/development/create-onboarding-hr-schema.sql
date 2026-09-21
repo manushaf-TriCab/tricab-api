@@ -72,17 +72,24 @@ GO
    submitted, routes each field to its class, and writes the ordinary-HR
    remainder to [onboarding].[FormSubmissions].
 
-   A field absent from this table is ordinary HR — and that default fails OPEN,
-   so it is the one thing in this design worth being uneasy about: a sensitive
-   field added to a form and not classified here is written to [onboarding] in
-   clear. No CHECK constraint can close it, because the rule spans two tables and
-   a JSON payload.
+   ## Why C2 is storable here, and the fail-open gap it closes
 
-   It is closed at publish time instead: a form version whose [AccessGroup] is
-   `payroll` or `restricted_hr` must have at least one row here before it can be
-   published, and any field in its schema that is not classified must be named
-   explicitly as ordinary. That is application code, so it is covered by a test
-   rather than by the database, and it is listed as such in the plan.
+   An earlier revision admitted only C3 and C4, on the reasoning that calling a
+   field ordinary is said by leaving it out. That made the default fail OPEN: a
+   sensitive field added to a form and never classified was written to
+   [onboarding] in clear, and nothing could tell "nobody has classified this" from
+   "somebody decided it is ordinary".
+
+   So C2 is a recordable answer. On a form whose [AccessGroup] is `payroll` or
+   `restricted_hr`, EVERY field in the published schema must have a row here —
+   C2, C3 or C4 — and FormVersionPublishGuard refuses to publish until they do.
+   Absence is then unambiguous: it means unclassified, which means unpublishable.
+
+   The guard is application code because the rule spans this table, a form
+   version's JSON schema and a publish action; no CHECK constraint can express
+   it. It is covered by tests rather than by the database, and that is the
+   residual risk, stated rather than hidden: a write that bypasses the guard
+   bypasses the rule.
    ============================================================================ */
 IF OBJECT_ID(N'[onboarding_hr].[FieldClassifications]', N'U') IS NULL
 BEGIN
@@ -98,10 +105,10 @@ BEGIN
         CONSTRAINT [PK_onboarding_hr_FieldClassifications] PRIMARY KEY CLUSTERED ([FieldClassificationId]),
         CONSTRAINT [UQ_onboarding_hr_FieldClassifications_Field]
             UNIQUE ([FormDefinitionVersionId], [FieldPath]),
-        /* Only C3 and C4 are routed here. Classifying a field as C0–C2 is saying
-           it is ordinary, which is said by leaving it out. */
+        /* C2 = explicitly ordinary, stays in [onboarding]. C3/C4 route here.
+           C0 and C1 are content and workflow, which a submitted field never is. */
         CONSTRAINT [CK_onboarding_hr_FieldClassifications_Class]
-            CHECK ([RetentionClassId] IN (3, 4)),
+            CHECK ([RetentionClassId] IN (2, 3, 4)),
         CONSTRAINT [CK_onboarding_hr_FieldClassifications_FieldPath]
             CHECK (LEN(LTRIM(RTRIM([FieldPath]))) > 0),
         CONSTRAINT [FK_onboarding_hr_FieldClassifications_Version]
