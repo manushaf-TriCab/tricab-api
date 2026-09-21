@@ -172,6 +172,8 @@ use TriCab\Api\Http\Action\Dev\DevProductFileDeliveryAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingAdminOverviewAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingSelfSummaryAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\TrustedDevice\ExchangeTrustedDeviceSessionAction;
 use TriCab\Api\Http\Action\TrustedDevice\RegisterTrustedDeviceAction;
@@ -356,7 +358,35 @@ final class AppBuilder
         $app->post('/api/v1/regions/select', PublicRegionAction::class);
         $app->get('/api/v1/public/about', GetPublicAboutAction::class);
         $app->get('/api/v1/public/contact', GetPublicContactAction::class);
+        self::registerOnboardingRoutes($app, $container);
         self::registerAdminRoutes($app, $container);
+    }
+
+    /**
+     * Onboarding module.
+     *
+     * Two groups with different gates, deliberately not one:
+     *
+     *  - `/api/v1/onboarding/*` is self-service. It is reachable by a
+     *    pre-start candidate on a guest session and by an employee who has no
+     *    TriCab mailbox, so it is gated on ONBOARDING.SELF.* and never on a
+     *    role or session type (work order §4.15).
+     *  - `/api/v1/admin/onboarding/*` is HR. Separate permissions, and the
+     *    self gate grants none of it.
+     *
+     * Phase 1: the gates are real, the handlers are stubs.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerOnboardingRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+
+        $app->get('/api/v1/onboarding/me', GetOnboardingSelfSummaryAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+
+        $app->get('/api/v1/admin/onboarding/overview', GetOnboardingAdminOverviewAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
     }
 
     /**

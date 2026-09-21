@@ -130,6 +130,7 @@ foreach ($s in @(
     'alter-product-regions.sql',
     'seed-customer-roles-and-permissions.sql',
     'seed-guest-role-and-login-permission.sql',
+    'seed-onboarding-permissions.sql',   # after guest role: grants GUEST + EMPLOYEE self-service
     'seed-product-catalogue-sample.sql',
     'seed-product-cable-reference.sql',      # after catalogue-sample
     'seed-customer-sample-data.sql'
