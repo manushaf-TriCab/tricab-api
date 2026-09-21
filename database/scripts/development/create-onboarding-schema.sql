@@ -1043,24 +1043,48 @@ IF OBJECT_ID(N'[onboarding].[TR_FormSubmissions_Immutable]', N'TR') IS NOT NULL
 GO
 CREATE TRIGGER [onboarding].[TR_FormSubmissions_Immutable]
 ON [onboarding].[FormSubmissions]
-INSTEAD OF UPDATE, DELETE
+AFTER UPDATE, DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    /* One exception, and it is bookkeeping rather than content: marking a
-       revision superseded when its replacement arrives. Nothing a person wrote
-       can be changed by it. */
-    IF UPDATE([SubmittedDataJson]) OR UPDATE([RevisionNumber]) OR UPDATE([SubmittedAtUtc])
-        OR UPDATE([UserId]) OR UPDATE([AssignmentId]) OR UPDATE([FormDefinitionVersionId])
-        OR EXISTS (SELECT 1 FROM deleted WHERE NOT EXISTS (SELECT 1 FROM inserted i WHERE i.[FormSubmissionId] = deleted.[FormSubmissionId]))
+
+    /* AFTER rather than INSTEAD OF, and the reason is worth keeping: this table
+       has one permitted update — marking a revision superseded when its
+       replacement arrives, which is bookkeeping rather than content. An INSTEAD
+       OF trigger would have to re-issue that update itself, and an update issued
+       from inside the trigger that governs the table only stays safe while the
+       database's RECURSIVE_TRIGGERS setting is OFF. It defaults to OFF; relying
+       on it would make this table's immutability a property of a database
+       option somebody can change from a different screen.
+
+       So: let the write land, then refuse it if it touched anything a person
+       wrote. THROW in an AFTER trigger rolls the statement back. */
+
+    /* No row in `inserted` for a key in `deleted` means a DELETE. */
+    IF EXISTS (
+        SELECT 1 FROM deleted d
+        WHERE NOT EXISTS (SELECT 1 FROM inserted i WHERE i.[FormSubmissionId] = d.[FormSubmissionId])
+    )
+    BEGIN
+        THROW 50001, N'onboarding.FormSubmissions is immutable. A submission is never deleted; withdraw the assignment instead.', 1;
+    END;
+
+    IF EXISTS (
+        SELECT 1
+        FROM inserted i
+        INNER JOIN deleted d ON d.[FormSubmissionId] = i.[FormSubmissionId]
+        WHERE i.[SubmittedDataJson]       <> d.[SubmittedDataJson]
+           OR i.[RevisionNumber]          <> d.[RevisionNumber]
+           OR i.[SubmittedAtUtc]          <> d.[SubmittedAtUtc]
+           OR i.[UserId]                  <> d.[UserId]
+           OR i.[AssignmentId]            <> d.[AssignmentId]
+           OR i.[FormDefinitionVersionId] <> d.[FormDefinitionVersionId]
+           OR i.[PublicId]                <> d.[PublicId]
+           OR i.[HasRestrictedData]       <> d.[HasRestrictedData]
+    )
     BEGIN
         THROW 50001, N'onboarding.FormSubmissions is immutable. Record a correction as a new revision.', 1;
     END;
-
-    UPDATE t
-       SET t.[SupersededByRevision] = i.[SupersededByRevision]
-      FROM [onboarding].[FormSubmissions] t
-      INNER JOIN inserted i ON i.[FormSubmissionId] = t.[FormSubmissionId];
 END;
 GO
 

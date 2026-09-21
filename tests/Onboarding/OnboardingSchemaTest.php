@@ -224,8 +224,16 @@ final class OnboardingSchemaTest extends TestCase
     {
         $workflow = $this->sql(self::WORKFLOW_SCHEMA);
 
+        /* FormSubmissions is AFTER rather than INSTEAD OF: it has one permitted
+           update (marking a revision superseded) and re-issuing that from inside
+           an INSTEAD OF trigger is only safe while RECURSIVE_TRIGGERS is off. */
+        self::assertMatchesRegularExpression(
+            '/CREATE TRIGGER \[onboarding\]\.\[TR_FormSubmissions_Immutable\].*?AFTER UPDATE, DELETE/s',
+            $workflow,
+            'FormSubmissions must refuse content changes and deletes without depending on a database-wide trigger option.',
+        );
+
         foreach ([
-            'TR_FormSubmissions_Immutable',
             'TR_PolicyAcknowledgements_Immutable',
             'TR_AttemptAnswers_Immutable',
             'TR_OnboardingStatusEvents_AppendOnly',
