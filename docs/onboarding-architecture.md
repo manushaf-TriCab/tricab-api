@@ -39,22 +39,41 @@ The module exists because these four look different to HR and must look identica
 code. Access follows the permission and the assurance level, **never the role or the session type**
 (work order §4.15).
 
-| Population | Signs in with | Assurance | Reaches |
-|---|---|---|---|
-| Pre-start candidate | Email OTP on a personal address (guest session) | LOW | `/onboarding` self-service only |
-| Employee with no TriCab mailbox (warehouse, yard) | Email OTP, then passkey once P.5 lands | LOW → SUBSTANTIAL | Self-service, plus whatever their role permits at their assurance |
-| Employee with a TriCab mailbox | Microsoft Entra | HIGH | Self-service, plus their role |
-| HR, reviewer, content author | Entra, or passkey | HIGH / SUBSTANTIAL | `/admin/onboarding` per permission |
+| Population | User type | Signs in with | Assurance | Reaches |
+|---|---|---|---|---|
+| Pre-start candidate | Trainee (`GUEST`) | Email OTP on a personal address | LOW | `/onboarding` self-service only |
+| Employee with no TriCab mailbox (warehouse, yard) | Trainee (`EMPLOYEE`) | Email OTP, then passkey once P.5 lands | LOW → SUBSTANTIAL | Self-service, plus whatever their role permits at their assurance |
+| Employee with a TriCab mailbox | Trainee (`EMPLOYEE`) | Microsoft Entra | HIGH | Self-service, plus their role |
+| The people who run onboarding | Admin (`ONBOARDING_ADMIN`) | Entra, or passkey | HIGH / SUBSTANTIAL | All of `/admin/onboarding`, plus their own induction |
 
-Two consequences worth stating plainly:
+**There are two user types, decided 21 Sep 2026: admin and trainee.** An admin
+creates, reads, updates and deletes trainees, allocates inductions, reviews what
+comes in, authors content and reads reports. A trainee reaches their own
+onboarding and nothing else. There is no separate reviewer: reviewing is
+something an admin does.
+
+The eight permissions are finer-grained than those two types and stay that way.
+The API gates each route on exactly one of them, which is what makes an
+endpoint's authority readable from the route table and lets a narrower role be
+added later without touching code. The mapping from permissions to these two
+types lives in the seed scripts — `seed-onboarding-permissions.sql` and
+`seed-onboarding-roles.sql` — not in the application.
+
+Three consequences worth stating plainly:
 
 - `ONBOARDING.ACCESS`, `ONBOARDING.SELF.READ` and `ONBOARDING.SELF.SUBMIT` are granted to **both**
   `EMPLOYEE` and `GUEST`. Scoping self-service to `GUEST` would make mailbox-less staff permanent
-  guests; scoping it to `EMPLOYEE` would lock out candidates.
-- Every HR permission sits at `SUBSTANTIAL` in `PermissionAssurancePolicy`. A mailbox-less employee
-  therefore **cannot hold a reviewer permission usefully until they have a passkey** (Phase P.5, not
-  started). If HR wants a warehouse supervisor reviewing inductions, that supervisor needs passkey
+  guests; scoping it to `EMPLOYEE` would lock out candidates. The trainee user type needs no role of
+  its own as a result, which matters: a role that has to be assigned per person is one somebody will
+  forget, locking a new starter out of their own onboarding on their first morning.
+- Every administrative permission sits at `SUBSTANTIAL` in `PermissionAssurancePolicy`. A mailbox-less
+  employee therefore **cannot be an Onboarding admin usefully until they have a passkey** (Phase P.5,
+  not started). If a warehouse supervisor is to run inductions, that supervisor needs passkey
   registration first. This is a deliberate trade, not an oversight.
+- **An admin is also a trainee**, holding both `ONBOARDING.SELF.SUBMIT` over their own record and
+  `ONBOARDING.REVIEW` over everyone's. Holding the review permission therefore no longer means "not
+  the person who did the work", so `SelfReviewPolicy` enforces separately that nobody reviews their
+  own onboarding. See §7.
 
 ---
 
@@ -132,14 +151,20 @@ seed had not run.
 
 | Permission | Granted to | Assurance floor | Gates |
 |---|---|---|---|
-| `ONBOARDING.ACCESS` | ADMINISTRATOR, EMPLOYEE, GUEST | LOW | Module entry |
-| `ONBOARDING.SELF.READ` | ADMINISTRATOR, EMPLOYEE, GUEST | LOW | `GET /api/v1/onboarding/*` |
-| `ONBOARDING.SELF.SUBMIT` | ADMINISTRATOR, EMPLOYEE, GUEST | LOW | Own attempts, acknowledgements, forms |
-| `ONBOARDING.REVIEW` | ADMINISTRATOR | SUBSTANTIAL | Reviewer queue, permitted status transitions |
-| `ONBOARDING.PEOPLE.MANAGE` | ADMINISTRATOR | SUBSTANTIAL | Invite, allocate, HR overview |
-| `ONBOARDING.CONTENT.MANAGE` | ADMINISTRATOR | SUBSTANTIAL | Modules, policy versions, form definitions |
-| `ONBOARDING.REPORTS.READ` | ADMINISTRATOR | SUBSTANTIAL | Operational and compliance reporting |
-| `ONBOARDING.ADMIN` | ADMINISTRATOR | SUBSTANTIAL | Module administration |
+| `ONBOARDING.ACCESS` | ONBOARDING_ADMIN, EMPLOYEE, GUEST, ADMINISTRATOR | LOW | Module entry |
+| `ONBOARDING.SELF.READ` | ONBOARDING_ADMIN, EMPLOYEE, GUEST, ADMINISTRATOR | LOW | `GET /api/v1/onboarding/*` |
+| `ONBOARDING.SELF.SUBMIT` | ONBOARDING_ADMIN, EMPLOYEE, GUEST, ADMINISTRATOR | LOW | Own attempts, acknowledgements, forms |
+| `ONBOARDING.REVIEW` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Review queue, permitted status transitions |
+| `ONBOARDING.PEOPLE.MANAGE` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Trainee CRUD, allocation, admin overview |
+| `ONBOARDING.CONTENT.MANAGE` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Modules, policy versions, form definitions |
+| `ONBOARDING.REPORTS.READ` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Operational and compliance reporting |
+| `ONBOARDING.ADMIN` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Module administration |
+
+`ADMINISTRATOR` holding all eight is inherited from the first seed and is **not** the intended end
+state. TriExpense's pattern is better: a platform administrator holds only the module's `ADMIN`
+permission, so they can grant access to a module without being able to read its data. Narrowing it
+would remove access from the only role that currently has it, so it waits until real people hold
+`ONBOARDING_ADMIN`.
 
 The seed carries a guard that throws if any administrative `ONBOARDING.*` permission is ever mapped to
 `EMPLOYEE` or `GUEST`, so a later well-meaning grant fails loudly instead of quietly widening the module.
@@ -193,8 +218,8 @@ expands it to everything the module stores.
 | **C0 Content** | Training modules, questions, policy wording, form definitions | `modules`, `questions`, `policies`, `policy_versions`, `form_definitions` | `onboarding` | Anyone allocated it; authored under `ONBOARDING.CONTENT.MANAGE` |
 | **C1 Workflow** | Assignments, status, progress, attempt answers, acknowledgement records, notification log | `assignments`, `presentation_progress`, `attempts`, `policy_acknowledgements`, `notification_log` | `onboarding` | Own records via `SELF.READ`; queue via `REVIEW`; `REPORTS.READ` |
 | **C2 Ordinary HR** | Position, department, branch, start date, manager, induction checklist, confidentiality deed, vehicle report | `trainees` (non-identity columns), `form_submissions` where `access_group='hr'` | `onboarding` | `PEOPLE.MANAGE`, `REVIEW` |
-| **C3 Payroll-sensitive** | Bank name, BSB, account number, account name, allocation, payslip email, **payslip PIN**, DOB, home address | `form_submissions` where `access_group='payroll'` (`employee-details`) | `onboarding_hr` | A payroll-scoped permission only |
-| **C4 Restricted HR** | Health conditions, WHS medical questionnaire, immigration status, passport number, visa number/subclass/expiry, Aboriginal or Torres Strait Islander status, cultural identity, gender identity, dietary needs, emergency contacts | `form_submissions` where `access_group='restricted_hr'`, plus fields inside `employee-details` | `onboarding_hr` | A restricted-HR-scoped permission only |
+| **C3 Payroll-sensitive** | Bank name, BSB, account number, account name, allocation, payslip email, **payslip PIN**, DOB, home address | `form_submissions` where `access_group='payroll'` (`employee-details`) | `onboarding_hr` | `ONBOARDING.PEOPLE.MANAGE` — the admin user type |
+| **C4 Restricted HR** | Health conditions, WHS medical questionnaire, immigration status, passport number, visa number/subclass/expiry, Aboriginal or Torres Strait Islander status, cultural identity, gender identity, dietary needs, emergency contacts | `form_submissions` where `access_group='restricted_hr'`, plus fields inside `employee-details` | `onboarding_hr` | `ONBOARDING.PEOPLE.MANAGE` — the admin user type |
 | **C5 Generated documents** | Completed form PDFs, candidate photo | `form_submissions.completed_pdf_base64`, `trainees.profile_photo_base64` | Metadata in the class of its content; **bytes in a private blob container** | Inherits its content's class |
 
 Three things this table is saying that matter:
@@ -212,9 +237,17 @@ Three things this table is saying that matter:
    onto the generated PDF. Carrying that pattern across would put a live credential in a document and in
    a JSON column. Flagged in §9.
 
-`ONBOARDING.PEOPLE.MANAGE` does **not** imply C3 or C4. The eight seeded permissions have no
-payroll-scoped or restricted-scoped member yet, because who may read those two classes is an owner
-decision (§9). Until it is made, Phase 2 builds the split and grants the classes to nobody.
+**Who reads C3 and C4** was settled on 21 Sep 2026 along with the two user types: the admin reads
+everything, because an admin who cannot open a trainee's forms cannot do the job the role exists for.
+No payroll-scoped or restricted-scoped permission is introduced.
+
+The classification is still worth building, for three reasons that survive the simplification:
+
+1. An accidental `SELECT *` over the workflow schema cannot sweep up a bank account number.
+2. Reads of C3/C4 are the ones worth auditing (§8), and auditing them requires knowing which they are.
+3. If a narrower role is ever wanted — a coordinator who allocates inductions but does not see medical
+   questionnaires — the split is already there and it becomes a permission grant rather than a
+   migration.
 
 ### Isolation: what is actually enforced
 
@@ -295,7 +328,33 @@ properties, which the port must preserve:
 - `completed` may only be left by a reviewer.
 
 That is work order invariant 7 expressed in code. The frontend renders the vocabulary
-(`onboardingStatus.ts`) and decides nothing; which transitions are legal is Phase 2 API work.
+(`onboardingStatus.ts`) and decides nothing.
+
+### Nobody reviews their own onboarding
+
+The status machine stops a *trainee* completing their own work, which is enough only while reviewing is
+a separate job held by someone else. With two user types it is not: an admin has an induction of their
+own, so one person holds `ONBOARDING.SELF.SUBMIT` over their own record and `ONBOARDING.REVIEW` over
+everyone's. Without a further rule they could hand in their own medical questionnaire and accept it in
+the next request, leaving a record that says a reviewer approved it.
+
+`SelfReviewPolicy` closes that, in two parts:
+
+- `actorFor($actingUser, $subject, $holdsReviewPermission)` derives which hat a person is wearing, and
+  is **biased towards trainee on one's own record**. Somebody opening their own induction is doing it,
+  not reviewing it. The alternative — letting the caller declare which hat they are wearing — makes the
+  privilege the default for whoever asks nicely.
+- `assertNotSelfReview()` refuses it outright as a second line, for any path that establishes the actor
+  some other way.
+
+Note what this means operationally: **a sole admin cannot complete their own induction.** Somebody else
+has to, which is the point. If TriCab ever has exactly one Onboarding admin and that person needs their
+own induction signed off, that is a second admin, not an exception in the code.
+
+The source application has this hole — `api/_lib/handlers/admin.ts` calls `requireAdmin()` and then
+`assertCanSet('reviewer', …)` with no comparison between reviewer and subject, and `trainees.is_admin`
+sits on the trainee's own row. With a handful of people who all know each other it never mattered. It
+matters the first time the evidence answers a regulator asking who checked what.
 
 ---
 
@@ -321,8 +380,9 @@ Gaps found while writing this, feeding the Phase 0.7 gap list:
 2. **`payslipPin` is a credential in a data field.** Needs a decision: drop it, store it write-only for
    payroll, or keep source behaviour knowingly. It must not reach a generated PDF held in blob storage
    under the current design.
-3. **No permission exists yet for C3 or C4.** The eight seeded permissions stop at `PEOPLE.MANAGE`.
-   Who may read payroll and restricted-HR data is an owner decision, and Phase 2 should not guess it.
+3. ~~**No permission exists yet for C3 or C4.**~~ **Resolved 21 Sep 2026:** two user types, and the
+   admin reads every class. No payroll-scoped or restricted-scoped permission is introduced. The
+   classification split is still built, for the reasons in §5.
 4. **Phase P.5 passkey-first path is not started**, so mailbox-less employees are stuck at LOW
    assurance and cannot usefully hold any HR permission.
 5. **Emergency-contact data has no subject.** Retention and correction rules for third-party data need
@@ -337,3 +397,5 @@ Decisions owed by the owner (also at the foot of the implementation plan):
   assignments when `trainees.cohort_id` changes. Confirm which is intended before porting `cohorts`.
 - **SAS versus streamed download for C3/C4** (§5).
 - **Whether `onboarding_hr` may be an underscore-bearing schema name** (§5).
+- **Whether a sole admin may ever sign off their own induction** (§7). The answer in code is no; if
+  that is operationally impossible at TriCab's size, the remedy is a second admin, not a code change.

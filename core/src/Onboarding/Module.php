@@ -12,6 +12,27 @@ namespace TriCab\Core\Onboarding;
  * records link to a person by `identity.Users.UserId` and nothing else, never
  * by email address, name or provider subject.
  *
+ * ## Two user types
+ *
+ *  - **Admin** — holds {@see ROLE_ADMIN}. Creates, reads, updates and deletes
+ *    trainees, allocates their induction, reviews what they hand in, authors
+ *    content, reads reports. Also has an induction of their own.
+ *  - **Trainee** — anyone holding `EMPLOYEE` or `GUEST`, which carry the
+ *    self-service three. Reaches their own onboarding and nothing else.
+ *
+ * There is no reviewer user type. Reviewing is something an admin does.
+ *
+ * The eight permissions below are finer-grained than those two types, and stay
+ * that way on purpose: the API gates each route on exactly one of them, which
+ * is what makes an endpoint's authority readable at the route table, and lets a
+ * narrower role be introduced later without touching code. Both facts about the
+ * current deployment — one admin role holding all eight, and trainees holding
+ * three — live in the seed scripts, not here.
+ *
+ * Because one person can be both types, `ONBOARDING.REVIEW` alone no longer
+ * means "not the person who did the work". That is enforced by
+ * {@see \TriCab\Core\Onboarding\Domain\Service\SelfReviewPolicy}.
+ *
  * Trust boundaries, data classification and the reasoning behind the
  * permission split are documented in `docs/onboarding-architecture.md`.
  */
@@ -54,9 +75,10 @@ final class Module
     ];
 
     /**
-     * The five HR permissions. Each gates exactly one group of endpoints, and
-     * none of them implies another — `ONBOARDING.ADMIN` in particular is
-     * module administration, not a superset.
+     * The five administrative permissions. Each gates exactly one group of
+     * endpoints, and none of them implies another — `ONBOARDING.ADMIN` in
+     * particular is module administration, not a superset. The admin role holds
+     * all five; nothing else does.
      */
     public const HR_PERMISSIONS = [
         self::PERMISSION_REVIEW,
@@ -65,4 +87,22 @@ final class Module
         self::PERMISSION_REPORTS_READ,
         self::PERMISSION_ADMIN,
     ];
+
+    /**
+     * The Onboarding admin role, created by `seed-onboarding-roles.sql`.
+     *
+     * `UPPERCASE_UNDERSCORE` by platform convention — dots are for permission
+     * codes. Holds all eight permissions, self-service included, because an
+     * admin has an induction of their own.
+     */
+    public const ROLE_ADMIN = 'ONBOARDING_ADMIN';
+
+    /**
+     * The trainee side has no role of its own by design: every employee and
+     * every pre-start guest already carries the self-service three. A role that
+     * must be assigned per person is one somebody will forget to assign,
+     * locking a new starter out of their own onboarding on their first morning.
+     * Reaching `/onboarding` grants nothing by itself — allocation is explicit.
+     */
+    public const TRAINEE_ROLES = ['EMPLOYEE', 'GUEST'];
 }

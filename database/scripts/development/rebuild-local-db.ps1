@@ -132,6 +132,7 @@ foreach ($s in @(
     'seed-customer-roles-and-permissions.sql',
     'seed-guest-role-and-login-permission.sql',
     'seed-onboarding-permissions.sql',   # after guest role: grants GUEST + EMPLOYEE self-service
+    'seed-onboarding-roles.sql',         # after onboarding permissions: ONBOARDING_ADMIN
     'seed-product-catalogue-sample.sql',
     'seed-product-cable-reference.sql',      # after catalogue-sample
     'seed-customer-sample-data.sql'
