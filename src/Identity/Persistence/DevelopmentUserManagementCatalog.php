@@ -97,6 +97,14 @@ final class DevelopmentUserManagementCatalog
             'TEL_DIRECTORY.ACCESS' => ['name' => 'Access Tel Directory', 'module' => 'TEL_DIRECTORY'],
             'CRM.ACCESS' => ['name' => 'Access CRM', 'module' => 'CRM'],
             'ERP.ACCESS' => ['name' => 'Access ERP', 'module' => 'ERP'],
+            'ONBOARDING.ACCESS' => ['name' => 'Access Onboarding', 'module' => 'ONBOARDING'],
+            'ONBOARDING.SELF.READ' => ['name' => 'Read Own Onboarding', 'module' => 'ONBOARDING'],
+            'ONBOARDING.SELF.SUBMIT' => ['name' => 'Submit Own Onboarding Work', 'module' => 'ONBOARDING'],
+            'ONBOARDING.REVIEW' => ['name' => 'Review Onboarding Submissions', 'module' => 'ONBOARDING'],
+            'ONBOARDING.PEOPLE.MANAGE' => ['name' => 'Manage Onboarding People', 'module' => 'ONBOARDING'],
+            'ONBOARDING.CONTENT.MANAGE' => ['name' => 'Manage Onboarding Content', 'module' => 'ONBOARDING'],
+            'ONBOARDING.REPORTS.READ' => ['name' => 'Read Onboarding Reports', 'module' => 'ONBOARDING'],
+            'ONBOARDING.ADMIN' => ['name' => 'Administer Onboarding', 'module' => 'ONBOARDING'],
         ];
     }
 

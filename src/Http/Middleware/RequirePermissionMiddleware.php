@@ -21,6 +21,8 @@ use TriCab\Core\Identity\Application\Exception\IdentityConflict;
 use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
+use TriCab\Core\Identity\Domain\Service\PermissionAssurancePolicy;
+use TriCab\Core\Identity\Domain\ValueObject\AuthenticationAssurance;
 use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
 use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 
@@ -68,7 +70,9 @@ final class RequirePermissionMiddleware implements MiddlewareInterface
             }
         }
 
-        if (!$this->hasPermission($user, PermissionCode::fromString($this->requiredPermission))) {
+        $required = PermissionCode::fromString($this->requiredPermission);
+
+        if (!$this->hasPermission($user, $required)) {
             return $responder->error(
                 'INSUFFICIENT_PERMISSION',
                 'You do not have permission to perform this action.',
@@ -76,9 +80,39 @@ final class RequirePermissionMiddleware implements MiddlewareInterface
             );
         }
 
+        // Holding the permission is not enough: the session must also have
+        // proved itself strongly enough for it. Distinguished from the check
+        // above because the remedy differs — the user has the right to do
+        // this, but not from this kind of sign-in, and telling them so is what
+        // lets them go and sign in properly instead of asking for access they
+        // already have.
+        if (!PermissionAssurancePolicy::isSatisfiedBy($required, $this->assuranceFor($request))) {
+            return $responder->error(
+                'INSUFFICIENT_AUTHENTICATION_ASSURANCE',
+                'This action requires a passkey or Microsoft sign-in.',
+                403,
+            );
+        }
+
         return $handler->handle(
             $request->withAttribute(AuthenticatedUserAttribute::KEY, $user),
         );
+    }
+
+    /**
+     * The provider that actually authenticated this request. Absent or
+     * unrecognised resolves to LOW rather than throwing: an unknown provider
+     * should lose reach, not crash the request.
+     */
+    private function assuranceFor(ServerRequestInterface $request): AuthenticationAssurance
+    {
+        $verifiedIdentity = $request->getAttribute(VerifiedIdentityAttribute::KEY);
+
+        if (!$verifiedIdentity instanceof VerifiedIdentity) {
+            return AuthenticationAssurance::low();
+        }
+
+        return AuthenticationAssurance::forProvider($verifiedIdentity->provider);
     }
 
     private function hasPermission(AuthenticatedUser $user, PermissionCode $required): bool

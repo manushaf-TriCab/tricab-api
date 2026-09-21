@@ -6,11 +6,13 @@ namespace TriCab\Api\Identity\Persistence;
 
 use Throwable;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Core\Identity\Application\DTO\VerifiedEmailOwner;
 use TriCab\Core\Identity\Contract\UserProvisioningRepository;
 use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Identity\Domain\Entity\ExternalIdentity;
 use TriCab\Core\Identity\Domain\Entity\User;
 use TriCab\Core\Identity\Domain\Service\UuidV4Generator;
+use TriCab\Core\Identity\Domain\ValueObject\EmailAddressPurpose;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
 use TriCab\Core\Identity\Domain\ValueObject\ExternalSubjectId;
@@ -31,6 +33,8 @@ final class AzureSqlUserProvisioningRepository implements UserProvisioningReposi
         private readonly UuidV4Generator $uuidGenerator = new UuidV4Generator(),
     ) {
     }
+
+    private ?bool $verifiedAddressTableExists = null;
 
     public function findByEmail(EmailAddress $emailAddress): ?User
     {
@@ -154,6 +158,121 @@ SQL,
         $subject = trim((string) ($rows[0]['SubjectIdentifier'] ?? ''));
 
         return $subject !== '' ? ExternalSubjectId::fromString($subject) : null;
+    }
+
+    /**
+     * @return list<VerifiedEmailOwner>
+     */
+    public function findAllByVerifiedEmail(EmailAddress $emailAddress): array
+    {
+        if (!$this->hasVerifiedAddressTable()) {
+            return $this->fallbackOwners($emailAddress);
+        }
+
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT TOP 2 [UserId], [Purpose]
+FROM [identity].[UserEmailAddresses]
+WHERE [NormalizedEmailAddress] = :email
+  AND [IsActive] = 1
+SQL,
+            [':email' => $this->normalize($emailAddress)],
+        );
+
+        if ($rows === []) {
+            // Before the backfill has run, or for a user who predates it, the
+            // primary address is still the only thing we know about.
+            return $this->fallbackOwners($emailAddress);
+        }
+
+        $owners = [];
+        foreach ($rows as $row) {
+            $rawUserId = $row['UserId'] ?? null;
+            if (!is_int($rawUserId) && !is_string($rawUserId)) {
+                continue;
+            }
+
+            $user = $this->users->findById(UserId::fromInt((int) $rawUserId));
+            if ($user === null) {
+                continue;
+            }
+
+            $rawPurpose = $row['Purpose'] ?? null;
+            $purpose = is_string($rawPurpose) ? trim($rawPurpose) : '';
+            $owners[] = new VerifiedEmailOwner(
+                $user,
+                $purpose !== '' ? EmailAddressPurpose::fromString($purpose) : null,
+            );
+        }
+
+        return $owners;
+    }
+
+    public function hasVerifiedAddress(UserId $userId, EmailAddress $emailAddress): bool
+    {
+        $normalized = $this->normalize($emailAddress);
+
+        $user = $this->users->findById($userId);
+        if ($user !== null && $this->normalize($user->emailAddress()) === $normalized) {
+            return true;
+        }
+
+        if (!$this->hasVerifiedAddressTable()) {
+            return false;
+        }
+
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT TOP 1 1 AS [Found]
+FROM [identity].[UserEmailAddresses]
+WHERE [UserId] = :userId
+  AND [NormalizedEmailAddress] = :email
+  AND [IsActive] = 1
+SQL,
+            [':userId' => $userId->toInt(), ':email' => $normalized],
+        );
+
+        return $rows !== [];
+    }
+
+    /**
+     * @return list<VerifiedEmailOwner>
+     */
+    private function fallbackOwners(EmailAddress $emailAddress): array
+    {
+        return array_map(
+            static fn (User $user): VerifiedEmailOwner => new VerifiedEmailOwner($user, null),
+            $this->findAllByEmail($emailAddress),
+        );
+    }
+
+    /**
+     * Memoised per request. The table arrives with the Phase P migration;
+     * until then every deployment must keep resolving identities exactly as
+     * before, so its absence is a supported state rather than an error.
+     */
+    private function hasVerifiedAddressTable(): bool
+    {
+        if ($this->verifiedAddressTableExists !== null) {
+            return $this->verifiedAddressTableExists;
+        }
+
+        try {
+            $rows = $this->connection->fetchAll(
+                "SELECT OBJECT_ID(N'[identity].[UserEmailAddresses]', N'U') AS [ObjectId]",
+                [],
+            );
+            $this->verifiedAddressTableExists = $rows !== [] && ($rows[0]['ObjectId'] ?? null) !== null;
+        } catch (Throwable) {
+            $this->verifiedAddressTableExists = false;
+        }
+
+        return $this->verifiedAddressTableExists;
+    }
+
+    private function normalize(EmailAddress $emailAddress): string
+    {
+        return strtolower(trim($emailAddress->toString()));
     }
 
     private function resolveStatusId(UserStatus $status): int

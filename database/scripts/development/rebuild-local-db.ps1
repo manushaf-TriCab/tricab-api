@@ -118,6 +118,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'create-product-migration-schema.sql') -Co
 Invoke-SqlFile (Join-Path $DevScripts 'create-legacy-migration-schema.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-site-configurations.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-user-management-audit.sql')
+Invoke-SqlFile (Join-Path $DevScripts 'create-identity-user-email-addresses.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
 
 # --- seeds -----------------------------------------------------------------
