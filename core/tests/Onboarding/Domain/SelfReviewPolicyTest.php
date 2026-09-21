@@ -16,13 +16,18 @@ use TriCab\Core\Onboarding\Module;
 /**
  * Nobody reviews their own onboarding.
  *
- * The situation this guards. TriCab has two Onboarding user types, admin and
- * trainee, and an admin has an induction of their own — so one person
- * legitimately holds `ONBOARDING.SELF.SUBMIT` over their own record and
- * `ONBOARDING.REVIEW` over everyone's. Holding the review permission therefore
- * no longer means "not the person who did the work", and without this check an
- * admin could hand in their own medical questionnaire and accept it in the next
- * request, leaving a record that says a reviewer approved it.
+ * The situation this guards: one person on both sides of one record. Holding
+ * `ONBOARDING.REVIEW` does not by itself mean "not the person who did the work",
+ * and without this check somebody could hand in their own medical questionnaire
+ * and accept it in the next request, leaving a record that says a reviewer
+ * approved it.
+ *
+ * Since 21 Sep 2026 `ONBOARDING_ADMIN` carries no self-service permission —
+ * TriCab's admins were inducted years ago — so nothing in today's deployment
+ * reaches the check. It stays because the condition is about one person holding
+ * two hats on one record, not about how a role happens to be configured, and an
+ * HR hire who is themselves a new starter produces it without anyone editing a
+ * role.
  */
 final class SelfReviewPolicyTest extends TestCase
 {
@@ -161,6 +166,22 @@ final class SelfReviewPolicyTest extends TestCase
     {
         self::assertSame('ONBOARDING_ADMIN', Module::ROLE_ADMIN);
         self::assertSame(['EMPLOYEE', 'GUEST'], Module::TRAINEE_ROLES);
+    }
+
+    /**
+     * Owner decision, 21 Sep 2026: admins were inducted years ago and will not be
+     * doing one, so the role means "runs onboarding for other people" and says
+     * only that. It takes no capability away — every admin also holds `EMPLOYEE`,
+     * which carries the self-service three.
+     */
+    public function test_the_admin_role_grants_no_self_service_permission(): void
+    {
+        self::assertSame(Module::HR_PERMISSIONS, Module::ADMIN_ROLE_PERMISSIONS);
+        self::assertSame(
+            [],
+            array_intersect(Module::ADMIN_ROLE_PERMISSIONS, Module::SELF_SERVICE_PERMISSIONS),
+        );
+        self::assertCount(5, Module::ADMIN_ROLE_PERMISSIONS);
     }
 
     /** Self-service and administrative permissions must not overlap. */

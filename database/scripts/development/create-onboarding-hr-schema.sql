@@ -37,9 +37,15 @@
     3. A least-privilege pass later can GRANT per schema without moving a table,
        and a narrower role becomes a permission grant rather than a migration.
 
-  [onboarding_hr] is the first platform schema name containing an underscore.
-  Recorded as a deliberate deviation; open question 8 asks the owner to accept
-  the name or choose another. Every other schema here is one word.
+  [onboarding_hr] is the first platform schema name containing an underscore —
+  every other schema here is one lowercase word. **The owner accepted the name on
+  21 Sep 2026**, so this is a settled deviation rather than an open one. The
+  alternatives considered and declined were `personnel` (names the data rather
+  than the module that collects it, but claims a domain the platform does not
+  have yet), `restricted` (names the sensitivity, which invites every other
+  module to use it as an attic) and `hr` (the only abbreviation among twelve
+  full words). What the chosen name buys is that nobody ever has to ask what is
+  in here or who owns it.
 ================================================================================
 */
 
@@ -122,13 +128,20 @@ GO
    The ordinary-HR remainder stays in [onboarding].[FormSubmissions]. Nothing
    here is ever written by a repository that also writes there.
 
-   NOTE — `payslipPin`. The source stores it in `submitted_data` and prints it
-   onto the generated PDF. There is deliberately NO column for it in this
-   schema and no classification row seeded for it, because it is a live
-   credential rather than a datum and storing it needs a decision, not a default.
-   Open question 6: drop it, store it write-only for payroll, or keep source
-   behaviour knowingly. Until that is answered, a submission carrying it is
-   rejected rather than quietly written somewhere.
+   NOTE — `payslipPin`. Open question 6 was answered by the owner on 21 Sep 2026:
+   **keep source behaviour knowingly.** It is collected on the employee-details
+   form, classified C3, and printed onto the generated PDF exactly as the source
+   does. The column is [PayrollDetails].[PayslipPin] below.
+
+   "Knowingly" is doing real work in that sentence, so record what is known: a
+   payslip PIN is a live credential, not a datum. Storing it means it is
+   readable by anyone holding ONBOARDING.PEOPLE.MANAGE, it appears in a generated
+   PDF, and it cannot be rotated by the platform because payroll owns it. The
+   target improves on the source in exactly one respect, and it is worth having:
+   the PDF lives in a private blob container and, under the delivery decision of
+   the same date, every read of it is streamed through an authenticated endpoint
+   and written to [audit].[OnboardingDocumentAccessEvents]. The source's PDF sat
+   base64-encoded in a database column that nothing audited.
    ============================================================================ */
 IF OBJECT_ID(N'[onboarding_hr].[RestrictedSubmissionData]', N'U') IS NULL
 BEGIN
@@ -183,6 +196,11 @@ BEGIN
         [ResidentialAddress]    NVARCHAR(500) NULL,
         [PostalAddress]         NVARCHAR(500) NULL,
         [PayslipEmailAddress]   NVARCHAR(320) NULL,
+        /* A live credential, kept in clear because payroll needs to read it back
+           and print it. Owner decision, 21 Sep 2026, open question 6. Never
+           projected into a list view, a report or the completion projection, and
+           every read of the document carrying it is audited. */
+        [PayslipPin]            NVARCHAR(32) NULL,
         [PrimaryBankName]       NVARCHAR(200) NULL,
         [PrimaryBsb]            NVARCHAR(16) NULL,
         [PrimaryAccountNumber]  NVARCHAR(32) NULL,

@@ -6,9 +6,17 @@
 
     ADMIN     `ONBOARDING_ADMIN`. Creates, reads, updates and deletes trainees,
               allocates their induction, reviews what they hand in, authors
-              content and reads reports. Holds all eight ONBOARDING.*
-              permissions, including the self-service three, because an admin
-              also has an induction of their own.
+              content and reads reports. Holds the FIVE administrative
+              ONBOARDING.* permissions and not the self-service three.
+
+              Owner decision, 21 Sep 2026: TriCab's Onboarding admins were
+              inducted years ago and will not be doing one, so a role meaning
+              "runs onboarding for other people" should say only that.
+
+              This takes no capability away from anybody. All four admins also
+              hold `employee`, which carries ACCESS + SELF.READ + SELF.SUBMIT,
+              so an admin who did somehow need an induction gets one from the
+              role that gives everybody else theirs.
 
     TRAINEE   No new role. A trainee is anyone holding `EMPLOYEE` or `GUEST`,
               both of which already carry ACCESS + SELF.READ + SELF.SUBMIT from
@@ -37,7 +45,13 @@
   - Idempotent / safe to re-run
   - Creates no users and assigns no roles to anyone
   - Does not modify permissions, EMPLOYEE, GUEST, CUSTOMER_* or ADMINISTRATOR
-  - Reactivates an ONBOARDING_ADMIN mapping it previously deactivated, nothing else
+
+  RE-RUN REQUIRED. An earlier revision of this script granted all eight, and it
+  was applied to `tc` on tricab-mel on 21 Sep 2026. Running it again deactivates
+  the three self-service mappings on ONBOARDING_ADMIN and leaves everything else
+  alone. Deactivation rather than deletion, following the platform's pattern for
+  RolePermissions, so the change is visible in Roles & Permissions rather than
+  silently absent.
 
   Run after seed-onboarding-permissions.sql.
 ================================================================================
@@ -82,16 +96,26 @@ BEGIN TRY
           AND ([IsActive] = 0 OR [RoleName] <> @RoleName OR ISNULL([Description], N'') <> @RoleDescription);
     END;
 
+    /* The five administrative permissions. Must match
+       TriCab\Core\Onboarding\Module::ADMIN_ROLE_PERMISSIONS. */
+    DECLARE @AdminPermissions TABLE ([PermissionCode] NVARCHAR(100) PRIMARY KEY);
+    INSERT INTO @AdminPermissions ([PermissionCode]) VALUES
+        (N'ONBOARDING.REVIEW'),
+        (N'ONBOARDING.PEOPLE.MANAGE'),
+        (N'ONBOARDING.CONTENT.MANAGE'),
+        (N'ONBOARDING.REPORTS.READ'),
+        (N'ONBOARDING.ADMIN');
+
     /* ------------------------------------------------------------------
-       Every ONBOARDING.* permission. An admin who could not open a
-       trainee's forms could not do the job the role exists for.
+       Grant the five. An admin who could not open a trainee's forms could
+       not do the job the role exists for.
        ------------------------------------------------------------------ */
     INSERT INTO [identity].[RolePermissions] ([RoleId], [PermissionId], [IsActive])
     SELECT r.[RoleId], p.[PermissionId], 1
     FROM [identity].[Roles] r
     CROSS JOIN [identity].[Permissions] p
     WHERE UPPER(r.[RoleCode]) = UPPER(@RoleCode)
-      AND UPPER(p.[PermissionCode]) LIKE N'ONBOARDING.%'
+      AND UPPER(p.[PermissionCode]) IN (SELECT [PermissionCode] FROM @AdminPermissions)
       AND p.[IsActive] = 1
       AND NOT EXISTS (
           SELECT 1 FROM [identity].[RolePermissions] rp
@@ -104,8 +128,27 @@ BEGIN TRY
     JOIN [identity].[Roles] r ON r.[RoleId] = rp.[RoleId]
     JOIN [identity].[Permissions] p ON p.[PermissionId] = rp.[PermissionId]
     WHERE UPPER(r.[RoleCode]) = UPPER(@RoleCode)
-      AND UPPER(p.[PermissionCode]) LIKE N'ONBOARDING.%'
+      AND UPPER(p.[PermissionCode]) IN (SELECT [PermissionCode] FROM @AdminPermissions)
       AND rp.[IsActive] = 0;
+
+    /* ------------------------------------------------------------------
+       Withdraw anything else this role was given — in practice the three
+       self-service permissions an earlier revision of this script granted.
+
+       Scoped to ONBOARDING.* on purpose. If somebody has deliberately added an
+       unrelated permission to this role in Roles & Permissions, that is their
+       decision to unmake, and a seed script quietly reversing it would be worse
+       than the drift it was fixing.
+       ------------------------------------------------------------------ */
+    UPDATE rp
+    SET rp.[IsActive] = 0
+    FROM [identity].[RolePermissions] rp
+    JOIN [identity].[Roles] r ON r.[RoleId] = rp.[RoleId]
+    JOIN [identity].[Permissions] p ON p.[PermissionId] = rp.[PermissionId]
+    WHERE UPPER(r.[RoleCode]) = UPPER(@RoleCode)
+      AND UPPER(p.[PermissionCode]) LIKE N'ONBOARDING.%'
+      AND UPPER(p.[PermissionCode]) NOT IN (SELECT [PermissionCode] FROM @AdminPermissions)
+      AND rp.[IsActive] = 1;
 
     /* ------------------------------------------------------------------
        Guards. Both would be a serious fault, so they fail the script
@@ -121,15 +164,33 @@ BEGIN TRY
         JOIN [identity].[Roles] r ON r.[RoleId] = rp.[RoleId]
         JOIN [identity].[Permissions] p ON p.[PermissionId] = rp.[PermissionId]
         WHERE UPPER(r.[RoleCode]) = UPPER(@RoleCode)
-          AND UPPER(p.[PermissionCode]) LIKE N'ONBOARDING.%'
+          AND UPPER(p.[PermissionCode]) IN (SELECT [PermissionCode] FROM @AdminPermissions)
           AND rp.[IsActive] = 1
     );
 
-    IF @Granted <> 8
+    IF @Granted <> 5
     BEGIN
         DECLARE @GrantedMessage NVARCHAR(200) =
-            CONCAT(N'ONBOARDING_ADMIN holds ', @Granted, N' of 8 ONBOARDING permissions. Run seed-onboarding-permissions.sql first.');
+            CONCAT(N'ONBOARDING_ADMIN holds ', @Granted, N' of 5 administrative ONBOARDING permissions. Run seed-onboarding-permissions.sql first.');
         THROW 52010, @GrantedMessage, 1;
+    END;
+
+    /* And it must hold none of the self-service three. The role means "runs
+       onboarding for other people"; an admin's own induction, if they ever have
+       one, comes from `employee` like everybody else's. */
+    IF EXISTS (
+        SELECT 1
+        FROM [identity].[RolePermissions] rp
+        JOIN [identity].[Roles] r ON r.[RoleId] = rp.[RoleId]
+        JOIN [identity].[Permissions] p ON p.[PermissionId] = rp.[PermissionId]
+        WHERE UPPER(r.[RoleCode]) = UPPER(@RoleCode)
+          AND rp.[IsActive] = 1
+          AND UPPER(p.[PermissionCode]) IN (
+              N'ONBOARDING.ACCESS', N'ONBOARDING.SELF.READ', N'ONBOARDING.SELF.SUBMIT'
+          )
+    )
+    BEGIN
+        THROW 52012, N'ONBOARDING_ADMIN still holds a self-service permission. Refusing to continue.', 1;
     END;
 
     /* Unchanged from seed-onboarding-permissions.sql: the trainee roles keep
@@ -154,7 +215,7 @@ BEGIN TRY
 
     SELECT
         @RoleCode AS [Role],
-        @Granted AS [OnboardingPermissionsGranted],
+        @Granted AS [AdministrativePermissionsGranted],
         (SELECT COUNT(*) FROM [identity].[UserRoles] ur
            JOIN [identity].[Roles] r ON r.[RoleId] = ur.[RoleId]
           WHERE UPPER(r.[RoleCode]) = UPPER(@RoleCode) AND ur.[IsActive] = 1) AS [UsersHoldingIt];

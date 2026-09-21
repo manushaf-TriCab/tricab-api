@@ -13,7 +13,7 @@
   What lives here:
     C0 Content   — training modules, questions, policy wording, form definitions
     C1 Workflow  — assignments, status, progress, attempts, acknowledgements
-    C2 Ordinary HR — position, department, start date, manager, cohort
+    C2 Ordinary HR — position, department, branch, start date, manager
 
   Written in GO-separated batches rather than one transaction because this file
   creates triggers, and CREATE TRIGGER must begin its batch. Every object is
@@ -99,39 +99,6 @@ WHEN NOT MATCHED BY TARGET THEN
 GO
 
 /* ============================================================================
-   C2 — Cohorts
-
-   A LABEL, and nothing more. Work order invariant 8: cohorts allocate nothing.
-
-   The source schema comments suggest changing `trainees.cohort_id` re-derives a
-   person's assignments, which is the opposite rule and is open question 4. Until
-   that is settled the target refuses to have the argument: there is no foreign
-   key from [Assignments] to [Cohorts], so no allocation can be derived from a
-   cohort even by accident. Moving a person between cohorts changes what they are
-   called in a report and nothing they have to do.
-   ============================================================================ */
-IF OBJECT_ID(N'[onboarding].[Cohorts]', N'U') IS NULL
-BEGIN
-    CREATE TABLE [onboarding].[Cohorts] (
-        [CohortId]      BIGINT IDENTITY(1,1) NOT NULL,
-        [PublicId]      UNIQUEIDENTIFIER NOT NULL
-            CONSTRAINT [DF_onboarding_Cohorts_PublicId] DEFAULT (NEWSEQUENTIALID()),
-        [Name]          NVARCHAR(160) NOT NULL,
-        [StartDate]     DATE NULL,
-        [IsActive]      BIT NOT NULL CONSTRAINT [DF_onboarding_Cohorts_IsActive] DEFAULT (1),
-        [CreatedAtUtc]  DATETIME2(7) NOT NULL
-            CONSTRAINT [DF_onboarding_Cohorts_CreatedAtUtc] DEFAULT (SYSUTCDATETIME()),
-        [UpdatedAtUtc]  DATETIME2(7) NOT NULL
-            CONSTRAINT [DF_onboarding_Cohorts_UpdatedAtUtc] DEFAULT (SYSUTCDATETIME()),
-        [RowVersion]    ROWVERSION NOT NULL,
-        CONSTRAINT [PK_onboarding_Cohorts] PRIMARY KEY CLUSTERED ([CohortId]),
-        CONSTRAINT [UQ_onboarding_Cohorts_PublicId] UNIQUE ([PublicId]),
-        CONSTRAINT [CK_onboarding_Cohorts_Name] CHECK (LEN(LTRIM(RTRIM([Name]))) > 0)
-    );
-END
-GO
-
-/* ============================================================================
    C2 — Trainee profiles
 
    One row per person being onboarded. The person is [identity].[Users].[UserId]
@@ -152,7 +119,6 @@ BEGIN
         [PublicId]           UNIQUEIDENTIFIER NOT NULL
             CONSTRAINT [DF_onboarding_TraineeProfiles_PublicId] DEFAULT (NEWSEQUENTIALID()),
         [UserId]             BIGINT NOT NULL,
-        [CohortId]           BIGINT NULL,
         [Position]           NVARCHAR(200) NULL,
         [Department]         NVARCHAR(200) NULL,
         [Branch]             NVARCHAR(200) NULL,
@@ -190,12 +156,8 @@ BEGIN
         CONSTRAINT [FK_onboarding_TraineeProfiles_InvitedByUserId]
             FOREIGN KEY ([InvitedByUserId]) REFERENCES [identity].[Users]([UserId]),
         CONSTRAINT [FK_onboarding_TraineeProfiles_DepartureRecordedByUserId]
-            FOREIGN KEY ([DepartureRecordedByUserId]) REFERENCES [identity].[Users]([UserId]),
-        CONSTRAINT [FK_onboarding_TraineeProfiles_CohortId]
-            FOREIGN KEY ([CohortId]) REFERENCES [onboarding].[Cohorts]([CohortId])
+            FOREIGN KEY ([DepartureRecordedByUserId]) REFERENCES [identity].[Users]([UserId])
     );
-    CREATE NONCLUSTERED INDEX [IX_onboarding_TraineeProfiles_CohortId]
-        ON [onboarding].[TraineeProfiles]([CohortId]) WHERE [CohortId] IS NOT NULL;
     CREATE NONCLUSTERED INDEX [IX_onboarding_TraineeProfiles_ManagerUserId]
         ON [onboarding].[TraineeProfiles]([ManagerUserId]) WHERE [ManagerUserId] IS NOT NULL;
     CREATE NONCLUSTERED INDEX [IX_onboarding_TraineeProfiles_StartDate]
@@ -459,7 +421,10 @@ GO
 
      - [AllocationSource] admits one value, N'explicit'. Adding N'cohort' later
        is a migration somebody has to write and defend, not a line of PHP.
-     - There is no foreign key to [Cohorts] anywhere in this table.
+     - There is no [Cohorts] table to derive anything from. TriCab does not use
+       cohorts (owner, 21 Sep 2026), so the concept is absent rather than
+       present-but-unused — and open question 4, whether changing a cohort
+       re-derives assignments, stops being a question anyone can get wrong.
      - A person with no row here sees nothing. That is the correct empty state,
        not a fault to be worked around by deriving something.
 

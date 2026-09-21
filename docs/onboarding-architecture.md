@@ -151,9 +151,9 @@ seed had not run.
 
 | Permission | Granted to | Assurance floor | Gates |
 |---|---|---|---|
-| `ONBOARDING.ACCESS` | ONBOARDING_ADMIN, EMPLOYEE, GUEST, ADMINISTRATOR | LOW | Module entry |
-| `ONBOARDING.SELF.READ` | ONBOARDING_ADMIN, EMPLOYEE, GUEST, ADMINISTRATOR | LOW | `GET /api/v1/onboarding/*` |
-| `ONBOARDING.SELF.SUBMIT` | ONBOARDING_ADMIN, EMPLOYEE, GUEST, ADMINISTRATOR | LOW | Own attempts, acknowledgements, forms |
+| `ONBOARDING.ACCESS` | EMPLOYEE, GUEST, ADMINISTRATOR | LOW | Module entry |
+| `ONBOARDING.SELF.READ` | EMPLOYEE, GUEST, ADMINISTRATOR | LOW | `GET /api/v1/onboarding/*` |
+| `ONBOARDING.SELF.SUBMIT` | EMPLOYEE, GUEST, ADMINISTRATOR | LOW | Own attempts, acknowledgements, forms |
 | `ONBOARDING.REVIEW` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Review queue, permitted status transitions |
 | `ONBOARDING.PEOPLE.MANAGE` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Trainee CRUD, allocation, admin overview |
 | `ONBOARDING.CONTENT.MANAGE` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Modules, policy versions, form definitions |
@@ -171,6 +171,16 @@ The seed carries a guard that throws if any administrative `ONBOARDING.*` permis
 
 `ONBOARDING.ADMIN` is **not** a superset. The API gates each route on exactly one permission, so neither
 the middleware nor the HR sub-navigation treats it as implying the other four.
+
+**`ONBOARDING_ADMIN` holds the five administrative permissions and none of the self-service three.**
+Owner decision, 21 Sep 2026: TriCab's Onboarding admins were inducted years ago and will not be doing
+one, so a role meaning "runs onboarding for other people" should say only that. This removes no
+capability from anybody — all four admins also hold `employee`, which carries the self-service three,
+so an admin who did somehow need an induction gets one from the role that gives everybody else theirs.
+
+The narrowing needs `seed-onboarding-roles.sql` re-run against any database the earlier revision was
+applied to; it deactivates the three mappings rather than deleting them, so the change is visible in
+Roles & Permissions.
 
 ### 4.2 The two different 403s
 
@@ -276,9 +286,17 @@ follow the platform pattern — with one qualification:
 > works for whoever holds it, it lands in browser history, and it is not authorised per request. That is
 > a reasonable trade for a receipt photo. It is not obviously the right trade for a medical
 > questionnaire. **Recommendation: stream C3/C4 documents through an authenticated API endpoint so each
-> read is authorised and auditable, and reserve SAS for C0–C2.** This costs API bandwidth and is the
-> less conventional choice inside this codebase, so it is stated here for the owner to accept or reject
-> before Phase 6 builds either one.
+> read is authorised and auditable, and reserve SAS for C0–C2.**
+
+**Accepted by the owner on 21 September 2026.** The rule is executable rather than documentary:
+`DocumentDeliveryPolicy::modeFor()` maps a `DataClass` to `stream` or `signed_url`, and Phase 6 calls
+it rather than deciding for itself. It **fails closed** — a document still carrying C5, meaning nobody
+recorded its content's class, is streamed and audited, because the harmless documents are the ones
+people remember to classify.
+
+The cost is accepted with it: streaming C3/C4 spends API bandwidth that a SAS URL would not, and it is
+the less conventional choice inside this codebase. What it buys is that "somebody with this link opened
+it" is never the best answer available about a medical questionnaire.
 
 ### Retention
 
@@ -423,9 +441,15 @@ Gaps found while writing this, feeding the Phase 0.7 gap list:
    floor, so an HR person signed in by OTP sees the console and is refused by the API. Handled by
    explaining the refusal. Proposal: add the authenticating provider's assurance to `/me`. Platform-wide
    consumer, so not done unasked.
-2. **`payslipPin` is a credential in a data field.** Needs a decision: drop it, store it write-only for
-   payroll, or keep source behaviour knowingly. It must not reach a generated PDF held in blob storage
-   under the current design.
+2. ~~**`payslipPin` is a credential in a data field.**~~ **Decided 21 Sep 2026: keep source behaviour
+   knowingly.** Collected on `employee-details`, classified C3, stored in
+   `onboarding_hr.PayrollDetails.PayslipPin`, and printed onto the generated PDF as the source does.
+   What "knowingly" commits to: it is readable by anyone holding `ONBOARDING.PEOPLE.MANAGE`, it lives
+   in a document, and the platform cannot rotate it because payroll owns it. The one improvement over
+   the source is not incidental — that PDF is C3, so under the delivery decision above every read of it
+   is streamed and written to `audit.OnboardingDocumentAccessEvents`, where the source's base64 column
+   was read by nothing that recorded anything. A test confirms the PIN never reaches the workflow
+   schema, which is the boundary the decision does not extend to.
 3. ~~**No permission exists yet for C3 or C4.**~~ **Resolved 21 Sep 2026:** two user types, and the
    admin reads every class. No payroll-scoped or restricted-scoped permission is introduced. The
    classification split is still built, for the reasons in §5.
@@ -440,9 +464,13 @@ Decisions owed by the owner (also at the foot of the implementation plan):
   only, and separate from how long records are kept — see §5. What it leaves owed is narrower: the
   platform identity change that lets a departed person sign in during the window, and the record
   retention figure per class, which is measured in years and needs advice behind it.
-- **Cohort semantics.** Work order invariant 8 says cohorts allocate nothing; the source re-derives
-  assignments when `trainees.cohort_id` changes. Confirm which is intended before porting `cohorts`.
-- **SAS versus streamed download for C3/C4** (§5).
-- **Whether `onboarding_hr` may be an underscore-bearing schema name** (§5).
-- **Whether a sole admin may ever sign off their own induction** (§7). The answer in code is no; if
-  that is operationally impossible at TriCab's size, the remedy is a second admin, not a code change.
+- ~~**Cohort semantics.**~~ **Decided 21 Sep 2026: TriCab does not use cohorts, so they are not
+  ported.** There is no `Cohorts` table and no `CohortId` anywhere, which also means invariant 8 cannot
+  be contradicted by a later change that seemed reasonable at the time.
+- ~~**SAS versus streamed download for C3/C4**~~ **Decided 21 Sep 2026: stream** (§5).
+- ~~**Whether `onboarding_hr` may be an underscore-bearing schema name**~~ **Decided 21 Sep 2026:
+  yes, keep it.** `personnel`, `restricted` and `hr` were considered and declined.
+- ~~**Whether a sole admin may ever sign off their own induction**~~ **Decided 21 Sep 2026: no, and the
+  question is moot** — TriCab's admins were inducted years ago and will not be doing one, so the
+  operational bite noted in §7 does not arise. `SelfReviewPolicy` stays: it guards one person holding
+  two hats on one record, which is one HR hire away regardless of how a role is configured.

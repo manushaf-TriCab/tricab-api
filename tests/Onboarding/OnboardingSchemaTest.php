@@ -123,17 +123,19 @@ final class OnboardingSchemaTest extends TestCase
     }
 
     /**
-     * Open question 4 is still open — the source's comments suggest changing a
-     * cohort re-derives assignments, which is the opposite of invariant 8. The
-     * schema refuses to have the argument: with no foreign key, no allocation
-     * can be derived from a cohort even by accident.
+     * TriCab does not use cohorts (owner, 21 Sep 2026), so there is no table for
+     * them — which also closes open question 4 without anybody having to settle
+     * it. The source's schema comments suggest changing a trainee's cohort
+     * re-derives their assignments, the exact opposite of invariant 8; a concept
+     * that is absent cannot be wired up that way by a later change that seemed
+     * reasonable at the time.
      */
-    public function test_an_assignment_cannot_reference_a_cohort(): void
+    public function test_cohorts_do_not_exist(): void
     {
-        $sql = $this->sql(self::WORKFLOW_SCHEMA);
-        $assignments = $this->tableBody($sql, 'Assignments');
+        $sql = $this->withoutComments($this->sql(self::WORKFLOW_SCHEMA));
 
-        self::assertStringNotContainsString('CohortId', $assignments);
+        self::assertStringNotContainsString('[Cohorts]', $sql);
+        self::assertStringNotContainsString('CohortId', $sql);
     }
 
     // -----------------------------------------------------------------
@@ -192,23 +194,29 @@ final class OnboardingSchemaTest extends TestCase
     }
 
     /**
-     * B4 / open question 6. `payslipPin` is a live credential that the source
-     * stores in a JSON column and prints onto a PDF. There is no column for it
-     * here and there must not be one until somebody decides what to do with it —
-     * a default of "store it like any other field" is how the source ended up
-     * where it is.
+     * B4 / open question 6, answered 21 Sep 2026: keep source behaviour. The
+     * payslip PIN is collected, stored and printed onto the generated PDF as the
+     * source does.
+     *
+     * What this test holds is the boundary that decision does NOT extend to. A
+     * live credential may live in the restricted schema, where reads are audited
+     * and the permission gate is ONBOARDING.PEOPLE.MANAGE. It may not live in
+     * the workflow schema, which ordinary queries, reports and the reviewer
+     * queue all read. That is the difference between a decision and a leak.
      */
-    public function test_no_column_anywhere_stores_a_payslip_pin(): void
+    public function test_the_payslip_pin_is_confined_to_the_restricted_schema(): void
     {
-        foreach ([self::WORKFLOW_SCHEMA, self::HR_SCHEMA] as $script) {
-            $sql = $this->sql($script);
+        self::assertMatchesRegularExpression(
+            '/\[PayslipPin\]\s+NVARCHAR/i',
+            $this->sql(self::HR_SCHEMA),
+            'The owner chose to keep source behaviour, so the column exists — in onboarding_hr, classified C3.',
+        );
 
-            self::assertDoesNotMatchRegularExpression(
-                '/\[\w*Pin\w*\]\s+(NVARCHAR|CHAR|INT|VARCHAR)/i',
-                $sql,
-                $script . ' must not declare a PIN column while open question 6 is unanswered.',
-            );
-        }
+        self::assertDoesNotMatchRegularExpression(
+            '/\[\w*Pin\w*\]\s+(NVARCHAR|CHAR|INT|VARCHAR)/i',
+            $this->withoutComments($this->sql(self::WORKFLOW_SCHEMA)),
+            'A credential must never reach the workflow schema, whatever was decided about storing it.',
+        );
     }
 
     // -----------------------------------------------------------------

@@ -16,7 +16,9 @@ namespace TriCab\Core\Onboarding;
  *
  *  - **Admin** — holds {@see ROLE_ADMIN}. Creates, reads, updates and deletes
  *    trainees, allocates their induction, reviews what they hand in, authors
- *    content, reads reports. Also has an induction of their own.
+ *    content, reads reports. Does **not** have an induction of their own: the
+ *    people doing this job at TriCab were inducted long ago (owner, 21 Sep
+ *    2026), so the role is "runs onboarding for other people" and nothing else.
  *  - **Trainee** — anyone holding `EMPLOYEE` or `GUEST`, which carry the
  *    self-service three. Reaches their own onboarding and nothing else.
  *
@@ -26,12 +28,15 @@ namespace TriCab\Core\Onboarding;
  * that way on purpose: the API gates each route on exactly one of them, which
  * is what makes an endpoint's authority readable at the route table, and lets a
  * narrower role be introduced later without touching code. Both facts about the
- * current deployment — one admin role holding all eight, and trainees holding
- * three — live in the seed scripts, not here.
+ * current deployment — one admin role holding the five administrative
+ * permissions, and trainees holding three — live in the seed scripts, not here.
  *
- * Because one person can be both types, `ONBOARDING.REVIEW` alone no longer
- * means "not the person who did the work". That is enforced by
- * {@see \TriCab\Core\Onboarding\Domain\Service\SelfReviewPolicy}.
+ * `ONBOARDING.REVIEW` alone does not mean "not the person who did the work",
+ * and {@see \TriCab\Core\Onboarding\Domain\Service\SelfReviewPolicy} is what
+ * enforces that it cannot be. Today's admins have no induction to review, so
+ * nothing exercises it — which is the argument for keeping it, not for removing
+ * it. The first HR hire who is themselves a new starter holds both hats on one
+ * record, and that is a hiring decision, not a code change.
  *
  * Trust boundaries, data classification and the reasoning behind the
  * permission split are documented in `docs/onboarding-architecture.md`.
@@ -92,10 +97,27 @@ final class Module
      * The Onboarding admin role, created by `seed-onboarding-roles.sql`.
      *
      * `UPPERCASE_UNDERSCORE` by platform convention — dots are for permission
-     * codes. Holds all eight permissions, self-service included, because an
-     * admin has an induction of their own.
+     * codes.
+     *
+     * Holds {@see HR_PERMISSIONS} — the five administrative ones — and not the
+     * self-service three. Owner decision, 21 Sep 2026: TriCab's Onboarding
+     * admins were inducted years ago and will not be doing one, so a role
+     * meaning "runs onboarding for other people" should say only that.
+     *
+     * Note what this does NOT do, because it would be easy to read it as a
+     * restriction: every one of these people also holds `EMPLOYEE`, which
+     * carries the self-service three. An admin who did somehow need an induction
+     * would get one, from the role that gives everybody else theirs. Narrowing
+     * this role removes no capability from anybody — it removes a claim the role
+     * was making about itself that is no longer true.
      */
     public const ROLE_ADMIN = 'ONBOARDING_ADMIN';
+
+    /**
+     * What `ONBOARDING_ADMIN` actually grants, named so the seed script and the
+     * application agree on one list rather than two.
+     */
+    public const ADMIN_ROLE_PERMISSIONS = self::HR_PERMISSIONS;
 
     /**
      * The trainee side has no role of its own by design: every employee and

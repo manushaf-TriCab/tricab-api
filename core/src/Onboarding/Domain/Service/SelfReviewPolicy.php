@@ -14,13 +14,26 @@ use TriCab\Core\Onboarding\Domain\ValueObject\StatusActor;
  * ## Why this class has to exist
  *
  * {@see AssignmentStatusPolicy} stops a *trainee* completing their own work.
- * That is enough only while reviewing is a separate job held by someone else.
- * TriCab has two Onboarding user types — admin and trainee — and an admin has
- * an induction of their own, so one person can legitimately hold
- * `ONBOARDING.SELF.SUBMIT` over their own record and `ONBOARDING.REVIEW` over
- * everyone's. Without this check they could hand in their own medical
- * questionnaire and accept it in the next request, and the record would say a
- * reviewer approved it.
+ * That is enough only while reviewing is a separate job held by someone else,
+ * and holding `ONBOARDING.REVIEW` does not establish that: a person can hold it
+ * over everyone's record and `ONBOARDING.SELF.SUBMIT` over their own. Without
+ * this check they could hand in their own medical questionnaire and accept it in
+ * the next request, and the record would say a reviewer approved it.
+ *
+ * ## Why it is still here after the owner said admins have no inductions
+ *
+ * On 21 September 2026 the owner settled that TriCab's Onboarding admins were
+ * inducted years ago and will not be doing one, which is why `ONBOARDING_ADMIN`
+ * no longer carries the self-service three. So nothing in today's deployment can
+ * reach this check.
+ *
+ * That is an argument for keeping it, not for deleting it. The condition it
+ * guards is not "the role is configured a certain way" but "one person is on
+ * both sides of one record", and the configuration is one HR hire away from
+ * producing it: an HR coordinator who is themselves a new starter holds
+ * `EMPLOYEE` for their own induction and `ONBOARDING_ADMIN` for everyone
+ * else's. Deleting the check now means rediscovering the hole then, in the one
+ * record where it matters most.
  *
  * The source application has this hole: `api/_lib/handlers/admin.ts` calls
  * `requireAdmin()` and then `assertCanSet('reviewer', …)` with no comparison
