@@ -35,7 +35,8 @@ declare(strict_types=1);
  *
  * Usage:
  *   php bin/onboarding-assign-admins.php                 # dry run, writes nothing
- *   php bin/onboarding-assign-admins.php --apply
+ *   php bin/onboarding-assign-admins.php --apply --actor=you@tricab.com
+ *   php bin/onboarding-assign-admins.php --apply --only=one@tricab.com
  *   php bin/onboarding-assign-admins.php --apply --json
  */
 
@@ -53,15 +54,54 @@ CoreAutoload::register();
 /**
  * The people who run onboarding, decided by the platform owner on
  * 21 September 2026.
+ *
+ * The platform owner is on the list as well. He already reaches the console
+ * through `ADMINISTRATOR`, which currently maps all eight ONBOARDING
+ * permissions — but that mapping is meant to be narrowed to `ONBOARDING.ADMIN`
+ * alone, so that a platform administrator can grant access to the module
+ * without reading inductions. Holding the role directly is what survives that
+ * change.
  */
 const ONBOARDING_ADMINS = [
     'eloised@tricab.com' => 'Eloise Dunford',
     'diemn@tricab.com' => 'Diem Nguyen',
     'ricm@tricab.com' => 'Ric Moretti',
+    'manushaf@tricab.com' => 'Manusha Fernando',
 ];
 
 $apply = in_array('--apply', $argv, true);
 $json = in_array('--json', $argv, true);
+
+/**
+ * `--only=a@tricab.com,b@tricab.com` narrows the run to some of the people
+ * above. It exists because the all-or-nothing guard below is the right default
+ * and the wrong behaviour when one person is ready and another is not — as
+ * happens while accounts are still `pending`.
+ *
+ * An address not on the list is refused rather than assigned. This script is a
+ * record of a decision about who runs onboarding, not a general-purpose way to
+ * hand out the role; that is Admin → User Management, where the grant is
+ * attributed to whoever makes it.
+ */
+$only = [];
+foreach ($argv as $argument) {
+    if (str_starts_with($argument, '--only=')) {
+        foreach (explode(',', substr($argument, 7)) as $candidate) {
+            $candidate = strtolower(trim($candidate));
+            if ($candidate === '') {
+                continue;
+            }
+            if (!array_key_exists($candidate, ONBOARDING_ADMINS)) {
+                fwrite(STDERR, sprintf(
+                    "NOT_ON_THE_LIST: %s is not one of the named Onboarding admins. Use Admin → User Management to grant the role to anybody else.\n",
+                    $candidate,
+                ));
+                exit(2);
+            }
+            $only[] = $candidate;
+        }
+    }
+}
 
 $basePath = dirname(__DIR__);
 $settings = Environment::settings($basePath);
@@ -185,8 +225,16 @@ $sql = $hasEmailAddressTable
         WHERE LOWER(u.NormalizedEmailAddress) = :email
         ORDER BY u.UserId';
 
+$selected = $only === []
+    ? ONBOARDING_ADMINS
+    : array_intersect_key(ONBOARDING_ADMINS, array_flip($only));
+
+if ($only !== []) {
+    $out(sprintf('Restricted to: %s', implode(', ', array_keys($selected))));
+}
+
 $plans = [];
-foreach (ONBOARDING_ADMINS as $email => $name) {
+foreach ($selected as $email => $name) {
     $normalized = strtolower(trim($email));
     $rows = $db->fetchAll($sql, [':email' => $normalized]);
 
@@ -247,9 +295,10 @@ $inactive = array_values(array_filter(
 ));
 
 /**
- * Refuse a partial apply. Assigning two of three named admins and reporting
+ * Refuse a partial apply. Assigning three of four named admins and reporting
  * success would leave somebody without the access they were told they have,
- * and the person running this would have no reason to look again.
+ * and the person running this would have no reason to look again. Narrowing the
+ * run is possible, but only by saying so explicitly with --only.
  */
 if ($unresolved !== []) {
     $out('');
@@ -292,14 +341,46 @@ if (!$apply) {
  * The actor recorded against every assignment. An audit row saying "somebody
  * granted HR access" is not worth writing, so this fails rather than assigning
  * anonymously.
+ *
+ * `--actor=you@tricab.com` is how you appear in the audit trail instead of
+ * whichever administrator happens to sort first. Worth passing: the row is the
+ * only lasting record of who decided this, and "the first ADMINISTRATOR by id"
+ * is not a decision anybody made.
  */
-$actorRow = $db->fetchAll(
-    "SELECT TOP 1 u.UserId, LOWER(CONVERT(NVARCHAR(36), u.PublicId)) AS PublicId, u.EmailAddress
-     FROM [identity].[Users] u
-     INNER JOIN [identity].[UserRoles] ur ON ur.UserId = u.UserId AND ur.IsActive = 1
-     INNER JOIN [identity].[Roles] r ON r.RoleId = ur.RoleId AND UPPER(r.RoleCode) = N'ADMINISTRATOR' AND r.IsActive = 1
-     ORDER BY u.UserId",
-);
+$actorEmail = null;
+foreach ($argv as $argument) {
+    if (str_starts_with($argument, '--actor=')) {
+        $actorEmail = strtolower(trim(substr($argument, 8)));
+    }
+}
+
+if ($actorEmail !== null) {
+    $actorRow = $db->fetchAll(
+        "SELECT TOP 1 u.UserId, LOWER(CONVERT(NVARCHAR(36), u.PublicId)) AS PublicId, u.EmailAddress
+         FROM [identity].[Users] u
+         INNER JOIN [identity].[UserRoles] ur ON ur.UserId = u.UserId AND ur.IsActive = 1
+         INNER JOIN [identity].[Roles] r ON r.RoleId = ur.RoleId AND UPPER(r.RoleCode) = N'ADMINISTRATOR' AND r.IsActive = 1
+         WHERE LOWER(u.NormalizedEmailAddress) = :email
+         ORDER BY u.UserId",
+        [':email' => $actorEmail],
+    );
+
+    if ($actorRow === []) {
+        fwrite(STDERR, sprintf(
+            "ACTOR_NOT_AN_ADMINISTRATOR: %s is not an active ADMINISTRATOR, so it cannot be recorded as granting a role.\n",
+            $actorEmail,
+        ));
+        exit(7);
+    }
+} else {
+    $actorRow = $db->fetchAll(
+        "SELECT TOP 1 u.UserId, LOWER(CONVERT(NVARCHAR(36), u.PublicId)) AS PublicId, u.EmailAddress
+         FROM [identity].[Users] u
+         INNER JOIN [identity].[UserRoles] ur ON ur.UserId = u.UserId AND ur.IsActive = 1
+         INNER JOIN [identity].[Roles] r ON r.RoleId = ur.RoleId AND UPPER(r.RoleCode) = N'ADMINISTRATOR' AND r.IsActive = 1
+         ORDER BY u.UserId",
+    );
+}
 
 if ($actorRow === []) {
     fwrite(STDERR, "NO_ADMIN_ACTOR: no active ADMINISTRATOR to attribute the assignment to.\n");
@@ -313,7 +394,12 @@ $actor = new ActorContext(
 );
 
 $out('');
-$out(sprintf('Acting as %s (userId=%d).', $actor->emailAddress, $actor->userId));
+$out(sprintf(
+    'Acting as %s (userId=%d).%s',
+    $actor->emailAddress,
+    $actor->userId,
+    $actorEmail === null ? ' Pass --actor=you@tricab.com to be recorded yourself.' : '',
+));
 
 $assigned = 0;
 $errors = 0;
