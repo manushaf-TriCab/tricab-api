@@ -102,18 +102,28 @@ final class OnboardingConcurrencyAndIdempotencyTest extends TestCase
     ];
 
     /**
-     * Reading a token out and binding it back in.
+     * Reading a token out and binding it back in — IN THIS TEST ONLY.
      *
      * A ROWVERSION is eight raw bytes, and PDO_SQLSRV binds a PHP string as
-     * NVARCHAR — so handing the raw bytes back as a parameter fails inside the
-     * driver, before the server sees it, with an IMSSP UCS-2 translation error
-     * that names neither the column nor the value. There is a test for that
-     * below, because it is the kind of failure that costs an afternoon.
+     * NVARCHAR, so handing the raw bytes back as a parameter never works. There
+     * is a test for that below, because it is the kind of failure that costs an
+     * afternoon.
      *
-     * So a token travels as the hex string `0x0000000000053FD1`: safe in JSON,
-     * safe in a header, safe as a parameter, and directly comparable once
-     * converted back. Style 1 is what makes CONVERT read `0x...` as hex rather
-     * than as characters, and it refuses NVARCHAR, hence the inner cast.
+     * These tests speak bare PDO, so they convert through hex: `0x0000000000053FD1`
+     * out, and back in with style 1, which is what makes CONVERT read `0x...` as
+     * hex rather than as characters. Style 1 refuses NVARCHAR, hence the inner
+     * VARCHAR cast that would otherwise look pointless.
+     *
+     * **Application code must NOT copy this.** The platform already solved it:
+     * {@see \TriCab\Api\Infrastructure\Database\SqlBinary} binds a parameter as
+     * PDO::PARAM_LOB with SQLSRV_ENCODING_BINARY, and
+     * {@see \TriCab\Core\Product\Domain\ValueObject\RowVersionToken} carries
+     * the token as Base64 for transport. A repository reads
+     * `CONVERT(VARBINARY(8), [RowVersion])`, maps it with
+     * `ProductRowVersionMapper::toToken()`, and compares with
+     * `WHERE [RowVersion] = :expected` bound through `toSqlBinary()` —
+     * see AzureSqlExpensePeriodRepository. Two encodings for one value in one
+     * database is how one of them ends up wrong.
      */
     private const TOKEN_OUT = 'CONVERT(CHAR(18), CONVERT(VARBINARY(8), [RowVersion]), 1)';
     private const TOKEN_IN = 'CONVERT(BINARY(8), CONVERT(VARCHAR(18), :token), 1)';
@@ -601,6 +611,9 @@ final class OnboardingConcurrencyAndIdempotencyTest extends TestCase
      * So the same bug reports itself two different ways depending on the value
      * of a counter nobody controls. Both are asserted, because pinning the test
      * to one of them would make it fail on a Tuesday for no reason.
+     *
+     * Application code avoids both by binding through `SqlBinary`, which is the
+     * platform's answer and predates this test — see TOKEN_IN above.
      */
     public function test_binding_a_raw_token_never_works_which_is_why_it_travels_as_hex(): void
     {
