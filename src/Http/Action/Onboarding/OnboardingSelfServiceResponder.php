@@ -10,6 +10,7 @@ use Throwable;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
+use TriCab\Core\Onboarding\Domain\Exception\AllocationNotPermitted;
 use TriCab\Core\Onboarding\Domain\Exception\AssessmentNotAvailable;
 use TriCab\Core\Onboarding\Domain\Exception\AssignmentStatusIsFinal;
 use TriCab\Core\Onboarding\Domain\Exception\ContentVersionSuperseded;
@@ -19,6 +20,7 @@ use TriCab\Core\Onboarding\Domain\Exception\OnboardingAccessWindowClosed;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingAssignmentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingDocumentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingItemTypeMismatch;
+use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingSubmissionWindowClosed;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
 use TriCab\Core\Onboarding\Domain\Exception\StatusChangeNotPermitted;
@@ -29,6 +31,10 @@ use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 /**
  * The shared plumbing of the eleven self-service routes: who is asking, what
  * they sent, and what a domain refusal looks like on the wire.
+ *
+ * The HR routes under `/api/v1/admin/onboarding` use it too (Phase 4). Their
+ * refusals are the same domain exceptions, and a second mapper would be a
+ * second chance for the two surfaces to answer one refusal differently.
  *
  * ## One mapping, in one place
  *
@@ -101,7 +107,8 @@ final readonly class OnboardingSelfServiceResponder
         return match (true) {
             // 404 — and the two are one answer on purpose.
             $failure instanceof OnboardingAssignmentNotFound,
-            $failure instanceof OnboardingDocumentNotFound
+            $failure instanceof OnboardingDocumentNotFound,
+            $failure instanceof OnboardingPersonNotFound
                 => $this->responder->error('ONBOARDING_NOT_FOUND', $failure->getMessage(), 404),
 
             // 403 — refused for a reason no credential changes.
@@ -123,6 +130,14 @@ final readonly class OnboardingSelfServiceResponder
                 => $this->responder->error('ONBOARDING_ITEM_IS_FINAL', $failure->getMessage(), 409),
             $failure instanceof OnboardingItemTypeMismatch
                 => $this->responder->error('ONBOARDING_ITEM_TYPE_MISMATCH', $failure->getMessage(), 409),
+            // HR's allocation refused for a reason the record explains —
+            // a leaver, or an item the page offered that is no longer on offer.
+            $failure instanceof AllocationNotPermitted
+                => $this->responder->error(
+                    'ONBOARDING_ALLOCATION_' . strtoupper($failure->reason),
+                    $failure->getMessage(),
+                    409,
+                ),
 
             // 422 — the request is wrong in a way the client can fix.
             $failure instanceof UnknownPresentationSlide

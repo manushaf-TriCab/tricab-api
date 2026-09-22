@@ -21,6 +21,7 @@ final class AllocationNotPermitted extends DomainException
     public const REASON_RETIRED = 'retired';
     public const REASON_ALREADY_ALLOCATED = 'already_allocated';
     public const REASON_DEPARTED = 'departed';
+    public const REASON_UNAVAILABLE = 'unavailable';
 
     private function __construct(string $message, public readonly string $reason)
     {
@@ -48,6 +49,20 @@ final class AllocationNotPermitted extends DomainException
         return new self(
             'This person already has that allocated and has not finished with it.',
             self::REASON_ALREADY_ALLOCATED,
+        );
+    }
+
+    /**
+     * The selection names something with no published, live version — it does
+     * not exist, was never published, or every version is retired. One answer
+     * for the three: the catalogue HR chose from did not offer it, so the page
+     * they are on is out of date and a reload is the remedy either way.
+     */
+    public static function unavailable(string $itemType, string $itemPublicId): self
+    {
+        return new self(
+            sprintf('That %s (%s) is not available to allocate. Reload the page and choose again.', $itemType, $itemPublicId),
+            self::REASON_UNAVAILABLE,
         );
     }
 

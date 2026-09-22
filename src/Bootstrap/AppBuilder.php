@@ -176,6 +176,8 @@ use TriCab\Api\Http\Action\Onboarding\GetOnboardingAdminOverviewAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentContentAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentsAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingItemAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingPeopleAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingPersonAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingSelfSummaryAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptSubmissionAction;
@@ -183,6 +185,7 @@ use TriCab\Api\Http\Action\Onboarding\PostOnboardingFormSubmissionAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPolicyAcknowledgementAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPresentationProgressAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormDraftAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingPersonAllocationAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\TrustedDevice\ExchangeTrustedDeviceSessionAction;
 use TriCab\Api\Http\Action\TrustedDevice\RegisterTrustedDeviceAction;
@@ -443,6 +446,17 @@ final class AppBuilder
             ->add(($require)('ONBOARDING.SELF.SUBMIT'));
 
         $app->get('/api/v1/admin/onboarding/overview', GetOnboardingAdminOverviewAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+
+        // Phase 4.2 — people and explicit allocation. Administrative, so the
+        // permission alone is not enough: RequirePermissionMiddleware also holds
+        // it to passkey or Entra assurance (invariant 14), and an emailed code
+        // reaches none of these.
+        $app->get('/api/v1/admin/onboarding/people', GetOnboardingPeopleAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->get('/api/v1/admin/onboarding/people/{personPublicId}', GetOnboardingPersonAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->put('/api/v1/admin/onboarding/people/{personPublicId}/allocation', PutOnboardingPersonAllocationAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
     }
 

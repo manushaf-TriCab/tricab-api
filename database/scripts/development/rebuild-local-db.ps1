@@ -121,6 +121,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'create-user-management-audit.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-identity-user-email-addresses.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-schema.sql')        # after identity + audit
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-hr-schema.sql')     # after onboarding: FKs point back into it
+Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-admin-audit.sql')   # after identity: FKs to identity.Users
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
 
 # --- seeds -----------------------------------------------------------------
