@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Expense\Legacy;
 
+use TriCab\Core\Expense\Application\Support\MixedValueCoercion;
 use TriCab\Core\Expense\Contract\ExpenseLegacyTeUserDirectoryPort;
 use TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection;
 use TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard;
@@ -41,14 +42,15 @@ final class MysqlLegacyExpenseTeUserDirectoryPort implements ExpenseLegacyTeUser
         );
         $out = [];
         foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
+            $isActiveRaw = $row['is_active'] ?? 0;
+            $isActive = is_bool($isActiveRaw)
+                ? ($isActiveRaw ? 1 : 0)
+                : MixedValueCoercion::intValue($isActiveRaw);
             $out[] = [
-                'login_norm' => (string) ($row['login_norm'] ?? ''),
-                'email_norm' => (string) ($row['email_norm'] ?? ''),
-                'is_active' => $row['is_active'] ?? 0,
-                'manager_login' => (string) ($row['manager_login'] ?? ''),
+                'login_norm' => MixedValueCoercion::stringValue($row['login_norm'] ?? null),
+                'email_norm' => MixedValueCoercion::stringValue($row['email_norm'] ?? null),
+                'is_active' => $isActive,
+                'manager_login' => MixedValueCoercion::stringValue($row['manager_login'] ?? null),
             ];
         }
 

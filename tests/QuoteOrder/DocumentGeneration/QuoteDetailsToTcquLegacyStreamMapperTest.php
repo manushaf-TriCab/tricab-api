@@ -88,16 +88,18 @@ final class QuoteDetailsToTcquLegacyStreamMapperTest extends TestCase
         self::assertSame('N', $header->field(17));
 
         $sales = $stream->first('S011');
-        self::assertSame('Alex Rep', $sales?->field(1));
-        self::assertSame('alex@tricab.com', $sales?->field(2));
+        self::assertNotNull($sales);
+        self::assertSame('Alex Rep', $sales->field(1));
+        self::assertSame('alex@tricab.com', $sales->field(2));
 
         $item = $stream->first('S009');
-        self::assertSame('2', $item?->field(1));
-        self::assertSame('KU-PAZN/4C16BK', $item?->field(2));
-        self::assertSame('40', $item?->field(4));
-        self::assertSame('m', $item?->field(5));
-        self::assertSame('12.50', $item?->field(6));
-        self::assertSame('Black', $item?->field(8));
-        self::assertSame('500.00', $item?->field(12));
+        self::assertNotNull($item);
+        self::assertSame('2', $item->field(1));
+        self::assertSame('KU-PAZN/4C16BK', $item->field(2));
+        self::assertSame('40', $item->field(4));
+        self::assertSame('m', $item->field(5));
+        self::assertSame('12.50', $item->field(6));
+        self::assertSame('Black', $item->field(8));
+        self::assertSame('500.00', $item->field(12));
     }
 }

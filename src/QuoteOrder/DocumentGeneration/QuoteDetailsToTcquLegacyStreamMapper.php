@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use TriCab\Core\DocumentGeneration\Legacy\LegacyRecord;
 use TriCab\Core\DocumentGeneration\Legacy\LegacyStream;
 use TriCab\Core\QuoteOrder\Application\DTO\QuoteDetails;
+use TriCab\Core\QuoteOrder\Application\DTO\QuoteDocumentDetails;
 use TriCab\Core\QuoteOrder\Application\DTO\QuoteItemDetails;
 
 /**
@@ -34,7 +35,7 @@ final class QuoteDetailsToTcquLegacyStreamMapper
             $this->ocrDate($quote->date),
             '',
             '',
-            $document?->sellerTaxId ?? '',
+            $this->sellerTaxId($document),
             '',
             '',
             '',
@@ -42,17 +43,17 @@ final class QuoteDetailsToTcquLegacyStreamMapper
             $quote->reference ?? '',
             $quote->currency ?? '',
             $this->money($quote->total),
-            $document?->paymentTermsCode ?? '',
-            $document?->paymentTerms ?? '',
+            $this->paymentTermsCode($document),
+            $this->paymentTerms($document),
             '',
             $this->ocrDate($quote->validDate),
-            ($document?->pricesExclusiveOfTax ?? true) ? 'N' : 'Y',
+            $this->pricesExclusiveOfTax($document) ? 'N' : 'Y',
             '',
             '',
             '',
         ], 1);
 
-        $metal = $document?->metalPrices;
+        $metal = $document !== null ? ($document->metalPrices ?? []) : [];
         $records[] = $this->record('S026', 7, [
             $docId,
             $metal['copperUsd'] ?? '',
@@ -66,16 +67,16 @@ final class QuoteDetailsToTcquLegacyStreamMapper
         $records[] = $this->record('S011', 4, [
             $docId,
             $quote->raisedBy ?? '',
-            $document?->raisedByEmail ?? '',
-            $document?->raisedByPhone ?? '',
+            $this->raisedByEmail($document),
+            $this->raisedByPhone($document),
         ], 3);
 
-        $sellerLines = $document?->sellerAddressLines ?? [];
-        $sellerPhone = $document?->sellerPhone;
-        $sellerEmail = $document?->sellerEmail;
+        $sellerLines = $this->sellerAddressLines($document);
+        $sellerPhone = $document !== null ? $document->sellerPhone : null;
+        $sellerEmail = $document !== null ? $document->sellerEmail : null;
         $records[] = $this->record('S007', 8, [
             $docId,
-            $document?->sellerCompanyName ?? '',
+            $this->sellerCompanyName($document),
             $sellerLines[0] ?? '',
             $sellerLines[1] ?? '',
             $sellerLines[2] ?? ($sellerLines[3] ?? ''),
@@ -87,13 +88,13 @@ final class QuoteDetailsToTcquLegacyStreamMapper
         $records[] = $this->record('S012', 6, [
             $docId,
             $quote->contactName ?? '',
-            $document?->contactPhone ?? '',
+            $this->contactPhone($document),
             '',
             '',
             '',
         ], 5);
 
-        $customerLines = $document?->customerAddressLines ?? [];
+        $customerLines = $this->customerAddressLines($document);
         $records[] = $this->record('S008', 7, [
             $docId,
             $quote->customerName ?? '',
@@ -111,6 +112,62 @@ final class QuoteDetailsToTcquLegacyStreamMapper
         }
 
         return new LegacyStream(self::SELECTOR, $records);
+    }
+
+    private function sellerTaxId(?QuoteDocumentDetails $document): string
+    {
+        return $document !== null ? ($document->sellerTaxId ?? '') : '';
+    }
+
+    private function paymentTermsCode(?QuoteDocumentDetails $document): string
+    {
+        return $document !== null ? ($document->paymentTermsCode ?? '') : '';
+    }
+
+    private function paymentTerms(?QuoteDocumentDetails $document): string
+    {
+        return $document !== null ? ($document->paymentTerms ?? '') : '';
+    }
+
+    private function pricesExclusiveOfTax(?QuoteDocumentDetails $document): bool
+    {
+        return $document !== null ? $document->pricesExclusiveOfTax : true;
+    }
+
+    private function raisedByEmail(?QuoteDocumentDetails $document): string
+    {
+        return $document !== null ? ($document->raisedByEmail ?? '') : '';
+    }
+
+    private function raisedByPhone(?QuoteDocumentDetails $document): string
+    {
+        return $document !== null ? ($document->raisedByPhone ?? '') : '';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function sellerAddressLines(?QuoteDocumentDetails $document): array
+    {
+        return $document !== null ? $document->sellerAddressLines : [];
+    }
+
+    private function sellerCompanyName(?QuoteDocumentDetails $document): string
+    {
+        return $document !== null ? ($document->sellerCompanyName ?? '') : '';
+    }
+
+    private function contactPhone(?QuoteDocumentDetails $document): string
+    {
+        return $document !== null ? ($document->contactPhone ?? '') : '';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function customerAddressLines(?QuoteDocumentDetails $document): array
+    {
+        return $document !== null ? $document->customerAddressLines : [];
     }
 
     private function itemRecord(string $docId, QuoteItemDetails $item, int $fallbackNo, int $sourceLine): LegacyRecord

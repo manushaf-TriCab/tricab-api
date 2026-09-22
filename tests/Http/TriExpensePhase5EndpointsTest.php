@@ -129,8 +129,8 @@ final class TriExpensePhase5EndpointsTest extends TestCase
             'TRIEXPENSE_DOC_INTEL_KEY' => 'test-key',
         ]);
 
+        /** @var \DI\Container $container */
         $container = $app->getContainer();
-        self::assertInstanceOf(ContainerInterface::class, $container);
 
         $fakePort = new class implements ExpenseCaptureAssistPort {
             public function isEnabled(): bool
@@ -162,12 +162,18 @@ final class TriExpensePhase5EndpointsTest extends TestCase
 
             public function suggestCategory(string $vendor, string $rawText, array $categories): ?string
             {
-                return '64100';
+                return $categories === [] ? null : '64100';
             }
         };
 
         $access = $container->get(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class);
+        self::assertInstanceOf(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class, $access);
         $audit = $container->get(\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class);
+        self::assertInstanceOf(\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class, $audit);
+        $responder = $container->get(\TriCab\Api\Http\Response\JsonResponder::class);
+        self::assertInstanceOf(\TriCab\Api\Http\Response\JsonResponder::class, $responder);
+        $errors = $container->get(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class);
+        self::assertInstanceOf(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class, $errors);
         $draftService = new \TriCab\Core\Expense\Application\Service\ExtractExpenseReceiptDraftService(
             $access,
             $fakePort,
@@ -179,8 +185,8 @@ final class TriExpensePhase5EndpointsTest extends TestCase
             \TriCab\Api\Http\Action\TriExpense\ExtractExpenseReceiptDraftAction::class,
             new \TriCab\Api\Http\Action\TriExpense\ExtractExpenseReceiptDraftAction(
                 $draftService,
-                $container->get(\TriCab\Api\Http\Response\JsonResponder::class),
-                $container->get(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class),
+                $responder,
+                $errors,
             ),
         );
 
@@ -207,8 +213,8 @@ final class TriExpensePhase5EndpointsTest extends TestCase
             'TRIEXPENSE_DOC_INTEL_ENDPOINT' => 'https://doc-intel.example',
             'TRIEXPENSE_DOC_INTEL_KEY' => 'test-key',
         ]);
+        /** @var \DI\Container $container */
         $container = $app->getContainer();
-        self::assertInstanceOf(ContainerInterface::class, $container);
         $container->set(ExpenseCaptureAssistPort::class, new class implements ExpenseCaptureAssistPort {
             public function isEnabled(): bool
             {
@@ -377,6 +383,9 @@ final class TriExpensePhase5EndpointsTest extends TestCase
         return $request;
     }
 
+    /**
+     * @param array{email?:string,subject?:string} $actor
+     */
     private function multipartExtractRequest(string $bytes, string $fileName, array $actor = []): ServerRequestInterface
     {
         $stream = (new \Slim\Psr7\Factory\StreamFactory())->createStream($bytes);
@@ -391,10 +400,10 @@ final class TriExpensePhase5EndpointsTest extends TestCase
         $request = TestAppFactory::request('POST', '/api/v1/tri-expense/receipts/extract')
             ->withUploadedFiles(['file' => $upload]);
         if (isset($actor['subject'])) {
-            $request = $request->withHeader('X-Dev-Entra-Subject', (string) $actor['subject']);
+            $request = $request->withHeader('X-Dev-Entra-Subject', $actor['subject']);
         }
         if (isset($actor['email'])) {
-            $request = $request->withHeader('X-Dev-Entra-Email', (string) $actor['email']);
+            $request = $request->withHeader('X-Dev-Entra-Email', $actor['email']);
         }
 
         return $request;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Expense\Legacy;
 
+use TriCab\Core\Expense\Application\Support\MixedValueCoercion;
 use TriCab\Core\Expense\Contract\ExpenseCostCentreOptionsPort;
 use TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection;
 use TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard;
@@ -39,11 +40,8 @@ SQL;
 
         $labels = [];
         foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $dept = trim((string) ($row['dept'] ?? ''));
-            $branch = trim((string) ($row['branch'] ?? ''));
+            $dept = MixedValueCoercion::stringValue($row['dept'] ?? null);
+            $branch = MixedValueCoercion::stringValue($row['branch'] ?? null);
             $parts = array_values(array_filter([$dept, $branch], static fn (string $part): bool => $part !== ''));
             if ($parts === []) {
                 continue;

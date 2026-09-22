@@ -115,8 +115,8 @@ final class TriExpenseAdminEndpointsTest extends TestCase
         $ov = Payload::obj(TestAppFactory::json($overview)['data']);
         self::assertArrayHasKey('users', $ov);
         self::assertArrayHasKey('missingApprovers', $ov);
-        self::assertGreaterThanOrEqual(1, (int) $ov['profiles']);
-        self::assertSame(1, (int) $ov['missingApprovers']);
+        self::assertGreaterThanOrEqual(1, Payload::int($ov['profiles']));
+        self::assertSame(1, Payload::int($ov['missingApprovers']));
 
         $targetPublicId = $this->createManagedUser($app, 'te.target@tricab.com', 'TE Target');
 
@@ -134,8 +134,8 @@ final class TriExpenseAdminEndpointsTest extends TestCase
         ));
         self::assertSame(200, $put->getStatusCode(), (string) $put->getBody());
         $data = Payload::obj(TestAppFactory::json($put)['data']);
-        self::assertContains(Module::ROLE_FINANCE, $data['roles']);
-        self::assertContains(Module::ROLE_ADMINISTRATOR, $data['roles']);
+        self::assertContains(Module::ROLE_FINANCE, Payload::list($data['roles']));
+        self::assertContains(Module::ROLE_ADMINISTRATOR, Payload::list($data['roles']));
         $perms = Payload::obj($data['permissions']);
         self::assertTrue($perms['access']);
         self::assertTrue($perms['approve']);
@@ -152,13 +152,12 @@ final class TriExpenseAdminEndpointsTest extends TestCase
         ));
         self::assertSame(200, $putAccess->getStatusCode(), (string) $putAccess->getBody());
         $accessData = Payload::obj(TestAppFactory::json($putAccess)['data']);
-        self::assertContains(Module::ROLE_USER, $accessData['roles']);
-        self::assertNotContains(Module::ROLE_ADMINISTRATOR, $accessData['roles']);
+        self::assertContains(Module::ROLE_USER, Payload::list($accessData['roles']));
+        self::assertNotContains(Module::ROLE_ADMINISTRATOR, Payload::list($accessData['roles']));
 
         $listed = $app->handle(TestAppFactory::request('GET', '/api/v1/tri-expense/admin/users?search=TE%20Target'));
         self::assertSame(200, $listed->getStatusCode());
-        $items = Payload::obj(TestAppFactory::json($listed)['data'])['items'];
-        self::assertIsArray($items);
+        $items = Payload::objList(Payload::obj(TestAppFactory::json($listed)['data'])['items']);
         self::assertNotEmpty($items);
 
         $dry = $app->handle(TestAppFactory::request('GET', '/api/v1/tri-expense/admin/legacy-approver-mapping'));
@@ -203,8 +202,7 @@ final class TriExpenseAdminEndpointsTest extends TestCase
             '/api/v1/tri-expense/admin/employee-search?q=Sarah&purpose=te_user',
         ));
         self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
-        $items = Payload::obj(TestAppFactory::json($response)['data'])['items'];
-        self::assertIsArray($items);
+        $items = Payload::objList(Payload::obj(TestAppFactory::json($response)['data'])['items']);
         $match = null;
         foreach ($items as $item) {
             if (($item['publicId'] ?? null) === $publicId) {
@@ -224,7 +222,7 @@ final class TriExpenseAdminEndpointsTest extends TestCase
         $publicId = $this->createManagedUser($app, 'new.te@tricab.com', 'New TE Employee');
 
         $before = $app->handle(TestAppFactory::request('GET', '/api/v1/tri-expense/admin/overview'));
-        $beforeUsers = (int) Payload::obj(TestAppFactory::json($before)['data'])['users'];
+        $beforeUsers = Payload::int(Payload::obj(TestAppFactory::json($before)['data'])['users']);
 
         $put = $app->handle($this->jsonRequest(
             'PUT',
@@ -236,10 +234,10 @@ final class TriExpenseAdminEndpointsTest extends TestCase
         self::assertTrue($data['profileCreated']);
         self::assertTrue($data['hasExpenseProfile']);
         self::assertFalse($data['hasApprover']);
-        self::assertContains(Module::ROLE_USER, $data['roles']);
+        self::assertContains(Module::ROLE_USER, Payload::list($data['roles']));
 
         $after = $app->handle(TestAppFactory::request('GET', '/api/v1/tri-expense/admin/overview'));
-        $afterUsers = (int) Payload::obj(TestAppFactory::json($after)['data'])['users'];
+        $afterUsers = Payload::int(Payload::obj(TestAppFactory::json($after)['data'])['users']);
         self::assertSame($beforeUsers + 1, $afterUsers);
     }
 
@@ -259,7 +257,7 @@ final class TriExpenseAdminEndpointsTest extends TestCase
             '/api/v1/tri-expense/admin/employee-search?q=Pending%20Manager&purpose=approver',
         ));
         self::assertSame(200, $search->getStatusCode(), (string) $search->getBody());
-        $items = Payload::obj(TestAppFactory::json($search)['data'])['items'];
+        $items = Payload::objList(Payload::obj(TestAppFactory::json($search)['data'])['items']);
         $match = null;
         foreach ($items as $item) {
             if (($item['publicId'] ?? null) === $publicId) {
@@ -296,11 +294,14 @@ final class TriExpenseAdminEndpointsTest extends TestCase
         return $app;
     }
 
-    /** @param list<int> $userIds */
+    /**
+     * @param App<ContainerInterface> $app
+     * @param list<int> $userIds
+     */
     private function seedProfileQueryUserIds(App $app, array $userIds): void
     {
+        /** @var \DI\Container $container */
         $container = $app->getContainer();
-        self::assertInstanceOf(ContainerInterface::class, $container);
         $query = $container->get(ExpenseProfileAdminQuery::class);
         self::assertInstanceOf(InMemoryExpenseProfileAdminQuery::class, $query);
         $query->seedUserIds(array_map(
@@ -309,6 +310,9 @@ final class TriExpenseAdminEndpointsTest extends TestCase
         ));
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function createManagedUser(App $app, string $email, string $displayName): string
     {
         $response = $app->handle($this->jsonRequest('POST', '/api/v1/admin/users', [
@@ -320,6 +324,9 @@ final class TriExpenseAdminEndpointsTest extends TestCase
         return Payload::str(Payload::obj(TestAppFactory::json($response)['data'])['publicId']);
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function seedProfile(
         App $app,
         int $userId,
@@ -343,6 +350,7 @@ final class TriExpenseAdminEndpointsTest extends TestCase
     }
 
     /**
+     * @param App<ContainerInterface> $app
      * @param list<string> $permissionCodes
      */
     private function replacePermissions(App $app, array $permissionCodes): void
@@ -362,20 +370,26 @@ final class TriExpenseAdminEndpointsTest extends TestCase
         return $request;
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function users(App $app): InMemoryApiUserRepository
     {
+        /** @var \DI\Container $container */
         $container = $app->getContainer();
-        self::assertInstanceOf(ContainerInterface::class, $container);
         $repository = $container->get(UserRepository::class);
         self::assertInstanceOf(InMemoryApiUserRepository::class, $repository);
 
         return $repository;
     }
 
+    /**
+     * @param App<ContainerInterface> $app
+     */
     private function profiles(App $app): InMemoryExpenseProfileRepository
     {
+        /** @var \DI\Container $container */
         $container = $app->getContainer();
-        self::assertInstanceOf(ContainerInterface::class, $container);
         $profiles = $container->get(ExpenseProfileRepository::class);
         self::assertInstanceOf(InMemoryExpenseProfileRepository::class, $profiles);
 
