@@ -767,10 +767,22 @@ final class ContainerFactory
             \TriCab\Core\Expense\Contract\ExpensePeriodRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpensePeriodRepository::class),
             \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
 
-            // Onboarding self-service (Phase 3.1/3.2). In-memory by default, as
-            // Expense is: the azure-sql branch below swaps in the real reader.
+            // Onboarding (Phase 3.1–3.3). In-memory by default, as Expense is:
+            // the azure-sql branch below swaps in the real adapters. The doubles
+            // are not merely test scaffolding — they are what `USER_REPOSITORY=memory`
+            // runs against, so they enforce the same ownership keying the SQL does.
             \TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingSelfServiceRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingTrainingRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingTrainingRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingPolicyRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingPolicyRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingFormRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingFormRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingDocumentRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingDocumentRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingWriteIdempotencyStore::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingWriteIdempotencyStore::class),
             \TriCab\Core\Expense\Contract\ExpensePdfRenderer::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ExpenseDompdfRenderer::class),
             \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
             // Profile-only by design: ExpenseProfile.IsFinance is authoritative at
@@ -2130,6 +2142,19 @@ final class ContainerFactory
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReminderLogRepository::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingSelfServiceRepository::class);
+            // Phase 3.3 — the write side. All four share one locator, whose single
+            // statement carries ownership, item type, withdrawal and content
+            // version; nothing else resolves an assignment.
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingTrainingRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingTrainingRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingPolicyRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingPolicyRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingFormRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingFormRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingDocumentRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingDocumentRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingWriteIdempotencyStore::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingWriteIdempotencyStore::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class);

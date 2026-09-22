@@ -173,7 +173,16 @@ use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingAdminOverviewAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentContentAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentsAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingItemAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingSelfSummaryAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptSubmissionAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingFormSubmissionAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingPolicyAcknowledgementAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingPresentationProgressAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormDraftAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\TrustedDevice\ExchangeTrustedDeviceSessionAction;
 use TriCab\Api\Http\Action\TrustedDevice\RegisterTrustedDeviceAction;
@@ -374,7 +383,22 @@ final class AppBuilder
      *  - `/api/v1/admin/onboarding/*` is HR. Separate permissions, and the
      *    self gate grants none of it.
      *
-     * Phase 1: the gates are real, the handlers are stubs.
+     * Within the self group the split is READ versus SUBMIT, and it is not
+     * cosmetic. `ONBOARDING.SELF.READ` opens an induction; `ONBOARDING.SELF.SUBMIT`
+     * is what writes evidence. A departed employee who keeps the first and loses
+     * the second is the leaver policy expressed as two permissions, and the
+     * route table is where that is legible.
+     *
+     * **Every path below identifies an item, never a person.** There is no user
+     * id in any of these routes, no `?forUser=`, and no body field that names a
+     * subject — whose record this is follows from the session, which is work
+     * order §4.3. The item id is checked against the session's own user inside
+     * one SQL statement, so an id belonging to somebody else is not found.
+     *
+     * Note there is no `/api/v1/onboarding/training/{id}/complete`. Nothing a
+     * trainee can call completes an item (invariant 7): passing an assessment
+     * does, acknowledging a policy does, and a reviewer does. The absence of the
+     * route is the enforcement.
      *
      * @param App<ContainerInterface> $app
      */
@@ -384,6 +408,39 @@ final class AppBuilder
 
         $app->get('/api/v1/onboarding/me', GetOnboardingSelfSummaryAction::class)
             ->add(($require)('ONBOARDING.SELF.READ'));
+
+        // Phase 3.3 — opening one allocated item. `itemType` is an argument of
+        // the route rather than of the request, so a client cannot ask for a
+        // policy "as training" to see what a different code path does with it.
+        $app->get('/api/v1/onboarding/training/{assignmentPublicId}', GetOnboardingItemAction::class)
+            ->setArgument('itemType', 'training')
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->get('/api/v1/onboarding/policies/{assignmentPublicId}', GetOnboardingItemAction::class)
+            ->setArgument('itemType', 'policy')
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->get('/api/v1/onboarding/forms/{assignmentPublicId}', GetOnboardingItemAction::class)
+            ->setArgument('itemType', 'form')
+            ->add(($require)('ONBOARDING.SELF.READ'));
+
+        $app->get('/api/v1/onboarding/documents', GetOnboardingDocumentsAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->get('/api/v1/onboarding/documents/{documentPublicId}/content', GetOnboardingDocumentContentAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+
+        // Phase 3.3 — the write side. All gated on SELF.SUBMIT, which READ alone
+        // does not grant.
+        $app->post('/api/v1/onboarding/training/{assignmentPublicId}/progress', PostOnboardingPresentationProgressAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->post('/api/v1/onboarding/training/{assignmentPublicId}/attempts', PostOnboardingAttemptAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->post('/api/v1/onboarding/training/{assignmentPublicId}/attempts/{attemptPublicId}', PostOnboardingAttemptSubmissionAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->post('/api/v1/onboarding/policies/{assignmentPublicId}/acknowledgement', PostOnboardingPolicyAcknowledgementAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->put('/api/v1/onboarding/forms/{assignmentPublicId}/draft', PutOnboardingFormDraftAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->post('/api/v1/onboarding/forms/{assignmentPublicId}/submission', PostOnboardingFormSubmissionAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
 
         $app->get('/api/v1/admin/onboarding/overview', GetOnboardingAdminOverviewAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
