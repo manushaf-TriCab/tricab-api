@@ -90,6 +90,31 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         self::assertStringContainsString('HTTP-1', $csvBody);
     }
 
+    public function test_finance_bank_transactions_endpoint_is_finance_only(): void
+    {
+        $app = $this->appWithWorld();
+        $world = $this->worldUsers($app);
+
+        $denied = $app->handle(
+            TestAppFactory::request('GET', '/api/v1/tri-expense/finance/bank-transactions')
+                ->withHeader('X-Dev-Entra-Subject', $world['teAdmin']['subject'])
+                ->withHeader('X-Dev-Entra-Email', $world['teAdmin']['email']),
+        );
+        self::assertSame(403, $denied->getStatusCode(), (string) $denied->getBody());
+        self::assertSame('TRIEXPENSE_ACCESS_DENIED', Payload::obj(TestAppFactory::json($denied)['error'])['code']);
+
+        $listed = $app->handle(
+            TestAppFactory::request('GET', '/api/v1/tri-expense/finance/bank-transactions?country=AU&pageSize=10')
+                ->withHeader('X-Dev-Entra-Subject', $world['finance']['subject'])
+                ->withHeader('X-Dev-Entra-Email', $world['finance']['email']),
+        );
+        self::assertSame(200, $listed->getStatusCode(), (string) $listed->getBody());
+        $data = Payload::obj(TestAppFactory::json($listed)['data']);
+        self::assertSame(0, $data['total']);
+        self::assertSame(10, $data['pageSize']);
+        self::assertFalse($data['legacyReadEnabled']);
+    }
+
     public function test_finance_config_flags_enabled(): void
     {
         $app = $this->appWithWorld();

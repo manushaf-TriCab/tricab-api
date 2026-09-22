@@ -9,7 +9,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Throwable;
 use TriCab\Api\Http\Auth\ExpenseActorFactory;
 use TriCab\Api\Http\Auth\ExpenseErrorMapper;
+use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Support\JsonValue;
 use TriCab\Core\Expense\Application\Service\GetExpenseFinanceEmployeeService;
 
 final class GetExpenseFinanceEmployeeAction
@@ -28,10 +30,18 @@ final class GetExpenseFinanceEmployeeAction
     {
         unset($response);
         try {
+            $params = QueryParams::normalize($request->getQueryParams());
+            $userIdArg = (string) ($args['userId'] ?? '');
+            $userIdOrEmail = str_contains($userIdArg, '@') || !ctype_digit($userIdArg)
+                ? rawurldecode($userIdArg)
+                : (int) $userIdArg;
+
             return $this->responder->success(
                 $this->service->execute(
                     ExpenseActorFactory::fromRequest($request),
-                    (int) ($args['userId'] ?? 0),
+                    $userIdOrEmail,
+                    JsonValue::stringOrNull($params, 'dateFrom'),
+                    JsonValue::stringOrNull($params, 'dateTo'),
                 ),
             );
         } catch (Throwable $e) {

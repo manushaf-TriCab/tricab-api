@@ -17,6 +17,6 @@ final class ExpenseLegacyReadOnly extends RuntimeException
 
     public static function invalidIdentifier(string $raw): self
     {
-        return new self('Invalid legacy TriExpense receipt identifier: ' . $raw);
+        return new self('Invalid legacy TriExpense identifier: ' . $raw);
     }
 }

@@ -773,6 +773,7 @@ final class ContainerFactory
             // only. See ExpenseAccessService for the full rationale.
             \TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class),
             \TriCab\Core\Expense\Contract\ExpenseManagerResolver::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileManagerResolver::class),
+            \TriCab\Core\Expense\Contract\ExpenseProfileAdminQuery::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseProfileAdminQuery::class),
             \TriCab\Core\Expense\Contract\ExpenseNotificationPort::class => static function (Container $container) use ($settings): \TriCab\Core\Expense\Contract\ExpenseNotificationPort {
                 return self::createExpenseNotificationPort($settings, $container);
             },
@@ -810,6 +811,54 @@ final class ContainerFactory
                     new \TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard(),
                 );
             },
+            \TriCab\Core\Expense\Contract\LegacyExpenseFinanceReadRepository::class => static function (Container $container) use ($settings): \TriCab\Core\Expense\Contract\LegacyExpenseFinanceReadRepository {
+                if (!$settings->triexpenseLegacyReadEnabled) {
+                    return new \TriCab\Api\Expense\Legacy\NullLegacyExpenseFinanceReadRepository();
+                }
+                try {
+                    $connection = self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class);
+                } catch (\Throwable) {
+                    return new \TriCab\Api\Expense\Legacy\NullLegacyExpenseFinanceReadRepository();
+                }
+
+                return new \TriCab\Api\Expense\Legacy\MysqlLegacyExpenseFinanceReadRepository(
+                    $connection,
+                    new \TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard(),
+                );
+            },
+            \TriCab\Core\Expense\Contract\LegacyExpenseFinanceBankReadRepository::class => static function (Container $container) use ($settings): \TriCab\Core\Expense\Contract\LegacyExpenseFinanceBankReadRepository {
+                if (!$settings->triexpenseLegacyReadEnabled) {
+                    return new \TriCab\Api\Expense\Legacy\NullLegacyExpenseFinanceBankReadRepository();
+                }
+                try {
+                    $connection = self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class);
+                } catch (\Throwable) {
+                    return new \TriCab\Api\Expense\Legacy\NullLegacyExpenseFinanceBankReadRepository();
+                }
+
+                return new \TriCab\Api\Expense\Legacy\MysqlLegacyExpenseFinanceBankReadRepository(
+                    $connection,
+                    new \TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard(),
+                );
+            },
+            \TriCab\Core\Expense\Application\Service\LegacyExpenseFinanceReceiptAssembler::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\LegacyExpenseFinanceReceiptAssembler::class),
+            \TriCab\Core\Expense\Application\Service\LegacyExpenseFinanceBankAssembler::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\LegacyExpenseFinanceBankAssembler::class),
+            \TriCab\Core\Expense\Application\Service\LegacyExpenseFinancePeriodAssembler::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\LegacyExpenseFinancePeriodAssembler::class),
+            // Cost-centre selector options: same legacy dept+office source as
+            // te_get_cost_centre_options(). Available whenever LEGACY_TC can connect;
+            // independent of TRIEXPENSE_LEGACY_READ_ENABLED (receipt dual-read).
+            \TriCab\Core\Expense\Contract\ExpenseCostCentreOptionsPort::class => static function (Container $container): \TriCab\Core\Expense\Contract\ExpenseCostCentreOptionsPort {
+                try {
+                    $connection = self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class);
+                } catch (\Throwable) {
+                    return new \TriCab\Api\Expense\Legacy\UnavailableExpenseCostCentreOptionsPort();
+                }
+
+                return new \TriCab\Api\Expense\Legacy\MysqlLegacyExpenseCostCentreOptionsPort(
+                    $connection,
+                    new \TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard(),
+                );
+            },
             \TriCab\Core\Expense\Contract\ExpenseAttachmentStore::class => \DI\autowire(\TriCab\Api\Expense\Persistence\AzureBlobExpenseAttachmentStore::class),
             \TriCab\Api\Http\Auth\ExpenseErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class),
             \TriCab\Core\Expense\Application\ExpensePermissionMode::class => static fn () => \TriCab\Core\Expense\Application\ExpensePermissionMode::fromString($settings->triexpensePermissionMode),
@@ -830,8 +879,48 @@ final class ContainerFactory
             \TriCab\Core\Expense\Application\Service\PurgeExpenseReceiptService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PurgeExpenseReceiptService::class),
             \TriCab\Core\Expense\Application\Service\CheckExpenseDuplicateService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CheckExpenseDuplicateService::class),
             \TriCab\Core\Expense\Application\Service\GetExpenseConfigService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseConfigService::class)
-                ->constructorParameter('features', \DI\get(\TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags::class)),
+                ->constructorParameter('features', \DI\get(\TriCab\Core\Expense\Application\DTO\ExpenseFeatureFlags::class))
+                ->constructorParameter('managers', \DI\get(\TriCab\Core\Expense\Contract\ExpenseManagerResolver::class))
+                ->constructorParameter('users', \DI\get(\TriCab\Core\Identity\Contract\UserRepository::class)),
+            \TriCab\Core\Expense\Application\Service\ListExpenseProfilesAdminService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseProfilesAdminService::class),
+            \TriCab\Core\Expense\Application\Service\UpdateExpenseProfileApproverService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\UpdateExpenseProfileApproverService::class),
+            \TriCab\Core\Expense\Application\Service\LinkLegacyExpenseApproversService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\LinkLegacyExpenseApproversService::class),
+            \TriCab\Core\Expense\Application\Service\ListExpenseAdminUsersService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseAdminUsersService::class),
+            \TriCab\Core\Expense\Application\Service\SetExpenseUserTeRolesService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\SetExpenseUserTeRolesService::class),
+            \TriCab\Core\Expense\Application\Service\SearchExpenseAdminEmployeesService::class => static function (Container $container): \TriCab\Core\Expense\Application\Service\SearchExpenseAdminEmployeesService {
+                $tel = null;
+                try {
+                    $reader = self::get($container, \TriCab\Core\TelDirectory\Contract\TelDirectoryGraphReader::class);
+                    if ($reader->isConfigured()) {
+                        $tel = $reader;
+                    }
+                } catch (\Throwable) {
+                    $tel = null;
+                }
+
+                return new \TriCab\Core\Expense\Application\Service\SearchExpenseAdminEmployeesService(
+                    self::get($container, \TriCab\Core\Expense\Application\Service\ExpenseAccessService::class),
+                    self::get($container, UserManagementRepository::class),
+                    self::get($container, \TriCab\Core\Expense\Contract\ExpenseProfileRepository::class),
+                    $tel,
+                );
+            },
+            \TriCab\Core\Expense\Application\Service\GetExpenseAdminOverviewService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseAdminOverviewService::class),
+            \TriCab\Core\Expense\Application\Service\DryCheckExpenseLegacyApproverMappingService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\DryCheckExpenseLegacyApproverMappingService::class),
+            \TriCab\Core\Expense\Contract\ExpenseLegacyTeUserDirectoryPort::class => static function (Container $container): \TriCab\Core\Expense\Contract\ExpenseLegacyTeUserDirectoryPort {
+                try {
+                    $connection = self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class);
+                } catch (\Throwable) {
+                    return new \TriCab\Api\Expense\Persistence\UnavailableExpenseLegacyTeUserDirectoryPort();
+                }
+
+                return new \TriCab\Api\Expense\Legacy\MysqlLegacyExpenseTeUserDirectoryPort(
+                    $connection,
+                    new \TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard(),
+                );
+            },
             \TriCab\Core\Expense\Application\Service\RunExpenseReceiptOcrService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\RunExpenseReceiptOcrService::class),
+            \TriCab\Core\Expense\Application\Service\ExtractExpenseReceiptDraftService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ExtractExpenseReceiptDraftService::class),
             \TriCab\Core\Expense\Application\Service\MonthlyManagerDigestService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\MonthlyManagerDigestService::class),
             \TriCab\Core\Expense\Application\Service\InitiateExpenseAttachmentService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\InitiateExpenseAttachmentService::class),
             \TriCab\Core\Expense\Application\Service\CompleteExpenseAttachmentService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CompleteExpenseAttachmentService::class),
@@ -848,12 +937,21 @@ final class ContainerFactory
             \TriCab\Core\Expense\Application\Service\OffsetExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\OffsetExpenseBankFeedService::class),
             \TriCab\Core\Expense\Application\Service\UndoOffsetExpenseBankFeedService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\UndoOffsetExpenseBankFeedService::class),
             \TriCab\Core\Expense\Application\Service\ResolveExpenseReceiptFinanceService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ResolveExpenseReceiptFinanceService::class),
-            \TriCab\Core\Expense\Application\Service\ListExpensePeriodsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpensePeriodsService::class),
+            \TriCab\Core\Expense\Application\Service\ListExpensePeriodsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpensePeriodsService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
+            \TriCab\Core\Expense\Application\Service\ListExpenseFinanceBankTransactionsService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseFinanceBankTransactionsService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
+            \TriCab\Core\Expense\Application\Service\GetExpenseFinanceBankTransactionService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseFinanceBankTransactionService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
             \TriCab\Core\Expense\Application\Service\GetOrCreateExpensePeriodService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetOrCreateExpensePeriodService::class),
             \TriCab\Core\Expense\Application\Service\PreCloseExpensePeriodService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PreCloseExpensePeriodService::class),
             \TriCab\Core\Expense\Application\Service\CloseExpensePeriodService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\CloseExpensePeriodService::class),
-            \TriCab\Core\Expense\Application\Service\GetExpenseReconciliationService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReconciliationService::class),
-            \TriCab\Core\Expense\Application\Service\GetExpenseFinanceEmployeeService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseFinanceEmployeeService::class),
+            \TriCab\Core\Expense\Application\Service\GetExpenseReconciliationService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseReconciliationService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
+            \TriCab\Core\Expense\Application\Service\GetExpenseFinanceWorkspaceService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseFinanceWorkspaceService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
+            \TriCab\Core\Expense\Application\Service\GetExpenseFinanceEmployeeService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\GetExpenseFinanceEmployeeService::class)
+                ->constructorParameter('legacyReadEnabled', $settings->triexpenseLegacyReadEnabled),
             \TriCab\Core\Expense\Application\Service\PrepareMissingReceiptRemindersService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PrepareMissingReceiptRemindersService::class),
             \TriCab\Core\Expense\Application\Service\PrepareManagerReminderService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\PrepareManagerReminderService::class),
             \TriCab\Core\Expense\Application\Service\ListExpenseAuditService::class => \DI\autowire(\TriCab\Core\Expense\Application\Service\ListExpenseAuditService::class),
@@ -944,10 +1042,13 @@ final class ContainerFactory
                 ->constructor($documentResources . '/templates', $documentResources . '/assets'),
             PdfRenderer::class => \DI\get(DompdfPdfRenderer::class),
             GenerateOcrPdfHandler::class => \DI\autowire(GenerateOcrPdfHandler::class),
+            \TriCab\Api\QuoteOrder\DocumentGeneration\QuoteDetailsToTcquLegacyStreamMapper::class => \DI\autowire(),
+            \TriCab\Api\QuoteOrder\DocumentGeneration\GenerateQuoteTemplatePdfService::class => \DI\autowire(),
             HealthAction::class => \DI\autowire(HealthAction::class),
             DatabaseHealthAction::class => \DI\autowire(DatabaseHealthAction::class),
             GetAuthenticatedUserAction::class => \DI\autowire(GetAuthenticatedUserAction::class),
             GenerateDocumentPdfAction::class => \DI\autowire(GenerateDocumentPdfAction::class),
+            \TriCab\Api\Http\Action\QuoteOrder\GetQuoteTemplateDocumentAction::class => \DI\autowire(),
             DevelopmentAuthenticationMiddleware::class => \DI\autowire(DevelopmentAuthenticationMiddleware::class),
             BearerTokenAuthenticationMiddleware::class => \DI\autowire(BearerTokenAuthenticationMiddleware::class),
             CorsMiddleware::class => \DI\autowire(CorsMiddleware::class),
@@ -2120,6 +2221,7 @@ final class ContainerFactory
             };
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReceiptRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReceiptRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseProfileRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseProfileRepository::class);
+            $definitions[\TriCab\Core\Expense\Contract\ExpenseProfileAdminQuery::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseProfileAdminQuery::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseBankFeedRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpensePeriodRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpensePeriodRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReminderLogRepository::class);

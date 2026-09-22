@@ -29,6 +29,7 @@ final readonly class QuoteDetails
         public string $totalStatus,
         public ?string $currency,
         public array $items = [],
+        public ?QuoteDocumentDetails $document = null,
     ) {
     }
 

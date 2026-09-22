@@ -202,11 +202,13 @@ use TriCab\Api\Http\Action\TriExpense\Finance\ExportEmployeeReceiptsCsvAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\ExportFinanceReconciliationCsvAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseBankFeedAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseFinanceEmployeeAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseFinanceWorkspaceAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\GetExpenseReconciliationAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\GetOrCreateExpensePeriodAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\ImportExpenseBankFeedAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\ListExpenseAuditAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\ListExpenseBankFeedCandidatesAction;
+use TriCab\Api\Http\Action\TriExpense\Finance\ListExpenseFinanceBankTransactionsAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\ListExpensePeriodsAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\ManualMatchExpenseBankFeedAction;
 use TriCab\Api\Http\Action\TriExpense\Finance\OffsetExpenseBankFeedAction;
@@ -225,15 +227,23 @@ use TriCab\Api\Http\Action\TriExpense\GetExpenseCustomerContactsAction;
 use TriCab\Api\Http\Action\TriExpense\GetExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\InitiateExpenseAttachmentAction;
 use TriCab\Api\Http\Action\TriExpense\ListExpenseApprovalsAction;
+use TriCab\Api\Http\Action\TriExpense\ListExpenseProfilesAdminAction;
+use TriCab\Api\Http\Action\TriExpense\ListExpenseAdminUsersAction;
+use TriCab\Api\Http\Action\TriExpense\GetExpenseAdminOverviewAction;
+use TriCab\Api\Http\Action\TriExpense\SetExpenseUserTeRolesAction;
+use TriCab\Api\Http\Action\TriExpense\SearchExpenseAdminEmployeesAction;
+use TriCab\Api\Http\Action\TriExpense\DryCheckExpenseLegacyApproverMappingAction;
 use TriCab\Api\Http\Action\TriExpense\ListExpenseReceiptsAction;
 use TriCab\Api\Http\Action\TriExpense\PurgeExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\RejectExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\RestoreExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\ExtractExpenseReceiptDraftAction;
 use TriCab\Api\Http\Action\TriExpense\RunExpenseReceiptOcrAction;
 use TriCab\Api\Http\Action\TriExpense\SearchExpenseCustomersAction;
 use TriCab\Api\Http\Action\TriExpense\SendBackExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\SoftDeleteExpenseReceiptAction;
 use TriCab\Api\Http\Action\TriExpense\SubmitExpenseReceiptAction;
+use TriCab\Api\Http\Action\TriExpense\UpdateExpenseProfileApproverAction;
 use TriCab\Api\Http\Action\TriExpense\UpdateExpenseReceiptAction;
 use TriCab\Api\Http\Middleware\BearerTokenAuthenticationMiddleware;
 use TriCab\Api\Http\Middleware\CorsMiddleware;
@@ -431,8 +441,17 @@ final class AppBuilder
         $gate = 'TRIEXPENSE.ACCESS';
 
         $app->get('/api/v1/tri-expense/config', GetExpenseConfigAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/admin/overview', GetExpenseAdminOverviewAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/admin/users', ListExpenseAdminUsersAction::class)->add(($require)($gate));
+        $app->put('/api/v1/tri-expense/admin/users/{publicId}/te-roles', SetExpenseUserTeRolesAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/admin/employee-search', SearchExpenseAdminEmployeesAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/admin/legacy-approver-mapping', DryCheckExpenseLegacyApproverMappingAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/admin/profiles', ListExpenseProfilesAdminAction::class)->add(($require)($gate));
+        $app->patch('/api/v1/tri-expense/admin/profiles/{userPublicId}/approver', UpdateExpenseProfileApproverAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/receipts', ListExpenseReceiptsAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/receipts', CreateExpenseReceiptAction::class)->add(($require)($gate));
+        // Must be registered before /receipts/{id} so "extract" is not treated as an id.
+        $app->post('/api/v1/tri-expense/receipts/extract', ExtractExpenseReceiptDraftAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/receipts/{id}', GetExpenseReceiptAction::class)->add(($require)($gate));
         $app->patch('/api/v1/tri-expense/receipts/{id}', UpdateExpenseReceiptAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/receipts/{id}/submit', SubmitExpenseReceiptAction::class)->add(($require)($gate));
@@ -451,6 +470,7 @@ final class AppBuilder
         $app->get('/api/v1/tri-expense/customers/{code}/contacts', GetExpenseCustomerContactsAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/duplicate-check', CheckExpenseDuplicateAction::class)->add(($require)($gate));
 
+        $app->get('/api/v1/tri-expense/finance/bank-transactions', ListExpenseFinanceBankTransactionsAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/finance/bank-feeds/import', ImportExpenseBankFeedAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/finance/bank-feeds/match', RunExpenseBankFeedMatchingAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/finance/bank-feeds/{id}', GetExpenseBankFeedAction::class)->add(($require)($gate));
@@ -471,6 +491,7 @@ final class AppBuilder
         $app->post('/api/v1/tri-expense/finance/periods/{id}/pre-close', PreCloseExpensePeriodAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/finance/periods/{id}/close', CloseExpensePeriodAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/finance/reconciliation', GetExpenseReconciliationAction::class)->add(($require)($gate));
+        $app->get('/api/v1/tri-expense/finance/workspace', GetExpenseFinanceWorkspaceAction::class)->add(($require)($gate));
         $app->get('/api/v1/tri-expense/finance/employees/{userId}', GetExpenseFinanceEmployeeAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/finance/reminders/missing-receipts', PrepareMissingReceiptRemindersAction::class)->add(($require)($gate));
         $app->post('/api/v1/tri-expense/finance/reminders/managers', PrepareManagerReminderAction::class)->add(($require)($gate));
@@ -494,6 +515,8 @@ final class AppBuilder
         $app->get('/api/v1/quotes-orders', \TriCab\Api\Http\Action\QuoteOrder\ListQuoteOrdersAction::class)
             ->add(($require)($gate));
         $app->get('/api/v1/quotes/{id}', \TriCab\Api\Http\Action\QuoteOrder\GetQuoteAction::class)
+            ->add(($require)($gate));
+        $app->get('/api/v1/quotes/{id}/document', \TriCab\Api\Http\Action\QuoteOrder\GetQuoteTemplateDocumentAction::class)
             ->add(($require)($gate));
         $app->get('/api/v1/orders/{id}', \TriCab\Api\Http\Action\QuoteOrder\GetOrderAction::class)
             ->add(($require)($gate));

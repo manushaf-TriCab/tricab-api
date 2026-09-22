@@ -12,6 +12,7 @@ use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Contract\ExpenseBankFeedRepository;
 use TriCab\Core\Expense\Domain\Exception\InvalidExpenseValue;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseBankFeedPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseBankFeedRef;
 use TriCab\Core\Expense\Module;
 use TriCab\Core\Shared\Time\Clock;
 
@@ -36,6 +37,8 @@ final class OffsetExpenseBankFeedService
         string $expectedRvB,
     ): array {
         $this->access->requireFinance($actor);
+        LegacyExpenseBankFeedRef::assertNotLegacy($publicIdA);
+        LegacyExpenseBankFeedRef::assertNotLegacy($publicIdB);
 
         $a = $this->bankFeeds->findByPublicId(ExpenseBankFeedPublicId::fromString($publicIdA));
         $b = $this->bankFeeds->findByPublicId(ExpenseBankFeedPublicId::fromString($publicIdB));

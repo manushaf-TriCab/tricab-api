@@ -83,10 +83,16 @@ final class ExpenseCatalog
      * @param ?ExpenseFeatureFlags $features runtime capability snapshot; when
      *        omitted the integration-dependent features report off, which is the
      *        correct answer for any caller that has no wiring to consult.
+     * @param list<array{code: string, name: string}> $costCentres
+     *        Active cost-centre labels from ExpenseCostCentreOptionsPort.
+     *        `code` is the value persisted on receipts (legacy label string).
      * @return array<string, mixed>
      */
-    public static function clientConfig(?ExpenseFeatureFlags $features = null): array
-    {
+    public static function clientConfig(
+        ?ExpenseFeatureFlags $features = null,
+        array $costCentres = [],
+        bool $costCentresAvailable = true,
+    ): array {
         $categories = [];
         foreach (self::categories() as $code => $name) {
             $categories[] = ['code' => $code, 'name' => $name];
@@ -94,6 +100,8 @@ final class ExpenseCatalog
 
         return [
             'categories' => $categories,
+            'costCentres' => array_values($costCentres),
+            'costCentresAvailable' => $costCentresAvailable,
             'currencies' => self::currencies(),
             'fileExtensions' => Module::ALLOWED_EXTENSIONS,
             'maxUploadBytes' => Module::MAX_UPLOAD_BYTES,

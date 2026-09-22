@@ -344,6 +344,7 @@ final class LegacyExpenseReadBridgeTest extends TestCase
             $legacy,
             $this->legacyAssembler,
             $this->identity,
+            new \TriCab\Api\Expense\Legacy\NullLegacyExpenseFinanceReadRepository(),
             $enabled,
         );
     }

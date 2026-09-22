@@ -72,6 +72,39 @@ final class QuoteOrderEndpointsTest extends TestCase
         self::assertSame('open', $quote['status']);
         self::assertSame('1710', $quote['statusCode']);
         self::assertIsArray($quote['items']);
+
+        $pdf = $app->handle(TestAppFactory::request('GET', '/api/v1/quotes/1001/document'));
+        self::assertSame(200, $pdf->getStatusCode());
+        self::assertSame('application/pdf', $pdf->getHeaderLine('Content-Type'));
+        self::assertStringContainsString('inline; filename="Quotation-1001.pdf"', $pdf->getHeaderLine('Content-Disposition'));
+        self::assertSame('tcqu.ocr', $pdf->getHeaderLine('X-OCR-Template'));
+        $body = (string) $pdf->getBody();
+        self::assertStringStartsWith('%PDF', $body);
+        self::assertGreaterThan(500, strlen($body));
+    }
+
+    public function test_quote_document_requires_permission(): void
+    {
+        $app = TestAppFactory::create(['QUOTES_ORDERS_LEGACY_READ_ENABLED' => 'true']);
+        $this->replacePermissions($app, ['ACCOUNT.LOGIN']);
+        $this->bindInMemoryRepo($app);
+
+        $response = $app->handle(TestAppFactory::request('GET', '/api/v1/quotes/1001/document'));
+        $payload = TestAppFactory::json($response);
+        self::assertSame(403, $response->getStatusCode());
+        self::assertSame('INSUFFICIENT_PERMISSION', Payload::obj($payload['error'])['code']);
+    }
+
+    public function test_quote_document_missing_quote_is_404(): void
+    {
+        $app = TestAppFactory::create(['QUOTES_ORDERS_LEGACY_READ_ENABLED' => 'true']);
+        $this->replacePermissions($app, ['ACCOUNT.LOGIN', Module::PERMISSION_READ]);
+        $this->bindInMemoryRepo($app);
+
+        $response = $app->handle(TestAppFactory::request('GET', '/api/v1/quotes/999999999/document'));
+        $payload = TestAppFactory::json($response);
+        self::assertSame(404, $response->getStatusCode());
+        self::assertSame('QUOTE_NOT_FOUND', Payload::obj($payload['error'])['code']);
     }
 
     public function test_source_disabled_returns_503(): void
@@ -140,12 +173,12 @@ final class QuoteOrderEndpointsTest extends TestCase
             quoteId: '1001',
             orderId: null,
             date: '2026-09-17',
-            validDate: null,
-            raisedBy: null,
+            validDate: '2026-09-19',
+            raisedBy: 'Alex',
             representative: 'Alex',
             customerCode: 'ACME01',
             customerName: 'Acme',
-            contactName: null,
+            contactName: 'Jordan',
             reference: 'R1',
             status: 'open',
             statusCode: '1710',
@@ -154,8 +187,46 @@ final class QuoteOrderEndpointsTest extends TestCase
             totalStatus: 'resolved',
             currency: 'AUD',
             items: [
-                new QuoteItemDetails('1', '1', 'BVA', '1', '1', '504.19', null, []),
+                new QuoteItemDetails(
+                    '1',
+                    '1',
+                    'BVA',
+                    '1',
+                    '1',
+                    '504.19',
+                    null,
+                    [],
+                    '504.19',
+                    'Accessories',
+                    null,
+                    'Sample accessory',
+                    null,
+                    '504.19',
+                    '1 bag',
+                ),
             ],
+            document: new \TriCab\Core\QuoteOrder\Application\DTO\QuoteDocumentDetails(
+                customerAddressLines: ['1 Test St', 'MELBOURNE VIC AU'],
+                customerCountry: 'AU',
+                customerTerritory: 'VIC',
+                paymentTerms: '30 Days from End of Month-No discount',
+                pricesExclusiveOfTax: true,
+                sellerTaxId: 'ACN 006 373 824',
+                sellerCompanyName: 'TriCab (Australia) Pty. Ltd.',
+                sellerAddressLines: ['57 Freight Drive', 'Somerton', 'VIC 3062 AU'],
+                sellerPhone: '+61 3 9081 5202',
+                sellerEmail: 'melbourne@tricab.com',
+                commercialNotes: [
+                    'Product "fitness of purpose" is the sole responsilibilty of the customer.',
+                ],
+                metalPrices: [
+                    'copperUsd' => '10000',
+                    'copperAud' => '15000',
+                    'aluminiumUsd' => '2500',
+                    'aluminiumAud' => '4000',
+                    'asAt' => null,
+                ],
+            ),
         ));
         $container->set(QuoteOrderRepository::class, $repo);
     }

@@ -18,6 +18,13 @@ final readonly class QuoteItemDetails
         public ?string $unitPrice,
         public ?string $reference,
         public array $packs = [],
+        public ?string $lineTotal = null,
+        public ?string $categoryGroup = null,
+        public ?string $colourName = null,
+        public ?string $description = null,
+        public ?string $weightKg = null,
+        public ?string $packPrice = null,
+        public ?string $packLabel = null,
     ) {
     }
 }

@@ -11,6 +11,7 @@ use TriCab\Core\Expense\Application\ExpenseRowVersion;
 use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Contract\ExpenseBankFeedRepository;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseBankFeedPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseBankFeedRef;
 
 final class UndoOffsetExpenseBankFeedService
 {
@@ -27,6 +28,7 @@ final class UndoOffsetExpenseBankFeedService
     public function execute(ExpenseActor $actor, string $publicId, string $expectedRowVersion): array
     {
         $this->access->requireFinance($actor);
+        LegacyExpenseBankFeedRef::assertNotLegacy($publicId);
 
         $entry = $this->bankFeeds->findByPublicId(ExpenseBankFeedPublicId::fromString($publicId));
         if ($entry === null) {
