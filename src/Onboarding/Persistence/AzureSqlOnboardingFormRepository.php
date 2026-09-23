@@ -81,7 +81,18 @@ final class AzureSqlOnboardingFormRepository implements OnboardingFormRepository
                     SELECT CONVERT(VARCHAR(33), MAX(fs.[SubmittedAtUtc]), 127)
                     FROM [onboarding].[FormSubmissions] fs
                     WHERE fs.[AssignmentId] = a.[AssignmentId]
-                ) AS [LastSubmittedAtUtc]
+                ) AS [LastSubmittedAtUtc],
+                /* The reviewer's reason for sending it back, only while it is
+                   sent back (4.3). The latest such event, not any: a form sent
+                   back twice owes the person the second reason. */
+                CASE WHEN a.[Status] = N'fix_and_resubmit' THEN (
+                    SELECT TOP (1) e.[Note]
+                    FROM [audit].[OnboardingStatusEvents] e
+                    WHERE e.[AssignmentPublicId] = a.[PublicId]
+                      AND e.[ActorType] = N'reviewer'
+                      AND e.[ToStatus] = N'fix_and_resubmit'
+                    ORDER BY e.[CreatedAtUtc] DESC, e.[OnboardingStatusEventId] DESC
+                ) END AS [ReviewerNote]
             FROM [onboarding].[Assignments] a
             JOIN [onboarding].[FormDefinitionVersions] fdv
                 ON fdv.[FormDefinitionVersionId] = a.[FormDefinitionVersionId]
@@ -115,6 +126,7 @@ final class AzureSqlOnboardingFormRepository implements OnboardingFormRepository
             draftUpdatedAtUtc: AzureSqlValueMapper::nullableString($row['DraftUpdatedAtUtc'] ?? null),
             submittedRevisionCount: AzureSqlValueMapper::intValue($row['SubmittedRevisionCount'] ?? 0),
             lastSubmittedAtUtc: AzureSqlValueMapper::nullableString($row['LastSubmittedAtUtc'] ?? null),
+            reviewerNote: AzureSqlValueMapper::nullableString($row['ReviewerNote'] ?? null),
         );
     }
 

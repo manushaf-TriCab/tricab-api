@@ -23,6 +23,8 @@ use TriCab\Core\Onboarding\Domain\Exception\OnboardingItemTypeMismatch;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingSubmissionWindowClosed;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
+use TriCab\Core\Onboarding\Domain\Exception\ReviewDecisionNotPermitted;
+use TriCab\Core\Onboarding\Domain\Exception\SelfReviewNotPermitted;
 use TriCab\Core\Onboarding\Domain\Exception\StatusChangeNotPermitted;
 use TriCab\Core\Onboarding\Domain\Exception\UnknownPresentationSlide;
 use TriCab\Core\Product\Domain\Exception\InvalidProductValue;
@@ -118,6 +120,10 @@ final readonly class OnboardingSelfServiceResponder
                 => $this->responder->error('ONBOARDING_SUBMISSION_WINDOW_CLOSED', $failure->getMessage(), 403),
             $failure instanceof StatusChangeNotPermitted
                 => $this->responder->error('ONBOARDING_STATUS_CHANGE_NOT_PERMITTED', $failure->getMessage(), 403),
+            // Said plainly rather than disguised as 404: the reviewer already
+            // knows the record is theirs, and the remedy is another reviewer.
+            $failure instanceof SelfReviewNotPermitted
+                => $this->responder->error('ONBOARDING_SELF_REVIEW_NOT_PERMITTED', $failure->getMessage(), 403),
 
             // 409 — real, understood, and in conflict with the current state.
             $failure instanceof ContentVersionSuperseded
@@ -135,6 +141,15 @@ final readonly class OnboardingSelfServiceResponder
             $failure instanceof AllocationNotPermitted
                 => $this->responder->error(
                     'ONBOARDING_ALLOCATION_' . strtoupper($failure->reason),
+                    $failure->getMessage(),
+                    409,
+                ),
+
+            // A reviewer decision the item's state no longer admits — decided
+            // by somebody else, or an outcome not offered from here.
+            $failure instanceof ReviewDecisionNotPermitted
+                => $this->responder->error(
+                    'ONBOARDING_REVIEW_' . strtoupper($failure->reason),
                     $failure->getMessage(),
                     409,
                 ),

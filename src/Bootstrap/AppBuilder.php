@@ -178,12 +178,15 @@ use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentsAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingItemAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingPeopleAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingPersonAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingReviewItemAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingReviewQueueAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingSelfSummaryAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptSubmissionAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingFormSubmissionAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPolicyAcknowledgementAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPresentationProgressAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingReviewDecisionAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormDraftAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingPersonAllocationAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
@@ -458,6 +461,17 @@ final class AppBuilder
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
         $app->put('/api/v1/admin/onboarding/people/{personPublicId}/allocation', PutOnboardingPersonAllocationAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+
+        // Phase 4.3 — the reviewer queue. ONBOARDING.REVIEW, not PEOPLE.MANAGE:
+        // deciding somebody's work and choosing what they are given are separate
+        // grants (work order §9, "reviewer and content-manager scopes remain
+        // separate"), and holding one opens none of the other's routes.
+        $app->get('/api/v1/admin/onboarding/queue', GetOnboardingReviewQueueAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->get('/api/v1/admin/onboarding/queue/{assignmentPublicId}', GetOnboardingReviewItemAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->post('/api/v1/admin/onboarding/queue/{assignmentPublicId}/decision', PostOnboardingReviewDecisionAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
     }
 
     /**

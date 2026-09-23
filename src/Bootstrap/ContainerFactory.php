@@ -788,6 +788,8 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingPeopleRepository::class),
             \TriCab\Core\Onboarding\Contract\OnboardingAdminAuditLog::class
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingAdminAuditLog::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingReviewRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReviewRepository::class),
             \TriCab\Core\Expense\Contract\ExpensePdfRenderer::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ExpenseDompdfRenderer::class),
             \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
             // Profile-only by design: ExpenseProfile.IsFinance is authoritative at
@@ -2166,6 +2168,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingPeopleRepository::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingAdminAuditLog::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingAdminAuditLog::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingReviewRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingReviewRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class);

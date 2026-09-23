@@ -196,6 +196,9 @@ final class InMemoryOnboardingFormRepository implements OnboardingFormRepository
             draftUpdatedAtUtc: $draftUpdatedAtUtc,
             submittedRevisionCount: $revisions,
             lastSubmittedAtUtc: $lastSubmittedAtUtc,
+            // Addressed to the person only while the form is sent back; any
+            // move they make takes it out of that state.
+            reviewerNote: $transition === null ? $detail->reviewerNote : null,
         );
 
         $this->details[self::key($userId, $detail->assignmentPublicId)] = $updated;

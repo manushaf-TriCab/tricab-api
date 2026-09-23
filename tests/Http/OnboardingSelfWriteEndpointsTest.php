@@ -295,6 +295,30 @@ final class OnboardingSelfWriteEndpointsTest extends TestCase
         self::assertStringNotContainsString('000-000', (string) $response->getBody());
     }
 
+    /**
+     * 4.3: a form sent back tells the person why, and stops telling them once
+     * they have acted on it.
+     */
+    public function test_a_sent_back_form_carries_the_reviewers_reason_until_it_is_resubmitted(): void
+    {
+        $app = $this->app(self::READ_AND_SUBMIT);
+        $this->seedForm($app, AssignmentStatus::fixAndResubmit(), 'Your start date is before the offer date.');
+
+        $read = $this->data($app->handle(TestAppFactory::request('GET', '/api/v1/onboarding/forms/' . self::FORM)));
+        self::assertSame('fix_and_resubmit', $read['status']);
+        self::assertSame('Your start date is before the offer date.', $read['reviewerNote']);
+
+        $resubmitted = $app->handle($this->json(
+            'POST',
+            '/api/v1/onboarding/forms/' . self::FORM . '/submission',
+            ['versionPublicId' => self::FORM_VERSION, 'formData' => ['preferredName' => 'Sam']],
+            'key-resubmit',
+        ));
+        self::assertSame(201, $resubmitted->getStatusCode(), (string) $resubmitted->getBody());
+        self::assertSame('submitted', $this->data($resubmitted)['status']);
+        self::assertNull($this->data($resubmitted)['reviewerNote']);
+    }
+
     public function test_a_draft_round_trips_its_row_version(): void
     {
         $app = $this->app(self::READ_AND_SUBMIT);
@@ -485,7 +509,7 @@ final class OnboardingSelfWriteEndpointsTest extends TestCase
     /**
      * @param App<ContainerInterface> $app
      */
-    private function seedForm(App $app): void
+    private function seedForm(App $app, ?AssignmentStatus $status = null, ?string $reviewerNote = null): void
     {
         $forms = $this->forms($app);
         $forms->withForm(self::SIGNED_IN_USER_ID, new OnboardingFormDetail(
@@ -493,13 +517,14 @@ final class OnboardingSelfWriteEndpointsTest extends TestCase
             title: 'Employee details',
             versionPublicId: self::FORM_VERSION,
             versionNumber: 1,
-            status: AssignmentStatus::notStarted(),
+            status: $status ?? AssignmentStatus::notStarted(),
             schema: ['fields' => []],
             draftData: [],
             draftRowVersion: null,
             draftUpdatedAtUtc: null,
-            submittedRevisionCount: 0,
+            submittedRevisionCount: $status === null ? 0 : 1,
             lastSubmittedAtUtc: null,
+            reviewerNote: $reviewerNote,
         ));
         $forms->withClassifications(self::FORM_VERSION, [
             'preferredName' => DataClass::ORDINARY_HR,

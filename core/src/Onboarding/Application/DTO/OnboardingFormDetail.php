@@ -23,6 +23,14 @@ use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
  * been split yet, and losing it on a page refresh is the fastest way to make
  * somebody abandon an induction.
  *
+ * ## The reviewer's note, and only while it applies
+ *
+ * {@see $reviewerNote} is what a reviewer wrote when they sent the form back
+ * (4.3), and it is set only while the form is `fix_and_resubmit`. It is the
+ * one reviewer note the person is shown, because it is the one addressed to
+ * them: without it they are told "changes requested" and left to guess which.
+ * Once they resubmit, it is history, and history is HR's view.
+ *
  * ## The row version is the point of this object
  *
  * {@see $draftRowVersion} is the `RowVersionToken` for
@@ -51,6 +59,7 @@ final readonly class OnboardingFormDetail
         public ?string $draftUpdatedAtUtc,
         public int $submittedRevisionCount,
         public ?string $lastSubmittedAtUtc,
+        public ?string $reviewerNote = null,
     ) {
     }
 
@@ -83,6 +92,7 @@ final readonly class OnboardingFormDetail
             'draftUpdatedAtUtc' => $this->draftUpdatedAtUtc,
             'submittedRevisionCount' => $this->submittedRevisionCount,
             'lastSubmittedAtUtc' => $this->lastSubmittedAtUtc,
+            'reviewerNote' => $this->reviewerNote,
         ];
     }
 }
