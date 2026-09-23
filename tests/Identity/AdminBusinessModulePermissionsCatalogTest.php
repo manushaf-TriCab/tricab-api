@@ -33,6 +33,7 @@ final class AdminBusinessModulePermissionsCatalogTest extends TestCase
             'TRIEXPENSE.ADMIN',
             'TRIEXPENSE.AUDIT',
             'TEL_DIRECTORY.ACCESS',
+            'CATALOGUE.READ',
             'CRM.ACCESS',
             'ERP.ACCESS',
             'REGION.READ',
