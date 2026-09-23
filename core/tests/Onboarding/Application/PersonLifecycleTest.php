@@ -221,7 +221,9 @@ final class PersonLifecycleTest extends TestCase
 
         self::assertSame([['to' => 'sam@example.test', 'displayName' => 'Sam Example', 'onboardingUrl' => 'https://tricab.ai/onboarding']], $this->sender->sent);
         self::assertNotNull($detail->person->invitedAtUtc);
-        self::assertSame(AdminEventType::PERSON_INVITED, $this->audit->entries[0]['event']->eventType);
+        // Written with the stamp, inside the repository's transaction.
+        self::assertSame([AdminEventType::PERSON_INVITED], array_map(static fn ($e) => $e->eventType, $this->people->writtenEvents));
+        self::assertSame([], $this->audit->entries);
     }
 
     public function test_a_double_click_sends_one_invitation(): void
@@ -270,7 +272,13 @@ final class PersonLifecycleTest extends TestCase
         }
 
         self::assertNull($this->people->personDetail($publicId)?->person->invitedAtUtc, 'InvitedAtUtc always means an email went');
-        self::assertSame('delivery_failed', $this->audit->entries[0]['event']->details['reason'] ?? null);
+        // The trail keeps both rows, each written with its change: the claim,
+        // then the refusal that put the stamp back.
+        self::assertSame(
+            [[AdminEventType::PERSON_INVITED, null], [AdminEventType::PERSON_INVITATION_REFUSED, 'delivery_failed']],
+            array_map(static fn ($e) => [$e->eventType, $e->details['reason'] ?? null], $this->people->writtenEvents),
+        );
+        self::assertSame([], $this->audit->entries);
 
         // And the stamp being put back means a retry is not blocked as "too soon".
         $this->inviter()->invite($this->actor(), $publicId);

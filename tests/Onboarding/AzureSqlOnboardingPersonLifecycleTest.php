@@ -21,10 +21,12 @@ use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
 use TriCab\Core\Identity\Application\Service\UserManagement\CreateUserService;
 use TriCab\Core\Identity\Application\Service\UserManagement\UserManagementAuditRecorder;
 use TriCab\Core\Identity\Domain\Service\UuidV4Generator;
+use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingAdminEvent;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingProfileFields;
 use TriCab\Core\Onboarding\Application\Service\CreateOnboardingPersonService;
 use TriCab\Core\Onboarding\Application\Service\UpdateOnboardingPersonProfileService;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
+use TriCab\Core\Onboarding\Domain\ValueObject\AdminEventType;
 use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 use TriCab\Core\Shared\Persistence\ApplicationTransaction;
 
@@ -190,13 +192,23 @@ final class AzureSqlOnboardingPersonLifecycleTest extends TestCase
         self::assertNotNull($record);
         self::assertSame($email, $record->emailAddress);
 
-        $first = $this->people->claimInvitation($record, 60, $this->actor());
-        self::assertSame(['previousInvitedAtUtc' => null, 'previousInvitedByUserId' => null], $first);
-        self::assertNull($this->people->claimInvitation($record, 60, $this->actor()), 'the second click loses');
+        $rows = fn (string $type): int => $this->number(
+            'SELECT COUNT(*) FROM [audit].[OnboardingAdminEvents] WHERE [SubjectUserId] = :u AND [EventType] = :t',
+            [':u' => $this->existing, ':t' => $type],
+        );
+        $invited = OnboardingAdminEvent::succeeded(AdminEventType::PERSON_INVITED, $this->existing, $record->publicId, 'Synthetic invitation.', [], 'ONBOARDING.PEOPLE.MANAGE');
+        $refused = OnboardingAdminEvent::refused(AdminEventType::PERSON_INVITATION_REFUSED, $this->existing, $record->publicId, 'Synthetic refusal.', ['reason' => 'delivery_failed'], 'ONBOARDING.PEOPLE.MANAGE');
 
-        $this->people->releaseInvitation($record, $first);
+        $first = $this->people->claimInvitation($record, 60, $invited, $this->actor());
+        self::assertSame(['previousInvitedAtUtc' => null, 'previousInvitedByUserId' => null], $first);
+        self::assertSame(1, $rows('person.invited'), 'the success row is written with the stamp');
+        self::assertNull($this->people->claimInvitation($record, 60, $invited, $this->actor()), 'the second click loses');
+        self::assertSame(1, $rows('person.invited'), 'and a lost click writes no row');
+
+        $this->people->releaseInvitation($record, $first, $refused, $this->actor());
         self::assertNull($this->people->personDetail($detail->person->publicId)?->person->invitedAtUtc);
-        self::assertNotNull($this->people->claimInvitation($record, 60, $this->actor()), 'released, so claimable again');
+        self::assertSame(1, $rows('person.invitation_refused'), 'the refusal is written with the stamp put back');
+        self::assertNotNull($this->people->claimInvitation($record, 60, $invited, $this->actor()), 'released, so claimable again');
     }
 
     // ---------------------------------------------------------------- helpers

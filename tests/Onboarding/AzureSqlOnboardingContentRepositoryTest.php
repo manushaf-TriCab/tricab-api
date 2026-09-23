@@ -182,6 +182,64 @@ final class AzureSqlOnboardingContentRepositoryTest extends TestCase
         self::assertSame(1, $this->number("SELECT COUNT(*) FROM [audit].[OnboardingAdminEvents] WHERE [EventType] = N'allocation.reissued' AND [SubjectUserId] = :u AND [CreatedAtUtc] > DATEADD(MINUTE, -5, SYSUTCDATETIME())", [':u' => $moving]));
     }
 
+    /**
+     * Work order §9, "policy version carry-forward preserves old
+     * acknowledgements". Publishing version 2 as a real change moves the person
+     * who had not acknowledged, and leaves the person who had exactly where they
+     * were: their acknowledgement row, its wording and its time untouched, still
+     * pointing at version 1, and no acknowledgement of version 2 invented for them.
+     */
+    public function test_a_new_policy_version_leaves_an_existing_acknowledgement_untouched(): void
+    {
+        [, $acknowledged, $reading] = $this->users;
+        $body = static fn (string $wording): array => [
+            'blocks' => [['type' => 'paragraph', 'text' => $wording]],
+            'declaration' => 'I have read the ' . $wording . ' policy.',
+        ];
+        $policy = $this->service->createItem($this->actor(), 'policy', ['slug' => 'syn-policy-' . bin2hex(random_bytes(4)), 'title' => 'Synthetic conduct policy']);
+        $v1 = $this->firstVersion($policy);
+        $v1 = $this->service->saveDraft($this->actor(), 'policy', $policy->item->publicId, $v1->publicId, $v1->rowVersion, $body('first'));
+        $this->service->publish($this->actor(), 'policy', $policy->item->publicId, $v1->publicId, $v1->rowVersion, false);
+
+        foreach ([[$acknowledged, 'completed'], [$reading, 'in_progress']] as [$userId, $status]) {
+            $this->exec(
+                "INSERT INTO [onboarding].[Assignments] ([UserId], [ItemType], [PolicyVersionId], [Status], [AllocatedByUserId])
+                 SELECT :u, N'policy', v.[PolicyVersionId], :s, :by FROM [onboarding].[PolicyVersions] v WHERE v.[PublicId] = :v",
+                [':u' => $userId, ':s' => $status, ':by' => $this->users[0], ':v' => $v1->publicId],
+            );
+        }
+        $this->exec(
+            "INSERT INTO [onboarding].[PolicyAcknowledgements] ([AssignmentId], [UserId], [PolicyVersionId], [AcknowledgedAtUtc], [DeclarationText])
+             SELECT a.[AssignmentId], a.[UserId], a.[PolicyVersionId], '2026-09-01T00:00:00', N'I have read the first policy.'
+             FROM [onboarding].[Assignments] a JOIN [onboarding].[PolicyVersions] v ON v.[PolicyVersionId] = a.[PolicyVersionId]
+             WHERE a.[UserId] = :u AND v.[PublicId] = :v",
+            [':u' => $acknowledged, ':v' => $v1->publicId],
+        );
+
+        $v2 = $this->service->createDraft($this->actor(), 'policy', $policy->item->publicId);
+        $v2 = $this->service->saveDraft($this->actor(), 'policy', $policy->item->publicId, $v2->publicId, $v2->rowVersion, $body('second'));
+        $result = $this->service->publish($this->actor(), 'policy', $policy->item->publicId, $v2->publicId, $v2->rowVersion, true);
+        self::assertSame(1, $result['reissuedCount'], 'only the unfinished reader moves');
+
+        $ack = $this->row(
+            "SELECT v.[PublicId] AS [V], k.[DeclarationText] AS [T], CONVERT(VARCHAR(19), k.[AcknowledgedAtUtc], 126) AS [At]
+             FROM [onboarding].[PolicyAcknowledgements] k JOIN [onboarding].[PolicyVersions] v ON v.[PolicyVersionId] = k.[PolicyVersionId]
+             WHERE k.[UserId] = :u",
+            [':u' => $acknowledged],
+        );
+        self::assertSame(strtolower($v1->publicId), strtolower(self::str($ack['V'])));
+        self::assertSame('I have read the first policy.', $ack['T']);
+        self::assertSame('2026-09-01T00:00:00', $ack['At']);
+
+        $live = static fn (string $version): string => "SELECT COUNT(*) FROM [onboarding].[Assignments] a JOIN [onboarding].[PolicyVersions] v ON v.[PolicyVersionId] = a.[PolicyVersionId]
+             WHERE a.[UserId] = :u AND v.[PublicId] = '{$version}' AND a.[WithdrawnAtUtc] IS NULL";
+        self::assertSame(1, $this->number($live($v1->publicId) . " AND a.[Status] = N'completed'", [':u' => $acknowledged]), 'still complete, on version 1');
+        self::assertSame(0, $this->number($live($v2->publicId), [':u' => $acknowledged]), 'not given version 2');
+        self::assertSame(1, $this->number($live($v2->publicId) . " AND a.[Status] = N'not_started'", [':u' => $reading]), 'the reader starts version 2');
+        self::assertSame(1, $this->number('SELECT COUNT(*) FROM [onboarding].[PolicyAcknowledgements] WHERE [UserId] IN (:a, :r)', [':a' => $acknowledged, ':r' => $reading]), 'no acknowledgement is carried to, or invented for, version 2');
+        self::assertNotSame('', $this->text('SELECT CONVERT(VARCHAR(33), [SupersededAtUtc], 127) FROM [onboarding].[PolicyVersions] WHERE [PublicId] = :p', [':p' => $v1->publicId]));
+    }
+
     public function test_a_payroll_form_writes_its_classifications_and_a_policy_its_wording(): void
     {
         $form = $this->service->createItem($this->actor(), 'form', ['slug' => 'syn-form-' . bin2hex(random_bytes(4)), 'title' => 'Synthetic bank details', 'accessGroup' => 'payroll']);

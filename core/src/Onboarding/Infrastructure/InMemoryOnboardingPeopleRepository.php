@@ -245,7 +245,7 @@ final class InMemoryOnboardingPeopleRepository implements OnboardingPeopleReposi
         $this->writtenEvents = [...$this->writtenEvents, ...$events];
     }
 
-    public function claimInvitation(OnboardingPersonRecord $person, int $cooldownSeconds, ActorContext $actor): ?array
+    public function claimInvitation(OnboardingPersonRecord $person, int $cooldownSeconds, OnboardingAdminEvent $event, ActorContext $actor): ?array
     {
         $previous = $this->invitedAt[$person->publicId] ?? null;
         if ($previous !== null && (time() - (int) strtotime($previous)) < $cooldownSeconds) {
@@ -253,14 +253,16 @@ final class InMemoryOnboardingPeopleRepository implements OnboardingPeopleReposi
         }
         $this->invitedAt[$person->publicId] = gmdate('Y-m-d\TH:i:s');
         $this->refreshInvited($person->publicId);
+        $this->writtenEvents[] = $event;
 
         return ['previousInvitedAtUtc' => $previous, 'previousInvitedByUserId' => null];
     }
 
-    public function releaseInvitation(OnboardingPersonRecord $person, array $previous): void
+    public function releaseInvitation(OnboardingPersonRecord $person, array $previous, OnboardingAdminEvent $event, ActorContext $actor): void
     {
         $this->invitedAt[$person->publicId] = $previous['previousInvitedAtUtc'];
         $this->refreshInvited($person->publicId);
+        $this->writtenEvents[] = $event;
     }
 
     private function refreshInvited(string $publicId): void

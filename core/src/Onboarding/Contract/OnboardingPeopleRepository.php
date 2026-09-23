@@ -111,17 +111,19 @@ interface OnboardingPeopleRepository
 
     /**
      * Stamps the invitation, unless one was sent within the cooldown — in one
-     * statement, so two clicks cannot both win.
+     * statement, so two clicks cannot both win — and appends `$event` in the
+     * same transaction. A lost click writes neither.
      *
      * @return ?array{previousInvitedAtUtc: ?string, previousInvitedByUserId: ?int} what to put back if the send fails; null when too soon
      */
-    public function claimInvitation(OnboardingPersonRecord $person, int $cooldownSeconds, ActorContext $actor): ?array;
+    public function claimInvitation(OnboardingPersonRecord $person, int $cooldownSeconds, OnboardingAdminEvent $event, ActorContext $actor): ?array;
 
     /**
      * Puts the invitation stamp back after a send the provider refused, so the
-     * record never says somebody was invited when they were not.
+     * record never says somebody was invited when they were not, and appends
+     * `$event` (the refusal) in the same transaction.
      *
      * @param array{previousInvitedAtUtc: ?string, previousInvitedByUserId: ?int} $previous
      */
-    public function releaseInvitation(OnboardingPersonRecord $person, array $previous): void;
+    public function releaseInvitation(OnboardingPersonRecord $person, array $previous, OnboardingAdminEvent $event, ActorContext $actor): void;
 }

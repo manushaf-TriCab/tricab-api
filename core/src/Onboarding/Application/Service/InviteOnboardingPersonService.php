@@ -75,8 +75,17 @@ final readonly class InviteOnboardingPersonService
             if (!$this->accounts->canSignIn($person->userId)) {
                 throw InvitationNotPermitted::cannotSignIn();
             }
-            $previous = $this->people->claimInvitation($person, self::COOLDOWN_SECONDS, $actor)
-                ?? throw InvitationNotPermitted::tooSoon(self::COOLDOWN_SECONDS);
+            // The success row is written with the stamp, in one transaction, so
+            // the two always agree. If the provider then refuses, the stamp is
+            // put back and a delivery_failed row follows it, again together.
+            $previous = $this->people->claimInvitation($person, self::COOLDOWN_SECONDS, OnboardingAdminEvent::succeeded(
+                AdminEventType::PERSON_INVITED,
+                $person->userId,
+                $person->publicId,
+                'Invitation to start onboarding handed to the email provider. It carries no sign-in code.',
+                [],
+                self::PERMISSION,
+            ), $actor) ?? throw InvitationNotPermitted::tooSoon(self::COOLDOWN_SECONDS);
         } catch (InvitationNotPermitted $refusal) {
             $this->refuse($actor, $person, $refusal->reason, $refusal->getMessage());
 
@@ -94,20 +103,15 @@ final readonly class InviteOnboardingPersonService
                 rtrim($this->publicAppBaseUrl, '/') . '/onboarding',
             );
         } catch (Throwable $failure) {
-            $this->people->releaseInvitation($person, $previous);
-            $this->refuse($actor, $person, 'delivery_failed', 'The email provider did not accept the invitation.');
+            $this->people->releaseInvitation(
+                $person,
+                $previous,
+                $this->refusal($person, 'delivery_failed', 'The email provider did not accept the invitation.'),
+                $actor,
+            );
 
             throw InvitationNotDelivered::fromThrowable($failure);
         }
-
-        $this->audit->append($actor, OnboardingAdminEvent::succeeded(
-            AdminEventType::PERSON_INVITED,
-            $person->userId,
-            $person->publicId,
-            'Sent an invitation to start onboarding. It carries no sign-in code.',
-            [],
-            self::PERMISSION,
-        ));
 
         $detail = $this->people->personDetail($publicId) ?? throw OnboardingPersonNotFound::forPublicId($personPublicId);
 
@@ -116,13 +120,18 @@ final readonly class InviteOnboardingPersonService
 
     private function refuse(ActorContext $actor, OnboardingPersonRecord $person, string $reason, string $why): void
     {
-        $this->audit->append($actor, OnboardingAdminEvent::refused(
+        $this->audit->append($actor, $this->refusal($person, $reason, $why));
+    }
+
+    private function refusal(OnboardingPersonRecord $person, string $reason, string $why): OnboardingAdminEvent
+    {
+        return OnboardingAdminEvent::refused(
             AdminEventType::PERSON_INVITATION_REFUSED,
             $person->userId,
             $person->publicId,
             'Invitation not sent: ' . $why,
             ['reason' => $reason],
             self::PERMISSION,
-        ));
+        );
     }
 }

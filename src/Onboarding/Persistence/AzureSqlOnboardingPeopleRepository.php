@@ -391,48 +391,57 @@ final class AzureSqlOnboardingPeopleRepository implements OnboardingPeopleReposi
         });
     }
 
-    public function claimInvitation(OnboardingPersonRecord $person, int $cooldownSeconds, ActorContext $actor): ?array
+    public function claimInvitation(OnboardingPersonRecord $person, int $cooldownSeconds, OnboardingAdminEvent $event, ActorContext $actor): ?array
     {
-        $rows = $this->connection->fetchAll(
-            <<<'SQL'
-            UPDATE [onboarding].[TraineeProfiles]
-            SET [InvitedAtUtc] = SYSUTCDATETIME(),
-                [InvitedByUserId] = :actorUserId,
-                [UpdatedAtUtc] = SYSUTCDATETIME()
-            OUTPUT CONVERT(VARCHAR(33), DELETED.[InvitedAtUtc], 126) AS [PreviousInvitedAtUtc],
-                   DELETED.[InvitedByUserId] AS [PreviousInvitedByUserId]
-            WHERE [UserId] = :userId
-              AND ([InvitedAtUtc] IS NULL OR [InvitedAtUtc] < DATEADD(SECOND, -:cooldown, SYSUTCDATETIME()))
-            SQL,
-            [':actorUserId' => $actor->userId, ':userId' => $person->userId, ':cooldown' => $cooldownSeconds],
-        );
+        /** @var ?array{previousInvitedAtUtc: ?string, previousInvitedByUserId: ?int} */
+        return $this->runInTransaction($this->connection, function () use ($person, $cooldownSeconds, $event, $actor): ?array {
+            $rows = $this->connection->fetchAll(
+                <<<'SQL'
+                UPDATE [onboarding].[TraineeProfiles]
+                SET [InvitedAtUtc] = SYSUTCDATETIME(),
+                    [InvitedByUserId] = :actorUserId,
+                    [UpdatedAtUtc] = SYSUTCDATETIME()
+                OUTPUT CONVERT(VARCHAR(33), DELETED.[InvitedAtUtc], 126) AS [PreviousInvitedAtUtc],
+                       DELETED.[InvitedByUserId] AS [PreviousInvitedByUserId]
+                WHERE [UserId] = :userId
+                  AND ([InvitedAtUtc] IS NULL OR [InvitedAtUtc] < DATEADD(SECOND, -:cooldown, SYSUTCDATETIME()))
+                SQL,
+                [':actorUserId' => $actor->userId, ':userId' => $person->userId, ':cooldown' => $cooldownSeconds],
+            );
 
-        if ($rows === []) {
-            return null;
-        }
+            if ($rows === []) {
+                return null;
+            }
 
-        return [
-            'previousInvitedAtUtc' => AzureSqlValueMapper::nullableString($rows[0]['PreviousInvitedAtUtc'] ?? null),
-            'previousInvitedByUserId' => AzureSqlValueMapper::nullableInt($rows[0]['PreviousInvitedByUserId'] ?? null),
-        ];
+            AzureSqlOnboardingAdminAuditLog::appendWithin($this->connection, $actor, $event);
+
+            return [
+                'previousInvitedAtUtc' => AzureSqlValueMapper::nullableString($rows[0]['PreviousInvitedAtUtc'] ?? null),
+                'previousInvitedByUserId' => AzureSqlValueMapper::nullableInt($rows[0]['PreviousInvitedByUserId'] ?? null),
+            ];
+        });
     }
 
-    public function releaseInvitation(OnboardingPersonRecord $person, array $previous): void
+    public function releaseInvitation(OnboardingPersonRecord $person, array $previous, OnboardingAdminEvent $event, ActorContext $actor): void
     {
-        $this->connection->execute(
-            <<<'SQL'
-            UPDATE [onboarding].[TraineeProfiles]
-            SET [InvitedAtUtc] = TRY_CONVERT(DATETIME2(7), :previousAt, 126),
-                [InvitedByUserId] = :previousBy,
-                [UpdatedAtUtc] = SYSUTCDATETIME()
-            WHERE [UserId] = :userId
-            SQL,
-            [
-                ':previousAt' => $previous['previousInvitedAtUtc'],
-                ':previousBy' => $previous['previousInvitedByUserId'],
-                ':userId' => $person->userId,
-            ],
-        );
+        $this->runInTransaction($this->connection, function () use ($person, $previous, $event, $actor): void {
+            $this->connection->execute(
+                <<<'SQL'
+                UPDATE [onboarding].[TraineeProfiles]
+                SET [InvitedAtUtc] = TRY_CONVERT(DATETIME2(7), :previousAt, 126),
+                    [InvitedByUserId] = :previousBy,
+                    [UpdatedAtUtc] = SYSUTCDATETIME()
+                WHERE [UserId] = :userId
+                SQL,
+                [
+                    ':previousAt' => $previous['previousInvitedAtUtc'],
+                    ':previousBy' => $previous['previousInvitedByUserId'],
+                    ':userId' => $person->userId,
+                ],
+            );
+
+            AzureSqlOnboardingAdminAuditLog::appendWithin($this->connection, $actor, $event);
+        });
     }
 
     // ------------------------------------------------------------------ writes
