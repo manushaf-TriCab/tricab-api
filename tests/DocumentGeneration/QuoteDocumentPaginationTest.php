@@ -73,7 +73,14 @@ final class QuoteDocumentPaginationTest extends TestCase
         $text = $this->extractTextFromPdf($pdf);
         self::assertMatchesRegularExpression('/Page \d+ of (\d+)/', $text, $text);
         preg_match_all('/Page (\d+) of (\d+)/', $text, $matches);
-        $pageCount = (int) max(array_map('intval', $matches[2]));
+        $pageTotals = array_map('intval', $matches[2]);
+        self::assertArrayHasKey(0, $pageTotals, 'Expected at least one Page N of M label');
+        $pageCount = $pageTotals[0];
+        foreach ($pageTotals as $total) {
+            if ($total > $pageCount) {
+                $pageCount = $total;
+            }
+        }
         self::assertGreaterThanOrEqual(2, $pageCount, 'Expected a multi-page quotation');
 
         $continuationCount = substr_count($text, 'Continues to next page ->');

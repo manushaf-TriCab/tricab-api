@@ -37,10 +37,11 @@ final readonly class ConductorComparisonMatrix
      */
     public static function fromRows(array $rows): self
     {
+        /** @var array<string, array{sizeMm2: string, tricab: string|null, class5: string|null, class6: string|null}> $bySize */
         $bySize = [];
         foreach ($rows as $row) {
-            $key = self::normalizeSizeKey($row['sizeMm2'] ?? '');
-            if ($key === null || isset($bySize[$key])) {
+            $key = self::normalizeSizeKey($row['sizeMm2']);
+            if ($key === null || array_key_exists($key, $bySize)) {
                 continue;
             }
             $bySize[$key] = $row;
@@ -51,18 +52,18 @@ final readonly class ConductorComparisonMatrix
         $class5 = [];
         $class6 = [];
         foreach (self::LEGACY_SIZES_MM2 as $size) {
-            if (!isset($bySize[$size])) {
+            if (!array_key_exists($size, $bySize)) {
                 continue;
             }
             $row = $bySize[$size];
-            $tricabCount = self::wireCount($row['tricab'] ?? null);
+            $tricabCount = self::wireCount($row['tricab']);
             if ($tricabCount === null) {
                 continue;
             }
             $sizes[] = $size;
             $tricab[] = $tricabCount;
-            $class5[] = self::wireCount($row['class5'] ?? null);
-            $class6[] = self::wireCount($row['class6'] ?? null);
+            $class5[] = self::wireCount($row['class5']);
+            $class6[] = self::wireCount($row['class6']);
         }
 
         return new self($sizes, $tricab, $class5, $class6);

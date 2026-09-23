@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\DocumentGeneration\Rendering;
 
+use Dompdf\Canvas;
 use Dompdf\Dompdf;
 use Dompdf\FontMetrics;
 
@@ -190,16 +191,14 @@ CSS;
         $canvas->page_script(static function (
             int $pageNumber,
             int $pageCount,
-            $canvas,
+            Canvas $canvas,
             FontMetrics $fontMetrics,
         ): void {
-            $font = $fontMetrics->getFont('Helvetica');
-            $bold = $fontMetrics->getFont('Helvetica', 'bold') ?: $font;
-            $width = $canvas->get_width();
-            $height = $canvas->get_height();
+            $font = $fontMetrics->getFont('Helvetica') ?? 'Helvetica';
+            $bold = $fontMetrics->getFont('Helvetica', 'bold') ?? $font;
+            $width = (float) $canvas->get_width();
+            $height = (float) $canvas->get_height();
             $right = $width - (self::SIDE_MARGIN_MM * self::MM_TO_PT);
-            $bottomMargin = self::BOTTOM_MARGIN_MM * self::MM_TO_PT;
-            $bandTop = $height - $bottomMargin;
 
             // Page 1: under QUOTATION title. Later pages: inside the top margin
             // (above the content box) so the label never overlaps the repeated thead.

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TriCab\Api\DocumentGeneration\Rendering;
 
+use TriCab\Core\DocumentGeneration\Legacy\LegacyRecord;
+
 /**
  * Deterministic quote item page chunks for Dompdf.
  *
@@ -41,8 +43,8 @@ final class QuoteItemPageAllocator
     private const CLOSING_SLACK_MM = 6.0;
 
     /**
-     * @param list<array{record: object, comments: list<object>}> $items
-     * @return list<list<array{record: object, comments: list<object>}>>
+     * @param list<array{record: LegacyRecord, comments: list<LegacyRecord>}> $items
+     * @return list<list<array{record: LegacyRecord, comments: list<LegacyRecord>}>>
      */
     public static function allocate(array $items, bool $hasConductorComparison): array
     {
@@ -94,8 +96,8 @@ final class QuoteItemPageAllocator
      * move >= 1 complete item onto it. Never invent an extra page when closing
      * already fits with the last items.
      *
-     * @param list<list<array{record: object, comments: list<object>}>> $chunks
-     * @return list<list<array{record: object, comments: list<object>}>>
+     * @param list<list<array{record: LegacyRecord, comments: list<LegacyRecord>}>> $chunks
+     * @return list<list<array{record: LegacyRecord, comments: list<LegacyRecord>}>>
      */
     private static function applyOrphanRule(
         array $chunks,
@@ -127,7 +129,7 @@ final class QuoteItemPageAllocator
             array_unshift($pull, $item);
             $pullHeight += $h;
 
-            if ($pullHeight + $closingHeight <= $finalCapacity && $pull !== []) {
+            if ($pullHeight + $closingHeight <= $finalCapacity) {
                 break;
             }
 
@@ -158,13 +160,13 @@ final class QuoteItemPageAllocator
     }
 
     /**
-     * @param array{record: object, comments: list<object>} $itemData
+     * @param array{record: LegacyRecord, comments: list<LegacyRecord>} $itemData
      */
     public static function estimateItemHeightMm(array $itemData): float
     {
         $record = $itemData['record'];
-        $desc = trim((string) $record->field(8));
-        $code = trim((string) $record->field(2) . ' ' . (string) $record->field(3));
+        $desc = trim($record->field(8));
+        $code = trim($record->field(2) . ' ' . $record->field(3));
         $comments = $itemData['comments'];
 
         $height = self::ITEM_BASE_HEIGHT_MM;
@@ -177,7 +179,7 @@ final class QuoteItemPageAllocator
     }
 
     /**
-     * @param list<array{record: object, comments: list<object>}> $chunk
+     * @param list<array{record: LegacyRecord, comments: list<LegacyRecord>}> $chunk
      */
     private static function estimateChunkHeightMm(array $chunk): float
     {
