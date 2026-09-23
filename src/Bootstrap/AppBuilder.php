@@ -189,6 +189,14 @@ use TriCab\Api\Http\Action\Onboarding\PostOnboardingPersonInvitationAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPolicyAcknowledgementAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPresentationProgressAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingReviewDecisionAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentItemAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentVersionAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingContentDraftAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingContentItemAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingContentPublishAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingContentItemAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingContentVersionAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormDraftAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingPersonAllocationAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingPersonProfileAction;
@@ -487,6 +495,37 @@ final class AppBuilder
             ->add(($require)('ONBOARDING.REVIEW'));
         $app->post('/api/v1/admin/onboarding/queue/{assignmentPublicId}/decision', PostOnboardingReviewDecisionAction::class)
             ->add(($require)('ONBOARDING.REVIEW'));
+
+        // Phase 4.4 — content authoring. ONBOARDING.CONTENT.MANAGE alone, and
+        // the only routes that serve an answer key: a version's authored body.
+        // The item type is a route argument per path segment, never a body
+        // field, as on the trainee side.
+        $app->get('/api/v1/admin/onboarding/content', GetOnboardingContentAction::class)
+            ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+        foreach (['training' => 'training', 'policies' => 'policy', 'forms' => 'form'] as $segment => $itemType) {
+            $base = '/api/v1/admin/onboarding/content/' . $segment;
+            $app->post($base, PostOnboardingContentItemAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->get($base . '/{itemPublicId}', GetOnboardingContentItemAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->put($base . '/{itemPublicId}', PutOnboardingContentItemAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->post($base . '/{itemPublicId}/versions', PostOnboardingContentDraftAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->get($base . '/{itemPublicId}/versions/{versionPublicId}', GetOnboardingContentVersionAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->put($base . '/{itemPublicId}/versions/{versionPublicId}', PutOnboardingContentVersionAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->post($base . '/{itemPublicId}/versions/{versionPublicId}/publish', PostOnboardingContentPublishAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+        }
     }
 
     /**

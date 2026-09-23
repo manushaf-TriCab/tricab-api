@@ -175,7 +175,13 @@ GO
 
    Content is versioned because evidence is: an attempt has to be readable
    against the questions as they were asked, not as they were later reworded.
-   A published version is frozen — see the trigger below.
+   A published version is frozen. NOTE (4.4, 23 Sep 2026): no trigger enforces
+   that — this comment used to say one did, and none was ever written. The
+   authoring repository (AzureSqlOnboardingContentRepository) writes a version's
+   body only WHERE [IsPublished] = 0, and replaces its questions or field
+   classifications only after that claim. A trigger was considered and not
+   added: remove-onboarding-demo-data.sql deletes questions of published demo
+   versions, and would have to disable it. See the plan's 4.4 evidence.
    ============================================================================ */
 IF OBJECT_ID(N'[onboarding].[TrainingModules]', N'U') IS NULL
 BEGIN

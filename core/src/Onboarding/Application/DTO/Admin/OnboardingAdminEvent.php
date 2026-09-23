@@ -49,6 +49,18 @@ final readonly class OnboardingAdminEvent
         'withdrawnCount',
         'keptCount',
         'dueDateChangedCount',
+        // 4.4 — counts and flags about content, never the content itself.
+        'accessGroup',
+        'isActive',
+        'slideCount',
+        'questionCount',
+        'blockCount',
+        'fieldCount',
+        'copiedFromVersionNumber',
+        'retiredVersionNumber',
+        'supersedesWorkInProgress',
+        'reissuedCount',
+        'fromAssignmentPublicId',
     ];
 
     /**

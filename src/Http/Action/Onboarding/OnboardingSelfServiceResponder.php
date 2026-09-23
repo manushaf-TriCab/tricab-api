@@ -13,6 +13,7 @@ use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Onboarding\Domain\Exception\AllocationNotPermitted;
 use TriCab\Core\Onboarding\Domain\Exception\AssessmentNotAvailable;
 use TriCab\Core\Onboarding\Domain\Exception\AssignmentStatusIsFinal;
+use TriCab\Core\Onboarding\Domain\Exception\ContentAuthoringNotPermitted;
 use TriCab\Core\Onboarding\Domain\Exception\ContentVersionSuperseded;
 use TriCab\Core\Onboarding\Domain\Exception\FormVersionNotClassified;
 use TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue;
@@ -20,6 +21,7 @@ use TriCab\Core\Onboarding\Domain\Exception\InvitationNotDelivered;
 use TriCab\Core\Onboarding\Domain\Exception\InvitationNotPermitted;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingAccessWindowClosed;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingAssignmentNotFound;
+use TriCab\Core\Onboarding\Domain\Exception\OnboardingContentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingDocumentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingItemTypeMismatch;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
@@ -113,7 +115,8 @@ final readonly class OnboardingSelfServiceResponder
             // 404 — and the two are one answer on purpose.
             $failure instanceof OnboardingAssignmentNotFound,
             $failure instanceof OnboardingDocumentNotFound,
-            $failure instanceof OnboardingPersonNotFound
+            $failure instanceof OnboardingPersonNotFound,
+            $failure instanceof OnboardingContentNotFound
                 => $this->responder->error('ONBOARDING_NOT_FOUND', $failure->getMessage(), 404),
 
             // 403 — refused for a reason no credential changes.
@@ -163,6 +166,13 @@ final readonly class OnboardingSelfServiceResponder
             $failure instanceof InvitationNotPermitted
                 => $this->responder->error(
                     'ONBOARDING_INVITATION_' . strtoupper($failure->reason),
+                    $failure->getMessage(),
+                    409,
+                ),
+            // 4.4 — authoring refused for a reason the content's state explains.
+            $failure instanceof ContentAuthoringNotPermitted
+                => $this->responder->error(
+                    'ONBOARDING_CONTENT_' . strtoupper($failure->reason),
                     $failure->getMessage(),
                     409,
                 ),

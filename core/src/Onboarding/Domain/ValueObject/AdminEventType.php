@@ -32,6 +32,17 @@ final class AdminEventType
     public const PERSON_INVITED = 'person.invited';
     /** An invitation refused, or one the provider did not accept. */
     public const PERSON_INVITATION_REFUSED = 'person.invitation_refused';
+    /** A training module, policy or form created, with its first empty draft (4.4). */
+    public const CONTENT_ITEM_CREATED = 'content.item_created';
+    /** Title, summary or active flag changed. */
+    public const CONTENT_ITEM_UPDATED = 'content.item_updated';
+    public const CONTENT_DRAFT_CREATED = 'content.draft_created';
+    public const CONTENT_DRAFT_SAVED = 'content.draft_saved';
+    public const CONTENT_PUBLISHED = 'content.published';
+    /** An authoring action refused before anything was written. */
+    public const CONTENT_REFUSED = 'content.refused';
+    /** One person moved onto a new version because its author said it supersedes work in progress. */
+    public const ALLOCATION_REISSUED = 'allocation.reissued';
 
     public const ALL = [
         self::ALLOCATION_ALLOCATED,
@@ -44,6 +55,13 @@ final class AdminEventType
         self::PERSON_PROFILE_UPDATED,
         self::PERSON_INVITED,
         self::PERSON_INVITATION_REFUSED,
+        self::CONTENT_ITEM_CREATED,
+        self::CONTENT_ITEM_UPDATED,
+        self::CONTENT_DRAFT_CREATED,
+        self::CONTENT_DRAFT_SAVED,
+        self::CONTENT_PUBLISHED,
+        self::CONTENT_REFUSED,
+        self::ALLOCATION_REISSUED,
     ];
 
     public static function assertKnown(string $value): string
