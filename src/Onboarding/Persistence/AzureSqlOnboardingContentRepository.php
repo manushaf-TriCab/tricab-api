@@ -94,6 +94,7 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
             $selects[] = <<<SQL
                 SELECT N'{$type}' AS [ItemType], CONVERT(NVARCHAR(36), i.[PublicId]) AS [PublicId], i.[Slug], i.[Title],
                     {$accessGroup} AS [AccessGroup], i.[IsActive], {$sortOrder} AS [SortOrder],
+                    CASE WHEN {$sortOrder} IS NULL THEN 1 ELSE 0 END AS [Unplaced],
                     (SELECT TOP (1) v.[VersionNumber] FROM {$t['versions']} v
                         WHERE v.[{$t['itemId']}] = i.[{$t['itemId']}] AND v.[IsPublished] = 1 AND v.[{$t['retired']}] IS NULL) AS [LiveVersionNumber],
                     (SELECT TOP (1) CONVERT(NVARCHAR(36), v.[PublicId]) FROM {$t['versions']} v
@@ -108,8 +109,9 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
         }
 
         $rows = $this->connection->fetchAll(implode("\nUNION ALL\n", $selects)
-            // Policies in handbook order; anything unplaced after, by title.
-            . "\nORDER BY [ItemType], CASE WHEN [SortOrder] IS NULL THEN 1 ELSE 0 END, [SortOrder], [Title], [PublicId]");
+            // Policies in handbook order; anything unplaced after, by title. A
+            // UNION's ORDER BY may only name its columns, so [Unplaced] is one.
+            . "\nORDER BY [ItemType], [Unplaced], [SortOrder], [Title], [PublicId]");
 
         return array_map(static fn (array $row): ContentItemSummary => new ContentItemSummary(
             AzureSqlValueMapper::stringValue($row['ItemType'] ?? ''),
