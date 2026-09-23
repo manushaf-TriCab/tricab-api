@@ -179,6 +179,7 @@ use TriCab\Api\Http\Action\Onboarding\GetOnboardingItemAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingPeopleAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingPersonAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingReviewItemAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingReportAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingReviewQueueAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingSelfSummaryAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptAction;
@@ -525,6 +526,15 @@ final class AppBuilder
             $app->post($base . '/{itemPublicId}/versions/{versionPublicId}/publish', PostOnboardingContentPublishAction::class)
                 ->setArgument('itemType', $itemType)
                 ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+        }
+
+        // Phase 4.5 — reports. ONBOARDING.REPORTS.READ alone. Counts and names,
+        // never an email address, score, note or answer, so a report reader is
+        // not handed the roster's contact details or a reviewer's evidence.
+        foreach (['summary', 'items', 'overdue'] as $report) {
+            $app->get('/api/v1/admin/onboarding/reports/' . $report, GetOnboardingReportAction::class)
+                ->setArgument('report', $report)
+                ->add(($require)('ONBOARDING.REPORTS.READ'));
         }
     }
 

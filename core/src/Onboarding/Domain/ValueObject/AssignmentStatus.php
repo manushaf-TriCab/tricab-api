@@ -203,6 +203,12 @@ final class AssignmentStatus
         return array_map(static fn (string $value): self => new self($value), self::NEEDS_REVIEW);
     }
 
+    /** @return list<self> */
+    public static function toBeWorkedOnSet(): array
+    {
+        return array_map(static fn (string $value): self => new self($value), self::TO_BE_WORKED_ON);
+    }
+
     public function toString(): string
     {
         return $this->value;

@@ -117,8 +117,10 @@ final class OnboardingEndpointsTest extends TestCase
 
         self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
         $data = $this->data($response);
-        self::assertSame([], $data['queue']);
-        self::assertSame([], $data['people']);
+        // Counts since 4.5; an empty module answers zeros, and says as of when.
+        self::assertSame(['waitingOnReview' => 0, 'needHelp' => 0], $data['queue']);
+        self::assertSame(['current' => 0, 'departed' => 0, 'notYetInvited' => 0, 'nothingAllocated' => 0, 'finished' => 0], $data['people']);
+        self::assertIsString($data['asOf']);
     }
 
     /**
