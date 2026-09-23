@@ -52,6 +52,16 @@ final readonly class AuthoredContent
         public ?string $effectiveFrom = null,
         public array $fields = [],
         public array $classifications = [],
+        /** Policies only: as printed on the source document, e.g. HR-POL-034-V000. */
+        public ?string $documentReference = null,
+        public ?string $issuedLabel = null,
+        public ?string $reviewDueLabel = null,
+        /**
+         * Policies only. False: the policy is read, not accepted, and "Mark as
+         * read" completes it without an acknowledgement row. True for every
+         * other item type, which has no such choice.
+         */
+        public bool $requiresAcknowledgement = true,
     ) {
     }
 
@@ -86,6 +96,10 @@ final readonly class AuthoredContent
                 blocks: PolicyBlockRules::normalise($body['blocks'] ?? []),
                 declaration: PolicyBlockRules::declaration(self::optionalString($body, 'declaration')),
                 effectiveFrom: self::date(self::optionalString($body, 'effectiveFrom'), 'effective date'),
+                documentReference: PolicyBlockRules::label(self::optionalString($body, 'documentReference'), 'document reference', PolicyBlockRules::MAX_REFERENCE_LENGTH),
+                issuedLabel: PolicyBlockRules::label(self::optionalString($body, 'issuedLabel'), 'issued', PolicyBlockRules::MAX_LABEL_LENGTH),
+                reviewDueLabel: PolicyBlockRules::label(self::optionalString($body, 'reviewDueLabel'), 'review due', PolicyBlockRules::MAX_LABEL_LENGTH),
+                requiresAcknowledgement: self::flag($body, 'requiresAcknowledgement', true),
             ),
             default => self::form($body, $accessGroup ?? FormVersionPublishGuard::ACCESS_GROUP_HR),
         };
@@ -112,8 +126,26 @@ final readonly class AuthoredContent
         ?string $effectiveFrom = null,
         array $fields = [],
         array $classifications = [],
+        ?string $documentReference = null,
+        ?string $issuedLabel = null,
+        ?string $reviewDueLabel = null,
+        bool $requiresAcknowledgement = true,
     ): self {
-        return new self(self::assertType($itemType), $slides, $passMarkPercent, $questions, $blocks, $declaration, $effectiveFrom, $fields, $classifications);
+        return new self(
+            self::assertType($itemType),
+            $slides,
+            $passMarkPercent,
+            $questions,
+            $blocks,
+            $declaration,
+            $effectiveFrom,
+            $fields,
+            $classifications,
+            $documentReference,
+            $issuedLabel,
+            $reviewDueLabel,
+            $requiresAcknowledgement,
+        );
     }
 
     /**
@@ -206,6 +238,10 @@ final readonly class AuthoredContent
                 'blocks' => $this->blocks,
                 'declaration' => $this->declaration,
                 'effectiveFrom' => $this->effectiveFrom,
+                'documentReference' => $this->documentReference,
+                'issuedLabel' => $this->issuedLabel,
+                'reviewDueLabel' => $this->reviewDueLabel,
+                'requiresAcknowledgement' => $this->requiresAcknowledgement,
             ],
             default => [
                 'fields' => array_map(fn (array $field): array => $field + [
@@ -261,6 +297,19 @@ final readonly class AuthoredContent
         $value = $body[$field] ?? null;
         if ($value !== null && !is_string($value)) {
             throw InvalidOnboardingValue::for($field, '(not text)');
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     */
+    private static function flag(array $body, string $field, bool $default): bool
+    {
+        $value = $body[$field] ?? $default;
+        if (!is_bool($value)) {
+            throw InvalidOnboardingValue::for($field, '(not true or false)');
         }
 
         return $value;

@@ -411,6 +411,36 @@ final class AzureSqlOnboardingSelfWriteTest extends TestCase
         self::assertSame('Wear the boots.', $detail->contentBlocks[0]['text'] ?? null);
     }
 
+    /**
+     * A read-only policy: completing it is a status event and nothing else.
+     * The second click finds the row locked and already finished.
+     */
+    public function test_marking_a_read_only_policy_read_completes_it_without_an_acknowledgement_row(): void
+    {
+        [$assignmentPublicId, $versionPublicId, $versionId] = $this->allocatePolicy(requiresAcknowledgement: false);
+
+        $before = $this->policies->findPolicy($this->mine, $assignmentPublicId);
+        self::assertNotNull($before);
+        self::assertFalse($before->requiresAcknowledgement);
+        self::assertSame('SYN-POL-001', $before->documentReference);
+
+        $transition = StatusTransition::systemMovesTo(AssignmentStatus::notStarted(), AssignmentStatus::completed(), 'Marked the policy as read.');
+        self::assertNotNull($transition);
+        $detail = $this->policies->markRead($this->mine, $assignmentPublicId, $versionPublicId, $transition);
+
+        self::assertSame(AssignmentStatus::COMPLETED, $detail->status->toString());
+        self::assertFalse($detail->isAcknowledged());
+        self::assertSame(0, $this->rowCount('SELECT COUNT(*) FROM [onboarding].[PolicyAcknowledgements] WHERE [PolicyVersionId] = :v', [':v' => $versionId]));
+        self::assertSame(1, $this->rowCount(
+            "SELECT COUNT(*) FROM [audit].[OnboardingStatusEvents]
+             WHERE [AssignmentPublicId] = CONVERT(UNIQUEIDENTIFIER, :a) AND [ToStatus] = N'completed' AND [Note] = N'Marked the policy as read.'",
+            [':a' => $assignmentPublicId],
+        ));
+
+        $this->expectException(OnboardingWriteConflict::class);
+        $this->policies->markRead($this->mine, $assignmentPublicId, $versionPublicId, $transition);
+    }
+
     // ------------------------------------------------------------------ forms
 
     /**
@@ -789,7 +819,7 @@ final class AzureSqlOnboardingSelfWriteTest extends TestCase
     /**
      * @return array{0: string, 1: string, 2: int}
      */
-    private function allocatePolicy(string $contentJson = '{"blocks":[]}'): array
+    private function allocatePolicy(string $contentJson = '{"blocks":[]}', bool $requiresAcknowledgement = true): array
     {
         $this->exec(
             'INSERT INTO [onboarding].[Policies] ([Slug],[Title]) VALUES (:slug, :title)',
@@ -799,9 +829,9 @@ final class AzureSqlOnboardingSelfWriteTest extends TestCase
 
         $this->exec(
             'INSERT INTO [onboarding].[PolicyVersions]
-                ([PolicyId],[VersionNumber],[ContentJson],[IsPublished],[PublishedAtUtc],[PublishedByUserId])
-             VALUES (:p, 1, :content, 1, SYSUTCDATETIME(), :u)',
-            [':p' => $policyId, ':content' => $contentJson, ':u' => $this->mine],
+                ([PolicyId],[VersionNumber],[ContentJson],[IsPublished],[PublishedAtUtc],[PublishedByUserId],[RequiresAcknowledgement],[DocumentReference])
+             VALUES (:p, 1, :content, 1, SYSUTCDATETIME(), :u, :ack, N\'SYN-POL-001\')',
+            [':p' => $policyId, ':content' => $contentJson, ':u' => $this->mine, ':ack' => $requiresAcknowledgement ? 1 : 0],
         );
         $versionId = (int) $this->db()->lastInsertId();
 

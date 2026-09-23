@@ -24,6 +24,7 @@ final class OnboardingSchemaTest extends TestCase
 {
     private const WORKFLOW_SCHEMA = 'database/scripts/development/create-onboarding-schema.sql';
     private const HR_SCHEMA = 'database/scripts/development/create-onboarding-hr-schema.sql';
+    private const POLICY_METADATA = 'database/scripts/development/alter-onboarding-policy-metadata.sql';
 
     private function sql(string $relativePath): string
     {
@@ -208,6 +209,28 @@ final class OnboardingSchemaTest extends TestCase
             '/CK_onboarding_hr_RestrictedSubmissionData_Class\]\s*\n?\s*CHECK \(\[RetentionClassId\] IN \(3, 4\)\)/',
             $sql,
         );
+    }
+
+    /**
+     * The handbook import's metadata (decision D3) goes onto a database that
+     * already holds published policies and their acknowledgements. So the
+     * script may only add: every column guarded, nothing dropped or rewritten,
+     * and "needs acknowledging" defaulting to yes so every existing policy
+     * keeps the behaviour it was published with.
+     */
+    public function test_the_policy_metadata_script_only_adds_and_defaults_to_acknowledging(): void
+    {
+        $sql = $this->sql(self::POLICY_METADATA);
+        $code = (string) preg_replace('~/\*.*?\*/~s', '', $sql);
+
+        foreach (['Summary', 'ChapterTitle', 'SortOrder'] as $column) {
+            self::assertStringContainsString("COL_LENGTH(N'[onboarding].[Policies]', N'{$column}') IS NULL", $code);
+        }
+        foreach (['DocumentReference', 'IssuedLabel', 'ReviewDueLabel', 'RequiresAcknowledgement'] as $column) {
+            self::assertStringContainsString("COL_LENGTH(N'[onboarding].[PolicyVersions]', N'{$column}') IS NULL", $code);
+        }
+        self::assertMatchesRegularExpression('/\[RequiresAcknowledgement\] BIT NOT NULL\s+CONSTRAINT \[DF_onboarding_PolicyVersions_RequiresAcknowledgement\] DEFAULT \(1\)/', $code);
+        self::assertDoesNotMatchRegularExpression('/\b(DROP|DELETE|UPDATE|TRUNCATE|INSERT)\b|sp_rename/i', $code);
     }
 
     /**

@@ -90,9 +90,10 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
         $selects = [];
         foreach (self::TABLES as $type => $t) {
             $accessGroup = $type === AuthoredContent::TYPE_FORM ? 'i.[AccessGroup]' : 'CAST(NULL AS NVARCHAR(20))';
+            $sortOrder = $type === AuthoredContent::TYPE_POLICY ? 'i.[SortOrder]' : 'CAST(NULL AS INT)';
             $selects[] = <<<SQL
                 SELECT N'{$type}' AS [ItemType], CONVERT(NVARCHAR(36), i.[PublicId]) AS [PublicId], i.[Slug], i.[Title],
-                    {$accessGroup} AS [AccessGroup], i.[IsActive],
+                    {$accessGroup} AS [AccessGroup], i.[IsActive], {$sortOrder} AS [SortOrder],
                     (SELECT TOP (1) v.[VersionNumber] FROM {$t['versions']} v
                         WHERE v.[{$t['itemId']}] = i.[{$t['itemId']}] AND v.[IsPublished] = 1 AND v.[{$t['retired']}] IS NULL) AS [LiveVersionNumber],
                     (SELECT TOP (1) CONVERT(NVARCHAR(36), v.[PublicId]) FROM {$t['versions']} v
@@ -106,7 +107,9 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
                 SQL;
         }
 
-        $rows = $this->connection->fetchAll(implode("\nUNION ALL\n", $selects) . "\nORDER BY [ItemType], [Title], [PublicId]");
+        $rows = $this->connection->fetchAll(implode("\nUNION ALL\n", $selects)
+            // Policies in handbook order; anything unplaced after, by title.
+            . "\nORDER BY [ItemType], CASE WHEN [SortOrder] IS NULL THEN 1 ELSE 0 END, [SortOrder], [Title], [PublicId]");
 
         return array_map(static fn (array $row): ContentItemSummary => new ContentItemSummary(
             AzureSqlValueMapper::stringValue($row['ItemType'] ?? ''),
@@ -128,13 +131,16 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
             return null;
         }
         $t = self::TABLES[$itemType];
-        $summary = $itemType === AuthoredContent::TYPE_TRAINING ? 'i.[Summary]' : 'CAST(NULL AS NVARCHAR(1000))';
+        $summary = $itemType === AuthoredContent::TYPE_FORM ? 'CAST(NULL AS NVARCHAR(1000))' : 'i.[Summary]';
         $accessGroup = $itemType === AuthoredContent::TYPE_FORM ? 'i.[AccessGroup]' : 'CAST(NULL AS NVARCHAR(20))';
+        $placement = $itemType === AuthoredContent::TYPE_POLICY
+            ? 'i.[ChapterTitle], i.[SortOrder]'
+            : 'CAST(NULL AS NVARCHAR(120)) AS [ChapterTitle], CAST(NULL AS INT) AS [SortOrder]';
 
         $rows = $this->connection->fetchAll(
             <<<SQL
             SELECT i.[{$t['itemId']}] AS [ItemId], CONVERT(NVARCHAR(36), i.[PublicId]) AS [PublicId], i.[Slug], i.[Title],
-                   {$summary} AS [Summary], {$accessGroup} AS [AccessGroup], i.[IsActive],
+                   {$summary} AS [Summary], {$accessGroup} AS [AccessGroup], i.[IsActive], {$placement},
                    CONVERT(VARBINARY(8), i.[RowVersion]) AS [RowVersion]
             FROM {$t['items']} i
             WHERE i.[PublicId] = CONVERT(UNIQUEIDENTIFIER, :publicId)
@@ -156,6 +162,8 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
             AzureSqlValueMapper::nullableString($row['AccessGroup'] ?? null),
             AzureSqlValueMapper::boolValue($row['IsActive'] ?? false),
             ProductRowVersionMapper::toToken($row['RowVersion'] ?? null),
+            AzureSqlValueMapper::nullableString($row['ChapterTitle'] ?? null),
+            AzureSqlValueMapper::nullableInt($row['SortOrder'] ?? null),
         );
     }
 
@@ -202,7 +210,8 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
         $t = self::TABLES[$item->itemType];
         $body = match ($item->itemType) {
             AuthoredContent::TYPE_TRAINING => 'v.[PresentationManifestJson] AS [ManifestJson], v.[PassMarkPercent]',
-            AuthoredContent::TYPE_POLICY => 'v.[ContentJson], CONVERT(VARCHAR(10), v.[EffectiveFrom], 23) AS [EffectiveFrom]',
+            AuthoredContent::TYPE_POLICY => 'v.[ContentJson], CONVERT(VARCHAR(10), v.[EffectiveFrom], 23) AS [EffectiveFrom], '
+                . 'v.[DocumentReference], v.[IssuedLabel], v.[ReviewDueLabel], v.[RequiresAcknowledgement]',
             default => 'v.[SchemaJson]',
         };
 
@@ -269,6 +278,8 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
         string $title,
         ?string $summary,
         ?string $accessGroup,
+        ?string $chapterTitle,
+        ?int $sortOrder,
         string $versionPublicId,
         AuthoredContent $initial,
         array $events,
@@ -277,6 +288,11 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
         $t = self::TABLES[$itemType];
         [$columns, $values, $params] = match ($itemType) {
             AuthoredContent::TYPE_TRAINING => [', [Summary]', ', :summary', [':summary' => $summary]],
+            AuthoredContent::TYPE_POLICY => [
+                ', [Summary], [ChapterTitle], [SortOrder]',
+                ', :summary, :chapterTitle, :sortOrder',
+                [':summary' => $summary, ':chapterTitle' => $chapterTitle, ':sortOrder' => $sortOrder],
+            ],
             AuthoredContent::TYPE_FORM => [', [AccessGroup]', ', :accessGroup', [':accessGroup' => $accessGroup]],
             default => ['', '', []],
         };
@@ -309,12 +325,18 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
         RowVersionToken $expectedRowVersion,
         string $title,
         ?string $summary,
+        ?string $chapterTitle,
+        ?int $sortOrder,
         bool $isActive,
         array $events,
         ActorContext $actor,
     ): void {
         $t = self::TABLES[$item->itemType];
-        $summarySet = $item->itemType === AuthoredContent::TYPE_TRAINING ? '[Summary] = :summary,' : '';
+        $summarySet = match ($item->itemType) {
+            AuthoredContent::TYPE_TRAINING => '[Summary] = :summary,',
+            AuthoredContent::TYPE_POLICY => '[Summary] = :summary, [ChapterTitle] = :chapterTitle, [SortOrder] = :sortOrder,',
+            default => '',
+        };
         $params = [
             ':title' => $title,
             ':isActive' => $isActive ? 1 : 0,
@@ -323,6 +345,10 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
         ];
         if ($summarySet !== '') {
             $params[':summary'] = $summary;
+        }
+        if ($item->itemType === AuthoredContent::TYPE_POLICY) {
+            $params[':chapterTitle'] = $chapterTitle;
+            $params[':sortOrder'] = $sortOrder;
         }
 
         $this->runInTransaction($this->connection, function () use ($t, $summarySet, $params, $events, $actor): void {
@@ -647,14 +673,18 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
                 ],
             ],
             AuthoredContent::TYPE_POLICY => [
-                '[ContentJson], [EffectiveFrom]',
-                ':contentjson, TRY_CONVERT(DATE, :effectivefrom, 23)',
+                '[ContentJson], [EffectiveFrom], [DocumentReference], [IssuedLabel], [ReviewDueLabel], [RequiresAcknowledgement]',
+                ':contentjson, TRY_CONVERT(DATE, :effectivefrom, 23), :documentreference, :issuedlabel, :reviewduelabel, :requiresacknowledgement',
                 [
                     ':contentjson' => json_encode(
                         $content->declaration === null ? ['blocks' => $content->blocks] : ['blocks' => $content->blocks, 'declaration' => $content->declaration],
                         self::JSON,
                     ),
                     ':effectivefrom' => $content->effectiveFrom,
+                    ':documentreference' => $content->documentReference,
+                    ':issuedlabel' => $content->issuedLabel,
+                    ':reviewduelabel' => $content->reviewDueLabel,
+                    ':requiresacknowledgement' => $content->requiresAcknowledgement ? 1 : 0,
                 ],
             ],
             default => [
@@ -697,6 +727,10 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
                 blocks: $blocks,
                 declaration: is_string($decoded['declaration'] ?? null) ? $decoded['declaration'] : null,
                 effectiveFrom: AzureSqlValueMapper::nullableString($row['EffectiveFrom'] ?? null),
+                documentReference: AzureSqlValueMapper::nullableString($row['DocumentReference'] ?? null),
+                issuedLabel: AzureSqlValueMapper::nullableString($row['IssuedLabel'] ?? null),
+                reviewDueLabel: AzureSqlValueMapper::nullableString($row['ReviewDueLabel'] ?? null),
+                requiresAcknowledgement: AzureSqlValueMapper::boolValue($row['RequiresAcknowledgement'] ?? true),
             );
         }
 

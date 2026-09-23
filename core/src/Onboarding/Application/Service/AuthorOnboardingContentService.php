@@ -57,6 +57,8 @@ final readonly class AuthorOnboardingContentService
     private const MAX_SLUG_LENGTH = 120;
     private const MAX_TITLE_LENGTH = 240;
     private const MAX_SUMMARY_LENGTH = 1000;
+    private const MAX_CHAPTER_LENGTH = 120;
+    private const MAX_SORT_ORDER = 10000;
     private const ACCESS_GROUPS = [
         FormVersionPublishGuard::ACCESS_GROUP_HR,
         FormVersionPublishGuard::ACCESS_GROUP_PAYROLL,
@@ -71,16 +73,19 @@ final readonly class AuthorOnboardingContentService
     }
 
     /**
-     * @param array<string, mixed> $body `{slug, title, summary?, accessGroup?}`
+     * @param array<string, mixed> $body `{slug, title, summary?, accessGroup?, chapterTitle?, sortOrder?}`
      */
     public function createItem(ActorContext $actor, string $itemType, array $body): ContentItemDetail
     {
         $type = self::type($itemType);
         $slug = self::slug($body['slug'] ?? null);
         $title = self::title($body['title'] ?? null);
-        // Only modules have a summary column; a policy or form ignores one.
-        $summary = $type === AuthoredContent::TYPE_TRAINING ? self::summary($body['summary'] ?? null) : null;
+        // Modules and policies have a summary column; a form ignores one.
+        $summary = $type !== AuthoredContent::TYPE_FORM ? self::summary($body['summary'] ?? null) : null;
         $accessGroup = $type === AuthoredContent::TYPE_FORM ? self::accessGroup($body['accessGroup'] ?? null) : null;
+        [$chapterTitle, $sortOrder] = $type === AuthoredContent::TYPE_POLICY
+            ? [self::chapterTitle($body['chapterTitle'] ?? null), self::sortOrder($body['sortOrder'] ?? null)]
+            : [null, null];
 
         if ($this->content->slugTaken($type, $slug)) {
             $this->refuse($actor, null, ContentAuthoringNotPermitted::slugTaken($slug), ['itemType' => $type]);
@@ -90,7 +95,7 @@ final readonly class AuthorOnboardingContentService
         $versionPublicId = $this->ids->generate()->toString();
         $initial = AuthoredContent::empty($type);
 
-        $this->content->createItem($type, $itemPublicId, $slug, $title, $summary, $accessGroup, $versionPublicId, $initial, [
+        $this->content->createItem($type, $itemPublicId, $slug, $title, $summary, $accessGroup, $chapterTitle, $sortOrder, $versionPublicId, $initial, [
             OnboardingAdminEvent::succeeded(
                 AdminEventType::CONTENT_ITEM_CREATED,
                 null,
@@ -105,7 +110,7 @@ final readonly class AuthorOnboardingContentService
     }
 
     /**
-     * @param array<string, mixed> $body `{title, summary?, isActive}`
+     * @param array<string, mixed> $body `{title, summary?, isActive, chapterTitle?, sortOrder?}`
      */
     public function updateItem(
         ActorContext $actor,
@@ -116,7 +121,19 @@ final readonly class AuthorOnboardingContentService
     ): ContentItemDetail {
         $item = $this->requireItem($itemType, $itemPublicId);
         $title = self::title($body['title'] ?? null);
-        $summary = $item->itemType === AuthoredContent::TYPE_TRAINING ? self::summary($body['summary'] ?? null) : null;
+        $summary = match ($item->itemType) {
+            AuthoredContent::TYPE_TRAINING => self::summary($body['summary'] ?? null),
+            // A policy's summary, chapter and position are newer than the
+            // editor that sends this, so a body without them leaves them be.
+            AuthoredContent::TYPE_POLICY => array_key_exists('summary', $body) ? self::summary($body['summary']) : $item->summary,
+            default => null,
+        };
+        [$chapterTitle, $sortOrder] = $item->itemType === AuthoredContent::TYPE_POLICY
+            ? [
+                array_key_exists('chapterTitle', $body) ? self::chapterTitle($body['chapterTitle']) : $item->chapterTitle,
+                array_key_exists('sortOrder', $body) ? self::sortOrder($body['sortOrder']) : $item->sortOrder,
+            ]
+            : [null, null];
         $isActive = $body['isActive'] ?? $item->isActive;
         if (!is_bool($isActive)) {
             throw InvalidOnboardingValue::for('isActive', '(not true or false)');
@@ -125,11 +142,13 @@ final readonly class AuthorOnboardingContentService
         $changed = self::changed([
             'title' => $title !== $item->title,
             'summary' => $summary !== $item->summary,
+            'chapterTitle' => $chapterTitle !== $item->chapterTitle,
+            'sortOrder' => $sortOrder !== $item->sortOrder,
             'isActive' => $isActive !== $item->isActive,
         ]);
 
         if ($changed !== []) {
-            $this->content->updateItem($item, $expectedRowVersion, $title, $summary, $isActive, [
+            $this->content->updateItem($item, $expectedRowVersion, $title, $summary, $chapterTitle, $sortOrder, $isActive, [
                 OnboardingAdminEvent::succeeded(
                     AdminEventType::CONTENT_ITEM_UPDATED,
                     null,
@@ -407,6 +426,34 @@ final readonly class AuthorOnboardingContentService
         }
 
         return $summary === '' ? null : $summary;
+    }
+
+    private static function chapterTitle(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+        if (!is_string($value)) {
+            throw InvalidOnboardingValue::for('chapter', '(not text)');
+        }
+        $chapter = trim($value);
+        if (mb_strlen($chapter) > self::MAX_CHAPTER_LENGTH) {
+            throw InvalidOnboardingValue::for('chapter', sprintf('longer than %d characters', self::MAX_CHAPTER_LENGTH));
+        }
+
+        return $chapter === '' ? null : $chapter;
+    }
+
+    private static function sortOrder(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if (!is_int($value) || $value < 1 || $value > self::MAX_SORT_ORDER) {
+            throw InvalidOnboardingValue::for('position', sprintf('%s — a whole number from 1 to %d', is_scalar($value) ? (string) $value : '(not a number)', self::MAX_SORT_ORDER));
+        }
+
+        return $value;
     }
 
     private static function accessGroup(mixed $value): string

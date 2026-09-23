@@ -39,6 +39,14 @@ use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
  * acknowledgement row IS the evidence, and a reviewer adding a tick to it would
  * be attesting to something they cannot observe.
  *
+ * ## A policy that is read, not accepted
+ *
+ * When the version says `requiresAcknowledgement = false` (the handbook's
+ * read-only policies), the same request is "Mark as read": the item completes
+ * by the same system transition, and no acknowledgement row is written, because
+ * there is no declaration to have agreed to. The route is shared so that a
+ * client cannot pick the wrong one — the version decides, not the browser.
+ *
  * ## Once
  *
  * `UQ_onboarding_PolicyAcknowledgements_UserVersion` is the database's answer,
@@ -91,6 +99,16 @@ final readonly class AcknowledgePolicyService
             // was a conflict — the ledger has to get the chance to recognise the
             // replay before anything decides the state is wrong.
             function () use ($userId, $assignmentPublicId, $versionPublicId, $declarationText, $idempotencyKey, $detail): array {
+                if (!$detail->requiresAcknowledgement) {
+                    $transition = StatusTransition::systemMovesTo($detail->status, AssignmentStatus::completed(), 'Marked the policy as read.');
+                    if ($transition === null) {
+                        throw OnboardingWriteConflict::alreadyRecorded('reading of this policy');
+                    }
+                    $read = $this->policies->markRead($userId, $assignmentPublicId, $versionPublicId, $transition);
+
+                    return [$read, $read->assignmentPublicId];
+                }
+
                 if ($detail->isAcknowledged()) {
                     throw OnboardingWriteConflict::alreadyRecorded('acknowledgement');
                 }

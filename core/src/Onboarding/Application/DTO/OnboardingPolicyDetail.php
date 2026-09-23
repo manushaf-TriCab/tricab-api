@@ -21,6 +21,11 @@ use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
  * shown to every new starter, and is therefore an injection path. The renderer
  * on the web side takes blocks and emits elements; there is no `dangerouslySet`
  * anything on this route.
+ *
+ * {@see $requiresAcknowledgement} false is a policy that is read, not accepted:
+ * the page offers "Mark as read", and finishing it writes a status event but no
+ * acknowledgement row, so {@see $acknowledgedAtUtc} stays null and
+ * {@see $status} is what says it is done.
  */
 final readonly class OnboardingPolicyDetail
 {
@@ -37,7 +42,35 @@ final readonly class OnboardingPolicyDetail
         public string $declarationText,
         public ?string $effectiveFrom,
         public ?string $acknowledgedAtUtc,
+        public bool $requiresAcknowledgement = true,
+        public ?string $summary = null,
+        public ?string $chapterTitle = null,
+        public ?string $documentReference = null,
+        public ?string $issuedLabel = null,
+        public ?string $reviewDueLabel = null,
     ) {
+    }
+
+    /** The same policy after the person finished it. */
+    public function finished(AssignmentStatus $status, ?string $acknowledgedAtUtc): self
+    {
+        return new self(
+            $this->assignmentPublicId,
+            $this->title,
+            $this->versionPublicId,
+            $this->versionNumber,
+            $status,
+            $this->contentBlocks,
+            $this->declarationText,
+            $this->effectiveFrom,
+            $acknowledgedAtUtc,
+            $this->requiresAcknowledgement,
+            $this->summary,
+            $this->chapterTitle,
+            $this->documentReference,
+            $this->issuedLabel,
+            $this->reviewDueLabel,
+        );
     }
 
     public function isAcknowledged(): bool
@@ -63,6 +96,12 @@ final readonly class OnboardingPolicyDetail
             'effectiveFrom' => $this->effectiveFrom,
             'acknowledgedAtUtc' => $this->acknowledgedAtUtc,
             'isAcknowledged' => $this->isAcknowledged(),
+            'requiresAcknowledgement' => $this->requiresAcknowledgement,
+            'summary' => $this->summary,
+            'chapterTitle' => $this->chapterTitle,
+            'documentReference' => $this->documentReference,
+            'issuedLabel' => $this->issuedLabel,
+            'reviewDueLabel' => $this->reviewDueLabel,
         ];
     }
 }

@@ -29,10 +29,9 @@ use RuntimeException;
  * Block text stays a plain string. Bold and italic are recorded beside it, in a
  * block-level `marks` map from the field's path (`text`, `items.3`,
  * `rows.2.1`, `rows.0.never.0`) to ranges of `{start, end, mark}` — code-point
- * offsets, end exclusive. A renderer that does not know `marks` still shows
- * every word; today's `PolicyBlockRules` drops the key, which is why validation
- * compares the output with the marks removed. Headings and table headers carry
- * no marks: they are already bold.
+ * offsets, end exclusive — the shape `PolicyBlockRules` validates and keeps. A
+ * renderer that does not know `marks` still shows every word. Headings and
+ * table headers carry no marks: they are already bold.
  *
  * ## The acknowledgement panel
  *

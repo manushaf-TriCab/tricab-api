@@ -69,21 +69,39 @@ final class InMemoryOnboardingPolicyRepository implements OnboardingPolicyReposi
             $this->transitions[] = $transition;
         }
 
-        $acknowledged = new OnboardingPolicyDetail(
-            assignmentPublicId: $detail->assignmentPublicId,
-            title: $detail->title,
-            versionPublicId: $detail->versionPublicId,
-            versionNumber: $detail->versionNumber,
-            status: $transition?->to ?? $detail->status,
-            contentBlocks: $detail->contentBlocks,
-            declarationText: $detail->declarationText,
-            effectiveFrom: $detail->effectiveFrom,
-            acknowledgedAtUtc: '2026-09-22T00:00:00+00:00',
-        );
+        $acknowledged = $detail->finished($transition?->to ?? $detail->status, '2026-09-22T00:00:00+00:00');
 
         $this->details[self::key($userId, $assignmentPublicId)] = $acknowledged;
 
         return $acknowledged;
+    }
+
+    public function markRead(
+        int $userId,
+        string $assignmentPublicId,
+        string $expectedVersionPublicId,
+        StatusTransition $transition,
+    ): OnboardingPolicyDetail {
+        $detail = $this->findPolicy($userId, $assignmentPublicId);
+
+        if ($detail === null) {
+            throw OnboardingAssignmentNotFound::forThisPerson();
+        }
+
+        if ($detail->versionPublicId !== $expectedVersionPublicId) {
+            throw ContentVersionSuperseded::reload();
+        }
+
+        // Stands in for the locked status check.
+        if (!$detail->status->equals($transition->from)) {
+            throw OnboardingWriteConflict::alreadyRecorded('reading of this policy');
+        }
+
+        $this->transitions[] = $transition;
+        $read = $detail->finished($transition->to, null);
+        $this->details[self::key($userId, $assignmentPublicId)] = $read;
+
+        return $read;
     }
 
     public function withPolicy(int $userId, OnboardingPolicyDetail $detail): void

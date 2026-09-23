@@ -303,6 +303,48 @@ final class OnboardingSelfWriteTest extends TestCase
         self::assertSame(StatusActor::SYSTEM, $this->policies->transitions[0]->actor->toString());
     }
 
+    /**
+     * A handbook policy that is read, not accepted. The same request completes
+     * it — the version decides which it is, not the browser — and no
+     * acknowledgement is written, because there was nothing to agree to.
+     */
+    public function test_a_read_only_policy_is_completed_by_marking_it_read_with_no_acknowledgement(): void
+    {
+        $this->givenPolicy(requiresAcknowledgement: false);
+
+        $detail = $this->acknowledge()->acknowledge(self::TRAINEE, self::POLICY, self::POLICY_VERSION, 'key-read');
+
+        self::assertSame(AssignmentStatus::COMPLETED, $detail->status->toString());
+        self::assertFalse($detail->isAcknowledged());
+        self::assertSame([], $this->policies->declarations, 'Marking as read writes no acknowledgement.');
+        self::assertCount(1, $this->policies->transitions);
+        self::assertSame(StatusActor::SYSTEM, $this->policies->transitions[0]->actor->toString());
+        self::assertSame('Marked the policy as read.', $this->policies->transitions[0]->note);
+    }
+
+    public function test_a_read_only_policy_cannot_be_marked_read_twice_but_a_double_click_replays(): void
+    {
+        $this->givenPolicy(requiresAcknowledgement: false);
+        $service = $this->acknowledge();
+
+        $first = $service->acknowledge(self::TRAINEE, self::POLICY, self::POLICY_VERSION, 'one-click');
+        $replayed = $service->acknowledge(self::TRAINEE, self::POLICY, self::POLICY_VERSION, 'one-click');
+        self::assertSame($first->status->toString(), $replayed->status->toString());
+        self::assertCount(1, $this->policies->transitions, 'The replay wrote nothing.');
+
+        $this->expectException(OnboardingWriteConflict::class);
+        $service->acknowledge(self::TRAINEE, self::POLICY, self::POLICY_VERSION, 'second-click');
+    }
+
+    public function test_marking_a_superseded_version_read_is_refused(): void
+    {
+        $this->givenPolicy(requiresAcknowledgement: false);
+
+        $this->expectException(ContentVersionSuperseded::class);
+
+        $this->acknowledge()->acknowledge(self::TRAINEE, self::POLICY, 'version-policy-1', 'key-old');
+    }
+
     public function test_a_second_acknowledgement_of_the_same_version_is_refused(): void
     {
         $this->givenPolicy();
@@ -628,7 +670,7 @@ final class OnboardingSelfWriteTest extends TestCase
         );
     }
 
-    private function givenPolicy(string $assignmentPublicId = self::POLICY): void
+    private function givenPolicy(string $assignmentPublicId = self::POLICY, bool $requiresAcknowledgement = true): void
     {
         $this->policies->withPolicy(self::TRAINEE, new OnboardingPolicyDetail(
             assignmentPublicId: $assignmentPublicId,
@@ -640,6 +682,7 @@ final class OnboardingSelfWriteTest extends TestCase
             declarationText: 'I have read and accept the Site Safety policy.',
             effectiveFrom: '2026-01-01',
             acknowledgedAtUtc: null,
+            requiresAcknowledgement: $requiresAcknowledgement,
         ));
     }
 

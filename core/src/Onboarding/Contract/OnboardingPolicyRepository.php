@@ -61,4 +61,26 @@ interface OnboardingPolicyRepository
         ?string $idempotencyKey,
         ?StatusTransition $transition,
     ): OnboardingPolicyDetail;
+
+    /**
+     * Completes a policy that is read rather than accepted
+     * (`RequiresAcknowledgement = 0`): the status event is the whole record,
+     * and no acknowledgement row is written — there is no declaration to have
+     * agreed to.
+     *
+     * Bound to the version the caller read, as {@see acknowledge()} is. The
+     * assignment is locked and its status checked against `$transition->from`
+     * inside the unit of work, so two clicks cannot both complete it; the
+     * second is {@see \TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict::alreadyRecorded()}.
+     *
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\OnboardingAssignmentNotFound
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\ContentVersionSuperseded
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict
+     */
+    public function markRead(
+        int $userId,
+        string $assignmentPublicId,
+        string $expectedVersionPublicId,
+        StatusTransition $transition,
+    ): OnboardingPolicyDetail;
 }

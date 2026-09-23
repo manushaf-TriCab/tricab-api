@@ -13,6 +13,7 @@ use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
  * The title and summary live here rather than on a version, as the schema has
  * it: they name the item in lists and on every version. Changing them is an
  * ordinary edit, not a new version, and every holder sees the new name at once.
+ * A policy's chapter and handbook position are the same kind of thing.
  */
 final readonly class ContentItemRecord
 {
@@ -27,6 +28,10 @@ final readonly class ContentItemRecord
         public ?string $accessGroup,
         public bool $isActive,
         public RowVersionToken $rowVersion,
+        /** Policies only: the handbook chapter, e.g. "Working at TriCab". */
+        public ?string $chapterTitle = null,
+        /** Policies only: position in the handbook, 1 first; null after the rest. */
+        public ?int $sortOrder = null,
     ) {
     }
 
@@ -43,6 +48,8 @@ final readonly class ContentItemRecord
             'summary' => $this->summary,
             'accessGroup' => $this->accessGroup,
             'isActive' => $this->isActive,
+            'chapterTitle' => $this->chapterTitle,
+            'sortOrder' => $this->sortOrder,
             'rowVersion' => $this->rowVersion->toBase64(),
         ];
     }

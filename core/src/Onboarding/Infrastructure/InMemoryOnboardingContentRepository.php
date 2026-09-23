@@ -182,6 +182,8 @@ final class InMemoryOnboardingContentRepository implements OnboardingContentRepo
         string $title,
         ?string $summary,
         ?string $accessGroup,
+        ?string $chapterTitle,
+        ?int $sortOrder,
         string $versionPublicId,
         AuthoredContent $initial,
         array $events,
@@ -190,7 +192,7 @@ final class InMemoryOnboardingContentRepository implements OnboardingContentRepo
         if ($this->slugTaken($itemType, $slug)) {
             throw ContentAuthoringNotPermitted::slugTaken($slug);
         }
-        $item = new ContentItemRecord($this->nextId++, $itemType, $itemPublicId, $slug, $title, $summary, $accessGroup, true, $this->nextToken());
+        $item = new ContentItemRecord($this->nextId++, $itemType, $itemPublicId, $slug, $title, $summary, $accessGroup, true, $this->nextToken(), $chapterTitle, $sortOrder);
         $this->items[self::key($item)] = $item;
         $this->versions[self::key($item)] = [$this->draft($versionPublicId, 1, $initial)];
         array_push($this->writtenEvents, ...$events);
@@ -201,6 +203,8 @@ final class InMemoryOnboardingContentRepository implements OnboardingContentRepo
         RowVersionToken $expectedRowVersion,
         string $title,
         ?string $summary,
+        ?string $chapterTitle,
+        ?int $sortOrder,
         bool $isActive,
         array $events,
         ActorContext $actor,
@@ -211,6 +215,7 @@ final class InMemoryOnboardingContentRepository implements OnboardingContentRepo
         }
         $this->items[self::key($item)] = new ContentItemRecord(
             $stored->itemId, $stored->itemType, $stored->publicId, $stored->slug, $title, $summary, $stored->accessGroup, $isActive, $this->nextToken(),
+            $chapterTitle, $sortOrder,
         );
         array_push($this->writtenEvents, ...$events);
     }
@@ -358,6 +363,10 @@ final class InMemoryOnboardingContentRepository implements OnboardingContentRepo
             $content->effectiveFrom,
             $content->fields,
             $content->classifications,
+            $content->documentReference,
+            $content->issuedLabel,
+            $content->reviewDueLabel,
+            $content->requiresAcknowledgement,
         );
     }
 

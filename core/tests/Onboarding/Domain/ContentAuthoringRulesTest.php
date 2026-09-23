@@ -110,6 +110,81 @@ final class ContentAuthoringRulesTest extends TestCase
         self::assertSame('Lift <5 kg alone. <b>not bold</b>', $blocks[0]['text']);
     }
 
+    // ------------------------------------------------------------ emphasis
+
+    public function test_marks_are_kept_beside_the_text_sorted_and_merged(): void
+    {
+        $blocks = PolicyBlockRules::normalise([[
+            'type' => 'paragraph',
+            'text' => 'Annual leave: four weeks.',
+            'marks' => ['text' => [
+                ['start' => 14, 'end' => 18, 'mark' => 'italic'],
+                ['start' => 0, 'end' => 6, 'mark' => 'bold'],
+                ['start' => 4, 'end' => 13, 'mark' => 'bold'],
+            ]],
+        ]]);
+
+        self::assertSame([
+            'type' => 'paragraph',
+            'text' => 'Annual leave: four weeks.',
+            'marks' => ['text' => [
+                ['start' => 0, 'end' => 13, 'mark' => 'bold'],
+                ['start' => 14, 'end' => 18, 'mark' => 'italic'],
+            ]],
+        ], $blocks[0]);
+    }
+
+    public function test_marks_move_with_trimmed_text_and_dropped_blank_lines(): void
+    {
+        $blocks = PolicyBlockRules::normalise([
+            ['type' => 'paragraph', 'text' => '  Hello there  ', 'marks' => ['text' => [['start' => 2, 'end' => 7, 'mark' => 'bold'], ['start' => 13, 'end' => 15, 'mark' => 'italic']]]],
+            ['type' => 'list', 'items' => ['', 'First', ' ', ' Second'], 'marks' => ['items.3' => [['start' => 1, 'end' => 7, 'mark' => 'bold']]]],
+            ['type' => 'comparisonTable', 'rows' => [['always' => ['', 'Be kind'], 'never' => ['Shout']]], 'marks' => ['rows.0.always.1' => [['start' => 3, 'end' => 7, 'mark' => 'italic']]]],
+            ['type' => 'table', 'headers' => ['A', 'B'], 'rows' => [['x', ' Yes']], 'marks' => ['rows.0.1' => [['start' => 1, 'end' => 4, 'mark' => 'bold']]]],
+        ]);
+
+        // The trailing italic covered only spaces, so it went with them.
+        self::assertSame(['text' => [['start' => 0, 'end' => 5, 'mark' => 'bold']]], $blocks[0]['marks']);
+        self::assertSame(['items.1' => [['start' => 0, 'end' => 6, 'mark' => 'bold']]], $blocks[1]['marks']);
+        self::assertSame(['rows.0.always.0' => [['start' => 3, 'end' => 7, 'mark' => 'italic']]], $blocks[2]['marks']);
+        self::assertSame(['rows.0.1' => [['start' => 0, 'end' => 3, 'mark' => 'bold']]], $blocks[3]['marks']);
+    }
+
+    public function test_a_block_with_no_marks_has_no_marks_key(): void
+    {
+        $blocks = PolicyBlockRules::normalise([['type' => 'paragraph', 'text' => 'Plain', 'marks' => []]]);
+
+        self::assertSame(['type' => 'paragraph', 'text' => 'Plain'], $blocks[0]);
+    }
+
+    /**
+     * @return iterable<string, array{0: array<string, mixed>}>
+     */
+    public static function refusedMarks(): iterable
+    {
+        $paragraph = ['type' => 'paragraph', 'text' => 'Some words'];
+        yield 'a heading' => [['type' => 'heading', 'text' => 'Title', 'marks' => ['text' => [['start' => 0, 'end' => 2, 'mark' => 'bold']]]]];
+        yield 'underline' => [$paragraph + ['marks' => ['text' => [['start' => 0, 'end' => 2, 'mark' => 'underline']]]]];
+        yield 'a link' => [$paragraph + ['marks' => ['text' => [['start' => 0, 'end' => 2, 'mark' => 'link', 'href' => 'https://example.test']]]]];
+        yield 'end before start' => [$paragraph + ['marks' => ['text' => [['start' => 4, 'end' => 2, 'mark' => 'bold']]]]];
+        yield 'not a number' => [$paragraph + ['marks' => ['text' => [['start' => '0', 'end' => 2, 'mark' => 'bold']]]]];
+        yield 'unknown field' => [$paragraph + ['marks' => ['title' => [['start' => 0, 'end' => 2, 'mark' => 'bold']]]]];
+        yield 'a list of marks' => [$paragraph + ['marks' => [['start' => 0, 'end' => 2, 'mark' => 'bold']]]];
+        yield 'a missing item' => [['type' => 'list', 'items' => ['One'], 'marks' => ['items.4' => [['start' => 0, 'end' => 2, 'mark' => 'bold']]]]];
+        yield 'a table header' => [['type' => 'table', 'headers' => ['A'], 'rows' => [['x']], 'marks' => ['headers.0' => [['start' => 0, 'end' => 1, 'mark' => 'bold']]]]];
+    }
+
+    /**
+     * @param array<string, mixed> $block
+     */
+    #[DataProvider('refusedMarks')]
+    public function test_marks_outside_the_rules_are_refused(array $block): void
+    {
+        $this->expectException(InvalidOnboardingValue::class);
+
+        PolicyBlockRules::normalise([$block]);
+    }
+
     public function test_too_many_blocks_are_refused(): void
     {
         $this->expectException(InvalidOnboardingValue::class);

@@ -145,6 +145,44 @@ final class OnboardingContentEndpointsTest extends TestCase
         self::assertSame('ONBOARDING_NOT_FOUND', $this->code($wrongType));
     }
 
+    public function test_a_policy_carries_its_placement_metadata_and_emphasis_through_the_api(): void
+    {
+        $app = $this->app();
+
+        $policy = $this->data($app->handle($this->json('POST', self::CONTENT . '/policies', [
+            'slug' => 'leave-policy', 'title' => 'Leave Policy', 'summary' => 'Leave of every kind.', 'chapterTitle' => 'Working at TriCab', 'sortOrder' => 7,
+        ])));
+        $item = self::arr($policy['item']);
+        self::assertSame('Working at TriCab', $item['chapterTitle']);
+        self::assertSame(7, $item['sortOrder']);
+        self::assertSame('Leave of every kind.', $item['summary']);
+
+        $itemPublicId = self::str($item['publicId']);
+        $versionPublicId = self::str(self::arr(self::arr($policy['versions'])[0])['publicId']);
+        $base = self::CONTENT . '/policies/' . $itemPublicId . '/versions/' . $versionPublicId;
+        $version = self::arr($this->data($app->handle(TestAppFactory::request('GET', $base)))['version']);
+
+        $saved = $app->handle($this->json('PUT', $base, [
+            'rowVersion' => $version['rowVersion'],
+            'blocks' => [['type' => 'paragraph', 'text' => 'Annual leave: four weeks.', 'marks' => ['text' => [['start' => 0, 'end' => 13, 'mark' => 'bold']]]]],
+            'documentReference' => 'HR-POL-034-V000',
+            'issuedLabel' => 'September-25',
+            'reviewDueLabel' => 'September-28',
+            'requiresAcknowledgement' => false,
+        ]));
+        self::assertSame(200, $saved->getStatusCode(), (string) $saved->getBody());
+        $content = self::arr(self::arr($this->data($saved)['version'])['content']);
+        self::assertSame('HR-POL-034-V000', $content['documentReference']);
+        self::assertFalse($content['requiresAcknowledgement']);
+        self::assertSame(['text' => [['start' => 0, 'end' => 13, 'mark' => 'bold']]], self::arr(self::arr($content['blocks'])[0])['marks']);
+
+        $underline = $app->handle($this->json('PUT', $base, [
+            'rowVersion' => self::arr($this->data($saved)['version'])['rowVersion'],
+            'blocks' => [['type' => 'paragraph', 'text' => 'x', 'marks' => ['text' => [['start' => 0, 'end' => 1, 'mark' => 'underline']]]]],
+        ]));
+        self::assertSame(422, $underline->getStatusCode(), 'only bold and italic are marks');
+    }
+
     // --------------------------------------------------------------- helpers
 
     /**

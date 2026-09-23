@@ -196,18 +196,26 @@ final class HandbookPolicyConverterTest extends TestCase
         self::assertSame(1.0, $result['report']['wordCoverage']['coverage']);
     }
 
-    public function testOutputWithoutMarksIsWhatTheAuthoringRulesStore(): void
+    public function testOutputIsExactlyWhatTheAuthoringRulesStore(): void
     {
         $result = HandbookPolicyConverter::convert(self::section(
             '<h2>Purpose</h2><p><strong>Bold</strong> text</p><ol><li>One</li></ol>'
             . '<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>',
         ));
-        $content = ['blocks' => $result['blocks'], 'declaration' => $result['declaration'], 'effectiveFrom' => null];
+        $content = [
+            'blocks' => $result['blocks'],
+            'declaration' => $result['declaration'],
+            'effectiveFrom' => null,
+            'documentReference' => null,
+            'issuedLabel' => null,
+            'reviewDueLabel' => null,
+            'requiresAcknowledgement' => true,
+        ];
 
         $stored = AuthoredContent::fromInput(AuthoredContent::TYPE_POLICY, $content, null)->toArray();
 
-        unset($content['blocks'][1]['marks']);
         self::assertSame($content, $stored);
+        self::assertArrayHasKey('marks', $result['blocks'][1], 'the emphasis is kept, not dropped');
     }
 
     public function testASectionWithoutPolicyContentIsRefused(): void

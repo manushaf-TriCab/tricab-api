@@ -59,7 +59,13 @@ final class AzureSqlOnboardingPolicyRepository implements OnboardingPolicyReposi
                 pv.[ContentJson],
                 CONVERT(VARCHAR(10), pv.[EffectiveFrom], 23) AS [EffectiveFrom],
                 a.[Status],
-                CONVERT(VARCHAR(33), ack.[AcknowledgedAtUtc], 127) AS [AcknowledgedAtUtc]
+                CONVERT(VARCHAR(33), ack.[AcknowledgedAtUtc], 127) AS [AcknowledgedAtUtc],
+                pv.[RequiresAcknowledgement],
+                pv.[DocumentReference],
+                pv.[IssuedLabel],
+                pv.[ReviewDueLabel],
+                p.[Summary],
+                p.[ChapterTitle]
             FROM [onboarding].[Assignments] a
             JOIN [onboarding].[PolicyVersions] pv ON pv.[PolicyVersionId] = a.[PolicyVersionId]
             JOIN [onboarding].[Policies] p ON p.[PolicyId] = pv.[PolicyId]
@@ -95,6 +101,12 @@ final class AzureSqlOnboardingPolicyRepository implements OnboardingPolicyReposi
             declarationText: $content->declaration(),
             effectiveFrom: AzureSqlValueMapper::nullableString($row['EffectiveFrom'] ?? null),
             acknowledgedAtUtc: AzureSqlValueMapper::nullableString($row['AcknowledgedAtUtc'] ?? null),
+            requiresAcknowledgement: AzureSqlValueMapper::boolValue($row['RequiresAcknowledgement'] ?? true),
+            summary: AzureSqlValueMapper::nullableString($row['Summary'] ?? null),
+            chapterTitle: AzureSqlValueMapper::nullableString($row['ChapterTitle'] ?? null),
+            documentReference: AzureSqlValueMapper::nullableString($row['DocumentReference'] ?? null),
+            issuedLabel: AzureSqlValueMapper::nullableString($row['IssuedLabel'] ?? null),
+            reviewDueLabel: AzureSqlValueMapper::nullableString($row['ReviewDueLabel'] ?? null),
         );
     }
 
@@ -164,5 +176,43 @@ final class AzureSqlOnboardingPolicyRepository implements OnboardingPolicyReposi
         }
 
         return $detail;
+    }
+
+    public function markRead(
+        int $userId,
+        string $assignmentPublicId,
+        string $expectedVersionPublicId,
+        StatusTransition $transition,
+    ): OnboardingPolicyDetail {
+        $located = $this->locator->locate($userId, $assignmentPublicId, 'policy', $expectedVersionPublicId);
+
+        if ($located === null) {
+            if ($this->locator->existsForPerson($userId, $assignmentPublicId, 'policy')) {
+                throw ContentVersionSuperseded::reload();
+            }
+
+            throw OnboardingAssignmentNotFound::forThisPerson();
+        }
+
+        $this->runInTransaction($this->connection, function () use ($located, $userId, $assignmentPublicId, $transition): void {
+            // No acknowledgement row, so no unique constraint to lean on: the
+            // assignment itself is locked and its status checked, and a second
+            // click waits here and then finds the item already finished.
+            $rows = $this->connection->fetchAll(
+                <<<'SQL'
+                SELECT a.[Status]
+                FROM [onboarding].[Assignments] a WITH (UPDLOCK, HOLDLOCK)
+                WHERE a.[AssignmentId] = :assignmentId
+                SQL,
+                [':assignmentId' => $located['assignmentId']],
+            );
+            if ($rows === [] || !AssignmentStatus::fromStorage($rows[0]['Status'] ?? null)->equals($transition->from)) {
+                throw OnboardingWriteConflict::alreadyRecorded('reading of this policy');
+            }
+
+            $this->applyTransition($this->connection, $located['assignmentId'], $assignmentPublicId, $userId, $transition);
+        });
+
+        return $this->findPolicy($userId, $assignmentPublicId) ?? throw OnboardingAssignmentNotFound::forThisPerson();
     }
 }

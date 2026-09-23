@@ -14,8 +14,8 @@ declare(strict_types=1);
  *      what is converted is the rendition HR approved;
  *   2. converts it with HandbookPolicyConverter;
  *   3. puts the result through AuthoredContent::fromInput — the same parse an
- *      author's save goes through — and checks it came back unchanged apart
- *      from the emphasis marks today's rules do not keep yet;
+ *      author's save goes through — and checks it came back unchanged, marks
+ *      and metadata included;
  *   4. writes <out>/policies/<slug>.json.
  *
  * Then it writes <out>/index.json and <out>/REPORT.md, the page HR reads beside
@@ -75,17 +75,6 @@ if (!is_dir($out . '/policies') && !mkdir($out . '/policies', 0o775, true)) {
     exit(2);
 }
 
-/** Every key of the stored shape, recursively, with `marks` removed. */
-function withoutMarks(mixed $value): mixed
-{
-    if (!is_array($value)) {
-        return $value;
-    }
-    unset($value['marks']);
-
-    return array_map(withoutMarks(...), $value);
-}
-
 /**
  * Marks must point inside the field they name. Returns problems.
  *
@@ -142,18 +131,26 @@ foreach ($manifest['policies'] as $policy) {
         continue;
     }
 
-    $content = ['blocks' => $converted['blocks'], 'declaration' => $converted['declaration'], 'effectiveFrom' => null];
+    $requiresAcknowledgement = in_array($policy['acknowledgement'], ['required', 'conditional'], true);
+    $content = [
+        'blocks' => $converted['blocks'],
+        'declaration' => $converted['declaration'],
+        'effectiveFrom' => null,
+        'documentReference' => $policy['documentReference'] !== '' ? $policy['documentReference'] : null,
+        'issuedLabel' => $policy['issued'] !== '' ? $policy['issued'] : null,
+        'reviewDueLabel' => $policy['reviewDue'] !== '' ? $policy['reviewDue'] : null,
+        'requiresAcknowledgement' => $requiresAcknowledgement,
+    ];
     $problems = markProblems($converted['blocks']);
     try {
         $authored = AuthoredContent::fromInput(AuthoredContent::TYPE_POLICY, $content, null);
         $problems = [...$problems, ...$authored->publishProblems(null)];
-        if ($authored->toArray() !== withoutMarks($content)) {
+        if ($authored->toArray() !== $content) {
             $problems[] = 'PolicyBlockRules changed the content: the converter is not emitting the stored shape.';
         }
     } catch (InvalidOnboardingValue $e) {
         $problems[] = 'PolicyBlockRules: ' . $e->getMessage();
     }
-    $requiresAcknowledgement = in_array($policy['acknowledgement'], ['required', 'conditional'], true);
     if ($requiresAcknowledgement && $converted['declaration'] === null) {
         $problems[] = 'Acknowledgement is required but no declaration wording was found.';
     }

@@ -233,6 +233,78 @@ final class ContentAuthoringTest extends TestCase
         self::assertSame(2, $saved->content->blocks[0]['level']);
     }
 
+    public function test_a_policy_version_keeps_its_reference_labels_emphasis_and_acknowledgement_choice(): void
+    {
+        $detail = $this->service->createItem($this->actor(), 'policy', ['slug' => 'leave', 'title' => 'Leave Policy']);
+        $draft = $this->onlyVersion($detail);
+        self::assertTrue($draft->content->requiresAcknowledgement, 'A new policy is acknowledged unless its author says otherwise.');
+
+        $saved = $this->service->saveDraft($this->actor(), 'policy', $detail->item->publicId, $draft->publicId, $draft->rowVersion, [
+            'blocks' => [['type' => 'paragraph', 'text' => 'Annual leave: four weeks.', 'marks' => ['text' => [['start' => 0, 'end' => 13, 'mark' => 'bold']]]]],
+            'documentReference' => ' HR-POL-034-V000 ',
+            'issuedLabel' => 'September-25',
+            'reviewDueLabel' => 'September-28',
+            'requiresAcknowledgement' => false,
+        ]);
+
+        self::assertSame('HR-POL-034-V000', $saved->content->documentReference);
+        self::assertSame('September-25', $saved->content->issuedLabel);
+        self::assertSame('September-28', $saved->content->reviewDueLabel);
+        self::assertFalse($saved->content->requiresAcknowledgement);
+        self::assertSame(['text' => [['start' => 0, 'end' => 13, 'mark' => 'bold']]], $saved->content->blocks[0]['marks']);
+
+        // A new draft starts as a copy of the live version, metadata and all.
+        $published = $this->service->publish($this->actor(), 'policy', $detail->item->publicId, $saved->publicId, $saved->rowVersion, false);
+        $next = $this->service->createDraft($this->actor(), 'policy', $detail->item->publicId);
+        self::assertTrue($next->content->sameAs($published['version']->content));
+    }
+
+    public function test_changing_only_whether_a_policy_needs_acknowledging_is_a_change(): void
+    {
+        $detail = $this->service->createItem($this->actor(), 'policy', ['slug' => 'dress', 'title' => 'Dress Code']);
+        $draft = $this->onlyVersion($detail);
+        $body = ['blocks' => [['type' => 'paragraph', 'text' => 'Wear boots.']]];
+        $saved = $this->service->saveDraft($this->actor(), 'policy', $detail->item->publicId, $draft->publicId, $draft->rowVersion, $body);
+
+        $again = $this->service->saveDraft($this->actor(), 'policy', $detail->item->publicId, $saved->publicId, $saved->rowVersion, $body + ['requiresAcknowledgement' => false]);
+
+        self::assertNotSame($saved->rowVersion->toBase64(), $again->rowVersion->toBase64());
+    }
+
+    public function test_a_policy_s_summary_chapter_and_position_are_item_edits_that_a_body_without_them_leaves_alone(): void
+    {
+        $detail = $this->service->createItem($this->actor(), 'policy', [
+            'slug' => 'leave-policy',
+            'title' => 'Leave Policy',
+            'summary' => 'Annual, personal and unpaid leave.',
+            'chapterTitle' => 'Working at TriCab',
+            'sortOrder' => 7,
+        ]);
+        self::assertSame('Annual, personal and unpaid leave.', $detail->item->summary);
+        self::assertSame('Working at TriCab', $detail->item->chapterTitle);
+        self::assertSame(7, $detail->item->sortOrder);
+
+        // An older client that knows only title and isActive.
+        $renamed = $this->service->updateItem($this->actor(), 'policy', $detail->item->publicId, $detail->item->rowVersion, ['title' => 'Leave', 'isActive' => true]);
+        self::assertSame('Working at TriCab', $renamed->item->chapterTitle);
+        self::assertSame(7, $renamed->item->sortOrder);
+        self::assertSame('Annual, personal and unpaid leave.', $renamed->item->summary);
+
+        $moved = $this->service->updateItem($this->actor(), 'policy', $renamed->item->publicId, $renamed->item->rowVersion, ['title' => 'Leave', 'sortOrder' => 8, 'chapterTitle' => '']);
+        self::assertSame(8, $moved->item->sortOrder);
+        self::assertNull($moved->item->chapterTitle);
+        $event = end($this->content->writtenEvents);
+        self::assertNotFalse($event);
+        self::assertSame(['chapterTitle', 'sortOrder'], $event->details['changedFields']);
+    }
+
+    public function test_a_policy_position_must_be_a_whole_number_from_one(): void
+    {
+        $this->expectException(InvalidOnboardingValue::class);
+
+        $this->service->createItem($this->actor(), 'policy', ['slug' => 'x', 'title' => 'X', 'sortOrder' => 0]);
+    }
+
     public function test_deactivating_an_item_is_an_audited_edit(): void
     {
         $detail = $this->createModule();

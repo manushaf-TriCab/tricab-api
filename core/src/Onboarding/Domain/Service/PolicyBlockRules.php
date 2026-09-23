@@ -28,6 +28,22 @@ use TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue;
  * roman numerals and got bullets finds out from a new starter, not from the
  * editor.
  *
+ * ## Emphasis is data beside the text, never markup in it
+ *
+ * Bold and italic (decision D2 of the handbook import) are a block-level
+ * `marks` map from a text field's path to ranges:
+ * `{"text": [{"start": 2, "end": 18, "mark": "bold"}]}`. Paths are `text`
+ * (paragraph, callout), `items.N` (list), `rows.R.C` (table) and
+ * `rows.R.always.N` / `rows.R.never.N` (comparison). Offsets are code points,
+ * end exclusive. The text itself stays plain, so a renderer that knows nothing
+ * of marks still shows every word, and there is no string anywhere that a
+ * browser could be persuaded to parse.
+ *
+ * Headings, captions, titles and table headers take no marks: they are already
+ * set apart. Offsets are taken against the text as sent and moved with it when
+ * it is trimmed or a blank list line is dropped, so a mark never ends up on
+ * the wrong words.
+ *
  * Pure: no database, no request, no clock.
  */
 final class PolicyBlockRules
@@ -39,10 +55,14 @@ final class PolicyBlockRules
     public const MAX_TABLE_ROWS = 50;
     public const MAX_TABLE_COLUMNS = 6;
     public const MAX_DECLARATION_LENGTH = 2000;
+    public const MAX_REFERENCE_LENGTH = 80;
+    public const MAX_LABEL_LENGTH = 40;
 
     public const TYPES = ['heading', 'paragraph', 'list', 'callout', 'table', 'comparisonTable'];
     public const LIST_STYLES = ['bullet', 'number', 'lower-roman', 'upper-roman', 'lower-alpha', 'upper-alpha'];
     public const CALLOUT_TONES = ['note', 'warning'];
+    public const MARKS = ['bold', 'italic'];
+    public const MAX_MARKS_PER_FIELD = 200;
 
     /**
      * @return list<array<string, mixed>> the blocks in their stored shape
@@ -85,6 +105,25 @@ final class PolicyBlockRules
     }
 
     /**
+     * A document reference or a date label as printed ("September-25"). Null
+     * when empty.
+     *
+     * @throws InvalidOnboardingValue
+     */
+    public static function label(?string $value, string $what, int $max): ?string
+    {
+        $trimmed = $value === null ? '' : trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+        if (mb_strlen($trimmed) > $max) {
+            throw InvalidOnboardingValue::for($what, sprintf('longer than %d characters', $max));
+        }
+
+        return $trimmed;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private static function block(mixed $block, int $number): array
@@ -98,7 +137,7 @@ final class PolicyBlockRules
         }
         $where = sprintf('policy block %d (%s)', $number, $type);
 
-        return match ($type) {
+        $normalised = match ($type) {
             'heading' => [
                 'type' => 'heading',
                 'level' => self::headingLevel($block['level'] ?? null, $where),
@@ -123,6 +162,178 @@ final class PolicyBlockRules
             'table' => self::table($block, $where),
             default => self::comparisonTable($block, $where),
         };
+
+        $marks = self::marks($block, $normalised, $where);
+        if ($marks !== []) {
+            $normalised['marks'] = $marks;
+        }
+
+        return $normalised;
+    }
+
+    /**
+     * @param array<array-key, mixed> $raw        the block as sent
+     * @param array<string, mixed>    $normalised the block as it will be stored
+     *
+     * @return array<string, list<array{start: int, end: int, mark: string}>>
+     */
+    private static function marks(array $raw, array $normalised, string $where): array
+    {
+        $marks = $raw['marks'] ?? null;
+        if ($marks === null || $marks === []) {
+            return [];
+        }
+        if (!is_array($marks) || array_is_list($marks)) {
+            throw InvalidOnboardingValue::for($where . ' marks', 'not a map of field to ranges');
+        }
+
+        $stored = [];
+        foreach ($marks as $path => $ranges) {
+            $path = (string) $path;
+            $target = self::markTarget($raw, $normalised, $path);
+            if ($target === null) {
+                throw InvalidOnboardingValue::for($where . ' marks', sprintf('"%s" is not a text that can be emphasised', $path));
+            }
+            [$storedPath, $rawText, $text] = $target;
+            $lead = mb_strlen($rawText) - mb_strlen(ltrim($rawText));
+            $cleaned = self::ranges($ranges, $lead, mb_strlen($text), sprintf('%s marks "%s"', $where, $path));
+            if ($cleaned !== []) {
+                $stored[$storedPath] = $cleaned;
+            }
+        }
+        ksort($stored, SORT_NATURAL);
+
+        return $stored;
+    }
+
+    /**
+     * Resolves a mark path to the field it emphasises: the path it will be
+     * stored under, the text as sent and the text as stored. Null when the path
+     * names no emphasisable text, or a blank list line the rules dropped.
+     *
+     * @param array<array-key, mixed> $raw
+     * @param array<string, mixed>    $normalised
+     *
+     * @return array{0: string, 1: string, 2: string}|null
+     */
+    private static function markTarget(array $raw, array $normalised, string $path): ?array
+    {
+        $type = $normalised['type'];
+        $steps = explode('.', $path);
+        $index = static fn (string $step): ?int => preg_match('/^(0|[1-9][0-9]{0,3})$/', $step) === 1 ? (int) $step : null;
+
+        if (($type === 'paragraph' || $type === 'callout') && $path === 'text') {
+            return is_string($raw['text'] ?? null) && is_string($normalised['text']) ? ['text', $raw['text'], $normalised['text']] : null;
+        }
+
+        if ($type === 'list' && count($steps) === 2 && $steps[0] === 'items' && ($n = $index($steps[1])) !== null) {
+            $kept = self::keptLine($raw['items'] ?? null, $n);
+            $items = $normalised['items'];
+
+            return $kept !== null && is_array($items) && is_string($items[$kept[0]] ?? null)
+                ? ['items.' . $kept[0], $kept[1], $items[$kept[0]]]
+                : null;
+        }
+
+        if ($type === 'table' && count($steps) === 3 && $steps[0] === 'rows' && ($r = $index($steps[1])) !== null && ($c = $index($steps[2])) !== null) {
+            $rawRows = $raw['rows'] ?? null;
+            $rawCell = is_array($rawRows) && is_array($rawRows[$r] ?? null) ? ($rawRows[$r][$c] ?? null) : null;
+            $rows = $normalised['rows'];
+            $cell = is_array($rows) && is_array($rows[$r] ?? null) ? ($rows[$r][$c] ?? null) : null;
+
+            return is_string($rawCell) && is_string($cell) && $cell !== '' ? [$path, $rawCell, $cell] : null;
+        }
+
+        if ($type === 'comparisonTable' && count($steps) === 4 && $steps[0] === 'rows' && in_array($steps[2], ['always', 'never'], true)
+            && ($r = $index($steps[1])) !== null && ($n = $index($steps[3])) !== null) {
+            $rawRows = $raw['rows'] ?? null;
+            $rawRow = is_array($rawRows) ? ($rawRows[$r] ?? null) : null;
+            $kept = self::keptLine(is_array($rawRow) ? ($rawRow[$steps[2]] ?? null) : null, $n);
+            $rows = $normalised['rows'];
+            $lines = is_array($rows) && is_array($rows[$r] ?? null) ? ($rows[$r][$steps[2]] ?? null) : null;
+
+            return $kept !== null && is_array($lines) && is_string($lines[$kept[0]] ?? null)
+                ? [sprintf('rows.%d.%s.%d', $r, $steps[2], $kept[0]), $kept[1], $lines[$kept[0]]]
+                : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Where raw line $n lands once blank lines are dropped, and its raw text.
+     *
+     * @return array{0: int, 1: string}|null
+     */
+    private static function keptLine(mixed $lines, int $n): ?array
+    {
+        if (!is_array($lines) || !array_is_list($lines) || !is_string($lines[$n] ?? null) || trim($lines[$n]) === '') {
+            return null;
+        }
+        $kept = 0;
+        for ($i = 0; $i < $n; $i++) {
+            if (is_string($lines[$i]) && trim($lines[$i]) !== '') {
+                $kept++;
+            }
+        }
+
+        return [$kept, $lines[$n]];
+    }
+
+    /**
+     * Validates one field's ranges, moves them by what trimming removed from
+     * the front, clips them to the stored text, and merges overlaps of the same
+     * mark. A range left empty by trimming is dropped: it covered only spaces.
+     *
+     * @return list<array{start: int, end: int, mark: string}>
+     */
+    private static function ranges(mixed $ranges, int $lead, int $length, string $where): array
+    {
+        if (!is_array($ranges) || !array_is_list($ranges)) {
+            throw InvalidOnboardingValue::for($where, 'not a list of ranges');
+        }
+        if (count($ranges) > self::MAX_MARKS_PER_FIELD) {
+            throw InvalidOnboardingValue::for($where, sprintf('more than %d ranges', self::MAX_MARKS_PER_FIELD));
+        }
+
+        $byMark = [];
+        foreach ($ranges as $i => $range) {
+            $label = sprintf('%s range %d', $where, $i + 1);
+            if (!is_array($range)) {
+                throw InvalidOnboardingValue::for($label, 'not an object');
+            }
+            $mark = self::oneOf($range['mark'] ?? null, self::MARKS, $label . ' mark');
+            $start = $range['start'] ?? null;
+            $end = $range['end'] ?? null;
+            if (!is_int($start) || !is_int($end) || $start < 0 || $end <= $start) {
+                throw InvalidOnboardingValue::for($label, 'start and end must be whole numbers with start before end');
+            }
+            $start = max(0, $start - $lead);
+            $end = min($length, $end - $lead);
+            if ($end > $start) {
+                $byMark[$mark][] = [$start, $end];
+            }
+        }
+
+        $merged = [];
+        foreach ($byMark as $mark => $spans) {
+            usort($spans, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
+            $current = null;
+            foreach ($spans as $span) {
+                if ($current !== null && $span[0] <= $current[1]) {
+                    $current[1] = max($current[1], $span[1]);
+                    continue;
+                }
+                if ($current !== null) {
+                    $merged[] = ['start' => $current[0], 'end' => $current[1], 'mark' => (string) $mark];
+                }
+                $current = $span;
+            }
+            $merged[] = ['start' => $current[0], 'end' => $current[1], 'mark' => (string) $mark];
+        }
+        usort($merged, static fn (array $a, array $b): int => [$a['start'], $a['mark']] <=> [$b['start'], $b['mark']]);
+
+        return $merged;
     }
 
     /**

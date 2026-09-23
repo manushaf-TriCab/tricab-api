@@ -249,6 +249,27 @@ final class OnboardingSelfWriteEndpointsTest extends TestCase
         );
     }
 
+    public function test_a_read_only_policy_is_marked_read_through_the_same_route_and_writes_no_acknowledgement(): void
+    {
+        $app = $this->app(self::READ_AND_SUBMIT);
+        $this->seedPolicy($app, requiresAcknowledgement: false);
+
+        $response = $app->handle($this->json(
+            'POST',
+            '/api/v1/onboarding/policies/' . self::POLICY . '/acknowledgement',
+            ['versionPublicId' => self::POLICY_VERSION],
+            'key-read',
+        ));
+
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+        $data = $this->data($response);
+        self::assertSame('completed', $data['status']);
+        self::assertFalse($data['requiresAcknowledgement']);
+        self::assertFalse($data['isAcknowledged']);
+        self::assertSame('WHS-POL-001-V005', $data['documentReference']);
+        self::assertSame([], $this->policies($app)->declarations);
+    }
+
     public function test_a_form_submission_reaches_submitted_and_splits_the_payload(): void
     {
         $app = $this->app(self::READ_AND_SUBMIT);
@@ -491,7 +512,7 @@ final class OnboardingSelfWriteEndpointsTest extends TestCase
     /**
      * @param App<ContainerInterface> $app
      */
-    private function seedPolicy(App $app): void
+    private function seedPolicy(App $app, bool $requiresAcknowledgement = true): void
     {
         $this->policies($app)->withPolicy(self::SIGNED_IN_USER_ID, new OnboardingPolicyDetail(
             assignmentPublicId: self::POLICY,
@@ -503,6 +524,8 @@ final class OnboardingSelfWriteEndpointsTest extends TestCase
             declarationText: 'I have read and accept the Site Safety policy.',
             effectiveFrom: '2026-01-01',
             acknowledgedAtUtc: null,
+            requiresAcknowledgement: $requiresAcknowledgement,
+            documentReference: 'WHS-POL-001-V005',
         ));
     }
 

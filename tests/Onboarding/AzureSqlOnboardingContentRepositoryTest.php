@@ -276,6 +276,39 @@ final class AzureSqlOnboardingContentRepositoryTest extends TestCase
         self::assertNull($listed[0]->draftVersionNumber);
     }
 
+    public function test_a_policy_s_placement_metadata_and_emphasis_survive_the_database(): void
+    {
+        $policy = $this->service->createItem($this->actor(), 'policy', [
+            'slug' => 'syn-policy-' . bin2hex(random_bytes(4)),
+            'title' => 'Synthetic leave policy',
+            'summary' => 'Synthetic summary.',
+            'chapterTitle' => 'Synthetic chapter',
+            'sortOrder' => 7,
+        ]);
+        self::assertSame('Synthetic chapter', $policy->item->chapterTitle);
+        self::assertSame(7, $policy->item->sortOrder);
+        self::assertSame('Synthetic summary.', $policy->item->summary);
+
+        $draft = $this->firstVersion($policy);
+        $saved = $this->service->saveDraft($this->actor(), 'policy', $policy->item->publicId, $draft->publicId, $draft->rowVersion, [
+            'blocks' => [['type' => 'paragraph', 'text' => 'Annual leave: four weeks.', 'marks' => ['text' => [['start' => 0, 'end' => 13, 'mark' => 'bold']]]]],
+            'documentReference' => 'SYN-POL-034-V000',
+            'issuedLabel' => 'September-25',
+            'reviewDueLabel' => 'September-28',
+            'requiresAcknowledgement' => false,
+        ]);
+
+        self::assertSame('SYN-POL-034-V000', $saved->content->documentReference);
+        self::assertSame('September-25', $saved->content->issuedLabel);
+        self::assertSame('September-28', $saved->content->reviewDueLabel);
+        self::assertFalse($saved->content->requiresAcknowledgement);
+        self::assertSame(['text' => [['start' => 0, 'end' => 13, 'mark' => 'bold']]], $saved->content->blocks[0]['marks']);
+
+        $moved = $this->service->updateItem($this->actor(), 'policy', $policy->item->publicId, $policy->item->rowVersion, ['title' => 'Synthetic leave policy', 'sortOrder' => 8]);
+        self::assertSame(8, $moved->item->sortOrder);
+        self::assertSame('Synthetic chapter', $moved->item->chapterTitle);
+    }
+
     // ---------------------------------------------------------------- helpers
 
     /**
