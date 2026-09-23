@@ -74,6 +74,36 @@ final class LeaverPolicy
      */
     public const ACCESS_WINDOW_DAYS = 14;
 
+    /** HR records a last day as a calendar date in TriCab's own timezone. */
+    public const LOCAL_TIMEZONE = 'Australia/Melbourne';
+
+    /**
+     * The departure instant for somebody whose last day is this date: midnight
+     * at the end of it, Melbourne time, in UTC.
+     *
+     * HR thinks in last days, the rules think in instants. The end of the day
+     * rather than its start, because somebody on their last day is still at
+     * work and may still be finishing a form; and Melbourne rather than UTC,
+     * because UTC midnight is ten or eleven hours into a Melbourne morning.
+     *
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue for anything but YYYY-MM-DD
+     */
+    public static function departureForLastDay(string $lastDay): DateTimeImmutable
+    {
+        $local = DateTimeImmutable::createFromFormat('!Y-m-d', $lastDay, new \DateTimeZone(self::LOCAL_TIMEZONE));
+        if ($local === false || $local->format('Y-m-d') !== $lastDay) {
+            throw \TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue::for('lastDay', $lastDay);
+        }
+
+        return $local->modify('+1 day')->setTimezone(new \DateTimeZone('UTC'));
+    }
+
+    /** The inverse of {@see departureForLastDay()}: the Melbourne date before the departure instant. */
+    public static function lastDayFor(DateTimeImmutable $departedAtUtc): string
+    {
+        return $departedAtUtc->setTimezone(new \DateTimeZone(self::LOCAL_TIMEZONE))->modify('-1 second')->format('Y-m-d');
+    }
+
     /**
      * When the read window shuts for somebody who departed at this instant.
      *

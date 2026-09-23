@@ -19,7 +19,14 @@ final readonly class OnboardingPersonDetail
         public string $rowVersion,
         public array $allocations,
         public array $catalogue,
+        /** Null when the reader did not ask the directory; the console treats that as unknown. */
+        public ?bool $canSignIn = null,
     ) {
+    }
+
+    public function withCanSignIn(bool $canSignIn): self
+    {
+        return new self($this->person, $this->rowVersion, $this->allocations, $this->catalogue, $canSignIn);
     }
 
     /**
@@ -32,6 +39,7 @@ final readonly class OnboardingPersonDetail
             'rowVersion' => $this->rowVersion,
             'allocations' => array_map(static fn (CurrentAllocation $a) => $a->toArray(), $this->allocations),
             'catalogue' => array_map(static fn (AllocatableItem $i) => $i->toArray(), $this->catalogue),
+            'canSignIn' => $this->canSignIn,
         ];
     }
 }

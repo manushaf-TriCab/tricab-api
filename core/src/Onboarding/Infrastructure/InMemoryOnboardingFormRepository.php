@@ -199,6 +199,7 @@ final class InMemoryOnboardingFormRepository implements OnboardingFormRepository
             // Addressed to the person only while the form is sent back; any
             // move they make takes it out of that state.
             reviewerNote: $transition === null ? $detail->reviewerNote : null,
+            restrictedFieldsCleared: $transition === null && $detail->restrictedFieldsCleared,
         );
 
         $this->details[self::key($userId, $detail->assignmentPublicId)] = $updated;

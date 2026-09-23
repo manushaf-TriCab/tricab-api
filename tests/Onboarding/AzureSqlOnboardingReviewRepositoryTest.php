@@ -161,6 +161,28 @@ final class AzureSqlOnboardingReviewRepositoryTest extends TestCase
         $mine = $this->forms->findForm($this->subject, $assignment);
         self::assertNotNull($mine);
         self::assertSame('Synthetic: the start date is before the offer date.', $mine->reviewerNote);
+
+        // Reopened with the ordinary answers; the payroll field is not copied
+        // back, even though this submission put it in the ordinary half.
+        self::assertSame(['preferredName' => self::SYNTHETIC_NAME], $mine->draftData);
+        self::assertNotNull($mine->draftRowVersion);
+        self::assertTrue($mine->restrictedFieldsCleared);
+    }
+
+    public function test_a_draft_the_person_already_has_is_not_overwritten_by_a_send_back(): void
+    {
+        $assignment = $this->submittedForm();
+        $this->exec(
+            "INSERT INTO [onboarding].[FormDrafts] ([AssignmentId], [DraftDataJson])
+             SELECT [AssignmentId], N'{\"preferredName\":\"Newer\"}' FROM [onboarding].[Assignments] WHERE [PublicId] = CONVERT(UNIQUEIDENTIFIER, :p)",
+            [':p' => $assignment],
+        );
+        $detail = $this->reviews->reviewDetail($assignment);
+        self::assertNotNull($detail);
+
+        $this->service->decide($this->actor($this->reviewer), $assignment, RowVersionToken::fromBase64($detail->rowVersion), AssignmentStatus::fixAndResubmit(), 'Synthetic reason.');
+
+        self::assertSame(['preferredName' => 'Newer'], $this->forms->findForm($this->subject, $assignment)?->draftData);
     }
 
     public function test_accepting_completes_it_and_the_person_is_no_longer_shown_a_note(): void

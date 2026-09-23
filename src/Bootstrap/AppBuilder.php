@@ -184,11 +184,14 @@ use TriCab\Api\Http\Action\Onboarding\GetOnboardingSelfSummaryAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptSubmissionAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingFormSubmissionAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingPersonAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingPersonInvitationAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPolicyAcknowledgementAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPresentationProgressAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingReviewDecisionAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormDraftAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingPersonAllocationAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingPersonProfileAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\TrustedDevice\ExchangeTrustedDeviceSessionAction;
 use TriCab\Api\Http\Action\TrustedDevice\RegisterTrustedDeviceAction;
@@ -460,6 +463,18 @@ final class AppBuilder
         $app->get('/api/v1/admin/onboarding/people/{personPublicId}', GetOnboardingPersonAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
         $app->put('/api/v1/admin/onboarding/people/{personPublicId}/allocation', PutOnboardingPersonAllocationAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+
+        // Phase 4.1 — adding a person, editing their profile, inviting them.
+        // Same permission as allocation: choosing who is inducted and choosing
+        // what they are given are one job. Creating a person may create a
+        // GUEST account (owner decision, 23 Sep 2026) — the only account this
+        // module can make, and one that reaches nothing but its own onboarding.
+        $app->post('/api/v1/admin/onboarding/people', PostOnboardingPersonAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->put('/api/v1/admin/onboarding/people/{personPublicId}/profile', PutOnboardingPersonProfileAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->post('/api/v1/admin/onboarding/people/{personPublicId}/invitation', PostOnboardingPersonInvitationAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
 
         // Phase 4.3 — the reviewer queue. ONBOARDING.REVIEW, not PEOPLE.MANAGE:

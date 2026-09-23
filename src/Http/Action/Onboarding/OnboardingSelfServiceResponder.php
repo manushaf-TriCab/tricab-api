@@ -16,10 +16,13 @@ use TriCab\Core\Onboarding\Domain\Exception\AssignmentStatusIsFinal;
 use TriCab\Core\Onboarding\Domain\Exception\ContentVersionSuperseded;
 use TriCab\Core\Onboarding\Domain\Exception\FormVersionNotClassified;
 use TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue;
+use TriCab\Core\Onboarding\Domain\Exception\InvitationNotDelivered;
+use TriCab\Core\Onboarding\Domain\Exception\InvitationNotPermitted;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingAccessWindowClosed;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingAssignmentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingDocumentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingItemTypeMismatch;
+use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingSubmissionWindowClosed;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
@@ -153,6 +156,19 @@ final readonly class OnboardingSelfServiceResponder
                     $failure->getMessage(),
                     409,
                 ),
+
+            // 4.1 — adding and inviting people.
+            $failure instanceof OnboardingPersonAlreadyExists
+                => $this->responder->error('ONBOARDING_PERSON_EXISTS', $failure->getMessage(), 409),
+            $failure instanceof InvitationNotPermitted
+                => $this->responder->error(
+                    'ONBOARDING_INVITATION_' . strtoupper($failure->reason),
+                    $failure->getMessage(),
+                    409,
+                ),
+            // 502 — the email provider refused. Nothing about the request is wrong.
+            $failure instanceof InvitationNotDelivered
+                => $this->responder->error('ONBOARDING_INVITATION_NOT_DELIVERED', $failure->getMessage(), 502),
 
             // 422 — the request is wrong in a way the client can fix.
             $failure instanceof UnknownPresentationSlide

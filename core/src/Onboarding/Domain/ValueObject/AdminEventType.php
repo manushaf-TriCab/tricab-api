@@ -25,6 +25,13 @@ final class AdminEventType
     public const REVIEW_DECIDED = 'review.decided';
     /** A review decision refused before anything was written — self-review, or an item no longer queued. */
     public const REVIEW_REFUSED = 'review.refused';
+    /** An induction record was created (4.1), and possibly the GUEST account with it. */
+    public const PERSON_CREATED = 'person.created';
+    /** Position, department, branch, start date or last day changed. */
+    public const PERSON_PROFILE_UPDATED = 'person.profile_updated';
+    public const PERSON_INVITED = 'person.invited';
+    /** An invitation refused, or one the provider did not accept. */
+    public const PERSON_INVITATION_REFUSED = 'person.invitation_refused';
 
     public const ALL = [
         self::ALLOCATION_ALLOCATED,
@@ -33,6 +40,10 @@ final class AdminEventType
         self::ALLOCATION_REFUSED,
         self::REVIEW_DECIDED,
         self::REVIEW_REFUSED,
+        self::PERSON_CREATED,
+        self::PERSON_PROFILE_UPDATED,
+        self::PERSON_INVITED,
+        self::PERSON_INVITATION_REFUSED,
     ];
 
     public static function assertKnown(string $value): string

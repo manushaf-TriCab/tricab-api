@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Onboarding\Persistence;
 
+use DateTimeImmutable;
 use PDOException;
 use TriCab\Api\Identity\Persistence\AzureSqlTransaction;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
@@ -16,6 +17,9 @@ use TriCab\Core\Onboarding\Application\DTO\Admin\CurrentAllocation;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonDetail;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonRecord;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonSummary;
+use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingProfileFields;
+use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingAdminEvent;
+use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
 use TriCab\Core\Onboarding\Contract\OnboardingPeopleRepository;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
@@ -109,6 +113,8 @@ final class AzureSqlOnboardingPeopleRepository implements OnboardingPeopleReposi
             strtolower(AzureSqlValueMapper::stringValue($row['PublicId'] ?? '')),
             ProductRowVersionMapper::toToken($row['RowVersion'] ?? null),
             AzureSqlValueMapper::nullableDateTime($row['DepartedAtUtc'] ?? null),
+            AzureSqlValueMapper::stringValue($row['EmailAddress'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['DisplayName'] ?? ''),
         );
     }
 
@@ -282,6 +288,151 @@ final class AzureSqlOnboardingPeopleRepository implements OnboardingPeopleReposi
                 AzureSqlOnboardingAdminAuditLog::appendWithin($this->connection, $actor, $event);
             }
         });
+    }
+
+    // ------------------------------------------------------------ 4.1 writes
+
+    public function findPersonPublicIdByUserId(int $userId): ?string
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT CONVERT(NVARCHAR(36), [PublicId]) AS [PublicId] FROM [onboarding].[TraineeProfiles] WHERE [UserId] = :userId',
+            [':userId' => $userId],
+        );
+
+        return $rows === [] ? null : strtolower(AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? ''));
+    }
+
+    public function createProfile(
+        int $userId,
+        string $publicId,
+        OnboardingProfileFields $fields,
+        OnboardingAdminEvent $event,
+        ActorContext $actor,
+    ): void {
+        $this->runInTransaction($this->connection, function () use ($userId, $publicId, $fields, $event, $actor): void {
+            try {
+                $this->connection->execute(
+                    <<<'SQL'
+                    INSERT INTO [onboarding].[TraineeProfiles] ([PublicId], [UserId], [Position], [Department], [Branch], [StartDate])
+                    VALUES (CONVERT(UNIQUEIDENTIFIER, :publicId), :userId, :position, :department, :branch, TRY_CONVERT(DATE, :startDate, 23))
+                    SQL,
+                    [
+                        ':publicId' => $publicId,
+                        ':userId' => $userId,
+                        ':position' => $fields->position,
+                        ':department' => $fields->department,
+                        ':branch' => $fields->branch,
+                        ':startDate' => $fields->startDate,
+                    ],
+                );
+            } catch (PDOException $failure) {
+                // UQ_onboarding_TraineeProfiles_UserId: another HR user added
+                // the same person between the check and this insert.
+                if (self::isUniqueViolation($failure)) {
+                    throw OnboardingPersonAlreadyExists::forPerson(null);
+                }
+                throw $failure;
+            }
+
+            AzureSqlOnboardingAdminAuditLog::appendWithin($this->connection, $actor, $event);
+        });
+    }
+
+    public function updateProfile(
+        OnboardingPersonRecord $person,
+        RowVersionToken $expectedRowVersion,
+        OnboardingProfileFields $fields,
+        ?DateTimeImmutable $departedAtUtc,
+        bool $departureChanged,
+        array $events,
+        ActorContext $actor,
+    ): void {
+        $this->runInTransaction($this->connection, function () use ($person, $expectedRowVersion, $fields, $departedAtUtc, $departureChanged, $events, $actor): void {
+            $updated = $this->connection->fetchAll(
+                <<<'SQL'
+                UPDATE [onboarding].[TraineeProfiles]
+                SET [Position] = :position,
+                    [Department] = :department,
+                    [Branch] = :branch,
+                    [StartDate] = TRY_CONVERT(DATE, :startDate, 23),
+                    [DepartedAtUtc] = CASE WHEN :departureChanged = 1 THEN TRY_CONVERT(DATETIME2(7), :departedAt, 120) ELSE [DepartedAtUtc] END,
+                    [DepartureRecordedByUserId] = CASE
+                        WHEN :departureChangedAgain = 0 THEN [DepartureRecordedByUserId]
+                        WHEN :departedAtCheck IS NULL THEN NULL
+                        ELSE :recordedBy
+                    END,
+                    [UpdatedAtUtc] = SYSUTCDATETIME()
+                OUTPUT INSERTED.[TraineeProfileId]
+                WHERE [UserId] = :userId
+                  AND [RowVersion] = :expectedRowVersion
+                SQL,
+                [
+                    ':position' => $fields->position,
+                    ':department' => $fields->department,
+                    ':branch' => $fields->branch,
+                    ':startDate' => $fields->startDate,
+                    // One name per occurrence — see the plan's trap list.
+                    ':departureChanged' => $departureChanged ? 1 : 0,
+                    ':departureChangedAgain' => $departureChanged ? 1 : 0,
+                    ':departedAt' => $departedAtUtc?->format('Y-m-d H:i:s'),
+                    ':departedAtCheck' => $departedAtUtc?->format('Y-m-d H:i:s'),
+                    ':recordedBy' => $actor->userId,
+                    ':userId' => $person->userId,
+                    ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary($expectedRowVersion),
+                ],
+            );
+            if ($updated === []) {
+                throw OnboardingWriteConflict::staleToken();
+            }
+
+            foreach ($events as $event) {
+                AzureSqlOnboardingAdminAuditLog::appendWithin($this->connection, $actor, $event);
+            }
+        });
+    }
+
+    public function claimInvitation(OnboardingPersonRecord $person, int $cooldownSeconds, ActorContext $actor): ?array
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+            UPDATE [onboarding].[TraineeProfiles]
+            SET [InvitedAtUtc] = SYSUTCDATETIME(),
+                [InvitedByUserId] = :actorUserId,
+                [UpdatedAtUtc] = SYSUTCDATETIME()
+            OUTPUT CONVERT(VARCHAR(33), DELETED.[InvitedAtUtc], 126) AS [PreviousInvitedAtUtc],
+                   DELETED.[InvitedByUserId] AS [PreviousInvitedByUserId]
+            WHERE [UserId] = :userId
+              AND ([InvitedAtUtc] IS NULL OR [InvitedAtUtc] < DATEADD(SECOND, -:cooldown, SYSUTCDATETIME()))
+            SQL,
+            [':actorUserId' => $actor->userId, ':userId' => $person->userId, ':cooldown' => $cooldownSeconds],
+        );
+
+        if ($rows === []) {
+            return null;
+        }
+
+        return [
+            'previousInvitedAtUtc' => AzureSqlValueMapper::nullableString($rows[0]['PreviousInvitedAtUtc'] ?? null),
+            'previousInvitedByUserId' => AzureSqlValueMapper::nullableInt($rows[0]['PreviousInvitedByUserId'] ?? null),
+        ];
+    }
+
+    public function releaseInvitation(OnboardingPersonRecord $person, array $previous): void
+    {
+        $this->connection->execute(
+            <<<'SQL'
+            UPDATE [onboarding].[TraineeProfiles]
+            SET [InvitedAtUtc] = TRY_CONVERT(DATETIME2(7), :previousAt, 126),
+                [InvitedByUserId] = :previousBy,
+                [UpdatedAtUtc] = SYSUTCDATETIME()
+            WHERE [UserId] = :userId
+            SQL,
+            [
+                ':previousAt' => $previous['previousInvitedAtUtc'],
+                ':previousBy' => $previous['previousInvitedByUserId'],
+                ':userId' => $person->userId,
+            ],
+        );
     }
 
     // ------------------------------------------------------------------ writes

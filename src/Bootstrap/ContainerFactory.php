@@ -790,6 +790,8 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingAdminAuditLog::class),
             \TriCab\Core\Onboarding\Contract\OnboardingReviewRepository::class
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReviewRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingAccountDirectory::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingAccountDirectory::class),
             \TriCab\Core\Expense\Contract\ExpensePdfRenderer::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ExpenseDompdfRenderer::class),
             \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
             // Profile-only by design: ExpenseProfile.IsFinance is authoritative at
@@ -2170,6 +2172,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingAdminAuditLog::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingReviewRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingReviewRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingAccountDirectory::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingAccountDirectory::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class);
@@ -2505,6 +2509,21 @@ SQL,
         $definitions[GuestPasskeyEmailSender::class] = static function (Container $container) use ($settings): GuestPasskeyEmailSender {
             return self::createGuestPasskeyEmailSender($settings, $container);
         };
+        // Onboarding invitations (4.1) go through the same provider as sign-in
+        // codes, so one setting decides where every guest-facing email goes.
+        $definitions[\TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender {
+            return self::createOnboardingInvitationEmailSender($settings, $container);
+        };
+        $definitions[\TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService {
+            return new \TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService(
+                people: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingPeopleRepository::class),
+                accounts: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingAccountDirectory::class),
+                sender: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender::class),
+                audit: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingAdminAuditLog::class),
+                clock: self::get($container, Clock::class),
+                publicAppBaseUrl: $settings->passkeyPublicAppBaseUrl,
+            );
+        };
         $definitions[RequestGuestPasskeySetupLinkService::class] = static function (Container $container) use ($settings): RequestGuestPasskeySetupLinkService {
             return new RequestGuestPasskeySetupLinkService(
                 eligibility: self::get($container, GuestLoginEligibilityService::class),
@@ -2625,6 +2644,33 @@ SQL,
             openAiEndpoint: $settings->triexpenseOpenAiEndpoint,
             openAiKey: $settings->triexpenseOpenAiKey,
             openAiDeployment: $settings->triexpenseOpenAiDeployment,
+        );
+    }
+
+    private static function createOnboardingInvitationEmailSender(Settings $settings, Container $container): \TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender
+    {
+        if ($settings->usesDevelopmentGuestEmail()) {
+            return new \TriCab\Api\Onboarding\Email\DevelopmentOnboardingInvitationEmailSender();
+        }
+
+        $http = self::get($container, JsonHttpClient::class);
+
+        if ($settings->usesMicrosoftGraphGuestEmail()) {
+            return new \TriCab\Api\Onboarding\Email\MicrosoftGraphOnboardingInvitationEmailSender(
+                http: $http,
+                tenantId: $settings->graphTenantId,
+                clientId: $settings->graphClientId,
+                clientSecret: $settings->graphClientSecret,
+                mailbox: $settings->rfqMailbox,
+            );
+        }
+
+        return new \TriCab\Api\Onboarding\Email\PostmarkOnboardingInvitationEmailSender(
+            http: $http,
+            serverToken: $settings->postmarkServerToken,
+            fromEmail: $settings->postmarkFromEmail,
+            fromName: $settings->postmarkFromName,
+            messageStream: $settings->postmarkMessageStream,
         );
     }
 

@@ -127,4 +127,12 @@ final class Module
      * Reaching `/onboarding` grants nothing by itself — allocation is explicit.
      */
     public const TRAINEE_ROLES = ['EMPLOYEE', 'GUEST'];
+
+    /**
+     * The role an account created by Onboarding holds (4.1, owner decision
+     * 23 Sep 2026): sign-in and one's own onboarding, and nothing else. Not
+     * `EMPLOYEE`, which also reads customers, orders and quotes — a candidate
+     * who has not started does not need them, and may never start.
+     */
+    public const ROLE_GUEST = 'GUEST';
 }

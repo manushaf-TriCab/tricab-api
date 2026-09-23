@@ -92,7 +92,13 @@ final class AzureSqlOnboardingFormRepository implements OnboardingFormRepository
                       AND e.[ActorType] = N'reviewer'
                       AND e.[ToStatus] = N'fix_and_resubmit'
                     ORDER BY e.[CreatedAtUtc] DESC, e.[OnboardingStatusEventId] DESC
-                ) END AS [ReviewerNote]
+                ) END AS [ReviewerNote],
+                CASE WHEN a.[Status] = N'fix_and_resubmit' AND (
+                    SELECT TOP (1) fs.[HasRestrictedData]
+                    FROM [onboarding].[FormSubmissions] fs
+                    WHERE fs.[AssignmentId] = a.[AssignmentId]
+                    ORDER BY fs.[RevisionNumber] DESC
+                ) = 1 THEN 1 ELSE 0 END AS [RestrictedFieldsCleared]
             FROM [onboarding].[Assignments] a
             JOIN [onboarding].[FormDefinitionVersions] fdv
                 ON fdv.[FormDefinitionVersionId] = a.[FormDefinitionVersionId]
@@ -127,6 +133,7 @@ final class AzureSqlOnboardingFormRepository implements OnboardingFormRepository
             submittedRevisionCount: AzureSqlValueMapper::intValue($row['SubmittedRevisionCount'] ?? 0),
             lastSubmittedAtUtc: AzureSqlValueMapper::nullableString($row['LastSubmittedAtUtc'] ?? null),
             reviewerNote: AzureSqlValueMapper::nullableString($row['ReviewerNote'] ?? null),
+            restrictedFieldsCleared: AzureSqlValueMapper::boolValue($row['RestrictedFieldsCleared'] ?? false),
         );
     }
 

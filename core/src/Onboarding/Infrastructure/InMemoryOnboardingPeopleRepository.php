@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Onboarding\Infrastructure;
 
+use DateTimeImmutable;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
 use TriCab\Core\Onboarding\Application\DTO\Admin\AllocatableItem;
 use TriCab\Core\Onboarding\Application\DTO\Admin\AllocationPlan;
@@ -12,6 +13,8 @@ use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingAdminEvent;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonDetail;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonRecord;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonSummary;
+use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingProfileFields;
+use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
 use TriCab\Core\Onboarding\Contract\OnboardingPeopleRepository;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
@@ -39,6 +42,12 @@ final class InMemoryOnboardingPeopleRepository implements OnboardingPeopleReposi
     public array $writtenEvents = [];
 
     private int $nextAssignmentId = 1000;
+
+    /** @var array<int, array{displayName: string, email: string}> */
+    private array $accounts = [];
+
+    /** @var array<string, ?string> */
+    public array $invitedAt = [];
 
     public function withPerson(OnboardingPersonRecord $record, OnboardingPersonSummary $summary): void
     {
@@ -176,6 +185,90 @@ final class InMemoryOnboardingPeopleRepository implements OnboardingPeopleReposi
             $stored->publicId,
             RowVersionToken::fromBinary(random_bytes(8)),
             $stored->departedAtUtc,
+        );
+    }
+
+    // ------------------------------------------------------------ 4.1 writes
+
+    /** The identity side a created profile would join to. */
+    public function withAccount(int $userId, string $displayName, string $email): void
+    {
+        $this->accounts[$userId] = ['displayName' => $displayName, 'email' => $email];
+    }
+
+    public function findPersonPublicIdByUserId(int $userId): ?string
+    {
+        foreach ($this->records as $record) {
+            if ($record->userId === $userId) {
+                return $record->publicId;
+            }
+        }
+
+        return null;
+    }
+
+    public function createProfile(int $userId, string $publicId, OnboardingProfileFields $fields, OnboardingAdminEvent $event, ActorContext $actor): void
+    {
+        if ($this->findPersonPublicIdByUserId($userId) !== null) {
+            throw OnboardingPersonAlreadyExists::forPerson($this->findPersonPublicIdByUserId($userId));
+        }
+        $account = $this->accounts[$userId] ?? ['displayName' => '', 'email' => ''];
+        $this->withPerson(
+            new OnboardingPersonRecord($userId, $publicId, RowVersionToken::fromBinary(random_bytes(8)), null, $account['email'], $account['displayName']),
+            new OnboardingPersonSummary($publicId, $account['displayName'], $account['email'], $fields->position, $fields->department, $fields->branch, $fields->startDate, null, null, []),
+        );
+        $this->writtenEvents[] = $event;
+    }
+
+    public function updateProfile(
+        OnboardingPersonRecord $person,
+        RowVersionToken $expectedRowVersion,
+        OnboardingProfileFields $fields,
+        ?DateTimeImmutable $departedAtUtc,
+        bool $departureChanged,
+        array $events,
+        ActorContext $actor,
+    ): void {
+        $stored = $this->records[$person->publicId] ?? null;
+        if ($stored === null || !$stored->rowVersion->equals($expectedRowVersion)) {
+            throw OnboardingWriteConflict::staleToken();
+        }
+        $summary = $this->summaries[$person->publicId];
+        $departed = $departureChanged ? $departedAtUtc : $stored->departedAtUtc;
+
+        $this->records[$person->publicId] = new OnboardingPersonRecord($stored->userId, $stored->publicId, RowVersionToken::fromBinary(random_bytes(8)), $departed, $stored->emailAddress, $stored->displayName);
+        $this->summaries[$person->publicId] = new OnboardingPersonSummary(
+            $summary->publicId, $summary->displayName, $summary->emailAddress,
+            $fields->position, $fields->department, $fields->branch, $fields->startDate,
+            $departed?->format('Y-m-d\TH:i:s'), $summary->invitedAtUtc, $summary->statusCounts,
+        );
+        $this->writtenEvents = [...$this->writtenEvents, ...$events];
+    }
+
+    public function claimInvitation(OnboardingPersonRecord $person, int $cooldownSeconds, ActorContext $actor): ?array
+    {
+        $previous = $this->invitedAt[$person->publicId] ?? null;
+        if ($previous !== null && (time() - (int) strtotime($previous)) < $cooldownSeconds) {
+            return null;
+        }
+        $this->invitedAt[$person->publicId] = gmdate('Y-m-d\TH:i:s');
+        $this->refreshInvited($person->publicId);
+
+        return ['previousInvitedAtUtc' => $previous, 'previousInvitedByUserId' => null];
+    }
+
+    public function releaseInvitation(OnboardingPersonRecord $person, array $previous): void
+    {
+        $this->invitedAt[$person->publicId] = $previous['previousInvitedAtUtc'];
+        $this->refreshInvited($person->publicId);
+    }
+
+    private function refreshInvited(string $publicId): void
+    {
+        $s = $this->summaries[$publicId];
+        $this->summaries[$publicId] = new OnboardingPersonSummary(
+            $s->publicId, $s->displayName, $s->emailAddress, $s->position, $s->department, $s->branch,
+            $s->startDate, $s->departedAtUtc, $this->invitedAt[$publicId] ?? null, $s->statusCounts,
         );
     }
 }

@@ -18,6 +18,9 @@ final readonly class OnboardingPersonRecord
         public string $publicId,
         public RowVersionToken $rowVersion,
         public ?DateTimeImmutable $departedAtUtc,
+        /** Where an invitation goes. The account's primary address. */
+        public string $emailAddress = '',
+        public string $displayName = '',
     ) {
     }
 }

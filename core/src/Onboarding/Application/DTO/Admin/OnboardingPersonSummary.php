@@ -34,6 +34,18 @@ final readonly class OnboardingPersonSummary
     ) {
     }
 
+    /** The Melbourne date HR entered, recovered from the departure instant. */
+    public function lastDay(): ?string
+    {
+        if ($this->departedAtUtc === null || $this->departedAtUtc === '') {
+            return null;
+        }
+        // DATETIME2 arrives as "2026-10-31T13:00:00.0000000"; seconds are plenty.
+        $instant = \DateTimeImmutable::createFromFormat('!Y-m-d\TH:i:s', substr($this->departedAtUtc, 0, 19), new \DateTimeZone('UTC'));
+
+        return $instant === false ? null : \TriCab\Core\Onboarding\Domain\Service\LeaverPolicy::lastDayFor($instant);
+    }
+
     public function assignedCount(): int
     {
         return array_sum($this->statusCounts);
@@ -65,6 +77,7 @@ final readonly class OnboardingPersonSummary
             'branch' => $this->branch,
             'startDate' => $this->startDate,
             'departedAtUtc' => $this->departedAtUtc,
+            'lastDay' => $this->lastDay(),
             'invitedAtUtc' => $this->invitedAtUtc,
             'assignedCount' => $this->assignedCount(),
             'completedCount' => $this->statusCounts[AssignmentStatus::COMPLETED] ?? 0,

@@ -15,8 +15,10 @@ use TriCab\Core\Onboarding\Application\DTO\Admin\ReviewItemRecord;
 use TriCab\Core\Onboarding\Application\DTO\Admin\ReviewQueueEntry;
 use TriCab\Core\Onboarding\Contract\OnboardingReviewRepository;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
+use TriCab\Core\Onboarding\Domain\Service\FormPayloadSplitter;
 use TriCab\Core\Onboarding\Domain\Service\ReviewFieldProjection;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
+use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
 use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
 use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 
@@ -200,8 +202,63 @@ final class AzureSqlOnboardingReviewRepository implements OnboardingReviewReposi
             }
 
             $this->applyTransition($this->connection, $item->assignmentId, $item->assignmentPublicId, $item->subjectUserId, $transition);
+            if ($item->itemType === 'form' && $transition->to->toString() === AssignmentStatus::FIX_AND_RESUBMIT) {
+                $this->reopenWithOrdinaryAnswers($item->assignmentId);
+            }
             AzureSqlOnboardingAdminAuditLog::appendWithin($this->connection, $actor, $event);
         });
+    }
+
+    /**
+     * A form sent back reopens with the person's last ordinary answers
+     * (owner decision, 23 Sep 2026), so they change what the reviewer asked
+     * about rather than typing the form again.
+     *
+     * Only the ordinary half: `SubmittedDataJson` never held the payroll or
+     * restricted fields, and nothing here reads `[onboarding_hr]` to put them
+     * back. The person enters those again, and the form says so
+     * (`OnboardingFormDetail::$restrictedFieldsCleared`).
+     *
+     * A draft that already exists is left alone — it is newer than the
+     * submission and it is theirs.
+     */
+    private function reopenWithOrdinaryAnswers(int $assignmentId): void
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+            SELECT TOP (1) fs.[SubmittedDataJson], fs.[FormDefinitionVersionId]
+            FROM [onboarding].[FormSubmissions] fs
+            WHERE fs.[AssignmentId] = :assignmentId
+              AND NOT EXISTS (SELECT 1 FROM [onboarding].[FormDrafts] d WHERE d.[AssignmentId] = fs.[AssignmentId])
+            ORDER BY fs.[RevisionNumber] DESC
+            SQL,
+            [':assignmentId' => $assignmentId],
+        );
+        if ($rows === []) {
+            return;
+        }
+
+        // As in ReviewFieldProjection: a field classified payroll or restricted
+        // is dropped by its classification, whatever the ordinary half holds.
+        $ordinary = self::decodeObject($rows[0]['SubmittedDataJson'] ?? null);
+        $classes = $this->classifications(AzureSqlValueMapper::intValue($rows[0]['FormDefinitionVersionId'] ?? 0));
+        foreach (array_keys($ordinary) as $path) {
+            $class = $classes[(string) $path] ?? null;
+            if ($class !== null && in_array($class, DataClass::ALL, true) && DataClass::fromInt($class)->isRestricted()) {
+                unset($ordinary[$path]);
+            }
+        }
+
+        $this->connection->execute(
+            'INSERT INTO [onboarding].[FormDrafts] ([AssignmentId], [DraftDataJson]) VALUES (:assignmentId, :draft)',
+            [
+                ':assignmentId' => $assignmentId,
+                ':draft' => json_encode(
+                    (object) FormPayloadSplitter::nest($ordinary),
+                    JSON_THROW_ON_ERROR,
+                ),
+            ],
+        );
     }
 
     // ------------------------------------------------------------------- reads

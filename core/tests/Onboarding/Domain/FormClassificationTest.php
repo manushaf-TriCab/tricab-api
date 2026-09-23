@@ -313,4 +313,12 @@ final class FormClassificationTest extends TestCase
         self::assertCount(19, $split['restricted']);
         self::assertTrue(FormPayloadSplitter::hasRestrictedData($split));
     }
+
+    public function test_nest_is_the_inverse_of_flatten(): void
+    {
+        $nested = ['preferredName' => 'Sam', 'emergency' => ['name' => 'Alex', 'phone' => '0400 000 000'], 'confirm' => true];
+
+        self::assertSame($nested, FormPayloadSplitter::nest(FormPayloadSplitter::flatten($nested)));
+        self::assertSame(['a' => ['b' => ['c' => 1]]], FormPayloadSplitter::nest(['a.b.c' => 1]));
+    }
 }

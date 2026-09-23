@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Onboarding\Contract;
 
+use DateTimeImmutable;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
 use TriCab\Core\Onboarding\Application\DTO\Admin\AllocatableItem;
 use TriCab\Core\Onboarding\Application\DTO\Admin\AllocationPlan;
@@ -12,6 +13,7 @@ use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingAdminEvent;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonDetail;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonRecord;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonSummary;
+use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingProfileFields;
 use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 
 /**
@@ -73,4 +75,53 @@ interface OnboardingPeopleRepository
         array $events,
         ActorContext $actor,
     ): void;
+
+    // ------------------------------------------------------------ 4.1 writes
+
+    /** The induction record's public id for this account, if it has one. */
+    public function findPersonPublicIdByUserId(int $userId): ?string;
+
+    /**
+     * Creates the induction record and appends its audit event in one unit.
+     *
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists when the account already has one
+     */
+    public function createProfile(
+        int $userId,
+        string $publicId,
+        OnboardingProfileFields $fields,
+        OnboardingAdminEvent $event,
+        ActorContext $actor,
+    ): void;
+
+    /**
+     * @param list<OnboardingAdminEvent> $events
+     *
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict on a stale token
+     */
+    public function updateProfile(
+        OnboardingPersonRecord $person,
+        RowVersionToken $expectedRowVersion,
+        OnboardingProfileFields $fields,
+        ?DateTimeImmutable $departedAtUtc,
+        bool $departureChanged,
+        array $events,
+        ActorContext $actor,
+    ): void;
+
+    /**
+     * Stamps the invitation, unless one was sent within the cooldown — in one
+     * statement, so two clicks cannot both win.
+     *
+     * @return ?array{previousInvitedAtUtc: ?string, previousInvitedByUserId: ?int} what to put back if the send fails; null when too soon
+     */
+    public function claimInvitation(OnboardingPersonRecord $person, int $cooldownSeconds, ActorContext $actor): ?array;
+
+    /**
+     * Puts the invitation stamp back after a send the provider refused, so the
+     * record never says somebody was invited when they were not.
+     *
+     * @param array{previousInvitedAtUtc: ?string, previousInvitedByUserId: ?int} $previous
+     */
+    public function releaseInvitation(OnboardingPersonRecord $person, array $previous): void;
 }

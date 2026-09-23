@@ -118,4 +118,41 @@ final class FormPayloadSplitter
 
         return $flat;
     }
+
+    /**
+     * The reverse of {@see flatten()}: dotted leaf paths back into the nested
+     * shape a form's draft is saved in.
+     *
+     * Used to reopen a sent-back form with the person's ordinary answers
+     * (4.3). Only ever given the ordinary half of a submission — the payroll
+     * and restricted halves are never read back into a draft, which is why a
+     * sent-back form asks for those again.
+     *
+     * @param array<string, mixed> $flat
+     *
+     * @return array<string, mixed>
+     */
+    public static function nest(array $flat): array
+    {
+        $nested = [];
+
+        foreach ($flat as $path => $value) {
+            $keys = explode('.', (string) $path);
+            $cursor = &$nested;
+            foreach ($keys as $index => $key) {
+                if ($index === count($keys) - 1) {
+                    $cursor[$key] = $value;
+                    break;
+                }
+                if (!isset($cursor[$key]) || !is_array($cursor[$key])) {
+                    $cursor[$key] = [];
+                }
+                $cursor = &$cursor[$key];
+            }
+            unset($cursor);
+        }
+
+        /** @var array<string, mixed> */
+        return $nested;
+    }
 }

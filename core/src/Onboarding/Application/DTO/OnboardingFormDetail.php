@@ -60,6 +60,8 @@ final readonly class OnboardingFormDetail
         public int $submittedRevisionCount,
         public ?string $lastSubmittedAtUtc,
         public ?string $reviewerNote = null,
+        /** Sent back, and the submission held payroll or restricted fields, which do not come back into the draft. */
+        public bool $restrictedFieldsCleared = false,
     ) {
     }
 
@@ -93,6 +95,7 @@ final readonly class OnboardingFormDetail
             'submittedRevisionCount' => $this->submittedRevisionCount,
             'lastSubmittedAtUtc' => $this->lastSubmittedAtUtc,
             'reviewerNote' => $this->reviewerNote,
+            'restrictedFieldsCleared' => $this->restrictedFieldsCleared,
         ];
     }
 }
