@@ -77,7 +77,14 @@ final class AzureSqlOnboardingSelfWriteTest extends TestCase
                 self::markTestSkipped('The onboarding schema is not applied to this database.');
             }
 
-            $users = $pdo->query('SELECT TOP 2 UserId FROM [identity].[Users] ORDER BY UserId');
+            // Two people with no induction record, so the test owns their records
+            // outright — demo data on the shared database gives some people one.
+            $users = $pdo->query(
+                'SELECT TOP 2 u.[UserId] FROM [identity].[Users] u
+                 WHERE NOT EXISTS (SELECT 1 FROM [onboarding].[TraineeProfiles] t WHERE t.[UserId] = u.[UserId])
+                   AND NOT EXISTS (SELECT 1 FROM [onboarding].[Assignments] a WHERE a.[UserId] = u.[UserId])
+                 ORDER BY u.[UserId]',
+            );
             $ids = $users === false ? [] : $users->fetchAll(PDO::FETCH_COLUMN);
         } catch (PDOException $e) {
             self::markTestSkipped('Azure SQL query failed: ' . $e->getMessage());
