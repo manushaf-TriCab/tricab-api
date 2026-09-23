@@ -209,4 +209,35 @@ final class ExpenseFinanceViews
 
         return $out;
     }
+
+    /**
+     * Build currency buckets from bank entry views — never cross-sum currencies.
+     *
+     * @param list<array<string, mixed>> $bankViews
+     * @return list<array{currency: string, totalAmount: string, entryCount: int}>
+     */
+    public static function bankCurrencyBuckets(array $bankViews): array
+    {
+        $buckets = [];
+        foreach ($bankViews as $view) {
+            $currencyRaw = $view['currency'] ?? 'AUD';
+            $currency = strtoupper(MixedValueCoercion::stringValue($currencyRaw)) ?: 'AUD';
+            if (!isset($buckets[$currency])) {
+                $buckets[$currency] = ['total' => 0.0, 'count' => 0];
+            }
+            $buckets[$currency]['total'] += MixedValueCoercion::floatValue($view['amount'] ?? 0);
+            $buckets[$currency]['count']++;
+        }
+        ksort($buckets);
+        $out = [];
+        foreach ($buckets as $currency => $data) {
+            $out[] = [
+                'currency' => $currency,
+                'totalAmount' => number_format($data['total'], 2, '.', ''),
+                'entryCount' => $data['count'],
+            ];
+        }
+
+        return $out;
+    }
 }

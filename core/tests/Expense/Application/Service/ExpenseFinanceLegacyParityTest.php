@@ -260,6 +260,8 @@ final class ExpenseFinanceLegacyParityTest extends TestCase
             null,
             null,
             null,
+            null,
+            null,
             1,
             2,
         );

@@ -164,10 +164,14 @@ final class MysqlLegacyQuoteOrderRepository implements QuoteOrderRepository
         $sql = 'SELECT i.id AS item_id, i.itm AS item_no, i.cata AS product_code, i.catdt AS category_type, '
             . 'i.qotqty AS quantity, i.qty AS pack_count, i.nprc AS unit_price, i.net AS line_total, '
             . 'i.ref AS item_reference, col.desc_name AS colour_name, acc.nom_conductor AS nom_conductor, '
-            . 'acc.weight AS weight_kg '
+            . 'acc.weight AS weight_kg, '
+            . 'sty.desc_name AS style_description, tpro.desc2 AS product_description_2 '
             . 'FROM tc.tqoti i '
             . 'LEFT JOIN tc.descript col ON i.col = col.desc_id '
             . 'LEFT JOIN tc.accessory_specs acc ON acc.product_code = i.cata '
+            . 'LEFT JOIN tc.descript sty ON sty.desc_type = 24 '
+            . 'AND sty.desc_code = SUBSTRING(i.cata, 1, NULLIF(LOCATE(\'-\', i.cata), 0) - 1) '
+            . 'LEFT JOIN tc.tpro_ext tpro ON tpro.product_code = i.cata '
             . 'WHERE i.qot = :qot AND i.cata NOT LIKE :zzdel ORDER BY i.itm ASC, i.id ASC';
         $params = [':qot' => $quoteId, ':zzdel' => '%ZZDEL%'];
         $this->guard->assertReadOnly($sql);

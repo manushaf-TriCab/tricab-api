@@ -90,6 +90,8 @@ final class GetExpenseFinanceWorkspaceService
         ?string $search = null,
         ?string $currency = null,
         ?string $customer = null,
+        ?string $branch = null,
+        ?string $view = null,
         int $page = 1,
         int $pageSize = 50,
     ): array {
@@ -97,6 +99,11 @@ final class GetExpenseFinanceWorkspaceService
 
         $page = max(1, $page);
         $pageSize = max(1, min(100, $pageSize));
+        $branchFilter = $branch !== null && trim($branch) !== '' ? trim($branch) : null;
+        $viewFilter = $view !== null ? strtolower(trim($view)) : 'all';
+        if (!in_array($viewFilter, ['all', 'needs-action', 'done'], true)) {
+            $viewFilter = 'all';
+        }
 
         $period = null;
         $legacyPeriodView = null;
@@ -305,6 +312,7 @@ final class GetExpenseFinanceWorkspaceService
         $employees = [];
         $summary = [
             'employeesRequiringAttention' => 0,
+            'employeesDone' => 0,
             'unmatchedReceipts' => 0,
             'unmatchedBank' => 0,
             'pendingManagerApprovals' => 0,
@@ -314,11 +322,14 @@ final class GetExpenseFinanceWorkspaceService
             'legacyBankTotal' => $legacyBankTotal,
             'v2BankTotal' => count($bankEntries),
         ];
+        /** @var array<string, int> $branchCounts */
+        $branchCounts = [];
 
         foreach ($groups as $group) {
             $stats = $this->computeEmployeeStats($group['receipts'], $group['bankEntries']);
             $group['stats'] = $stats;
             $group['currencyTotals'] = ExpenseFinanceViews::currencyBuckets($group['receipts']);
+            $group['bankCurrencyTotals'] = ExpenseFinanceViews::bankCurrencyBuckets($group['bankEntries']);
             $group['receiptCount'] = count($group['receipts']);
             $group['bankCount'] = count($group['bankEntries']);
             // Strip heavy arrays for list payload — detail endpoint loads them.
@@ -329,13 +340,32 @@ final class GetExpenseFinanceWorkspaceService
                 || $stats['exceptions'] > 0;
             if ($needsAttention) {
                 $summary['employeesRequiringAttention']++;
+            } else {
+                $summary['employeesDone']++;
             }
             $summary['unmatchedReceipts'] += $stats['needsMatch'];
             $summary['unmatchedBank'] += $stats['needsReceipt'];
             $summary['pendingManagerApprovals'] += $stats['pendingApproval'];
             $summary['receiptTotal'] += $group['receiptCount'];
+            $branchLabel = MixedValueCoercion::nullableString($group['branch'] ?? null) ?? 'Unknown';
+            $branchCounts[$branchLabel] = ($branchCounts[$branchLabel] ?? 0) + 1;
             $employees[] = $group;
         }
+
+        $branchFacets = [];
+        foreach ($branchCounts as $label => $count) {
+            $branchFacets[] = ['branch' => $label, 'count' => $count];
+        }
+        usort($branchFacets, static function (array $a, array $b): int {
+            if ($a['branch'] === 'Unknown') {
+                return 1;
+            }
+            if ($b['branch'] === 'Unknown') {
+                return -1;
+            }
+
+            return $b['count'] <=> $a['count'];
+        });
 
         usort($employees, static function (array $a, array $b): int {
             $ap = $a['stats']['pendingApproval'];
@@ -351,6 +381,43 @@ final class GetExpenseFinanceWorkspaceService
 
             return $b['receiptCount'] <=> $a['receiptCount'];
         });
+
+        if ($branchFilter !== null) {
+            $employees = array_values(array_filter(
+                $employees,
+                static function (array $row) use ($branchFilter): bool {
+                    $label = MixedValueCoercion::nullableString($row['branch'] ?? null) ?? 'Unknown';
+
+                    return strcasecmp($label, $branchFilter) === 0;
+                },
+            ));
+        }
+
+        if ($viewFilter === 'needs-action') {
+            $employees = array_values(array_filter(
+                $employees,
+                static function (array $row): bool {
+                    $stats = $row['stats'];
+
+                    return $stats['needsReceipt'] > 0
+                        || $stats['needsMatch'] > 0
+                        || $stats['pendingApproval'] > 0
+                        || $stats['exceptions'] > 0;
+                },
+            ));
+        } elseif ($viewFilter === 'done') {
+            $employees = array_values(array_filter(
+                $employees,
+                static function (array $row): bool {
+                    $stats = $row['stats'];
+
+                    return $stats['needsReceipt'] === 0
+                        && $stats['needsMatch'] === 0
+                        && $stats['pendingApproval'] === 0
+                        && $stats['exceptions'] === 0;
+                },
+            ));
+        }
 
         $totalEmployees = count($employees);
         $offset = ($page - 1) * $pageSize;
@@ -389,9 +456,12 @@ final class GetExpenseFinanceWorkspaceService
                 'search' => $search,
                 'currency' => $currency,
                 'customer' => $customer,
+                'branch' => $branchFilter,
+                'view' => $viewFilter,
             ],
             'summary' => $summary,
             'currencyTotals' => $currencyTotals,
+            'branchFacets' => $branchFacets,
             'pagination' => [
                 'page' => $page,
                 'pageSize' => $pageSize,
@@ -634,6 +704,8 @@ final class GetExpenseFinanceWorkspaceService
      *   needsReceipt: int,
      *   needsMatch: int,
      *   pendingApproval: int,
+     *   approved: int,
+     *   rejected: int,
      *   exceptions: int,
      *   markedCash: int,
      *   chased: int
@@ -644,16 +716,25 @@ final class GetExpenseFinanceWorkspaceService
         $matched = 0;
         $needsMatch = 0;
         $pendingApproval = 0;
+        $approved = 0;
+        $rejected = 0;
         $exceptions = 0;
         $markedCash = 0;
         $chased = 0;
 
         foreach ($receipts as $receipt) {
             $status = MixedValueCoercion::stringValue($receipt['status'] ?? '');
+            $managerStatus = MixedValueCoercion::stringValue($receipt['managerStatus'] ?? '');
             $resolution = strtolower(MixedValueCoercion::stringValue($receipt['resolution'] ?? ''));
             $bankId = $receipt['bankFeedEntryId'] ?? null;
 
-            if ($status === 'pending' || MixedValueCoercion::stringValue($receipt['managerStatus'] ?? '') === 'pending') {
+            if ($status === 'approved' || $managerStatus === 'approved') {
+                $approved++;
+            }
+            if ($status === 'rejected' || $managerStatus === 'rejected') {
+                $rejected++;
+            }
+            if ($status === 'pending' || $managerStatus === 'pending') {
                 $pendingApproval++;
             }
             if ($resolution === Module::RESOLUTION_MARKED_CASH) {
@@ -689,6 +770,8 @@ final class GetExpenseFinanceWorkspaceService
             'needsReceipt' => $needsReceipt,
             'needsMatch' => $needsMatch,
             'pendingApproval' => $pendingApproval,
+            'approved' => $approved,
+            'rejected' => $rejected,
             'exceptions' => $exceptions,
             'markedCash' => $markedCash,
             'chased' => $chased,

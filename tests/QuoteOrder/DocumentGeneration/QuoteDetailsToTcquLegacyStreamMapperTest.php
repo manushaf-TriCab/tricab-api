@@ -48,7 +48,7 @@ final class QuoteDetailsToTcquLegacyStreamMapperTest extends TestCase
                     lineTotal: '500.00',
                     categoryGroup: 'Cables',
                     colourName: 'Black',
-                    description: 'Black',
+                    description: 'Black Flexible Rubber EMC X-90 0.6/1KV 90C AS/NZS 5000.1 - (RE,WH,BL,EA)',
                     packLabel: '40m',
                 ),
             ],
@@ -71,10 +71,18 @@ final class QuoteDetailsToTcquLegacyStreamMapperTest extends TestCase
                     'aluminiumAud' => '13',
                     'asAt' => null,
                 ],
+                conductorComparison: [
+                    ['sizeMm2' => '50', 'tricab' => '658', 'class5' => '378', 'class6' => '662'],
+                    ['sizeMm2' => '70', 'tricab' => '969', 'class5' => '342', 'class6' => '927'],
+                    ['sizeMm2' => '630', 'tricab' => '8784', 'class5' => '2155', 'class6' => null],
+                ],
             ),
         ));
 
         self::assertSame('tcqu.ocr', $stream->templateName());
+        self::assertCount(3, $stream->conductorComparison);
+        self::assertSame('50', $stream->conductorComparison[0]['sizeMm2']);
+        self::assertNull($stream->conductorComparison[2]['class6']);
         $header = $stream->first('S006');
         self::assertNotNull($header);
         self::assertSame('100146098', $header->field(1));
@@ -99,7 +107,12 @@ final class QuoteDetailsToTcquLegacyStreamMapperTest extends TestCase
         self::assertSame('40', $item->field(4));
         self::assertSame('m', $item->field(5));
         self::assertSame('12.50', $item->field(6));
-        self::assertSame('Black', $item->field(8));
+        self::assertSame('Black', $item->field(3));
+        self::assertSame(
+            'Black Flexible Rubber EMC X-90 0.6/1KV 90C AS/NZS 5000.1 - (RE,WH,BL,EA)',
+            $item->field(8),
+        );
+        self::assertSame('40m', $item->field(18));
         self::assertSame('500.00', $item->field(12));
     }
 }

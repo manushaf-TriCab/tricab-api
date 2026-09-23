@@ -170,12 +170,9 @@ final class LegacyQuoteOrderMapper
             default => null,
         };
         $colourName = $this->nullableString($row['colour_name'] ?? null);
-        $sizeHint = $this->nullableString($row['nom_conductor'] ?? null);
-        $descriptionParts = array_values(array_filter([
-            $colourName !== null ? ucfirst(strtolower($colourName)) : null,
-            $sizeHint !== null && $sizeHint !== '' ? $sizeHint . ' mm²' : null,
-        ], static fn (?string $v): bool => $v !== null && $v !== ''));
-        $description = $descriptionParts === [] ? null : implode(' ', $descriptionParts);
+        $styleDescription = $this->nullableString($row['style_description'] ?? null);
+        $productDescription2 = $this->nullableString($row['product_description_2'] ?? null);
+        $description = $this->buildLegacyQuoteLineDescription($colourName, $styleDescription, $productDescription2);
 
         $unitPrice = $this->nullableString($row['unit_price'] ?? $row['nprc'] ?? null);
         $packCount = $this->nullableString($row['pack_count'] ?? $row['qty'] ?? null);
@@ -490,6 +487,33 @@ final class LegacyQuoteOrderMapper
         }
 
         return $notes;
+    }
+
+    /**
+     * Legacy quotation PDF description (quote-pdf-format.php):
+     * ucfirst(colour) + ' ' + Description1 + optional ' - ' + description2
+     * where Description1 = descript.desc_name (desc_type=24, style)
+     * and description2 = tpro_ext.desc2.
+     *
+     * colourName stays a separate semantic field on QuoteItemDetails.
+     */
+    private function buildLegacyQuoteLineDescription(
+        ?string $colourName,
+        ?string $styleDescription,
+        ?string $productDescription2,
+    ): ?string {
+        $colour = $colourName !== null && trim($colourName) !== ''
+            ? ucfirst(strtolower(trim($colourName)))
+            : '';
+        $style = $styleDescription !== null ? trim($styleDescription) : '';
+        $desc2 = $productDescription2 !== null ? trim($productDescription2) : '';
+
+        $primary = trim($colour . ' ' . $style);
+        if ($desc2 !== '') {
+            $primary = $primary === '' ? $desc2 : ($primary . ' - ' . $desc2);
+        }
+
+        return $primary === '' ? null : $primary;
     }
 
     private function string(mixed $value): string

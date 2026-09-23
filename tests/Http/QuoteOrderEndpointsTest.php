@@ -81,6 +81,11 @@ final class QuoteOrderEndpointsTest extends TestCase
         $body = (string) $pdf->getBody();
         self::assertStringStartsWith('%PDF', $body);
         self::assertGreaterThan(500, strlen($body));
+        $strandingAsset = file_get_contents(
+            dirname(__DIR__, 2) . '/resources/document-generation/assets/conductor-stranding.jpg',
+        );
+        self::assertNotFalse($strandingAsset);
+        self::assertStringNotContainsString($strandingAsset, $body);
     }
 
     public function test_quote_document_requires_permission(): void
@@ -225,6 +230,10 @@ final class QuoteOrderEndpointsTest extends TestCase
                     'aluminiumUsd' => '2500',
                     'aluminiumAud' => '4000',
                     'asAt' => null,
+                ],
+                conductorComparison: [
+                    ['sizeMm2' => '50', 'tricab' => '658', 'class5' => '378', 'class6' => '662'],
+                    ['sizeMm2' => '630', 'tricab' => '8784', 'class5' => '2155', 'class6' => null],
                 ],
             ),
         ));

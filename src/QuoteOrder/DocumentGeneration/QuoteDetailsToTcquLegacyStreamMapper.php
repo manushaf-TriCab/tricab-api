@@ -12,9 +12,11 @@ use TriCab\Core\QuoteOrder\Application\DTO\QuoteDocumentDetails;
 use TriCab\Core\QuoteOrder\Application\DTO\QuoteItemDetails;
 
 /**
- * Maps authoritative QuoteDetails into a tcqu.ocr LegacyStream so the existing
- * DompdfPdfRenderer can render resources/document-generation/templates/quote.php
- * without modifying that template.
+ * Maps authoritative QuoteDetails into a tcqu.ocr LegacyStream so DompdfPdfRenderer
+ * can render resources/document-generation/templates/quote.php.
+ *
+ * Conductor comparison rows from QuoteDocumentDetails are attached on the stream
+ * for the HTML table in quote.php (not re-queried in the template).
  *
  * Field layouts follow the audited tcqu.ocr dictionary + tcquo.ocr.txt fixture
  * and the field indexes actually read by quote.php.
@@ -111,7 +113,9 @@ final class QuoteDetailsToTcquLegacyStreamMapper
             ++$line;
         }
 
-        return new LegacyStream(self::SELECTOR, $records);
+        $conductorComparison = $document !== null ? $document->conductorComparison : [];
+
+        return new LegacyStream(self::SELECTOR, $records, [], $conductorComparison);
     }
 
     private function sellerTaxId(?QuoteDocumentDetails $document): string

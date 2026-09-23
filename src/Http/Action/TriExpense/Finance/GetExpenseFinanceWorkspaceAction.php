@@ -45,6 +45,8 @@ final class GetExpenseFinanceWorkspaceAction
                     JsonValue::stringOrNull($params, 'search'),
                     JsonValue::stringOrNull($params, 'currency'),
                     JsonValue::stringOrNull($params, 'customer'),
+                    JsonValue::stringOrNull($params, 'branch'),
+                    JsonValue::stringOrNull($params, 'view'),
                     $page,
                     $pageSize,
                 ),
