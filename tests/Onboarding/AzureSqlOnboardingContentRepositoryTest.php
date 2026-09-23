@@ -309,6 +309,41 @@ final class AzureSqlOnboardingContentRepositoryTest extends TestCase
         self::assertSame('Synthetic chapter', $moved->item->chapterTitle);
     }
 
+    public function test_deleting_an_unallocated_item_removes_its_versions_and_children_and_an_allocated_one_is_refused(): void
+    {
+        [$moduleId, $moduleVersion] = $this->publishedModule();
+        $module = $this->content->findItem('training', $moduleId);
+        self::assertNotNull($module);
+        $versionId = $this->number('SELECT [TrainingModuleVersionId] FROM [onboarding].[TrainingModuleVersions] WHERE [PublicId] = :v', [':v' => $moduleVersion]);
+        self::assertSame(2, $this->number('SELECT COUNT(*) FROM [onboarding].[Questions] WHERE [TrainingModuleVersionId] = :v', [':v' => $versionId]));
+
+        $this->service->deleteItem($this->actor(), 'training', $moduleId, $module->rowVersion);
+
+        self::assertNull($this->content->findItem('training', $moduleId));
+        self::assertSame(0, $this->number('SELECT COUNT(*) FROM [onboarding].[Questions] WHERE [TrainingModuleVersionId] = :v', [':v' => $versionId]));
+        self::assertSame(0, $this->number('SELECT COUNT(*) FROM [onboarding].[TrainingModuleVersions] WHERE [TrainingModuleVersionId] = :v', [':v' => $versionId]));
+        self::assertSame(1, $this->number(
+            "SELECT COUNT(*) FROM [audit].[OnboardingAdminEvents] WHERE [TargetPublicId] = CONVERT(UNIQUEIDENTIFIER, :t) AND [EventType] = N'content.item_deleted' AND [Outcome] = N'succeeded'",
+            [':t' => $moduleId],
+        ));
+
+        [$heldId, $heldVersion] = $this->publishedModule();
+        $this->assign($this->users[1], $heldVersion, 'not_started');
+        $held = $this->content->findItem('training', $heldId);
+        self::assertNotNull($held);
+        try {
+            $this->service->deleteItem($this->actor(), 'training', $heldId, $held->rowVersion);
+            self::fail('An allocated module was deleted.');
+        } catch (ContentAuthoringNotPermitted $refused) {
+            self::assertSame(ContentAuthoringNotPermitted::REASON_IN_USE, $refused->reason);
+        }
+        self::assertNotNull($this->content->findItem('training', $heldId));
+
+        // Past the service's own check, the repository refuses too.
+        $this->expectException(ContentAuthoringNotPermitted::class);
+        $this->content->deleteItem($held, $held->rowVersion, [], $this->actor());
+    }
+
     // ---------------------------------------------------------------- helpers
 
     /**

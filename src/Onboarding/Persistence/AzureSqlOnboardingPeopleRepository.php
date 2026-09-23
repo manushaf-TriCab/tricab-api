@@ -22,6 +22,7 @@ use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingAdminEvent;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
 use TriCab\Core\Onboarding\Contract\OnboardingPeopleRepository;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
+use TriCab\Core\Onboarding\Domain\Exception\PersonDeletionNotPermitted;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
 use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 
@@ -300,6 +301,79 @@ final class AzureSqlOnboardingPeopleRepository implements OnboardingPeopleReposi
         );
 
         return $rows === [] ? null : strtolower(AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? ''));
+    }
+
+    public function recordedWork(int $userId): array
+    {
+        // One name per occurrence: PDO_SQLSRV binds each separately.
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+            SELECT
+                (SELECT COUNT(*) FROM [onboarding].[PresentationProgress] e JOIN [onboarding].[Assignments] a ON a.[AssignmentId] = e.[AssignmentId] WHERE a.[UserId] = :u1) AS [progress],
+                (SELECT COUNT(*) FROM [onboarding].[Attempts] e JOIN [onboarding].[Assignments] a ON a.[AssignmentId] = e.[AssignmentId] WHERE a.[UserId] = :u2) AS [attempts],
+                (SELECT COUNT(*) FROM [onboarding].[PolicyAcknowledgements] e WHERE e.[UserId] = :u3) AS [acknowledgements],
+                (SELECT COUNT(*) FROM [onboarding].[FormDrafts] e JOIN [onboarding].[Assignments] a ON a.[AssignmentId] = e.[AssignmentId] WHERE a.[UserId] = :u4) AS [form_drafts],
+                (SELECT COUNT(*) FROM [onboarding].[FormSubmissions] e WHERE e.[UserId] = :u5) AS [form_submissions],
+                (SELECT COUNT(*) FROM [onboarding].[DocumentReferences] e WHERE e.[UserId] = :u6) AS [documents]
+            SQL,
+            [':u1' => $userId, ':u2' => $userId, ':u3' => $userId, ':u4' => $userId, ':u5' => $userId, ':u6' => $userId],
+        );
+
+        // Nothing here reads the restricted HR schema, not even to count
+        // (invariant 11; OnboardingPeopleRepositoryBoundaryTest). It does not
+        // need to: HR-held details come only from a form submission, which is
+        // counted, and they are keyed to the account, which is never deleted.
+        $work = [];
+        foreach (['progress', 'attempts', 'acknowledgements', 'form_drafts', 'form_submissions', 'documents'] as $kind) {
+            $count = AzureSqlValueMapper::intValue($rows[0][$kind] ?? 0);
+            if ($count > 0) {
+                $work[$kind] = $count;
+            }
+        }
+
+        return $work;
+    }
+
+    public function deletePerson(OnboardingPersonRecord $person, RowVersionToken $expectedRowVersion, OnboardingAdminEvent $event, ActorContext $actor): void
+    {
+        $this->runInTransaction($this->connection, function () use ($person, $expectedRowVersion, $event, $actor): void {
+            // Claims the record, then locks the person's allocations, so nobody
+            // can start work or be allocated between the check and the DELETE.
+            $claimed = $this->connection->fetchAll(
+                <<<'SQL'
+                SET NOCOUNT ON;
+                UPDATE [onboarding].[TraineeProfiles] SET [UpdatedAtUtc] = SYSUTCDATETIME()
+                WHERE [PublicId] = CONVERT(UNIQUEIDENTIFIER, :publicId) AND [RowVersion] = :expectedRowVersion;
+                SELECT @@ROWCOUNT AS [Affected];
+                SQL,
+                [':publicId' => $person->publicId, ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary($expectedRowVersion)],
+            );
+            if (AzureSqlValueMapper::intValue($claimed[0]['Affected'] ?? 0) === 0) {
+                throw OnboardingWriteConflict::staleToken();
+            }
+            $this->connection->fetchAll(
+                'SELECT [AssignmentId] FROM [onboarding].[Assignments] WITH (UPDLOCK, HOLDLOCK) WHERE [UserId] = :userId',
+                [':userId' => $person->userId],
+            );
+
+            $work = $this->recordedWork($person->userId);
+            if ($work !== []) {
+                throw PersonDeletionNotPermitted::hasRecordedWork($work);
+            }
+
+            // Derived figures and the (unused) notification log, then the
+            // untouched allocations, then the record itself. Audit rows about
+            // the allocations keep their public ids; they are history.
+            $this->connection->execute('DELETE FROM [onboarding].[CompletionProjection] WHERE [UserId] = :userId', [':userId' => $person->userId]);
+            $this->connection->execute('DELETE FROM [onboarding].[NotificationLog] WHERE [UserId] = :userId', [':userId' => $person->userId]);
+            $this->connection->execute('DELETE FROM [onboarding].[Assignments] WHERE [UserId] = :userId', [':userId' => $person->userId]);
+            $this->connection->execute(
+                'DELETE FROM [onboarding].[TraineeProfiles] WHERE [PublicId] = CONVERT(UNIQUEIDENTIFIER, :publicId)',
+                [':publicId' => $person->publicId],
+            );
+
+            AzureSqlOnboardingAdminAuditLog::appendWithin($this->connection, $actor, $event);
+        });
     }
 
     public function createProfile(

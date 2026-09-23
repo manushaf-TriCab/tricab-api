@@ -305,6 +305,47 @@ final class ContentAuthoringTest extends TestCase
         $this->service->createItem($this->actor(), 'policy', ['slug' => 'x', 'title' => 'X', 'sortOrder' => 0]);
     }
 
+    public function test_an_item_nobody_was_given_is_deleted_with_its_versions_and_audited(): void
+    {
+        $detail = $this->createModule();
+        self::assertSame(0, $detail->allocationCount);
+        self::assertTrue($detail->toArray()['canDelete']);
+
+        $this->service->deleteItem($this->actor(), 'training', $detail->item->publicId, $detail->item->rowVersion);
+
+        self::assertNull($this->content->findItem('training', $detail->item->publicId));
+        $event = end($this->content->writtenEvents);
+        self::assertNotFalse($event);
+        self::assertSame(AdminEventType::CONTENT_ITEM_DELETED, $event->eventType);
+        self::assertSame(1, $event->details['versionCount']);
+    }
+
+    /**
+     * Even a withdrawn allocation points at its version, and so may the work
+     * done under it.
+     */
+    public function test_an_item_anybody_was_ever_given_is_refused_and_audited(): void
+    {
+        [$itemPublicId, $v1] = $this->publishedModule();
+        $this->content->withAssignment($v1, 71, 'not_started', withdrawn: true);
+        $item = $this->content->findItem('training', $itemPublicId);
+        self::assertNotNull($item);
+
+        try {
+            $this->service->deleteItem($this->actor(), 'training', $itemPublicId, $item->rowVersion);
+            self::fail('An item somebody was given was deleted.');
+        } catch (ContentAuthoringNotPermitted $refused) {
+            self::assertSame(ContentAuthoringNotPermitted::REASON_IN_USE, $refused->reason);
+            self::assertStringContainsString('Offered for allocation', $refused->getMessage());
+        }
+
+        self::assertNotNull($this->content->findItem('training', $itemPublicId));
+        $refusal = end($this->audit->entries);
+        self::assertNotFalse($refusal);
+        self::assertSame('in_use', $refusal['event']->details['reason']);
+        self::assertSame(1, $refusal['event']->details['allocationCount']);
+    }
+
     public function test_deactivating_an_item_is_an_audited_edit(): void
     {
         $detail = $this->createModule();

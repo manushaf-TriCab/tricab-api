@@ -54,6 +54,26 @@ interface OnboardingContentRepository
     public function slugTaken(string $itemType, string $slug): bool;
 
     /**
+     * Every allocation ever made of any version, withdrawn ones included: a
+     * withdrawn allocation still points at its version, and so may the work
+     * done under it.
+     */
+    public function allocationCount(ContentItemRecord $item): int;
+
+    /**
+     * Deletes the item, its versions and what hangs off them (questions, field
+     * classifications) and appends `$events`, in one unit — but only while
+     * nobody has been given it. The check is repeated under lock inside the
+     * unit, and the foreign keys from `Assignments` are the last word.
+     *
+     * @param list<OnboardingAdminEvent> $events
+     *
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\ContentAuthoringNotPermitted in_use, when an allocation landed first
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict on a stale token
+     */
+    public function deleteItem(ContentItemRecord $item, RowVersionToken $expectedRowVersion, array $events, ActorContext $actor): void;
+
+    /**
      * Creates the item and its first, empty draft together.
      *
      * @param list<OnboardingAdminEvent> $events

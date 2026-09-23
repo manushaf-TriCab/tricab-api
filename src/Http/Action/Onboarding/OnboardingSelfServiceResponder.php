@@ -26,6 +26,7 @@ use TriCab\Core\Onboarding\Domain\Exception\OnboardingDocumentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingItemTypeMismatch;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonNotFound;
+use TriCab\Core\Onboarding\Domain\Exception\PersonDeletionNotPermitted;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingSubmissionWindowClosed;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
 use TriCab\Core\Onboarding\Domain\Exception\ReviewDecisionNotPermitted;
@@ -163,6 +164,8 @@ final readonly class OnboardingSelfServiceResponder
             // 4.1 — adding and inviting people.
             $failure instanceof OnboardingPersonAlreadyExists
                 => $this->responder->error('ONBOARDING_PERSON_EXISTS', $failure->getMessage(), 409),
+            $failure instanceof PersonDeletionNotPermitted
+                => $this->responder->error('ONBOARDING_PERSON_HAS_RECORDED_WORK', $failure->getMessage(), 409),
             $failure instanceof InvitationNotPermitted
                 => $this->responder->error(
                     'ONBOARDING_INVITATION_' . strtoupper($failure->reason),

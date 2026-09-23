@@ -8,6 +8,7 @@ use Throwable;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
+use TriCab\Core\Identity\Application\Service\UserManagement\ChangeUserStatusService;
 use TriCab\Core\Identity\Application\Service\UserManagement\CreateUserService;
 use TriCab\Core\Identity\Domain\Service\ProtectedIdentityCatalog;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
@@ -43,6 +44,7 @@ final class AzureSqlOnboardingAccountDirectory implements OnboardingAccountDirec
     public function __construct(
         private readonly SqlConnection $connection,
         private readonly CreateUserService $createUser,
+        private readonly ChangeUserStatusService $changeStatus,
     ) {
     }
 
@@ -117,6 +119,38 @@ final class AzureSqlOnboardingAccountDirectory implements OnboardingAccountDirec
         );
 
         return $rows !== [] && AzureSqlValueMapper::boolValue($rows[0]['CanSignIn'] ?? false);
+    }
+
+    public function isOnboardingOnlyAccount(int $userId): bool
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+            SELECT
+                (SELECT COUNT(*) FROM [audit].[OnboardingAdminEvents] e
+                  WHERE e.[SubjectUserId] = :u1 AND e.[EventType] = N'person.created' AND e.[Outcome] = N'succeeded'
+                    AND JSON_VALUE(e.[DetailsJson], '$.accountCreated') = 'true') AS [MadeByOnboarding],
+                (SELECT COUNT(*) FROM [identity].[UserRoles] ur JOIN [identity].[Roles] r ON r.[RoleId] = ur.[RoleId]
+                  WHERE ur.[UserId] = :u2 AND ur.[IsActive] = 1 AND UPPER(r.[RoleCode]) <> UPPER(:guest)) AS [OtherRoles]
+            SQL,
+            [':u1' => $userId, ':u2' => $userId, ':guest' => Module::ROLE_GUEST],
+        );
+
+        return $rows !== []
+            && AzureSqlValueMapper::intValue($rows[0]['MadeByOnboarding'] ?? 0) > 0
+            && AzureSqlValueMapper::intValue($rows[0]['OtherRoles'] ?? 1) === 0;
+    }
+
+    public function disableAccount(ActorContext $actor, int $userId): void
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT LOWER(CONVERT(NVARCHAR(36), [PublicId])) AS [PublicId] FROM [identity].[Users] WHERE [UserId] = :userId',
+            [':userId' => $userId],
+        );
+        if ($rows === []) {
+            return;
+        }
+
+        $this->changeStatus->execute($actor, AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? ''), UserStatus::DISABLED);
     }
 
     private function addressTableExists(): bool

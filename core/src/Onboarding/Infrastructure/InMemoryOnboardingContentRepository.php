@@ -175,6 +175,27 @@ final class InMemoryOnboardingContentRepository implements OnboardingContentRepo
         return false;
     }
 
+    public function allocationCount(ContentItemRecord $item): int
+    {
+        $versions = array_map(static fn (ContentVersionRecord $v): string => $v->publicId, $this->versions[self::key($item)] ?? []);
+
+        return count(array_filter($this->assignments, static fn (array $a): bool => in_array($a['versionPublicId'], $versions, true)));
+    }
+
+    public function deleteItem(ContentItemRecord $item, RowVersionToken $expectedRowVersion, array $events, ActorContext $actor): void
+    {
+        $stored = $this->items[self::key($item)] ?? null;
+        if ($stored === null || !$stored->rowVersion->equals($expectedRowVersion)) {
+            throw OnboardingWriteConflict::staleToken();
+        }
+        $allocations = $this->allocationCount($item);
+        if ($allocations > 0) {
+            throw ContentAuthoringNotPermitted::inUse($allocations);
+        }
+        unset($this->items[self::key($item)], $this->versions[self::key($item)]);
+        array_push($this->writtenEvents, ...$events);
+    }
+
     public function createItem(
         string $itemType,
         string $itemPublicId,

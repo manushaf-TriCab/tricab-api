@@ -48,6 +48,7 @@ final class OnboardingContentRepositoryBoundaryTest extends TestCase
             'GetOnboardingContentVersionAction.php',
             'PostOnboardingContentItemAction.php',
             'PutOnboardingContentItemAction.php',
+            'DeleteOnboardingContentItemAction.php',
             'PostOnboardingContentDraftAction.php',
             'PutOnboardingContentVersionAction.php',
             'PostOnboardingContentPublishAction.php',

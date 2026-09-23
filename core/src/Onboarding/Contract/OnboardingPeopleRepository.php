@@ -78,6 +78,28 @@ interface OnboardingPeopleRepository
 
     // ------------------------------------------------------------ 4.1 writes
 
+    /**
+     * What is recorded against this person, by kind, with only the non-zero
+     * kinds present: `progress`, `attempts`, `acknowledgements`, `form_drafts`,
+     * `form_submissions`, `documents`. Empty means the record can be deleted.
+     * HR-held details are not counted: they come only from a submission, and
+     * this repository never reads `[onboarding_hr]`.
+     *
+     * @return array<string, int>
+     */
+    public function recordedWork(int $userId): array;
+
+    /**
+     * Deletes the induction record — its allocations, its completion figures
+     * and the profile — and appends `$event`, in one unit, but only while
+     * {@see recordedWork()} is empty; that is checked again under lock inside
+     * the unit. The account is not touched here.
+     *
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\PersonDeletionNotPermitted when work landed first
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict on a stale token
+     */
+    public function deletePerson(OnboardingPersonRecord $person, RowVersionToken $expectedRowVersion, OnboardingAdminEvent $event, ActorContext $actor): void;
+
     /** The induction record's public id for this account, if it has one. */
     public function findPersonPublicIdByUserId(int $userId): ?string;
 

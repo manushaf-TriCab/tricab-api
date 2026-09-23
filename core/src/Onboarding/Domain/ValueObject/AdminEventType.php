@@ -32,6 +32,12 @@ final class AdminEventType
     public const PERSON_INVITED = 'person.invited';
     /** An invitation refused, or one the provider did not accept. */
     public const PERSON_INVITATION_REFUSED = 'person.invitation_refused';
+    /**
+     * An induction record removed while nothing was recorded against it — or a
+     * refusal to, because something was. The account is kept (audit rows name
+     * it) and disabled only if onboarding made it.
+     */
+    public const PERSON_DELETED = 'person.deleted';
     /** A training module, policy or form created, with its first empty draft (4.4). */
     public const CONTENT_ITEM_CREATED = 'content.item_created';
     /** Title, summary or active flag changed. */
@@ -39,6 +45,8 @@ final class AdminEventType
     public const CONTENT_DRAFT_CREATED = 'content.draft_created';
     public const CONTENT_DRAFT_SAVED = 'content.draft_saved';
     public const CONTENT_PUBLISHED = 'content.published';
+    /** A module, policy or form removed, with its versions, before anybody was ever given it. */
+    public const CONTENT_ITEM_DELETED = 'content.item_deleted';
     /** An authoring action refused before anything was written. */
     public const CONTENT_REFUSED = 'content.refused';
     /** One person moved onto a new version because its author said it supersedes work in progress. */
@@ -55,11 +63,13 @@ final class AdminEventType
         self::PERSON_PROFILE_UPDATED,
         self::PERSON_INVITED,
         self::PERSON_INVITATION_REFUSED,
+        self::PERSON_DELETED,
         self::CONTENT_ITEM_CREATED,
         self::CONTENT_ITEM_UPDATED,
         self::CONTENT_DRAFT_CREATED,
         self::CONTENT_DRAFT_SAVED,
         self::CONTENT_PUBLISHED,
+        self::CONTENT_ITEM_DELETED,
         self::CONTENT_REFUSED,
         self::ALLOCATION_REISSUED,
     ];

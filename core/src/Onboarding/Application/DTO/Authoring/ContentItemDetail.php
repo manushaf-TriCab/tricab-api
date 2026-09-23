@@ -13,6 +13,8 @@ final readonly class ContentItemDetail
     public function __construct(
         public ContentItemRecord $item,
         public array $versions,
+        /** Every allocation ever made, withdrawn ones included. Zero means it can be deleted. */
+        public int $allocationCount = 0,
     ) {
     }
 
@@ -36,6 +38,8 @@ final readonly class ContentItemDetail
             'item' => $this->item->toArray(),
             'versions' => array_map(static fn (ContentVersionSummary $version): array => $version->toArray(), $this->versions),
             'hasDraft' => $this->hasDraft(),
+            'allocationCount' => $this->allocationCount,
+            'canDelete' => $this->allocationCount === 0,
         ];
     }
 }

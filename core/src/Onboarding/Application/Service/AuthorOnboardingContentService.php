@@ -310,13 +310,47 @@ final readonly class AuthorOnboardingContentService
         ];
     }
 
+    /**
+     * Deletes an item nobody has ever been given — a mistake, a test, an import
+     * that should not have happened. Once anybody holds a version, even one
+     * since withdrawn, it is refused: their allocation points at it, and so may
+     * their work. "Offered for allocation" is how such an item is put away.
+     *
+     * The audit row keeps the slug and the version count, never the wording.
+     */
+    public function deleteItem(ActorContext $actor, string $itemType, string $itemPublicId, RowVersionToken $expectedRowVersion): void
+    {
+        $item = $this->requireItem($itemType, $itemPublicId);
+        $details = ['itemType' => $item->itemType, 'itemPublicId' => $item->publicId, 'slug' => $item->slug];
+
+        $allocations = $this->content->allocationCount($item);
+        if ($allocations > 0) {
+            $this->refuse($actor, $item, ContentAuthoringNotPermitted::inUse($allocations), $details + ['allocationCount' => $allocations]);
+        }
+
+        try {
+            $this->content->deleteItem($item, $expectedRowVersion, [
+                OnboardingAdminEvent::succeeded(
+                    AdminEventType::CONTENT_ITEM_DELETED,
+                    null,
+                    $item->publicId,
+                    sprintf('Deleted the %s "%s", which nobody had been given.', self::noun($item->itemType), $item->slug),
+                    $details + ['versionCount' => count($this->content->listVersions($item))],
+                    self::PERMISSION,
+                ),
+            ], $actor);
+        } catch (ContentAuthoringNotPermitted $refused) {
+            $this->refuse($actor, $item, $refused, $details);
+        }
+    }
+
     // ------------------------------------------------------------------ helpers
 
     private function detail(string $itemType, string $itemPublicId): ContentItemDetail
     {
         $item = $this->requireItem($itemType, $itemPublicId);
 
-        return new ContentItemDetail($item, $this->content->listVersions($item));
+        return new ContentItemDetail($item, $this->content->listVersions($item), $this->content->allocationCount($item));
     }
 
     private function requireItem(string $itemType, string $itemPublicId): ContentItemRecord

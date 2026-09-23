@@ -7,6 +7,7 @@ namespace TriCab\Api\Onboarding\Persistence;
 use PDOException;
 use TriCab\Api\Identity\Persistence\AzureSqlTransaction;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
+use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Api\Product\Persistence\ProductRowVersionMapper;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
@@ -271,7 +272,81 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
         return $this->connection->fetchAll("SELECT 1 AS [Taken] FROM {$t['items']} WHERE [Slug] = :slug", [':slug' => $slug]) !== [];
     }
 
+    public function allocationCount(ContentItemRecord $item): int
+    {
+        $t = self::TABLES[$item->itemType];
+        $rows = $this->connection->fetchAll(
+            <<<SQL
+            SELECT COUNT(*) AS [Total]
+            FROM [onboarding].[Assignments] a
+            JOIN {$t['versions']} v ON v.[{$t['versionId']}] = a.[{$t['versionId']}]
+            WHERE v.[{$t['itemId']}] = :itemId
+            SQL,
+            [':itemId' => $item->itemId],
+        );
+
+        return AzureSqlValueMapper::intValue($rows[0]['Total'] ?? 0);
+    }
+
     // ------------------------------------------------------------------ writes
+
+    public function deleteItem(ContentItemRecord $item, RowVersionToken $expectedRowVersion, array $events, ActorContext $actor): void
+    {
+        $t = self::TABLES[$item->itemType];
+
+        $this->runInTransaction($this->connection, function () use ($t, $item, $expectedRowVersion, $events, $actor): void {
+            // Claims the item: a second HR user deleting or editing it waits
+            // here and then finds it gone or changed.
+            $claimed = $this->affected(
+                "UPDATE {$t['items']} SET [UpdatedAtUtc] = SYSUTCDATETIME() WHERE [{$t['itemId']}] = :itemId AND [RowVersion] = :expectedRowVersion",
+                [':itemId' => $item->itemId, ':expectedRowVersion' => ProductRowVersionMapper::toSqlBinary($expectedRowVersion)],
+            );
+            if ($claimed === 0) {
+                throw OnboardingWriteConflict::staleToken();
+            }
+
+            // Asked again under a range lock, so an allocation cannot land
+            // between this and the DELETE. The foreign keys would refuse it
+            // anyway; this turns that into a sentence.
+            $held = $this->connection->fetchAll(
+                <<<SQL
+                SELECT COUNT(*) AS [Total]
+                FROM [onboarding].[Assignments] a WITH (UPDLOCK, HOLDLOCK)
+                JOIN {$t['versions']} v ON v.[{$t['versionId']}] = a.[{$t['versionId']}]
+                WHERE v.[{$t['itemId']}] = :itemId
+                SQL,
+                [':itemId' => $item->itemId],
+            );
+            $allocations = AzureSqlValueMapper::intValue($held[0]['Total'] ?? 0);
+            if ($allocations > 0) {
+                throw ContentAuthoringNotPermitted::inUse($allocations);
+            }
+
+            $children = match ($item->itemType) {
+                AuthoredContent::TYPE_TRAINING => '[onboarding].[Questions]',
+                AuthoredContent::TYPE_FORM => '[onboarding_hr].[FieldClassifications]',
+                default => null,
+            };
+
+            try {
+                if ($children !== null) {
+                    $this->connection->execute(
+                        "DELETE c FROM {$children} c JOIN {$t['versions']} v ON v.[{$t['versionId']}] = c.[{$t['versionId']}] WHERE v.[{$t['itemId']}] = :itemId",
+                        [':itemId' => $item->itemId],
+                    );
+                }
+                $this->connection->execute("DELETE FROM {$t['versions']} WHERE [{$t['itemId']}] = :itemId", [':itemId' => $item->itemId]);
+                $this->connection->execute("DELETE FROM {$t['items']} WHERE [{$t['itemId']}] = :itemId", [':itemId' => $item->itemId]);
+            } catch (DatabaseUnavailable $failure) {
+                if (self::isForeignKeyViolation($failure)) {
+                    throw ContentAuthoringNotPermitted::inUse(1);
+                }
+                throw $failure;
+            }
+
+            $this->appendAll($events, $actor);
+        });
+    }
 
     public function createItem(
         string $itemType,
@@ -888,6 +963,21 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
     private static function lowerOrNull(?string $value): ?string
     {
         return $value === null ? null : strtolower($value);
+    }
+
+    /**
+     * SQL Server 547: a row something still points at. The connection wraps
+     * the PDOException, so it is looked for underneath.
+     */
+    private static function isForeignKeyViolation(\Throwable $failure): bool
+    {
+        for ($cause = $failure; $cause !== null; $cause = $cause->getPrevious()) {
+            if ($cause instanceof PDOException && is_array($cause->errorInfo) && ($cause->errorInfo[1] ?? null) === 547) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function isUniqueViolation(PDOException $failure): bool

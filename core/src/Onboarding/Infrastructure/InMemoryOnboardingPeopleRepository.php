@@ -17,6 +17,7 @@ use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingProfileFields;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
 use TriCab\Core\Onboarding\Contract\OnboardingPeopleRepository;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
+use TriCab\Core\Onboarding\Domain\Exception\PersonDeletionNotPermitted;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
 use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 
@@ -48,6 +49,39 @@ final class InMemoryOnboardingPeopleRepository implements OnboardingPeopleReposi
 
     /** @var array<string, ?string> */
     public array $invitedAt = [];
+
+    /** @var array<int, array<string, int>> what {@see recordedWork()} answers, per user */
+    private array $work = [];
+
+    /** @var list<string> public ids of deleted records */
+    public array $deleted = [];
+
+    /**
+     * @param array<string, int> $work
+     */
+    public function withRecordedWork(int $userId, array $work): void
+    {
+        $this->work[$userId] = $work;
+    }
+
+    public function recordedWork(int $userId): array
+    {
+        return $this->work[$userId] ?? [];
+    }
+
+    public function deletePerson(OnboardingPersonRecord $person, RowVersionToken $expectedRowVersion, OnboardingAdminEvent $event, ActorContext $actor): void
+    {
+        $stored = $this->records[$person->publicId] ?? null;
+        if ($stored === null || !$stored->rowVersion->equals($expectedRowVersion)) {
+            throw OnboardingWriteConflict::staleToken();
+        }
+        if ($this->recordedWork($person->userId) !== []) {
+            throw PersonDeletionNotPermitted::hasRecordedWork($this->recordedWork($person->userId));
+        }
+        unset($this->records[$person->publicId], $this->summaries[$person->publicId], $this->allocations[$person->userId]);
+        $this->deleted[] = $person->publicId;
+        $this->writtenEvents[] = $event;
+    }
 
     public function withPerson(OnboardingPersonRecord $record, OnboardingPersonSummary $summary): void
     {

@@ -13,6 +13,7 @@ use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonRecord;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingPersonSummary;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingProfileFields;
 use TriCab\Core\Onboarding\Application\Service\CreateOnboardingPersonService;
+use TriCab\Core\Onboarding\Application\Service\DeleteOnboardingPersonService;
 use TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService;
 use TriCab\Core\Onboarding\Application\Service\UpdateOnboardingPersonProfileService;
 use TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue;
@@ -20,6 +21,7 @@ use TriCab\Core\Onboarding\Domain\Exception\InvitationNotDelivered;
 use TriCab\Core\Onboarding\Domain\Exception\InvitationNotPermitted;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
+use TriCab\Core\Onboarding\Domain\Exception\PersonDeletionNotPermitted;
 use TriCab\Core\Onboarding\Domain\Service\LeaverPolicy;
 use TriCab\Core\Onboarding\Domain\ValueObject\AdminEventType;
 use TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingAccountDirectory;
@@ -286,6 +288,89 @@ final class PersonLifecycleTest extends TestCase
     }
 
     // --------------------------------------------------------------- helpers
+
+    // ----------------------------------------------------------------- delete
+
+    public function test_a_record_made_by_mistake_is_deleted_and_the_guest_account_made_for_it_disabled(): void
+    {
+        $created = $this->create->create($this->actor(), 'oops@example.test', 'Oops Twice', OnboardingProfileFields::of(null, null, null, null));
+        $publicId = $created['detail']->person->publicId;
+        $record = $this->people->findPerson($publicId);
+        self::assertNotNull($record);
+
+        $result = $this->deleter()->delete($this->actor(), $publicId, $record->rowVersion);
+
+        self::assertSame(['accountDisabled' => true], $result);
+        self::assertNull($this->people->findPerson($publicId));
+        self::assertSame([5000], $this->accounts->disabled);
+        $event = end($this->people->writtenEvents);
+        self::assertNotFalse($event);
+        self::assertSame(AdminEventType::PERSON_DELETED, $event->eventType);
+        self::assertSame(['accountDisabled' => true], $event->details);
+    }
+
+    /**
+     * An employee linked to a record — or a GUEST somebody has since given
+     * another role — keeps their account exactly as it was.
+     */
+    public function test_an_account_onboarding_did_not_make_is_left_alone(): void
+    {
+        [$linked, $linkedToken] = $this->person(77, 'ari@tricab.com');
+        self::assertSame(['accountDisabled' => false], $this->deleter()->delete($this->actor(), $linked, $linkedToken));
+
+        $created = $this->create->create($this->actor(), 'promoted@example.test', 'Since Promoted', OnboardingProfileFields::of(null, null, null, null));
+        $this->accounts->notOnboardingOnly[] = 5000;
+        $record = $this->people->findPerson($created['detail']->person->publicId);
+        self::assertNotNull($record);
+        self::assertSame(['accountDisabled' => false], $this->deleter()->delete($this->actor(), $record->publicId, $record->rowVersion));
+
+        self::assertSame([], $this->accounts->disabled);
+    }
+
+    public function test_a_person_with_recorded_work_is_refused_audited_and_untouched(): void
+    {
+        [$publicId, $token] = $this->person();
+        $this->people->withRecordedWork(7, ['acknowledgements' => 2, 'form_submissions' => 1]);
+
+        try {
+            $this->deleter()->delete($this->actor(), $publicId, $token);
+            self::fail('A person with acknowledgements was deleted.');
+        } catch (PersonDeletionNotPermitted $refused) {
+            self::assertStringContainsString('2 acknowledgements, 1 form submissions', $refused->getMessage());
+            self::assertStringContainsString('last day', $refused->getMessage());
+        }
+
+        self::assertNotNull($this->people->findPerson($publicId));
+        self::assertSame([], $this->accounts->disabled);
+        $refusal = end($this->audit->entries);
+        self::assertNotFalse($refusal);
+        self::assertSame(AdminEventType::PERSON_DELETED, $refusal['event']->eventType);
+        self::assertSame(['reason' => 'has_recorded_work', 'acknowledgements' => 2, 'form_submissions' => 1], $refusal['event']->details);
+    }
+
+    public function test_deleting_with_a_stale_token_is_a_conflict(): void
+    {
+        [$publicId] = $this->person();
+
+        $this->expectException(OnboardingWriteConflict::class);
+
+        $this->deleter()->delete($this->actor(), $publicId, RowVersionToken::fromBinary(str_repeat("\x09", 8)));
+    }
+
+    private function deleter(): DeleteOnboardingPersonService
+    {
+        return new DeleteOnboardingPersonService(
+            $this->people,
+            $this->accounts,
+            $this->audit,
+            new class () implements ApplicationTransaction {
+                public function run(callable $operation): mixed
+                {
+                    return $operation();
+                }
+            },
+        );
+    }
 
     /**
      * @return array{0: string, 1: RowVersionToken}

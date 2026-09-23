@@ -172,6 +172,8 @@ use TriCab\Api\Http\Action\Dev\DevProductFileDeliveryAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
+use TriCab\Api\Http\Action\Onboarding\DeleteOnboardingContentItemAction;
+use TriCab\Api\Http\Action\Onboarding\DeleteOnboardingPersonAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingAdminOverviewAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentContentAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentsAction;
@@ -485,6 +487,10 @@ final class AppBuilder
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
         $app->post('/api/v1/admin/onboarding/people/{personPublicId}/invitation', PostOnboardingPersonInvitationAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        // Deleting a record nothing is recorded against — a mistake or a test.
+        // Anybody who has done anything is given a last day instead.
+        $app->delete('/api/v1/admin/onboarding/people/{personPublicId}', DeleteOnboardingPersonAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
 
         // Phase 4.3 — the reviewer queue. ONBOARDING.REVIEW, not PEOPLE.MANAGE:
         // deciding somebody's work and choosing what they are given are separate
@@ -512,6 +518,9 @@ final class AppBuilder
                 ->setArgument('itemType', $itemType)
                 ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
             $app->put($base . '/{itemPublicId}', PutOnboardingContentItemAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->delete($base . '/{itemPublicId}', DeleteOnboardingContentItemAction::class)
                 ->setArgument('itemType', $itemType)
                 ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
             $app->post($base . '/{itemPublicId}/versions', PostOnboardingContentDraftAction::class)

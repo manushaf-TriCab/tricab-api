@@ -38,6 +38,7 @@ final class OnboardingContentEndpointsTest extends TestCase
                     $this->json('POST', $base, ['slug' => 'x', 'title' => 'X']),
                     TestAppFactory::request('GET', $base . '/' . self::ID),
                     $this->json('PUT', $base . '/' . self::ID, ['rowVersion' => 'AAAAAAAAAAE=', 'title' => 'X']),
+                    $this->json('DELETE', $base . '/' . self::ID, ['rowVersion' => 'AAAAAAAAAAE=']),
                     $this->json('POST', $base . '/' . self::ID . '/versions', []),
                     TestAppFactory::request('GET', $base . '/' . self::ID . '/versions/' . self::ID),
                     $this->json('PUT', $base . '/' . self::ID . '/versions/' . self::ID, ['rowVersion' => 'AAAAAAAAAAE=']),
@@ -143,6 +144,27 @@ final class OnboardingContentEndpointsTest extends TestCase
         $wrongType = $app->handle(TestAppFactory::request('GET', self::CONTENT . '/training/' . $itemPublicId));
         self::assertSame(404, $wrongType->getStatusCode());
         self::assertSame('ONBOARDING_NOT_FOUND', $this->code($wrongType));
+    }
+
+    public function test_an_item_nobody_was_given_is_deleted(): void
+    {
+        $app = $this->app();
+
+        $policy = $this->data($app->handle($this->json('POST', self::CONTENT . '/policies', ['slug' => 'mistake', 'title' => 'Made by mistake'])));
+        $item = self::arr($policy['item']);
+        self::assertTrue($policy['canDelete']);
+        self::assertSame(0, $policy['allocationCount']);
+        $itemPublicId = self::str($item['publicId']);
+
+        $noToken = $app->handle($this->json('DELETE', self::CONTENT . '/policies/' . $itemPublicId, []));
+        self::assertSame(422, $noToken->getStatusCode());
+
+        $deleted = $app->handle($this->json('DELETE', self::CONTENT . '/policies/' . $itemPublicId, ['rowVersion' => $item['rowVersion']]));
+        self::assertSame(200, $deleted->getStatusCode(), (string) $deleted->getBody());
+        self::assertSame(404, $app->handle(TestAppFactory::request('GET', self::CONTENT . '/policies/' . $itemPublicId))->getStatusCode());
+
+        // The slug is free again.
+        self::assertSame(201, $app->handle($this->json('POST', self::CONTENT . '/policies', ['slug' => 'mistake', 'title' => 'Again']))->getStatusCode());
     }
 
     public function test_a_policy_carries_its_placement_metadata_and_emphasis_through_the_api(): void

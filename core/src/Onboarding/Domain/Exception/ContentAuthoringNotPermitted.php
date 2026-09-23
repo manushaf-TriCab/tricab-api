@@ -20,6 +20,7 @@ final class ContentAuthoringNotPermitted extends DomainException
     public const REASON_DRAFT_EXISTS = 'draft_exists';
     public const REASON_SLUG_TAKEN = 'slug_taken';
     public const REASON_NOT_PUBLISHABLE = 'not_publishable';
+    public const REASON_IN_USE = 'in_use';
 
     /**
      * @param list<string> $problems what the author has to fix, in the order they appear on the page
@@ -46,6 +47,23 @@ final class ContentAuthoringNotPermitted extends DomainException
     public static function slugTaken(string $slug): self
     {
         return new self(sprintf('The short name "%s" is already used by another item of this type.', $slug), self::REASON_SLUG_TAKEN);
+    }
+
+    /**
+     * Somebody has been given a version of it — even one since withdrawn — and
+     * their allocation, and anything they did under it, points at that version.
+     * Stopping new allocations is the remedy, not deleting.
+     */
+    public static function inUse(int $allocations): self
+    {
+        return new self(
+            sprintf(
+                'This has been given to people %d %s, so it cannot be deleted. Untick "Offered for allocation" to stop it being given to anybody else.',
+                $allocations,
+                $allocations === 1 ? 'time' : 'times',
+            ),
+            self::REASON_IN_USE,
+        );
     }
 
     /**

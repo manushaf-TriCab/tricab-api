@@ -61,6 +61,20 @@ final readonly class OnboardingAdminEvent
         'supersedesWorkInProgress',
         'reissuedCount',
         'fromAssignmentPublicId',
+        // Deleting content. The slug is the item's identifier, an HR-chosen
+        // code like `leave-policy` — once the row is gone it is the only way
+        // left to tell what the target public id was.
+        'slug',
+        'versionCount',
+        'allocationCount',
+        // Deleting a person: a flag, and counts of what blocked it by kind.
+        'accountDisabled',
+        'progress',
+        'attempts',
+        'acknowledgements',
+        'form_drafts',
+        'form_submissions',
+        'documents',
     ];
 
     /**

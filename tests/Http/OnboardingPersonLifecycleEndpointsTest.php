@@ -40,6 +40,7 @@ final class OnboardingPersonLifecycleEndpointsTest extends TestCase
                 $this->json('POST', self::PEOPLE, ['emailAddress' => 'x@example.test', 'displayName' => 'X']),
                 $this->json('PUT', self::PEOPLE . '/' . $id . '/profile', ['rowVersion' => 'AAAAAAAAAAE=']),
                 $this->json('POST', self::PEOPLE . '/' . $id . '/invitation', []),
+                $this->json('DELETE', self::PEOPLE . '/' . $id, ['rowVersion' => 'AAAAAAAAAAE=']),
             ] as $request) {
                 self::assertSame(403, $app->handle($request)->getStatusCode(), implode(',', $held) . ' reached ' . $request->getUri()->getPath());
             }
@@ -103,6 +104,38 @@ final class OnboardingPersonLifecycleEndpointsTest extends TestCase
         $stale = $app->handle($this->json('PUT', self::PEOPLE . '/' . $publicId . '/profile', ['rowVersion' => $data['rowVersion'], 'position' => 'Late']));
         self::assertSame(409, $stale->getStatusCode());
         self::assertSame('ONBOARDING_STALE_TOKEN', $this->code($stale));
+    }
+
+    public function test_a_person_added_by_mistake_is_deleted_and_one_with_recorded_work_is_refused(): void
+    {
+        $app = $this->app();
+        $people = $this->container($app)->get(OnboardingPeopleRepository::class);
+        self::assertInstanceOf(InMemoryOnboardingPeopleRepository::class, $people);
+        $people->withAccount(5000, 'Added Twice', 'twice@example.test');
+
+        $data = $this->data($app->handle($this->json('POST', self::PEOPLE, ['emailAddress' => 'twice@example.test', 'displayName' => 'Added Twice'])));
+        self::assertIsArray($data['person']);
+        $publicId = $data['person']['publicId'];
+        self::assertIsString($publicId);
+
+        $read = $this->data($app->handle(TestAppFactory::request('GET', self::PEOPLE . '/' . $publicId)));
+        self::assertTrue($read['canDelete']);
+        self::assertSame([], $read['recordedWork']);
+
+        $people->withRecordedWork(5000, ['progress' => 1]);
+        $refused = $app->handle($this->json('DELETE', self::PEOPLE . '/' . $publicId, ['rowVersion' => $read['rowVersion']]));
+        self::assertSame(409, $refused->getStatusCode());
+        self::assertSame('ONBOARDING_PERSON_HAS_RECORDED_WORK', $this->code($refused));
+
+        $people->withRecordedWork(5000, []);
+        $deleted = $app->handle($this->json('DELETE', self::PEOPLE . '/' . $publicId, ['rowVersion' => $read['rowVersion']]));
+        self::assertSame(200, $deleted->getStatusCode(), (string) $deleted->getBody());
+        self::assertSame(['deleted' => true, 'accountDisabled' => true], $this->data($deleted));
+
+        self::assertSame(404, $app->handle(TestAppFactory::request('GET', self::PEOPLE . '/' . $publicId))->getStatusCode());
+
+        $noToken = $app->handle($this->json('DELETE', self::PEOPLE . '/' . $publicId, []));
+        self::assertSame(422, $noToken->getStatusCode(), 'the token is required');
     }
 
     public function test_adding_somebody_twice_and_inviting_somebody_who_cannot_sign_in_are_refused_by_name(): void

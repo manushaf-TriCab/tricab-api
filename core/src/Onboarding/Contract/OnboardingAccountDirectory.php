@@ -41,4 +41,19 @@ interface OnboardingAccountDirectory
      * question the email-code sign-in asks before it sends a code.
      */
     public function canSignIn(int $userId): bool;
+
+    /**
+     * Whether this account exists only for onboarding: onboarding created it
+     * (the `person.created` audit row says so) and it still holds nothing but
+     * `GUEST`. An employee's account, a customer's, or a guest somebody has
+     * since given another role is none of onboarding's business to disable.
+     */
+    public function isOnboardingOnlyAccount(int $userId): bool;
+
+    /**
+     * Disables the account through User Management's own audited status
+     * change. It cannot be deleted: `audit.UserManagementEvents` and
+     * `audit.OnboardingAdminEvents` name it, and both are append-only.
+     */
+    public function disableAccount(ActorContext $actor, int $userId): void;
 }

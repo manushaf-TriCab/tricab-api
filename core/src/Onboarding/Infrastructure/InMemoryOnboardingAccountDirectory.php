@@ -26,6 +26,12 @@ final class InMemoryOnboardingAccountDirectory implements OnboardingAccountDirec
 
     private int $nextUserId = 5000;
 
+    /** @var list<int> accounts onboarding made that have since been given another role */
+    public array $notOnboardingOnly = [];
+
+    /** @var list<int> */
+    public array $disabled = [];
+
     public function withAccount(int $userId, string $email, bool $canSignIn): void
     {
         $this->byEmail[strtolower($email)] = $userId;
@@ -49,5 +55,17 @@ final class InMemoryOnboardingAccountDirectory implements OnboardingAccountDirec
     public function canSignIn(int $userId): bool
     {
         return $this->canSignIn[$userId] ?? false;
+    }
+
+    /** Accounts this directory made, unless a test says otherwise with {@see $notOnboardingOnly}. */
+    public function isOnboardingOnlyAccount(int $userId): bool
+    {
+        return in_array($userId, array_column($this->created, 'userId'), true) && !in_array($userId, $this->notOnboardingOnly, true);
+    }
+
+    public function disableAccount(ActorContext $actor, int $userId): void
+    {
+        $this->canSignIn[$userId] = false;
+        $this->disabled[] = $userId;
     }
 }

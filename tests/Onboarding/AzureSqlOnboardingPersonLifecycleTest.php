@@ -18,12 +18,14 @@ use TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingAdminAuditLog;
 use TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingPeopleRepository;
 use TriCab\Api\Tests\CableCalculator\LiveAzureSqlSupport;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
+use TriCab\Core\Identity\Application\Service\UserManagement\ChangeUserStatusService;
 use TriCab\Core\Identity\Application\Service\UserManagement\CreateUserService;
 use TriCab\Core\Identity\Application\Service\UserManagement\UserManagementAuditRecorder;
 use TriCab\Core\Identity\Domain\Service\UuidV4Generator;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingAdminEvent;
 use TriCab\Core\Onboarding\Application\DTO\Admin\OnboardingProfileFields;
 use TriCab\Core\Onboarding\Application\Service\CreateOnboardingPersonService;
+use TriCab\Core\Onboarding\Application\Service\DeleteOnboardingPersonService;
 use TriCab\Core\Onboarding\Application\Service\UpdateOnboardingPersonProfileService;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingPersonAlreadyExists;
 use TriCab\Core\Onboarding\Domain\ValueObject\AdminEventType;
@@ -84,6 +86,9 @@ final class AzureSqlOnboardingPersonLifecycleTest extends TestCase
             new AzureSqlUserManagementRepository($connection),
             new AzureSqlRoleManagementRepository($connection),
             new UserManagementAuditRecorder(new AzureSqlUserManagementAuditRepository($connection)),
+        ), new ChangeUserStatusService(
+            new AzureSqlUserManagementRepository($connection),
+            new UserManagementAuditRecorder(new AzureSqlUserManagementAuditRepository($connection)),
         ));
         $this->create = new CreateOnboardingPersonService(
             $this->accounts,
@@ -137,6 +142,59 @@ final class AzureSqlOnboardingPersonLifecycleTest extends TestCase
         $admin = $this->text("SELECT [DetailsJson] FROM [audit].[OnboardingAdminEvents] WHERE [SubjectUserId] = :u AND [EventType] = N'person.created'", [':u' => $userId]);
         self::assertSame('{"accountCreated":true}', $admin);
         self::assertSame('Storeperson', $result['detail']->person->position);
+    }
+
+    /**
+     * Deleting a record made by mistake: the record and its untouched
+     * allocations go; the GUEST account made for it is disabled through User
+     * Management, not deleted, because the audit rows naming it are
+     * append-only. A linked account is left exactly as it was.
+     */
+    public function test_deleting_a_mistaken_record_disables_the_account_onboarding_made_and_leaves_a_linked_one(): void
+    {
+        $actor = new ActorContext(
+            $this->hr,
+            $this->text('SELECT LOWER(CONVERT(NVARCHAR(36), [PublicId])) FROM [identity].[Users] WHERE [UserId] = :u', [':u' => $this->hr]),
+            'hr@example.test',
+            'test-correlation',
+        );
+        $delete = new DeleteOnboardingPersonService($this->people, $this->accounts, new AzureSqlOnboardingAdminAuditLog($this->connection()), new class () implements ApplicationTransaction {
+            public function run(callable $operation): mixed
+            {
+                return $operation();
+            }
+        });
+
+        $email = 'syn-onboarding-' . bin2hex(random_bytes(5)) . '@example.test';
+        $made = $this->create->create($actor, $email, 'Synthetic Mistake', OnboardingProfileFields::of(null, null, null, null));
+        $publicId = $made['detail']->person->publicId;
+        $userId = $this->number('SELECT [UserId] FROM [identity].[Users] WHERE [NormalizedEmailAddress] = :e', [':e' => $email]);
+        $record = $this->people->findPerson($publicId);
+        self::assertNotNull($record);
+        self::assertSame([], $this->people->recordedWork($userId));
+        self::assertTrue($this->accounts->isOnboardingOnlyAccount($userId));
+
+        self::assertSame(['accountDisabled' => true], $delete->delete($actor, $publicId, $record->rowVersion));
+
+        self::assertNull($this->people->findPerson($publicId));
+        self::assertSame('disabled', $this->text(
+            'SELECT s.[StatusCode] FROM [identity].[Users] u JOIN [identity].[UserStatuses] s ON s.[UserStatusId] = u.[UserStatusId] WHERE u.[UserId] = :u',
+            [':u' => $userId],
+        ));
+        self::assertSame(1, $this->number(
+            "SELECT COUNT(*) FROM [audit].[OnboardingAdminEvents] WHERE [SubjectUserId] = :u AND [EventType] = N'person.deleted' AND [Outcome] = N'succeeded'",
+            [':u' => $userId],
+        ));
+
+        $linked = $this->create->create($actor, $this->text('SELECT [EmailAddress] FROM [identity].[Users] WHERE [UserId] = :u', [':u' => $this->existing]), '', OnboardingProfileFields::of(null, null, null, null));
+        $linkedRecord = $this->people->findPerson($linked['detail']->person->publicId);
+        self::assertNotNull($linkedRecord);
+        self::assertFalse($this->accounts->isOnboardingOnlyAccount($this->existing));
+        self::assertSame(['accountDisabled' => false], $delete->delete($actor, $linkedRecord->publicId, $linkedRecord->rowVersion));
+        self::assertSame('pending', $this->text(
+            'SELECT s.[StatusCode] FROM [identity].[Users] u JOIN [identity].[UserStatuses] s ON s.[UserStatusId] = u.[UserStatusId] WHERE u.[UserId] = :u',
+            [':u' => $this->existing],
+        ));
     }
 
     public function test_an_existing_pending_account_is_linked_and_not_touched(): void
@@ -212,6 +270,13 @@ final class AzureSqlOnboardingPersonLifecycleTest extends TestCase
     }
 
     // ---------------------------------------------------------------- helpers
+
+    private function connection(): PdoSqlConnection
+    {
+        self::assertNotNull($this->pdo);
+
+        return new PdoSqlConnection($this->pdo, new RequestPerformanceMetrics('test'));
+    }
 
     private function actor(): ActorContext
     {

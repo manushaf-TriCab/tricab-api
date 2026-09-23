@@ -21,12 +21,27 @@ final readonly class OnboardingPersonDetail
         public array $catalogue,
         /** Null when the reader did not ask the directory; the console treats that as unknown. */
         public ?bool $canSignIn = null,
+        /**
+         * What is recorded against them, by kind; empty means the record can be
+         * deleted. Null when the reader did not ask.
+         *
+         * @var array<string, int>|null
+         */
+        public ?array $recordedWork = null,
     ) {
     }
 
     public function withCanSignIn(bool $canSignIn): self
     {
-        return new self($this->person, $this->rowVersion, $this->allocations, $this->catalogue, $canSignIn);
+        return new self($this->person, $this->rowVersion, $this->allocations, $this->catalogue, $canSignIn, $this->recordedWork);
+    }
+
+    /**
+     * @param array<string, int> $recordedWork
+     */
+    public function withRecordedWork(array $recordedWork): self
+    {
+        return new self($this->person, $this->rowVersion, $this->allocations, $this->catalogue, $this->canSignIn, $recordedWork);
     }
 
     /**
@@ -40,6 +55,8 @@ final readonly class OnboardingPersonDetail
             'allocations' => array_map(static fn (CurrentAllocation $a) => $a->toArray(), $this->allocations),
             'catalogue' => array_map(static fn (AllocatableItem $i) => $i->toArray(), $this->catalogue),
             'canSignIn' => $this->canSignIn,
+            'recordedWork' => $this->recordedWork,
+            'canDelete' => $this->recordedWork === null ? null : $this->recordedWork === [],
         ];
     }
 }

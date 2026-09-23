@@ -24,6 +24,9 @@ final readonly class ReadOnboardingPersonService
         $record = $this->people->findPerson($publicId) ?? throw OnboardingPersonNotFound::forPublicId($personPublicId);
 
         // Whether an invitation would work — the console only offers one when it would.
-        return $detail->withCanSignIn($this->accounts->canSignIn($record->userId));
+        // And whether it could be deleted — the console disables the button, and says why, when not.
+        return $detail
+            ->withCanSignIn($this->accounts->canSignIn($record->userId))
+            ->withRecordedWork($this->people->recordedWork($record->userId));
     }
 }
