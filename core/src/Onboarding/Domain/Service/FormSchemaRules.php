@@ -128,6 +128,9 @@ final class FormSchemaRules
         if ($type === 'select') {
             $stored['options'] = self::options($field['options'] ?? null, $where);
         }
+        if ($type === 'number') {
+            $stored += self::numberBounds($field['min'] ?? null, $field['max'] ?? null, $where);
+        }
 
         return [$stored, self::classification($field['dataClass'] ?? null, $where, $accessGroup)];
     }
@@ -167,6 +170,31 @@ final class FormSchemaRules
         }
 
         return $normalised;
+    }
+
+    /**
+     * Optional `min` and `max`. Without a `min`, {@see FormSubmissionRules}
+     * refuses negatives, so an author only writes one to allow them.
+     *
+     * @return array{min?: int|float, max?: int|float}
+     */
+    private static function numberBounds(mixed $min, mixed $max, string $where): array
+    {
+        $bounds = [];
+        foreach (['min' => $min, 'max' => $max] as $name => $value) {
+            if ($value === null) {
+                continue;
+            }
+            if (!(is_int($value) || is_float($value)) || !is_finite((float) $value)) {
+                throw InvalidOnboardingValue::for($where . ' ' . ($name === 'min' ? 'minimum' : 'maximum'), is_scalar($value) ? (string) $value : '(not a number)');
+            }
+            $bounds[$name] = $value;
+        }
+        if (isset($bounds['min'], $bounds['max']) && $bounds['min'] > $bounds['max']) {
+            throw InvalidOnboardingValue::for($where . ' minimum', $bounds['min'] . ' — above the maximum ' . $bounds['max']);
+        }
+
+        return $bounds;
     }
 
     private static function classification(mixed $class, string $where, string $accessGroup): int

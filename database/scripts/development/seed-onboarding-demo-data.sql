@@ -116,7 +116,7 @@ DECLARE @Uniform BIGINT = (SELECT [FormDefinitionId] FROM [onboarding].[FormDefi
 INSERT INTO [onboarding].[FormDefinitionVersions] ([FormDefinitionId], [VersionNumber], [SchemaJson], [IsPublished], [PublishedAtUtc], [PublishedByUserId])
 VALUES (@Starter, 1, N'{"fields":[{"path":"preferredName","label":"Preferred name","type":"text","required":true},{"path":"startDate","label":"Start date","type":"date","required":true,"hint":"The date on your offer letter."},{"path":"parking","label":"Do you need a parking space?","type":"select","options":[{"key":"yes","label":"Yes"},{"key":"no","label":"No"}]},{"path":"notes","label":"Anything HR should know","type":"textarea"},{"path":"confirm","label":"The details above are correct","type":"checkbox","required":true}]}',
         1, SYSUTCDATETIME(), @OwnerUserId),
-       (@Uniform, 1, N'{"fields":[{"path":"shirtSize","label":"Shirt size","type":"select","required":true,"options":[{"key":"s","label":"Small"},{"key":"m","label":"Medium"},{"key":"l","label":"Large"}]},{"path":"bootSize","label":"Boot size","type":"number","required":true}]}',
+       (@Uniform, 1, N'{"fields":[{"path":"shirtSize","label":"Shirt size","type":"select","required":true,"options":[{"key":"s","label":"Small"},{"key":"m","label":"Medium"},{"key":"l","label":"Large"}]},{"path":"bootSize","label":"Boot size","type":"number","required":true,"min":1,"max":20}]}',
         1, SYSUTCDATETIME(), @OwnerUserId);
 
 DECLARE @StarterV BIGINT = (SELECT [FormDefinitionVersionId] FROM [onboarding].[FormDefinitionVersions] WHERE [FormDefinitionId] = @Starter);

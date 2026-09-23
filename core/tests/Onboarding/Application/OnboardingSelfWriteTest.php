@@ -434,6 +434,25 @@ final class OnboardingSelfWriteTest extends TestCase
     }
 
     /**
+     * The schema is checked on the server, before anything is written — the
+     * browser's checks are a convenience a request can skip.
+     */
+    public function test_a_submission_the_schema_refuses_writes_nothing(): void
+    {
+        $this->givenForm();
+
+        try {
+            $this->submitForm()->submit(self::TRAINEE, self::FORM, self::FORM_VERSION, ['preferredName' => ''], 'key-form');
+            self::fail('An empty required field was accepted.');
+        } catch (InvalidOnboardingValue $refused) {
+            self::assertStringContainsString('Preferred name', $refused->getMessage());
+        }
+
+        self::assertSame([], $this->forms->submissions);
+        self::assertSame([], $this->forms->transitions);
+    }
+
+    /**
      * Invariant 7. Handing a form in is not finishing it — somebody has to read
      * it, and the person who filled it in is not that somebody.
      */
@@ -632,7 +651,11 @@ final class OnboardingSelfWriteTest extends TestCase
             versionPublicId: self::FORM_VERSION,
             versionNumber: 1,
             status: AssignmentStatus::notStarted(),
-            schema: ['fields' => []],
+            schema: ['fields' => [
+                ['path' => 'preferredName', 'label' => 'Preferred name', 'type' => 'text', 'required' => true],
+                ['path' => 'bank.accountNumber', 'label' => 'Account number', 'type' => 'text', 'required' => false],
+                ['path' => 'health.conditions', 'label' => 'Conditions', 'type' => 'textarea', 'required' => false],
+            ]],
             draftData: [],
             draftRowVersion: null,
             draftUpdatedAtUtc: null,

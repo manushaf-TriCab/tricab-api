@@ -11,6 +11,8 @@ use TriCab\Core\Onboarding\Contract\OnboardingWriteIdempotencyStore;
 use TriCab\Core\Onboarding\Domain\Exception\ContentVersionSuperseded;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingAssignmentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
+use TriCab\Core\Onboarding\Domain\Service\FormPayloadSplitter;
+use TriCab\Core\Onboarding\Domain\Service\FormSubmissionRules;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
 use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
 
@@ -64,6 +66,7 @@ final readonly class SubmitFormService
      * @throws ContentVersionSuperseded
      * @throws OnboardingWriteConflict
      * @throws \TriCab\Core\Onboarding\Domain\Exception\FormVersionNotClassified
+     * @throws \TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue an answer the schema refuses
      */
     public function submit(
         int $userId,
@@ -95,6 +98,11 @@ final readonly class SubmitFormService
             $payload,
             $this->forms->fieldClassifications($detail->versionPublicId),
         );
+
+        // Then every answer against the version's own schema, still before
+        // anything is written: a submission is immutable, so a bad value
+        // accepted here is one a reviewer has to send back.
+        FormSubmissionRules::check($detail->schema, FormPayloadSplitter::flatten($payload));
 
         return $this->idempotency->run(
             $userId,

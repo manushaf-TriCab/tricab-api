@@ -518,7 +518,11 @@ final class OnboardingSelfWriteEndpointsTest extends TestCase
             versionPublicId: self::FORM_VERSION,
             versionNumber: 1,
             status: $status ?? AssignmentStatus::notStarted(),
-            schema: ['fields' => []],
+            schema: ['fields' => [
+                ['path' => 'preferredName', 'label' => 'Preferred name', 'type' => 'text', 'required' => true],
+                ['path' => 'bank.accountNumber', 'label' => 'Account number', 'type' => 'text', 'required' => false],
+                ['path' => 'health.conditions', 'label' => 'Conditions', 'type' => 'textarea', 'required' => false],
+            ]],
             draftData: [],
             draftRowVersion: null,
             draftUpdatedAtUtc: null,
