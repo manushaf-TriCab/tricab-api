@@ -29,6 +29,7 @@ use TriCab\Api\Bootstrap\ContainerFactory;
 use TriCab\Api\Bootstrap\CoreAutoload;
 use TriCab\Api\Bootstrap\Environment;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Api\Product\Storage\AzureBlobRestClient;
 use TriCab\Core\PdfCatalogue\Domain\PdfCatalogueInventory;
 use TriCab\Core\PdfCatalogue\Module;
 use TriCab\Core\Product\Contract\ProductBlobStore;
@@ -141,6 +142,17 @@ echo "BLOB_CONTAINER={$blobContainer}\n";
 /** @var ProductBlobStore $blobs */
 $blobs = $container->get(ProductBlobStore::class);
 
+if ($apply) {
+    // Container may not exist yet on first non-prod cutover; create idempotently.
+    $rest = new AzureBlobRestClient(
+        $settings->blobAccountName,
+        $settings->blobAccountKey,
+        $settings->blobEndpoint,
+    );
+    $rest->ensureContainer($blobContainer);
+    echo "BLOB_CONTAINER_ENSURED={$blobContainer}\n";
+}
+
 $verifyRows = [];
 foreach ($items as $item) {
     $seedKey = (string) $item['seedKey'];
@@ -186,7 +198,7 @@ foreach ($items as $item) {
         $blobs->putObject($blobContainer, $blobPath, 'application/pdf', $binary);
         $row['upload'] = 'put';
         $head = $blobs->headObject($blobContainer, $blobPath);
-        $row['headOk'] = $head !== null && $head->sizeBytes === $expectedSize;
+        $row['headOk'] = $head !== null && $head->contentLength === $expectedSize;
         if (!$row['headOk']) {
             $row['error'] = 'blob HEAD missing or size mismatch; DocumentAvailable left 0';
             $verifyRows[] = $row;
@@ -240,12 +252,15 @@ function markDocumentAvailable($container, string $seedKey, string $blobPath): b
     try {
         /** @var SqlConnection $db */
         $db = $container->get(SqlConnection::class);
-    } catch (Throwable) {
+    } catch (Throwable $e) {
+        fwrite(STDERR, '[migrate-pdf-catalogues] SqlConnection unavailable: ' . $e->getMessage() . "\n");
+
         return false;
     }
 
     try {
-        $affected = $db->execute(
+        // SqlConnection::execute returns void — success is no exception.
+        $db->execute(
             <<<'SQL'
 UPDATE [catalogue].[Catalogues]
 SET
@@ -262,7 +277,21 @@ SQL
             ],
         );
 
-        return $affected > 0;
+        $rows = $db->fetchAll(
+            <<<'SQL'
+SELECT [DocumentAvailable]
+FROM [catalogue].[Catalogues]
+WHERE [SeedKey] = :seedKey
+  AND [DeletedAtUtc] IS NULL
+SQL
+            ,
+            ['seedKey' => $seedKey],
+        );
+        if ($rows === []) {
+            return false;
+        }
+
+        return (int) ($rows[0]['DocumentAvailable'] ?? 0) === 1;
     } catch (Throwable $e) {
         fwrite(STDERR, '[migrate-pdf-catalogues] DB update failed for ' . $seedKey . ': ' . $e->getMessage() . "\n");
 
