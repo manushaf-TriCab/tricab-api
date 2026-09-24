@@ -25,13 +25,17 @@ final class CostPerMeterFallback
         ?string $defaultLength,
         ?string $userInputLength,
     ): ?string {
+        if (!is_numeric($defaultCost)) {
+            return null;
+        }
+
         if ($status !== MakeStockStatus::MAKE) {
-            return is_numeric($defaultCost) ? $defaultCost : null;
+            return $defaultCost;
         }
 
         $length = $userInputLength !== null ? trim($userInputLength) : '';
         if ($length === '' || $length === '0' || !is_numeric($length) || bccomp($length, '0', 6) <= 0) {
-            return is_numeric($defaultCost) ? $defaultCost : null;
+            return $defaultCost;
         }
 
         $setupLen = $defaultLength !== null ? trim($defaultLength) : '';
@@ -39,15 +43,7 @@ final class CostPerMeterFallback
             return null;
         }
 
-        if (!is_numeric($defaultCost)) {
-            return null;
-        }
-
         $setupCost = $this->setupCost->calculate($productCode);
-        if (!is_numeric($defaultCost) || !is_numeric($length)) {
-            return null;
-        }
-
         // legacy: generatedCost = baseCost + (setupCost / userInputLength)
         $additional = bcdiv($setupCost, $length, PriceLookupMoney::WORK_SCALE);
 
@@ -59,8 +55,6 @@ final class CostPerMeterFallback
      */
     public function setupPremium(string $productCode): string
     {
-        $premium = $this->setupCost->calculate($productCode);
-
-        return is_numeric($premium) ? $premium : '0';
+        return $this->setupCost->calculate($productCode);
     }
 }
