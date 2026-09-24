@@ -51,10 +51,10 @@ final class PdfCatalogueEndpointsTest extends TestCase
         self::assertTrue($payload['success']);
         $data = Payload::obj($payload['data']);
         self::assertSame(10, $data['count']);
-        $items = Payload::list($data['items']);
+        $items = Payload::objList($data['items']);
         self::assertCount(10, $items);
 
-        $titles = array_map(static fn (array $row): string => (string) Payload::obj($row)['title'], $items);
+        $titles = array_map(static fn (array $row): string => Payload::str($row['title'] ?? ''), $items);
         self::assertSame(
             [
                 'ALIFLEX Marine',
@@ -72,9 +72,8 @@ final class PdfCatalogueEndpointsTest extends TestCase
         );
 
         $pur = null;
-        foreach ($items as $row) {
-            $item = Payload::obj($row);
-            if ($item['title'] === 'PUR Marine') {
+        foreach ($items as $item) {
+            if (Payload::str($item['title'] ?? '') === 'PUR Marine') {
                 $pur = $item;
                 break;
             }
@@ -88,7 +87,7 @@ final class PdfCatalogueEndpointsTest extends TestCase
 
         $purMatches = array_values(array_filter(
             $items,
-            static fn (array $row): bool => Payload::obj($row)['title'] === 'PUR Marine',
+            static fn (array $row): bool => Payload::str($row['title'] ?? '') === 'PUR Marine',
         ));
         self::assertCount(1, $purMatches);
     }
@@ -108,8 +107,8 @@ final class PdfCatalogueEndpointsTest extends TestCase
 
         $list = TestAppFactory::json($app->handle(TestAppFactory::request('GET', '/api/v1/catalogues')));
         $titles = array_map(
-            static fn (array $row): string => (string) Payload::obj($row)['title'],
-            Payload::list(Payload::obj($list['data'])['items']),
+            static fn (array $row): string => Payload::str($row['title'] ?? ''),
+            Payload::objList(Payload::obj($list['data'])['items']),
         );
         self::assertNotContains('ALIFLEX Marine', $titles);
         self::assertSame(9, Payload::obj($list['data'])['count']);
@@ -190,7 +189,7 @@ final class PdfCatalogueEndpointsTest extends TestCase
 
         self::assertSame(200, $response->getStatusCode());
         $data = Payload::obj($payload['data']);
-        self::assertStringStartsWith('memory://', (string) $data['url']);
+        self::assertStringStartsWith('memory://', Payload::str($data['url'] ?? ''));
         self::assertSame('GET', $data['httpMethod']);
         self::assertSame('PUR Marine.pdf', $data['fileName']);
         self::assertSame('application/pdf', $data['contentType']);

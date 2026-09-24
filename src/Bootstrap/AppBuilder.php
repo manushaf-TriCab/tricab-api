@@ -575,12 +575,10 @@ final class AppBuilder
     }
 
     /**
-     * Technical hub — versioned JSON content packs (manifest / articles / lookup tables).
-     * Login required (ACCOUNT.LOGIN). Cable Calculator remains on its existing public route.
+     * Staff Price Lookup — internal cost/sell calculator (PRICE_LOOKUP.READ).
      *
      * @param App<ContainerInterface> $app
      */
-
     private static function registerPriceLookupRoutes(App $app, Container $container): void
     {
         $require = new RequirePermission($container);
@@ -589,6 +587,12 @@ final class AppBuilder
         $app->post('/api/v1/price-lookup/quote', QuotePriceLookupAction::class)->add(($require)($gate));
     }
 
+    /**
+     * Technical hub — versioned JSON content packs (manifest / articles / lookup tables).
+     * Login required (ACCOUNT.LOGIN). Cable Calculator remains on its existing public route.
+     *
+     * @param App<ContainerInterface> $app
+     */
     private static function registerTechnicalRoutes(App $app, Container $container): void
     {
         $require = new RequirePermission($container);
