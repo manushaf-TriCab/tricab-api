@@ -173,6 +173,11 @@ final class HttpLegacyCostCalculationGateway implements LegacyCostCalculationGat
             return ['resolution' => $resolution, 'retryable' => false];
         }
 
+        // Live Cost API returns STOCK; customer pricing historically used STOCKED.
+        if ($status === 'STOCK') {
+            $status = CustomerSellPriceStatus::AVAILABILITY_STOCKED;
+        }
+
         if (!in_array($status, [CustomerSellPriceStatus::AVAILABILITY_STOCKED, CustomerSellPriceStatus::AVAILABILITY_MAKE], true)) {
             $resolution = CostResolution::failure($productCode, $dbco, 'INVALID_STATUS', $status !== '' ? $status : CustomerSellPriceStatus::AVAILABILITY_UNKNOWN, $requestedLength);
             $this->metric('cost_api_failure', $resolution->status);

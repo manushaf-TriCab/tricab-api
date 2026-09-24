@@ -160,6 +160,11 @@ use TriCab\Api\Http\Action\Technical\GetTechnicalProductCodingAction;
 use TriCab\Api\Http\Action\Technical\GetTechnicalTableAction;
 use TriCab\Api\Http\Action\Technical\ListTechnicalDocumentsAction;
 use TriCab\Api\Http\Action\Technical\ListTechnicalSectionsAction;
+use TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueAction;
+use TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueFileAction;
+use TriCab\Api\Http\Action\PdfCatalogue\ListPdfCataloguesAction;
+use TriCab\Api\Http\Action\PriceLookup\QuotePriceLookupAction;
+use TriCab\Api\Http\Action\PriceLookup\SearchPriceLookupAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\CableCalculator\PostCableCalculatorCalculateAction;
 use TriCab\Api\Http\Action\ProductFinder\FindProductAction;
@@ -360,6 +365,8 @@ final class AppBuilder
         self::registerQuoteOrderRoutes($app, $container);
         self::registerLogNoteRoutes($app, $container);
         self::registerTelDirectoryRoutes($app, $container);
+        self::registerPdfCatalogueRoutes($app, $container);
+        self::registerPriceLookupRoutes($app, $container);
         self::registerTechnicalRoutes($app, $container);
         $app->get('/api/v1/regions', PublicRegionAction::class);
         $app->get('/api/v1/regions/current', PublicRegionAction::class);
@@ -554,11 +561,34 @@ final class AppBuilder
     }
 
     /**
+     * Staff PDF catalogues — Azure SQL metadata + Blob PDFs (NOT product catalogue navigation).
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerPdfCatalogueRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $gate = \TriCab\Core\PdfCatalogue\Module::PERMISSION_READ;
+        $app->get('/api/v1/catalogues', ListPdfCataloguesAction::class)->add(($require)($gate));
+        $app->get('/api/v1/catalogues/{publicId}', GetPdfCatalogueAction::class)->add(($require)($gate));
+        $app->get('/api/v1/catalogues/{publicId}/file', GetPdfCatalogueFileAction::class)->add(($require)($gate));
+    }
+
+    /**
      * Technical hub — versioned JSON content packs (manifest / articles / lookup tables).
      * Login required (ACCOUNT.LOGIN). Cable Calculator remains on its existing public route.
      *
      * @param App<ContainerInterface> $app
      */
+
+    private static function registerPriceLookupRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $gate = \TriCab\Core\PriceLookup\Module::PERMISSION_READ;
+        $app->get('/api/v1/price-lookup/search', SearchPriceLookupAction::class)->add(($require)($gate));
+        $app->post('/api/v1/price-lookup/quote', QuotePriceLookupAction::class)->add(($require)($gate));
+    }
+
     private static function registerTechnicalRoutes(App $app, Container $container): void
     {
         $require = new RequirePermission($container);

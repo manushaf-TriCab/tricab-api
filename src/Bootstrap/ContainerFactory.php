@@ -1685,6 +1685,63 @@ final class ContainerFactory
             \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class => \DI\autowire(
                 \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class,
             ),
+
+            \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository::class => static function (Container $container): \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository {
+                $config = self::get($container, \TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig::class);
+                if (!$config->tcConfigured()) {
+                    return new \TriCab\Api\PriceLookup\Persistence\InMemoryPriceLookupPriceRepository();
+                }
+                return new \TriCab\Api\PriceLookup\Persistence\MysqlPriceLookupPriceRepository(
+                    self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                );
+            },
+            \TriCab\Core\PriceLookup\Contract\PriceLookupFxRepository::class => static function (Container $container): \TriCab\Core\PriceLookup\Contract\PriceLookupFxRepository {
+                $config = self::get($container, \TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig::class);
+                if (!$config->tcConfigured()) {
+                    return new \TriCab\Api\PriceLookup\Persistence\InMemoryPriceLookupFxRepository();
+                }
+                return new \TriCab\Api\PriceLookup\Persistence\MysqlPriceLookupFxRepository(
+                    self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                );
+            },
+            \TriCab\Core\PriceLookup\Application\Service\SearchPriceLookupService::class => \DI\autowire(
+                \TriCab\Core\PriceLookup\Application\Service\SearchPriceLookupService::class,
+            ),
+            \TriCab\Core\PriceLookup\Application\Service\QuotePriceLookupService::class => \DI\autowire(
+                \TriCab\Core\PriceLookup\Application\Service\QuotePriceLookupService::class,
+            ),
+
+            \TriCab\Core\PdfCatalogue\Contract\PdfCatalogueRepository::class => static function (): \TriCab\Core\PdfCatalogue\Contract\PdfCatalogueRepository {
+                return new \TriCab\Api\PdfCatalogue\Persistence\InMemoryPdfCatalogueRepository();
+            },
+            \TriCab\Core\PdfCatalogue\Application\Service\ListPdfCataloguesService::class => \DI\autowire(
+                \TriCab\Core\PdfCatalogue\Application\Service\ListPdfCataloguesService::class,
+            ),
+            \TriCab\Core\PdfCatalogue\Application\Service\GetPdfCatalogueService::class => \DI\autowire(
+                \TriCab\Core\PdfCatalogue\Application\Service\GetPdfCatalogueService::class,
+            ),
+            \TriCab\Core\PdfCatalogue\Application\Service\GetPdfCatalogueFileService::class => static function (Container $container) use ($settings): \TriCab\Core\PdfCatalogue\Application\Service\GetPdfCatalogueFileService {
+                $containerName = trim($settings->blobContainerCatalogues);
+                if ($containerName === '') {
+                    $containerName = \TriCab\Core\PdfCatalogue\Module::BLOB_CONTAINER;
+                }
+
+                return new \TriCab\Core\PdfCatalogue\Application\Service\GetPdfCatalogueFileService(
+                    self::get($container, \TriCab\Core\PdfCatalogue\Contract\PdfCatalogueRepository::class),
+                    self::get($container, ProductBlobStore::class),
+                    $containerName,
+                    max(60, $settings->blobDownloadSasTtlSeconds),
+                );
+            },
+            \TriCab\Api\Http\Action\PdfCatalogue\ListPdfCataloguesAction::class => \DI\autowire(
+                \TriCab\Api\Http\Action\PdfCatalogue\ListPdfCataloguesAction::class,
+            ),
+            \TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueAction::class => \DI\autowire(
+                \TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueAction::class,
+            ),
+            \TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueFileAction::class => \DI\autowire(
+                \TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueFileAction::class,
+            ),
             \TriCab\Api\QuoteOrder\Mapping\LegacyQuoteOrderMapper::class => \DI\autowire(
                 \TriCab\Api\QuoteOrder\Mapping\LegacyQuoteOrderMapper::class,
             ),
@@ -2207,6 +2264,7 @@ final class ContainerFactory
             $definitions[CustomerRepository::class] = \DI\autowire(AzureSqlCustomerRepository::class);
             $definitions[\TriCab\Core\LogNote\Contract\LogNoteRepository::class] = \DI\autowire(\TriCab\Api\LogNote\Persistence\AzureSqlLogNoteRepository::class);
             $definitions[\TriCab\Core\LogNote\Contract\LogNoteAuditRecorder::class] = \DI\autowire(\TriCab\Api\LogNote\Persistence\AzureSqlLogNoteAuditRecorder::class);
+            $definitions[\TriCab\Core\PdfCatalogue\Contract\PdfCatalogueRepository::class] = \DI\autowire(\TriCab\Api\PdfCatalogue\Persistence\AzureSqlPdfCatalogueRepository::class);
             $definitions[CustomerContactRepository::class] = \DI\autowire(AzureSqlCustomerContactRepository::class);
             $definitions[CustomerContactUserRepository::class] = \DI\autowire(AzureSqlCustomerContactUserRepository::class);
             $definitions[CustomerPortalUserProvisioner::class] = \DI\autowire(UserManagementCustomerPortalUserProvisioner::class);

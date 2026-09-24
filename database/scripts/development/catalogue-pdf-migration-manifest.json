@@ -1,0 +1,217 @@
+{
+  "generatedFor": "tricab-pdf-catalogues",
+  "mode": "staging-verified-sources",
+  "documentAvailablePolicy": "never set DocumentAvailable=1 until APPLY verifies blob",
+  "itemCount": 10,
+  "verifiedCount": 10,
+  "mappingErrors": [],
+  "purMarineComparison": {
+    "canonical": {
+      "file": "PUR Marine.pdf",
+      "status": "VERIFIED",
+      "sha256": "b50603d0fef528438dca5dc26c6e047076f8c7ac96f176716017ae78fcba2e70",
+      "sizeBytes": 13775583
+    },
+    "alternate": {
+      "file": "TriCab_PUR_Catalogue_issue_12.0.pdf",
+      "status": "FAILED",
+      "sha256": null,
+      "sizeBytes": 0,
+      "error": "HTTP Error 400: Bad Request"
+    },
+    "result": "ALTERNATE_UNAVAILABLE \u2014 cannot compare SHA-256; continue with canonical PUR Marine (AU_NZ+ASIA). Do not auto-create second catalogue."
+  },
+  "items": [
+    {
+      "seedKey": "aliflex-marine",
+      "title": "ALIFLEX Marine",
+      "issue": "13.0",
+      "regions": [
+        "AU_NZ"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/05/ALIFLEX%20Marine.pdf",
+      "sourceFileName": "ALIFLEX Marine.pdf",
+      "legacyRelativePath": "2026/05/ALIFLEX Marine.pdf",
+      "sizeBytes": 7478825,
+      "sha256": "cb54982c723c9028f0497d41f94f6d79c816f5b77fb275dae54de80eabeff68f",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/aliflex-marine/13.0/catalogue.pdf",
+      "pagesEstimate": 32,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    },
+    {
+      "seedKey": "dali-lighting-automation",
+      "title": "DALI - Lighting Automation",
+      "issue": "15.0",
+      "regions": [
+        "AU_NZ"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/06/DALI-Lighting%20Automation.pdf",
+      "sourceFileName": "DALI-Lighting Automation.pdf",
+      "legacyRelativePath": "2026/06/DALI-Lighting Automation.pdf",
+      "sizeBytes": 1558184,
+      "sha256": "b79120511951ee2e69628cbb3c9ce5535a4ae97fb11b48eaf01223ab346fa510",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/dali-lighting-automation/15.0/catalogue.pdf",
+      "pagesEstimate": 6,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    },
+    {
+      "seedKey": "drag-chain-festoon-elevator",
+      "title": "Drag Chain, Festoon & Elevator",
+      "issue": "15.0",
+      "regions": [
+        "AU_NZ"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/06/DRAG%20CHAIN%2C%20FESTOON%20and%20ELEVATOR.pdf",
+      "sourceFileName": "DRAG CHAIN, FESTOON and ELEVATOR.pdf",
+      "legacyRelativePath": "2026/06/DRAG CHAIN, FESTOON and ELEVATOR.pdf",
+      "sizeBytes": 5524793,
+      "sha256": "7c099aee6b7274f07273194c2eec88aa7b94954b3bbf4de282dbc5aa536c87ea",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/drag-chain-festoon-elevator/15.0/catalogue.pdf",
+      "pagesEstimate": 20,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    },
+    {
+      "seedKey": "food-beverage",
+      "title": "Food & Beverage",
+      "issue": "1.0",
+      "regions": [
+        "AU_NZ"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/05/Food%20%26%20Beverage.pdf",
+      "sourceFileName": "Food & Beverage.pdf",
+      "legacyRelativePath": "2026/05/Food & Beverage.pdf",
+      "sizeBytes": 3795578,
+      "sha256": "0cac5fd4ebb0e1c00099a446754b630192c7996959e5c3c88ee5bab520467aaf",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/food-beverage/1.0/catalogue.pdf",
+      "pagesEstimate": 5,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    },
+    {
+      "seedKey": "pur-marine",
+      "title": "PUR Marine",
+      "issue": "12.0",
+      "regions": [
+        "AU_NZ",
+        "ASIA"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/05/PUR%20Marine.pdf",
+      "sourceFileName": "PUR Marine.pdf",
+      "legacyRelativePath": "2026/05/PUR Marine.pdf",
+      "sizeBytes": 13775583,
+      "sha256": "b50603d0fef528438dca5dc26c6e047076f8c7ac96f176716017ae78fcba2e70",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/pur-marine/12.0/catalogue.pdf",
+      "pagesEstimate": 98,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    },
+    {
+      "seedKey": "ship-loaders-cranes",
+      "title": "Ship Loaders & Cranes",
+      "issue": "1.0",
+      "regions": [
+        "AU_NZ"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/05/Ship%20Loaders%20%26%20Cranes.pdf",
+      "sourceFileName": "Ship Loaders & Cranes.pdf",
+      "legacyRelativePath": "2026/05/Ship Loaders & Cranes.pdf",
+      "sizeBytes": 8584669,
+      "sha256": "acbe827b3fcd84f0fe1780a16b34264f78efadf831c9e2ff7d9b71ccdf5672ba",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/ship-loaders-cranes/1.0/catalogue.pdf",
+      "pagesEstimate": 12,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    },
+    {
+      "seedKey": "shore-power",
+      "title": "Shore Power",
+      "issue": "1.0",
+      "regions": [
+        "AU_NZ"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/05/Shore%20Power.pdf",
+      "sourceFileName": "Shore Power.pdf",
+      "legacyRelativePath": "2026/05/Shore Power.pdf",
+      "sizeBytes": 903906,
+      "sha256": "3f40c6efb8925f5684257772258687a2fa73d13180f4d11d828c7c2852200f8b",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/shore-power/1.0/catalogue.pdf",
+      "pagesEstimate": 4,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    },
+    {
+      "seedKey": "temporary-power",
+      "title": "Temporary Power",
+      "issue": "1.0",
+      "regions": [
+        "AU_NZ"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/05/Temporary%20Power.pdf",
+      "sourceFileName": "Temporary Power.pdf",
+      "legacyRelativePath": "2026/05/Temporary Power.pdf",
+      "sizeBytes": 1593903,
+      "sha256": "dbbe7e916c291fa92699a93e7b60ea39cc0e2a6615843b0827622a519fc19557",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/temporary-power/1.0/catalogue.pdf",
+      "pagesEstimate": 8,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    },
+    {
+      "seedKey": "water-treatment",
+      "title": "Water Treatment",
+      "issue": "1.0",
+      "regions": [
+        "AU_NZ"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/05/Water%20Treatment.pdf",
+      "sourceFileName": "Water Treatment.pdf",
+      "legacyRelativePath": "2026/05/Water Treatment.pdf",
+      "sizeBytes": 1865526,
+      "sha256": "a571cbdced1e7cd2d85d58c5d55fa4b943dfd4982eda2cfa4305f20861e9b2ad",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/water-treatment/1.0/catalogue.pdf",
+      "pagesEstimate": 4,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    },
+    {
+      "seedKey": "marine-lszh",
+      "title": "Marine LSZH",
+      "issue": "14.0",
+      "regions": [
+        "USA"
+      ],
+      "sourceUrl": "https://www.tricab.com/wp-content/uploads/2026/06/TriCabUSA_LSZH_MARINE.pdf",
+      "sourceFileName": "TriCabUSA_LSZH_MARINE.pdf",
+      "legacyRelativePath": "2026/06/TriCabUSA_LSZH_MARINE.pdf",
+      "sizeBytes": 8809235,
+      "sha256": "8a452e2dbacea60dda5e00911826cc658eb58cdaa27c2630aafacecb7a4978c8",
+      "contentType": "application/pdf",
+      "blobPath": "catalogues/marine-lszh/14.0/catalogue.pdf",
+      "pagesEstimate": 38,
+      "httpStatus": 200,
+      "pdfMagicOk": true,
+      "status": "VERIFIED"
+    }
+  ]
+}
