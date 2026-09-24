@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Onboarding\Contract;
 
+use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
 use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
 use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
@@ -24,6 +25,23 @@ interface OnboardingDocumentGenerationRepository
      */
     public function recordFormDocument(
         FormSubmissionForDocument $submission,
+        RenderedDocument $document,
+        DataClass $dataClass,
+        string $container,
+        string $blobPath,
+    ): string;
+
+    /** The training assignment and its person, for this person only; null when it is not theirs or not training. */
+    public function findAssessmentContext(int $userId, string $assignmentPublicId): ?AssessmentDocumentContext;
+
+    /** Whether a live document already sits at this blob path — how an attempt's sheet stays once-only. */
+    public function hasDocumentAtPath(string $blobPath): bool;
+
+    /**
+     * Writes the reference row for an assessment sheet and returns its public id.
+     */
+    public function recordAssessmentDocument(
+        AssessmentDocumentContext $context,
         RenderedDocument $document,
         DataClass $dataClass,
         string $container,

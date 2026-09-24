@@ -8,7 +8,17 @@ use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\TestCase;
 use TriCab\Core\Identity\Domain\Service\UuidV4Generator;
+use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
+use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentInput;
+use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
+use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
 use TriCab\Core\Onboarding\Application\DTO\OnboardingDocumentRef;
+use TriCab\Core\Onboarding\Application\Service\GenerateAssessmentDocumentService;
+use TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService;
+use TriCab\Core\Onboarding\Contract\OnboardingAssessmentDocumentRenderer;
+use TriCab\Core\Onboarding\Contract\OnboardingFormDocumentRenderer;
+use TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingDocumentGenerationRepository;
+use TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingDocumentStore;
 use TriCab\Core\Onboarding\Application\DTO\OnboardingFormDetail;
 use TriCab\Core\Onboarding\Application\DTO\OnboardingPolicyDetail;
 use TriCab\Core\Onboarding\Application\DTO\OnboardingTraineeRecord;
@@ -771,5 +781,76 @@ final class OnboardingSelfWriteTest extends TestCase
     private function openDocument(): OpenOwnDocumentService
     {
         return new OpenOwnDocumentService($this->documents, $this->gate());
+    }
+
+    // ------------------------------------------------ paper copies (5.4)
+
+    public function test_a_submitted_attempt_gets_its_paper_sheet_once_with_the_answers_in_order(): void
+    {
+        $this->givenTraining(reached: ['intro', 'hazards', 'sign-off']);
+        [$generation, $store, $renderer] = $this->paperCopies();
+        $generation->withAssessment(self::TRAINING, new AssessmentDocumentContext(9, self::TRAINEE, 'corporate-whse-induction', 'Corporate and WHSE Induction', 'Sam Synthetic', 'Storeperson', 'Warehouse', 'Dandenong', 'Morgan Manager'));
+        $submit = new SubmitAssessmentAttemptService($this->training, $this->gate(), $this->idempotency(), new GenerateAssessmentDocumentService($generation, $this->training, $renderer, $store));
+        $attempt = $this->startAttempt()->start(self::TRAINEE, self::TRAINING, self::TRAINING_VERSION);
+
+        $submit->submit(self::TRAINEE, self::TRAINING, $attempt->publicId, self::TRAINING_VERSION, ['q1' => 'b', 'q2' => 'a'], 'key-sheet');
+        $submit->submit(self::TRAINEE, self::TRAINING, $attempt->publicId, self::TRAINING_VERSION, ['q1' => 'b', 'q2' => 'a'], 'key-sheet');
+
+        self::assertCount(1, $store->objects, 'a replay makes no second sheet');
+        self::assertCount(1, $renderer->inputs);
+        $input = $renderer->inputs[0];
+        self::assertSame(['b', 'a'], array_column($input->questions, 'chosenKey'), 'the attempt\'s own order');
+        self::assertSame(50, $input->scorePercent);
+        self::assertFalse($input->passed);
+        $listed = $this->documents->listDocuments(self::TRAINEE);
+        self::assertCount(1, $listed);
+        self::assertSame('assessment', $listed[0]->documentKind);
+        self::assertSame(DataClass::WORKFLOW, $listed[0]->dataClass->toInt());
+    }
+
+    public function test_a_submitted_form_gets_its_paper_copy(): void
+    {
+        $this->givenForm();
+        [$generation, $store] = $this->paperCopies();
+        $generation->withSubmission(self::FORM, new FormSubmissionForDocument(31, 9, self::TRAINEE, 'employee-details', 'payroll', 1, '2026-09-22T09:00:00Z', 'Sam Synthetic'));
+        $renderer = new class () implements OnboardingFormDocumentRenderer {
+            /** @var list<array<string, mixed>> */
+            public array $answers = [];
+
+            public function render(FormSubmissionForDocument $submission, array $answers): ?RenderedDocument
+            {
+                $this->answers[] = $answers;
+
+                return new RenderedDocument('employee_details', 'application/pdf', '%PDF-1.4 form');
+            }
+        };
+        $submit = new SubmitFormService($this->forms, $this->gate(), $this->idempotency(), new GenerateFormSubmissionDocumentService($generation, $renderer, $store, new UuidV4Generator()));
+
+        $submit->submit(self::TRAINEE, self::FORM, self::FORM_VERSION, ['preferredName' => 'Sam', 'bank' => ['accountNumber' => '12345678']], 'key-form-copy');
+
+        self::assertSame([['preferredName' => 'Sam', 'bank' => ['accountNumber' => '12345678']]], $renderer->answers, 'the whole payload, before the split');
+        $listed = $this->documents->listDocuments(self::TRAINEE);
+        self::assertCount(1, $listed);
+        self::assertSame(DataClass::PAYROLL, $listed[0]->dataClass->toInt());
+    }
+
+    /**
+     * @return array{InMemoryOnboardingDocumentGenerationRepository, InMemoryOnboardingDocumentStore, OnboardingAssessmentDocumentRenderer&object{inputs: list<AssessmentDocumentInput>}}
+     */
+    private function paperCopies(): array
+    {
+        $renderer = new class () implements OnboardingAssessmentDocumentRenderer {
+            /** @var list<AssessmentDocumentInput> */
+            public array $inputs = [];
+
+            public function render(AssessmentDocumentInput $input): ?RenderedDocument
+            {
+                $this->inputs[] = $input;
+
+                return new RenderedDocument('assessment', 'application/pdf', '%PDF-1.4 sheet');
+            }
+        };
+
+        return [new InMemoryOnboardingDocumentGenerationRepository($this->documents), new InMemoryOnboardingDocumentStore(), $renderer];
     }
 }

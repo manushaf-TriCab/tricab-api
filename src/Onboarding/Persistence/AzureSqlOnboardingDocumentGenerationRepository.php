@@ -6,6 +6,7 @@ namespace TriCab\Api\Onboarding\Persistence;
 
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
 use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
 use TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository;
@@ -96,6 +97,89 @@ final class AzureSqlOnboardingDocumentGenerationRepository implements Onboarding
                 ':userId' => $submission->userId,
                 ':assignmentId' => $submission->assignmentId,
                 ':submissionId' => $submission->formSubmissionId,
+                ':kind' => $document->documentKind,
+                ':class' => $dataClass->toInt(),
+                ':container' => $container,
+                ':path' => $blobPath,
+                ':contentType' => $document->contentType,
+                ':size' => $document->byteSize(),
+                ':sha' => $document->sha256,
+            ],
+        );
+
+        return strtolower(AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? ''));
+    }
+
+    public function findAssessmentContext(int $userId, string $assignmentPublicId): ?AssessmentDocumentContext
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+            SELECT TOP (1)
+                a.[AssignmentId],
+                a.[UserId],
+                tm.[Slug],
+                tm.[Title],
+                COALESCE(NULLIF(LTRIM(RTRIM(u.[DisplayName])), N''), N'') AS [PersonName],
+                COALESCE(t.[Position], N'') AS [Position],
+                COALESCE(t.[Department], N'') AS [Department],
+                COALESCE(t.[Branch], N'') AS [Branch],
+                COALESCE(NULLIF(LTRIM(RTRIM(m.[DisplayName])), N''), N'') AS [ManagerName]
+            FROM [onboarding].[Assignments] a
+            JOIN [onboarding].[TrainingModuleVersions] tmv ON tmv.[TrainingModuleVersionId] = a.[TrainingModuleVersionId]
+            JOIN [onboarding].[TrainingModules] tm ON tm.[TrainingModuleId] = tmv.[TrainingModuleId]
+            JOIN [identity].[Users] u ON u.[UserId] = a.[UserId]
+            LEFT JOIN [onboarding].[TraineeProfiles] t ON t.[UserId] = a.[UserId]
+            LEFT JOIN [identity].[Users] m ON m.[UserId] = t.[ManagerUserId]
+            WHERE a.[PublicId] = CONVERT(UNIQUEIDENTIFIER, :assignment)
+              AND a.[UserId] = :userId
+              AND a.[ItemType] = N'training'
+            SQL,
+            [':assignment' => $assignmentPublicId, ':userId' => $userId],
+        );
+        if ($rows === []) {
+            return null;
+        }
+        $row = $rows[0];
+
+        return new AssessmentDocumentContext(
+            AzureSqlValueMapper::intValue($row['AssignmentId'] ?? 0),
+            AzureSqlValueMapper::intValue($row['UserId'] ?? 0),
+            AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['Title'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['PersonName'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['Position'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['Department'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['Branch'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['ManagerName'] ?? ''),
+        );
+    }
+
+    public function hasDocumentAtPath(string $blobPath): bool
+    {
+        return $this->connection->fetchAll(
+            'SELECT TOP (1) 1 AS [Found] FROM [onboarding].[DocumentReferences] WHERE [BlobPath] = :path',
+            [':path' => $blobPath],
+        ) !== [];
+    }
+
+    public function recordAssessmentDocument(
+        AssessmentDocumentContext $context,
+        RenderedDocument $document,
+        DataClass $dataClass,
+        string $container,
+        string $blobPath,
+    ): string {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+            INSERT INTO [onboarding].[DocumentReferences]
+                ([UserId], [AssignmentId], [FormSubmissionId], [DocumentKind], [RetentionClassId],
+                 [BlobContainer], [BlobPath], [ContentType], [ByteSize], [ContentSha256])
+            OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
+            VALUES (:userId, :assignmentId, NULL, :kind, :class, :container, :path, :contentType, :size, :sha)
+            SQL,
+            [
+                ':userId' => $context->userId,
+                ':assignmentId' => $context->assignmentId,
                 ':kind' => $document->documentKind,
                 ':class' => $dataClass->toInt(),
                 ':container' => $container,

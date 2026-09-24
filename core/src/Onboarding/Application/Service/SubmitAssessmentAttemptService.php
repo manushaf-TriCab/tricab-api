@@ -62,6 +62,8 @@ final readonly class SubmitAssessmentAttemptService
         private OnboardingTrainingRepository $training,
         private OnboardingSubmissionGate $gate,
         private OnboardingIdempotentWrite $idempotency,
+        /** Phase 5.4: the paper sheet, made after the attempt commits. Null in tests that do not need it. */
+        private ?GenerateAssessmentDocumentService $documents = null,
     ) {
     }
 
@@ -101,7 +103,7 @@ final readonly class SubmitAssessmentAttemptService
 
         $grade = AssessmentGrader::grade($attempt->questions, $answers, $detail->passMarkPercent);
 
-        return $this->idempotency->run(
+        $result = $this->idempotency->run(
             $userId,
             OnboardingWriteIdempotencyStore::OPERATION_SUBMIT_ATTEMPT,
             $idempotencyKey,
@@ -144,6 +146,12 @@ final readonly class SubmitAssessmentAttemptService
                 return self::reveal($replayed, $grade);
             },
         );
+
+        // After the write, and on a replay too: once per attempt, so a replay
+        // finds the sheet made, and one whose first try failed gets another.
+        $this->documents?->generate($userId, $assignmentPublicId, $result->publicId);
+
+        return $result;
     }
 
     /**

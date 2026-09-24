@@ -819,6 +819,17 @@ final class ContainerFactory
                         self::get($container, ProductBlobStore::class),
                         $settings->blobContainerOnboarding,
                     ),
+            \TriCab\Core\Onboarding\Contract\OnboardingAssessmentDocumentRenderer::class
+                => static fn (): \TriCab\Core\Onboarding\Contract\OnboardingAssessmentDocumentRenderer
+                    => new \TriCab\Api\Onboarding\Document\AssessmentPdfMapper(dirname(__DIR__, 2) . '/resources/onboarding/form-templates'),
+            \TriCab\Core\Onboarding\Application\Service\SubmitAssessmentAttemptService::class
+                => static fn (Container $container): \TriCab\Core\Onboarding\Application\Service\SubmitAssessmentAttemptService
+                    => new \TriCab\Core\Onboarding\Application\Service\SubmitAssessmentAttemptService(
+                        self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingTrainingRepository::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingSubmissionGate::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingIdempotentWrite::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\GenerateAssessmentDocumentService::class),
+                    ),
             \TriCab\Core\Onboarding\Application\Service\SubmitFormService::class
                 => static fn (Container $container): \TriCab\Core\Onboarding\Application\Service\SubmitFormService
                     => new \TriCab\Core\Onboarding\Application\Service\SubmitFormService(

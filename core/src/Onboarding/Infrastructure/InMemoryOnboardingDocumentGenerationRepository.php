@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Onboarding\Infrastructure;
 
+use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
 use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
 use TriCab\Core\Onboarding\Application\DTO\OnboardingDocumentRef;
@@ -21,6 +22,12 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
 
     /** @var array<int, string> formSubmissionId => document public id */
     public array $recorded = [];
+
+    /** @var array<string, AssessmentDocumentContext> keyed "userId|assignmentPublicId" */
+    public array $assessments = [];
+
+    /** @var array<string, string> blob path => document public id */
+    public array $paths = [];
 
     private int $next = 1;
 
@@ -52,9 +59,50 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
     ): string {
         $publicId = sprintf('00000000-0000-4000-8000-%012d', $this->next++);
         $this->recorded[$submission->formSubmissionId] = $publicId;
+        $this->paths[$blobPath] = $publicId;
         $this->documents?->withDocument($submission->userId, new OnboardingDocumentRef(
             $publicId,
             $submission->userId,
+            $document->documentKind,
+            $dataClass,
+            $container,
+            $blobPath,
+            $document->contentType,
+            $document->byteSize(),
+            $document->sha256,
+            gmdate('Y-m-d\TH:i:s\Z'),
+        ));
+
+        return $publicId;
+    }
+
+    public function withAssessment(string $assignmentPublicId, AssessmentDocumentContext $context): void
+    {
+        $this->assessments[$context->userId . '|' . strtolower($assignmentPublicId)] = $context;
+    }
+
+    public function findAssessmentContext(int $userId, string $assignmentPublicId): ?AssessmentDocumentContext
+    {
+        return $this->assessments[$userId . '|' . strtolower($assignmentPublicId)] ?? null;
+    }
+
+    public function hasDocumentAtPath(string $blobPath): bool
+    {
+        return isset($this->paths[$blobPath]);
+    }
+
+    public function recordAssessmentDocument(
+        AssessmentDocumentContext $context,
+        RenderedDocument $document,
+        DataClass $dataClass,
+        string $container,
+        string $blobPath,
+    ): string {
+        $publicId = sprintf('00000000-0000-4000-8000-%012d', $this->next++);
+        $this->paths[$blobPath] = $publicId;
+        $this->documents?->withDocument($context->userId, new OnboardingDocumentRef(
+            $publicId,
+            $context->userId,
             $document->documentKind,
             $dataClass,
             $container,

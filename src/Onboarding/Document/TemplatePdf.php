@@ -58,9 +58,10 @@ final class TemplatePdf
 
     /**
      * One readable line: shrinks from `$preferredSize` to fit `$width`, never
-     * below {@see MIN_VALUE_SIZE}, then truncates with an ellipsis.
+     * below `$minSize` ({@see MIN_VALUE_SIZE} for forms; the assessment sheets'
+     * small boxes use 4.6, as the source did), then truncates with an ellipsis.
      */
-    public function draw(string $raw, float $x, float $top, float $width, float $preferredSize = 8.2, bool $bold = false): void
+    public function draw(string $raw, float $x, float $top, float $width, float $preferredSize = 8.2, bool $bold = false, float $minSize = self::MIN_VALUE_SIZE): void
     {
         $value = trim((string) preg_replace('/\s+/u', ' ', $raw));
         if ($value === '') {
@@ -70,11 +71,11 @@ final class TemplatePdf
 
         $size = $preferredSize;
         $this->pdf->SetFont('Helvetica', $bold ? 'B' : '', $size);
-        while ($size > self::MIN_VALUE_SIZE && $this->pdf->GetStringWidth($encoded) > $width) {
+        while ($size > $minSize && $this->pdf->GetStringWidth($encoded) > $width) {
             $size -= 0.2;
             $this->pdf->SetFont('Helvetica', $bold ? 'B' : '', $size);
         }
-        $size = max(self::MIN_VALUE_SIZE, $size);
+        $size = max($minSize, $size);
         $this->pdf->SetFont('Helvetica', $bold ? 'B' : '', $size);
 
         $this->pdf->Text($x, $top + $size, $this->fit($encoded, $width));
@@ -85,6 +86,42 @@ final class TemplatePdf
     {
         $this->pdf->SetFont('Helvetica', 'B', 7);
         $this->pdf->Text($x, $top + 7, 'X');
+    }
+
+    /** Paints a white box — the source's way of clearing a printed placeholder before writing over it. */
+    public function erase(float $x, float $top, float $width, float $height): void
+    {
+        $this->pdf->SetFillColor(255, 255, 255);
+        $this->pdf->Rect($x, $top, $width, $height, 'F');
+    }
+
+    /** Word-wrapped text in a box, as many lines as fit, the last one ellipsed if more remain. */
+    public function drawWrapped(string $raw, float $x, float $top, float $width, float $height, float $size): void
+    {
+        $words = array_values(array_filter(explode(' ', trim((string) preg_replace('/\s+/u', ' ', $raw))), static fn (string $w): bool => $w !== ''));
+        if ($words === []) {
+            return;
+        }
+        $this->pdf->SetFont('Helvetica', '', $size);
+        $lines = [];
+        $current = '';
+        foreach ($words as $word) {
+            $candidate = $current === '' ? $word : $current . ' ' . $word;
+            if ($this->pdf->GetStringWidth(self::encode($candidate)) <= $width) {
+                $current = $candidate;
+                continue;
+            }
+            if ($current !== '') {
+                $lines[] = $current;
+            }
+            $current = $word;
+        }
+        $lines[] = $current;
+        $max = max(1, (int) floor($height / ($size + 2)));
+        foreach (array_slice($lines, 0, $max) as $i => $line) {
+            $last = $i === $max - 1 && count($lines) > $max;
+            $this->draw($last ? $line . '...' : $line, $x, $top + $i * ($size + 2), $width, $size, false, 4.6);
+        }
     }
 
     public function metadata(string $title, string $subject): void
