@@ -12,6 +12,7 @@ use TriCab\Core\PriceLookup\Contract\PriceLookupFxRepository;
 use TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository;
 use TriCab\Core\PriceLookup\Domain\CostPerMeterFallback;
 use TriCab\Core\PriceLookup\Domain\MakeStockStatus;
+use TriCab\Core\PriceLookup\Domain\PaLargeCableDetector;
 use TriCab\Core\PriceLookup\Domain\PriceLookupDbcoMapper;
 use TriCab\Core\PriceLookup\Domain\PriceLookupMetricRate;
 use TriCab\Core\PriceLookup\Domain\PriceLookupMoney;
@@ -35,6 +36,7 @@ final class QuotePriceLookupService
         private readonly StaffEnteredMarginSellFormula $sellFormula = new StaffEnteredMarginSellFormula(),
         private readonly CostPerMeterFallback $fallback = new CostPerMeterFallback(),
         private readonly MakeStockStatus $makeStock = new MakeStockStatus(),
+        private readonly PaLargeCableDetector $paLargeCable = new PaLargeCableDetector(),
     ) {
     }
 
@@ -55,7 +57,6 @@ final class QuotePriceLookupService
             throw PriceLookupValidationException::invalidProductCode();
         }
 
-        $lengthProbe = $this->normalizeLengthProbe($length);
         if ($length !== null && trim($length) !== '' && trim($length) !== '0') {
             $this->assertPositiveLength($length);
         }
@@ -72,13 +73,19 @@ final class QuotePriceLookupService
         $setupLength = $row['setupLength'] ?? '';
         $setupPremium = $this->money->roundDisplay($this->fallback->setupPremium($code));
 
+        // Legacy template-price-lookup: Cost API length = (length != 0 ? length : setup).
+        $apiLength = $this->lengthForCostApi($length, $setupLength !== '' ? $setupLength : null);
+        // Fallback receives the raw staff length (0/empty → no length-dependent uplift).
+        $userLengthForFallback = $this->userLengthForFallback($length);
+
         [$unitCost, $costSource] = $this->resolveUnitCost(
             $code,
             $dbco,
             $status,
             $baseCostRaw,
             $setupLength !== '' ? $setupLength : null,
-            $lengthProbe,
+            $apiLength,
+            $userLengthForFallback,
             $companyCode,
         );
 
@@ -111,10 +118,11 @@ final class QuotePriceLookupService
         string $status,
         string $baseCost,
         ?string $setupLength,
-        string $lengthProbe,
+        string $apiLength,
+        ?string $userLengthForFallback,
         string $company,
     ): array {
-        $resolution = $this->costApi->resolveCost($productCode, $dbco, $lengthProbe);
+        $resolution = $this->costApi->resolveCost($productCode, $dbco, $apiLength);
         $effective = $resolution->effectiveCostPerUnit();
         if ($effective !== null) {
             return [$effective, self::COST_SOURCE_API];
@@ -129,13 +137,22 @@ final class QuotePriceLookupService
             return [(string) $resolution->calculatedCostPerMeter, self::COST_SOURCE_API];
         }
 
-        $userLength = $lengthProbe === '1' ? null : $lengthProbe;
+        // Decision B: do not silently return simplified/base cost for PA large-cable cases
+        // where legacy finalCalculatedCostPermeter diverges from CostPerMeterFallback.
+        if ($this->paLargeCable->requiresAuthoritativeCostApi($productCode)) {
+            error_log('[price-lookup] cost_api_required productCode=' . $productCode . ' company=' . $company . ' reason=PA_LARGE_CABLE');
+            throw new PriceLookupUnavailable(
+                'COST_CALCULATION_UNAVAILABLE',
+                'Authoritative cost calculation is unavailable for this product right now.',
+            );
+        }
+
         $fallbackCost = $this->fallback->calculate(
             $productCode,
             $status,
             $baseCost,
             $setupLength,
-            $userLength,
+            $userLengthForFallback,
         );
 
         if ($fallbackCost !== null && bccomp($fallbackCost, '0', 6) > 0) {
@@ -177,14 +194,39 @@ final class QuotePriceLookupService
         return $code;
     }
 
-    private function normalizeLengthProbe(?string $length): string
+    /**
+     * Legacy Cost API userInputLength: staff length when set, otherwise product setup length, else 1.
+     */
+    private function lengthForCostApi(?string $length, ?string $setupLength): string
+    {
+        if ($length !== null) {
+            $trimmed = trim($length);
+            if ($trimmed !== '' && $trimmed !== '0') {
+                return $trimmed;
+            }
+        }
+
+        if ($setupLength !== null) {
+            $setup = trim($setupLength);
+            if ($setup !== '' && $setup !== '0' && is_numeric($setup) && bccomp($setup, '0', 6) > 0) {
+                return $setup;
+            }
+        }
+
+        return '1';
+    }
+
+    /**
+     * Raw staff length for local fallback (null when unset/0 — matches legacy finalCalculatedCostPermeter).
+     */
+    private function userLengthForFallback(?string $length): ?string
     {
         if ($length === null) {
-            return '1';
+            return null;
         }
         $trimmed = trim($length);
         if ($trimmed === '' || $trimmed === '0') {
-            return '1';
+            return null;
         }
 
         return $trimmed;

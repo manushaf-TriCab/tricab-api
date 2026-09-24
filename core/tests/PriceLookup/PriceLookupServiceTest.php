@@ -86,14 +86,14 @@ final class PriceLookupServiceTest extends TestCase
         $costApi->seed(
             'LSUP-TEST/1C10',
             '2507',
-            '1',
+            '500',
             new CostResolution(
                 productCode: 'LSUP-TEST/1C10',
                 dbco: '2507',
                 status: 'STOCKED',
                 defaultCost: '100',
                 defaultLength: '500',
-                requestedLength: '1',
+                requestedLength: '500',
                 calculatedCostPerMeter: '80',
                 legacyUnitCode: 'M',
                 success: true,
@@ -109,6 +109,46 @@ final class PriceLookupServiceTest extends TestCase
         self::assertSame('80.00', $result->adjustedCost);
         self::assertSame('100.00', $result->sell);
         self::assertSame('TCA', $result->company);
+        self::assertSame('500', $costApi->calls[0]['requestedLength'] ?? null);
+    }
+
+    public function test_quote_uses_explicit_length_for_cost_api(): void
+    {
+        $prices = new InMemoryPriceLookupPriceRepository();
+        $prices->seed([
+            'productCode' => 'LSUP-LEN/1C10',
+            'cost' => '100',
+            'setupLength' => '500',
+            'lastUpdated' => "1st Jan'26",
+            'warehouseStatus' => null,
+            'dbco' => '2507',
+        ]);
+        $fx = new InMemoryPriceLookupFxRepository(['AUD' => '1']);
+        $costApi = new FakeLegacyCostCalculationGateway();
+        $costApi->seed(
+            'LSUP-LEN/1C10',
+            '2507',
+            '100',
+            new CostResolution(
+                productCode: 'LSUP-LEN/1C10',
+                dbco: '2507',
+                status: 'MAKE',
+                defaultCost: '100',
+                defaultLength: '500',
+                requestedLength: '100',
+                calculatedCostPerMeter: '90',
+                legacyUnitCode: 'M',
+                success: true,
+                failureReason: null,
+            ),
+        );
+
+        $service = new QuotePriceLookupService($prices, $fx, $costApi);
+        $result = $service->execute('LSUP-LEN/1C10', 'TCA', 'AUD', 'metre', '100', null);
+
+        self::assertSame(QuotePriceLookupService::COST_SOURCE_API, $result->costSource);
+        self::assertSame('90.00', $result->adjustedCost);
+        self::assertSame('100', $costApi->calls[0]['requestedLength'] ?? null);
     }
 
     public function test_quote_falls_back_when_cost_api_fails(): void
@@ -135,5 +175,75 @@ final class PriceLookupServiceTest extends TestCase
         ]);
         self::assertSame('50.00', $result->adjustedCost);
         self::assertSame('50.00', $result->sell);
+    }
+
+    public function test_pa_large_cable_uses_cost_api_when_available(): void
+    {
+        $prices = new InMemoryPriceLookupPriceRepository();
+        $prices->seed([
+            'productCode' => 'B1C-PATD/4C120BK',
+            'cost' => '50',
+            'setupLength' => '100',
+            'lastUpdated' => "1st Jan'26",
+            'warehouseStatus' => null,
+            'dbco' => '2507',
+        ]);
+        $fx = new InMemoryPriceLookupFxRepository(['AUD' => '1']);
+        $costApi = new FakeLegacyCostCalculationGateway();
+        $costApi->seed(
+            'B1C-PATD/4C120BK',
+            '2507',
+            '200',
+            new CostResolution(
+                productCode: 'B1C-PATD/4C120BK',
+                dbco: '2507',
+                status: 'MAKE',
+                defaultCost: '50',
+                defaultLength: '100',
+                requestedLength: '200',
+                calculatedCostPerMeter: '77.50',
+                legacyUnitCode: 'M',
+                success: true,
+                failureReason: null,
+            ),
+        );
+
+        $service = new QuotePriceLookupService($prices, $fx, $costApi);
+        $result = $service->execute('B1C-PATD/4C120BK', 'TCA', 'AUD', 'metre', '200', null);
+
+        self::assertSame(QuotePriceLookupService::COST_SOURCE_API, $result->costSource);
+        self::assertSame('77.50', $result->adjustedCost);
+        self::assertSame('MAKE', $result->status);
+    }
+
+    public function test_pa_large_cable_refuses_untrusted_fallback_when_cost_api_fails(): void
+    {
+        $prices = new InMemoryPriceLookupPriceRepository();
+        $prices->seed([
+            'productCode' => 'B1C-PATD/4C120BK',
+            'cost' => '50',
+            'setupLength' => '100',
+            'lastUpdated' => "1st Jan'26",
+            'warehouseStatus' => null,
+            'dbco' => '2507',
+        ]);
+        $fx = new InMemoryPriceLookupFxRepository(['AUD' => '1']);
+        $costApi = new FakeLegacyCostCalculationGateway();
+
+        $service = new QuotePriceLookupService($prices, $fx, $costApi);
+        try {
+            $service->execute('B1C-PATD/4C120BK', 'TCA', 'AUD', 'metre', '200', null);
+            self::fail('Expected PriceLookupUnavailable');
+        } catch (\TriCab\Core\PriceLookup\Application\Exception\PriceLookupUnavailable $e) {
+            self::assertSame('COST_CALCULATION_UNAVAILABLE', $e->errorCode);
+        }
+    }
+
+    public function test_pa_large_cable_detector(): void
+    {
+        $detector = new \TriCab\Core\PriceLookup\Domain\PaLargeCableDetector();
+        self::assertTrue($detector->requiresAuthoritativeCostApi('B1C-PATD/4C120BK'));
+        self::assertFalse($detector->requiresAuthoritativeCostApi('LS-XXXA/1C120'));
+        self::assertFalse($detector->requiresAuthoritativeCostApi('BVA-CAXN/19C1.5BK'));
     }
 }
