@@ -192,4 +192,31 @@ final class AzureSqlOnboardingDocumentGenerationRepository implements Onboarding
 
         return strtolower(AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? ''));
     }
+
+    public function findLatestFormSubmissionByAssignment(string $assignmentPublicId): ?FormSubmissionForDocument
+    {
+        $owner = $this->connection->fetchAll(
+            'SELECT TOP (1) [UserId] FROM [onboarding].[Assignments] WHERE [PublicId] = TRY_CONVERT(UNIQUEIDENTIFIER, :assignment)',
+            [':assignment' => $assignmentPublicId],
+        );
+
+        return $owner === [] ? null : $this->findLatestFormSubmission(AzureSqlValueMapper::intValue($owner[0]['UserId'] ?? 0), $assignmentPublicId);
+    }
+
+    public function ordinaryAnswers(int $formSubmissionId): array
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT [SubmittedDataJson] FROM [onboarding].[FormSubmissions] WHERE [FormSubmissionId] = :id',
+            [':id' => $formSubmissionId],
+        );
+        $decoded = json_decode(AzureSqlValueMapper::stringValue($rows[0]['SubmittedDataJson'] ?? '{}'), true);
+        $answers = [];
+        foreach (is_array($decoded) ? $decoded : [] as $path => $value) {
+            if (is_string($path)) {
+                $answers[$path] = $value;
+            }
+        }
+
+        return $answers;
+    }
 }

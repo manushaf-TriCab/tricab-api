@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace TriCab\Api\Onboarding\Document;
 
 /**
- * Reads a submitted payload by the dotted paths its form declares, as
- * {@see \TriCab\Core\Onboarding\Domain\Service\FormPayloadSplitter} nests them.
+ * Reads a submitted payload by the dotted paths its form declares, nested as
+ * {@see \TriCab\Core\Onboarding\Domain\Service\FormPayloadSplitter} nests
+ * them or flat by path, as stored answers and contributions are.
  * Anything missing or not scalar reads as empty — a mapper draws nothing for it.
  */
 final class FormAnswers
@@ -34,6 +35,10 @@ final class FormAnswers
 
     private function value(string $path): mixed
     {
+        // Contributed parts are stored flat, by their dotted path.
+        if (array_key_exists($path, $this->answers)) {
+            return $this->answers[$path];
+        }
         $node = $this->answers;
         foreach (explode('.', $path) as $segment) {
             if (!is_array($node) || !array_key_exists($segment, $node)) {

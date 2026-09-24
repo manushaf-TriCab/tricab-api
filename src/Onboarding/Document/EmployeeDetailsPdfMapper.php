@@ -31,6 +31,11 @@ final class EmployeeDetailsPdfMapper implements FormPdfMapper
         return EmployeeDetailsFormDefinition::SLUG;
     }
 
+    public function renderedAt(): string
+    {
+        return 'submission';
+    }
+
     public function documentKind(): string
     {
         return 'employee_details';

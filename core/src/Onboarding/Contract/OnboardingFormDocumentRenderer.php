@@ -16,8 +16,12 @@ use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
  */
 interface OnboardingFormDocumentRenderer
 {
+    public const AT_SUBMISSION = 'submission';
+    public const AT_COMPLETION = 'completion';
+
     /**
-     * @param array<string, mixed> $answers the full, nested payload as submitted, before the split
+     * @param array<string, mixed> $answers the full payload — nested as submitted, or flat by path
+     * @param 'submission'|'completion' $moment only a mapper made for this moment renders
      */
-    public function render(FormSubmissionForDocument $submission, array $answers): ?RenderedDocument;
+    public function render(FormSubmissionForDocument $submission, array $answers, string $moment = self::AT_SUBMISSION): ?RenderedDocument;
 }

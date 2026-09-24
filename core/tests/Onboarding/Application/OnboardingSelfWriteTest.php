@@ -817,7 +817,7 @@ final class OnboardingSelfWriteTest extends TestCase
             /** @var list<array<string, mixed>> */
             public array $answers = [];
 
-            public function render(FormSubmissionForDocument $submission, array $answers): ?RenderedDocument
+            public function render(FormSubmissionForDocument $submission, array $answers, string $moment = self::AT_SUBMISSION): ?RenderedDocument
             {
                 $this->answers[] = $answers;
 

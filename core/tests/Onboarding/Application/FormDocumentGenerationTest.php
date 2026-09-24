@@ -121,21 +121,64 @@ final class FormDocumentGenerationTest extends TestCase
         self::assertSame(DataClass::RESTRICTED_HR, GenerateFormSubmissionDocumentService::classFor('something-new')->toInt());
     }
 
-    private function service(): GenerateFormSubmissionDocumentService
+    public function test_a_form_others_fill_is_copied_at_completion_with_every_part(): void
     {
+        $this->submitted('new-starter-induction-checklist', 'hr', 601);
+        $this->repository->ordinary[601] = ['employeeAcknowledged' => true];
+        $contributions = new \TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingFormContributionRepository();
+        $contributions->withForm(new \TriCab\Core\Onboarding\Application\DTO\Contribution\FormContributionContext(9, self::ASSIGNMENT, self::USER, 20, 'Checklist', 'hr', \TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus::completed(), ['fields' => []]));
+        $contributions->rows[] = ['assignmentId' => 9, 'role' => 'hr', 'contributorUserId' => 40, 'answers' => ['employeeName' => 'Sam']];
+        $contributions->rows[] = ['assignmentId' => 9, 'role' => 'manager', 'contributorUserId' => 20, 'answers' => ['managerAcknowledged' => true]];
+        $service = $this->service($contributions);
+
+        self::assertNull($service->generate(self::USER, self::ASSIGNMENT, []), 'not at submission');
+        self::assertNotNull($service->generateAtCompletion(self::ASSIGNMENT));
+        self::assertSame(['employeeAcknowledged' => true, 'employeeName' => 'Sam', 'managerAcknowledged' => true], $this->renderedAnswers);
+        self::assertSame(DataClass::ORDINARY_HR, $this->read->listDocuments(self::USER)[0]->dataClass->toInt());
+        self::assertNull($service->generateAtCompletion(self::ASSIGNMENT), 'once');
+    }
+
+    /** @var array<string, mixed>|null */
+    private ?array $renderedAnswers = null;
+
+    private function service(?\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingFormContributionRepository $contributions = null): GenerateFormSubmissionDocumentService
+    {
+        $test = $this;
+
         return new GenerateFormSubmissionDocumentService(
             $this->repository,
-            new class () implements OnboardingFormDocumentRenderer {
-                public function render(FormSubmissionForDocument $submission, array $answers): ?RenderedDocument
+            new class ($test) implements OnboardingFormDocumentRenderer {
+                public function __construct(private readonly FormDocumentGenerationTest $test)
                 {
-                    return $submission->formSlug === 'employee-details'
+                }
+
+                public function render(FormSubmissionForDocument $submission, array $answers, string $moment = self::AT_SUBMISSION): ?RenderedDocument
+                {
+                    if ($submission->formSlug === 'new-starter-induction-checklist') {
+                        if ($moment !== self::AT_COMPLETION) {
+                            return null;
+                        }
+                        $this->test->recordAnswers($answers);
+
+                        return new RenderedDocument('workflow', 'application/pdf', '%PDF-1.4 checklist');
+                    }
+
+                    return $submission->formSlug === 'employee-details' && $moment === self::AT_SUBMISSION
                         ? new RenderedDocument('employee_details', 'application/pdf', '%PDF-1.4 synthetic r' . $submission->revisionNumber)
                         : null;
                 }
             },
             $this->store,
             new UuidV4Generator(),
+            $contributions,
         );
+    }
+
+    /** @param array<string, mixed> $answers */
+    public function recordAnswers(array $answers): void
+    {
+        ksort($answers);
+        $this->renderedAnswers = $answers;
     }
 
     private function submitted(string $slug, string $accessGroup, int $submissionId, int $revision = 1): void

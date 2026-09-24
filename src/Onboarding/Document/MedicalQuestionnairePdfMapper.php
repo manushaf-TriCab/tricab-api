@@ -17,6 +17,11 @@ final class MedicalQuestionnairePdfMapper implements FormPdfMapper
         return LegalFormDefinitions::MEDICAL_SLUG;
     }
 
+    public function renderedAt(): string
+    {
+        return 'submission';
+    }
+
     public function documentKind(): string
     {
         return 'legal_forms';

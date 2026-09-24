@@ -806,6 +806,10 @@ final class ContainerFactory
             // named: without them a form's HR and manager parts would be neither
             // shown to the starter nor required before a reviewer accepts it.
             \TriCab\Core\Onboarding\Application\Service\DecideReviewService::class
+                => \DI\autowire()
+                    ->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class))
+                    ->constructorParameter('documents', \DI\get(\TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class)),
+            \TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class
                 => \DI\autowire()->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class)),
             \TriCab\Core\Onboarding\Application\Service\ReadOnboardingItemService::class
                 => \DI\autowire()->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class)),

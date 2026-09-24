@@ -14,6 +14,11 @@ final class ConfidentialityDeedPdfMapper implements FormPdfMapper
         return LegalFormDefinitions::DEED_SLUG;
     }
 
+    public function renderedAt(): string
+    {
+        return 'submission';
+    }
+
     public function documentKind(): string
     {
         return 'legal_forms';

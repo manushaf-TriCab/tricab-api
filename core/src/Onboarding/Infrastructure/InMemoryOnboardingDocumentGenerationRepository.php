@@ -29,6 +29,9 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
     /** @var array<string, string> blob path => document public id */
     public array $paths = [];
 
+    /** @var array<int, array<string, mixed>> formSubmissionId => ordinary answers, flat */
+    public array $ordinary = [];
+
     private int $next = 1;
 
     public function __construct(private readonly ?InMemoryOnboardingDocumentRepository $documents = null)
@@ -114,5 +117,21 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
         ));
 
         return $publicId;
+    }
+
+    public function findLatestFormSubmissionByAssignment(string $assignmentPublicId): ?FormSubmissionForDocument
+    {
+        foreach ($this->submissions as $key => $submission) {
+            if (str_ends_with($key, '|' . strtolower($assignmentPublicId))) {
+                return $submission;
+            }
+        }
+
+        return null;
+    }
+
+    public function ordinaryAnswers(int $formSubmissionId): array
+    {
+        return $this->ordinary[$formSubmissionId] ?? [];
     }
 }

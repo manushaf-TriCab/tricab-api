@@ -47,4 +47,15 @@ interface OnboardingDocumentGenerationRepository
         string $container,
         string $blobPath,
     ): string;
+
+    /** The latest submitted revision of a form assignment, whoever it belongs to — for a reviewer's completion (5.4). */
+    public function findLatestFormSubmissionByAssignment(string $assignmentPublicId): ?FormSubmissionForDocument;
+
+    /**
+     * The ordinary answers of a submission, flat by path. Only an `hr` form is
+     * completed this way, so there is no restricted half to fetch.
+     *
+     * @return array<string, mixed>
+     */
+    public function ordinaryAnswers(int $formSubmissionId): array;
 }

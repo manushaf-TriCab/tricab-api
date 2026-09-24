@@ -55,6 +55,8 @@ final readonly class DecideReviewService
         private OnboardingAdminAuditLog $audit,
         /** 5.4: a form with HR or manager parts cannot be completed while a required one is empty. */
         private ?\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository $contributions = null,
+        /** 5.4: a form whose paper copy is made when it is accepted. */
+        private ?GenerateFormSubmissionDocumentService $documents = null,
     ) {
     }
 
@@ -87,6 +89,10 @@ final readonly class DecideReviewService
         }
 
         $this->reviews->applyDecision($item, $expectedRowVersion, $transition, self::decided($item, $outcome), $actor);
+
+        if ($item->itemType === 'form' && $outcome->toString() === AssignmentStatus::COMPLETED) {
+            $this->documents?->generateAtCompletion($item->assignmentPublicId);
+        }
 
         return $this->reviews->reviewDetail($publicId)
             ?? throw OnboardingAssignmentNotFound::forThisPerson();

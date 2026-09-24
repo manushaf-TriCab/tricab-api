@@ -43,7 +43,7 @@ final readonly class TriCabFormImporter
             'title' => EmployeeDetailsFormDefinition::TITLE,
             'accessGroup' => EmployeeDetailsFormDefinition::ACCESS_GROUP,
             'fields' => EmployeeDetailsFormDefinition::fields(),
-        ], ...LegalFormDefinitions::definitions()];
+        ], ...LegalFormDefinitions::definitions(), ChecklistFormDefinition::definition()];
     }
 
     /**

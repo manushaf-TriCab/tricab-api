@@ -43,7 +43,51 @@ final readonly class GenerateFormSubmissionDocumentService
         private OnboardingFormDocumentRenderer $renderer,
         private OnboardingDocumentStore $store,
         private UuidV4Generator $uuids,
+        /** 5.4: for a form HR and the manager fill parts of, whose copy is made at completion. */
+        private ?\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository $contributions = null,
     ) {
+    }
+
+    /**
+     * The paper copy of a form a reviewer has just accepted (5.4): the
+     * starter's ordinary answers with HR's and the manager's parts laid over
+     * them. Only a mapper made for completion renders; every other form was
+     * copied when it was submitted. Swallows failures as {@see generate()} does.
+     */
+    public function generateAtCompletion(string $assignmentPublicId): ?string
+    {
+        try {
+            $submission = $this->repository->findLatestFormSubmissionByAssignment($assignmentPublicId);
+            if ($submission === null || $submission->accessGroup !== 'hr' || $this->repository->hasDocumentForFormSubmission($submission->formSubmissionId)) {
+                return null;
+            }
+
+            $answers = $this->repository->ordinaryAnswers($submission->formSubmissionId);
+            $context = $this->contributions?->findContext($assignmentPublicId);
+            if ($context !== null) {
+                foreach ($this->contributions?->latest($context->assignmentId) ?? [] as $part) {
+                    $answers = $part + $answers;
+                }
+            }
+
+            $document = $this->renderer->render($submission, $answers, \TriCab\Core\Onboarding\Contract\OnboardingFormDocumentRenderer::AT_COMPLETION);
+            if ($document === null) {
+                return null;
+            }
+
+            $path = sprintf('%d/%s.pdf', $submission->userId, $this->uuids->generate()->toString());
+            $stored = $this->store->put($path, $document);
+
+            return $this->repository->recordFormDocument($submission, $document, self::classFor($submission->accessGroup), $stored['container'], $stored['path']);
+        } catch (Throwable $failure) {
+            error_log(sprintf(
+                'onboarding.document.completion_generation_failed {"assignment":"%s","error":"%s"}',
+                $assignmentPublicId,
+                (new \ReflectionClass($failure))->getShortName(),
+            ));
+
+            return null;
+        }
     }
 
     /**
