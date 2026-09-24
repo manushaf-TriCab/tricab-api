@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Onboarding\Infrastructure;
 
+use TriCab\Core\Onboarding\Application\DTO\Contribution\FormContributionContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
 use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
@@ -28,6 +29,9 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
 
     /** @var array<string, string> blob path => document public id */
     public array $paths = [];
+
+    /** @var array<string, int> photo public id => assignment id */
+    public array $photos = [];
 
     /** @var array<int, array<string, mixed>> formSubmissionId => ordinary answers, flat */
     public array $ordinary = [];
@@ -133,5 +137,31 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
     public function ordinaryAnswers(int $formSubmissionId): array
     {
         return $this->ordinary[$formSubmissionId] ?? [];
+    }
+
+    public function recordPhoto(FormContributionContext $form, RenderedDocument $photo, string $container, string $blobPath): string
+    {
+        $publicId = sprintf('00000000-0000-4000-9000-%012d', $this->next++);
+        $this->photos[$publicId] = $form->assignmentId;
+        $this->paths[$blobPath] = $publicId;
+        $this->documents?->withDocument($form->subjectUserId, new OnboardingDocumentRef(
+            $publicId,
+            $form->subjectUserId,
+            $photo->documentKind,
+            DataClass::ordinaryHr(),
+            $container,
+            $blobPath,
+            $photo->contentType,
+            $photo->byteSize(),
+            $photo->sha256,
+            gmdate('Y-m-d\TH:i:s\Z'),
+        ));
+
+        return $publicId;
+    }
+
+    public function photosOf(int $assignmentId, array $documentPublicIds): array
+    {
+        return array_values(array_filter($documentPublicIds, fn (string $id): bool => ($this->photos[strtolower($id)] ?? null) === $assignmentId));
     }
 }

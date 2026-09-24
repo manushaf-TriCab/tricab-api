@@ -193,6 +193,8 @@ use TriCab\Api\Http\Action\Onboarding\PostOnboardingPolicyAcknowledgementAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPresentationProgressAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingReviewDecisionAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingFormContributionAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingFormPhotoAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingFormPhotoAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormContributionAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingManagerFormsAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingManagerFormAction;
@@ -523,6 +525,10 @@ final class AppBuilder
         $app->get('/api/v1/admin/onboarding/queue/{assignmentPublicId}/contribution', GetOnboardingFormContributionAction::class)
             ->add(($require)('ONBOARDING.REVIEW'));
         $app->put('/api/v1/admin/onboarding/queue/{assignmentPublicId}/contribution', PutOnboardingFormContributionAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->post('/api/v1/admin/onboarding/queue/{assignmentPublicId}/photos', PostOnboardingFormPhotoAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->get('/api/v1/admin/onboarding/queue/{assignmentPublicId}/photos/{photoPublicId}', GetOnboardingFormPhotoAction::class)
             ->add(($require)('ONBOARDING.REVIEW'));
 
         // Phase 4.4 — content authoring. ONBOARDING.CONTENT.MANAGE alone, and

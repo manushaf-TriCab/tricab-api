@@ -91,6 +91,7 @@ final class FormSubmissionRules
             'date' => self::date($label, $value),
             'checkbox' => self::checkbox($label, $value),
             'signature' => \TriCab\Core\Onboarding\Domain\ValueObject\SignatureImage::fromDataUrl($label, $value),
+            'photo' => \TriCab\Core\Onboarding\Domain\ValueObject\PhotoImage::idsFromAnswer($label, $value),
             'textarea' => self::text($label, $value, self::MAX_TEXTAREA_LENGTH),
             default => self::text($label, $value, self::MAX_TEXT_LENGTH),
         };

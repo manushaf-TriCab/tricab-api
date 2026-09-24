@@ -54,6 +54,7 @@ final class AdminEventType
     /** HR or the named manager filled their part of a form (5.4). */
     public const FORM_CONTRIBUTED = 'form.contributed';
     public const FORM_CONTRIBUTION_REFUSED = 'form.contribution_refused';
+    public const FORM_PHOTO_UPLOADED = 'form.photo_uploaded';
 
     public const ALL = [
         self::ALLOCATION_ALLOCATED,
@@ -77,6 +78,7 @@ final class AdminEventType
         self::ALLOCATION_REISSUED,
         self::FORM_CONTRIBUTED,
         self::FORM_CONTRIBUTION_REFUSED,
+        self::FORM_PHOTO_UPLOADED,
     ];
 
     public static function assertKnown(string $value): string

@@ -19,17 +19,25 @@ final class TemplateOnboardingFormDocumentRenderer implements OnboardingFormDocu
 
     /**
      * @param list<FormPdfMapper> $mappers
+     * @param (\Closure(int, string): ?string)|null $photoBytes a photo's JPEG by owner and document id
      */
-    public function __construct(private readonly string $templateDirectory, array $mappers)
+    public function __construct(private readonly string $templateDirectory, array $mappers, private readonly ?\Closure $photoBytes = null)
     {
         foreach ($mappers as $mapper) {
             $this->mappers[$mapper->formSlug()] = $mapper;
         }
     }
 
-    public static function withTriCabTemplates(string $basePath): self
+    /**
+     * @param (\Closure(int, string): ?string)|null $photoBytes
+     */
+    public static function withTriCabTemplates(string $basePath, ?\Closure $photoBytes = null): self
     {
-        return new self($basePath . '/resources/onboarding/form-templates', [new EmployeeDetailsPdfMapper(), ...LegalFormPdfMappers::all(), new ChecklistPdfMapper()]);
+        return new self(
+            $basePath . '/resources/onboarding/form-templates',
+            [new EmployeeDetailsPdfMapper(), ...LegalFormPdfMappers::all(), new ChecklistPdfMapper(), new VehicleReportPdfMapper()],
+            $photoBytes,
+        );
     }
 
     public function render(FormSubmissionForDocument $submission, array $answers, string $moment = self::AT_SUBMISSION): ?RenderedDocument
@@ -42,7 +50,14 @@ final class TemplateOnboardingFormDocumentRenderer implements OnboardingFormDocu
         return new RenderedDocument(
             $mapper->documentKind(),
             'application/pdf',
-            $mapper->render(new FormAnswers($answers), $submission, $this->templateDirectory),
+            $mapper->render(
+                new FormAnswers(
+                    $answers,
+                    $this->photoBytes === null ? null : fn (string $id): ?string => ($this->photoBytes)($submission->userId, $id),
+                ),
+                $submission,
+                $this->templateDirectory,
+            ),
         );
     }
 }

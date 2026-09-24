@@ -6,6 +6,7 @@ namespace TriCab\Api\Onboarding\Persistence;
 
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Core\Onboarding\Application\DTO\Contribution\FormContributionContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
 use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
@@ -218,5 +219,54 @@ final class AzureSqlOnboardingDocumentGenerationRepository implements Onboarding
         }
 
         return $answers;
+    }
+
+    public function recordPhoto(FormContributionContext $form, RenderedDocument $photo, string $container, string $blobPath): string
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+            INSERT INTO [onboarding].[DocumentReferences]
+                ([UserId], [AssignmentId], [FormSubmissionId], [DocumentKind], [RetentionClassId],
+                 [BlobContainer], [BlobPath], [ContentType], [ByteSize], [ContentSha256])
+            OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
+            VALUES (:userId, :assignmentId, NULL, N'photo', :class, :container, :path, :contentType, :size, :sha)
+            SQL,
+            [
+                ':userId' => $form->subjectUserId,
+                ':assignmentId' => $form->assignmentId,
+                ':class' => DataClass::ORDINARY_HR,
+                ':container' => $container,
+                ':path' => $blobPath,
+                ':contentType' => $photo->contentType,
+                ':size' => $photo->byteSize(),
+                ':sha' => $photo->sha256,
+            ],
+        );
+
+        return strtolower(AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? ''));
+    }
+
+    public function photosOf(int $assignmentId, array $documentPublicIds): array
+    {
+        $ids = array_values(array_filter($documentPublicIds, static fn (string $id): bool => preg_match('/^[0-9a-f-]{36}$/i', $id) === 1));
+        if ($ids === []) {
+            return [];
+        }
+        $params = [':assignmentId' => $assignmentId];
+        $markers = [];
+        foreach ($ids as $i => $id) {
+            $params[':id' . $i] = $id;
+            $markers[] = 'TRY_CONVERT(UNIQUEIDENTIFIER, :id' . $i . ')';
+        }
+        $rows = $this->connection->fetchAll(
+            sprintf(
+                "SELECT CONVERT(NVARCHAR(36), [PublicId]) AS [PublicId] FROM [onboarding].[DocumentReferences]
+                 WHERE [AssignmentId] = :assignmentId AND [DocumentKind] = N'photo' AND [DeletedAtUtc] IS NULL AND [PublicId] IN (%s)",
+                implode(', ', $markers),
+            ),
+            $params,
+        );
+
+        return array_map(static fn (array $row): string => strtolower(AzureSqlValueMapper::stringValue($row['PublicId'] ?? '')), $rows);
     }
 }

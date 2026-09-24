@@ -95,7 +95,25 @@ final class TemplatePdf
      */
     public function signature(string $png, float $x, float $top, float $width, float $height, float $padding = 2): void
     {
-        $size = @getimagesizefromstring($png);
+        $this->image($png, 'PNG', $x, $top, $width, $height, $padding);
+    }
+
+    /** A photograph, contained in its box and centred, as the source's `drawPhoto` did. */
+    public function photo(string $jpeg, float $x, float $top, float $width, float $height): void
+    {
+        $this->image($jpeg, 'JPG', $x, $top, $width, $height, 0);
+    }
+
+    /** A blank A4 page after the template's own — the source's photo evidence pages. */
+    public function blankPage(): void
+    {
+        $this->pdf->AddPage('P', [595.28, 841.89]);
+        $this->pdf->SetTextColor(...self::INK);
+    }
+
+    private function image(string $bytes, string $type, float $x, float $top, float $width, float $height, float $padding): void
+    {
+        $size = @getimagesizefromstring($bytes);
         if ($size === false || $size[0] < 1 || $size[1] < 1) {
             return;
         }
@@ -108,11 +126,11 @@ final class TemplatePdf
         // FPDF reads images from a path; the bytes live only as long as this call.
         $file = tempnam(sys_get_temp_dir(), 'sig');
         if ($file === false) {
-            throw new \RuntimeException('No temporary file for a signature.');
+            throw new \RuntimeException('No temporary file for an image.');
         }
         try {
-            file_put_contents($file, $png);
-            $this->pdf->Image($file, $x + $padding + ($boxW - $w) / 2, $top + $padding + ($boxH - $h) / 2, $w, $h, 'PNG');
+            file_put_contents($file, $bytes);
+            $this->pdf->Image($file, $x + $padding + ($boxW - $w) / 2, $top + $padding + ($boxH - $h) / 2, $w, $h, $type);
         } finally {
             @unlink($file);
         }

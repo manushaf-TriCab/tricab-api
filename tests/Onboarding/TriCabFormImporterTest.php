@@ -30,10 +30,11 @@ final class TriCabFormImporterTest extends TestCase
             ['whs-medical-questionnaire', TriCabFormImporter::CREATE],
             ['deed-of-confidentiality', TriCabFormImporter::CREATE],
             ['new-starter-induction-checklist', TriCabFormImporter::CREATE],
+            ['vehicle-condition-report', TriCabFormImporter::CREATE],
         ], array_map(static fn ($s) => [$s['slug'], $s['action']], $plan));
 
         $results = $importer->apply($plan, $actor);
-        self::assertSame(array_fill(0, 4, 'created; draft saved, not published'), array_column($results, 'result'));
+        self::assertSame(array_fill(0, 5, 'created; draft saved, not published'), array_column($results, 'result'));
 
         $summary = array_values(array_filter($content->listItems(), static fn ($i) => $i->slug === 'employee-details'))[0];
         $item = $content->findItem(AuthoredContent::TYPE_FORM, $summary->publicId);
@@ -49,7 +50,7 @@ final class TriCabFormImporterTest extends TestCase
         self::assertSame(DataClass::RESTRICTED_HR, $version->content->classifications['medicalConditions']);
 
         $again = $importer->plan();
-        self::assertSame(array_fill(0, 4, TriCabFormImporter::EXISTS), array_column($again, 'action'));
+        self::assertSame(array_fill(0, 5, TriCabFormImporter::EXISTS), array_column($again, 'action'));
         self::assertSame('not touched', $importer->apply($again, $actor)[0]['result']);
         self::assertCount(1, $content->listVersions($item));
     }

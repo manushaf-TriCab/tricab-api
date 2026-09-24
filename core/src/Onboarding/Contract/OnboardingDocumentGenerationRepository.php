@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Onboarding\Contract;
 
+use TriCab\Core\Onboarding\Application\DTO\Contribution\FormContributionContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
 use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
@@ -58,4 +59,16 @@ interface OnboardingDocumentGenerationRepository
      * @return array<string, mixed>
      */
     public function ordinaryAnswers(int $formSubmissionId): array;
+
+    /** Records an uploaded photo (kind `photo`, C2) against its form assignment and returns its public id. */
+    public function recordPhoto(FormContributionContext $form, RenderedDocument $photo, string $container, string $blobPath): string;
+
+    /**
+     * Which of these ids are live photos uploaded to this assignment. A photo
+     * field's answer may name only those.
+     *
+     * @param list<string> $documentPublicIds
+     * @return list<string>
+     */
+    public function photosOf(int $assignmentId, array $documentPublicIds): array;
 }

@@ -46,6 +46,8 @@ final readonly class ContributeToFormService
     public function __construct(
         private OnboardingFormContributionRepository $contributions,
         private OnboardingAdminAuditLog $audit,
+        /** 5.4: a photo field may name only photos uploaded to the same form. */
+        private ?\TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository $documents = null,
     ) {
     }
 
@@ -145,6 +147,7 @@ final readonly class ContributeToFormService
             }
             $flat = FormPayloadSplitter::flatten($answers);
             FormSubmissionRules::check($form->schema, $flat, $role);
+            $this->assertOwnPhotos($form, $flat);
         } catch (SelfReviewNotPermitted | OnboardingWriteConflict | InvalidOnboardingValue $refusal) {
             $this->audit->append($actor, OnboardingAdminEvent::refused(
                 AdminEventType::FORM_CONTRIBUTION_REFUSED,
@@ -169,6 +172,27 @@ final readonly class ContributeToFormService
         ), $actor);
 
         return $form;
+    }
+
+    /**
+     * @param array<string, mixed> $flat
+     */
+    private function assertOwnPhotos(FormContributionContext $form, array $flat): void
+    {
+        foreach (is_array($form->schema['fields'] ?? null) ? $form->schema['fields'] : [] as $field) {
+            if (!is_array($field) || ($field['type'] ?? null) !== 'photo') {
+                continue;
+            }
+            $label = is_string($field['label'] ?? null) ? $field['label'] : 'photo';
+            $ids = \TriCab\Core\Onboarding\Domain\ValueObject\PhotoImage::idsFromAnswer($label, $flat[(string) ($field['path'] ?? '')] ?? null);
+            if ($ids === []) {
+                continue;
+            }
+            $known = $this->documents?->photosOf($form->assignmentId, $ids) ?? [];
+            if (count(array_unique($known)) !== count(array_unique($ids))) {
+                throw InvalidOnboardingValue::for($label, 'names a photo that was not uploaded to this form');
+            }
+        }
     }
 
     /**

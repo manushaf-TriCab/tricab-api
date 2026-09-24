@@ -811,6 +811,8 @@ final class ContainerFactory
                     ->constructorParameter('documents', \DI\get(\TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class)),
             \TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class
                 => \DI\autowire()->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class)),
+            \TriCab\Core\Onboarding\Application\Service\ContributeToFormService::class
+                => \DI\autowire()->constructorParameter('documents', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository::class)),
             \TriCab\Core\Onboarding\Application\Service\ReadOnboardingItemService::class
                 => \DI\autowire()->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class)),
             // Phase 5.4 — generated documents. The in-memory repository writes
@@ -824,8 +826,25 @@ final class ContainerFactory
                     );
                 },
             \TriCab\Core\Onboarding\Contract\OnboardingFormDocumentRenderer::class
-                => static fn (): \TriCab\Core\Onboarding\Contract\OnboardingFormDocumentRenderer
-                    => \TriCab\Api\Onboarding\Document\TemplateOnboardingFormDocumentRenderer::withTriCabTemplates(dirname(__DIR__, 2)),
+                => static function (Container $container): \TriCab\Core\Onboarding\Contract\OnboardingFormDocumentRenderer {
+                    // Photos are read back from the private container for the
+                    // vehicle report's copy — found through the person's own
+                    // documents, so only that person's photos can be drawn.
+                    $documents = self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingDocumentRepository::class);
+                    $blobs = self::get($container, ProductBlobStore::class);
+
+                    return \TriCab\Api\Onboarding\Document\TemplateOnboardingFormDocumentRenderer::withTriCabTemplates(
+                        dirname(__DIR__, 2),
+                        static function (int $userId, string $documentPublicId) use ($documents, $blobs): ?string {
+                            $photo = $documents->findDocument($userId, strtolower($documentPublicId));
+                            if ($photo === null || $photo->documentKind !== 'photo') {
+                                return null;
+                            }
+
+                            return $blobs->getObjectBinary($photo->blobContainer, $photo->blobPath);
+                        },
+                    );
+                },
             \TriCab\Core\Onboarding\Contract\OnboardingDocumentStore::class
                 => static fn (Container $container): \TriCab\Core\Onboarding\Contract\OnboardingDocumentStore
                     => new \TriCab\Api\Onboarding\Document\BlobOnboardingDocumentStore(

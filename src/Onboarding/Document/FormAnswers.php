@@ -12,9 +12,35 @@ namespace TriCab\Api\Onboarding\Document;
  */
 final class FormAnswers
 {
-    /** @param array<string, mixed> $answers */
-    public function __construct(private readonly array $answers)
+    /**
+     * @param array<string, mixed> $answers
+     * @param (\Closure(string): ?string)|null $photoBytes a photo's JPEG by its document id, or null
+     */
+    public function __construct(
+        private readonly array $answers,
+        private readonly ?\Closure $photoBytes = null,
+    ) {
+    }
+
+    /**
+     * The JPEGs a photo field names, in order, skipping any that cannot be read.
+     *
+     * @return list<string>
+     */
+    public function photos(string $path): array
     {
+        if ($this->photoBytes === null) {
+            return [];
+        }
+        $out = [];
+        foreach (array_filter(array_map('trim', explode(',', $this->text($path)))) as $id) {
+            $bytes = ($this->photoBytes)($id);
+            if (is_string($bytes) && $bytes !== '') {
+                $out[] = $bytes;
+            }
+        }
+
+        return $out;
     }
 
     public function text(string $path): string

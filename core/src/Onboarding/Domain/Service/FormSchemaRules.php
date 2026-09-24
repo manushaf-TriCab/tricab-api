@@ -15,7 +15,8 @@ use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
  * nothing to port, and the rules come from what the target already relies on:
  *
  *  - the field types the trainee form renders — six, and since 5.4 a drawn
- *    `signature`, which the paper forms need;
+ *    `signature` and `photo`s, which the paper forms need. A photo field is
+ *    filled by HR (the vehicle inspection), never by the starter;
  *  - a dotted path per field, which {@see FormPayloadSplitter} splits on and
  *    `onboarding_hr.FieldClassifications` keys by;
  *  - **a classification for every field, recorded as the author saves**.
@@ -53,7 +54,7 @@ final class FormSchemaRules
     public const MAX_HINT_LENGTH = 500;
     public const MAX_PATH_LENGTH = 200;
 
-    public const FIELD_TYPES = ['text', 'textarea', 'date', 'number', 'select', 'checkbox', 'signature'];
+    public const FIELD_TYPES = ['text', 'textarea', 'date', 'number', 'select', 'checkbox', 'signature', 'photo'];
 
     /** The classes a submitted field can be — C0, C1 and C5 are never answers. */
     public const FIELD_CLASSES = [DataClass::ORDINARY_HR, DataClass::PAYROLL, DataClass::RESTRICTED_HR];
@@ -139,6 +140,10 @@ final class FormSchemaRules
         }
         if ($filledBy !== self::FILLED_BY_STARTER && $accessGroup !== FormVersionPublishGuard::ACCESS_GROUP_HR) {
             throw InvalidOnboardingValue::for($where . ' filled by', 'only an HR form can have parts filled by HR or a manager');
+        }
+
+        if ($type === 'photo' && $filledBy !== self::FILLED_BY_HR) {
+            throw InvalidOnboardingValue::for($where . ' filled by', 'photos are uploaded by HR, so a photo field is filled by HR');
         }
 
         $stored = ['path' => $path, 'label' => $label, 'type' => $type, 'required' => $required];
