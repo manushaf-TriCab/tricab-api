@@ -81,11 +81,11 @@ final class TemplatePdf
         $this->pdf->Text($x, $top + $size, $this->fit($encoded, $width));
     }
 
-    /** The source's tick: a 7pt bold X. */
-    public function mark(float $x, float $top): void
+    /** The source's tick: a bold X, 7pt unless a sheet used another size. */
+    public function mark(float $x, float $top, float $size = 7): void
     {
-        $this->pdf->SetFont('Helvetica', 'B', 7);
-        $this->pdf->Text($x, $top + 7, 'X');
+        $this->pdf->SetFont('Helvetica', 'B', $size);
+        $this->pdf->Text($x, $top + $size, 'X');
     }
 
     /**
@@ -126,7 +126,7 @@ final class TemplatePdf
     }
 
     /** Word-wrapped text in a box, as many lines as fit, the last one ellipsed if more remain. */
-    public function drawWrapped(string $raw, float $x, float $top, float $width, float $height, float $size): void
+    public function drawWrapped(string $raw, float $x, float $top, float $width, float $height, float $size, float $lineGap = 2): void
     {
         $words = array_values(array_filter(explode(' ', trim((string) preg_replace('/\s+/u', ' ', $raw))), static fn (string $w): bool => $w !== ''));
         if ($words === []) {
@@ -147,10 +147,10 @@ final class TemplatePdf
             $current = $word;
         }
         $lines[] = $current;
-        $max = max(1, (int) floor($height / ($size + 2)));
+        $max = max(1, (int) floor($height / ($size + $lineGap)));
         foreach (array_slice($lines, 0, $max) as $i => $line) {
             $last = $i === $max - 1 && count($lines) > $max;
-            $this->draw($last ? $line . '...' : $line, $x, $top + $i * ($size + 2), $width, $size, false, 4.6);
+            $this->draw($last ? $line . '...' : $line, $x, $top + $i * ($size + $lineGap), $width, $size, false, 4.6);
         }
     }
 

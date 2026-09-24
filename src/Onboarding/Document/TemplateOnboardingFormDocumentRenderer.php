@@ -29,7 +29,7 @@ final class TemplateOnboardingFormDocumentRenderer implements OnboardingFormDocu
 
     public static function withTriCabTemplates(string $basePath): self
     {
-        return new self($basePath . '/resources/onboarding/form-templates', [new EmployeeDetailsPdfMapper()]);
+        return new self($basePath . '/resources/onboarding/form-templates', [new EmployeeDetailsPdfMapper(), ...LegalFormPdfMappers::all()]);
     }
 
     public function render(FormSubmissionForDocument $submission, array $answers): ?RenderedDocument
