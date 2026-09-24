@@ -11,6 +11,7 @@ use TriCab\Core\Onboarding\Domain\Exception\ContentVersionSuperseded;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingAssignmentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
+use TriCab\Core\Onboarding\Domain\ValueObject\PolicyDeclaration;
 use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
 
 /**
@@ -47,6 +48,14 @@ use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
  * there is no declaration to have agreed to. The route is shared so that a
  * client cannot pick the wrong one — the version decides, not the browser.
  *
+ * ## A policy that is signed
+ *
+ * Seven policies ask for more than a click: a name and a drawn signature, or
+ * the Code of Conduct's declaration ({@see PolicyDeclaration}). The version
+ * decides which, and the declaration is checked here and stored on the
+ * acknowledgement row. Its paper copy is made after the row commits
+ * ({@see GeneratePolicyDocumentService}), never as part of it.
+ *
  * ## Once
  *
  * `UQ_onboarding_PolicyAcknowledgements_UserVersion` is the database's answer,
@@ -60,6 +69,7 @@ final readonly class AcknowledgePolicyService
         private OnboardingPolicyRepository $policies,
         private OnboardingSubmissionGate $gate,
         private OnboardingIdempotentWrite $idempotency,
+        private ?GeneratePolicyDocumentService $documents = null,
     ) {
     }
 
@@ -73,6 +83,7 @@ final readonly class AcknowledgePolicyService
         string $assignmentPublicId,
         string $versionPublicId,
         ?string $idempotencyKey,
+        mixed $declarationInput = null,
     ): OnboardingPolicyDetail {
         $this->gate->assertMaySubmit($userId);
 
@@ -88,7 +99,14 @@ final readonly class AcknowledgePolicyService
 
         $declarationText = $detail->declarationText;
 
-        return $this->idempotency->run(
+        // Checked before the ledger, so a declaration with a field missing is
+        // answered with what is missing and can be sent again, fixed, under the
+        // same key. An already-acknowledged policy is not asked again.
+        $declaration = $detail->declarationKind !== null && $detail->requiresAcknowledgement && !$detail->isAcknowledged()
+            ? PolicyDeclaration::fromInput($detail->declarationKind, $declarationInput, $detail->documentReference, new \DateTimeImmutable('now'))
+            : null;
+
+        $result = $this->idempotency->run(
             $userId,
             OnboardingWriteIdempotencyStore::OPERATION_ACKNOWLEDGE_POLICY,
             $idempotencyKey,
@@ -98,7 +116,7 @@ final readonly class AcknowledgePolicyService
             // it on the second click and be told its own successful acknowledgement
             // was a conflict — the ledger has to get the chance to recognise the
             // replay before anything decides the state is wrong.
-            function () use ($userId, $assignmentPublicId, $versionPublicId, $declarationText, $idempotencyKey, $detail): array {
+            function () use ($userId, $assignmentPublicId, $versionPublicId, $declarationText, $idempotencyKey, $detail, $declaration): array {
                 if (!$detail->requiresAcknowledgement) {
                     $transition = StatusTransition::systemMovesTo($detail->status, AssignmentStatus::completed(), 'Marked the policy as read.');
                     if ($transition === null) {
@@ -124,6 +142,7 @@ final readonly class AcknowledgePolicyService
                         AssignmentStatus::completed(),
                         'Acknowledged the policy.',
                     ),
+                    $declaration?->toJson(),
                 );
 
                 return [$acknowledged, $acknowledged->assignmentPublicId];
@@ -138,5 +157,11 @@ final readonly class AcknowledgePolicyService
                 return $replayed;
             },
         );
+
+        if ($result->declaration !== null) {
+            $this->documents?->generate($userId, $assignmentPublicId);
+        }
+
+        return $result;
     }
 }

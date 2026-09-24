@@ -7,6 +7,7 @@ namespace TriCab\Core\Onboarding\Contract;
 use TriCab\Core\Onboarding\Application\DTO\Contribution\FormContributionContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
+use TriCab\Core\Onboarding\Application\DTO\Document\PolicyDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
 use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
 
@@ -71,4 +72,19 @@ interface OnboardingDocumentGenerationRepository
      * @return list<string>
      */
     public function photosOf(int $assignmentId, array $documentPublicIds): array;
+
+    /**
+     * This person's signed acknowledgement of a policy assignment; null when it
+     * is not theirs, not a policy, not acknowledged, or carries no declaration.
+     */
+    public function findPolicyDocumentContext(int $userId, string $assignmentPublicId): ?PolicyDocumentContext;
+
+    /** Writes the reference row for a signed policy copy (kind `policy_declaration`) and returns its public id. */
+    public function recordPolicyDocument(
+        PolicyDocumentContext $context,
+        RenderedDocument $document,
+        DataClass $dataClass,
+        string $container,
+        string $blobPath,
+    ): string;
 }

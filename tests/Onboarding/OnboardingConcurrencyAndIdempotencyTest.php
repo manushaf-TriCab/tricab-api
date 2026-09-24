@@ -73,6 +73,7 @@ final class OnboardingConcurrencyAndIdempotencyTest extends TestCase
         'onboarding.AttemptAnswers',
         'onboarding.Attempts',
         'onboarding.DocumentReferences',
+        'onboarding.FormContributions',
         'onboarding.FormSubmissions',
         'onboarding.NotificationLog',
         'onboarding.PolicyAcknowledgements',

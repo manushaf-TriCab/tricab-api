@@ -388,6 +388,29 @@ final class AzureSqlOnboardingSelfWriteTest extends TestCase
         );
     }
 
+    /**
+     * 5.4: a signed policy's declaration is written on the acknowledgement row
+     * and read back with the policy. Skipped until
+     * alter-onboarding-policy-declarations.sql is applied.
+     */
+    public function test_a_signed_declaration_is_stored_on_the_acknowledgement_and_read_back(): void
+    {
+        if ($this->scalar("SELECT COL_LENGTH(N'[onboarding].[PolicyAcknowledgements]', N'DeclarationJson')") === null) {
+            self::markTestSkipped('alter-onboarding-policy-declarations.sql is not applied to this database.');
+        }
+        [$assignmentPublicId, $versionPublicId, $versionId] = $this->allocatePolicy();
+        $json = '{"kind":"sign_off","values":{"fullName":"Sam Starter","signature":"data:image/png;base64,AAAA","date":"2026-09-24","accepted":true}}';
+
+        $detail = $this->policies->acknowledge($this->mine, $assignmentPublicId, $versionPublicId, 'Accepted.', null, null, $json);
+
+        self::assertNotNull($detail->declaration);
+        self::assertSame('Sam Starter', $detail->declaration->text('fullName'));
+        self::assertSame(
+            $json,
+            $this->text('SELECT [DeclarationJson] FROM [onboarding].[PolicyAcknowledgements] WHERE [UserId] = :u AND [PolicyVersionId] = :v', [':u' => $this->mine, ':v' => $versionId]),
+        );
+    }
+
     public function test_a_second_acknowledgement_of_one_version_is_refused_by_the_database(): void
     {
         [$assignmentPublicId, $versionPublicId] = $this->allocatePolicy();

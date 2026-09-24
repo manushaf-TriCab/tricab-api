@@ -9,9 +9,11 @@ use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Onboarding\Application\DTO\Contribution\FormContributionContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
+use TriCab\Core\Onboarding\Application\DTO\Document\PolicyDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
 use TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository;
 use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
+use TriCab\Core\Onboarding\Domain\ValueObject\PolicyDeclaration;
 
 /**
  * Writes `[onboarding].[DocumentReferences]` (5.4). The table has no trigger, so
@@ -268,5 +270,90 @@ final class AzureSqlOnboardingDocumentGenerationRepository implements Onboarding
         );
 
         return array_map(static fn (array $row): string => strtolower(AzureSqlValueMapper::stringValue($row['PublicId'] ?? '')), $rows);
+    }
+
+    public function findPolicyDocumentContext(int $userId, string $assignmentPublicId): ?PolicyDocumentContext
+    {
+        $column = $this->connection->fetchAll(
+            "SELECT COL_LENGTH(N'[onboarding].[PolicyAcknowledgements]', N'DeclarationJson') AS [Length]",
+        );
+        if ($column === [] || ($column[0]['Length'] ?? null) === null) {
+            return null;
+        }
+
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+            SELECT TOP (1)
+                a.[AssignmentId],
+                a.[UserId],
+                CONVERT(NVARCHAR(36), ack.[PublicId]) AS [AcknowledgementPublicId],
+                p.[Slug],
+                p.[Title],
+                COALESCE(pv.[DocumentReference], N'') AS [DocumentReference],
+                CONVERT(VARCHAR(33), ack.[AcknowledgedAtUtc], 127) AS [AcknowledgedAtUtc],
+                ack.[DeclarationJson]
+            FROM [onboarding].[Assignments] a
+            JOIN [onboarding].[PolicyVersions] pv ON pv.[PolicyVersionId] = a.[PolicyVersionId]
+            JOIN [onboarding].[Policies] p ON p.[PolicyId] = pv.[PolicyId]
+            JOIN [onboarding].[PolicyAcknowledgements] ack
+                ON ack.[UserId] = a.[UserId]
+               AND ack.[PolicyVersionId] = pv.[PolicyVersionId]
+            WHERE a.[PublicId] = TRY_CONVERT(UNIQUEIDENTIFIER, :assignment)
+              AND a.[UserId] = :userId
+              AND a.[ItemType] = N'policy'
+              AND ack.[DeclarationJson] IS NOT NULL
+            SQL,
+            [':assignment' => $assignmentPublicId, ':userId' => $userId],
+        );
+        if ($rows === []) {
+            return null;
+        }
+        $row = $rows[0];
+        $declaration = PolicyDeclaration::fromStoredJson(AzureSqlValueMapper::nullableString($row['DeclarationJson'] ?? null));
+        if ($declaration === null) {
+            return null;
+        }
+
+        return new PolicyDocumentContext(
+            AzureSqlValueMapper::intValue($row['AssignmentId'] ?? 0),
+            AzureSqlValueMapper::intValue($row['UserId'] ?? 0),
+            strtolower(AzureSqlValueMapper::stringValue($row['AcknowledgementPublicId'] ?? '')),
+            AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['Title'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['DocumentReference'] ?? ''),
+            AzureSqlValueMapper::stringValue($row['AcknowledgedAtUtc'] ?? ''),
+            $declaration,
+        );
+    }
+
+    public function recordPolicyDocument(
+        PolicyDocumentContext $context,
+        RenderedDocument $document,
+        DataClass $dataClass,
+        string $container,
+        string $blobPath,
+    ): string {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+            INSERT INTO [onboarding].[DocumentReferences]
+                ([UserId], [AssignmentId], [FormSubmissionId], [DocumentKind], [RetentionClassId],
+                 [BlobContainer], [BlobPath], [ContentType], [ByteSize], [ContentSha256])
+            OUTPUT CONVERT(NVARCHAR(36), INSERTED.[PublicId]) AS [PublicId]
+            VALUES (:userId, :assignmentId, NULL, :kind, :class, :container, :path, :contentType, :size, :sha)
+            SQL,
+            [
+                ':userId' => $context->userId,
+                ':assignmentId' => $context->assignmentId,
+                ':kind' => $document->documentKind,
+                ':class' => $dataClass->toInt(),
+                ':container' => $container,
+                ':path' => $blobPath,
+                ':contentType' => $document->contentType,
+                ':size' => $document->byteSize(),
+                ':sha' => $document->sha256,
+            ],
+        );
+
+        return strtolower(AzureSqlValueMapper::stringValue($rows[0]['PublicId'] ?? ''));
     }
 }

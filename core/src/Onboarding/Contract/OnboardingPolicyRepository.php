@@ -60,6 +60,7 @@ interface OnboardingPolicyRepository
         string $declarationText,
         ?string $idempotencyKey,
         ?StatusTransition $transition,
+        ?string $declarationJson = null,
     ): OnboardingPolicyDetail;
 
     /**

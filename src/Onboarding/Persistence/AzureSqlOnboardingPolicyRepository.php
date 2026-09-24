@@ -16,6 +16,7 @@ use TriCab\Core\Onboarding\Domain\Exception\OnboardingAssignmentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
 use TriCab\Core\Onboarding\Domain\ValueObject\PolicyContent;
+use TriCab\Core\Onboarding\Domain\ValueObject\PolicyDeclaration;
 use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
 
 /**
@@ -34,6 +35,12 @@ use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
  * `acknowledge()` takes it as a parameter and the application service fills it
  * from {@see PolicyContent}. The row is the evidence, and evidence whose wording
  * the signatory supplied is not evidence.
+ *
+ * ## The signed declaration, and a database without its column
+ *
+ * `[DeclarationJson]` arrives with `alter-onboarding-policy-declarations.sql`.
+ * Until that is applied, reads select NULL in its place and behave as before,
+ * and only writing a declaration fails, naming the script.
  */
 final class AzureSqlOnboardingPolicyRepository implements OnboardingPolicyRepository
 {
@@ -47,10 +54,25 @@ final class AzureSqlOnboardingPolicyRepository implements OnboardingPolicyReposi
     ) {
     }
 
+    private ?bool $declarationColumnExists = null;
+
+    private function declarationColumnExists(): bool
+    {
+        if ($this->declarationColumnExists === null) {
+            $rows = $this->connection->fetchAll(
+                "SELECT COL_LENGTH(N'[onboarding].[PolicyAcknowledgements]', N'DeclarationJson') AS [Length]",
+            );
+            $this->declarationColumnExists = $rows !== [] && ($rows[0]['Length'] ?? null) !== null;
+        }
+
+        return $this->declarationColumnExists;
+    }
+
     public function findPolicy(int $userId, string $assignmentPublicId): ?OnboardingPolicyDetail
     {
+        $declarationColumn = $this->declarationColumnExists() ? 'ack.[DeclarationJson]' : 'CAST(NULL AS NVARCHAR(MAX))';
         $rows = $this->connection->fetchAll(
-            <<<'SQL'
+            <<<SQL
             SELECT TOP (1)
                 CONVERT(NVARCHAR(36), a.[PublicId]) AS [AssignmentPublicId],
                 p.[Title],
@@ -65,7 +87,9 @@ final class AzureSqlOnboardingPolicyRepository implements OnboardingPolicyReposi
                 pv.[IssuedLabel],
                 pv.[ReviewDueLabel],
                 p.[Summary],
-                p.[ChapterTitle]
+                p.[ChapterTitle],
+                p.[Slug],
+                {$declarationColumn} AS [DeclarationJson]
             FROM [onboarding].[Assignments] a
             JOIN [onboarding].[PolicyVersions] pv ON pv.[PolicyVersionId] = a.[PolicyVersionId]
             JOIN [onboarding].[Policies] p ON p.[PolicyId] = pv.[PolicyId]
@@ -107,6 +131,11 @@ final class AzureSqlOnboardingPolicyRepository implements OnboardingPolicyReposi
             documentReference: AzureSqlValueMapper::nullableString($row['DocumentReference'] ?? null),
             issuedLabel: AzureSqlValueMapper::nullableString($row['IssuedLabel'] ?? null),
             reviewDueLabel: AzureSqlValueMapper::nullableString($row['ReviewDueLabel'] ?? null),
+            declarationKind: PolicyDeclaration::kindFor(
+                AzureSqlValueMapper::nullableString($row['DocumentReference'] ?? null),
+                AzureSqlValueMapper::nullableString($row['Slug'] ?? null),
+            ),
+            declaration: PolicyDeclaration::fromStoredJson(AzureSqlValueMapper::nullableString($row['DeclarationJson'] ?? null)),
         );
     }
 
@@ -117,7 +146,12 @@ final class AzureSqlOnboardingPolicyRepository implements OnboardingPolicyReposi
         string $declarationText,
         ?string $idempotencyKey,
         ?StatusTransition $transition,
+        ?string $declarationJson = null,
     ): OnboardingPolicyDetail {
+        if ($declarationJson !== null && !$this->declarationColumnExists()) {
+            throw new \RuntimeException('onboarding.PolicyAcknowledgements has no DeclarationJson column yet: apply alter-onboarding-policy-declarations.sql.');
+        }
+
         $located = $this->locator->locate($userId, $assignmentPublicId, 'policy', $expectedVersionPublicId);
 
         if ($located === null) {
@@ -135,26 +169,40 @@ final class AzureSqlOnboardingPolicyRepository implements OnboardingPolicyReposi
             $declarationText,
             $idempotencyKey,
             $transition,
+            $declarationJson,
         ): void {
             /* UQ_onboarding_PolicyAcknowledgements_UserVersion is the guarantee;
                this translates its violation into something a browser can read.
                There is no preceding SELECT to check — a check would leave a
                window, and the constraint would win the race anyway. */
             $this->translatingUniqueConstraintViolation(
-                function () use ($located, $userId, $declarationText, $idempotencyKey): void {
+                function () use ($located, $userId, $declarationText, $idempotencyKey, $declarationJson): void {
+                    $parameters = [
+                        ':assignmentId' => $located['assignmentId'],
+                        ':userId' => $userId,
+                        ':policyVersionId' => $located['versionId'],
+                        ':declarationText' => $declarationText,
+                        ':idempotencyKey' => $idempotencyKey,
+                    ];
+                    if ($declarationJson === null) {
+                        $this->connection->execute(
+                            <<<'SQL'
+                            INSERT INTO [onboarding].[PolicyAcknowledgements]
+                                ([AssignmentId], [UserId], [PolicyVersionId], [DeclarationText], [IdempotencyKey])
+                            VALUES (:assignmentId, :userId, :policyVersionId, :declarationText, :idempotencyKey)
+                            SQL,
+                            $parameters,
+                        );
+
+                        return;
+                    }
                     $this->connection->execute(
                         <<<'SQL'
                         INSERT INTO [onboarding].[PolicyAcknowledgements]
-                            ([AssignmentId], [UserId], [PolicyVersionId], [DeclarationText], [IdempotencyKey])
-                        VALUES (:assignmentId, :userId, :policyVersionId, :declarationText, :idempotencyKey)
+                            ([AssignmentId], [UserId], [PolicyVersionId], [DeclarationText], [IdempotencyKey], [DeclarationJson])
+                        VALUES (:assignmentId, :userId, :policyVersionId, :declarationText, :idempotencyKey, :declarationJson)
                         SQL,
-                        [
-                            ':assignmentId' => $located['assignmentId'],
-                            ':userId' => $userId,
-                            ':policyVersionId' => $located['versionId'],
-                            ':declarationText' => $declarationText,
-                            ':idempotencyKey' => $idempotencyKey,
-                        ],
+                        $parameters + [':declarationJson' => $declarationJson],
                     );
                 },
                 static fn (): Throwable => OnboardingWriteConflict::alreadyRecorded('acknowledgement'),

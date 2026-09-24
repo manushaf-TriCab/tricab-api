@@ -46,6 +46,7 @@ use TriCab\Core\Onboarding\Domain\Service\DocumentDeliveryPolicy;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssessmentQuestion;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
 use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
+use TriCab\Core\Onboarding\Domain\ValueObject\PolicyDeclaration;
 use TriCab\Core\Onboarding\Domain\ValueObject\PresentationManifest;
 use TriCab\Core\Onboarding\Domain\ValueObject\StatusActor;
 use TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingDocumentRepository;
@@ -56,6 +57,7 @@ use TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingTrainingRepository;
 use TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingWriteIdempotencyStore;
 use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 use TriCab\Core\Tests\Identity\Doubles\FixedClock;
+use TriCab\Core\Tests\Onboarding\Domain\SignatureFieldTest;
 
 /**
  * Phase 3.3 — the write side, against doubles.
@@ -353,6 +355,49 @@ final class OnboardingSelfWriteTest extends TestCase
         $this->expectException(ContentVersionSuperseded::class);
 
         $this->acknowledge()->acknowledge(self::TRAINEE, self::POLICY, 'version-policy-1', 'key-old');
+    }
+
+    /**
+     * 5.4, owner decision 24 Sep 2026: a signed policy's declaration is part of
+     * acknowledging it. Without one nothing is written and the item stays open.
+     */
+    public function test_a_signed_policy_is_not_acknowledged_without_its_declaration(): void
+    {
+        $this->givenPolicy(declarationKind: PolicyDeclaration::SIGN_OFF, documentReference: 'HR-POL-001-V004');
+
+        try {
+            $this->acknowledge()->acknowledge(self::TRAINEE, self::POLICY, self::POLICY_VERSION, 'key-unsigned');
+            self::fail('A signed policy was acknowledged with no signature.');
+        } catch (InvalidOnboardingValue) {
+        }
+        self::assertSame([], $this->policies->declarations, 'Nothing was written.');
+        self::assertSame([], $this->policies->transitions);
+
+        // The same key, now with the declaration, goes through: the refusal left nothing in the ledger.
+        $detail = $this->acknowledge()->acknowledge(self::TRAINEE, self::POLICY, self::POLICY_VERSION, 'key-unsigned', [
+            'fullName' => 'Sam Starter',
+            'signature' => SignatureFieldTest::png(400, 120),
+            'accepted' => true,
+        ]);
+
+        self::assertTrue($detail->isAcknowledged());
+        self::assertSame(AssignmentStatus::COMPLETED, $detail->status->toString());
+        self::assertNotNull($detail->declaration);
+        self::assertSame('Sam Starter', $detail->declaration->text('fullName'));
+        $public = $detail->toArray()['declaration'];
+        self::assertIsArray($public);
+        self::assertTrue($public['signed']);
+        self::assertArrayNotHasKey('signature', $public, 'The signature image never goes back to the browser.');
+    }
+
+    public function test_a_declaration_sent_for_a_policy_that_asks_for_none_is_ignored(): void
+    {
+        $this->givenPolicy();
+
+        $detail = $this->acknowledge()->acknowledge(self::TRAINEE, self::POLICY, self::POLICY_VERSION, 'key-extra', ['fullName' => 'Sam']);
+
+        self::assertTrue($detail->isAcknowledged());
+        self::assertNull($detail->declaration);
     }
 
     public function test_a_second_acknowledgement_of_the_same_version_is_refused(): void
@@ -680,8 +725,12 @@ final class OnboardingSelfWriteTest extends TestCase
         );
     }
 
-    private function givenPolicy(string $assignmentPublicId = self::POLICY, bool $requiresAcknowledgement = true): void
-    {
+    private function givenPolicy(
+        string $assignmentPublicId = self::POLICY,
+        bool $requiresAcknowledgement = true,
+        ?string $declarationKind = null,
+        ?string $documentReference = null,
+    ): void {
         $this->policies->withPolicy(self::TRAINEE, new OnboardingPolicyDetail(
             assignmentPublicId: $assignmentPublicId,
             title: 'Site Safety',
@@ -693,6 +742,8 @@ final class OnboardingSelfWriteTest extends TestCase
             effectiveFrom: '2026-01-01',
             acknowledgedAtUtc: null,
             requiresAcknowledgement: $requiresAcknowledgement,
+            documentReference: $documentReference,
+            declarationKind: $declarationKind,
         ));
     }
 

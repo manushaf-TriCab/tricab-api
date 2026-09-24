@@ -9,6 +9,7 @@ use TriCab\Core\Onboarding\Contract\OnboardingPolicyRepository;
 use TriCab\Core\Onboarding\Domain\Exception\ContentVersionSuperseded;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingAssignmentNotFound;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
+use TriCab\Core\Onboarding\Domain\ValueObject\PolicyDeclaration;
 use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
 
 /**
@@ -45,6 +46,7 @@ final class InMemoryOnboardingPolicyRepository implements OnboardingPolicyReposi
         string $declarationText,
         ?string $idempotencyKey,
         ?StatusTransition $transition,
+        ?string $declarationJson = null,
     ): OnboardingPolicyDetail {
         unset($idempotencyKey);
 
@@ -69,7 +71,11 @@ final class InMemoryOnboardingPolicyRepository implements OnboardingPolicyReposi
             $this->transitions[] = $transition;
         }
 
-        $acknowledged = $detail->finished($transition?->to ?? $detail->status, '2026-09-22T00:00:00+00:00');
+        $acknowledged = $detail->finished(
+            $transition?->to ?? $detail->status,
+            '2026-09-22T00:00:00+00:00',
+            PolicyDeclaration::fromStoredJson($declarationJson),
+        );
 
         $this->details[self::key($userId, $assignmentPublicId)] = $acknowledged;
 

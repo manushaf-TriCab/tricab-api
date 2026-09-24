@@ -862,6 +862,17 @@ final class ContainerFactory
                         self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingIdempotentWrite::class),
                         self::get($container, \TriCab\Core\Onboarding\Application\Service\GenerateAssessmentDocumentService::class),
                     ),
+            \TriCab\Core\Onboarding\Contract\OnboardingPolicyDocumentRenderer::class
+                => static fn (): \TriCab\Core\Onboarding\Contract\OnboardingPolicyDocumentRenderer
+                    => \TriCab\Api\Onboarding\Document\PolicyDeclarationPdfMapper::withTriCabTemplates(dirname(__DIR__, 2)),
+            \TriCab\Core\Onboarding\Application\Service\AcknowledgePolicyService::class
+                => static fn (Container $container): \TriCab\Core\Onboarding\Application\Service\AcknowledgePolicyService
+                    => new \TriCab\Core\Onboarding\Application\Service\AcknowledgePolicyService(
+                        self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingPolicyRepository::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingSubmissionGate::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingIdempotentWrite::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\GeneratePolicyDocumentService::class),
+                    ),
             \TriCab\Core\Onboarding\Application\Service\SubmitFormService::class
                 => static fn (Container $container): \TriCab\Core\Onboarding\Application\Service\SubmitFormService
                     => new \TriCab\Core\Onboarding\Application\Service\SubmitFormService(

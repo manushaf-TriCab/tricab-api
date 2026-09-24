@@ -7,6 +7,7 @@ namespace TriCab\Core\Onboarding\Infrastructure;
 use TriCab\Core\Onboarding\Application\DTO\Contribution\FormContributionContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
+use TriCab\Core\Onboarding\Application\DTO\Document\PolicyDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
 use TriCab\Core\Onboarding\Application\DTO\OnboardingDocumentRef;
 use TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository;
@@ -29,6 +30,9 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
 
     /** @var array<string, string> blob path => document public id */
     public array $paths = [];
+
+    /** @var array<string, PolicyDocumentContext> keyed by `userId:assignment` */
+    public array $policies = [];
 
     /** @var array<string, int> photo public id => assignment id */
     public array $photos = [];
@@ -163,5 +167,35 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
     public function photosOf(int $assignmentId, array $documentPublicIds): array
     {
         return array_values(array_filter($documentPublicIds, fn (string $id): bool => ($this->photos[strtolower($id)] ?? null) === $assignmentId));
+    }
+
+    public function findPolicyDocumentContext(int $userId, string $assignmentPublicId): ?PolicyDocumentContext
+    {
+        return $this->policies[$userId . ':' . $assignmentPublicId] ?? null;
+    }
+
+    public function recordPolicyDocument(
+        PolicyDocumentContext $context,
+        RenderedDocument $document,
+        DataClass $dataClass,
+        string $container,
+        string $blobPath,
+    ): string {
+        $publicId = sprintf('00000000-0000-4000-8000-%012d', $this->next++);
+        $this->paths[$blobPath] = $publicId;
+        $this->documents?->withDocument($context->userId, new OnboardingDocumentRef(
+            $publicId,
+            $context->userId,
+            $document->documentKind,
+            $dataClass,
+            $container,
+            $blobPath,
+            $document->contentType,
+            $document->byteSize(),
+            $document->sha256,
+            gmdate('Y-m-d\TH:i:s\Z'),
+        ));
+
+        return $publicId;
     }
 }

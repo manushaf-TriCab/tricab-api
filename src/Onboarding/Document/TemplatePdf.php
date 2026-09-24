@@ -26,6 +26,7 @@ final class TemplatePdf
 
     private readonly Fpdi $pdf;
     private int $pageCount;
+    private float $pageHeight = 841.89;
 
     public function __construct(string $templatePath)
     {
@@ -53,6 +54,10 @@ final class TemplatePdf
         }
         $this->pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
         $this->pdf->useTemplate($template);
+        $height = $size['height'] ?? null;
+        if (is_int($height) || is_float($height)) {
+            $this->pageHeight = $height;
+        }
         $this->pdf->SetTextColor(...self::INK);
     }
 
@@ -104,9 +109,24 @@ final class TemplatePdf
         $this->image($jpeg, 'JPG', $x, $top, $width, $height, 0);
     }
 
+    /** The height of the page being drawn on, for a mapper ported from bottom-up coordinates. */
+    public function pageHeight(): float
+    {
+        return $this->pageHeight;
+    }
+
+    /** A thin grey outline — the source's `drawFieldBorder`, for a printed box a white-out has covered. */
+    public function border(float $x, float $top, float $width, float $height): void
+    {
+        $this->pdf->SetDrawColor(56, 64, 77);
+        $this->pdf->SetLineWidth(0.8);
+        $this->pdf->Rect($x, $top, $width, $height, 'D');
+    }
+
     /** A blank A4 page after the template's own — the source's photo evidence pages. */
     public function blankPage(): void
     {
+        $this->pageHeight = 841.89;
         $this->pdf->AddPage('P', [595.28, 841.89]);
         $this->pdf->SetTextColor(...self::INK);
     }

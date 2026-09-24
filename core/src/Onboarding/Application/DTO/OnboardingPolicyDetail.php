@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Onboarding\Application\DTO;
 
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
+use TriCab\Core\Onboarding\Domain\ValueObject\PolicyDeclaration;
 
 /**
  * One policy as the person allocated it sees it, with the wording they are being
@@ -48,11 +49,13 @@ final readonly class OnboardingPolicyDetail
         public ?string $documentReference = null,
         public ?string $issuedLabel = null,
         public ?string $reviewDueLabel = null,
+        public ?string $declarationKind = null,
+        public ?PolicyDeclaration $declaration = null,
     ) {
     }
 
     /** The same policy after the person finished it. */
-    public function finished(AssignmentStatus $status, ?string $acknowledgedAtUtc): self
+    public function finished(AssignmentStatus $status, ?string $acknowledgedAtUtc, ?PolicyDeclaration $declaration = null): self
     {
         return new self(
             $this->assignmentPublicId,
@@ -70,6 +73,8 @@ final readonly class OnboardingPolicyDetail
             $this->documentReference,
             $this->issuedLabel,
             $this->reviewDueLabel,
+            $this->declarationKind,
+            $declaration ?? $this->declaration,
         );
     }
 
@@ -102,6 +107,8 @@ final readonly class OnboardingPolicyDetail
             'documentReference' => $this->documentReference,
             'issuedLabel' => $this->issuedLabel,
             'reviewDueLabel' => $this->reviewDueLabel,
+            'declarationKind' => $this->declarationKind,
+            'declaration' => $this->declaration?->toPublicArray(),
         ];
     }
 }

@@ -12,8 +12,10 @@ use TriCab\Core\Onboarding\Application\Service\AcknowledgePolicyService;
 /**
  * POST /api/v1/onboarding/policies/{assignmentPublicId}/acknowledgement
  *
- * `{ versionPublicId }` plus an `Idempotency-Key` header. That is the whole
- * request.
+ * `{ versionPublicId }` plus an `Idempotency-Key` header, and for the seven
+ * policies that are signed, `declaration`: the name and drawn signature, or the
+ * Code of Conduct's answers ({@see \TriCab\Core\Onboarding\Domain\ValueObject\PolicyDeclaration}).
+ * The date on it is the server's.
  *
  * In particular there is no `declarationText` field. The wording stored on the
  * acknowledgement is the policy version's, read server-side — a browser that
@@ -45,6 +47,7 @@ final class PostOnboardingPolicyAcknowledgementAction
                 $arguments['assignmentPublicId'] ?? '',
                 OnboardingSelfServiceResponder::versionPublicId($body),
                 OnboardingSelfServiceResponder::idempotencyKey($request),
+                $body['declaration'] ?? null,
             );
 
             return $this->responder->success($detail->toArray());
