@@ -163,6 +163,8 @@ use TriCab\Api\Http\Action\Technical\ListTechnicalSectionsAction;
 use TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueAction;
 use TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueFileAction;
 use TriCab\Api\Http\Action\PdfCatalogue\ListPdfCataloguesAction;
+use TriCab\Api\Http\Action\PriceLookup\QuotePriceLookupAction;
+use TriCab\Api\Http\Action\PriceLookup\SearchPriceLookupAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\CableCalculator\PostCableCalculatorCalculateAction;
 use TriCab\Api\Http\Action\ProductFinder\FindProductAction;
@@ -364,6 +366,7 @@ final class AppBuilder
         self::registerLogNoteRoutes($app, $container);
         self::registerTelDirectoryRoutes($app, $container);
         self::registerPdfCatalogueRoutes($app, $container);
+        self::registerPriceLookupRoutes($app, $container);
         self::registerTechnicalRoutes($app, $container);
         $app->get('/api/v1/regions', PublicRegionAction::class);
         $app->get('/api/v1/regions/current', PublicRegionAction::class);
@@ -577,6 +580,15 @@ final class AppBuilder
      *
      * @param App<ContainerInterface> $app
      */
+
+    private static function registerPriceLookupRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $gate = \TriCab\Core\PriceLookup\Module::PERMISSION_READ;
+        $app->get('/api/v1/price-lookup/search', SearchPriceLookupAction::class)->add(($require)($gate));
+        $app->post('/api/v1/price-lookup/quote', QuotePriceLookupAction::class)->add(($require)($gate));
+    }
+
     private static function registerTechnicalRoutes(App $app, Container $container): void
     {
         $require = new RequirePermission($container);

@@ -1685,6 +1685,32 @@ final class ContainerFactory
             \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class => \DI\autowire(
                 \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class,
             ),
+
+            \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository::class => static function (Container $container): \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository {
+                $config = self::get($container, \TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig::class);
+                if (!$config->tcConfigured()) {
+                    return new \TriCab\Api\PriceLookup\Persistence\InMemoryPriceLookupPriceRepository();
+                }
+                return new \TriCab\Api\PriceLookup\Persistence\MysqlPriceLookupPriceRepository(
+                    self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                );
+            },
+            \TriCab\Core\PriceLookup\Contract\PriceLookupFxRepository::class => static function (Container $container): \TriCab\Core\PriceLookup\Contract\PriceLookupFxRepository {
+                $config = self::get($container, \TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig::class);
+                if (!$config->tcConfigured()) {
+                    return new \TriCab\Api\PriceLookup\Persistence\InMemoryPriceLookupFxRepository();
+                }
+                return new \TriCab\Api\PriceLookup\Persistence\MysqlPriceLookupFxRepository(
+                    self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                );
+            },
+            \TriCab\Core\PriceLookup\Application\Service\SearchPriceLookupService::class => \DI\autowire(
+                \TriCab\Core\PriceLookup\Application\Service\SearchPriceLookupService::class,
+            ),
+            \TriCab\Core\PriceLookup\Application\Service\QuotePriceLookupService::class => \DI\autowire(
+                \TriCab\Core\PriceLookup\Application\Service\QuotePriceLookupService::class,
+            ),
+
             \TriCab\Core\PdfCatalogue\Contract\PdfCatalogueRepository::class => static function (): \TriCab\Core\PdfCatalogue\Contract\PdfCatalogueRepository {
                 return new \TriCab\Api\PdfCatalogue\Persistence\InMemoryPdfCatalogueRepository();
             },
