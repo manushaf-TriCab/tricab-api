@@ -796,6 +796,10 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingContentRepository::class),
             \TriCab\Core\Onboarding\Contract\OnboardingReportRepository::class
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReportRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingReminderRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReminderRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingRetentionRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingRetentionRepository::class),
             \TriCab\Core\Expense\Contract\ExpensePdfRenderer::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ExpenseDompdfRenderer::class),
             \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
             // Profile-only by design: ExpenseProfile.IsFinance is authoritative at
@@ -2121,6 +2125,7 @@ final class ContainerFactory
             $definitions[ApplicationTransaction::class] = \DI\autowire(SqlApplicationTransaction::class);
             $definitions[UserRepository::class] = \DI\autowire(AzureSqlUserRepository::class);
             $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(AzureSqlEmailOtpChallengeRepository::class);
+            $definitions[\TriCab\Core\Identity\Contract\ExpiredEmailOtpChallengePurger::class] = \DI\autowire(\TriCab\Api\Identity\Persistence\AzureSqlExpiredEmailOtpChallengePurger::class);
             $definitions[GuestSessionRepository::class] = \DI\autowire(AzureSqlGuestSessionRepository::class);
             $definitions[TrustedDeviceRepository::class] = \DI\autowire(AzureSqlTrustedDeviceRepository::class);
             $definitions[UserPasskeyRepository::class] = \DI\autowire(AzureSqlUserPasskeyRepository::class);
@@ -2182,6 +2187,10 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingContentRepository::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingReportRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingReportRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingReminderRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingReminderRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingRetentionRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingRetentionRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class);
@@ -2273,6 +2282,8 @@ SQL,
 
                 return $repository;
             };
+
+            $definitions[\TriCab\Core\Identity\Contract\ExpiredEmailOtpChallengePurger::class] = \DI\autowire(\TriCab\Api\Identity\Persistence\InMemoryExpiredEmailOtpChallengePurger::class);
 
             if ($settings->isGuestJwtConfigured()) {
                 $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(InMemoryEmailOtpChallengeRepository::class);
@@ -2521,6 +2532,33 @@ SQL,
         // codes, so one setting decides where every guest-facing email goes.
         $definitions[\TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender {
             return self::createOnboardingInvitationEmailSender($settings, $container);
+        };
+        // Reminders (5.2) share the invitation's provider and its sender class.
+        $definitions[\TriCab\Core\Onboarding\Contract\OnboardingReminderEmailSender::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Contract\OnboardingReminderEmailSender {
+            $sender = self::createOnboardingInvitationEmailSender($settings, $container);
+            if (!$sender instanceof \TriCab\Core\Onboarding\Contract\OnboardingReminderEmailSender) {
+                throw new \LogicException('The onboarding email sender does not send reminders.');
+            }
+
+            return $sender;
+        };
+        $definitions[\TriCab\Core\Onboarding\Application\DTO\Reminder\OnboardingReminderDelivery::class] = static function () use ($settings): \TriCab\Core\Onboarding\Application\DTO\Reminder\OnboardingReminderDelivery {
+            return \TriCab\Core\Onboarding\Application\DTO\Reminder\OnboardingReminderDelivery::decide(
+                $settings->onboardingReminderEmails,
+                $settings->onboardingEmailTestRecipient,
+                $settings->isProduction(),
+                $settings->usesDevelopmentGuestEmail(),
+            );
+        };
+        $definitions[\TriCab\Core\Onboarding\Application\Service\SendOnboardingRemindersService::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Application\Service\SendOnboardingRemindersService {
+            return new \TriCab\Core\Onboarding\Application\Service\SendOnboardingRemindersService(
+                reminders: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingReminderRepository::class),
+                accounts: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingAccountDirectory::class),
+                sender: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingReminderEmailSender::class),
+                delivery: self::get($container, \TriCab\Core\Onboarding\Application\DTO\Reminder\OnboardingReminderDelivery::class),
+                clock: self::get($container, Clock::class),
+                publicAppBaseUrl: $settings->passkeyPublicAppBaseUrl,
+            );
         };
         $definitions[\TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService {
             return new \TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService(

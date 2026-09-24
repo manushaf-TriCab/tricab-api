@@ -8,13 +8,15 @@ use RuntimeException;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender;
+use TriCab\Core\Onboarding\Contract\OnboardingReminderEmailSender;
 
 /**
  * Follows `MicrosoftGraphGuestPasskeyEmailSender`: client-credentials token,
  * `sendMail` from the configured mailbox. Failures throw; the invite service
- * turns any of them into a 502 and puts the invitation stamp back.
+ * turns any of them into a 502 and puts the invitation stamp back, and the
+ * reminder job (5.2) marks that person's digest failed.
  */
-final class MicrosoftGraphOnboardingInvitationEmailSender implements OnboardingInvitationEmailSender
+final class MicrosoftGraphOnboardingInvitationEmailSender implements OnboardingInvitationEmailSender, OnboardingReminderEmailSender
 {
     private const GRAPH_SCOPE = 'https://graph.microsoft.com/.default';
     private const TOKEN_URL_TEMPLATE = 'https://login.microsoftonline.com/%s/oauth2/v2.0/token';
@@ -38,13 +40,23 @@ final class MicrosoftGraphOnboardingInvitationEmailSender implements OnboardingI
 
     public function sendInvitation(EmailAddress $to, string $displayName, string $onboardingUrl): void
     {
+        $this->send($to, OnboardingInvitationEmailTemplate::subject(), OnboardingInvitationEmailTemplate::html($displayName, $onboardingUrl));
+    }
+
+    public function sendReminder(EmailAddress $to, string $displayName, array $items, string $onboardingUrl): void
+    {
+        $this->send($to, OnboardingReminderEmailTemplate::subject($items), OnboardingReminderEmailTemplate::html($displayName, $items, $onboardingUrl));
+    }
+
+    private function send(EmailAddress $to, string $subject, string $html): void
+    {
         $response = $this->http->postJson(
             sprintf(self::SEND_MAIL_URL_TEMPLATE, rawurlencode($this->mailbox)),
             ['Authorization' => 'Bearer ' . $this->accessToken()],
             [
                 'message' => [
-                    'subject' => OnboardingInvitationEmailTemplate::subject(),
-                    'body' => ['contentType' => 'HTML', 'content' => OnboardingInvitationEmailTemplate::html($displayName, $onboardingUrl)],
+                    'subject' => $subject,
+                    'body' => ['contentType' => 'HTML', 'content' => $html],
                     'toRecipients' => [['emailAddress' => ['address' => $to->toString()]]],
                     'from' => ['emailAddress' => ['address' => $this->mailbox, 'name' => $this->fromDisplayName]],
                 ],
