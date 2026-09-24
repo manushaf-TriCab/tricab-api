@@ -31,6 +31,13 @@ use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
  * that needs a bank account is a payroll form, and saying so is a decision about
  * who should see it, made once for the form rather than per field.
  *
+ * ## Who fills a field (5.4)
+ *
+ * `filledBy` is `starter` (the default), `hr` or `manager`. The checklist and
+ * the vehicle report have parts the new starter does not fill. Only an `hr`
+ * form may have them, so everything somebody else writes is ordinary HR data
+ * (C2) and nothing contributed ever reaches `onboarding_hr`.
+ *
  * ## No path may contain another
  *
  * `bank` and `bank.bsb` cannot both be fields: when the answers are nested for
@@ -50,6 +57,11 @@ final class FormSchemaRules
 
     /** The classes a submitted field can be — C0, C1 and C5 are never answers. */
     public const FIELD_CLASSES = [DataClass::ORDINARY_HR, DataClass::PAYROLL, DataClass::RESTRICTED_HR];
+
+    public const FILLED_BY_STARTER = 'starter';
+    public const FILLED_BY_HR = 'hr';
+    public const FILLED_BY_MANAGER = 'manager';
+    public const FILLED_BY = [self::FILLED_BY_STARTER, self::FILLED_BY_HR, self::FILLED_BY_MANAGER];
 
     private const PATH = '/^[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)*$/';
     private const OPTION_KEY = '/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/';
@@ -121,7 +133,18 @@ final class FormSchemaRules
             throw InvalidOnboardingValue::for($where . ' required', '(not true or false)');
         }
 
+        $filledBy = $field['filledBy'] ?? self::FILLED_BY_STARTER;
+        if (!is_string($filledBy) || !in_array($filledBy, self::FILLED_BY, true)) {
+            throw InvalidOnboardingValue::forOneOf($where . ' filled by', is_string($filledBy) ? $filledBy : '(not text)', self::FILLED_BY);
+        }
+        if ($filledBy !== self::FILLED_BY_STARTER && $accessGroup !== FormVersionPublishGuard::ACCESS_GROUP_HR) {
+            throw InvalidOnboardingValue::for($where . ' filled by', 'only an HR form can have parts filled by HR or a manager');
+        }
+
         $stored = ['path' => $path, 'label' => $label, 'type' => $type, 'required' => $required];
+        if ($filledBy !== self::FILLED_BY_STARTER) {
+            $stored['filledBy'] = $filledBy;
+        }
         $hint = self::text($field['hint'] ?? null, $where . ' hint', self::MAX_HINT_LENGTH);
         if ($hint !== null) {
             $stored['hint'] = $hint;
@@ -234,5 +257,13 @@ final class FormSchemaRules
         }
 
         return $trimmed === '' ? null : $trimmed;
+    }
+
+    /** Who fills this stored field: `starter` unless it says otherwise. */
+    public static function filledBy(mixed $field): string
+    {
+        $value = is_array($field) ? ($field['filledBy'] ?? null) : null;
+
+        return is_string($value) && in_array($value, self::FILLED_BY, true) ? $value : self::FILLED_BY_STARTER;
     }
 }

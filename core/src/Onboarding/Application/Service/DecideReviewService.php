@@ -53,6 +53,8 @@ final readonly class DecideReviewService
     public function __construct(
         private OnboardingReviewRepository $reviews,
         private OnboardingAdminAuditLog $audit,
+        /** 5.4: a form with HR or manager parts cannot be completed while a required one is empty. */
+        private ?\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository $contributions = null,
     ) {
     }
 
@@ -76,6 +78,7 @@ final readonly class DecideReviewService
                 UserId::fromInt($item->subjectUserId),
             );
             ReviewDecisionPolicy::assertAllowed($item->status, $outcome, $note);
+            $this->assertContributionsComplete($item, $outcome);
             $transition = StatusTransition::attempt($item->status, $outcome, StatusActor::reviewer(), $actor->userId, $note);
         } catch (SelfReviewNotPermitted | ReviewDecisionNotPermitted | StatusChangeNotPermitted | AssignmentStatusIsFinal $refusal) {
             $this->audit->append($actor, self::refusal($item, $outcome, $refusal));
@@ -87,6 +90,21 @@ final readonly class DecideReviewService
 
         return $this->reviews->reviewDetail($publicId)
             ?? throw OnboardingAssignmentNotFound::forThisPerson();
+    }
+
+    private function assertContributionsComplete(ReviewItemRecord $item, AssignmentStatus $outcome): void
+    {
+        if ($this->contributions === null || $item->itemType !== 'form' || $outcome->toString() !== AssignmentStatus::COMPLETED) {
+            return;
+        }
+        $form = $this->contributions->findContext($item->assignmentPublicId);
+        if ($form === null) {
+            return;
+        }
+        $missing = ContributeToFormService::missingContributions($form->schema, $this->contributions->latest($form->assignmentId));
+        if ($missing !== []) {
+            throw ReviewDecisionNotPermitted::contributionsMissing($missing);
+        }
     }
 
     private static function decided(ReviewItemRecord $item, AssignmentStatus $outcome): OnboardingAdminEvent

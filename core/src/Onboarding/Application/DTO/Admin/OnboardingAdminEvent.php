@@ -75,6 +75,8 @@ final readonly class OnboardingAdminEvent
         'form_drafts',
         'form_submissions',
         'documents',
+        // 5.4 — who filled part of a form: `hr` or `manager`, never a value.
+        'role',
     ];
 
     /**

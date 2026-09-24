@@ -800,6 +800,15 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReminderRepository::class),
             \TriCab\Core\Onboarding\Contract\OnboardingRetentionRepository::class
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingRetentionRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingFormContributionRepository::class),
+            // Optional constructor parameters are not autowired, so these two are
+            // named: without them a form's HR and manager parts would be neither
+            // shown to the starter nor required before a reviewer accepts it.
+            \TriCab\Core\Onboarding\Application\Service\DecideReviewService::class
+                => \DI\autowire()->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class)),
+            \TriCab\Core\Onboarding\Application\Service\ReadOnboardingItemService::class
+                => \DI\autowire()->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class)),
             // Phase 5.4 — generated documents. The in-memory repository writes
             // into the in-memory read side, so a generated copy shows on the list.
             \TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository::class
@@ -2229,6 +2238,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingReminderRepository::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingRetentionRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingRetentionRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingFormContributionRepository::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingDocumentGenerationRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);

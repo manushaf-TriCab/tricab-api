@@ -62,7 +62,32 @@ final readonly class OnboardingFormDetail
         public ?string $reviewerNote = null,
         /** Sent back, and the submission held payroll or restricted fields, which do not come back into the draft. */
         public bool $restrictedFieldsCleared = false,
+        /** @var array<string, array<string, mixed>> 5.4: role => path => value, what HR and the manager filled; read-only here */
+        public array $contributions = [],
     ) {
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $contributions
+     */
+    public function withContributions(array $contributions): self
+    {
+        return new self(
+            $this->assignmentPublicId,
+            $this->title,
+            $this->versionPublicId,
+            $this->versionNumber,
+            $this->status,
+            $this->schema,
+            $this->draftData,
+            $this->draftRowVersion,
+            $this->draftUpdatedAtUtc,
+            $this->submittedRevisionCount,
+            $this->lastSubmittedAtUtc,
+            $this->reviewerNote,
+            $this->restrictedFieldsCleared,
+            $contributions,
+        );
     }
 
     public function hasDraft(): bool
@@ -96,6 +121,7 @@ final readonly class OnboardingFormDetail
             'lastSubmittedAtUtc' => $this->lastSubmittedAtUtc,
             'reviewerNote' => $this->reviewerNote,
             'restrictedFieldsCleared' => $this->restrictedFieldsCleared,
+            'contributions' => (object) array_map(static fn (array $answers): object => (object) $answers, $this->contributions),
         ];
     }
 }

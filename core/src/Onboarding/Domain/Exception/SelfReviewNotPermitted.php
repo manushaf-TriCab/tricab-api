@@ -31,4 +31,13 @@ final class SelfReviewNotPermitted extends DomainException
             $userId,
         );
     }
+
+    /** Filling the HR or manager part of one's own form (5.4) — the same rule, on the same record. */
+    public static function contribution(UserId $userId): self
+    {
+        return new self(
+            'You cannot fill the HR or manager part of your own onboarding. Ask another administrator or your manager.',
+            $userId,
+        );
+    }
 }

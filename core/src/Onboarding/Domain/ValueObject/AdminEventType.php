@@ -51,6 +51,9 @@ final class AdminEventType
     public const CONTENT_REFUSED = 'content.refused';
     /** One person moved onto a new version because its author said it supersedes work in progress. */
     public const ALLOCATION_REISSUED = 'allocation.reissued';
+    /** HR or the named manager filled their part of a form (5.4). */
+    public const FORM_CONTRIBUTED = 'form.contributed';
+    public const FORM_CONTRIBUTION_REFUSED = 'form.contribution_refused';
 
     public const ALL = [
         self::ALLOCATION_ALLOCATED,
@@ -72,6 +75,8 @@ final class AdminEventType
         self::CONTENT_ITEM_DELETED,
         self::CONTENT_REFUSED,
         self::ALLOCATION_REISSUED,
+        self::FORM_CONTRIBUTED,
+        self::FORM_CONTRIBUTION_REFUSED,
     ];
 
     public static function assertKnown(string $value): string

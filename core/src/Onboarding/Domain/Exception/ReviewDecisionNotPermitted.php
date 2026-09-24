@@ -19,6 +19,8 @@ final class ReviewDecisionNotPermitted extends DomainException
 {
     public const REASON_NOT_AWAITING_REVIEW = 'not_awaiting_review';
     public const REASON_OUTCOME_NOT_OFFERED = 'outcome_not_offered';
+    /** 5.4: HR or the manager has not filled their part of the form yet. */
+    public const REASON_CONTRIBUTIONS_MISSING = 'contributions_missing';
 
     private function __construct(string $message, public readonly string $reason)
     {
@@ -42,6 +44,17 @@ final class ReviewDecisionNotPermitted extends DomainException
         return new self(
             sprintf('An item that is "%s" cannot be reviewed to "%s".', $from->label(), $to->label()),
             self::REASON_OUTCOME_NOT_OFFERED,
+        );
+    }
+
+    /**
+     * @param non-empty-list<string> $labels the required HR or manager fields still empty
+     */
+    public static function contributionsMissing(array $labels): self
+    {
+        return new self(
+            sprintf('This form cannot be accepted yet: %s still to be filled by HR or the manager.', implode(', ', array_slice($labels, 0, 5)) . (count($labels) > 5 ? ' and more' : '')),
+            self::REASON_CONTRIBUTIONS_MISSING,
         );
     }
 }

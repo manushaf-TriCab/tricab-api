@@ -40,16 +40,20 @@ final class FormSubmissionRules
     private const DATE = '/^(\d{4})-(\d{2})-(\d{2})$/';
 
     /**
+     * Only the fields `$filledBy` fills are checked, and an answer for any other
+     * field is refused: the starter cannot write the manager's sign-off, and HR
+     * cannot write the starter's answers (5.4).
+     *
      * @param array<string, mixed> $schema      the version's schema, `{ fields: [...] }`
      * @param array<string, mixed> $flatPayload dotted leaf path => submitted value
      *
      * @throws InvalidOnboardingValue naming the first field that is wrong, by its label
      */
-    public static function check(array $schema, array $flatPayload): void
+    public static function check(array $schema, array $flatPayload, string $filledBy = FormSchemaRules::FILLED_BY_STARTER): void
     {
         $fields = [];
         foreach (is_array($schema['fields'] ?? null) ? $schema['fields'] : [] as $field) {
-            if (is_array($field) && is_string($field['path'] ?? null)) {
+            if (is_array($field) && is_string($field['path'] ?? null) && FormSchemaRules::filledBy($field) === $filledBy) {
                 $fields[$field['path']] = $field;
             }
         }

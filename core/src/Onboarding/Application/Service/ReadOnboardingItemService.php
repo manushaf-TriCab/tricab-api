@@ -35,6 +35,8 @@ final readonly class ReadOnboardingItemService
         private OnboardingPolicyRepository $policies,
         private OnboardingFormRepository $forms,
         private OnboardingSubmissionGate $gate,
+        /** 5.4: what HR and the manager filled, shown to the starter read-only. */
+        private ?\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository $contributions = null,
     ) {
     }
 
@@ -70,7 +72,16 @@ final readonly class ReadOnboardingItemService
     {
         $this->gate->assertMayRead($userId);
 
-        return $this->forms->findForm($userId, $assignmentPublicId)
+        $detail = $this->forms->findForm($userId, $assignmentPublicId)
             ?? throw OnboardingAssignmentNotFound::forThisPerson();
+
+        // findForm() has already proved the form is this person's; only then is
+        // the contribution looked up, and only for that same assignment.
+        $context = $this->contributions?->findContext($detail->assignmentPublicId);
+        if ($context === null || $context->subjectUserId !== $userId) {
+            return $detail;
+        }
+
+        return $detail->withContributions($this->contributions?->latest($context->assignmentId) ?? []);
     }
 }

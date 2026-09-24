@@ -192,6 +192,11 @@ use TriCab\Api\Http\Action\Onboarding\PostOnboardingPersonInvitationAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPolicyAcknowledgementAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingPresentationProgressAction;
 use TriCab\Api\Http\Action\Onboarding\PostOnboardingReviewDecisionAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingFormContributionAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormContributionAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingManagerFormsAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingManagerFormAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingManagerContributionAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentItemAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentVersionAction;
@@ -462,6 +467,17 @@ final class AppBuilder
         $app->post('/api/v1/onboarding/forms/{assignmentPublicId}/submission', PostOnboardingFormSubmissionAction::class)
             ->add(($require)('ONBOARDING.SELF.SUBMIT'));
 
+        // Phase 5.4 — a manager's part of their own starters' forms. The
+        // trainee-side permission, because managers are ordinary staff; what
+        // limits it is the service's rule that the starter's profile names them,
+        // and anybody else is answered 404.
+        $app->get('/api/v1/onboarding/team/forms', GetOnboardingManagerFormsAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->get('/api/v1/onboarding/team/forms/{assignmentPublicId}', GetOnboardingManagerFormAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->put('/api/v1/onboarding/team/forms/{assignmentPublicId}/contribution', PutOnboardingManagerContributionAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+
         $app->get('/api/v1/admin/onboarding/overview', GetOnboardingAdminOverviewAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
 
@@ -501,6 +517,12 @@ final class AppBuilder
         $app->get('/api/v1/admin/onboarding/queue/{assignmentPublicId}', GetOnboardingReviewItemAction::class)
             ->add(($require)('ONBOARDING.REVIEW'));
         $app->post('/api/v1/admin/onboarding/queue/{assignmentPublicId}/decision', PostOnboardingReviewDecisionAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        // Phase 5.4 — HR's part of a form (the induction checklist, the vehicle
+        // inspection). REVIEW, as the decision is: HR fills and decides.
+        $app->get('/api/v1/admin/onboarding/queue/{assignmentPublicId}/contribution', GetOnboardingFormContributionAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->put('/api/v1/admin/onboarding/queue/{assignmentPublicId}/contribution', PutOnboardingFormContributionAction::class)
             ->add(($require)('ONBOARDING.REVIEW'));
 
         // Phase 4.4 — content authoring. ONBOARDING.CONTENT.MANAGE alone, and
