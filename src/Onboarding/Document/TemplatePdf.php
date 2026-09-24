@@ -88,6 +88,36 @@ final class TemplatePdf
         $this->pdf->Text($x, $top + 7, 'X');
     }
 
+    /**
+     * A drawn signature, scaled to fit inside the box and centred in it, as the
+     * source's `drawContainedImage` did. The PNG has already been checked
+     * ({@see \TriCab\Core\Onboarding\Domain\ValueObject\SignatureImage}).
+     */
+    public function signature(string $png, float $x, float $top, float $width, float $height, float $padding = 2): void
+    {
+        $size = @getimagesizefromstring($png);
+        if ($size === false || $size[0] < 1 || $size[1] < 1) {
+            return;
+        }
+        $boxW = max(1, $width - 2 * $padding);
+        $boxH = max(1, $height - 2 * $padding);
+        $scale = min($boxW / $size[0], $boxH / $size[1]);
+        $w = $size[0] * $scale;
+        $h = $size[1] * $scale;
+
+        // FPDF reads images from a path; the bytes live only as long as this call.
+        $file = tempnam(sys_get_temp_dir(), 'sig');
+        if ($file === false) {
+            throw new \RuntimeException('No temporary file for a signature.');
+        }
+        try {
+            file_put_contents($file, $png);
+            $this->pdf->Image($file, $x + $padding + ($boxW - $w) / 2, $top + $padding + ($boxH - $h) / 2, $w, $h, 'PNG');
+        } finally {
+            @unlink($file);
+        }
+    }
+
     /** Paints a white box — the source's way of clearing a printed placeholder before writing over it. */
     public function erase(float $x, float $top, float $width, float $height): void
     {

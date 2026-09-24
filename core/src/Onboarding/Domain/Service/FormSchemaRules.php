@@ -14,7 +14,8 @@ use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
  * The source had no form authoring at all — its forms were code. So there is
  * nothing to port, and the rules come from what the target already relies on:
  *
- *  - the six field types the trainee form renders;
+ *  - the field types the trainee form renders — six, and since 5.4 a drawn
+ *    `signature`, which the paper forms need;
  *  - a dotted path per field, which {@see FormPayloadSplitter} splits on and
  *    `onboarding_hr.FieldClassifications` keys by;
  *  - **a classification for every field, recorded as the author saves**.
@@ -45,7 +46,7 @@ final class FormSchemaRules
     public const MAX_HINT_LENGTH = 500;
     public const MAX_PATH_LENGTH = 200;
 
-    public const FIELD_TYPES = ['text', 'textarea', 'date', 'number', 'select', 'checkbox'];
+    public const FIELD_TYPES = ['text', 'textarea', 'date', 'number', 'select', 'checkbox', 'signature'];
 
     /** The classes a submitted field can be — C0, C1 and C5 are never answers. */
     public const FIELD_CLASSES = [DataClass::ORDINARY_HR, DataClass::PAYROLL, DataClass::RESTRICTED_HR];

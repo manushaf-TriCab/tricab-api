@@ -52,7 +52,13 @@ final class ReviewFieldProjection
         foreach (self::schemaFields($schema) as $field) {
             $path = $field['path'];
             $seen[$path] = true;
-            $fields[] = self::field($path, $field['label'], $ordinaryData[$path] ?? null, $classifications, $field['options']);
+            $value = $ordinaryData[$path] ?? null;
+            // A drawn signature is an image, not text to read: the reviewer is
+            // told it is there, and sees it on the generated paper copy.
+            if ($field['type'] === 'signature' && is_string($value) && $value !== '') {
+                $value = 'Signed (drawn signature)';
+            }
+            $fields[] = self::field($path, $field['label'], $value, $classifications, $field['options']);
         }
 
         foreach ($ordinaryData as $path => $value) {
@@ -107,7 +113,7 @@ final class ReviewFieldProjection
     /**
      * @param array<string, mixed> $schema
      *
-     * @return list<array{path: string, label: string, options: array<string, string>}>
+     * @return list<array{path: string, label: string, type: string, options: array<string, string>}>
      */
     private static function schemaFields(array $schema): array
     {
@@ -135,6 +141,7 @@ final class ReviewFieldProjection
             $fields[] = [
                 'path' => $field['path'],
                 'label' => is_string($label) && $label !== '' ? $label : $field['path'],
+                'type' => is_string($field['type'] ?? null) ? $field['type'] : 'text',
                 'options' => $options,
             ];
         }

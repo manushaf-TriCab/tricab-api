@@ -24,6 +24,7 @@ use TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue;
  *  - a select answer is one of the field's option keys;
  *  - a date is a real calendar date, `YYYY-MM-DD`;
  *  - a checkbox is true or false;
+ *  - a signature is a drawn PNG of a signature's size ({@see \TriCab\Core\Onboarding\Domain\ValueObject\SignatureImage});
  *  - text is text, within {@see MAX_TEXT_LENGTH} / {@see MAX_TEXTAREA_LENGTH};
  *  - an answer for a path the schema does not have is refused rather than
  *    stored — it would be data nobody asked for and no reviewer is shown.
@@ -85,6 +86,7 @@ final class FormSubmissionRules
             'select' => self::select($field, $label, $value),
             'date' => self::date($label, $value),
             'checkbox' => self::checkbox($label, $value),
+            'signature' => \TriCab\Core\Onboarding\Domain\ValueObject\SignatureImage::fromDataUrl($label, $value),
             'textarea' => self::text($label, $value, self::MAX_TEXTAREA_LENGTH),
             default => self::text($label, $value, self::MAX_TEXT_LENGTH),
         };
