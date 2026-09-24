@@ -56,6 +56,8 @@ final readonly class SubmitFormService
         private OnboardingFormRepository $forms,
         private OnboardingSubmissionGate $gate,
         private OnboardingIdempotentWrite $idempotency,
+        /** Phase 5.4: the paper copy, made after the submission commits. Null in tests that do not need it. */
+        private ?GenerateFormSubmissionDocumentService $documents = null,
     ) {
     }
 
@@ -104,7 +106,7 @@ final readonly class SubmitFormService
         // accepted here is one a reviewer has to send back.
         FormSubmissionRules::check($detail->schema, FormPayloadSplitter::flatten($payload));
 
-        return $this->idempotency->run(
+        $result = $this->idempotency->run(
             $userId,
             OnboardingWriteIdempotencyStore::OPERATION_SUBMIT_FORM,
             $idempotencyKey,
@@ -144,5 +146,12 @@ final readonly class SubmitFormService
                 return $replayed;
             },
         );
+
+        // Outside the write, and on a replay too: generation is once per
+        // revision, so a replay that finds the copy already made is a no-op,
+        // and one whose first attempt failed gets a second chance.
+        $this->documents?->generate($userId, $assignmentPublicId, $payload);
+
+        return $result;
     }
 }

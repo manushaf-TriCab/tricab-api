@@ -800,6 +800,33 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReminderRepository::class),
             \TriCab\Core\Onboarding\Contract\OnboardingRetentionRepository::class
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingRetentionRepository::class),
+            // Phase 5.4 — generated documents. The in-memory repository writes
+            // into the in-memory read side, so a generated copy shows on the list.
+            \TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository::class
+                => static function (Container $container): \TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository {
+                    $read = self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingDocumentRepository::class);
+
+                    return new \TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingDocumentGenerationRepository(
+                        $read instanceof \TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingDocumentRepository ? $read : null,
+                    );
+                },
+            \TriCab\Core\Onboarding\Contract\OnboardingFormDocumentRenderer::class
+                => static fn (): \TriCab\Core\Onboarding\Contract\OnboardingFormDocumentRenderer
+                    => \TriCab\Api\Onboarding\Document\TemplateOnboardingFormDocumentRenderer::withTriCabTemplates(dirname(__DIR__, 2)),
+            \TriCab\Core\Onboarding\Contract\OnboardingDocumentStore::class
+                => static fn (Container $container): \TriCab\Core\Onboarding\Contract\OnboardingDocumentStore
+                    => new \TriCab\Api\Onboarding\Document\BlobOnboardingDocumentStore(
+                        self::get($container, ProductBlobStore::class),
+                        $settings->blobContainerOnboarding,
+                    ),
+            \TriCab\Core\Onboarding\Application\Service\SubmitFormService::class
+                => static fn (Container $container): \TriCab\Core\Onboarding\Application\Service\SubmitFormService
+                    => new \TriCab\Core\Onboarding\Application\Service\SubmitFormService(
+                        self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingFormRepository::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingSubmissionGate::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingIdempotentWrite::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class),
+                    ),
             \TriCab\Core\Expense\Contract\ExpensePdfRenderer::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ExpenseDompdfRenderer::class),
             \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
             // Profile-only by design: ExpenseProfile.IsFinance is authoritative at
@@ -2191,6 +2218,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingReminderRepository::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingRetentionRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingRetentionRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingDocumentGenerationRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class);

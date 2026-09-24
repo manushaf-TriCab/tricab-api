@@ -1,0 +1,70 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TriCab\Core\Onboarding\Infrastructure;
+
+use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
+use TriCab\Core\Onboarding\Application\DTO\Document\RenderedDocument;
+use TriCab\Core\Onboarding\Application\DTO\OnboardingDocumentRef;
+use TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository;
+use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
+
+/**
+ * Submissions are seeded by a test; a recorded document is added to the
+ * in-memory read repository, so it shows on the person's own list as it would.
+ */
+final class InMemoryOnboardingDocumentGenerationRepository implements OnboardingDocumentGenerationRepository
+{
+    /** @var array<string, FormSubmissionForDocument> keyed "userId|assignmentPublicId" */
+    public array $submissions = [];
+
+    /** @var array<int, string> formSubmissionId => document public id */
+    public array $recorded = [];
+
+    private int $next = 1;
+
+    public function __construct(private readonly ?InMemoryOnboardingDocumentRepository $documents = null)
+    {
+    }
+
+    public function withSubmission(string $assignmentPublicId, FormSubmissionForDocument $submission): void
+    {
+        $this->submissions[$submission->userId . '|' . strtolower($assignmentPublicId)] = $submission;
+    }
+
+    public function findLatestFormSubmission(int $userId, string $assignmentPublicId): ?FormSubmissionForDocument
+    {
+        return $this->submissions[$userId . '|' . strtolower($assignmentPublicId)] ?? null;
+    }
+
+    public function hasDocumentForFormSubmission(int $formSubmissionId): bool
+    {
+        return isset($this->recorded[$formSubmissionId]);
+    }
+
+    public function recordFormDocument(
+        FormSubmissionForDocument $submission,
+        RenderedDocument $document,
+        DataClass $dataClass,
+        string $container,
+        string $blobPath,
+    ): string {
+        $publicId = sprintf('00000000-0000-4000-8000-%012d', $this->next++);
+        $this->recorded[$submission->formSubmissionId] = $publicId;
+        $this->documents?->withDocument($submission->userId, new OnboardingDocumentRef(
+            $publicId,
+            $submission->userId,
+            $document->documentKind,
+            $dataClass,
+            $container,
+            $blobPath,
+            $document->contentType,
+            $document->byteSize(),
+            $document->sha256,
+            gmdate('Y-m-d\TH:i:s\Z'),
+        ));
+
+        return $publicId;
+    }
+}
