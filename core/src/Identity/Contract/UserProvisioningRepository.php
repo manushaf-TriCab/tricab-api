@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Identity\Contract;
 
+use TriCab\Core\Identity\Application\DTO\VerifiedEmailOwner;
 use TriCab\Core\Identity\Domain\Entity\ExternalIdentity;
 use TriCab\Core\Identity\Domain\Entity\User;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
@@ -26,6 +27,27 @@ interface UserProvisioningRepository
      * @return list<User>
      */
     public function findAllByEmail(EmailAddress $emailAddress): array;
+
+    /**
+     * Every user holding this address as a *verified* address, with what that
+     * address is for. Supersedes findAllByEmail() in the resolution path: a
+     * person may hold both a personal and a corporate address, and matching
+     * only the primary one forces a choice between their two logins.
+     *
+     * Still expected to yield at most one user — the normalized address is
+     * unique — but returns a list so the caller can tell "none" from
+     * "ambiguous" rather than silently picking one.
+     *
+     * @return list<VerifiedEmailOwner>
+     */
+    public function findAllByVerifiedEmail(EmailAddress $emailAddress): array;
+
+    /**
+     * Whether this address is one of the user's active verified addresses.
+     * Used to accept an already-linked identity whose provider email is not
+     * the user's primary address.
+     */
+    public function hasVerifiedAddress(UserId $userId, EmailAddress $emailAddress): bool;
 
     public function findByExternalIdentity(ExternalIdentity $identity): ?User;
 

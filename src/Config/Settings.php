@@ -160,6 +160,9 @@ final readonly class Settings
         public string $triexpenseMailFrom = 'ap@tricab.com',
         public bool $triexpenseEmailEnabled = false,
         public string $triexpenseEmailTestRecipient = '',
+        public string $onboardingReminderEmails = '',
+        public string $onboardingEmailTestRecipient = '',
+        public string $blobContainerOnboarding = 'onboarding',
         public string $triexpenseAppBaseUrl = '',
         public int $triexpenseGraphConnectTimeoutSeconds = 5,
         public int $triexpenseGraphRequestTimeoutSeconds = 15,
@@ -809,6 +812,13 @@ final readonly class Settings
         if ($triexpenseEmailTestRecipient !== '' && !str_contains($triexpenseEmailTestRecipient, '@')) {
             throw new InvalidArgumentException('TRIEXPENSE_EMAIL_TEST_RECIPIENT must be a mailbox address when set.');
         }
+        // Onboarding reminders (5.2). Kept raw: OnboardingReminderDelivery treats
+        // anything but exactly "on" as off, so a typo cannot switch them on.
+        $onboardingReminderEmails = self::string($env, 'ONBOARDING_REMINDER_EMAILS', '');
+        $onboardingEmailTestRecipient = strtolower(trim(self::string($env, 'ONBOARDING_EMAIL_TEST_RECIPIENT', '')));
+        if ($onboardingEmailTestRecipient !== '' && !str_contains($onboardingEmailTestRecipient, '@')) {
+            throw new InvalidArgumentException('ONBOARDING_EMAIL_TEST_RECIPIENT must be a mailbox address when set.');
+        }
         $triexpenseAppBaseUrl = rtrim(trim(self::string($env, 'TRIEXPENSE_APP_BASE_URL', '')), '/');
         if ($triexpenseAppBaseUrl !== '' && !str_starts_with(strtolower($triexpenseAppBaseUrl), 'https://')) {
             if ($appEnv === 'production' || !str_starts_with(strtolower($triexpenseAppBaseUrl), 'http://')) {
@@ -949,6 +959,9 @@ final readonly class Settings
             triexpenseMailFrom: $triexpenseMailFrom,
             triexpenseEmailEnabled: $triexpenseEmailEnabled,
             triexpenseEmailTestRecipient: $triexpenseEmailTestRecipient,
+            onboardingReminderEmails: $onboardingReminderEmails,
+            onboardingEmailTestRecipient: $onboardingEmailTestRecipient,
+            blobContainerOnboarding: self::string($env, 'BLOB_CONTAINER_ONBOARDING', 'onboarding'),
             triexpenseAppBaseUrl: $triexpenseAppBaseUrl,
             triexpenseGraphConnectTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_GRAPH_CONNECT_TIMEOUT_SECONDS', 5, 1, 30),
             triexpenseGraphRequestTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_GRAPH_REQUEST_TIMEOUT_SECONDS', 15, 1, 60),

@@ -118,6 +118,14 @@ Invoke-SqlFile (Join-Path $DevScripts 'create-product-migration-schema.sql') -Co
 Invoke-SqlFile (Join-Path $DevScripts 'create-legacy-migration-schema.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-site-configurations.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-user-management-audit.sql')
+Invoke-SqlFile (Join-Path $DevScripts 'create-identity-user-email-addresses.sql')
+Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-schema.sql')        # after identity + audit
+Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-hr-schema.sql')     # after onboarding: FKs point back into it
+Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-admin-audit.sql')   # after identity: FKs to identity.Users
+Invoke-SqlFile (Join-Path $DevScripts 'alter-onboarding-policy-metadata.sql') # after onboarding: adds columns to Policies, PolicyVersions
+Invoke-SqlFile (Join-Path $DevScripts 'alter-onboarding-policy-declarations.sql') # after onboarding: adds DeclarationJson
+Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-form-contributions.sql') # after onboarding: FKs to Assignments
+Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-migration-rows.sql')     # after legacy migration: FKs to LegacyMigrationBatches
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
 
 # --- seeds -----------------------------------------------------------------
@@ -130,6 +138,8 @@ foreach ($s in @(
     'alter-product-regions.sql',
     'seed-customer-roles-and-permissions.sql',
     'seed-guest-role-and-login-permission.sql',
+    'seed-onboarding-permissions.sql',   # after guest role: grants GUEST + EMPLOYEE self-service
+    'seed-onboarding-roles.sql',         # after onboarding permissions: ONBOARDING_ADMIN
     'seed-product-catalogue-sample.sql',
     'seed-product-cable-reference.sql',      # after catalogue-sample
     'seed-customer-sample-data.sql'

@@ -177,6 +177,47 @@ use TriCab\Api\Http\Action\Dev\DevProductFileDeliveryAction;
 use TriCab\Api\Http\Action\GetAuthenticatedUserAction;
 use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
+use TriCab\Api\Http\Action\Onboarding\DeleteOnboardingContentItemAction;
+use TriCab\Api\Http\Action\Onboarding\DeleteOnboardingPersonAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingAdminOverviewAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentContentAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentsAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingItemAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingPeopleAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingPersonAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingPersonDocumentContentAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingPersonDocumentsAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingReviewItemAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingReportAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingReviewQueueAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingSelfSummaryAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingAttemptSubmissionAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingFormSubmissionAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingPersonAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingPersonInvitationAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingPolicyAcknowledgementAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingPresentationProgressAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingReviewDecisionAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingFormContributionAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingFormPhotoAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingFormPhotoAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormContributionAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingManagerFormsAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingManagerFormAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingManagerContributionAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingCompletionFeedAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentItemAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentVersionAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingContentDraftAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingContentItemAction;
+use TriCab\Api\Http\Action\Onboarding\PostOnboardingContentPublishAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingContentItemAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingContentVersionAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormDraftAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingPersonAllocationAction;
+use TriCab\Api\Http\Action\Onboarding\PutOnboardingPersonProfileAction;
 use TriCab\Api\Http\Action\LogoutGuestAction;
 use TriCab\Api\Http\Action\TrustedDevice\ExchangeTrustedDeviceSessionAction;
 use TriCab\Api\Http\Action\TrustedDevice\RegisterTrustedDeviceAction;
@@ -373,7 +414,197 @@ final class AppBuilder
         $app->post('/api/v1/regions/select', PublicRegionAction::class);
         $app->get('/api/v1/public/about', GetPublicAboutAction::class);
         $app->get('/api/v1/public/contact', GetPublicContactAction::class);
+        self::registerOnboardingRoutes($app, $container);
         self::registerAdminRoutes($app, $container);
+    }
+
+    /**
+     * Onboarding module.
+     *
+     * Two groups with different gates, deliberately not one:
+     *
+     *  - `/api/v1/onboarding/*` is self-service. It is reachable by a
+     *    pre-start candidate on a guest session and by an employee who has no
+     *    TriCab mailbox, so it is gated on ONBOARDING.SELF.* and never on a
+     *    role or session type (work order §4.15).
+     *  - `/api/v1/admin/onboarding/*` is HR. Separate permissions, and the
+     *    self gate grants none of it.
+     *
+     * Within the self group the split is READ versus SUBMIT, and it is not
+     * cosmetic. `ONBOARDING.SELF.READ` opens an induction; `ONBOARDING.SELF.SUBMIT`
+     * is what writes evidence. A departed employee who keeps the first and loses
+     * the second is the leaver policy expressed as two permissions, and the
+     * route table is where that is legible.
+     *
+     * **Every path below identifies an item, never a person.** There is no user
+     * id in any of these routes, no `?forUser=`, and no body field that names a
+     * subject — whose record this is follows from the session, which is work
+     * order §4.3. The item id is checked against the session's own user inside
+     * one SQL statement, so an id belonging to somebody else is not found.
+     *
+     * Note there is no `/api/v1/onboarding/training/{id}/complete`. Nothing a
+     * trainee can call completes an item (invariant 7): passing an assessment
+     * does, acknowledging a policy does, and a reviewer does. The absence of the
+     * route is the enforcement.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerOnboardingRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+
+        $app->get('/api/v1/onboarding/me', GetOnboardingSelfSummaryAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+
+        // Phase 3.3 — opening one allocated item. `itemType` is an argument of
+        // the route rather than of the request, so a client cannot ask for a
+        // policy "as training" to see what a different code path does with it.
+        $app->get('/api/v1/onboarding/training/{assignmentPublicId}', GetOnboardingItemAction::class)
+            ->setArgument('itemType', 'training')
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->get('/api/v1/onboarding/policies/{assignmentPublicId}', GetOnboardingItemAction::class)
+            ->setArgument('itemType', 'policy')
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->get('/api/v1/onboarding/forms/{assignmentPublicId}', GetOnboardingItemAction::class)
+            ->setArgument('itemType', 'form')
+            ->add(($require)('ONBOARDING.SELF.READ'));
+
+        $app->get('/api/v1/onboarding/documents', GetOnboardingDocumentsAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->get('/api/v1/onboarding/documents/{documentPublicId}/content', GetOnboardingDocumentContentAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+
+        // Phase 3.3 — the write side. All gated on SELF.SUBMIT, which READ alone
+        // does not grant.
+        $app->post('/api/v1/onboarding/training/{assignmentPublicId}/progress', PostOnboardingPresentationProgressAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->post('/api/v1/onboarding/training/{assignmentPublicId}/attempts', PostOnboardingAttemptAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->post('/api/v1/onboarding/training/{assignmentPublicId}/attempts/{attemptPublicId}', PostOnboardingAttemptSubmissionAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->post('/api/v1/onboarding/policies/{assignmentPublicId}/acknowledgement', PostOnboardingPolicyAcknowledgementAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->put('/api/v1/onboarding/forms/{assignmentPublicId}/draft', PutOnboardingFormDraftAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+        $app->post('/api/v1/onboarding/forms/{assignmentPublicId}/submission', PostOnboardingFormSubmissionAction::class)
+            ->add(($require)('ONBOARDING.SELF.SUBMIT'));
+
+        // Phase 5.4 — a manager's part of their own starters' forms. The
+        // trainee-side permission, because managers are ordinary staff; what
+        // limits it is the service's rule that the starter's profile names them,
+        // and anybody else is answered 404.
+        $app->get('/api/v1/onboarding/team/forms', GetOnboardingManagerFormsAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->get('/api/v1/onboarding/team/forms/{assignmentPublicId}', GetOnboardingManagerFormAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+        $app->put('/api/v1/onboarding/team/forms/{assignmentPublicId}/contribution', PutOnboardingManagerContributionAction::class)
+            ->add(($require)('ONBOARDING.SELF.READ'));
+
+        // Phase 6 — the completion feed for Skill Matrix. Its own permission,
+        // held by no person's role: a service identity polls it (owner decision
+        // owed on which). Defined and tested; nothing connects to it.
+        $app->get('/api/v1/integrations/onboarding/completions', GetOnboardingCompletionFeedAction::class)
+            ->add(($require)('ONBOARDING.COMPLETIONS.READ'));
+
+        $app->get('/api/v1/admin/onboarding/overview', GetOnboardingAdminOverviewAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+
+        // Phase 4.2 — people and explicit allocation. Administrative, so the
+        // permission alone is not enough: RequirePermissionMiddleware also holds
+        // it to passkey or Entra assurance (invariant 14), and an emailed code
+        // reaches none of these.
+        $app->get('/api/v1/admin/onboarding/people', GetOnboardingPeopleAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->get('/api/v1/admin/onboarding/people/{personPublicId}', GetOnboardingPersonAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->put('/api/v1/admin/onboarding/people/{personPublicId}/allocation', PutOnboardingPersonAllocationAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        // Phase 5.4 — a person's generated documents, for the personnel file.
+        // Every download is streamed and audited against HR (PersonDocumentsService).
+        $app->get('/api/v1/admin/onboarding/people/{personPublicId}/documents', GetOnboardingPersonDocumentsAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->get('/api/v1/admin/onboarding/people/{personPublicId}/documents/{documentPublicId}/content', GetOnboardingPersonDocumentContentAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+
+        // Phase 4.1 — adding a person, editing their profile, inviting them.
+        // Same permission as allocation: choosing who is inducted and choosing
+        // what they are given are one job. Creating a person may create a
+        // GUEST account (owner decision, 23 Sep 2026) — the only account this
+        // module can make, and one that reaches nothing but its own onboarding.
+        $app->post('/api/v1/admin/onboarding/people', PostOnboardingPersonAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->put('/api/v1/admin/onboarding/people/{personPublicId}/profile', PutOnboardingPersonProfileAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->post('/api/v1/admin/onboarding/people/{personPublicId}/invitation', PostOnboardingPersonInvitationAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        // Deleting a record nothing is recorded against — a mistake or a test.
+        // Anybody who has done anything is given a last day instead.
+        $app->delete('/api/v1/admin/onboarding/people/{personPublicId}', DeleteOnboardingPersonAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+
+        // Phase 4.3 — the reviewer queue. ONBOARDING.REVIEW, not PEOPLE.MANAGE:
+        // deciding somebody's work and choosing what they are given are separate
+        // grants (work order §9, "reviewer and content-manager scopes remain
+        // separate"), and holding one opens none of the other's routes.
+        $app->get('/api/v1/admin/onboarding/queue', GetOnboardingReviewQueueAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->get('/api/v1/admin/onboarding/queue/{assignmentPublicId}', GetOnboardingReviewItemAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->post('/api/v1/admin/onboarding/queue/{assignmentPublicId}/decision', PostOnboardingReviewDecisionAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        // Phase 5.4 — HR's part of a form (the induction checklist, the vehicle
+        // inspection). REVIEW, as the decision is: HR fills and decides.
+        $app->get('/api/v1/admin/onboarding/queue/{assignmentPublicId}/contribution', GetOnboardingFormContributionAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->put('/api/v1/admin/onboarding/queue/{assignmentPublicId}/contribution', PutOnboardingFormContributionAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->post('/api/v1/admin/onboarding/queue/{assignmentPublicId}/photos', PostOnboardingFormPhotoAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+        $app->get('/api/v1/admin/onboarding/queue/{assignmentPublicId}/photos/{photoPublicId}', GetOnboardingFormPhotoAction::class)
+            ->add(($require)('ONBOARDING.REVIEW'));
+
+        // Phase 4.4 — content authoring. ONBOARDING.CONTENT.MANAGE alone, and
+        // the only routes that serve an answer key: a version's authored body.
+        // The item type is a route argument per path segment, never a body
+        // field, as on the trainee side.
+        $app->get('/api/v1/admin/onboarding/content', GetOnboardingContentAction::class)
+            ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+        foreach (['training' => 'training', 'policies' => 'policy', 'forms' => 'form'] as $segment => $itemType) {
+            $base = '/api/v1/admin/onboarding/content/' . $segment;
+            $app->post($base, PostOnboardingContentItemAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->get($base . '/{itemPublicId}', GetOnboardingContentItemAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->put($base . '/{itemPublicId}', PutOnboardingContentItemAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->delete($base . '/{itemPublicId}', DeleteOnboardingContentItemAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->post($base . '/{itemPublicId}/versions', PostOnboardingContentDraftAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->get($base . '/{itemPublicId}/versions/{versionPublicId}', GetOnboardingContentVersionAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->put($base . '/{itemPublicId}/versions/{versionPublicId}', PutOnboardingContentVersionAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+            $app->post($base . '/{itemPublicId}/versions/{versionPublicId}/publish', PostOnboardingContentPublishAction::class)
+                ->setArgument('itemType', $itemType)
+                ->add(($require)('ONBOARDING.CONTENT.MANAGE'));
+        }
+
+        // Phase 4.5 — reports. ONBOARDING.REPORTS.READ alone. Counts and names,
+        // never an email address, score, note or answer, so a report reader is
+        // not handed the roster's contact details or a reviewer's evidence.
+        foreach (['summary', 'items', 'overdue'] as $report) {
+            $app->get('/api/v1/admin/onboarding/reports/' . $report, GetOnboardingReportAction::class)
+                ->setArgument('report', $report)
+                ->add(($require)('ONBOARDING.REPORTS.READ'));
+        }
     }
 
     /**

@@ -766,6 +766,124 @@ final class ContainerFactory
             \TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseBankFeedRepository::class),
             \TriCab\Core\Expense\Contract\ExpensePeriodRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpensePeriodRepository::class),
             \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
+
+            // Onboarding (Phase 3.1–3.3). In-memory by default, as Expense is:
+            // the azure-sql branch below swaps in the real adapters. The doubles
+            // are not merely test scaffolding — they are what `USER_REPOSITORY=memory`
+            // runs against, so they enforce the same ownership keying the SQL does.
+            \TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingSelfServiceRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingTrainingRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingTrainingRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingPolicyRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingPolicyRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingFormRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingFormRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingDocumentRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingDocumentRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingWriteIdempotencyStore::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingWriteIdempotencyStore::class),
+            // Phase 4 — HR administration.
+            \TriCab\Core\Onboarding\Contract\OnboardingPeopleRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingPeopleRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingAdminAuditLog::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingAdminAuditLog::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingReviewRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReviewRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingAccountDirectory::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingAccountDirectory::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingContentRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingContentRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingReportRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReportRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingReminderRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReminderRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingRetentionRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingRetentionRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingFormContributionRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingCompletionFeedRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingCompletionFeedRepository::class),
+            // Optional constructor parameters are not autowired, so these two are
+            // named: without them a form's HR and manager parts would be neither
+            // shown to the starter nor required before a reviewer accepts it.
+            \TriCab\Core\Onboarding\Application\Service\DecideReviewService::class
+                => \DI\autowire()
+                    ->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class))
+                    ->constructorParameter('documents', \DI\get(\TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class))
+                    ->constructorParameter('assessmentSheets', \DI\get(\TriCab\Core\Onboarding\Application\Service\GenerateAssessmentDocumentService::class)),
+            \TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class
+                => \DI\autowire()->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class)),
+            \TriCab\Core\Onboarding\Application\Service\ContributeToFormService::class
+                => \DI\autowire()->constructorParameter('documents', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository::class)),
+            \TriCab\Core\Onboarding\Application\Service\ReadOnboardingItemService::class
+                => \DI\autowire()->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class)),
+            // Phase 5.4 — generated documents. The in-memory repository writes
+            // into the in-memory read side, so a generated copy shows on the list.
+            \TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository::class
+                => static function (Container $container): \TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository {
+                    $read = self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingDocumentRepository::class);
+
+                    return new \TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingDocumentGenerationRepository(
+                        $read instanceof \TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingDocumentRepository ? $read : null,
+                    );
+                },
+            \TriCab\Core\Onboarding\Contract\OnboardingFormDocumentRenderer::class
+                => static function (Container $container): \TriCab\Core\Onboarding\Contract\OnboardingFormDocumentRenderer {
+                    // Photos are read back from the private container for the
+                    // vehicle report's copy — found through the person's own
+                    // documents, so only that person's photos can be drawn.
+                    $documents = self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingDocumentRepository::class);
+                    $blobs = self::get($container, ProductBlobStore::class);
+
+                    return \TriCab\Api\Onboarding\Document\TemplateOnboardingFormDocumentRenderer::withTriCabTemplates(
+                        dirname(__DIR__, 2),
+                        static function (int $userId, string $documentPublicId) use ($documents, $blobs): ?string {
+                            $photo = $documents->findDocument($userId, strtolower($documentPublicId));
+                            if ($photo === null || $photo->documentKind !== 'photo') {
+                                return null;
+                            }
+
+                            return $blobs->getObjectBinary($photo->blobContainer, $photo->blobPath);
+                        },
+                    );
+                },
+            \TriCab\Core\Onboarding\Contract\OnboardingDocumentStore::class
+                => static fn (Container $container): \TriCab\Core\Onboarding\Contract\OnboardingDocumentStore
+                    => new \TriCab\Api\Onboarding\Document\BlobOnboardingDocumentStore(
+                        self::get($container, ProductBlobStore::class),
+                        $settings->blobContainerOnboarding,
+                    ),
+            \TriCab\Core\Onboarding\Contract\OnboardingAssessmentDocumentRenderer::class
+                => static fn (): \TriCab\Core\Onboarding\Contract\OnboardingAssessmentDocumentRenderer
+                    => new \TriCab\Api\Onboarding\Document\AssessmentPdfMapper(dirname(__DIR__, 2) . '/resources/onboarding/form-templates'),
+            \TriCab\Core\Onboarding\Application\Service\SubmitAssessmentAttemptService::class
+                => static fn (Container $container): \TriCab\Core\Onboarding\Application\Service\SubmitAssessmentAttemptService
+                    => new \TriCab\Core\Onboarding\Application\Service\SubmitAssessmentAttemptService(
+                        self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingTrainingRepository::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingSubmissionGate::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingIdempotentWrite::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\GenerateAssessmentDocumentService::class),
+                    ),
+            \TriCab\Core\Onboarding\Contract\OnboardingPolicyDocumentRenderer::class
+                => static fn (): \TriCab\Core\Onboarding\Contract\OnboardingPolicyDocumentRenderer
+                    => \TriCab\Api\Onboarding\Document\PolicyDeclarationPdfMapper::withTriCabTemplates(dirname(__DIR__, 2)),
+            \TriCab\Core\Onboarding\Application\Service\AcknowledgePolicyService::class
+                => static fn (Container $container): \TriCab\Core\Onboarding\Application\Service\AcknowledgePolicyService
+                    => new \TriCab\Core\Onboarding\Application\Service\AcknowledgePolicyService(
+                        self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingPolicyRepository::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingSubmissionGate::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingIdempotentWrite::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\GeneratePolicyDocumentService::class),
+                    ),
+            \TriCab\Core\Onboarding\Application\Service\SubmitFormService::class
+                => static fn (Container $container): \TriCab\Core\Onboarding\Application\Service\SubmitFormService
+                    => new \TriCab\Core\Onboarding\Application\Service\SubmitFormService(
+                        self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingFormRepository::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingSubmissionGate::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\OnboardingIdempotentWrite::class),
+                        self::get($container, \TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class),
+                    ),
             \TriCab\Core\Expense\Contract\ExpensePdfRenderer::class => \DI\autowire(\TriCab\Api\Expense\Persistence\ExpenseDompdfRenderer::class),
             \TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class => \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class),
             // Profile-only by design: ExpenseProfile.IsFinance is authoritative at
@@ -2249,6 +2367,7 @@ final class ContainerFactory
             $definitions[ApplicationTransaction::class] = \DI\autowire(SqlApplicationTransaction::class);
             $definitions[UserRepository::class] = \DI\autowire(AzureSqlUserRepository::class);
             $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(AzureSqlEmailOtpChallengeRepository::class);
+            $definitions[\TriCab\Core\Identity\Contract\ExpiredEmailOtpChallengePurger::class] = \DI\autowire(\TriCab\Api\Identity\Persistence\AzureSqlExpiredEmailOtpChallengePurger::class);
             $definitions[GuestSessionRepository::class] = \DI\autowire(AzureSqlGuestSessionRepository::class);
             $definitions[TrustedDeviceRepository::class] = \DI\autowire(AzureSqlTrustedDeviceRepository::class);
             $definitions[UserPasskeyRepository::class] = \DI\autowire(AzureSqlUserPasskeyRepository::class);
@@ -2283,6 +2402,46 @@ final class ContainerFactory
             $definitions[\TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseBankFeedRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpensePeriodRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpensePeriodRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReminderLogRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingSelfServiceRepository::class);
+            // Phase 3.3 — the write side. All four share one locator, whose single
+            // statement carries ownership, item type, withdrawal and content
+            // version; nothing else resolves an assignment.
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingTrainingRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingTrainingRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingPolicyRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingPolicyRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingFormRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingFormRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingDocumentRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingDocumentRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingWriteIdempotencyStore::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingWriteIdempotencyStore::class);
+            // Phase 6 — the completion feed, read only.
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingCompletionFeedRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingCompletionFeedRepository::class);
+            // Phase 4 — HR administration. Admin writes audit inside their own
+            // transaction; the audit log alone is for refusals.
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingPeopleRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingPeopleRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingAdminAuditLog::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingAdminAuditLog::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingReviewRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingReviewRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingAccountDirectory::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingAccountDirectory::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingContentRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingContentRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingReportRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingReportRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingReminderRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingReminderRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingRetentionRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingRetentionRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingFormContributionRepository::class);
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingDocumentGenerationRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseAuditRecorder::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseGraphFinanceGroupChecker::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\NullExpenseGraphFinanceGroupChecker::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseFinanceCapabilityResolver::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\ProfileFinanceCapabilityResolver::class);
@@ -2374,6 +2533,8 @@ SQL,
 
                 return $repository;
             };
+
+            $definitions[\TriCab\Core\Identity\Contract\ExpiredEmailOtpChallengePurger::class] = \DI\autowire(\TriCab\Api\Identity\Persistence\InMemoryExpiredEmailOtpChallengePurger::class);
 
             if ($settings->isGuestJwtConfigured()) {
                 $definitions[EmailOtpChallengeRepository::class] = \DI\autowire(InMemoryEmailOtpChallengeRepository::class);
@@ -2618,6 +2779,48 @@ SQL,
         $definitions[GuestPasskeyEmailSender::class] = static function (Container $container) use ($settings): GuestPasskeyEmailSender {
             return self::createGuestPasskeyEmailSender($settings, $container);
         };
+        // Onboarding invitations (4.1) go through the same provider as sign-in
+        // codes, so one setting decides where every guest-facing email goes.
+        $definitions[\TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender {
+            return self::createOnboardingInvitationEmailSender($settings, $container);
+        };
+        // Reminders (5.2) share the invitation's provider and its sender class.
+        $definitions[\TriCab\Core\Onboarding\Contract\OnboardingReminderEmailSender::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Contract\OnboardingReminderEmailSender {
+            $sender = self::createOnboardingInvitationEmailSender($settings, $container);
+            if (!$sender instanceof \TriCab\Core\Onboarding\Contract\OnboardingReminderEmailSender) {
+                throw new \LogicException('The onboarding email sender does not send reminders.');
+            }
+
+            return $sender;
+        };
+        $definitions[\TriCab\Core\Onboarding\Application\DTO\Reminder\OnboardingReminderDelivery::class] = static function () use ($settings): \TriCab\Core\Onboarding\Application\DTO\Reminder\OnboardingReminderDelivery {
+            return \TriCab\Core\Onboarding\Application\DTO\Reminder\OnboardingReminderDelivery::decide(
+                $settings->onboardingReminderEmails,
+                $settings->onboardingEmailTestRecipient,
+                $settings->isProduction(),
+                $settings->usesDevelopmentGuestEmail(),
+            );
+        };
+        $definitions[\TriCab\Core\Onboarding\Application\Service\SendOnboardingRemindersService::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Application\Service\SendOnboardingRemindersService {
+            return new \TriCab\Core\Onboarding\Application\Service\SendOnboardingRemindersService(
+                reminders: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingReminderRepository::class),
+                accounts: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingAccountDirectory::class),
+                sender: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingReminderEmailSender::class),
+                delivery: self::get($container, \TriCab\Core\Onboarding\Application\DTO\Reminder\OnboardingReminderDelivery::class),
+                clock: self::get($container, Clock::class),
+                publicAppBaseUrl: $settings->passkeyPublicAppBaseUrl,
+            );
+        };
+        $definitions[\TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService::class] = static function (Container $container) use ($settings): \TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService {
+            return new \TriCab\Core\Onboarding\Application\Service\InviteOnboardingPersonService(
+                people: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingPeopleRepository::class),
+                accounts: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingAccountDirectory::class),
+                sender: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender::class),
+                audit: self::get($container, \TriCab\Core\Onboarding\Contract\OnboardingAdminAuditLog::class),
+                clock: self::get($container, Clock::class),
+                publicAppBaseUrl: $settings->passkeyPublicAppBaseUrl,
+            );
+        };
         $definitions[RequestGuestPasskeySetupLinkService::class] = static function (Container $container) use ($settings): RequestGuestPasskeySetupLinkService {
             return new RequestGuestPasskeySetupLinkService(
                 eligibility: self::get($container, GuestLoginEligibilityService::class),
@@ -2738,6 +2941,33 @@ SQL,
             openAiEndpoint: $settings->triexpenseOpenAiEndpoint,
             openAiKey: $settings->triexpenseOpenAiKey,
             openAiDeployment: $settings->triexpenseOpenAiDeployment,
+        );
+    }
+
+    private static function createOnboardingInvitationEmailSender(Settings $settings, Container $container): \TriCab\Core\Onboarding\Contract\OnboardingInvitationEmailSender
+    {
+        if ($settings->usesDevelopmentGuestEmail()) {
+            return new \TriCab\Api\Onboarding\Email\DevelopmentOnboardingInvitationEmailSender();
+        }
+
+        $http = self::get($container, JsonHttpClient::class);
+
+        if ($settings->usesMicrosoftGraphGuestEmail()) {
+            return new \TriCab\Api\Onboarding\Email\MicrosoftGraphOnboardingInvitationEmailSender(
+                http: $http,
+                tenantId: $settings->graphTenantId,
+                clientId: $settings->graphClientId,
+                clientSecret: $settings->graphClientSecret,
+                mailbox: $settings->rfqMailbox,
+            );
+        }
+
+        return new \TriCab\Api\Onboarding\Email\PostmarkOnboardingInvitationEmailSender(
+            http: $http,
+            serverToken: $settings->postmarkServerToken,
+            fromEmail: $settings->postmarkFromEmail,
+            fromName: $settings->postmarkFromName,
+            messageStream: $settings->postmarkMessageStream,
         );
     }
 

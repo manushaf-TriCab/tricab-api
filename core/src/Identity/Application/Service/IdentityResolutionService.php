@@ -8,6 +8,7 @@ use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
 use TriCab\Core\Identity\Application\Exception\IdentityConflict;
 use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Contract\UserProvisioningRepository;
+use TriCab\Core\Identity\Domain\Service\ProviderBindingPolicy;
 use TriCab\Core\Identity\Domain\Entity\ExternalIdentity;
 use TriCab\Core\Identity\Domain\Entity\User;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
@@ -34,7 +35,13 @@ final class IdentityResolutionService
     {
         $linkedUser = $this->users->findByExternalIdentity($identity);
         if ($linkedUser !== null) {
-            if ($verifiedEmail !== null && !$linkedUser->emailAddress()->equals($verifiedEmail)) {
+            // Any of the user's verified addresses, not just the primary one.
+            // Comparing against the primary address alone meant a person with
+            // both a personal and a corporate address could use exactly one of
+            // them: changing the primary to fix one login broke the other.
+            if ($verifiedEmail !== null
+                && !$this->users->hasVerifiedAddress($linkedUser->id(), $verifiedEmail)
+            ) {
                 throw IdentityConflict::subjectLinkedToAnotherUser();
             }
 
@@ -47,7 +54,7 @@ final class IdentityResolutionService
             throw UserNotRegistered::create();
         }
 
-        $emailMatches = $this->users->findAllByEmail($verifiedEmail);
+        $emailMatches = $this->users->findAllByVerifiedEmail($verifiedEmail);
         if ($emailMatches === []) {
             throw UserNotRegistered::create();
         }
@@ -56,7 +63,23 @@ final class IdentityResolutionService
             throw IdentityAmbiguous::duplicateEmail();
         }
 
-        $emailUser = $emailMatches[0];
+        $match = $emailMatches[0];
+
+        // An address admits only the providers its purpose allows. Without
+        // this, adding someone's personal address would let anyone who can
+        // authenticate to Google as that address auto-link to their platform
+        // user and inherit every role they hold.
+        //
+        // Refused as UserNotRegistered, not as its own error: a distinct code
+        // would confirm to a stranger that the address belongs to somebody
+        // here, which is the enumeration the guest OTP flow already avoids.
+        if ($match->purpose !== null
+            && !ProviderBindingPolicy::allows($identity->provider(), $match->purpose)
+        ) {
+            throw UserNotRegistered::create();
+        }
+
+        $emailUser = $match->user;
         $existingSubject = $this->users->findActiveProviderSubjectForUser(
             $emailUser->id(),
             $identity->provider(),

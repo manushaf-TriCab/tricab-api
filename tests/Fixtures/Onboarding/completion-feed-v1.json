@@ -1,0 +1,41 @@
+{
+    "schemaVersion": "onboarding.completions.v1",
+    "items": [
+        {
+            "eventId": "eeeeeeee-0000-4000-8000-000000000041",
+            "cursor": "41",
+            "type": "completion.recorded",
+            "occurredAtUtc": "2026-09-24T01:15:00Z",
+            "person": {
+                "userPublicId": "aaaaaaaa-0000-4000-8000-000000000007"
+            },
+            "item": {
+                "type": "training",
+                "publicId": "bbbbbbbb-0000-4000-8000-000000000001",
+                "slug": "corporate-whse-induction",
+                "title": "Corporate and WHSE Induction",
+                "versionNumber": 1
+            },
+            "evidenceReference": "onboarding:assignment:cccccccc-0000-4000-8000-000000000041"
+        },
+        {
+            "eventId": "eeeeeeee-0000-4000-8000-000000000057",
+            "cursor": "57",
+            "type": "completion.reopened",
+            "occurredAtUtc": "2026-09-24T03:40:00Z",
+            "person": {
+                "userPublicId": "aaaaaaaa-0000-4000-8000-000000000007"
+            },
+            "item": {
+                "type": "policy",
+                "publicId": "bbbbbbbb-0000-4000-8000-000000000002",
+                "slug": "hr-pol-036-code-of-conduct",
+                "title": "Code of Conduct",
+                "versionNumber": 2
+            },
+            "evidenceReference": "onboarding:assignment:cccccccc-0000-4000-8000-000000000057"
+        }
+    ],
+    "nextCursor": "57",
+    "hasMore": false
+}
