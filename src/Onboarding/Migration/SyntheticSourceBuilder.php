@@ -40,7 +40,8 @@ use TriCab\Core\Onboarding\Migration\Target\TargetCatalogue;
  *  - a module with no platform counterpart (`HR-DOC-999-V001`);
  *  - an acknowledgement of a policy version the source had since superseded;
  *  - an assignment the person already has on the platform (the demo seed gave
- *    Alex `demo-site-induction`);
+ *    Alex `demo-site-induction`) — the only overlap with the demo seed's
+ *    allocations, so the rest of the history is exercised;
  *  - a profile photo, which the platform has nowhere to put.
  */
 /**
@@ -119,17 +120,17 @@ final class SyntheticSourceBuilder
         ]);
         $this->policyAck($alex, $whsOld, 9, ['fullName' => 'Alex Ng', 'signatureDataUrl' => self::signature('Alex Ng'), 'date' => $this->date(9), 'accepted' => true]);
         $this->policyAssignment($alex, $pv['handbook-welcome'], 9, viewed: true);
-        $fa = $this->formAssignment($alex, $fUniform, 'completed', 'reviewer', 16, ['shirtSize' => 'm', 'bootSize' => 9]);
-        $this->submission($fa, 1, 15, ['shirtSize' => 'm'], 'fix_and_resubmit', 'Boot size missing.', $admin);
-        $this->submission($fa, 2, 16, ['shirtSize' => 'm', 'bootSize' => 9], 'completed', '', $admin);
+        $fa = $this->formAssignment($alex, $fStarter, 'completed', 'reviewer', 16, ['preferredName' => 'Al', 'startDate' => '2026-08-03', 'parking' => 'yes', 'confirm' => true]);
+        $this->submission($fa, 1, 15, ['preferredName' => 'Al', 'parking' => 'yes', 'confirm' => true], 'fix_and_resubmit', 'Start date missing.', $admin);
+        $this->submission($fa, 2, 16, ['preferredName' => 'Al', 'startDate' => '2026-08-03', 'parking' => 'yes', 'confirm' => true], 'completed', '', $admin);
 
         // ---- Priya: part-way through
         $a = $this->assignment($priya, $mWhse, 'in_progress', 'trainee', 20);
         $this->progress($priya, $a, $mWhse, array_slice($whse['slideIds'], 0, 30), 20, complete: false);
-        $a = $this->assignment($priya, $mForklift, 'need_help', 'trainee', 21, note: 'Slide 2 will not load on my phone.');
-        $this->progress($priya, $a, $mForklift, array_slice($forklift['slideIds'], 0, 1), 21, complete: false);
+        $a = $this->assignment($priya, $mSite, 'need_help', 'trainee', 21, note: 'Slide 2 will not load on my phone.');
+        $this->progress($priya, $a, $mSite, array_slice($site['slideIds'], 0, 1), 21, complete: false);
         $this->policyAssignment($priya, $pv['workplace-behaviour-policy'], 20, viewed: false);
-        $this->formAssignment($priya, $fStarter, 'in_progress', 'trainee', 21, ['preferredName' => 'Pri', 'parking' => 'yes', 'notes' => '']);
+        $this->formAssignment($priya, $fUniform, 'in_progress', 'trainee', 21, ['shirtSize' => 's', 'bootSize' => '']);
 
         // ---- Jordan (has left): a pass waiting for HR
         $a = $this->assignment($jordan, $mWhse, 'submitted', 'trainee', 30);
