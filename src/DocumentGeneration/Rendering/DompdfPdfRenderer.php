@@ -42,6 +42,10 @@ final readonly class DompdfPdfRenderer implements PdfRenderer
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
 
+        if ($template === 'quote.php') {
+            QuoteDocumentPagination::apply($dompdf);
+        }
+
         return $dompdf->output();
     }
 
@@ -61,6 +65,16 @@ final readonly class DompdfPdfRenderer implements PdfRenderer
         $css = file_get_contents($cssPath);
         if ($css === false) {
             throw new RuntimeException('Unable to read document CSS.');
+        }
+        if ($template === 'quote.php') {
+            // Replace the shared @page block so Dompdf cannot keep the shorter bottom margin.
+            $css = (string) preg_replace(
+                '/@page\s*\{[^}]*\}/s',
+                '',
+                $css,
+                1,
+            );
+            $css .= "\n" . QuoteDocumentPagination::quotePaginationCss();
         }
 
         ob_start();

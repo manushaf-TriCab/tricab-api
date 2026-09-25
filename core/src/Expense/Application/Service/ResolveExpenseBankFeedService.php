@@ -14,6 +14,7 @@ use TriCab\Core\Expense\Contract\ExpenseNotificationPort;
 use TriCab\Core\Expense\Domain\Exception\InvalidExpenseValue;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseBankFeedPublicId;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseFinanceResolution;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseBankFeedRef;
 use TriCab\Core\Expense\Module;
 use TriCab\Core\Shared\Time\Clock;
 
@@ -37,6 +38,7 @@ final class ResolveExpenseBankFeedService
         string $expectedRowVersion,
     ): array {
         $this->access->requireFinance($actor);
+        LegacyExpenseBankFeedRef::assertNotLegacy($bankPublicId);
 
         $normalized = strtolower(trim($resolution));
         if (!in_array($normalized, Module::BANK_RESOLUTIONS, true)) {

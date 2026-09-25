@@ -62,4 +62,9 @@ final class ExpenseAccessDenied extends RuntimeException
     {
         return new self('Finance capability is required for this Tri Expense finance operation.');
     }
+
+    public static function adminRequired(): self
+    {
+        return new self('TriExpense Administrator permission is required for this operation.');
+    }
 }

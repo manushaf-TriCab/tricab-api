@@ -14,6 +14,8 @@ use TriCab\Core\Expense\Contract\ExpenseBankFeedRepository;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseBankFeedPublicId;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseBankFeedRef;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
 use TriCab\Core\Shared\Time\Clock;
 
 final class ManualMatchExpenseBankFeedService
@@ -38,6 +40,8 @@ final class ManualMatchExpenseBankFeedService
         string $expectedReceiptRowVersion,
     ): array {
         $this->access->requireFinance($actor);
+        LegacyExpenseBankFeedRef::assertNotLegacy($bankPublicId);
+        LegacyExpenseReceiptRef::assertNotLegacy($receiptPublicId);
 
         $bank = $this->bankFeeds->findByPublicId(ExpenseBankFeedPublicId::fromString($bankPublicId));
         if ($bank === null || $bank->id() === null) {

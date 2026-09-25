@@ -88,18 +88,172 @@ final class TriExpensePhase5EndpointsTest extends TestCase
         self::assertSame(404, $response->getStatusCode(), (string) $response->getBody());
     }
 
+    public function test_extractEndpointRequiresAuthentication(): void
+    {
+        $app = TestAppFactory::create(['DEV_AUTH_ENABLED' => 'false']);
+        $response = $app->handle(TestAppFactory::request('POST', '/api/v1/tri-expense/receipts/extract'));
+
+        self::assertSame(401, $response->getStatusCode());
+        self::assertSame('UNAUTHENTICATED', Payload::obj(TestAppFactory::json($response)['error'])['code']);
+    }
+
+    public function test_extractEndpointRefusesCleanlyWhenOcrIsNotConfigured(): void
+    {
+        $app = $this->appWithWorld();
+        $response = $app->handle($this->multipartExtractRequest("\xFF\xD8\xFFjpeg", 'lunch.jpg'));
+
+        self::assertSame(503, $response->getStatusCode(), (string) $response->getBody());
+        self::assertSame('TRIEXPENSE_OCR_DISABLED', Payload::obj(TestAppFactory::json($response)['error'])['code']);
+    }
+
+    public function test_extractEndpointRejectsMissingFile(): void
+    {
+        $app = $this->appWithWorld([
+            'TRIEXPENSE_OCR_ENABLED' => 'true',
+            'TRIEXPENSE_DOC_INTEL_ENDPOINT' => 'https://doc-intel.example',
+            'TRIEXPENSE_DOC_INTEL_KEY' => 'test-key',
+        ]);
+
+        $response = $app->handle(TestAppFactory::request('POST', '/api/v1/tri-expense/receipts/extract')
+            ->withHeader('Content-Type', 'multipart/form-data'));
+
+        self::assertSame(422, $response->getStatusCode(), (string) $response->getBody());
+        self::assertSame('TRIEXPENSE_OCR_INPUT_REJECTED', Payload::obj(TestAppFactory::json($response)['error'])['code']);
+    }
+
+    public function test_extractEndpointReturnsSuggestionsFromUploadedBytes(): void
+    {
+        $app = $this->appWithWorld([
+            'TRIEXPENSE_OCR_ENABLED' => 'true',
+            'TRIEXPENSE_DOC_INTEL_ENDPOINT' => 'https://doc-intel.example',
+            'TRIEXPENSE_DOC_INTEL_KEY' => 'test-key',
+        ]);
+
+        /** @var \DI\Container $container */
+        $container = $app->getContainer();
+
+        $fakePort = new class implements ExpenseCaptureAssistPort {
+            public function isEnabled(): bool
+            {
+                return true;
+            }
+
+            public function suggestReceiptFields(string $fileContent, string $mimeType): array
+            {
+                if ($mimeType !== 'image/jpeg') {
+                    throw new \RuntimeException('unexpected mime: ' . $mimeType);
+                }
+                if (!str_contains($fileContent, 'jpeg')) {
+                    throw new \RuntimeException('unexpected file content');
+                }
+
+                return [
+                    'fields' => [
+                        'vendorName' => ['value' => 'Shell', 'confidence' => 0.9, 'source' => 'document_intelligence'],
+                        'receiptDate' => ['value' => '2026-09-10', 'confidence' => 0.8, 'source' => 'document_intelligence'],
+                        'totalAmount' => ['value' => '55.00', 'confidence' => 0.95, 'source' => 'document_intelligence'],
+                        'gstAmount' => ['value' => '5.00', 'confidence' => 0.9, 'source' => 'document_intelligence'],
+                        'currency' => ['value' => 'AUD', 'confidence' => 0.7, 'source' => 'document_intelligence'],
+                    ],
+                    'warnings' => [],
+                    'rawText' => 'Shell fuel',
+                ];
+            }
+
+            public function suggestCategory(string $vendor, string $rawText, array $categories): ?string
+            {
+                return $categories === [] ? null : '64100';
+            }
+        };
+
+        $access = $container->get(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class);
+        self::assertInstanceOf(\TriCab\Core\Expense\Application\Service\ExpenseAccessService::class, $access);
+        $audit = $container->get(\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class);
+        self::assertInstanceOf(\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class, $audit);
+        $responder = $container->get(\TriCab\Api\Http\Response\JsonResponder::class);
+        self::assertInstanceOf(\TriCab\Api\Http\Response\JsonResponder::class, $responder);
+        $errors = $container->get(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class);
+        self::assertInstanceOf(\TriCab\Api\Http\Auth\ExpenseErrorMapper::class, $errors);
+        $draftService = new \TriCab\Core\Expense\Application\Service\ExtractExpenseReceiptDraftService(
+            $access,
+            $fakePort,
+            $audit,
+        );
+        $container->set(ExpenseCaptureAssistPort::class, $fakePort);
+        $container->set(\TriCab\Core\Expense\Application\Service\ExtractExpenseReceiptDraftService::class, $draftService);
+        $container->set(
+            \TriCab\Api\Http\Action\TriExpense\ExtractExpenseReceiptDraftAction::class,
+            new \TriCab\Api\Http\Action\TriExpense\ExtractExpenseReceiptDraftAction(
+                $draftService,
+                $responder,
+                $errors,
+            ),
+        );
+
+        $response = $app->handle($this->multipartExtractRequest("\xFF\xD8\xFFjpeg-bytes", 'fuel.jpg'));
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+
+        $data = Payload::obj(TestAppFactory::json($response)['data']);
+        self::assertFalse($data['applied']);
+        self::assertArrayNotHasKey('receiptId', $data);
+        $fields = Payload::obj($data['fields']);
+        self::assertSame('Shell', Payload::obj($fields['vendorName'])['value']);
+        self::assertSame('2026-09-10', Payload::obj($fields['receiptDate'])['value']);
+        self::assertSame('55.00', Payload::obj($fields['totalAmount'])['value']);
+        self::assertSame('5.00', Payload::obj($fields['gstAmount'])['value']);
+        self::assertSame('AUD', Payload::obj($fields['currency'])['value']);
+        self::assertSame('64100', Payload::obj($fields['categoryCode'])['value']);
+        self::assertSame('openai', Payload::obj($fields['categoryCode'])['source']);
+    }
+
+    public function test_extractEndpointRejectsUnsupportedExtension(): void
+    {
+        $app = $this->appWithWorld([
+            'TRIEXPENSE_OCR_ENABLED' => 'true',
+            'TRIEXPENSE_DOC_INTEL_ENDPOINT' => 'https://doc-intel.example',
+            'TRIEXPENSE_DOC_INTEL_KEY' => 'test-key',
+        ]);
+        /** @var \DI\Container $container */
+        $container = $app->getContainer();
+        $container->set(ExpenseCaptureAssistPort::class, new class implements ExpenseCaptureAssistPort {
+            public function isEnabled(): bool
+            {
+                return true;
+            }
+
+            public function suggestReceiptFields(string $fileContent, string $mimeType): array
+            {
+                throw new \RuntimeException('must not extract unsupported files');
+            }
+
+            public function suggestCategory(string $vendor, string $rawText, array $categories): ?string
+            {
+                return null;
+            }
+        });
+
+        $response = $app->handle($this->multipartExtractRequest('hello', 'notes.txt'));
+        self::assertSame(422, $response->getStatusCode(), (string) $response->getBody());
+        self::assertSame('TRIEXPENSE_OCR_INPUT_REJECTED', Payload::obj(TestAppFactory::json($response)['error'])['code']);
+    }
+
     public function test_configReportsIntegrationsOffUntilTheyAreConfigured(): void
     {
         $app = $this->appWithWorld();
-        $features = Payload::obj(Payload::obj(TestAppFactory::json($app->handle(
+        $data = Payload::obj(TestAppFactory::json($app->handle(
             TestAppFactory::request('GET', '/api/v1/tri-expense/config'),
-        ))['data'])['features']);
+        ))['data']);
+        $features = Payload::obj($data['features']);
 
         self::assertFalse($features['ocr']);
         self::assertFalse($features['emailNotifications']);
         // Phase 4 capabilities need no external service, so they stay on.
         self::assertTrue($features['bankReconciliation']);
         self::assertTrue($features['periodClose']);
+        self::assertArrayHasKey('costCentres', $data);
+        self::assertArrayHasKey('costCentresAvailable', $data);
+        self::assertIsArray($data['costCentres']);
+        self::assertIsBool($data['costCentresAvailable']);
     }
 
     public function test_configReportsIntegrationsOnWhenCredentialsArePresent(): void
@@ -225,6 +379,32 @@ final class TriExpensePhase5EndpointsTest extends TestCase
             $request = $request->withHeader('X-Dev-Entra-Email', (string) $actor['email']);
         }
         $request->getBody()->write(json_encode($body, JSON_THROW_ON_ERROR));
+
+        return $request;
+    }
+
+    /**
+     * @param array{email?:string,subject?:string} $actor
+     */
+    private function multipartExtractRequest(string $bytes, string $fileName, array $actor = []): ServerRequestInterface
+    {
+        $stream = (new \Slim\Psr7\Factory\StreamFactory())->createStream($bytes);
+        $upload = new \Slim\Psr7\UploadedFile(
+            $stream,
+            $fileName,
+            'application/octet-stream',
+            strlen($bytes),
+            UPLOAD_ERR_OK,
+        );
+
+        $request = TestAppFactory::request('POST', '/api/v1/tri-expense/receipts/extract')
+            ->withUploadedFiles(['file' => $upload]);
+        if (isset($actor['subject'])) {
+            $request = $request->withHeader('X-Dev-Entra-Subject', $actor['subject']);
+        }
+        if (isset($actor['email'])) {
+            $request = $request->withHeader('X-Dev-Entra-Email', $actor['email']);
+        }
 
         return $request;
     }

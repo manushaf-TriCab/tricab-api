@@ -7,6 +7,7 @@
 .DS_Store
 /var/log/
 /var/cache/
+/var/catalogue-pdf-migration/
 /tmp/
 /output/
 /artifacts/

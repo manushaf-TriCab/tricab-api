@@ -110,6 +110,36 @@ final class ExpenseAccessService
         return $profile;
     }
 
+    /**
+     * ExpenseProfile administration (approver assignment) — Finance or TE Admin.
+     */
+    public function requireProfileAdministration(ExpenseActor $actor): ExpenseProfile
+    {
+        $profile = $this->requireActiveProfile($actor);
+        if (
+            !$this->hasFinanceCapability($actor, $profile)
+            && !$this->isExpenseAdmin($actor, $profile)
+        ) {
+            throw ExpenseAccessDenied::financeRequired();
+        }
+
+        return $profile;
+    }
+
+    /**
+     * TriExpense module administration (Users & Access, settings) — TE Admin only.
+     * Does not grant platform User Management powers outside Module::ROLES.
+     */
+    public function requireExpenseAdmin(ExpenseActor $actor): ExpenseProfile
+    {
+        $profile = $this->requireActiveProfile($actor);
+        if (!$this->isExpenseAdmin($actor, $profile)) {
+            throw ExpenseAccessDenied::adminRequired();
+        }
+
+        return $profile;
+    }
+
     public function hasApproveCapability(ExpenseActor $actor, ExpenseProfile $profile): bool
     {
         // Legacy had no APPROVE permission — any active profile could hit /approvals

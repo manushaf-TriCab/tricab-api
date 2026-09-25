@@ -251,13 +251,8 @@ final class AzureExpenseCaptureAssistPort implements ExpenseCaptureAssistPort
      */
     private static function scalarOf(array $field): ?string
     {
-        foreach (['valueString', 'valueDate', 'content'] as $key) {
-            $value = $field[$key] ?? null;
-            if (is_string($value) && trim($value) !== '') {
-                return trim($value);
-            }
-        }
-
+        // Prefer structured numeric/currency values over free-text `content`,
+        // which Document Intelligence often returns as "AUD\n110.00".
         $number = $field['valueNumber'] ?? null;
         if (is_int($number) || is_float($number)) {
             return number_format((float) $number, 2, '.', '');
@@ -269,6 +264,24 @@ final class AzureExpenseCaptureAssistPort implements ExpenseCaptureAssistPort
             if (is_int($amount) || is_float($amount)) {
                 return number_format((float) $amount, 2, '.', '');
             }
+        }
+
+        foreach (['valueString', 'valueDate'] as $key) {
+            $value = $field[$key] ?? null;
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
+            }
+        }
+
+        $content = $field['content'] ?? null;
+        if (is_string($content) && trim($content) !== '') {
+            $trimmed = trim($content);
+            // Last resort for totals printed as "AUD 110.00" / multi-line blobs.
+            if (preg_match('/(\d+(?:\.\d{1,2})?)\s*$/', str_replace(',', '', $trimmed), $matches) === 1) {
+                return number_format((float) $matches[1], 2, '.', '');
+            }
+
+            return $trimmed;
         }
 
         return null;

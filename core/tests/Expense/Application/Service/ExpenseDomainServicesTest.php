@@ -570,7 +570,7 @@ final class ExpenseDomainServicesTest extends TestCase
             ->execute($this->owner, $created->publicId, $ticket['blobPath'], 'lunch.png', (string) $created->rowVersion);
 
         $this->expectException(ExpenseAccessDenied::class);
-        (new GetExpenseAttachmentFileService($this->access, $this->profiles, $this->receipts, $attachments, new NullLegacyExpenseReadRepository(), new LegacyExpenseIdentityResolver(), false))
+        (new GetExpenseAttachmentFileService($this->access, $this->profiles, $this->receipts, $attachments, new NullLegacyExpenseReadRepository(), new LegacyExpenseIdentityResolver(), new \TriCab\Api\Expense\Legacy\NullLegacyExpenseFinanceReadRepository(), false))
             ->execute($this->stranger, $created->publicId);
     }
 
@@ -588,7 +588,7 @@ final class ExpenseDomainServicesTest extends TestCase
         self::assertSame('legacy_wordpress', $created->attachment['dualReadClass'] ?? null);
         $attachments = new \TriCab\Api\Expense\Persistence\InMemoryExpenseAttachmentStore();
         $this->expectException(\TriCab\Core\Expense\Application\Exception\ExpenseAttachmentUnavailable::class);
-        (new GetExpenseAttachmentFileService($this->access, $this->profiles, $this->receipts, $attachments, new NullLegacyExpenseReadRepository(), new LegacyExpenseIdentityResolver(), false))
+        (new GetExpenseAttachmentFileService($this->access, $this->profiles, $this->receipts, $attachments, new NullLegacyExpenseReadRepository(), new LegacyExpenseIdentityResolver(), new \TriCab\Api\Expense\Legacy\NullLegacyExpenseFinanceReadRepository(), false))
             ->execute($this->owner, $created->publicId);
     }
 }

@@ -10,6 +10,7 @@ use TriCab\Core\Expense\Application\Exception\ExpenseAccessDenied;
 use TriCab\Core\Expense\Application\Exception\ExpenseReceiptNotFound;
 use TriCab\Core\Expense\Contract\ExpenseProfileRepository;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
+use TriCab\Core\Expense\Contract\LegacyExpenseFinanceReadRepository;
 use TriCab\Core\Expense\Contract\LegacyExpenseReadRepository;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
 use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseReceiptRef;
@@ -25,6 +26,7 @@ final class GetExpenseReceiptService
         private readonly LegacyExpenseReadRepository $legacyReceipts,
         private readonly LegacyExpenseReceiptAssembler $legacyAssembler,
         private readonly LegacyExpenseIdentityResolver $legacyIdentity,
+        private readonly LegacyExpenseFinanceReadRepository $legacyFinance,
         private readonly bool $legacyReadEnabled = false,
     ) {
     }
@@ -64,22 +66,32 @@ final class GetExpenseReceiptService
         }
 
         $profile = $this->profiles->findByUserId($actor->userId);
-        $ownerKeys = $this->legacyIdentity->ownerKeys($profile);
-        if ($ownerKeys === []) {
-            // No resolved legacy identity → treat as not found (no cross-user disclosure).
-            throw ExpenseReceiptNotFound::forPublicId($legacyRef->toPublicId());
+        $canFinance = $profile !== null && $this->access->canMutateOthersReceipts($actor, $profile);
+
+        $row = null;
+        if ($canFinance) {
+            // Finance / privileged path — org-wide legacy detail (still read-only).
+            $row = $this->legacyFinance->findById($legacyRef->legacyReceiptId());
+        } else {
+            $ownerKeys = $this->legacyIdentity->ownerKeys($profile);
+            if ($ownerKeys === []) {
+                // No resolved legacy identity → treat as not found (no cross-user disclosure).
+                throw ExpenseReceiptNotFound::forPublicId($legacyRef->toPublicId());
+            }
+            $row = $this->legacyReceipts->findOwnedById($legacyRef->legacyReceiptId(), $ownerKeys);
         }
 
-        $row = $this->legacyReceipts->findOwnedById($legacyRef->legacyReceiptId(), $ownerKeys);
         if ($row === null) {
-            // Owned-by filter already applied — stranger gets the same 404 as missing.
+            // Owned-by filter already applied for non-finance — stranger gets the same 404 as missing.
             throw ExpenseReceiptNotFound::forPublicId($legacyRef->toPublicId());
         }
 
-        // Suppress duplicate when migrated Azure row exists for this actor.
-        foreach ($this->receipts->listOwnedBy($actor->userId) as $receipt) {
-            if ($receipt->legacy()->legacyReceiptId() === $legacyRef->legacyReceiptId()) {
-                return $this->assembler->toDetails($receipt);
+        // Suppress duplicate when migrated Azure row exists for this actor (owner path).
+        if (!$canFinance) {
+            foreach ($this->receipts->listOwnedBy($actor->userId) as $receipt) {
+                if ($receipt->legacy()->legacyReceiptId() === $legacyRef->legacyReceiptId()) {
+                    return $this->assembler->toDetails($receipt);
+                }
             }
         }
 

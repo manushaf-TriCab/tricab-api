@@ -100,4 +100,14 @@ final readonly class LegacyDocumentData
 
         return $lines;
     }
+
+    /**
+     * Authoritative conductor comparison rows for quotation PDF (from QuoteDocumentDetails).
+     *
+     * @return list<array{sizeMm2: string, tricab: string|null, class5: string|null, class6: string|null}>
+     */
+    public function conductorComparison(): array
+    {
+        return $this->stream->conductorComparison;
+    }
 }

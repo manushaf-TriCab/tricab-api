@@ -11,6 +11,7 @@ use TriCab\Core\Expense\Contract\ExpensePeriodRepository;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\Entity\ExpensePeriod;
 use TriCab\Core\Expense\Domain\ValueObject\ExpensePeriodPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpensePeriodRef;
 use TriCab\Core\Expense\Module;
 
 final class PreCloseExpensePeriodService
@@ -29,6 +30,7 @@ final class PreCloseExpensePeriodService
     public function execute(ExpenseActor $actor, string $periodPublicId): array
     {
         $this->access->requireFinance($actor);
+        LegacyExpensePeriodRef::assertNotLegacy($periodPublicId);
 
         $period = $this->periods->findByPublicId(ExpensePeriodPublicId::fromString($periodPublicId));
         if ($period === null || $period->id() === null) {

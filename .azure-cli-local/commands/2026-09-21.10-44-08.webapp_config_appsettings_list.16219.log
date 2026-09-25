@@ -1,0 +1,3 @@
+CMD-LOG-LINE-BEGIN 16219 | 2026-09-21 10:44:08,904 | INFO | az_command_data_logger | command args: webapp config appsettings list -n {} -g {} --slot {} -o {}
+CMD-LOG-LINE-BEGIN 16219 | 2026-09-21 10:44:09,068 | ERROR | az_command_data_logger | Please run 'az login' to setup account.
+CMD-LOG-LINE-BEGIN 16219 | 2026-09-21 10:44:09,068 | INFO | az_command_data_logger | exit code: 1

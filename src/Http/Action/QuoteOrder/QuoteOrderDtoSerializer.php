@@ -56,7 +56,7 @@ final class QuoteOrderDtoSerializer
      */
     public static function quote(QuoteDetails $details): array
     {
-        return [
+        $payload = [
             'id' => $details->id,
             'type' => $details->type,
             'quoteId' => $details->quoteId,
@@ -77,6 +77,33 @@ final class QuoteOrderDtoSerializer
             'currency' => $details->currency,
             'items' => array_map(self::item(...), $details->items),
         ];
+        if ($details->document !== null) {
+            $doc = $details->document;
+            $payload['document'] = [
+                'customerAddressLines' => $doc->customerAddressLines,
+                'customerPhone' => $doc->customerPhone,
+                'customerCountry' => $doc->customerCountry,
+                'customerTerritory' => $doc->customerTerritory,
+                'contactEmail' => $doc->contactEmail,
+                'contactPhone' => $doc->contactPhone,
+                'contactPosition' => $doc->contactPosition,
+                'raisedByEmail' => $doc->raisedByEmail,
+                'raisedByPhone' => $doc->raisedByPhone,
+                'paymentTerms' => $doc->paymentTerms,
+                'paymentTermsCode' => $doc->paymentTermsCode,
+                'pricesExclusiveOfTax' => $doc->pricesExclusiveOfTax,
+                'sellerTaxId' => $doc->sellerTaxId,
+                'sellerCompanyName' => $doc->sellerCompanyName,
+                'sellerAddressLines' => $doc->sellerAddressLines,
+                'sellerPhone' => $doc->sellerPhone,
+                'sellerEmail' => $doc->sellerEmail,
+                'commercialNotes' => $doc->commercialNotes,
+                'metalPrices' => $doc->metalPrices,
+                'conductorComparison' => $doc->conductorComparison,
+            ];
+        }
+
+        return $payload;
     }
 
     /**
@@ -110,6 +137,13 @@ final class QuoteOrderDtoSerializer
             'unitPrice' => $item->unitPrice,
             'reference' => $item->reference,
             'packs' => array_map(self::pack(...), $item->packs),
+            'lineTotal' => $item->lineTotal,
+            'categoryGroup' => $item->categoryGroup,
+            'colourName' => $item->colourName,
+            'description' => $item->description,
+            'weightKg' => $item->weightKg,
+            'packPrice' => $item->packPrice,
+            'packLabel' => $item->packLabel,
         ];
     }
 

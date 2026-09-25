@@ -230,6 +230,73 @@ table {
     margin: 8mm auto 0;
 }
 
+.conductor-comparison {
+    width: 100%;
+    margin: 5mm 0 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.conductor-comparison-title {
+    margin: 0 0 1.2mm;
+    font-size: 8pt;
+    line-height: 1.15;
+}
+
+.conductor-comparison-title strong {
+    font-weight: bold;
+}
+
+.conductor-comparison-title span {
+    font-weight: normal;
+    font-size: 7.5pt;
+    color: #333;
+}
+
+.conductor-comparison table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 7.5pt;
+    line-height: 1.12;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.conductor-comparison thead th {
+    padding: 1mm 0.6mm;
+    background: #000;
+    color: #fff;
+    font-weight: normal;
+    text-align: center;
+    white-space: nowrap;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+
+.conductor-comparison thead th:first-child {
+    width: 9%;
+    text-align: left;
+    padding-left: 1mm;
+}
+
+.conductor-comparison tbody td {
+    padding: 0.9mm 0.6mm;
+    background: #fff;
+    border-bottom: 0.25mm solid #222;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.conductor-comparison tbody td:first-child {
+    text-align: left;
+    padding-left: 1mm;
+    font-weight: normal;
+}
+
 .legal-note {
     margin: 7mm 2mm 0;
     color: #f04a43;

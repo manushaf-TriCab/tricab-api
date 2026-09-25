@@ -13,6 +13,7 @@ use TriCab\Core\Expense\Contract\ExpensePeriodRepository;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\Exception\InvalidExpenseStatusTransition;
 use TriCab\Core\Expense\Domain\ValueObject\ExpensePeriodPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpensePeriodRef;
 use TriCab\Core\Shared\Time\Clock;
 
 final class CloseExpensePeriodService
@@ -31,6 +32,7 @@ final class CloseExpensePeriodService
     public function execute(ExpenseActor $actor, string $periodPublicId, string $expectedRowVersion): array
     {
         $this->access->requireFinance($actor);
+        LegacyExpensePeriodRef::assertNotLegacy($periodPublicId);
 
         $period = $this->periods->findByPublicId(ExpensePeriodPublicId::fromString($periodPublicId));
         if ($period === null || $period->id() === null) {

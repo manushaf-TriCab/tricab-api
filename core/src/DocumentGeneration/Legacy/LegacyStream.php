@@ -11,11 +11,13 @@ final readonly class LegacyStream
     /**
      * @param list<LegacyRecord> $records
      * @param list<string> $warnings
+     * @param list<array{sizeMm2: string, tricab: string|null, class5: string|null, class6: string|null}> $conductorComparison
      */
     public function __construct(
         public string $selector,
         public array $records,
         public array $warnings = [],
+        public array $conductorComparison = [],
     ) {
     }
 

@@ -6,12 +6,14 @@ namespace TriCab\Core\Expense\Application\Service;
 
 use TriCab\Core\Expense\Application\DTO\ExpenseActor;
 use TriCab\Core\Expense\Application\DTO\ExpenseReceiptDetails;
+use TriCab\Core\Expense\Application\Support\MixedValueCoercion;
 use TriCab\Core\Expense\Application\Exception\ExpenseAccessDenied;
 use TriCab\Core\Expense\Application\Exception\ExpenseAttachmentUnavailable;
 use TriCab\Core\Expense\Application\Exception\ExpenseReceiptNotFound;
 use TriCab\Core\Expense\Contract\ExpenseAttachmentStore;
 use TriCab\Core\Expense\Contract\ExpenseProfileRepository;
 use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
+use TriCab\Core\Expense\Contract\LegacyExpenseFinanceReadRepository;
 use TriCab\Core\Expense\Contract\LegacyExpenseReadRepository;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseAttachmentRef;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
@@ -27,6 +29,7 @@ final class GetExpenseAttachmentFileService
         private readonly ExpenseAttachmentStore $attachments,
         private readonly LegacyExpenseReadRepository $legacyReceipts,
         private readonly LegacyExpenseIdentityResolver $legacyIdentity,
+        private readonly LegacyExpenseFinanceReadRepository $legacyFinance,
         private readonly bool $legacyReadEnabled = false,
     ) {
     }
@@ -84,25 +87,34 @@ final class GetExpenseAttachmentFileService
         }
 
         $profile = $this->profiles->findByUserId($actor->userId);
-        $ownerKeys = $this->legacyIdentity->ownerKeys($profile);
-        if ($ownerKeys === []) {
-            throw ExpenseReceiptNotFound::forPublicId($legacyRef->toPublicId());
+        $canFinance = $profile !== null && $this->access->canMutateOthersReceipts($actor, $profile);
+
+        $row = null;
+        if ($canFinance) {
+            // Dedicated Finance-authorized legacy attachment path (SELECT metadata only).
+            $row = $this->legacyFinance->findById($legacyRef->legacyReceiptId());
+        } else {
+            $ownerKeys = $this->legacyIdentity->ownerKeys($profile);
+            if ($ownerKeys === []) {
+                throw ExpenseReceiptNotFound::forPublicId($legacyRef->toPublicId());
+            }
+            $row = $this->legacyReceipts->findOwnedById($legacyRef->legacyReceiptId(), $ownerKeys);
         }
 
-        $row = $this->legacyReceipts->findOwnedById($legacyRef->legacyReceiptId(), $ownerKeys);
         if ($row === null) {
             throw ExpenseReceiptNotFound::forPublicId($legacyRef->toPublicId());
         }
 
-        $fileUrl = trim((string) ($row['file_url'] ?? ''));
+        $fileUrl = MixedValueCoercion::stringValue($row['file_url'] ?? '');
         if ($fileUrl === '') {
             throw ExpenseAttachmentUnavailable::notFound();
         }
 
         // Server resolves URL from authorized row — never from client input.
+        $fileName = MixedValueCoercion::nullableString($row['file_name'] ?? null);
         $ref = ExpenseAttachmentRef::fromLegacyUrl(
             $fileUrl,
-            trim((string) ($row['file_name'] ?? '')) !== '' ? trim((string) $row['file_name']) : null,
+            $fileName,
         );
 
         $ticket = $this->attachments->issueAuthorizedRead($ref, max(60, $expiresInSeconds));

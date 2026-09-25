@@ -12,6 +12,7 @@ use TriCab\Core\Expense\Contract\ExpenseReceiptRepository;
 use TriCab\Core\Expense\Domain\Service\ExpenseBankFeedMatcher;
 use TriCab\Core\Expense\Domain\Service\ExpenseNearMissDiagnostics;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseBankFeedPublicId;
+use TriCab\Core\Expense\Domain\ValueObject\LegacyExpenseBankFeedRef;
 
 final class ListExpenseBankFeedCandidatesService
 {
@@ -36,6 +37,7 @@ final class ListExpenseBankFeedCandidatesService
     public function execute(ExpenseActor $actor, string $publicId): array
     {
         $this->access->requireFinance($actor);
+        LegacyExpenseBankFeedRef::assertNotLegacy($publicId);
         $entry = $this->bankFeeds->findByPublicId(ExpenseBankFeedPublicId::fromString($publicId));
         if ($entry === null) {
             throw ExpenseBankFeedNotFound::forPublicId($publicId);
