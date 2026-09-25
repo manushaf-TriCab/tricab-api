@@ -12,3 +12,5 @@
 /artifacts/
 .venv/
 *.p8
+# Onboarding migration snapshots and reports (personal data when real)
+/var/onboarding-migration/
