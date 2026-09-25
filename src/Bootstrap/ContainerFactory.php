@@ -802,6 +802,8 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingRetentionRepository::class),
             \TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class
                 => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingFormContributionRepository::class),
+            \TriCab\Core\Onboarding\Contract\OnboardingCompletionFeedRepository::class
+                => \DI\autowire(\TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingCompletionFeedRepository::class),
             // Optional constructor parameters are not autowired, so these two are
             // named: without them a form's HR and manager parts would be neither
             // shown to the starter nor required before a reviewer accepts it.
@@ -2255,6 +2257,9 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingDocumentRepository::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingWriteIdempotencyStore::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingWriteIdempotencyStore::class);
+            // Phase 6 — the completion feed, read only.
+            $definitions[\TriCab\Core\Onboarding\Contract\OnboardingCompletionFeedRepository::class]
+                = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingCompletionFeedRepository::class);
             // Phase 4 — HR administration. Admin writes audit inside their own
             // transaction; the audit log alone is for refusals.
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingPeopleRepository::class]

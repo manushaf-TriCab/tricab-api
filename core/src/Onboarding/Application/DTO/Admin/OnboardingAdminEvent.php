@@ -67,6 +67,11 @@ final readonly class OnboardingAdminEvent
         'slug',
         'versionCount',
         'allocationCount',
+        // Phase 6 — a page of the completion feed: its range and size, never who was on it.
+        'schemaVersion',
+        'cursorFrom',
+        'cursorTo',
+        'count',
         // Deleting a person: a flag, and counts of what blocked it by kind.
         'accountDisabled',
         'progress',

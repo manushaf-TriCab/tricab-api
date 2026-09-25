@@ -56,6 +56,9 @@ final class PermissionAssurancePolicy
         'ONBOARDING.CONTENT.MANAGE' => AuthenticationAssurance::SUBSTANTIAL,
         'ONBOARDING.REPORTS.READ' => AuthenticationAssurance::SUBSTANTIAL,
         'ONBOARDING.ADMIN' => AuthenticationAssurance::SUBSTANTIAL,
+        // Phase 6: the completion feed is for a service identity; an emailed
+        // code must never be enough to read everybody's completions.
+        'ONBOARDING.COMPLETIONS.READ' => AuthenticationAssurance::SUBSTANTIAL,
     ];
 
     public static function requiredFor(PermissionCode $permission): AuthenticationAssurance

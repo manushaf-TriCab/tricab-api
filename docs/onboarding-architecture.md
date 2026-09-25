@@ -129,7 +129,7 @@ Three consequences worth stating plainly:
 | B4 | Ordinary HR → payroll → restricted HR | Form submissions and their documents | Per-class permission + separate repositories (§5) | 403 `INSUFFICIENT_PERMISSION` |
 | B5 | API → document storage | Generated PDFs, candidate photos | Private container; no bytes in Azure SQL | — |
 | B6 | Module → platform identity | `UserId` only | `IdentityResolutionService`, `ProviderBindingPolicy` | 401/403 via `IdentityResolutionErrorMapper` |
-| B7 | Module → Skill Matrix | Person id, item id/type, completion date, evidence ref — nothing else | Versioned projection contract | — |
+| B7 | Module → Skill Matrix | Person id, item id/type, completion date, evidence ref — nothing else | Versioned contract `onboarding.completions.v1` — [onboarding-completion-feed.md](onboarding-completion-feed.md), `ONBOARDING.COMPLETIONS.READ` | 403 |
 | B8 | Scheduled job → email provider | Reminder emails | `GUEST_EMAIL_PROVIDER` abstraction; disabled by default outside production | — |
 
 **The SPA is not a boundary.** `ProtectedRoute`, the admin nav filter and the Onboarding sub-navigation
@@ -159,6 +159,7 @@ seed had not run.
 | `ONBOARDING.CONTENT.MANAGE` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Modules, policy versions, form definitions |
 | `ONBOARDING.REPORTS.READ` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Operational and compliance reporting |
 | `ONBOARDING.ADMIN` | ONBOARDING_ADMIN, ADMINISTRATOR | SUBSTANTIAL | Module administration |
+| `ONBOARDING.COMPLETIONS.READ` | nobody yet — a service identity (Phase 6) | SUBSTANTIAL | The completion feed for Skill Matrix |
 
 `ADMINISTRATOR` holding all eight is inherited from the first seed and is **not** the intended end
 state. TriExpense's pattern is better: a platform administrator holds only the module's `ADMIN`
@@ -453,8 +454,9 @@ Gaps found while writing this, feeding the Phase 0.7 gap list:
 3. ~~**No permission exists yet for C3 or C4.**~~ **Resolved 21 Sep 2026:** two user types, and the
    admin reads every class. No payroll-scoped or restricted-scoped permission is introduced. The
    classification split is still built, for the reasons in §5.
-4. **Phase P.5 passkey-first path is not started**, so mailbox-less employees are stuck at LOW
-   assurance and cannot usefully hold any HR permission.
+4. ~~**Phase P.5 passkey-first path is not started**~~ — **done 25 Sep 2026**: after an email-code sign-in
+   the trainee's onboarding offers the platform's passkey setup link, so mailbox-less staff can reach
+   SUBSTANTIAL assurance.
 5. **Emergency-contact data has no subject.** Retention and correction rules for third-party data need
    stating even if the answer is "delete with the submission".
 

@@ -56,6 +56,9 @@ final class AdminEventType
     public const FORM_CONTRIBUTION_REFUSED = 'form.contribution_refused';
     public const FORM_PHOTO_UPLOADED = 'form.photo_uploaded';
 
+    /** Phase 6: a page of the completion feed was read. No subject: it spans people. */
+    public const COMPLETIONS_READ = 'completions.read';
+
     public const ALL = [
         self::ALLOCATION_ALLOCATED,
         self::ALLOCATION_WITHDRAWN,
@@ -78,6 +81,7 @@ final class AdminEventType
         self::ALLOCATION_REISSUED,
         self::FORM_CONTRIBUTED,
         self::FORM_CONTRIBUTION_REFUSED,
+        self::COMPLETIONS_READ,
         self::FORM_PHOTO_UPLOADED,
     ];
 

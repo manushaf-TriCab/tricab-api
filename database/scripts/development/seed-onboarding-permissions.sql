@@ -44,6 +44,8 @@
 
   No administrative ONBOARDING permission is granted to EMPLOYEE or GUEST.
 
+  ONBOARDING.COMPLETIONS.READ (Phase 6) is created and granted to nobody.
+
   RE-RUN REQUIRED on any database where the bootstrap revision granted
   ADMINISTRATOR all eight. Re-running deactivates the seven it should not have.
 ================================================================================
@@ -80,7 +82,12 @@ BEGIN TRY
         (N'ONBOARDING.REPORTS.READ',   N'Read onboarding reports',
          N'Operational and compliance reporting.'),
         (N'ONBOARDING.ADMIN',          N'Administer Onboarding',
-         N'Administer the Onboarding module.');
+         N'Administer the Onboarding module.'),
+        /* Phase 6. For a service identity (Skill Matrix), granted to no role
+           here: which identity holds it is an owner decision, and a person's
+           role must never carry it. */
+        (N'ONBOARDING.COMPLETIONS.READ', N'Read the onboarding completion feed',
+         N'Poll approved completions for Skill Matrix. Person id, item and date only.');
 
     /* ------------------------------------------------------------------
        Permissions: insert what is missing, leave existing rows alone

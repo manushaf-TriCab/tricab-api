@@ -70,6 +70,13 @@ final class Module
     public const PERMISSION_ADMIN = 'ONBOARDING.ADMIN';
 
     /**
+     * Phase 6: read the completion feed (`GET /api/v1/integrations/onboarding/completions`).
+     * For a service identity — Skill Matrix — and nobody else: not an HR
+     * permission, held by no role yet, and not in {@see HR_PERMISSIONS}.
+     */
+    public const PERMISSION_COMPLETIONS_READ = 'ONBOARDING.COMPLETIONS.READ';
+
+    /**
      * The three self-service permissions, held by candidates and by employees
      * who have no TriCab mailbox. None of them grants any HR capability.
      */
@@ -91,6 +98,11 @@ final class Module
         self::PERMISSION_CONTENT_MANAGE,
         self::PERMISSION_REPORTS_READ,
         self::PERMISSION_ADMIN,
+    ];
+
+    /** Permissions for other systems, not people. None is granted to a person's role. */
+    public const INTEGRATION_PERMISSIONS = [
+        self::PERMISSION_COMPLETIONS_READ,
     ];
 
     /**

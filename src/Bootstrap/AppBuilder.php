@@ -201,6 +201,7 @@ use TriCab\Api\Http\Action\Onboarding\PutOnboardingFormContributionAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingManagerFormsAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingManagerFormAction;
 use TriCab\Api\Http\Action\Onboarding\PutOnboardingManagerContributionAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingCompletionFeedAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentItemAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingContentVersionAction;
@@ -481,6 +482,12 @@ final class AppBuilder
             ->add(($require)('ONBOARDING.SELF.READ'));
         $app->put('/api/v1/onboarding/team/forms/{assignmentPublicId}/contribution', PutOnboardingManagerContributionAction::class)
             ->add(($require)('ONBOARDING.SELF.READ'));
+
+        // Phase 6 — the completion feed for Skill Matrix. Its own permission,
+        // held by no person's role: a service identity polls it (owner decision
+        // owed on which). Defined and tested; nothing connects to it.
+        $app->get('/api/v1/integrations/onboarding/completions', GetOnboardingCompletionFeedAction::class)
+            ->add(($require)('ONBOARDING.COMPLETIONS.READ'));
 
         $app->get('/api/v1/admin/onboarding/overview', GetOnboardingAdminOverviewAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
