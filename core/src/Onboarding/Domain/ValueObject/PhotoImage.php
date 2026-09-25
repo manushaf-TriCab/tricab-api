@@ -49,7 +49,62 @@ final readonly class PhotoImage
             throw InvalidOnboardingValue::for('photo', sprintf('a %d×%d image is not the size of a photograph', $size[0], $size[1]));
         }
 
-        return new self($jpeg, $size[0], $size[1]);
+        return new self(self::withoutMetadata($jpeg), $size[0], $size[1]);
+    }
+
+    /**
+     * The same picture with its metadata segments removed: EXIF (which carries
+     * GPS position, camera serial and time taken), XMP, maker notes, comments
+     * and the MPF segment that can hide a second full image. The source
+     * re-encoded for this; removing segments does the same job without
+     * re-compressing, so the picture is unchanged byte for byte from the scan
+     * onwards. Kept: JFIF (APP0), a colour profile (APP2 ICC_PROFILE) and
+     * Adobe's colour-transform flag (APP14), which change how it looks.
+     *
+     * The browser already re-draws a photo before upload, which strips all of
+     * this; this is the server holding the line for a client that does not.
+     * Orientation lives in EXIF, so it is gone too — the browser's re-draw has
+     * already applied it.
+     *
+     * @throws InvalidOnboardingValue
+     */
+    private static function withoutMetadata(string $jpeg): string
+    {
+        $out = "\xFF\xD8";
+        $length = strlen($jpeg);
+        $at = 2;
+        while ($at + 4 <= $length) {
+            if ($jpeg[$at] !== "\xFF") {
+                break;
+            }
+            $marker = ord($jpeg[$at + 1]);
+            if ($marker === 0xFF) {
+                ++$at; // fill byte
+
+                continue;
+            }
+            $segmentLength = (ord($jpeg[$at + 2]) << 8) | ord($jpeg[$at + 3]);
+            if ($segmentLength < 2 || $at + 2 + $segmentLength > $length) {
+                break;
+            }
+            if ($marker === 0xDA) {
+                // Start of scan: the compressed picture follows, to the end.
+                return $out . substr($jpeg, $at);
+            }
+            $segment = substr($jpeg, $at, 2 + $segmentLength);
+            $keep = match (true) {
+                $marker === 0xE0, $marker === 0xEE => true,
+                $marker === 0xE2 => str_starts_with(substr($segment, 4), "ICC_PROFILE\0"),
+                $marker >= 0xE1 && $marker <= 0xEF, $marker === 0xFE => false,
+                default => true,
+            };
+            if ($keep) {
+                $out .= $segment;
+            }
+            $at += 2 + $segmentLength;
+        }
+
+        throw InvalidOnboardingValue::for('photo', 'not a readable JPEG image');
     }
 
     /**

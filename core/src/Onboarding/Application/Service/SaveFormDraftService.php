@@ -76,6 +76,12 @@ final readonly class SaveFormDraftService
             throw ContentVersionSuperseded::reload();
         }
 
+        // A decided form takes no more scratch answers: nothing would ever
+        // read them, and they would sit beside the record as if they counted.
+        if ($detail->status->isFinal()) {
+            throw OnboardingWriteConflict::alreadyRecorded('completed form');
+        }
+
         // Asked here rather than only in SQL so that the answer is the same
         // whichever adapter is running: a client that has a draft and sends no
         // token is trying to blind-overwrite, and an insert that then failed on

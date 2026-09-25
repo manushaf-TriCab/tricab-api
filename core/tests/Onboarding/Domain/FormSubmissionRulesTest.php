@@ -91,6 +91,38 @@ final class FormSubmissionRulesTest extends TestCase
         FormSubmissionRules::check($schema, $payload);
     }
 
+    /**
+     * The message reaches audit summaries and migration findings, so it names
+     * the field and the rule and never repeats what was typed.
+     *
+     * @return iterable<string, array{array<string, mixed>, array<string, mixed>, string}>
+     */
+    public static function refusedValues(): iterable
+    {
+        $starter = ['preferredName' => 'Sam', 'startDate' => '2026-10-01', 'confirm' => true];
+
+        yield 'date' => [self::STARTER, ['startDate' => '14/03/1987'] + $starter, '14/03/1987'];
+        yield 'checkbox' => [self::STARTER, ['confirm' => 'visa-subclass-482'] + $starter, 'visa-subclass-482'];
+        yield 'select' => [self::UNIFORM, ['shirtSize' => 'PA1234567', 'bootSize' => 9], 'PA1234567'];
+        yield 'number' => [self::UNIFORM, ['shirtSize' => 'm', 'bootSize' => '0412 555 019'], '0412 555 019'];
+        yield 'number out of bounds' => [self::UNIFORM, ['shirtSize' => 'm', 'bootSize' => -73512], '73512'];
+    }
+
+    /**
+     * @param array<string, mixed> $schema
+     * @param array<string, mixed> $payload
+     */
+    #[DataProvider('refusedValues')]
+    public function test_a_refusal_never_repeats_the_value(array $schema, array $payload, string $value): void
+    {
+        try {
+            FormSubmissionRules::check($schema, $payload);
+            self::fail('Expected a refusal.');
+        } catch (InvalidOnboardingValue $refusal) {
+            self::assertStringNotContainsString($value, $refusal->getMessage());
+        }
+    }
+
     public function test_optional_fields_may_be_left_empty(): void
     {
         FormSubmissionRules::check(self::STARTER, [

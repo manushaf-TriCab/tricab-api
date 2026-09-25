@@ -29,6 +29,10 @@ use TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue;
  *  - an answer for a path the schema does not have is refused rather than
  *    stored — it would be data nobody asked for and no reviewer is shown.
  *
+ * A refusal names the field and the rule, never the value: these messages
+ * reach audit summaries and migration findings, and a malformed date of birth
+ * or visa expiry is still somebody's date of birth.
+ *
  * Pure: no database, no request, no clock.
  */
 final class FormSubmissionRules
@@ -115,16 +119,16 @@ final class FormSubmissionRules
             default => null,
         };
         if ($number === null || !is_finite($number)) {
-            throw InvalidOnboardingValue::for($label, self::shown($value) . ' — not a number');
+            throw InvalidOnboardingValue::for($label, 'not a number');
         }
 
         $min = self::bound($field['min'] ?? null) ?? self::DEFAULT_NUMBER_MIN;
         if ($number < $min) {
-            throw InvalidOnboardingValue::for($label, self::shown($value) . ' — must be at least ' . self::format($min));
+            throw InvalidOnboardingValue::for($label, 'must be at least ' . self::format($min));
         }
         $max = self::bound($field['max'] ?? null);
         if ($max !== null && $number > $max) {
-            throw InvalidOnboardingValue::for($label, self::shown($value) . ' — must be at most ' . self::format($max));
+            throw InvalidOnboardingValue::for($label, 'must be at most ' . self::format($max));
         }
     }
 
@@ -140,7 +144,7 @@ final class FormSubmissionRules
             }
         }
         if (!is_string($value) || !in_array($value, $keys, true)) {
-            throw InvalidOnboardingValue::forOneOf($label, self::shown($value), $keys);
+            throw InvalidOnboardingValue::forOneOf($label, 'not one of the options', $keys);
         }
     }
 
@@ -151,14 +155,14 @@ final class FormSubmissionRules
             || preg_match(self::DATE, $value, $m) !== 1
             || !checkdate((int) $m[2], (int) $m[3], (int) $m[1])
         ) {
-            throw InvalidOnboardingValue::for($label, self::shown($value) . ' — not a date (YYYY-MM-DD)');
+            throw InvalidOnboardingValue::for($label, 'not a date (YYYY-MM-DD)');
         }
     }
 
     private static function checkbox(string $label, mixed $value): void
     {
         if (!is_bool($value)) {
-            throw InvalidOnboardingValue::for($label, self::shown($value) . ' — not ticked or unticked');
+            throw InvalidOnboardingValue::for($label, 'not ticked or unticked');
         }
     }
 
@@ -180,13 +184,5 @@ final class FormSubmissionRules
     private static function format(float $number): string
     {
         return $number == floor($number) ? (string) (int) $number : (string) $number;
-    }
-
-    /** Enough of the value to recognise it, never a whole essay. */
-    private static function shown(mixed $value): string
-    {
-        $text = is_scalar($value) ? (string) $value : get_debug_type($value);
-
-        return mb_strlen($text) > 40 ? mb_substr($text, 0, 40) . '…' : $text;
     }
 }
