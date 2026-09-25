@@ -180,6 +180,8 @@ use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentsAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingItemAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingPeopleAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingPersonAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingPersonDocumentContentAction;
+use TriCab\Api\Http\Action\Onboarding\GetOnboardingPersonDocumentsAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingReviewItemAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingReportAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingReviewQueueAction;
@@ -492,6 +494,12 @@ final class AppBuilder
         $app->get('/api/v1/admin/onboarding/people/{personPublicId}', GetOnboardingPersonAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
         $app->put('/api/v1/admin/onboarding/people/{personPublicId}/allocation', PutOnboardingPersonAllocationAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        // Phase 5.4 — a person's generated documents, for the personnel file.
+        // Every download is streamed and audited against HR (PersonDocumentsService).
+        $app->get('/api/v1/admin/onboarding/people/{personPublicId}/documents', GetOnboardingPersonDocumentsAction::class)
+            ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
+        $app->get('/api/v1/admin/onboarding/people/{personPublicId}/documents/{documentPublicId}/content', GetOnboardingPersonDocumentContentAction::class)
             ->add(($require)('ONBOARDING.PEOPLE.MANAGE'));
 
         // Phase 4.1 — adding a person, editing their profile, inviting them.
