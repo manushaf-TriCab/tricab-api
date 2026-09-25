@@ -55,7 +55,7 @@ final readonly class GenerateAssessmentDocumentService
      * After the decision commits, never part of it, like every copy here. Once
      * per attempt, held by its own blob path.
      */
-    public function generateSignedOff(int $userId, string $assignmentPublicId, int $reviewerUserId, string $feedback, string $reviewedAtUtc): ?string
+    public function generateSignedOff(int $userId, string $assignmentPublicId, int $reviewerUserId, string $feedback, string $reviewedOn): ?string
     {
         try {
             $attempt = $this->training->findTraining($userId, $assignmentPublicId)?->latestAttempt;
@@ -68,7 +68,7 @@ final readonly class GenerateAssessmentDocumentService
                 $assignmentPublicId,
                 $attempt->publicId,
                 sprintf('%d/attempt-%s-signed-off.pdf', $userId, strtolower($attempt->publicId)),
-                new AssessmentSignOff($feedback, $this->repository->userDisplayName($reviewerUserId), $reviewedAtUtc),
+                new AssessmentSignOff($feedback, $this->repository->userDisplayName($reviewerUserId), $reviewedOn),
             );
         } catch (Throwable $failure) {
             self::logFailure($assignmentPublicId, $failure);

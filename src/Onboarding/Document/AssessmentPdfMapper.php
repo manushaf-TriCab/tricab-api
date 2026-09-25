@@ -209,7 +209,7 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
             if ($signOff !== null) {
                 $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->drawWrapped($signOff->feedback, ...$s['feedback']);
                 $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->draw($signOff->receivedBy, $s['receivedBy'][0], $s['receivedBy'][1], $s['receivedBy'][2], 7.0, false, self::TEXT_MIN);
-                $reviewed = TemplatePdf::formatDate(substr($signOff->reviewedAtUtc, 0, 10));
+                $reviewed = TemplatePdf::formatDate($signOff->reviewedOn);
                 $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->draw($reviewed, $s['date'][0], $s['date'][1], $s['date'][2], 7.0, false, self::TEXT_MIN);
             }
         } else {

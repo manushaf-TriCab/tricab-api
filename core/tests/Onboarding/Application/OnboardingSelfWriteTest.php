@@ -7,7 +7,13 @@ namespace TriCab\Core\Tests\Onboarding\Application;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\TestCase;
+use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
 use TriCab\Core\Identity\Domain\Service\UuidV4Generator;
+use TriCab\Core\Onboarding\Application\DTO\Admin\ReviewItemRecord;
+use TriCab\Core\Onboarding\Application\DTO\Admin\ReviewQueueEntry;
+use TriCab\Core\Onboarding\Application\Service\DecideReviewService;
+use TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingAdminAuditLog;
+use TriCab\Core\Onboarding\Infrastructure\InMemoryOnboardingReviewRepository;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentContext;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentInput;
 use TriCab\Core\Onboarding\Application\DTO\Document\FormSubmissionForDocument;
@@ -699,6 +705,7 @@ final class OnboardingSelfWriteTest extends TestCase
         int $userId = self::TRAINEE,
         array $reached = [],
         ?array $questions = null,
+        string $moduleSlug = 'site-induction',
     ): void {
         $questions ??= [
             AssessmentQuestion::of('q1', 1, 'First', ['a' => 'No', 'b' => 'Yes'], 'b', 'Because yes.'),
@@ -720,6 +727,7 @@ final class OnboardingSelfWriteTest extends TestCase
                 questionCount: count($questions),
                 reachedSlideIds: $reached,
                 latestAttempt: null,
+                moduleSlug: $moduleSlug,
             ),
             $questions,
         );
@@ -857,6 +865,69 @@ final class OnboardingSelfWriteTest extends TestCase
         self::assertCount(1, $listed);
         self::assertSame('assessment', $listed[0]->documentKind);
         self::assertSame(DataClass::WORKFLOW, $listed[0]->dataClass->toInt());
+    }
+
+    // ------------------------------------------------ WHSE sign-off (5.4)
+
+    public function test_passing_the_whse_induction_hands_it_to_hr_instead_of_completing_it(): void
+    {
+        $this->givenTraining(reached: ['intro', 'hazards', 'sign-off'], moduleSlug: 'corporate-whse-induction');
+        $attempt = $this->startAttempt()->start(self::TRAINEE, self::TRAINING, self::TRAINING_VERSION);
+
+        $this->submitAttempt()->submit(self::TRAINEE, self::TRAINING, $attempt->publicId, self::TRAINING_VERSION, ['q1' => 'b', 'q2' => 'b'], 'key-whse');
+
+        $handedIn = end($this->training->transitions);
+        self::assertNotFalse($handedIn);
+        self::assertSame(AssignmentStatus::SUBMITTED, $handedIn->to->toString());
+        self::assertSame(StatusActor::TRAINEE, $handedIn->actor->toString(), 'the person hands it in; the system never submits');
+        $detail = $this->training->findTraining(self::TRAINEE, self::TRAINING);
+        self::assertNotNull($detail);
+        self::assertFalse($detail->mayStartAttempt(), 'no re-sit while HR has the passed attempt');
+    }
+
+    public function test_hr_accepts_the_whse_induction_only_with_feedback_and_the_sheet_is_signed_off(): void
+    {
+        $this->givenTraining(reached: ['intro', 'hazards', 'sign-off'], moduleSlug: 'corporate-whse-induction');
+        [$generation, $store, $renderer] = $this->paperCopies();
+        $generation->withAssessment(self::TRAINING, new AssessmentDocumentContext(9, self::TRAINEE, 'corporate-whse-induction', 'Corporate and WHSE Induction', 'Sam Synthetic', 'Storeperson', 'Warehouse', 'Dandenong', 'Morgan Manager'));
+        $generation->displayNames[40] = 'Hana Reviewer';
+        $sheets = new GenerateAssessmentDocumentService($generation, $this->training, $renderer, $store);
+        $attempt = $this->startAttempt()->start(self::TRAINEE, self::TRAINING, self::TRAINING_VERSION);
+        (new SubmitAssessmentAttemptService($this->training, $this->gate(), $this->idempotency(), $sheets))
+            ->submit(self::TRAINEE, self::TRAINING, $attempt->publicId, self::TRAINING_VERSION, ['q1' => 'b', 'q2' => 'b'], 'key-whse');
+
+        $token = RowVersionToken::fromBinary("\x00\x00\x00\x00\x00\x00\x0B\xB8");
+        $reviews = new InMemoryOnboardingReviewRepository();
+        $reviews->withItem(
+            new ReviewItemRecord(9, self::TRAINING, self::TRAINEE, 'training', 'item-whse', 'Corporate and WHSE Induction', AssignmentStatus::submitted(), $token, null, 'corporate-whse-induction'),
+            new ReviewQueueEntry(self::TRAINING, self::TRAINEE, 'person-601', 'Sam Synthetic', 'training', 'item-whse', 'Corporate and WHSE Induction', 1, AssignmentStatus::submitted(), '2026-09-22T00:05:00Z', null, null),
+        );
+        $outcomes = $reviews->reviewDetail(self::TRAINING)?->toArray(40)['outcomes'] ?? [];
+        self::assertIsArray($outcomes);
+        self::assertSame([true, true], array_column($outcomes, 'requiresNote'), 'accepting WHSE asks for the feedback');
+        $decide = new DecideReviewService($reviews, new InMemoryOnboardingAdminAuditLog(), null, null, $sheets);
+        $hr = new ActorContext(40, 'hr-public-id', 'hr@example.test');
+
+        try {
+            $decide->decide($hr, self::TRAINING, $token, AssignmentStatus::completed(), '  ');
+            self::fail('accepted WHSE without feedback');
+        } catch (InvalidOnboardingValue) {
+        }
+        self::assertCount(1, $renderer->inputs, 'no sheet for a refused acceptance');
+
+        $decided = $decide->decide($hr, self::TRAINING, $token, AssignmentStatus::completed(), 'Safe around the forklift bay.');
+
+        self::assertSame(AssignmentStatus::COMPLETED, $decided->status()->toString());
+        self::assertCount(2, $renderer->inputs);
+        self::assertNull($renderer->inputs[0]->signOff, 'the copy made at submission is left as it was');
+        $signOff = $renderer->inputs[1]->signOff;
+        self::assertNotNull($signOff);
+        self::assertSame('Safe around the forklift bay.', $signOff->feedback);
+        self::assertSame('Hana Reviewer', $signOff->receivedBy);
+        self::assertSame((new DateTimeImmutable('now', new DateTimeZone('Australia/Melbourne')))->format('Y-m-d'), $signOff->reviewedOn);
+        self::assertTrue($renderer->inputs[1]->passed);
+        self::assertCount(2, $this->documents->listDocuments(self::TRAINEE));
+        self::assertArrayHasKey(sprintf('%d/attempt-%s-signed-off.pdf', self::TRAINEE, $attempt->publicId), $store->objects);
     }
 
     public function test_a_submitted_form_gets_its_paper_copy(): void

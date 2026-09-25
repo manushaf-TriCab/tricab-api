@@ -105,7 +105,9 @@ final readonly class DecideReviewService
                 $item->assignmentPublicId,
                 $actor->userId,
                 $note,
-                gmdate('Y-m-d\\TH:i:s\\Z'),
+                // The day in Melbourne, not the UTC date: a sign-off before
+                // 10 or 11 am would otherwise print yesterday.
+                (new \DateTimeImmutable('now', new \DateTimeZone(\TriCab\Core\Onboarding\Domain\Service\LeaverPolicy::LOCAL_TIMEZONE)))->format('Y-m-d'),
             );
         }
 

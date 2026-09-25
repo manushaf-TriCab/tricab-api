@@ -135,7 +135,7 @@ final class TrainingImportTest extends TestCase
         $signed = $mapper->render($this->input(
             'corporate-whse-induction',
             $whse['content']['questions'],
-            new AssessmentSignOff(str_repeat('Works safely around the racking and the forklift bay. ', 6), 'Hana Reviewer', '2026-09-25T03:00:00Z'),
+            new AssessmentSignOff(str_repeat('Works safely around the racking and the forklift bay. ', 6), 'Hana Reviewer', '2026-09-25'),
         ));
 
         self::assertNotNull($plain);
