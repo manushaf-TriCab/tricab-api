@@ -51,10 +51,12 @@ interface OnboardingTrainingRepository
      *
      * **The write is monotonic and conflicts are not surfaced.** An
      * implementation must not overwrite a stored set that is already larger than
-     * `$mergedSlideIds`; that write is a no-op, not an error. Progress only ever
-     * grows, so two tabs racing cannot produce a wrong answer — only a stale
-     * one — and asking somebody to reload because their phone and their laptop
-     * both auto-saved would be a conflict dialogue with nothing behind it. This
+     * `$mergedSlideIds`; that write is a no-op, not an error. `$mergedSlideIds`
+     * was built from an earlier read, so an implementation must also union it
+     * with the stored set under a lock: two posts of equal size but different
+     * slides otherwise lose one of them. Progress only ever grows, and asking
+     * somebody to reload because their phone and their laptop both auto-saved
+     * would be a conflict dialogue with nothing behind it. This
      * is exactly why there is no `RowVersionToken` on this method and there is
      * one on {@see OnboardingFormRepository::saveDraft()}: a draft CAN be
      * silently clobbered, and a slide list cannot.

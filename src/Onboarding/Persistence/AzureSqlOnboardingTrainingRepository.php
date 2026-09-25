@@ -142,13 +142,41 @@ final class AzureSqlOnboardingTrainingRepository implements OnboardingTrainingRe
             $reachedFinalSlide,
             $transition,
         ): void {
-            $count = count($mergedSlideIds);
-            $slides = json_encode($mergedSlideIds, JSON_THROW_ON_ERROR);
+            /* Read the stored set again under an update lock and union it here.
+               `$mergedSlideIds` was built from a read taken before this
+               transaction, so two posts close together (Next pressed quickly)
+               each start from the same set; comparing counts alone let the
+               second overwrite the first's slide with a set of equal size.
+               UPDLOCK serialises writers on the row, and HOLDLOCK covers the
+               first post, when there is no row yet to lock. */
+            $stored = $this->connection->fetchAll(
+                <<<'SQL'
+                SELECT [SlideIdsJson], [ReachedFinalSlide]
+                FROM [onboarding].[PresentationProgress] WITH (UPDLOCK, HOLDLOCK)
+                WHERE [AssignmentId] = :assignmentId
+                  AND [TrainingModuleVersionId] = :versionId
+                SQL,
+                [
+                    ':assignmentId' => $located['assignmentId'],
+                    ':versionId' => $located['versionId'],
+                ],
+            );
 
-            /* The monotonic guard, in the statement. `[ReachedSlideCount] <=
-               :guardCount` means a stale writer whose set is smaller matches
-               nothing and quietly does nothing — which is the right answer for a
-               union, and is why this path raises no conflict. Two parameter names
+            $union = $mergedSlideIds;
+            if ($stored !== []) {
+                $union = array_values(array_unique(array_merge(
+                    $mergedSlideIds,
+                    self::decodeSlideIds($stored[0]['SlideIdsJson'] ?? null),
+                )));
+                $reachedFinalSlide = $reachedFinalSlide
+                    || AzureSqlValueMapper::boolValue($stored[0]['ReachedFinalSlide'] ?? false);
+            }
+
+            $count = count($union);
+            $slides = json_encode($union, JSON_THROW_ON_ERROR);
+
+            /* The count guard stays as a backstop: under the lock above the
+               union is never smaller than what is stored. Two parameter names
                for the same value, because PDO_SQLSRV binds each occurrence of a
                named parameter separately and leaves the second unbound. */
             $updated = $this->connection->fetchAll(
@@ -404,9 +432,8 @@ final class AzureSqlOnboardingTrainingRepository implements OnboardingTrainingRe
         bool $reachedFinalSlide,
     ): void {
         /* Two writers can reach here at once, and `UQ_onboarding_PresentationProgress_Assignment`
-           decides between them. The loser's write is discarded rather than
-           retried: its slides are a subset of the winner's by the time the next
-           save runs, because progress is a union and the client still holds them. */
+           decides between them. The HOLDLOCK read in savePresentationProgress()
+           makes the loser wait and then update, so this is a backstop. */
         $this->translatingUniqueConstraintViolation(
             function () use ($located, $slides, $count, $reachedFinalSlide): void {
                 $this->connection->execute(
