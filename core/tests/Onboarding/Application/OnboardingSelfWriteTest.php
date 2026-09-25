@@ -234,7 +234,12 @@ final class OnboardingSelfWriteTest extends TestCase
         self::assertNull($completion->actorUserId, 'A system action carries no name, and the schema requires that.');
     }
 
-    public function test_failing_leaves_the_module_open_and_reveals_the_answers(): void
+    /**
+     * A failed attempt says what was chosen and whether it was right, and
+     * never which option is: the re-sit draws the same questions, so that key
+     * would be the next attempt's key (Phase 8, owner decision 25 Sep 2026).
+     */
+    public function test_failing_leaves_the_module_open_and_withholds_the_answers(): void
     {
         $this->givenTraining(reached: ['intro', 'hazards', 'sign-off']);
         $attempt = $this->startAttempt()->start(self::TRAINEE, self::TRAINING, self::TRAINING_VERSION);
@@ -249,7 +254,12 @@ final class OnboardingSelfWriteTest extends TestCase
         );
 
         self::assertFalse($graded->isPass);
-        self::assertSame('b', $graded->questions[0]['correctOptionKey'] ?? null);
+        self::assertSame('a', $graded->questions[0]['selectedOptionKey'] ?? null);
+        self::assertFalse($graded->questions[0]['isCorrect'] ?? null);
+        foreach ($graded->questions as $question) {
+            self::assertArrayNotHasKey('correctOptionKey', $question);
+            self::assertArrayNotHasKey('correctReason', $question);
+        }
 
         $detail = $this->training->findTraining(self::TRAINEE, self::TRAINING);
         self::assertNotNull($detail);

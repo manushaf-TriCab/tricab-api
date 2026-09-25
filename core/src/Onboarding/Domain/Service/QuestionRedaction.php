@@ -26,14 +26,18 @@ use TriCab\Core\Onboarding\Domain\ValueObject\AssessmentQuestion;
  * default is whatever the author assumed, and a wrong assumption is invisible in
  * the diff.
  *
- * ## Why the reveal exists at all
+ * ## Why the reveal exists, and why only on a pass
  *
- * Somebody who has just failed a question learns nothing from being told only
- * that they failed. The source shows the correct option and its reason after an
- * attempt is graded, and that is worth keeping — it is the difference between an
- * assessment and a gate. The constraint is ordering, not secrecy: the answer is
- * shown *after* the attempt is immutable, so knowing it cannot change what was
- * submitted.
+ * The source shows the correct option and its reason after an attempt is
+ * graded, and that is worth keeping for somebody who has passed: it is the
+ * difference between an assessment and a gate.
+ *
+ * Ordering alone is not enough, though. A re-sit is offered at once and draws
+ * the same questions, so a key revealed after a *failed* attempt is a key for
+ * the next one: submit blank, copy, re-sit, pass (found in Phase 8, owner
+ * decision 25 Sep 2026). So a failed attempt gets {@see withRecordedOutcome()}
+ * — what was chosen and whether it was right, never the key or its reason —
+ * and only a passed one gets {@see withRecordedAnswer()}.
  *
  * Pure: no database, no request, no clock.
  */
@@ -100,6 +104,43 @@ final class QuestionRedaction
     {
         return array_map(
             static fn (AssessmentQuestion $question): array => self::withRecordedAnswer(
+                $question,
+                $recordedAnswers[$question->publicId] ?? null,
+            ),
+            $questions,
+        );
+    }
+
+    /**
+     * A question from a failed attempt: the recorded answer and whether it was
+     * right, and nothing that names the right one.
+     *
+     * @return array{publicId: string, ordinal: int, prompt: string, options: list<array{key: string, label: string}>, selectedOptionKey: ?string, isCorrect: bool}
+     */
+    public static function withRecordedOutcome(
+        AssessmentQuestion $question,
+        ?string $recordedOptionKey,
+    ): array {
+        return [
+            'publicId' => $question->publicId,
+            'ordinal' => $question->ordinal,
+            'prompt' => $question->prompt,
+            'options' => self::options($question),
+            'selectedOptionKey' => $recordedOptionKey,
+            'isCorrect' => $question->isCorrect($recordedOptionKey),
+        ];
+    }
+
+    /**
+     * @param list<AssessmentQuestion>   $questions
+     * @param array<string, string|null> $recordedAnswers question public id to recorded option key
+     *
+     * @return list<array{publicId: string, ordinal: int, prompt: string, options: list<array{key: string, label: string}>, selectedOptionKey: ?string, isCorrect: bool}>
+     */
+    public static function withRecordedOutcomes(array $questions, array $recordedAnswers): array
+    {
+        return array_map(
+            static fn (AssessmentQuestion $question): array => self::withRecordedOutcome(
                 $question,
                 $recordedAnswers[$question->publicId] ?? null,
             ),

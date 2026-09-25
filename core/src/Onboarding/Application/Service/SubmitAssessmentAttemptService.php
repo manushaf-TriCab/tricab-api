@@ -159,27 +159,25 @@ final readonly class SubmitAssessmentAttemptService
     }
 
     /**
-     * What a person sees once their answers are immutable: their choice, the
-     * correct option, and why.
-     *
-     * Allowed precisely because it is after the fact. Work order invariant 1
-     * constrains ordering rather than secrecy — knowing the answer now cannot
-     * change what was submitted — and somebody who has just failed a question
-     * learns nothing from being told only that they failed.
+     * What a person sees once their answers are immutable: their choice and
+     * whether it was right, and — only if they passed — the correct option and
+     * why. A failed attempt's key would be the next attempt's key, because the
+     * re-sit draws the same questions (see {@see QuestionRedaction}).
      */
     private static function reveal(OnboardingAttemptRecord $attempt, AssessmentGrade $grade): OnboardingAttemptDetail
     {
+        $isPass = $attempt->isPass ?? $grade->isPass;
+
         return new OnboardingAttemptDetail(
             publicId: $attempt->publicId,
             attemptNumber: $attempt->attemptNumber,
             startedAtUtc: $attempt->startedAtUtc,
             submittedAtUtc: $attempt->submittedAtUtc,
             scorePercent: $attempt->scorePercent ?? $grade->scorePercent,
-            isPass: $attempt->isPass ?? $grade->isPass,
-            questions: QuestionRedaction::withRecordedAnswers(
-                $attempt->questions,
-                $attempt->recordedAnswers,
-            ),
+            isPass: $isPass,
+            questions: $isPass
+                ? QuestionRedaction::withRecordedAnswers($attempt->questions, $attempt->recordedAnswers)
+                : QuestionRedaction::withRecordedOutcomes($attempt->questions, $attempt->recordedAnswers),
         );
     }
 
