@@ -55,9 +55,9 @@ final class GuestAuthEndpointsTest extends TestCase
         self::assertDoesNotMatchRegularExpression('/"otp"\s*:\s*"\d{6}"/', $encoded);
     }
 
-    public function test_request_otp_rejects_unknown_email_without_challenge_or_email(): void
+    public function test_request_otp_for_unknown_email_answers_like_a_sent_code_without_sending_one(): void
     {
-        $app = TestAppFactory::create();
+        $app = TestAppFactory::create(['DEV_AUTH_ENABLED' => 'false']);
         $container = $app->getContainer();
         self::assertInstanceOf(ContainerInterface::class, $container);
 
@@ -68,22 +68,36 @@ final class GuestAuthEndpointsTest extends TestCase
         $users = $container->get(UserProvisioningRepository::class);
         self::assertInstanceOf(UserProvisioningRepository::class, $users);
 
+        $this->seedEligiblePortalUser($app, 'known@example.com');
+        $known = $app->handle($this->jsonRequest('POST', '/api/v1/auth/guest/request-otp', [
+            'email' => 'known@example.com',
+        ]));
+        $knownPayload = TestAppFactory::json($known);
+
         $response = $app->handle($this->jsonRequest('POST', '/api/v1/auth/guest/request-otp', [
             'email' => 'unknown@example.com',
         ]));
         $payload = TestAppFactory::json($response);
 
-        self::assertSame(403, $response->getStatusCode());
-        self::assertIsArray($payload['error']);
-        /** @var array<string, mixed> $error */
-        $error = $payload['error'];
-        self::assertSame('AUTH_CUSTOMER_LOGIN_NOT_REGISTERED', $error['code']);
-        self::assertSame(
-            'This email is not registered for TriCab access. Please contact your nearest TriCab branch to request an account.',
-            $error['message'],
+        self::assertSame($known->getStatusCode(), $response->getStatusCode());
+        self::assertSame(202, $response->getStatusCode());
+        self::assertTrue($payload['success']);
+        self::assertIsArray($payload['data']);
+        self::assertIsArray($knownPayload['data']);
+        self::assertSame(array_keys($knownPayload['data']), array_keys($payload['data']));
+        /** @var array<string, mixed> $data */
+        $data = $payload['data'];
+        self::assertSame('u***n@example.com', $data['email']);
+        self::assertIsString($data['challengeId']);
+        self::assertMatchesRegularExpression(
+            '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/',
+            $data['challengeId'],
         );
-        self::assertStringNotContainsString('user_not_found', (string) $response->getBody());
-        self::assertNull($sender->lastMessage());
+        self::assertIsInt($data['expiresInSeconds']);
+        self::assertGreaterThan(0, $data['expiresInSeconds']);
+        self::assertLessThanOrEqual(300, $data['expiresInSeconds']);
+
+        self::assertSame('known@example.com', $sender->lastMessage()['to'] ?? null);
         self::assertNull(
             $challenges->findLatestActiveByEmailAndPurpose(
                 EmailAddress::fromString('unknown@example.com'),
@@ -91,6 +105,23 @@ final class GuestAuthEndpointsTest extends TestCase
             ),
         );
         self::assertNull($users->findByEmail(EmailAddress::fromString('unknown@example.com')));
+
+        // Verifying the made-up challenge fails exactly as a wrong code for a registered address does.
+        self::assertIsString($knownPayload['data']['challengeId']);
+        $knownVerify = $app->handle($this->jsonRequest('POST', '/api/v1/auth/guest/verify-otp', [
+            'challengeId' => $knownPayload['data']['challengeId'],
+            'email' => 'known@example.com',
+            'otp' => '000000',
+        ]));
+        $unknownVerify = $app->handle($this->jsonRequest('POST', '/api/v1/auth/guest/verify-otp', [
+            'challengeId' => $data['challengeId'],
+            'email' => 'unknown@example.com',
+            'otp' => '000000',
+        ]));
+
+        self::assertSame(401, $unknownVerify->getStatusCode());
+        self::assertSame($knownVerify->getStatusCode(), $unknownVerify->getStatusCode());
+        self::assertSame((string) $knownVerify->getBody(), (string) $unknownVerify->getBody());
     }
 
     public function test_request_otp_eligibility_mapper_hides_internal_reason(): void
