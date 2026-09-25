@@ -65,7 +65,7 @@ final class MicrosoftGraphOnboardingInvitationEmailSender implements OnboardingI
         );
 
         if ($response['status'] < 200 || $response['status'] > 299) {
-            throw new RuntimeException(sprintf('Microsoft Graph sendMail answered %d.', $response['status']));
+            throw new RuntimeException(sprintf('Microsoft Graph sendMail answered %d%s.', $response['status'], self::graphErrorCode($response['body'])));
         }
     }
 
@@ -87,7 +87,7 @@ final class MicrosoftGraphOnboardingInvitationEmailSender implements OnboardingI
             ],
         );
         if ($response['status'] < 200 || $response['status'] > 299) {
-            throw new RuntimeException(sprintf('Microsoft identity platform answered %d.', $response['status']));
+            throw new RuntimeException(sprintf('Microsoft identity platform answered %d%s.', $response['status'], self::identityErrorCode($response['body'])));
         }
 
         $decoded = json_decode($response['body'], true, 512, JSON_THROW_ON_ERROR);
@@ -104,5 +104,32 @@ final class MicrosoftGraphOnboardingInvitationEmailSender implements OnboardingI
         $this->cachedAccessTokenExpiresAt = $now + max(60, is_numeric($expiresIn) ? (int) $expiresIn : 3600);
 
         return $token;
+    }
+
+    /**
+     * The identity platform's error and AADSTS number — `invalid_client`,
+     * AADSTS7000215 for an expired client secret — and nothing else from the
+     * body: its description quotes the client id and a trace id.
+     */
+    private static function identityErrorCode(string $body): string
+    {
+        $decoded = json_decode($body, true);
+        if (!is_array($decoded)) {
+            return '';
+        }
+        $error = is_string($decoded['error'] ?? null) ? preg_replace('/[^a-z_]/', '', $decoded['error']) : '';
+        $codes = is_array($decoded['error_codes'] ?? null) ? array_filter($decoded['error_codes'], 'is_int') : [];
+        $parts = array_filter([$error, ...array_map(static fn (int $c): string => 'AADSTS' . $c, $codes)]);
+
+        return $parts === [] ? '' : ' (' . implode(', ', $parts) . ')';
+    }
+
+    /** Graph's error code (`ErrorAccessDenied`, `MailboxNotEnabledForRESTAPI`…), without its message. */
+    private static function graphErrorCode(string $body): string
+    {
+        $decoded = json_decode($body, true);
+        $code = is_array($decoded) && is_array($decoded['error'] ?? null) ? ($decoded['error']['code'] ?? null) : null;
+
+        return is_string($code) && $code !== '' ? ' (' . preg_replace('/[^A-Za-z0-9_.]/', '', $code) . ')' : '';
     }
 }

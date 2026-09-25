@@ -103,6 +103,16 @@ final readonly class InviteOnboardingPersonService
                 rtrim($this->publicAppBaseUrl, '/') . '/onboarding',
             );
         } catch (Throwable $failure) {
+            // The provider's reason, which the 502 deliberately does not carry:
+            // an expired Graph secret looked, from the page, like any outage.
+            // The senders' messages hold a status and an error code — never the
+            // recipient or a credential.
+            error_log(sprintf(
+                'onboarding.invitation.delivery_failed {"person":"%s","error":"%s","reason":%s}',
+                $person->publicId,
+                (new \ReflectionClass($failure))->getShortName(),
+                json_encode(mb_substr($failure->getMessage(), 0, 300), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+            ));
             $this->people->releaseInvitation(
                 $person,
                 $previous,
