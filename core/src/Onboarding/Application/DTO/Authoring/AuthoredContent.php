@@ -36,7 +36,7 @@ final readonly class AuthoredContent
     public const TYPES = [self::TYPE_TRAINING, self::TYPE_POLICY, self::TYPE_FORM];
 
     /**
-     * @param list<array{id: string, title: string}> $slides
+     * @param list<array<string, mixed>> $slides each with `id` and `title`, plus what it shows
      * @param list<array{publicId?: string, prompt: string, options: list<array{key: string, label: string}>, correctOptionKey: string, correctReason: ?string}> $questions
      * @param list<array<string, mixed>> $blocks
      * @param list<array<string, mixed>> $fields
@@ -110,7 +110,7 @@ final readonly class AuthoredContent
      * way in — so this does not re-run the rules, which would make a rule
      * tightened later lock authors out of reading what they wrote before it.
      *
-     * @param list<array{id: string, title: string}> $slides
+     * @param list<array<string, mixed>> $slides each with `id` and `title`, plus what it shows
      * @param list<array{publicId?: string, prompt: string, options: list<array{key: string, label: string}>, correctOptionKey: string, correctReason: ?string}> $questions
      * @param list<array<string, mixed>> $blocks
      * @param list<array<string, mixed>> $fields

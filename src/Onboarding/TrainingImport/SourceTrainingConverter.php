@@ -16,8 +16,16 @@ use TriCab\Core\Onboarding\Domain\Service\TrainingAuthoringRules;
  *  - `db/training-content.sql` — the modules (by document reference), the
  *    Respect at Work and Sexual Harassment quizzes as JSON, the WHSE quiz as
  *    SQL tuples, and an explanation backfill applied on top;
- *  - `public/training-decks/<deck>/<version>/manifest.json` — slide ids and
- *    titles. Images and transcripts are not ported (a slide is id + title).
+ *  - `public/training-decks/<deck>/<version>/manifest.json` — each slide's
+ *    id, title, image, alt text, transcript, videos and links.
+ *
+ * Slide images live in the public `training-decks` blob container at the same
+ * path as in the source checkout (uploaded by the owner, 25 Sep 2026), so a
+ * manifest-relative image path becomes {@see ASSET_BASE_URL}/<deck>/<version>/…,
+ * and only once the file is confirmed to be in the checkout. The two WHSE videos
+ * already carry absolute blob URLs. YouTube embed links become ordinary watch
+ * links: they open in a new tab, where an embed URL plays without YouTube's page.
+ * The deck PDF (`pdfUrl`) is deck-level and has nowhere to go in a slide list.
  *
  * Question order is the sheet's order and is kept exactly: the assessment PDF
  * mappers place each answer by its position on the paper sheet.
@@ -27,11 +35,15 @@ use TriCab\Core\Onboarding\Domain\Service\TrainingAuthoringRules;
  * expects, stops the conversion.
  *
  * @phpstan-type TrainingQuestion array{prompt: string, options: list<array{key: string, label: string}>, correctOptionKey: string, correctReason: ?string}
- * @phpstan-type TrainingRecord array{schema: string, slug: string, documentReference: string, title: string, summary: string, sortOrder: int, content: array{slides: list<array{id: string, title: string}>, passMarkPercent: int, questions: list<TrainingQuestion>}}
+ * @phpstan-type TrainingSlide array{id: string, title: string, imageUrl?: string, altText?: string, transcript?: string, media?: list<array{type: string, url: string, mimeType?: string, transcript?: string}>, links?: list<array{text: string, url: string}>}
+ * @phpstan-type TrainingRecord array{schema: string, slug: string, documentReference: string, title: string, summary: string, sortOrder: int, content: array{slides: list<TrainingSlide>, passMarkPercent: int, questions: list<TrainingQuestion>}}
  */
 final class SourceTrainingConverter
 {
     public const SCHEMA = 'tricab.onboarding.source-training/1';
+
+    /** The public container the deck files were uploaded to, keeping the source's paths. */
+    public const ASSET_BASE_URL = 'https://tricabv2.blob.core.windows.net/training-decks';
 
     /** document reference => [slug (the deck id), expected question count] */
     public const MODULES = [
@@ -194,7 +206,7 @@ final class SourceTrainingConverter
         ];
     }
 
-    /** @return list<array{id: string, title: string}> */
+    /** @return list<TrainingSlide> */
     private static function slides(string $sourceRoot, string $slug, string $reference): array
     {
         $manifests = glob($sourceRoot . '/public/training-decks/' . $slug . '/*/manifest.json') ?: [];
@@ -205,6 +217,9 @@ final class SourceTrainingConverter
         if (!is_array($manifest) || ($manifest['moduleReference'] ?? null) !== $reference || !is_array($manifest['slides'] ?? null)) {
             throw new RuntimeException($slug . ': the manifest is not this module\'s');
         }
+
+        $deckDir = dirname($manifests[0]);
+        $deckUrl = self::ASSET_BASE_URL . '/' . $slug . '/' . basename($deckDir);
 
         $slides = [];
         foreach ($manifest['slides'] as $slide) {
@@ -219,10 +234,92 @@ final class SourceTrainingConverter
             if (mb_strlen($title) > TrainingAuthoringRules::MAX_SLIDE_TITLE_LENGTH) {
                 $title = rtrim(mb_substr($title, 0, TrainingAuthoringRules::MAX_SLIDE_TITLE_LENGTH - 1)) . '…';
             }
-            $slides[] = ['id' => self::str($slide['id'] ?? null), 'title' => $title];
+            $id = self::str($slide['id'] ?? null);
+            $converted = ['id' => $id, 'title' => $title];
+
+            $image = trim(self::str($slide['imageUrl'] ?? null));
+            if ($image !== '') {
+                $converted['imageUrl'] = self::asset($deckDir, $deckUrl, $image, $slug . ' ' . $id . ' image');
+            }
+            foreach (['altText', 'transcript'] as $key) {
+                $text = trim(self::str($slide[$key] ?? null));
+                if ($text !== '') {
+                    $converted[$key] = $text;
+                }
+            }
+
+            $media = [];
+            foreach (is_array($slide['media'] ?? null) ? $slide['media'] : [] as $item) {
+                if (!is_array($item)) {
+                    throw new RuntimeException($slug . ' ' . $id . ': a media item is not an object');
+                }
+                $entry = [
+                    'type' => self::str($item['type'] ?? null),
+                    'url' => self::asset($deckDir, $deckUrl, trim(self::str($item['url'] ?? null)), $slug . ' ' . $id . ' media'),
+                ];
+                if (self::str($item['mimeType'] ?? null) !== '') {
+                    $entry['mimeType'] = self::str($item['mimeType']);
+                }
+                if (trim(self::str($item['transcript'] ?? null)) !== '') {
+                    $entry['transcript'] = trim(self::str($item['transcript']));
+                }
+                $media[] = $entry;
+            }
+            if ($media !== []) {
+                $converted['media'] = $media;
+            }
+
+            $links = [];
+            foreach (is_array($slide['links'] ?? null) ? $slide['links'] : [] as $link) {
+                // A link to another slide (`targetSlideId`) has no address to
+                // open; none of the three decks has one.
+                if (!is_array($link) || trim(self::str($link['url'] ?? null)) === '') {
+                    continue;
+                }
+                $text = trim((string) preg_replace('/\s+/u', ' ', self::str($link['text'] ?? null)));
+                $links[] = [
+                    'text' => $text === '' ? 'Open link' : $text,
+                    'url' => self::youtubeWatchUrl(trim(self::str($link['url']))),
+                ];
+            }
+            if ($links !== []) {
+                $converted['links'] = $links;
+            }
+
+            $slides[] = $converted;
         }
 
         return $slides;
+    }
+
+    /**
+     * An absolute URL is kept; a manifest-relative path must name a file in the
+     * checkout and becomes its address in the public container.
+     */
+    private static function asset(string $deckDir, string $deckUrl, string $path, string $where): string
+    {
+        if (preg_match('#^https://#i', $path) === 1) {
+            return $path;
+        }
+        $relative = ltrim($path, '/');
+        if ($relative === '' || str_contains($relative, '..') || preg_match('#^[a-z][a-z0-9+.-]*:#i', $relative) === 1) {
+            throw new RuntimeException($where . ': not a usable path: ' . $path);
+        }
+        if (!is_file($deckDir . '/' . $relative)) {
+            throw new RuntimeException($where . ': ' . $relative . ' is not in the source checkout');
+        }
+
+        return $deckUrl . '/' . implode('/', array_map('rawurlencode', explode('/', $relative)));
+    }
+
+    /** https://www.youtube.com/embed/<id>?… → https://www.youtube.com/watch?v=<id>; anything else unchanged. */
+    private static function youtubeWatchUrl(string $url): string
+    {
+        if (preg_match('~^https://(?:www\.)?youtube(?:-nocookie)?\.com/embed/([A-Za-z0-9_-]{6,20})(?:[?#].*)?$~', $url, $m) === 1) {
+            return 'https://www.youtube.com/watch?v=' . $m[1];
+        }
+
+        return $url;
     }
 
     private static function between(string $haystack, string $start, string $end): string

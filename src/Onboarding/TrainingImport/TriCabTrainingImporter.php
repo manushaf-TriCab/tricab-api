@@ -56,9 +56,12 @@ final readonly class TriCabTrainingImporter
                 'reason' => isset($existing[$slug])
                     ? 'Already on the platform; left exactly as it is.'
                     : sprintf(
-                        '%s: %d slides, %d questions, pass mark %d%%, saved as a draft for HR to publish.',
+                        '%s: %d slides (%d images, %d videos, %d links), %d questions, pass mark %d%%, saved as a draft for HR to publish.',
                         $record['documentReference'],
                         count($content['slides']),
+                        count(array_filter($content['slides'], static fn (array $s): bool => isset($s['imageUrl']))),
+                        array_sum(array_map(static fn (array $s): int => count($s['media'] ?? []), $content['slides'])),
+                        array_sum(array_map(static fn (array $s): int => count($s['links'] ?? []), $content['slides'])),
                         count($content['questions']),
                         $content['passMarkPercent'],
                     ),

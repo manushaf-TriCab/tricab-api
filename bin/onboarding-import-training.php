@@ -10,7 +10,8 @@ declare(strict_types=1);
  *
  * Dry-run is the DEFAULT. Nothing is written without --apply, and --apply needs
  * --actor. A module that already exists is never touched. HR publishes each one
- * from the editor. Slide images and transcripts are not ported.
+ * from the editor. Each slide carries its image, videos and links (the files are
+ * in the public training-decks container).
  *
  * Usage:
  *   php bin/onboarding-import-training.php --source=../../hr/onboarding-workflow/tricab-training-vercel

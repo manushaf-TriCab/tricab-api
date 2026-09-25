@@ -6,6 +6,7 @@ namespace TriCab\Core\Onboarding\Domain\ValueObject;
 
 use TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue;
 use TriCab\Core\Onboarding\Domain\Exception\UnknownPresentationSlide;
+use TriCab\Core\Onboarding\Domain\Service\SlideMaterialRules;
 
 /**
  * The ordered slide list a training module version publishes.
@@ -37,6 +38,10 @@ use TriCab\Core\Onboarding\Domain\Exception\UnknownPresentationSlide;
  *   ["intro", "hazards", "sign-off"]
  *   [{"id": "intro", "title": "Welcome"}, …]
  *
+ * An object slide may also carry what it shows — `imageUrl`, `altText`,
+ * `transcript`, `media`, `links` — read by {@see SlideMaterialRules}, as
+ * strictly as the ids and for the same reason. Progress ignores all of it.
+ *
  * Anything else — a duplicate id, an empty id, a nested object with no `id` —
  * is a defect in the content and is reported as one.
  */
@@ -45,10 +50,12 @@ final class PresentationManifest
     /**
      * @param list<string>          $slideIds ordered, unique, non-empty
      * @param array<string, string> $titles   slide id to title, where one was authored
+     * @param array<string, array<string, mixed>> $material slide id to what it shows, where it shows anything
      */
     private function __construct(
         private readonly array $slideIds,
         private readonly array $titles,
+        private readonly array $material = [],
     ) {
     }
 
@@ -76,6 +83,7 @@ final class PresentationManifest
     {
         $ids = [];
         $titles = [];
+        $material = [];
 
         foreach (array_values($slides) as $index => $slide) {
             $id = self::slideId($slide, $index);
@@ -89,9 +97,16 @@ final class PresentationManifest
             if (is_array($slide) && isset($slide['title']) && is_string($slide['title'])) {
                 $titles[$id] = $slide['title'];
             }
+
+            if (is_array($slide)) {
+                $shown = SlideMaterialRules::normalise($slide, 'slide ' . ($index + 1));
+                if ($shown !== []) {
+                    $material[$id] = $shown;
+                }
+            }
         }
 
-        return new self($ids, $titles);
+        return new self($ids, $titles, $material);
     }
 
     /**
@@ -197,12 +212,12 @@ final class PresentationManifest
     }
 
     /**
-     * @return list<array{id: string, title: string|null}>
+     * @return list<array<string, mixed>> each with `id` and `title` (null when untitled)
      */
     public function toArray(): array
     {
         return array_map(
-            fn (string $id): array => ['id' => $id, 'title' => $this->titleFor($id)],
+            fn (string $id): array => ['id' => $id, 'title' => $this->titleFor($id)] + ($this->material[$id] ?? []),
             $this->slideIds,
         );
     }

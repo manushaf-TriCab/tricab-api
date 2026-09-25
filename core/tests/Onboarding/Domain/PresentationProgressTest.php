@@ -35,6 +35,27 @@ final class PresentationProgressTest extends TestCase
         self::assertNull($strings->titleFor('intro'), 'The string form carries no titles.');
     }
 
+    public function test_a_manifest_hands_each_slide_s_material_to_the_trainee(): void
+    {
+        $manifest = PresentationManifest::fromJson(json_encode([
+            ['id' => 'intro', 'title' => 'Welcome', 'imageUrl' => 'https://example.test/1.webp',
+                'media' => [['type' => 'video', 'url' => 'https://example.test/v.mp4', 'mimeType' => 'video/mp4']],
+                'links' => [['text' => 'Policy', 'url' => 'https://example.test/p.pdf']]],
+            ['id' => 'end', 'title' => 'The end'],
+        ], JSON_THROW_ON_ERROR));
+
+        self::assertSame([
+            ['id' => 'intro', 'title' => 'Welcome', 'imageUrl' => 'https://example.test/1.webp',
+                'media' => [['type' => 'video', 'url' => 'https://example.test/v.mp4', 'mimeType' => 'video/mp4']],
+                'links' => [['text' => 'Policy', 'url' => 'https://example.test/p.pdf']]],
+            ['id' => 'end', 'title' => 'The end'],
+        ], $manifest->toArray());
+        self::assertSame(['intro', 'end'], $manifest->slideIds(), 'Progress sees ids only.');
+
+        $this->expectException(InvalidOnboardingValue::class);
+        PresentationManifest::fromJson('[{"id":"intro","imageUrl":"javascript:alert(1)"}]');
+    }
+
     /**
      * Strict where the trainee-facing reads are forgiving. A manifest is content
      * an author published and can fix; forgiving it would silently shorten a

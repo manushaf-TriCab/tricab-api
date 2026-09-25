@@ -257,6 +257,66 @@ final class ContentAuthoringRulesTest extends TestCase
         }
     }
 
+    public function test_a_slide_keeps_its_image_media_and_links_and_drops_empty_material(): void
+    {
+        $slide = [
+            'id' => 'hazards',
+            'title' => 'Hazards',
+            'imageUrl' => ' https://tricabv2.blob.core.windows.net/training-decks/d/v1/slides/slide-001.webp ',
+            'altText' => '',
+            'transcript' => null,
+            'media' => [['type' => 'video', 'url' => 'https://example.test/v.mp4', 'mimeType' => 'Video/MP4', 'transcript' => '']],
+            'links' => [['text' => ' Quality Policy ', 'url' => 'https://example.test/policy.pdf?e=1']],
+            'requiresAnimationReview' => true,
+        ];
+
+        self::assertSame([[
+            'id' => 'hazards',
+            'title' => 'Hazards',
+            'imageUrl' => 'https://tricabv2.blob.core.windows.net/training-decks/d/v1/slides/slide-001.webp',
+            'media' => [['type' => 'video', 'url' => 'https://example.test/v.mp4', 'mimeType' => 'video/mp4']],
+            'links' => [['text' => 'Quality Policy', 'url' => 'https://example.test/policy.pdf?e=1']],
+        ]], TrainingAuthoringRules::slides([$slide]));
+
+        self::assertSame(
+            [['id' => 'plain', 'title' => 'Plain']],
+            TrainingAuthoringRules::slides([['id' => 'plain', 'title' => 'Plain', 'media' => [], 'links' => [], 'imageUrl' => '']]),
+            'a slide without material reads back exactly as before',
+        );
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>}>
+     */
+    public static function refusedSlideMaterial(): iterable
+    {
+        yield 'javascript image' => [['imageUrl' => 'javascript:alert(1)']];
+        yield 'data image' => [['imageUrl' => 'data:image/png;base64,AAAA']];
+        yield 'http image' => [['imageUrl' => 'http://example.test/a.webp']];
+        yield 'relative image' => [['imageUrl' => 'slides/slide-001.webp']];
+        yield 'protocol-relative image' => [['imageUrl' => '//example.test/a.webp']];
+        yield 'credentials in url' => [['imageUrl' => 'https://user:pw@example.test/a.webp']];
+        yield 'quote in url' => [['imageUrl' => 'https://example.test/a".webp']];
+        yield 'media not a list' => [['media' => ['type' => 'video']]];
+        yield 'media of an unknown type' => [['media' => [['type' => 'iframe', 'url' => 'https://example.test/x']]]];
+        yield 'media without an address' => [['media' => [['type' => 'video']]]];
+        yield 'video with an audio type' => [['media' => [['type' => 'video', 'url' => 'https://example.test/x', 'mimeType' => 'audio/mpeg']]]];
+        yield 'link without text' => [['links' => [['text' => ' ', 'url' => 'https://example.test/']]]];
+        yield 'javascript link' => [['links' => [['text' => 'Go', 'url' => 'javascript:void(0)']]]];
+        yield 'alt text not text' => [['altText' => ['x']]];
+    }
+
+    /**
+     * @param array<string, mixed> $material
+     */
+    #[DataProvider('refusedSlideMaterial')]
+    public function test_slide_material_outside_the_rules_is_refused(array $material): void
+    {
+        $this->expectException(InvalidOnboardingValue::class);
+
+        TrainingAuthoringRules::slides([['id' => 'one', 'title' => 'One'] + $material]);
+    }
+
     public function test_the_pass_mark_is_a_whole_percentage(): void
     {
         self::assertSame(80, TrainingAuthoringRules::passMark(80));

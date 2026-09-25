@@ -83,6 +83,32 @@ final class TrainingImportTest extends TestCase
         }
     }
 
+    public function test_every_slide_carries_its_image_video_and_links_at_their_blob_addresses(): void
+    {
+        $base = SourceTrainingConverter::ASSET_BASE_URL;
+        [$whse, $respect, $harassment] = array_map(static fn (array $r): array => $r['content']['slides'], $this->records);
+
+        foreach ([$whse, $respect, $harassment] as $slides) {
+            foreach ($slides as $slide) {
+                self::assertArrayHasKey('imageUrl', $slide, $slide['id'] . ' has its image');
+            }
+        }
+        self::assertSame($base . '/respect-at-work/v1-f402f29a0ed5/slides/slide-001.webp', $respect[0]['imageUrl'] ?? null);
+        self::assertSame(
+            [['type' => 'video', 'url' => $base . '/corporate-whse-induction/v1-4aefccfb99b1/video-2e803ed06053.mp4', 'mimeType' => 'video/mp4']],
+            $whse[2]['media'] ?? null,
+        );
+        self::assertSame(2, array_sum(array_map(static fn (array $s): int => count($s['media'] ?? []), $whse)));
+        self::assertSame([['text' => 'Open external video', 'url' => 'https://www.youtube.com/watch?v=z1A07MBSu0w']], $respect[7]['links'] ?? null);
+        self::assertSame('New Starter Checklist', $whse[4]['links'][0]['text'] ?? null);
+
+        // What the rules keep is what was converted — nothing dropped on save.
+        foreach ($this->records as $record) {
+            $content = AuthoredContent::fromInput(AuthoredContent::TYPE_TRAINING, $record['content'], null);
+            self::assertSame($record['content']['slides'], $content->slides);
+        }
+    }
+
     public function test_the_import_makes_three_drafts_once(): void
     {
         $content = new InMemoryOnboardingContentRepository();

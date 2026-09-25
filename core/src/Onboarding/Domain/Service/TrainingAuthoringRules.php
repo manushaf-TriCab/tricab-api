@@ -8,8 +8,9 @@ use TriCab\Core\Onboarding\Domain\Exception\InvalidOnboardingValue;
 use TriCab\Core\Onboarding\Domain\ValueObject\PresentationManifest;
 
 /**
- * What an author may put in a training module version (4.4): its slide list,
- * its pass mark and its questions.
+ * What an author may put in a training module version (4.4): its slide list
+ * (with each slide's image, media and links — {@see SlideMaterialRules}), its
+ * pass mark and its questions.
  *
  * Question rules follow the source's `parseModulePayload`: two to six options,
  * each with a label, unique keys, and exactly one correct answer. The source
@@ -42,7 +43,9 @@ final class TrainingAuthoringRules
     private const OPTION_KEY = '/^[a-z0-9]{1,40}$/';
 
     /**
-     * @return list<array{id: string, title: string}>
+     * Each slide's id and title, plus whatever it shows ({@see SlideMaterialRules}).
+     *
+     * @return list<array<string, mixed>> each with `id` and `title`
      *
      * @throws InvalidOnboardingValue
      */
@@ -72,7 +75,7 @@ final class TrainingAuthoringRules
             if (mb_strlen($title) > self::MAX_SLIDE_TITLE_LENGTH) {
                 throw InvalidOnboardingValue::for($where . ' title', sprintf('longer than %d characters', self::MAX_SLIDE_TITLE_LENGTH));
             }
-            $normalised[] = ['id' => $id, 'title' => $title];
+            $normalised[] = ['id' => $id, 'title' => $title] + SlideMaterialRules::normalise($slide, $where);
         }
 
         // The manifest's own reading is the authority on duplicates — the same

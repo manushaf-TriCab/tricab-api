@@ -54,6 +54,9 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
 
     private const JSON = JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
 
+    /** What a stored slide shows beside its id and title. */
+    private const SLIDE_MATERIAL_KEYS = ['imageUrl', 'altText', 'transcript', 'media', 'links'];
+
     /** @var array<string, array{items: string, itemId: string, versions: string, versionId: string, retired: string}> */
     private const TABLES = [
         AuthoredContent::TYPE_TRAINING => [
@@ -876,11 +879,14 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
     }
 
     /**
-     * Both manifest shapes the schema admits — bare ids and `{id, title}`.
+     * Both manifest shapes the schema admits — bare ids and `{id, title}` — with
+     * each slide's image, media and links carried as stored. Not re-validated
+     * here: this read feeds the editor, and a save runs every value through
+     * {@see \TriCab\Core\Onboarding\Domain\Service\SlideMaterialRules} again.
      *
      * @param array<array-key, mixed> $manifest
      *
-     * @return list<array{id: string, title: string}>
+     * @return list<array<string, mixed>> each with `id` and `title`
      */
     private static function slides(array $manifest): array
     {
@@ -889,7 +895,8 @@ final class AzureSqlOnboardingContentRepository implements OnboardingContentRepo
             if (is_string($slide)) {
                 $slides[] = ['id' => $slide, 'title' => $slide];
             } elseif (is_array($slide) && is_string($slide['id'] ?? null)) {
-                $slides[] = ['id' => $slide['id'], 'title' => is_string($slide['title'] ?? null) ? $slide['title'] : $slide['id']];
+                $slides[] = ['id' => $slide['id'], 'title' => is_string($slide['title'] ?? null) ? $slide['title'] : $slide['id']]
+                    + array_intersect_key($slide, array_flip(self::SLIDE_MATERIAL_KEYS));
             }
         }
 
