@@ -1,6 +1,8 @@
 # Onboarding — architecture, trust boundaries and data classification
 
-Status: **Phase 1** — contracts, permissions and skeletons exist; the module stores no domain data yet.
+Status: **Phase 8** (verification and handoff). Written in Phase 1 and amended as later phases
+settled what it left open; where a section says "lands in Phase N", that phase is done. Running and
+operating the module: [`onboarding-operations.md`](onboarding-operations.md).
 Companion to `platform/ONBOARDING-MIGRATION-WORK-ORDER.md` (revision 2) and
 `platform/ONBOARDING-IMPLEMENTATION-PLAN.md`. Work order §5, §6 and §7 Phase 1.5 ask for this document.
 

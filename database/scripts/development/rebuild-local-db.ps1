@@ -123,6 +123,9 @@ Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-schema.sql')        # a
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-hr-schema.sql')     # after onboarding: FKs point back into it
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-admin-audit.sql')   # after identity: FKs to identity.Users
 Invoke-SqlFile (Join-Path $DevScripts 'alter-onboarding-policy-metadata.sql') # after onboarding: adds columns to Policies, PolicyVersions
+Invoke-SqlFile (Join-Path $DevScripts 'alter-onboarding-policy-declarations.sql') # after onboarding: adds DeclarationJson
+Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-form-contributions.sql') # after onboarding: FKs to Assignments
+Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-migration-rows.sql')     # after legacy migration: FKs to LegacyMigrationBatches
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
 
 # --- seeds -----------------------------------------------------------------
