@@ -6,6 +6,7 @@ namespace TriCab\Core\Onboarding\Application\Service;
 
 use Throwable;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentInput;
+use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentSignOff;
 use TriCab\Core\Onboarding\Contract\OnboardingAssessmentDocumentRenderer;
 use TriCab\Core\Onboarding\Contract\OnboardingDocumentGenerationRepository;
 use TriCab\Core\Onboarding\Contract\OnboardingDocumentStore;
@@ -36,8 +37,49 @@ final readonly class GenerateAssessmentDocumentService
 
     public function generate(int $userId, string $assignmentPublicId, string $attemptPublicId): ?string
     {
+        return $this->make(
+            $userId,
+            $assignmentPublicId,
+            $attemptPublicId,
+            sprintf('%d/attempt-%s.pdf', $userId, strtolower($attemptPublicId)),
+            null,
+        );
+    }
+
+    /**
+     * The WHSE sheet again, once HR has accepted it (5.4): the passed attempt,
+     * with the supervisor's or manager's feedback, who received it for HR and
+     * the review date — the source's reviewed PDF. A second document beside
+     * the one made at submission, which is kept as it was.
+     *
+     * After the decision commits, never part of it, like every copy here. Once
+     * per attempt, held by its own blob path.
+     */
+    public function generateSignedOff(int $userId, string $assignmentPublicId, int $reviewerUserId, string $feedback, string $reviewedAtUtc): ?string
+    {
         try {
-            $path = sprintf('%d/attempt-%s.pdf', $userId, strtolower($attemptPublicId));
+            $attempt = $this->training->findTraining($userId, $assignmentPublicId)?->latestAttempt;
+            if ($attempt === null || $attempt->isPass !== true) {
+                return null;
+            }
+
+            return $this->make(
+                $userId,
+                $assignmentPublicId,
+                $attempt->publicId,
+                sprintf('%d/attempt-%s-signed-off.pdf', $userId, strtolower($attempt->publicId)),
+                new AssessmentSignOff($feedback, $this->repository->userDisplayName($reviewerUserId), $reviewedAtUtc),
+            );
+        } catch (Throwable $failure) {
+            self::logFailure($assignmentPublicId, $failure);
+
+            return null;
+        }
+    }
+
+    private function make(int $userId, string $assignmentPublicId, string $attemptPublicId, string $path, ?AssessmentSignOff $signOff): ?string
+    {
+        try {
             if ($this->repository->hasDocumentAtPath($path)) {
                 return null;
             }
@@ -69,6 +111,7 @@ final readonly class GenerateAssessmentDocumentService
                 $context->department,
                 $context->branch,
                 $context->managerName,
+                $signOff,
             ));
             if ($document === null) {
                 return null;
@@ -78,13 +121,18 @@ final readonly class GenerateAssessmentDocumentService
 
             return $this->repository->recordAssessmentDocument($context, $document, DataClass::workflow(), $stored['container'], $stored['path']);
         } catch (Throwable $failure) {
-            error_log(sprintf(
-                'onboarding.document.assessment_generation_failed {"attempt":"%s","error":"%s"}',
-                $attemptPublicId,
-                (new \ReflectionClass($failure))->getShortName(),
-            ));
+            self::logFailure($attemptPublicId, $failure);
 
             return null;
         }
+    }
+
+    private static function logFailure(string $reference, Throwable $failure): void
+    {
+        error_log(sprintf(
+            'onboarding.document.assessment_generation_failed {"attempt":"%s","error":"%s"}',
+            $reference,
+            (new \ReflectionClass($failure))->getShortName(),
+        ));
     }
 }

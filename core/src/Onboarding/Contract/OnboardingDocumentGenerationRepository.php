@@ -39,6 +39,9 @@ interface OnboardingDocumentGenerationRepository
     /** Whether a live document already sits at this blob path — how an attempt's sheet stays once-only. */
     public function hasDocumentAtPath(string $blobPath): bool;
 
+    /** A platform user's display name ('' when unset) — who received a WHSE sheet for HR (5.4). */
+    public function userDisplayName(int $userId): string;
+
     /**
      * Writes the reference row for an assessment sheet and returns its public id.
      */

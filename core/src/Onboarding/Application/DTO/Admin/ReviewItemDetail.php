@@ -45,6 +45,8 @@ final readonly class ReviewItemDetail
         public ?array $formSubmission,
         public array $attempts,
         public ?string $acknowledgedAtUtc,
+        /** 5.4: the WHSE sign-off — accepting needs the supervisor's feedback. */
+        public bool $signOff = false,
     ) {
     }
 
@@ -75,10 +77,10 @@ final readonly class ReviewItemDetail
             // Nothing is offered on one's own work. The API refuses it anyway;
             // offering buttons that can only fail is the page lying.
             'outcomes' => $isOwn ? [] : array_map(
-                static fn (AssignmentStatus $to): array => [
+                fn (AssignmentStatus $to): array => [
                     'status' => $to->toString(),
                     'label' => $to->label(),
-                    'requiresNote' => ReviewDecisionPolicy::requiresNote($to),
+                    'requiresNote' => ReviewDecisionPolicy::requiresNote($to, $this->signOff),
                 ],
                 ReviewDecisionPolicy::outcomesFrom($this->entry->status),
             ),
@@ -86,6 +88,7 @@ final readonly class ReviewItemDetail
             'formSubmission' => $this->formSubmission,
             'attempts' => $this->attempts,
             'acknowledgedAtUtc' => $this->acknowledgedAtUtc,
+            'signOff' => $this->signOff,
         ];
     }
 }

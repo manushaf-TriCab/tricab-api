@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use TriCab\Api\Onboarding\Document\AssessmentPdfMapper;
 use TriCab\Api\Onboarding\TrainingImport\SourceTrainingConverter;
 use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentDocumentInput;
+use TriCab\Core\Onboarding\Application\DTO\Document\AssessmentSignOff;
 use TriCab\Api\Onboarding\TrainingImport\TriCabTrainingImporter;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
 use TriCab\Core\Identity\Domain\Service\UuidV4Generator;
@@ -125,6 +126,28 @@ final class TrainingImportTest extends TestCase
         }
     }
 
+    public function test_the_whse_sheet_takes_hr_s_sign_off_on_its_result_page(): void
+    {
+        $mapper = new AssessmentPdfMapper(dirname(__DIR__, 2) . '/resources/onboarding/form-templates');
+        $whse = array_values(array_filter($this->records, static fn (array $r): bool => $r['slug'] === 'corporate-whse-induction'))[0];
+
+        $plain = $mapper->render($this->input('corporate-whse-induction', $whse['content']['questions']));
+        $signed = $mapper->render($this->input(
+            'corporate-whse-induction',
+            $whse['content']['questions'],
+            new AssessmentSignOff(str_repeat('Works safely around the racking and the forklift bay. ', 6), 'Hana Reviewer', '2026-09-25T03:00:00Z'),
+        ));
+
+        self::assertNotNull($plain);
+        self::assertNotNull($signed);
+        self::assertNotSame($plain->bytes, $signed->bytes);
+        $file = tempnam(sys_get_temp_dir(), 'pdf');
+        self::assertIsString($file);
+        file_put_contents($file, $signed->bytes);
+        self::assertSame(4, (new \setasign\Fpdi\Fpdi())->setSourceFile($file));
+        unlink($file);
+    }
+
     public function test_a_question_count_no_sheet_has_is_refused_and_an_unknown_module_has_no_sheet(): void
     {
         $mapper = new AssessmentPdfMapper(dirname(__DIR__, 2) . '/resources/onboarding/form-templates');
@@ -137,7 +160,7 @@ final class TrainingImportTest extends TestCase
     /**
      * @param list<TrainingQuestion> $questions
      */
-    private function input(string $slug, array $questions): AssessmentDocumentInput
+    private function input(string $slug, array $questions, ?AssessmentSignOff $signOff = null): AssessmentDocumentInput
     {
         return new AssessmentDocumentInput(
             $slug,
@@ -152,6 +175,7 @@ final class TrainingImportTest extends TestCase
             'Warehouse',
             'Dandenong',
             'Morgan Manager',
+            $signOff,
         );
     }
 }

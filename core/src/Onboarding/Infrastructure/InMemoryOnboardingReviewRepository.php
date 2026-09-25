@@ -98,6 +98,7 @@ final class InMemoryOnboardingReviewRepository implements OnboardingReviewReposi
             $this->submissions[$assignmentPublicId] ?? null,
             [],
             null,
+            $record->isSignOff(),
         );
     }
 
@@ -130,6 +131,7 @@ final class InMemoryOnboardingReviewRepository implements OnboardingReviewReposi
             $transition->to,
             RowVersionToken::fromBinary(random_bytes(8)),
             $stored->latestRevisionNumber,
+            $stored->moduleSlug,
         );
     }
 

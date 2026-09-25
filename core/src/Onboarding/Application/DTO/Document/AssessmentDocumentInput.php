@@ -29,6 +29,8 @@ final readonly class AssessmentDocumentInput
         public string $department,
         public string $branch,
         public string $managerName,
+        /** 5.4: set only on the copy made when HR signs the WHSE induction off. */
+        public ?AssessmentSignOff $signOff = null,
     ) {
     }
 }

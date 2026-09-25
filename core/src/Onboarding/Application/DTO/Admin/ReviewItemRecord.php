@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Onboarding\Application\DTO\Admin;
 
+use TriCab\Core\Onboarding\Domain\Service\TrainingReviewPolicy;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
 use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
 
@@ -27,6 +28,14 @@ final readonly class ReviewItemRecord
         public AssignmentStatus $status,
         public RowVersionToken $rowVersion,
         public ?int $latestRevisionNumber,
+        /** 5.4: a training item's module slug, '' otherwise — whether HR signs it off. */
+        public string $moduleSlug = '',
     ) {
+    }
+
+    /** Accepting it needs the supervisor's feedback, and stamps the sheet with it (5.4). */
+    public function isSignOff(): bool
+    {
+        return $this->itemType === 'training' && TrainingReviewPolicy::requiresSignOff($this->moduleSlug);
     }
 }

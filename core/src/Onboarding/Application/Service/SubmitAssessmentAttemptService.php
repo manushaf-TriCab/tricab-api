@@ -15,6 +15,7 @@ use TriCab\Core\Onboarding\Domain\Service\AssessmentGrader;
 use TriCab\Core\Onboarding\Domain\Service\QuestionRedaction;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssessmentGrade;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
+use TriCab\Core\Onboarding\Domain\Service\TrainingReviewPolicy;
 use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
 
 /**
@@ -38,6 +39,9 @@ use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
  * see the grader for why those two are treated differently.
  *
  * ## Passing completes; failing does not fail the person
+ *
+ * Except on a module HR signs off ({@see TrainingReviewPolicy}): there a pass
+ * submits it for review, and HR completes it.
  *
  * A pass moves the item to `completed` as
  * {@see \TriCab\Core\Onboarding\Domain\ValueObject\StatusActor::SYSTEM}. That is
@@ -127,7 +131,7 @@ final readonly class SubmitAssessmentAttemptService
                     $attemptPublicId,
                     $answers,
                     $grade,
-                    self::outcomeTransition($detail->status, $grade, $userId),
+                    self::outcomeTransition($detail->status, $grade, $userId, TrainingReviewPolicy::requiresSignOff($detail->moduleSlug)),
                 );
 
                 return [self::reveal($submitted, $grade), $submitted->publicId];
@@ -183,7 +187,20 @@ final readonly class SubmitAssessmentAttemptService
         AssignmentStatus $from,
         AssessmentGrade $grade,
         int $userId,
+        bool $signedOffByHr,
     ): ?StatusTransition {
+        // 5.4: on a module HR signs off (the WHSE induction), passing is the
+        // person handing their work in — so the trainee moves it, to
+        // `submitted`, and it joins HR's queue. The system still never submits.
+        if ($grade->isPass && $signedOffByHr) {
+            return StatusTransition::traineeMovesTo(
+                $from,
+                AssignmentStatus::submitted(),
+                $userId,
+                sprintf('Passed the assessment with %d%%; waiting for HR to sign it off.', $grade->scorePercent),
+            );
+        }
+
         if ($grade->isPass) {
             return StatusTransition::systemMovesTo(
                 $from,

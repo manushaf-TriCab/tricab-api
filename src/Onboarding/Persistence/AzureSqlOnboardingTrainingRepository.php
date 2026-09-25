@@ -61,6 +61,7 @@ final class AzureSqlOnboardingTrainingRepository implements OnboardingTrainingRe
                 CONVERT(NVARCHAR(36), a.[PublicId]) AS [AssignmentPublicId],
                 tm.[Title],
                 tm.[Summary],
+                tm.[Slug],
                 CONVERT(NVARCHAR(36), tmv.[PublicId]) AS [VersionPublicId],
                 tmv.[VersionNumber],
                 tmv.[PresentationManifestJson],
@@ -119,6 +120,7 @@ final class AzureSqlOnboardingTrainingRepository implements OnboardingTrainingRe
                 self::decodeSlideIds($row['SlideIdsJson'] ?? null),
             ),
             latestAttempt: $this->latestAttemptSummary($userId, $assignmentPublicId),
+            moduleSlug: AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
         );
     }
 

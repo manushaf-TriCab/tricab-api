@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Onboarding\Infrastructure;
 
+use TriCab\Core\Onboarding\Application\DTO\OnboardingAttemptDetail;
 use TriCab\Core\Onboarding\Application\DTO\OnboardingAttemptRecord;
 use TriCab\Core\Onboarding\Application\DTO\OnboardingTrainingDetail;
 use TriCab\Core\Onboarding\Contract\OnboardingTrainingRepository;
@@ -157,7 +158,17 @@ final class InMemoryOnboardingTrainingRepository implements OnboardingTrainingRe
 
         $detail = $this->findTraining($userId, $assignmentPublicId);
         if ($detail !== null) {
-            $this->replace($userId, $assignmentPublicId, $detail, $transition, null);
+            // The summary the SQL side reads live: the latest attempt, no questions.
+            $latest = new OnboardingAttemptDetail(
+                publicId: $submitted->publicId,
+                attemptNumber: $submitted->attemptNumber,
+                startedAtUtc: $submitted->startedAtUtc,
+                submittedAtUtc: $submitted->submittedAtUtc,
+                scorePercent: $submitted->scorePercent,
+                isPass: $submitted->isPass,
+                questions: [],
+            );
+            $this->replace($userId, $assignmentPublicId, $detail, $transition, null, $latest);
         }
 
         return $submitted;
@@ -211,6 +222,7 @@ final class InMemoryOnboardingTrainingRepository implements OnboardingTrainingRe
         OnboardingTrainingDetail $detail,
         ?StatusTransition $transition,
         ?array $reachedSlideIds,
+        ?OnboardingAttemptDetail $latestAttempt = null,
     ): OnboardingTrainingDetail {
         if ($transition !== null) {
             $this->transitions[] = $transition;
@@ -228,7 +240,8 @@ final class InMemoryOnboardingTrainingRepository implements OnboardingTrainingRe
             passMarkPercent: $detail->passMarkPercent,
             questionCount: $detail->questionCount,
             reachedSlideIds: $reachedSlideIds ?? $detail->reachedSlideIds,
-            latestAttempt: $detail->latestAttempt,
+            latestAttempt: $latestAttempt ?? $detail->latestAttempt,
+            moduleSlug: $detail->moduleSlug,
         );
 
         $this->details[self::key($userId, $assignmentPublicId)] = $updated;

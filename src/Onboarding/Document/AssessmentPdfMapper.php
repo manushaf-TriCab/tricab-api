@@ -205,6 +205,13 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
             // Supervisor feedback, "received by HR" and the review date are
             // written at review; at submission they are left blank, as the source did.
             $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->erase(...$s['dateErase']);
+            $signOff = $input->signOff;
+            if ($signOff !== null) {
+                $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->drawWrapped($signOff->feedback, ...$s['feedback']);
+                $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->draw($signOff->receivedBy, $s['receivedBy'][0], $s['receivedBy'][1], $s['receivedBy'][2], 7.0, false, self::TEXT_MIN);
+                $reviewed = TemplatePdf::formatDate(substr($signOff->reviewedAtUtc, 0, 10));
+                $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->draw($reviewed, $s['date'][0], $s['date'][1], $s['date'][2], 7.0, false, self::TEXT_MIN);
+            }
         } else {
             $score = $input->scorePercent . '%';
             $outcome = sprintf('%s (pass mark %d%%)', $input->passed ? 'PASS' : 'NOT YET COMPETENT', $input->passMarkPercent);

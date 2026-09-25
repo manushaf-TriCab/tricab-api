@@ -808,7 +808,8 @@ final class ContainerFactory
             \TriCab\Core\Onboarding\Application\Service\DecideReviewService::class
                 => \DI\autowire()
                     ->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class))
-                    ->constructorParameter('documents', \DI\get(\TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class)),
+                    ->constructorParameter('documents', \DI\get(\TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class))
+                    ->constructorParameter('assessmentSheets', \DI\get(\TriCab\Core\Onboarding\Application\Service\GenerateAssessmentDocumentService::class)),
             \TriCab\Core\Onboarding\Application\Service\GenerateFormSubmissionDocumentService::class
                 => \DI\autowire()->constructorParameter('contributions', \DI\get(\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository::class)),
             \TriCab\Core\Onboarding\Application\Service\ContributeToFormService::class

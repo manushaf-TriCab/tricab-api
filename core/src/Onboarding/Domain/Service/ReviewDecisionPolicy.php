@@ -68,9 +68,15 @@ final class ReviewDecisionPolicy
         );
     }
 
-    public static function requiresNote(AssignmentStatus $to): bool
+    /**
+     * 5.4: on a module HR signs off ({@see TrainingReviewPolicy}), accepting
+     * needs a note too — the supervisor's or manager's feedback, which goes on
+     * the sheet. The source's `NOTE_REQUIRED` for WHSE.
+     */
+    public static function requiresNote(AssignmentStatus $to, bool $signOff = false): bool
     {
-        return in_array($to->toString(), self::NEEDS_NOTE, true);
+        return in_array($to->toString(), self::NEEDS_NOTE, true)
+            || ($signOff && $to->toString() === AssignmentStatus::COMPLETED);
     }
 
     /**
@@ -101,7 +107,7 @@ final class ReviewDecisionPolicy
      * @throws ReviewDecisionNotPermitted
      * @throws InvalidOnboardingValue when the outcome needs a note and has none
      */
-    public static function assertAllowed(AssignmentStatus $from, AssignmentStatus $to, ?string $note): void
+    public static function assertAllowed(AssignmentStatus $from, AssignmentStatus $to, ?string $note, bool $signOff = false): void
     {
         if (!$from->needsReview()) {
             throw ReviewDecisionNotPermitted::notAwaitingReview($from);
@@ -109,6 +115,10 @@ final class ReviewDecisionPolicy
 
         if (!in_array($to->toString(), self::OUTCOMES[$from->toString()] ?? [], true)) {
             throw ReviewDecisionNotPermitted::outcomeNotOffered($from, $to);
+        }
+
+        if ($note === null && $signOff && $to->toString() === AssignmentStatus::COMPLETED) {
+            throw InvalidOnboardingValue::required('note', 'add the supervisor or manager feedback for the assessment sheet.');
         }
 
         if ($note === null && self::requiresNote($to)) {

@@ -40,6 +40,8 @@ final readonly class OnboardingTrainingDetail
         public int $questionCount,
         public array $reachedSlideIds,
         public ?OnboardingAttemptDetail $latestAttempt,
+        /** 5.4: fixed at creation; names the paper sheet and whether HR signs the module off. */
+        public string $moduleSlug = '',
     ) {
     }
 
@@ -73,6 +75,12 @@ final readonly class OnboardingTrainingDetail
     public function mayStartAttempt(): bool
     {
         if (!$this->hasAssessment() || !$this->isPresentationComplete()) {
+            return false;
+        }
+
+        // A pass on a module HR signs off is waiting with HR; a re-sit then
+        // would replace the attempt they are reviewing.
+        if ($this->status->toString() === AssignmentStatus::SUBMITTED) {
             return false;
         }
 

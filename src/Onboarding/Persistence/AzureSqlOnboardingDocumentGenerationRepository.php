@@ -157,6 +157,16 @@ final class AzureSqlOnboardingDocumentGenerationRepository implements Onboarding
         );
     }
 
+    public function userDisplayName(int $userId): string
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT COALESCE(NULLIF(LTRIM(RTRIM([DisplayName])), N\'\'), N\'\') AS [DisplayName] FROM [identity].[Users] WHERE [UserId] = :userId',
+            [':userId' => $userId],
+        );
+
+        return AzureSqlValueMapper::stringValue($rows[0]['DisplayName'] ?? '');
+    }
+
     public function hasDocumentAtPath(string $blobPath): bool
     {
         return $this->connection->fetchAll(

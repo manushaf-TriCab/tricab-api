@@ -37,6 +37,9 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
     /** @var array<string, int> photo public id => assignment id */
     public array $photos = [];
 
+    /** @var array<int, string> user id => display name */
+    public array $displayNames = [];
+
     /** @var array<int, array<string, mixed>> formSubmissionId => ordinary answers, flat */
     public array $ordinary = [];
 
@@ -95,6 +98,11 @@ final class InMemoryOnboardingDocumentGenerationRepository implements Onboarding
     public function findAssessmentContext(int $userId, string $assignmentPublicId): ?AssessmentDocumentContext
     {
         return $this->assessments[$userId . '|' . strtolower($assignmentPublicId)] ?? null;
+    }
+
+    public function userDisplayName(int $userId): string
+    {
+        return $this->displayNames[$userId] ?? '';
     }
 
     public function hasDocumentAtPath(string $blobPath): bool

@@ -39,6 +39,10 @@ use TriCab\Core\Product\Domain\ValueObject\RowVersionToken;
  *     Rule 2 is narrower, so today this never fires; it stays because it is
  *     the invariant and rule 2 is an endpoint's choice that may widen.
  *
+ * On the WHSE induction ({@see \TriCab\Core\Onboarding\Domain\Service\TrainingReviewPolicy})
+ * accepting needs a note as well — the supervisor's feedback — and afterwards
+ * the assessment sheet is made again with it, HR's name and the date (5.4).
+ *
  * A note missing where one is required is a malformed request (422) and is not
  * audited: it is the page's validation failing, not a decision refused.
  *
@@ -57,6 +61,8 @@ final readonly class DecideReviewService
         private ?\TriCab\Core\Onboarding\Contract\OnboardingFormContributionRepository $contributions = null,
         /** 5.4: a form whose paper copy is made when it is accepted. */
         private ?GenerateFormSubmissionDocumentService $documents = null,
+        /** 5.4: the WHSE sheet, stamped with HR's sign-off when it is accepted. */
+        private ?GenerateAssessmentDocumentService $assessmentSheets = null,
     ) {
     }
 
@@ -79,7 +85,7 @@ final readonly class DecideReviewService
                 UserId::fromInt($actor->userId),
                 UserId::fromInt($item->subjectUserId),
             );
-            ReviewDecisionPolicy::assertAllowed($item->status, $outcome, $note);
+            ReviewDecisionPolicy::assertAllowed($item->status, $outcome, $note, $item->isSignOff());
             $this->assertContributionsComplete($item, $outcome);
             $transition = StatusTransition::attempt($item->status, $outcome, StatusActor::reviewer(), $actor->userId, $note);
         } catch (SelfReviewNotPermitted | ReviewDecisionNotPermitted | StatusChangeNotPermitted | AssignmentStatusIsFinal $refusal) {
@@ -92,6 +98,15 @@ final readonly class DecideReviewService
 
         if ($item->itemType === 'form' && $outcome->toString() === AssignmentStatus::COMPLETED) {
             $this->documents?->generateAtCompletion($item->assignmentPublicId);
+        }
+        if ($item->isSignOff() && $outcome->toString() === AssignmentStatus::COMPLETED && $note !== null) {
+            $this->assessmentSheets?->generateSignedOff(
+                $item->subjectUserId,
+                $item->assignmentPublicId,
+                $actor->userId,
+                $note,
+                gmdate('Y-m-d\\TH:i:s\\Z'),
+            );
         }
 
         return $this->reviews->reviewDetail($publicId)

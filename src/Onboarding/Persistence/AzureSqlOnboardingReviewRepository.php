@@ -17,6 +17,7 @@ use TriCab\Core\Onboarding\Contract\OnboardingReviewRepository;
 use TriCab\Core\Onboarding\Domain\Exception\OnboardingWriteConflict;
 use TriCab\Core\Onboarding\Domain\Service\FormPayloadSplitter;
 use TriCab\Core\Onboarding\Domain\Service\ReviewFieldProjection;
+use TriCab\Core\Onboarding\Domain\Service\TrainingReviewPolicy;
 use TriCab\Core\Onboarding\Domain\ValueObject\AssignmentStatus;
 use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
 use TriCab\Core\Onboarding\Domain\ValueObject\StatusTransition;
@@ -74,6 +75,7 @@ final class AzureSqlOnboardingReviewRepository implements OnboardingReviewReposi
         a.[ItemType],
         COALESCE(CONVERT(NVARCHAR(36), tm.[PublicId]), CONVERT(NVARCHAR(36), p.[PublicId]), CONVERT(NVARCHAR(36), fd.[PublicId])) AS [ItemPublicId],
         COALESCE(tm.[Title], p.[Title], fd.[Title]) AS [Title],
+        COALESCE(tm.[Slug], N'') AS [ModuleSlug],
         COALESCE(tmv.[VersionNumber], pv.[VersionNumber], fdv.[VersionNumber]) AS [VersionNumber],
         a.[Status],
         CONVERT(VARCHAR(10), a.[DueDate], 23) AS [DueDate],
@@ -139,6 +141,7 @@ final class AzureSqlOnboardingReviewRepository implements OnboardingReviewReposi
             AssignmentStatus::fromStorage($row['Status'] ?? null),
             ProductRowVersionMapper::toToken($row['RowVersion'] ?? null),
             AzureSqlValueMapper::nullableInt($row['RevisionNumber'] ?? null),
+            AzureSqlValueMapper::stringValue($row['ModuleSlug'] ?? ''),
         );
     }
 
@@ -164,6 +167,7 @@ final class AzureSqlOnboardingReviewRepository implements OnboardingReviewReposi
             $itemType === 'form' ? $this->latestSubmission($assignmentId) : null,
             $itemType === 'training' ? $this->attempts($assignmentId) : [],
             $itemType === 'policy' ? $this->acknowledgedAt($assignmentId) : null,
+            $itemType === 'training' && TrainingReviewPolicy::requiresSignOff(AzureSqlValueMapper::stringValue($row['ModuleSlug'] ?? '')),
         );
     }
 
