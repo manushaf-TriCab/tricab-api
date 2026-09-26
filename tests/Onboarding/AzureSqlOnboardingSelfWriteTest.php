@@ -192,6 +192,43 @@ final class AzureSqlOnboardingSelfWriteTest extends TestCase
         self::assertSame(['intro', 'hazards', 'sign-off'], $after->reachedSlideIds);
     }
 
+    /**
+     * Two posts close together each merge onto the same earlier read, so they
+     * arrive as sets of equal size naming different slides. Neither may win:
+     * the stored set is the union. This lost slide 78 of 88 in production.
+     */
+    public function test_two_saves_built_from_the_same_read_keep_both_slides(): void
+    {
+        [$assignmentPublicId, $versionPublicId] = $this->allocateTraining();
+
+        $this->training->savePresentationProgress(
+            $this->mine,
+            $assignmentPublicId,
+            $versionPublicId,
+            ['intro'],
+            false,
+            null,
+        );
+        $this->training->savePresentationProgress(
+            $this->mine,
+            $assignmentPublicId,
+            $versionPublicId,
+            ['intro', 'hazards'],
+            false,
+            null,
+        );
+        $after = $this->training->savePresentationProgress(
+            $this->mine,
+            $assignmentPublicId,
+            $versionPublicId,
+            ['intro', 'sign-off'],
+            true,
+            null,
+        );
+
+        self::assertSame(['intro', 'hazards', 'sign-off'], $after->reachedSlideIds);
+    }
+
     public function test_progress_against_a_replaced_version_matches_nothing(): void
     {
         [$assignmentPublicId] = $this->allocateTraining();
