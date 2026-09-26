@@ -39,14 +39,13 @@ final class DocumentDeliveryPolicyTest extends TestCase
         self::assertFalse(DocumentDeliveryPolicy::maySignUrl($class));
     }
 
-    public function test_ordinary_documents_may_be_signed(): void
+    public function test_ordinary_documents_may_be_signed_but_are_streamed(): void
     {
+        // Streamed since 26 Sep 2026: a signed URL is fetched straight from blob
+        // storage, which has no CORS rule for tricab.ai, so the trainee's download
+        // failed. Signing stays permitted; the audit rule is unchanged.
         foreach ([DataClass::content(), DataClass::workflow(), DataClass::ordinaryHr()] as $class) {
-            self::assertSame(
-                DocumentDeliveryPolicy::SIGNED_URL,
-                DocumentDeliveryPolicy::modeFor($class),
-                $class->code() . ' should follow the expense precedent.',
-            );
+            self::assertSame(DocumentDeliveryPolicy::STREAM, DocumentDeliveryPolicy::modeFor($class), $class->code());
             self::assertTrue(DocumentDeliveryPolicy::maySignUrl($class));
             self::assertFalse(DocumentDeliveryPolicy::mustBeAudited($class));
         }

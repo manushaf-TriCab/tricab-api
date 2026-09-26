@@ -49,7 +49,7 @@ final class GetOnboardingPersonDocumentContentAction
 
             return $out
                 ->withHeader('Content-Type', $document->contentType !== '' ? $document->contentType : 'application/octet-stream')
-                ->withHeader('Content-Disposition', 'attachment; filename="' . $document->downloadFilename() . '"')
+                ->withHeader('Content-Disposition', $document->contentDisposition())
                 ->withHeader('Cache-Control', 'no-store, private')
                 ->withHeader('X-Content-Type-Options', 'nosniff');
         });

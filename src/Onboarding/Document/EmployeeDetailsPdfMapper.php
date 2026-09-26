@@ -103,7 +103,7 @@ final class EmployeeDetailsPdfMapper implements FormPdfMapper
         $pdf->draw($legalName, 66, 707, 170, 8);
         $pdf->draw($a->text('address'), 255, 707, 280, 8);
         $pdf->draw('Electronically acknowledged by ' . $legalName, 60, 748, 245, 7.5, true);
-        $pdf->draw(TemplatePdf::formatDate(substr($submission->submittedAtUtc, 0, 10)), 330, 748, 160, 8);
+        $pdf->draw(TemplatePdf::localDate($submission->submittedAtUtc), 330, 748, 160, 8);
 
         $pdf->metadata(
             'TriCab Employee Details Form - completed',

@@ -76,7 +76,7 @@ final class ChecklistPdfMapper implements FormPdfMapper
         // template, as the manager's row at 743 shows the right offset.
         $draw($starterName, 138, 722, 190);
         if ($a->ticked('employeeAcknowledged')) {
-            $draw('Authenticated ' . TemplatePdf::formatDate(substr($submission->submittedAtUtc, 0, 10)), 405, 722, 135, 5.8, true);
+            $draw('Authenticated ' . TemplatePdf::localDate($submission->submittedAtUtc), 405, 722, 135, 5.8, true);
         }
         $draw($a->text('managerName'), 182, 743, 145);
         if ($a->ticked('managerAcknowledged')) {

@@ -635,11 +635,11 @@ final class OnboardingSelfWriteTest extends TestCase
         self::assertSame(self::TRAINEE, $this->documents->accessLog[0]['actorUserId']);
     }
 
-    public function test_an_ordinary_document_may_be_signed(): void
+    public function test_an_ordinary_document_is_streamed_too(): void
     {
         $this->documents->withDocument(self::TRAINEE, self::document(DataClass::ordinaryHr()));
 
-        self::assertSame(DocumentDeliveryPolicy::SIGNED_URL, $this->openDocument()->open(self::TRAINEE, 'doc-1')->mode);
+        self::assertSame(DocumentDeliveryPolicy::STREAM, $this->openDocument()->open(self::TRAINEE, 'doc-1')->mode);
     }
 
     public function test_another_person_s_document_is_not_found_and_is_not_audited(): void
@@ -654,7 +654,7 @@ final class OnboardingSelfWriteTest extends TestCase
         }
     }
 
-    public function test_a_download_filename_is_built_from_the_kind_and_never_from_the_stored_path(): void
+    public function test_a_download_filename_is_hr_s_filing_name_and_never_the_stored_path(): void
     {
         $ref = new OnboardingDocumentRef(
             publicId: 'doc-1',
@@ -667,9 +667,13 @@ final class OnboardingSelfWriteTest extends TestCase
             byteSize: 10,
             contentSha256: str_repeat('a', 64),
             generatedAtUtc: '2026-09-22T00:00:00+00:00',
+            personName: 'Sam Lee',
+            documentTitle: 'Employee Details Form',
+            completedAtUtc: '2026-09-21T23:30:00Z',
         );
 
-        self::assertSame('employee_details-doc-1.pdf', $ref->downloadFilename());
+        self::assertSame('26.09.22 LEE Sam - Employee Details Form.pdf', $ref->downloadFilename());
+        self::assertStringNotContainsString('passwd', $ref->contentDisposition());
     }
 
     // ---------------------------------------------------------- leaver window
@@ -684,7 +688,7 @@ final class OnboardingSelfWriteTest extends TestCase
         $this->givenPolicy();
         $this->documents->withDocument(self::TRAINEE, self::document(DataClass::ordinaryHr()));
 
-        self::assertSame(DocumentDeliveryPolicy::SIGNED_URL, $this->openDocument()->open(self::TRAINEE, 'doc-1')->mode);
+        self::assertSame(DocumentDeliveryPolicy::STREAM, $this->openDocument()->open(self::TRAINEE, 'doc-1')->mode);
 
         $this->expectException(OnboardingSubmissionWindowClosed::class);
 

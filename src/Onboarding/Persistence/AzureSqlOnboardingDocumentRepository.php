@@ -88,8 +88,49 @@ final class AzureSqlOnboardingDocumentRepository implements OnboardingDocumentRe
                 d.[ContentType],
                 d.[ByteSize],
                 d.[ContentSha256],
-                CONVERT(VARCHAR(33), d.[GeneratedAtUtc], 127) AS [GeneratedAtUtc]
+                CONVERT(VARCHAR(33), d.[GeneratedAtUtc], 127) AS [GeneratedAtUtc],
+                u.[DisplayName] AS [PersonName],
+                CASE
+                    WHEN d.[DocumentKind] = N'assessment' AND tm.[Title] IS NOT NULL THEN tm.[Title] + N' Assessment'
+                    WHEN d.[DocumentKind] = N'policy_declaration' THEN p.[Title]
+                    WHEN d.[DocumentKind] = N'photo' AND fd.[Title] IS NOT NULL THEN fd.[Title] + N' Photo'
+                    ELSE fd.[Title]
+                END AS [DocumentTitle],
+                /* When the person completed the work, not when the file was made:
+                   a WHSE sheet is regenerated at HR sign-off. The minute's grace
+                   covers a document written in the same transaction as the work. */
+                CONVERT(VARCHAR(33), CASE d.[DocumentKind]
+                    WHEN N'assessment' THEN att.[SubmittedAtUtc]
+                    WHEN N'policy_declaration' THEN ack.[AcknowledgedAtUtc]
+                    WHEN N'photo' THEN d.[GeneratedAtUtc]
+                    ELSE fs.[SubmittedAtUtc]
+                END, 127) AS [CompletedAtUtc]
             FROM [onboarding].[DocumentReferences] d
+            JOIN [identity].[Users] u ON u.[UserId] = d.[UserId]
+            LEFT JOIN [onboarding].[Assignments] a ON a.[AssignmentId] = d.[AssignmentId]
+            LEFT JOIN [onboarding].[TrainingModuleVersions] tmv ON tmv.[TrainingModuleVersionId] = a.[TrainingModuleVersionId]
+            LEFT JOIN [onboarding].[TrainingModules] tm ON tm.[TrainingModuleId] = tmv.[TrainingModuleId]
+            LEFT JOIN [onboarding].[PolicyVersions] pv ON pv.[PolicyVersionId] = a.[PolicyVersionId]
+            LEFT JOIN [onboarding].[Policies] p ON p.[PolicyId] = pv.[PolicyId]
+            LEFT JOIN [onboarding].[FormSubmissions] fs ON fs.[FormSubmissionId] = d.[FormSubmissionId]
+            LEFT JOIN [onboarding].[FormDefinitionVersions] fdv
+                ON fdv.[FormDefinitionVersionId] = COALESCE(fs.[FormDefinitionVersionId], a.[FormDefinitionVersionId])
+            LEFT JOIN [onboarding].[FormDefinitions] fd ON fd.[FormDefinitionId] = fdv.[FormDefinitionId]
+            OUTER APPLY (
+                SELECT TOP (1) x.[SubmittedAtUtc]
+                FROM [onboarding].[Attempts] x
+                WHERE x.[AssignmentId] = d.[AssignmentId]
+                  AND x.[SubmittedAtUtc] IS NOT NULL
+                  AND x.[SubmittedAtUtc] <= DATEADD(MINUTE, 1, d.[GeneratedAtUtc])
+                ORDER BY x.[SubmittedAtUtc] DESC
+            ) att
+            OUTER APPLY (
+                SELECT TOP (1) y.[AcknowledgedAtUtc]
+                FROM [onboarding].[PolicyAcknowledgements] y
+                WHERE y.[AssignmentId] = d.[AssignmentId]
+                  AND y.[AcknowledgedAtUtc] <= DATEADD(MINUTE, 1, d.[GeneratedAtUtc])
+                ORDER BY y.[AcknowledgedAtUtc] DESC
+            ) ack
             WHERE d.[UserId] = :userId
               AND CONVERT(NVARCHAR(36), d.[PublicId]) = :documentPublicId
               AND d.[DeletedAtUtc] IS NULL
@@ -114,6 +155,9 @@ final class AzureSqlOnboardingDocumentRepository implements OnboardingDocumentRe
             byteSize: AzureSqlValueMapper::intValue($row['ByteSize'] ?? 0),
             contentSha256: AzureSqlValueMapper::stringValue($row['ContentSha256'] ?? ''),
             generatedAtUtc: AzureSqlValueMapper::stringValue($row['GeneratedAtUtc'] ?? ''),
+            personName: AzureSqlValueMapper::nullableString($row['PersonName'] ?? null),
+            documentTitle: AzureSqlValueMapper::nullableString($row['DocumentTitle'] ?? null),
+            completedAtUtc: AzureSqlValueMapper::nullableString($row['CompletedAtUtc'] ?? null),
         );
     }
 

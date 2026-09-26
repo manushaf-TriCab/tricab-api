@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Onboarding\Document;
 
 use setasign\Fpdi\Fpdi;
+use TriCab\Core\Onboarding\Domain\Service\LeaverPolicy;
 
 /**
  * One of TriCab's paper templates with answers painted onto it (5.4) — the PHP
@@ -91,6 +92,20 @@ final class TemplatePdf
     {
         $this->pdf->SetFont('Helvetica', 'B', $size);
         $this->pdf->Text($x, $top + $size, 'X');
+    }
+
+    /**
+     * An X centred in a printed checkbox, given the box's left edge, top and
+     * side. Helvetica Bold's capital X is 0.667 em wide and 0.718 em tall.
+     */
+    public function markBox(float $boxX, float $boxTop, float $boxSize, float $size = 8): void
+    {
+        $this->pdf->SetFont('Helvetica', 'B', $size);
+        $this->pdf->Text(
+            $boxX + ($boxSize - 0.667 * $size) / 2,
+            $boxTop + ($boxSize + 0.718 * $size) / 2,
+            'X',
+        );
     }
 
     /**
@@ -211,6 +226,22 @@ final class TemplatePdf
     }
 
     /** `YYYY-MM-DD` as the paper forms write it, `DD/MM/YYYY`; anything else unchanged. */
+    /**
+     * A UTC timestamp as the Melbourne calendar day, dd/mm/yyyy. Cutting the
+     * first ten characters off the UTC value dated anything done before 10 or
+     * 11 am Melbourne time the day before.
+     */
+    public static function localDate(string $utc): string
+    {
+        try {
+            $at = new \DateTimeImmutable($utc, new \DateTimeZone('UTC'));
+        } catch (\Throwable) {
+            return self::formatDate(substr($utc, 0, 10));
+        }
+
+        return $at->setTimezone(new \DateTimeZone(LeaverPolicy::LOCAL_TIMEZONE))->format('d/m/Y');
+    }
+
     public static function formatDate(string $value): string
     {
         return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m) === 1 ? "{$m[3]}/{$m[2]}/{$m[1]}" : $value;

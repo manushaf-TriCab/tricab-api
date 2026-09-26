@@ -98,7 +98,7 @@ final class GetOnboardingDocumentContentAction
             ->withHeader('Content-Type', $document->contentType !== '' ? $document->contentType : 'application/octet-stream')
             // `attachment`, always. A payroll PDF rendered inline is a payroll
             // PDF sitting in a tab somebody walks away from.
-            ->withHeader('Content-Disposition', 'attachment; filename="' . $document->downloadFilename() . '"')
+            ->withHeader('Content-Disposition', $document->contentDisposition())
             // Never cached. A shared or kiosk browser holding a copy of a
             // restricted document defeats the audit trail this route exists for.
             ->withHeader('Cache-Control', 'no-store, private')

@@ -50,7 +50,7 @@ final class GetOnboardingFormPhotoAction
 
             return $out
                 ->withHeader('Content-Type', 'image/jpeg')
-                ->withHeader('Content-Disposition', 'inline; filename="' . $photo->downloadFilename() . '"')
+                ->withHeader('Content-Disposition', $photo->contentDisposition('inline'))
                 ->withHeader('Cache-Control', 'no-store, private')
                 ->withHeader('X-Content-Type-Options', 'nosniff');
         });
