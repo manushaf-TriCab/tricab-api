@@ -25,20 +25,20 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
     /**
      * @var array<string, array{reference: string, variants: list<array{
      *     filename: string,
-     *     optionX: int|float,
+     *     optionBox: array{int|float, int|float},
      *     detailsPage: int,
      *     detailsErase?: array{int|float, int|float, int|float, int|float},
      *     details: array{name: array{int|float, int|float, int|float}, manager: array{int|float, int|float, int|float}, date: array{int|float, int|float, int|float}, location?: array{int|float, int|float, int|float}, position?: array{int|float, int|float, int|float}, department?: array{int|float, int|float, int|float}},
      *     optionTops: list<list<int|float>>,
      *     questionPages: list<int>,
      *     result: array{page: int, score: array{int|float, int|float, int|float}, outcome: array{int|float, int|float, int|float}},
-     *     signOff?: array{competentX: int|float, notCompetentX: int|float, top: int|float, feedback: array{int|float, int|float, int|float, int|float, int|float}, receivedBy: array{int|float, int|float, int|float}, dateErase: array{int|float, int|float, int|float, int|float}, date: array{int|float, int|float, int|float}}
+     *     signOff?: array{competentX: int|float, notCompetentX: int|float, top: int|float, boxSize: int|float, feedback: array{int|float, int|float, int|float, int|float, int|float}, receivedBy: array{int|float, int|float, int|float}, dateErase: array{int|float, int|float, int|float, int|float}, date: array{int|float, int|float, int|float}}
      * }>}>
      */
     private const TEMPLATES = [
         'workplace-sexual-harassment' => ['reference' => 'HR-DOC-094-V000', 'variants' => [[
             'filename' => 'workplace-sexual-harassment-v000.pdf',
-            'optionX' => 129,
+            'optionBox' => [157, 11.3],
             'detailsPage' => 1,
             'details' => ['name' => [128, 117, 150], 'location' => [420, 117, 120], 'manager' => [188, 149, 92], 'date' => [407, 149, 130]],
             'optionTops' => [
@@ -55,7 +55,7 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
         ]]],
         'respect-at-work' => ['reference' => 'HR-DOC-098-V000', 'variants' => [[
             'filename' => 'respect-at-work-v000.pdf',
-            'optionX' => 129,
+            'optionBox' => [157, 10.1],
             'detailsPage' => 1,
             'details' => ['name' => [128, 116, 150], 'location' => [420, 116, 120], 'manager' => [188, 145, 92], 'date' => [407, 145, 130]],
             'optionTops' => [
@@ -75,7 +75,7 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
             [
                 // WHSE-DOC-003-V007 (issued August 2026): 17 questions over four pages.
                 'filename' => 'whse-corporate-assessment-v007.pdf',
-                'optionX' => 44,
+                'optionBox' => [73, 11.3],
                 'detailsPage' => 0,
                 'detailsErase' => [64, 169, 136, 22],
                 'details' => ['name' => [96, 95, 200], 'position' => [88, 115, 200], 'department' => [107, 135, 200], 'manager' => [157, 155, 175], 'date' => [68, 175, 120]],
@@ -92,7 +92,7 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
                 'questionPages' => [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3],
                 'result' => ['page' => 3, 'score' => [0, 0, 0], 'outcome' => [0, 0, 0]],
                 'signOff' => [
-                    'competentX' => 100, 'notCompetentX' => 181, 'top' => 244.5,
+                    'competentX' => 99.6, 'notCompetentX' => 179.8, 'top' => 241.7, 'boxSize' => 10.1,
                     'feedback' => [36, 289, 500, 45, 7], 'receivedBy' => [142, 310, 160],
                     'dateErase' => [358, 297, 136, 22], 'date' => [362, 310, 124],
                 ],
@@ -100,7 +100,7 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
             [
                 // WHSE-DOC-003-V006 (superseded May 2026 sheet): 14 questions, three pages.
                 'filename' => 'whse-corporate-assessment-v006.pdf',
-                'optionX' => 54,
+                'optionBox' => [82.1, 10.7],
                 'detailsPage' => 0,
                 'detailsErase' => [74, 179, 132, 22],
                 'details' => ['name' => [125, 108, 200], 'manager' => [165, 166, 175], 'date' => [80, 185, 120], 'position' => [118, 127, 200], 'department' => [138, 147, 200]],
@@ -116,7 +116,7 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
                 'questionPages' => [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2],
                 'result' => ['page' => 2, 'score' => [0, 0, 0], 'outcome' => [0, 0, 0]],
                 'signOff' => [
-                    'competentX' => 108, 'notCompetentX' => 185, 'top' => 603,
+                    'competentX' => 107.8, 'notCompetentX' => 184.7, 'top' => 600.3, 'boxSize' => 9.6,
                     'feedback' => [47, 646, 500, 45, 7], 'receivedBy' => [148, 666, 160],
                     'dateErase' => [356, 653, 132, 22], 'date' => [360, 666, 124],
                 ],
@@ -177,7 +177,7 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
             $ops[$detailsPage][] = self::detailText($details['location'], $input->branch !== '' ? $input->branch : $input->department);
         }
         $ops[$detailsPage][] = self::detailText($details['manager'], $input->managerName);
-        $ops[$detailsPage][] = self::detailText($details['date'], TemplatePdf::formatDate(substr($input->submittedAtUtc, 0, 10)));
+        $ops[$detailsPage][] = self::detailText($details['date'], TemplatePdf::localDate($input->submittedAtUtc));
         if (isset($details['position'])) {
             $ops[$detailsPage][] = self::detailText($details['position'], $input->position);
         }
@@ -185,7 +185,10 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
             $ops[$detailsPage][] = self::detailText($details['department'], $input->department);
         }
 
-        $optionX = $map['optionX'];
+        // Each optionTop is 1.5 pt below its printed box's top edge (measured on
+        // all four sheets, within half a point), and every box on a sheet shares
+        // one left edge and size.
+        [$boxX, $boxSize] = $map['optionBox'];
         foreach ($input->questions as $index => $question) {
             if ($question['chosenKey'] === null) {
                 continue;
@@ -193,7 +196,7 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
             $option = array_search($question['chosenKey'], $question['optionKeys'], true);
             $optionTop = is_int($option) ? ($map['optionTops'][$index][$option] ?? null) : null;
             if (is_int($optionTop) || is_float($optionTop)) {
-                $ops[$map['questionPages'][$index]][] = static fn (TemplatePdf $p) => $p->mark($optionX, $optionTop);
+                $ops[$map['questionPages'][$index]][] = static fn (TemplatePdf $p) => $p->markBox($boxX, $optionTop - 1.5, $boxSize);
             }
         }
 
@@ -201,7 +204,7 @@ final class AssessmentPdfMapper implements OnboardingAssessmentDocumentRenderer
         if (isset($map['signOff'])) {
             $s = $map['signOff'];
             $x = $input->passed ? $s['competentX'] : $s['notCompetentX'];
-            $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->mark($x, $s['top']);
+            $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->markBox($x, $s['top'], $s['boxSize']);
             // Supervisor feedback, "received by HR" and the review date are
             // written at review; at submission they are left blank, as the source did.
             $ops[$result['page']][] = static fn (TemplatePdf $p) => $p->erase(...$s['dateErase']);

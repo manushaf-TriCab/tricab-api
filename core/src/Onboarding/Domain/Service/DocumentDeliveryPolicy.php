@@ -53,7 +53,15 @@ final class DocumentDeliveryPolicy
      */
     public static function modeFor(DataClass $class): string
     {
-        return self::mustBeStreamed($class) ? self::STREAM : self::SIGNED_URL;
+        unset($class);
+
+        // Everything is streamed, 26 Sep 2026. A signed URL is fetched by the
+        // browser straight from blob storage, which has no CORS rule for
+        // tricab.ai, so a trainee's download failed; and the saved file took the
+        // blob's name, not the filing name. Streaming is the stricter of the two
+        // options the decision above allows. Which reads are audited is still
+        // decided by mustBeAudited().
+        return self::STREAM;
     }
 
     public static function mustBeStreamed(DataClass $class): bool

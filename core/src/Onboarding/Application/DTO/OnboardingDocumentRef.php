@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Onboarding\Application\DTO;
 
+use TriCab\Core\Onboarding\Domain\Service\FilingName;
 use TriCab\Core\Onboarding\Domain\ValueObject\DataClass;
 
 /**
@@ -32,10 +33,19 @@ final readonly class OnboardingDocumentRef
         public int $byteSize,
         public string $contentSha256,
         public string $generatedAtUtc,
+        /** For HR's filing name: the person's display name, the document's title, and when the work was completed. */
+        public ?string $personName = null,
+        public ?string $documentTitle = null,
+        public ?string $completedAtUtc = null,
     ) {
     }
 
-    /** A filename safe to put in a Content-Disposition header. */
+    /**
+     * HR's filing name, `YY.MM.DD SURNAME Given - Document name.pdf`
+     * ({@see FilingName}). Built from the person, the title and the completion
+     * date, never from the stored blob path: a path is attacker-influenced the
+     * moment any part of it comes from a filename somebody uploaded.
+     */
     public function downloadFilename(): string
     {
         $extension = match ($this->contentType) {
@@ -45,12 +55,31 @@ final readonly class OnboardingDocumentRef
             default => 'bin',
         };
 
-        // Built from the document KIND and the public id, never from the stored
-        // blob path. A path is attacker-influenced the moment any part of it
-        // comes from a filename somebody uploaded, and a header is exactly where
-        // that turns into a traversal or a header split.
-        $kind = preg_replace('/[^a-z0-9_-]/', '', strtolower($this->documentKind)) ?? 'document';
+        return FilingName::build(
+            $this->personName,
+            $this->completedAtUtc ?? $this->generatedAtUtc,
+            $this->documentTitle ?? match ($this->documentKind) {
+                'assessment' => 'Assessment',
+                'policy_declaration' => 'Policy declaration',
+                'employee_details' => 'Employee Details Form',
+                'photo' => 'Photo',
+                default => 'Onboarding form',
+            },
+            $extension,
+        );
+    }
 
-        return sprintf('%s-%s.%s', $kind === '' ? 'document' : $kind, $this->publicId, $extension);
+    /**
+     * `attachment` (or `inline`), with an ASCII fallback and the UTF-8 name (RFC 6266), so an
+     * accented surname survives. FilingName has already removed quotes, slashes
+     * and control characters, so neither form can split the header.
+     */
+    /** @param 'attachment'|'inline' $type */
+    public function contentDisposition(string $type = 'attachment'): string
+    {
+        $name = $this->downloadFilename();
+        $ascii = preg_replace('/[^\x20-\x7E]/u', '_', $name) ?? 'TriCab record';
+
+        return sprintf("%s; filename=\"%s\"; filename*=UTF-8''%s", $type, $ascii, rawurlencode($name));
     }
 }
