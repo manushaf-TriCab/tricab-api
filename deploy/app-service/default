@@ -15,6 +15,24 @@ server {
         try_files /__tricab_api_front_controller__ @tricab_api;
     }
 
+    # RFQ saves (8 MB) and source documents (20 MB) are the only request bodies
+    # over nginx's 1 MB default; the rest of the platform keeps it. The old RFQ
+    # app returned 413 on saves above about 175 lines at 1 MB. The RFQ code
+    # enforces its own limits below these (docs/rfq-architecture.md §6.2).
+    #
+    # nginx checks a Content-Length body here, but a chunked body is checked as
+    # it is read, in @tricab_api, so it still gets 1 MB. Browsers send
+    # Content-Length; a streaming client would be refused, never let through.
+    location = /api/v1/rfqs {
+        client_max_body_size 25m;
+        try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
+    location ^~ /api/v1/rfqs/ {
+        client_max_body_size 25m;
+        try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
     location = /health {
         try_files /__tricab_api_front_controller__ @tricab_api;
     }
@@ -33,6 +51,12 @@ server {
         fastcgi_param DOCUMENT_ROOT /home/site/wwwroot;
         fastcgi_param REQUEST_URI $request_uri;
         fastcgi_param QUERY_STRING $query_string;
+        # PHP's body limits, just above nginx's 25 MB RFQ allowance. They must
+        # arrive this way: PHP rejects an oversized body before it reads a
+        # .user.ini, and the image's php.ini is not ours to ship. nginx is the
+        # per-route gate, so the rest of the API still stops at 1 MB there.
+        fastcgi_param PHP_VALUE "post_max_size=26M
+upload_max_filesize=20M";
 
         fastcgi_intercept_errors off;
         fastcgi_connect_timeout 300;
