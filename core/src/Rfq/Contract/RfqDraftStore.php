@@ -31,7 +31,9 @@ interface RfqDraftStore
     public function create(NewDraft $draft): string;
 
     /**
-     * The source's `update_draft`: new header and lines, revision + 1.
+     * The source's `update_draft`: new header and lines, revision + 1. The
+     * actor becomes the sales rep, assignee and 4js author
+     * ({@see \TriCab\Core\Rfq\Storage\SalesRepAttribution}).
      *
      * @param array<string, mixed>       $quoteDetails
      * @param list<array<string, mixed>> $rows

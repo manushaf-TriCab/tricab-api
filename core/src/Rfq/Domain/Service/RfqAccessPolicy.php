@@ -23,12 +23,12 @@ use TriCab\Core\Rfq\Module;
  * sees the same: the source runs with `RFQ_OPEN_DRAFT_ACCESS` on, which
  * replaces its own/branch/all `draft_scope` with "all".
  *
- * **Working is narrower.** Editing, workflow, sync, reconcile and archive
- * belong to the assignee, or to a manager (`RFQ.DRAFT.ASSIGN`), and each still
- * needs its own permission. Ported from `draft_is_mine` and
- * `allowed_draft_actions` in the pinned source (`draft_store.py`), *without*
- * the open-access flag: in production that flag also lets anyone with the
- * permission work any draft. Whether to keep that is open (Q8).
+ * **Anyone may work any RFQ** their permissions allow (owner decision, 28 Sep
+ * 2026): editing, workflow, sync, reconcile and archive are not reserved to
+ * the assignee. That is production today (`RFQ_OPEN_DRAFT_ACCESS=true` makes
+ * the source's `draft_is_mine` true for everybody). What stays with a manager
+ * (`RFQ.DRAFT.ASSIGN`) is assigning, and the wider workflow moves.
+ * Ported from `allowed_draft_actions` in the pinned source (`draft_store.py`).
  *
  * Permanent deletion is absent from {@see allowedActions()} on purpose: it has
  * no retention policy and no route (plan 1.3).
@@ -44,7 +44,7 @@ final class RfqAccessPolicy
         return $actor->can(Module::PERMISSION_DRAFT_READ);
     }
 
-    /** Assigned to this actor. The source's `draft_is_mine`, less the open-access flag. */
+    /** Assigned to this actor: the `mine` filter. It no longer decides what they may do. */
     public static function isMine(RfqActor $actor, RfqOwnership $rfq): bool
     {
         return $rfq->assigneeUserId === $actor->userId;
@@ -57,7 +57,8 @@ final class RfqAccessPolicy
 
     /**
      * Which workflow actor this person is on this RFQ, or null if they may not
-     * change its workflow at all.
+     * change its workflow at all. Anyone with the permission works it as the
+     * assignee would; a manager has the manager's moves.
      */
     public static function workflowActor(RfqActor $actor, RfqOwnership $rfq): ?WorkflowActor
     {
@@ -69,7 +70,7 @@ final class RfqAccessPolicy
             return WorkflowActor::manager();
         }
 
-        return self::isMine($actor, $rfq) ? WorkflowActor::assignee() : null;
+        return WorkflowActor::assignee();
     }
 
     /**
@@ -84,7 +85,6 @@ final class RfqAccessPolicy
             return [];
         }
 
-        $mineOrManager = self::isMine($actor, $rfq) || self::isManager($actor);
         $actions = [RfqAction::VIEW];
 
         if ($actor->can(Module::PERMISSION_DRAFT_COMMENT)) {
@@ -115,7 +115,7 @@ final class RfqAccessPolicy
             RfqAction::ARCHIVE => Module::PERMISSION_DRAFT_ARCHIVE,
         ];
         foreach ($gated as $action => $permission) {
-            if ($mineOrManager && $actor->can($permission)) {
+            if ($actor->can($permission)) {
                 $actions[] = $action;
             }
         }

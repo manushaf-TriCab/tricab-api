@@ -778,6 +778,18 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqBranchDirectory::class),
             \TriCab\Core\Rfq\Contract\RfqParserClient::class
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UndeployedRfqParserClient::class),
+            // The rep's 4js operator code, for the quote's author (SalesRepAttribution).
+            // Read only; falls back to "nobody confirmed" when the legacy database is absent.
+            \TriCab\Core\Rfq\Contract\RfqOperatorDirectory::class => static function (Container $container) use ($settings): \TriCab\Core\Rfq\Contract\RfqOperatorDirectory {
+                try {
+                    return new \TriCab\Api\Rfq\Legacy\DescriptRfqOperatorDirectory(
+                        self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                        $settings->usesAzureSqlUserRepository() ? self::get($container, SqlConnection::class) : null,
+                    );
+                } catch (\Throwable) {
+                    return new \TriCab\Core\Rfq\Infrastructure\UnavailableRfqOperatorDirectory();
+                }
+            },
 
             // Onboarding (Phase 3.1–3.3). In-memory by default, as Expense is:
             // the azure-sql branch below swaps in the real adapters. The doubles

@@ -11,6 +11,9 @@ namespace TriCab\Core\Rfq\Storage;
  *
  * The store is keyed by email, as the source was. The service builds this
  * from the resolved platform actor; nothing here comes from a request body.
+ * `operatorCode` is the person's confirmed 4js operator code
+ * (`RfqOperatorDirectory`), which a save puts on the quote as its author
+ * ({@see SalesRepAttribution}).
  */
 final class DraftActor
 {
@@ -22,6 +25,7 @@ final class DraftActor
         ?string $email,
         public readonly ?string $role,
         ?string $branch,
+        public readonly ?string $operatorCode = null,
     ) {
         $email = $email === null ? '' : mb_strtolower(PythonText::strip($email), 'UTF-8');
         $branch = $branch === null ? '' : PythonText::upper(PythonText::strip($branch));

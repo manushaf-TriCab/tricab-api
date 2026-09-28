@@ -80,7 +80,36 @@ final class AzureSqlRfqDraftStoreTest extends TestCase
             'simple',
         );
         self::assertSame(2, $revision);
-        self::assertSame(self::expected(DraftStoreGolden::tables('edit')), $this->state($id));
+        // The source wrote exactly this, plus one deliberate addition: the save
+        // now records whose author the quote carries (SalesRepAttribution). The
+        // rep did not change here (same person; no operator code confirmed).
+        $expected = self::expected(DraftStoreGolden::tables('edit'));
+        $last = count($expected['activity']) - 1;
+        $detail = PythonJson::decodeObject($expected['activity'][$last]['detail'] ?? null);
+        $expected['activity'][$last]['detail'] = PythonJson::encode($detail + ['author_source' => 'kept']);
+        self::assertSame($expected, $this->state($id));
+    }
+
+    public function testSavingMakesTheWorkerTheSalesRepInBothFields(): void
+    {
+        $store = $this->store();
+        $id = $store->create(new NewDraft('email', 'rfq', ['author' => 'SCOTTH', 'customer_code' => '1'], [['raw_text' => 'x']], creatorEmail: 'scott@tricab.com'));
+        $saved = $store->load($id);
+        self::assertNotNull($saved);
+
+        $store->saveContent($id, 1, $saved->quoteDetails, $saved->rows, 'in_progress', new DraftActor('Felicity@TriCab.com', 'sales', 'VIC', 'felicityb'));
+
+        $after = $store->load($id);
+        self::assertNotNull($after);
+        self::assertSame('felicity@tricab.com', $after->columns['assignee_email']);
+        self::assertSame('FELICITYB', $after->quoteDetails['author']);
+        self::assertSame('scott@tricab.com', $after->columns['created_by_email'], 'the creator is history and stays');
+        $detail = PythonJson::decodeObject($this->scalar("SELECT TOP 1 [detail] FROM [rfq].[rfq_draft_activity] WHERE [draft_id] = '{$id}' AND [event_type] = 'content_updated'"));
+        self::assertSame(['from' => 'scott@tricab.com', 'to' => 'felicity@tricab.com'], $detail['assignee'] ?? null);
+        self::assertSame('operator', $detail['author_source'] ?? null);
+        $changes = $detail['header_changes'] ?? null;
+        self::assertIsArray($changes);
+        self::assertContains(['field' => 'author', 'from' => 'SCOTTH', 'to' => 'FELICITYB'], $changes);
     }
 
     public function testStaleRevisionIsRefusedAndWritesNothing(): void

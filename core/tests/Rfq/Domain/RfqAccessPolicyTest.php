@@ -78,11 +78,11 @@ final class RfqAccessPolicyTest extends TestCase
         self::assertNull(RfqAccessPolicy::workflowActor($employee, self::rfq(self::ME, self::ME, 'VIC')));
     }
 
-    public function test_an_unassigned_rfq_offers_claim_but_not_edit_to_a_salesperson(): void
+    public function test_an_unassigned_rfq_offers_claim_and_the_working_actions_to_a_salesperson(): void
     {
         $actions = RfqAccessPolicy::allowedActions(self::actor(self::sales()), self::rfq(self::COLLEAGUE, null, 'VIC'));
 
-        self::assertSame(['view', 'comment', 'claim'], $actions);
+        self::assertSame(['view', 'comment', 'claim', 'workflow', 'edit', 'sync', 'reconcile', 'archive'], $actions);
     }
 
     /** Source: an assignee may edit, sync, archive and change workflow on their own work. */
@@ -93,12 +93,12 @@ final class RfqAccessPolicyTest extends TestCase
         self::assertSame(['view', 'comment', 'workflow', 'edit', 'sync', 'reconcile', 'archive'], $actions);
     }
 
-    /** Source: a salesperson does not work somebody else's assigned RFQ, in any branch. */
-    public function test_a_colleague_s_assigned_work_is_view_and_comment_only(): void
+    /** Owner decision, 28 Sep 2026 (production's open access): anyone works any RFQ their role allows. */
+    public function test_a_salesperson_works_a_colleague_s_rfq_in_any_branch(): void
     {
         foreach (['VIC', 'NSW', null] as $branch) {
             $actions = RfqAccessPolicy::allowedActions(self::actor(self::sales()), self::rfq(self::COLLEAGUE, self::COLLEAGUE, $branch));
-            self::assertSame(['view', 'comment'], $actions);
+            self::assertSame(['view', 'comment', 'workflow', 'edit', 'sync', 'reconcile', 'archive'], $actions);
         }
     }
 
@@ -132,14 +132,13 @@ final class RfqAccessPolicyTest extends TestCase
         self::assertSame([], RfqAccessPolicy::allowedActions(self::actor($noRead), self::rfq(self::ME, self::ME, 'VIC')));
     }
 
-    public function test_workflow_actor_is_manager_assignee_or_nobody(): void
+    public function test_workflow_actor_is_manager_or_assignee_for_anyone_who_may_change_workflow(): void
     {
-        $mine = self::rfq(self::COLLEAGUE, self::ME, 'VIC');
         $theirs = self::rfq(self::COLLEAGUE, self::COLLEAGUE, 'VIC');
 
-        self::assertSame('assignee', RfqAccessPolicy::workflowActor(self::actor(self::sales()), $mine)?->toString());
-        self::assertNull(RfqAccessPolicy::workflowActor(self::actor(self::sales()), $theirs));
+        self::assertSame('assignee', RfqAccessPolicy::workflowActor(self::actor(self::sales()), $theirs)?->toString());
         self::assertSame('manager', RfqAccessPolicy::workflowActor(self::actor(self::manager()), $theirs)?->toString());
+        self::assertNull(RfqAccessPolicy::workflowActor(self::actor(Module::EMPLOYEE_PERMISSIONS), $theirs), 'no workflow permission');
     }
 
     public function test_permission_codes_are_matched_case_insensitively(): void

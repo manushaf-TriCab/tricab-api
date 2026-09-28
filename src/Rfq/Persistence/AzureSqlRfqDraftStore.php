@@ -18,6 +18,7 @@ use TriCab\Core\Rfq\Storage\DraftRowSet;
 use TriCab\Core\Rfq\Storage\NewDraft;
 use TriCab\Core\Rfq\Storage\PythonJson;
 use TriCab\Core\Rfq\Storage\PythonText;
+use TriCab\Core\Rfq\Storage\SalesRepAttribution;
 use TriCab\Core\Rfq\Storage\StoredDraft;
 use TriCab\Core\Rfq\Storage\StoreFormat;
 use TriCab\Core\Shared\Time\Clock;
@@ -123,7 +124,7 @@ final class AzureSqlRfqDraftStore implements RfqDraftStore
 
         return $this->runInTransaction($this->connection, function () use ($draftId, $expectedRevision, $quoteDetails, $rows, $nextStatus, $actor, $viewMode): ?int {
             $current = $this->connection->fetchAll(
-                'SELECT [sync_started_at], [status], [revision], [archived_at], [quote_details]
+                'SELECT [sync_started_at], [status], [revision], [archived_at], [quote_details], [assignee_email]
                  FROM [rfq].[rfq_draft_quotes] WITH (UPDLOCK, HOLDLOCK, ROWLOCK)
                  WHERE [id] = :id',
                 ['id' => $draftId],
@@ -142,18 +143,22 @@ final class AzureSqlRfqDraftStore implements RfqDraftStore
                 throw RfqDraftNotEditable::archived();
             }
 
+            // The worker becomes the sales rep: assignee and 4js author.
+            $rep = SalesRepAttribution::apply($quoteDetails, self::text($current['assignee_email']), $actor, $actor->operatorCode);
+            $quoteDetails = $rep['quoteDetails'];
             $headerChanges = DraftChangeLog::headerChanges(PythonJson::decodeObject(self::text($current['quote_details'])), $quoteDetails);
             $nextRevision = $revision + 1;
             $this->connection->execute(
                 'UPDATE [rfq].[rfq_draft_quotes]
                  SET [quote_details] = :quote_details, [status] = :status, [push_error] = NULL,
-                     [updated_at] = :updated_at, [revision] = :revision
+                     [updated_at] = :updated_at, [revision] = :revision, [assignee_email] = :assignee
                  WHERE [id] = :id',
                 [
                     'quote_details' => PythonJson::encode($quoteDetails === [] ? new \stdClass() : $quoteDetails),
                     'status' => $nextStatus,
                     'updated_at' => $this->nowIso(),
                     'revision' => $nextRevision,
+                    'assignee' => $rep['assignee'],
                     'id' => $draftId,
                 ],
             );
@@ -189,6 +194,12 @@ final class AzureSqlRfqDraftStore implements RfqDraftStore
             ];
             if ($headerChanges !== []) {
                 $detail['header_changes'] = $headerChanges;
+            }
+            if ($rep['assigneeChange'] !== null) {
+                $detail['assignee'] = $rep['assigneeChange'];
+            }
+            if ($rep['authorSource'] !== null) {
+                $detail['author_source'] = $rep['authorSource'];
             }
             $this->addActivity($draftId, 'content_updated', $actor, $detail, $nextRevision);
 
