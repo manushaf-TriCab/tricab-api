@@ -179,6 +179,9 @@ use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
 use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\Onboarding\DeleteOnboardingContentItemAction;
 use TriCab\Api\Http\Action\Onboarding\DeleteOnboardingPersonAction;
+use TriCab\Api\Http\Action\Rfq\GetRfqAccessAction;
+use TriCab\Api\Http\Action\Rfq\GetRfqAction;
+use TriCab\Api\Http\Action\Rfq\ListRfqsAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingAdminOverviewAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentContentAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentsAction;
@@ -415,7 +418,35 @@ final class AppBuilder
         $app->get('/api/v1/public/about', GetPublicAboutAction::class);
         $app->get('/api/v1/public/contact', GetPublicContactAction::class);
         self::registerOnboardingRoutes($app, $container);
+        self::registerRfqRoutes($app, $container);
         self::registerAdminRoutes($app, $container);
+    }
+
+    /**
+     * RFQ module — Phase 1 skeleton. Reads only; every write family (intake,
+     * workflow, sync) lands with its phase, each on its own permission.
+     *
+     * Every route carries exactly one `RFQ.*` permission, and every record the
+     * handlers return is filtered by `RfqAccessPolicy` on top of it. The
+     * permission is the door to the module; scope is which RFQs are behind it.
+     * `RfqRouteTableTest` pins the one-permission-per-route rule, which is what
+     * the source's `test_deploy_bundle` allow-list checks were for.
+     *
+     * `/rfqs/me` is registered before `/rfqs/{publicId}` so "me" is never read
+     * as an id; FastRoute prefers the static route regardless.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerRfqRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+
+        $app->get('/api/v1/rfqs/me', GetRfqAccessAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_ACCESS));
+        $app->get('/api/v1/rfqs', ListRfqsAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        $app->get('/api/v1/rfqs/{publicId}', GetRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
     }
 
     /**

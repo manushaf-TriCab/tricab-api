@@ -767,6 +767,18 @@ final class ContainerFactory
             \TriCab\Core\Expense\Contract\ExpensePeriodRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpensePeriodRepository::class),
             \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
 
+            // RFQ (Phase 1). In-memory in every mode, azure-sql included, until
+            // the Phase 2 schema lands: the queue is empty rather than invented,
+            // and the routes are gated on permissions nobody holds yet. Branch
+            // membership has no source (owner question Q7), and the parser is
+            // not packaged (plan 3.1), so both answer "not available".
+            \TriCab\Core\Rfq\Contract\RfqRepository::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\InMemoryRfqRepository::class),
+            \TriCab\Core\Rfq\Contract\RfqBranchDirectory::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqBranchDirectory::class),
+            \TriCab\Core\Rfq\Contract\RfqParserClient::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UndeployedRfqParserClient::class),
+
             // Onboarding (Phase 3.1–3.3). In-memory by default, as Expense is:
             // the azure-sql branch below swaps in the real adapters. The doubles
             // are not merely test scaffolding — they are what `USER_REPOSITORY=memory`
