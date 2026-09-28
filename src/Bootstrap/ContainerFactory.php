@@ -767,8 +767,8 @@ final class ContainerFactory
             \TriCab\Core\Expense\Contract\ExpensePeriodRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpensePeriodRepository::class),
             \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
 
-            // RFQ (Phase 1). In-memory in every mode, azure-sql included, until
-            // the Phase 2 schema lands: the queue is empty rather than invented,
+            // RFQ. In-memory by default; the azure-sql branch below reads the
+            // store's tables (plan 2.4). Empty rather than invented either way,
             // and the routes are gated on permissions nobody holds yet. Branch
             // membership has no source (owner question Q7), and the parser is
             // not packaged (plan 3.1), so both answer "not available".
@@ -2414,11 +2414,14 @@ final class ContainerFactory
             $definitions[\TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseBankFeedRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpensePeriodRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpensePeriodRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReminderLogRepository::class);
-            // RFQ plan 2.4: the draft store on the live MySQL store's shape
-            // (`create-rfq-schema.sql`). Azure SQL only: there is no in-memory
-            // store, and nothing calls it until the Phase 3/4 endpoints do.
+            // RFQ plan 2.4: the draft store and the queue on the live MySQL
+            // store's shape (`create-rfq-schema.sql`). The store has no
+            // in-memory twin, and nothing calls it until the Phase 3/4
+            // endpoints do; the queue replaces InMemoryRfqRepository.
             $definitions[\TriCab\Core\Rfq\Contract\RfqDraftStore::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
+            $definitions[\TriCab\Core\Rfq\Contract\RfqRepository::class]
+                = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqRepository::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingSelfServiceRepository::class);
             // Phase 3.3 — the write side. All four share one locator, whose single

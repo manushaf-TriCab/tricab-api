@@ -10,7 +10,8 @@ use RuntimeException;
 
 /**
  * A disposable SQL Server for the RFQ store tests: a database of its own on a
- * local server (Docker), with `create-rfq-schema.sql` applied.
+ * local server (Docker), with the identity schema (people are matched by
+ * email against it) and `create-rfq-schema.sql` applied.
  *
  * Local rather than the shared `tc`, because these tests need what a
  * rolled-back transaction on a shared database cannot give: two sessions
@@ -57,23 +58,28 @@ final class LocalRfqSqlServer
         );
     }
 
-    /** Empties every RFQ table, children first. */
+    /** Empties every RFQ table and the test's people, children first. */
     public static function truncate(PDO $pdo): void
     {
-        foreach (['rfq_draft_rows', 'rfq_draft_activity', 'rfq_draft_row_edits', 'rfq_entries', 'rfq_draft_quotes', 'rfq_sessions'] as $table) {
+        foreach (['rfq_draft_rows', 'rfq_draft_activity', 'rfq_draft_row_edits', 'rfq_entries', 'rfq_reader_jobs',
+            'rfq_sync_attempts', 'rfq_draft_quotes', 'rfq_sessions'] as $table) {
             $pdo->exec("DELETE FROM [rfq].[{$table}]");
         }
+        $pdo->exec('DELETE FROM [identity].[UserEmailAddresses]');
+        $pdo->exec('DELETE FROM [identity].[Users]');
     }
 
     private static function applySchema(PDO $pdo): void
     {
-        $script = file_get_contents(dirname(__DIR__, 3) . '/database/scripts/development/create-rfq-schema.sql');
-        if ($script === false) {
-            throw new RuntimeException('create-rfq-schema.sql is missing.');
-        }
-        foreach (preg_split('/^\s*GO\s*$/mi', $script) ?: [] as $batch) {
-            if (trim($batch) !== '') {
-                $pdo->exec($batch);
+        foreach (['create-identity-schema.sql', 'create-identity-user-email-addresses.sql', 'create-rfq-schema.sql'] as $file) {
+            $script = file_get_contents(dirname(__DIR__, 3) . '/database/scripts/development/' . $file);
+            if ($script === false) {
+                throw new RuntimeException("{$file} is missing.");
+            }
+            foreach (preg_split('/^\s*GO\s*$/mi', $script) ?: [] as $batch) {
+                if (trim($batch) !== '') {
+                    $pdo->exec($batch);
+                }
             }
         }
     }
