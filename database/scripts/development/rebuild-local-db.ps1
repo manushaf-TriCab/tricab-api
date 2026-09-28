@@ -127,6 +127,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'alter-onboarding-policy-declarations.sql'
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-form-contributions.sql') # after onboarding: FKs to Assignments
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-migration-rows.sql')     # after legacy migration: FKs to LegacyMigrationBatches
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
+Invoke-SqlFile (Join-Path $DevScripts 'create-rfq-schema.sql')               # the live MySQL RFQ store's shape; no FKs outside [rfq]
 
 # --- seeds -----------------------------------------------------------------
 Write-Host "`n[4/6] Reference data and seeds" -ForegroundColor Cyan

@@ -249,6 +249,15 @@ The source's Python store writes every table. The plan's rule is **one writer pe
 
 So **Python owns no table**, and the source's import-time DDL and store construction do not come across (plan 3.1). This is a proposal. Two facts it depends on are owner questions: which store is live (**Q5**: MySQL since 11 Sept, or SQLite), which shapes the Phase 7 translator but not this split; and who owns the mailbox (**Q6**: WebJob, Logic App or both). For the pilot the old application keeps the mailbox, so the Phase 6 rows wait for that answer.
 
+### 6.5 Storage schema: the live MySQL shape (owner decision, 28 Sept)
+
+The platform's RFQ tables **follow `tc-mysql-live` table for table**, so the data moves across unchanged. `database/scripts/development/create-rfq-schema.sql` creates the 15 tables in `[rfq]` with MySQL's table, column, index and foreign-key names (`rfq.rfq_draft_quotes`, `rfq.rfq_correction_memory`, …). `drop-rfq-legacy-tables.sql` first removes the seven empty 5 Aug tables, and refuses if any holds a row.
+
+- **Type mapping:** `varchar(n)` → `NVARCHAR(n)`, `text`/`longtext` → `NVARCHAR(MAX)`, `char(n)` → `CHAR(n)`; the numeric types are unchanged. Timestamps stay ISO text, as MySQL has them. There are no `ISJSON` checks, because 18 live row snapshots hold Python's `NaN`.
+- **Proof of fit (28 Sept, local SQL Server 2022 in Docker, `SQL_Latin1_General_CP1_CI_AS` like `tricab-mel`):** all 68,482 live rows loaded from one read-only MySQL snapshot, and every row's SHA-256 matched. A deliberate one-space change was caught.
+- **Consequences for the design above:** the MySQL shape has no separate revision, comment or document tables. `rfq_draft_quotes.revision` is the revision counter, and history lives in `rfq_draft_activity` and `rfq_draft_row_edits`. Platform needs the source lacks (public IDs, document metadata, the migration ledger) are **added alongside** as new tables or nullable columns, never by reshaping these 15. The §6.4 writers map onto them: RFQs/lines/audit → `rfq_draft_quotes`, `rfq_draft_rows`, `rfq_draft_activity`, `rfq_draft_row_edits`; reader jobs → `rfq_reader_jobs`; sync → `rfq_sync_attempts`; outbox → `rfq_notification_outbox`; mail dedupe → `rfq_mail_audit`.
+- **Access tables:** `rfq_roles`, `rfq_user_roles` and `rfq_identities` are carried for the history they hold. Platform access still comes from `RFQ.*` permissions (§4); they grant nothing.
+
 ## 7. Where things are
 
 | Concern | Code | Tests |
