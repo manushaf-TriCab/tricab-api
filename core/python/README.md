@@ -1,4 +1,4 @@
-# core/python — the cable-selection rules, and the finder that reads them
+# core/python — the cable-selection rules, and the finder and RFQ parser that read them
 
 Domain logic belongs in core. That is read here as a statement about **location**
 — one home, one version, one pull request, shipped in the same App Service zip —
@@ -34,20 +34,42 @@ the LLM fallback, draft and log stores, pricing, the agent loop, the pipeline.
 `__init__.py` names the operations both consumers use. Import from the package
 root; the module layout is an implementation detail.
 
-## Two copies, until Phase 7
+## Two copies, until the RFQ cutover
 
-`tricab_cable_rules` and `rfq-parser-mvp/matcher/` are the same rules twice over.
-That is acceptable **only because Phase 7 removes the second copy**; a permanent
-second copy is not. Until then:
+The live RFQ parser (`rfq/wt-main-verified`, pinned at `1942f91`) keeps running
+production and keeps taking fixes until the platform's RFQ module replaces it, so
+its `matcher/` stays the authority for the rules and the parser code alike. Two
+guards keep this tree equal to it:
 
 ```bash
-python3 tools/check_rules_sync.py --matcher /path/to/rfq-parser-mvp
+python3 tools/check_rules_sync.py --matcher /path/to/rfq/wt-main-verified    # the rules
+python3 tools/sync_rfq_parser.py  --matcher /path/to/rfq/wt-main-verified    # rfq_parser (--write to regenerate)
 ```
 
-Byte-identical except for three declared packaging patches — where the catalogue
-sits, and one absolute `matcher.` import that cannot resolve under another
-package name. Anything else fails. It also runs as
-`tests/test_rules_sync.py`, so it fires with the suite.
+`check_rules_sync.py`: the rule modules are byte-identical except for three
+declared packaging patches, and data files match (text compared without regard
+to line endings). `sync_rfq_parser.py`: every generated `rfq_parser` module is
+the source module with its imports rewritten, plus the patches the tool declares.
+Both run in the suite (`tests/test_rules_sync.py`, `tests/test_rfq_parser_sync.py`)
+when `RFQ_MATCHER_PATH` names a checkout, and report SKIPPED rather than passing
+without one.
+
+At cutover the source stops being the authority: both tools are deleted, and
+**that deletion is the signal the second copy is gone.**
+
+## `rfq_parser`
+
+The production parser's extraction, matching and pricing (plan Phase 3,
+`platform/RFQ-IMPLEMENTATION-PLAN.md`), generated from the pinned source — see the
+package docstring for what is and is not here. It runs as its own private
+service (`rfq_wsgi.py`, `127.0.0.1:8002`) beside the finder, started by
+`startup.sh` only when `RFQ_PARSER_ENABLED=true`.
+
+`tools/compare_rfq_parser.py` runs a folder of real RFQs through the source and
+this package with the same deterministic cost API and diffs every field. On
+28 Sep 2026 the 119 inputs of `rfq/sample rfq` (108 files plus the text files as
+pasted lines) gave 4,520 identical rows. The corpus is customer data; the tool
+prints only differences.
 
 ## `product_finder`
 
@@ -80,6 +102,7 @@ python3 -m venv /somewhere/outside/this/tree/venv
 /somewhere/.../venv/bin/pip install -r requirements-dev.txt
 PYTHONPATH=. /somewhere/.../venv/bin/python -m pytest
 PYTHONPATH=. /somewhere/.../venv/bin/python -m flask --app product_finder.app run --port 8001
+PYTHONPATH=. /somewhere/.../venv/bin/python -m rfq_parser.app          # 127.0.0.1:8002
 ```
 
 **Keep the virtualenv out of this tree.** Composer's path repository copies

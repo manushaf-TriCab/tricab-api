@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# App Service startup: nginx config, then the product-finder service.
+# App Service startup: nginx config, then the product-finder service, then the
+# RFQ parser (only when RFQ_PARSER_ENABLED=true).
 #
 # Set the Linux App Service startup command to:
 #
@@ -136,6 +137,58 @@ start_finder() {
 
 if ! start_finder; then
     log "product finder not started; the API will report sizing: unavailable"
+fi
+
+# ── 3. the RFQ parser ────────────────────────────────────────────────────────
+#
+# Same model as the finder: its own gunicorn on loopback, no nginx location, PHP
+# in front of it. A separate process so a long schedule never holds up a finder
+# request. Off unless RFQ_PARSER_ENABLED=true: each worker holds its own
+# catalogue (~150 MB), and nothing calls the parser until the RFQ module ships.
+
+RFQ_LOG_DIR=/home/LogFiles/rfq-parser
+RFQ_BIND=127.0.0.1:8002
+RFQ_WORKERS="${RFQ_PARSER_WORKERS:-2}"
+
+start_rfq_parser() {
+    if [ "${RFQ_PARSER_ENABLED:-false}" != "true" ]; then
+        log "RFQ parser disabled (RFQ_PARSER_ENABLED is not true)"
+        return 0
+    fi
+    PYTHON_BIN="$(command -v python3 || true)"
+    if [ -z "$PYTHON_BIN" ] || [ ! -d "$VENDOR/gunicorn" ] || [ ! -f "$APP_PYTHON/rfq_wsgi.py" ]; then
+        log "ERROR: the RFQ parser cannot start (python3, vendored gunicorn or rfq_wsgi.py missing); the API reports the parser unavailable"
+        return 1
+    fi
+    mkdir -p "$RFQ_LOG_DIR"
+    (
+        export PYTHONPATH="$VENDOR:$APP_PYTHON"
+        delay=2
+        while true; do
+            log "starting the RFQ parser on $RFQ_BIND ($RFQ_WORKERS workers)"
+            # --timeout above the API's own RFQ_PARSER_TIMEOUT_SECONDS (120), so PHP
+            # gives up first and reports it, rather than gunicorn killing a worker
+            # mid-answer.
+            "$PYTHON_BIN" -m gunicorn \
+                --chdir "$APP_PYTHON" \
+                --bind "$RFQ_BIND" \
+                --workers "$RFQ_WORKERS" \
+                --timeout 180 \
+                --graceful-timeout 30 \
+                --access-logfile "$RFQ_LOG_DIR/access.log" \
+                --error-logfile "$RFQ_LOG_DIR/error.log" \
+                rfq_wsgi:application >>"$LOG" 2>&1
+            log "RFQ parser exited ($?); restarting in ${delay}s"
+            sleep "$delay"
+            delay=$(( delay < 60 ? delay * 2 : 60 ))
+        done
+    ) &
+    disown 2>/dev/null || true
+    return 0
+}
+
+if ! start_rfq_parser; then
+    log "RFQ parser not started"
 fi
 
 log "startup complete"

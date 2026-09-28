@@ -260,9 +260,32 @@ rm -rf "$vendor_python/bin"
 
 # A wheel built for the wrong platform is the failure this step exists to
 # prevent, and it is silent until import time on the instance.
-if find "$vendor_python" -name '*.so' | grep -qv 'x86_64-linux-gnu'; then
-    echo "Vendored tree contains a native extension that is not x86_64 Linux:" >&2
-    find "$vendor_python" -name '*.so' | grep -v 'x86_64-linux-gnu' >&2
+#
+# Checked from each shared object's ELF header, not its name. The name was a
+# good enough proxy while MarkupSafe was the only native code, but the RFQ
+# parser's PDF stack ships libraries named without the platform triplet
+# (pypdfium2's `libpdfium.so`, cryptography's `_rust.abi3.so`) that are correct
+# x86-64 Linux builds, and a wrong-platform library named correctly would have
+# passed. ELF class 2 is 64-bit; machine 62 (EM_X86_64) is x86-64.
+if ! python3 - "$vendor_python" <<'PY'
+import os, struct, sys
+bad = []
+for root, _dirs, files in os.walk(sys.argv[1]):
+    for name in files:
+        if not (name.endswith(".so") or ".so." in name):
+            continue
+        path = os.path.join(root, name)
+        with open(path, "rb") as handle:
+            head = handle.read(20)
+        ok = len(head) == 20 and head[:4] == b"\x7fELF" and head[4] == 2 and struct.unpack("<H", head[18:20])[0] == 62
+        if not ok:
+            bad.append(path)
+for path in bad:
+    print(path, file=sys.stderr)
+sys.exit(1 if bad else 0)
+PY
+then
+    echo "Vendored tree contains a native library that is not x86-64 Linux (listed above)." >&2
     exit 1
 fi
 
