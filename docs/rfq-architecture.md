@@ -12,7 +12,7 @@ This document says where the boundaries are, who enforces them, and which source
 
 RFQ is a bounded module in the Onboarding sense: `core/src/Rfq/` for domain and application code, `src/Http/Action/Rfq/` for HTTP, and one `Module` class holding the permission and role vocabulary.
 
-It owns intake, extraction results, editable review, persisted revisions, scoped queues, pricing snapshots, exports and the controlled 4js handoff. Mailbox intake, notifications, audit and migrated history join in later phases.
+It owns intake, extraction results, editable review, persisted revisions, queues, pricing snapshots, exports and the controlled 4js handoff. Mailbox intake, notifications, audit and migrated history join in later phases.
 
 **It owns no part of identity.** Records link to a person by `identity.Users.UserId`. The source's `rfq_roles`, `rfq_user_roles`, `rfq_identities` and `sync-directory` are retired, not ported. The source's WordPress `manage_options` backstop, which gave every WordPress administrator every RFQ permission, is not carried.
 
@@ -26,7 +26,7 @@ It owns intake, extraction results, editable review, persisted revisions, scoped
       ▼
  ResolveRfqActorService       platform user → RfqActor (per request, never cached)
       ▼
- RfqAccessPolicy              scope on every record; out of scope   → 404
+ RfqAccessPolicy              read = every RFQ; work = assignee/manager
       ▼
  RFQ services ──► RfqRepository (Azure SQL, Phase 2; in-memory today)
       │
@@ -72,8 +72,8 @@ Conventions carried by all of them:
 - **People are named, never addressed.** No response carries an email address (invariant 11). The scaffold's `assignee_email` is gone.
 - **Money and quantities are decimal strings.** Units are `m` or `U`, the two 4js unit systems. Cuts are kept as `cutLengthMetres` × `cuts` alongside the quoted quantity (invariant 4).
 - **Machine output, human decisions and inclusion are separate fields** on a line: `matchStatus`, `approval`, `disposition` (§5.3).
-- **Filters narrow and never widen.** `GET /api/v1/rfqs` accepts `q`, `status`, `priority`, `archived` (`exclude`/`include`/`only`), `mine`, `page` and `pageSize` (≤ 100). An unknown value is a 400 `RFQ_QUERY_INVALID`, not an ignored filter. There is no `scope` or `branch` parameter the server trusts.
-- **Queue counts are not in `rfq.queue.v1`.** `total` counts what the caller may see under their filters. KPI tiles get their own scoped statistics endpoint in Phase 4.5, not a count derived from one page of rows in the browser.
+- **Filters only narrow.** `GET /api/v1/rfqs` accepts `q`, `status`, `priority`, `branch` (codes, upper-cased; `none` = no branch), `archived` (`exclude`/`include`/`only`), `mine`, `page` and `pageSize` (≤ 100). An unknown value is a 400 `RFQ_QUERY_INVALID`, not an ignored filter. None of them is an access decision: everyone who reads RFQs reads all of them (§4.3). The page carries `branches`, the codes to filter by.
+- **Queue counts are not in `rfq.queue.v1`.** `total` counts the RFQs under the filters. KPI tiles get their own statistics endpoint in Phase 4.5, not a count derived from one page of rows in the browser.
 
 ### 3.2 Parser contract (`rfq-parser.v1`)
 
@@ -86,7 +86,7 @@ Conventions carried by all of them:
 
 Bytes travel inline, so the parser needs no storage credential. Lines stay as arrays at this boundary. Phase 3 maps them into `ParsedLine` after deterministic validation (invariant 2).
 
-## 4. Permissions and scope (plan 1.3)
+## 4. Permissions and visibility (plan 1.3)
 
 ### 4.1 The catalogue
 
@@ -95,7 +95,7 @@ Seeded by `database/scripts/development/seed-rfq-permissions.sql`, module code `
 | Permission | Source key | Gates | Assurance |
 |---|---|---|---|
 | `RFQ.ACCESS` | (signed-in staff) | module entry, `/rfqs/me`; **no record** | LOW |
-| `RFQ.DRAFT.READ` | `drafts.view` | list, detail, reads, sync status, exports | LOW |
+| `RFQ.DRAFT.READ` | `drafts.view` | list and open **every** RFQ, reads, sync status, exports; **every employee** | LOW |
 | `RFQ.DRAFT.CREATE` | `drafts.view` | intake. **New**: the source lets read create | LOW |
 | `RFQ.DRAFT.EDIT` | `drafts.edit` | save revision, resolve reads | LOW |
 | `RFQ.DRAFT.CLAIM` | `drafts.claim` | claim unassigned | LOW |
@@ -108,19 +108,17 @@ Seeded by `database/scripts/development/seed-rfq-permissions.sql`, module code `
 | `RFQ.QUOTE.SYNC` | `drafts.push` | sync, retry PDF | LOW |
 | `RFQ.QUOTE.RECONCILE` | `drafts.push` | reconcile an uncertain attempt | SUBSTANTIAL |
 | `RFQ.PRICING.VIEW` | `pricing.view` | cost and margin; hide vs withhold is **Q9** | LOW |
-| `RFQ.ANALYTICS.READ` | `analytics.team/all` | scoped statistics | LOW |
+| `RFQ.ANALYTICS.READ` | `analytics.team/all` | queue statistics | LOW |
 | `RFQ.REPORTS.READ` | `admin.dashboard` | all-branch review metrics | LOW |
-| `RFQ.AUDIT.READ` | `audit.view` | scoped activity log | LOW |
+| `RFQ.AUDIT.READ` | `audit.view` | activity log | LOW |
 | `RFQ.REVIEWLOG.READ` | `review.view` | raw review sessions, row edits (customer text) | SUBSTANTIAL |
 | `RFQ.TECHNICAL.READ` | `technical.view`, `health.detail` | diagnostics | LOW |
-| `RFQ.SCOPE.BRANCH` | role `draft_scope = branch` | widen scope to own branch | LOW |
-| `RFQ.SCOPE.ALL` | role `draft_scope = all` | widen scope to every branch | LOW |
 | `RFQ.ADMIN` | `roles.manage` (module part) | module administration; reads no RFQ | SUBSTANTIAL |
 | `RFQ.MAIL.INGEST` | `MAIL_WORKER_TOKEN` | mailbox intake; **service identity only** | SUBSTANTIAL |
 
 `drafts.delete`, a compatibility key that nothing checked, is not carried. Assurance floors are in `PermissionAssurancePolicy`. The four SUBSTANTIAL codes are the ones that act on a live ERP, destroy history, expose raw customer text or administer the module.
 
-**Scope is two extra grants, not a suffix.** The source stores scope on the role. Here, holding neither scope permission means *own*. The alternative (`RFQ.DRAFT.READ.BRANCH` and so on) would triple the route table and still need one resolver.
+**There is no scope.** The source's role-level `draft_scope` (own / branch / all) is not carried, and nor are the `RFQ.SCOPE.BRANCH` / `RFQ.SCOPE.ALL` grants an earlier draft of this catalogue had (owner decision, 28 Sept: as in 4js, anyone can see any quote).
 
 ### 4.2 Roles: a draft for owner review
 
@@ -128,30 +126,22 @@ Seeded by `database/scripts/development/seed-rfq-permissions.sql`, module code `
 
 | Role | Adds |
 |---|---|
-| `RFQ_SALES` | access, read, create, edit, claim, workflow, comment, archive, sync, reconcile, branch scope |
+| `RFQ_SALES` | access, read, create, edit, claim, workflow, comment, archive, sync, reconcile |
 | `RFQ_SALES_MANAGER` | assign, restore, analytics, activity log |
-| `RFQ_ADMIN` | reports, pricing view, all scope, module admin |
+| `RFQ_ADMIN` | reports, pricing view, module admin |
 | `RFQ_DEVELOPER` | review logs, diagnostics, purge |
 
-`ADMINISTRATOR` holds `RFQ.ADMIN` only (the TriExpense/Onboarding pattern). `EMPLOYEE` and `GUEST` hold nothing, and the permissions seed refuses to run if either ever does. **This is a behaviour change**: the source makes every signed-in staff member a salesperson. Who gets access for the pilot is owner question Q8.
+`ADMINISTRATOR` holds `RFQ.ADMIN` only (the TriExpense/Onboarding pattern). **`EMPLOYEE` holds `RFQ.ACCESS` and `RFQ.DRAFT.READ`** (`Module::EMPLOYEE_PERMISSIONS`): every employee reads every RFQ, warehouse staff who sign in by emailed code included, and does nothing else. `GUEST` holds nothing. The permissions seed refuses to run if `EMPLOYEE` ever holds more or `GUEST` holds anything. The source made every signed-in staff member a salesperson; that wider grant is still not carried, and who works RFQs in the pilot is owner question Q8.
 
 ### 4.3 Visibility and allowed actions
 
-`RfqAccessPolicy` is ported from `can_see_draft`, `draft_is_mine` and `allowed_draft_actions`.
+`RfqAccessPolicy` is ported from `draft_is_mine` and `allowed_draft_actions`.
 
-- **Effective scope:** `RFQ.SCOPE.ALL` → all; otherwise `RFQ.SCOPE.BRANCH` **and a known branch** → branch; otherwise own. `/rfqs/me` reports both the granted and the effective scope, so "branch-scoped with no branch" is said rather than showing up as an empty queue.
-- **Visible:** needs `RFQ.DRAFT.READ`. Then all scope, or owner or assignee is the actor, or branch scope and the same non-empty branch.
-- **Out of scope is 404, identical to absent** (source `…cross_branch_concealment`).
-- **Allowed actions** come from the server on every record: `view`; `comment`; if archived, `restore` only; otherwise `claim` (unassigned), `assign` (manager), and `workflow`/`edit`/`sync`/`reconcile`/`archive` when the RFQ is assigned to the actor or the actor is a manager, each with its own permission. `purge` is never offered.
+- **Visible: every RFQ, to anyone holding `RFQ.DRAFT.READ`** (owner decision, 28 Sept: as in 4js, anyone can see any quote). Branch is a queue filter, never a limit. Production already behaves this way: it runs `RFQ_OPEN_DRAFT_ACCESS=true`, which makes the source's scope "all". An unknown or malformed id is 404.
+- **Allowed actions** come from the server on every record: `view`; `comment`; if archived, `restore` only; otherwise `claim` (unassigned), `assign` (manager), and `workflow`/`edit`/`sync`/`reconcile`/`archive` when the RFQ is assigned to the actor or the actor is a manager (`RFQ.DRAFT.ASSIGN`), each with its own permission. `purge` is never offered. An employee who holds only read gets `view`.
+- **Open point (Q8):** in production, `RFQ_OPEN_DRAFT_ACCESS` also lifts the assignee reservation, so anyone whose role allows editing, syncing or archiving may do it to *any* draft. The platform keeps the reservation until the owner says otherwise; lifting it is one line in `allowedActions()`.
 
-Deliberate differences from the source, each covered by a test in `RfqAccessPolicyTest`:
-
-1. **An assignee sees what is assigned to them.** The source matched only the owner, so work assigned across a branch disappeared from the assignee's list.
-2. **Unattributed RFQs are visible only at all scope.** The source also showed them to every `drafts.assign` holder in every branch as a triage bucket. That is **Q10**; until it is answered, the narrower rule applies.
-3. **No branch means own scope.** The source's reuse of a last-seen branch is not carried: a stale branch is a grant nobody reviewed.
-4. **`RFQ_OPEN_DRAFT_ACCESS` is not carried.** If production runs with it on (**Q8** / 0.7 §6.1), matching it means granting `RFQ.SCOPE.ALL` and `RFQ.DRAFT.ASSIGN`: a role decision, not a flag.
-
-**Branch membership has no source** (Q7). `RfqBranchDirectory` is the seam, and `UnconfiguredRfqBranchDirectory` answers null for everybody. Branch scoping becomes real when plan 1.4 settles where branches come from.
+**Branch membership has no source yet** (Q7). It no longer decides access. It is the default for the branch filter and the branch a new RFQ is stamped with, so it matters from Phase 4. `RfqBranchDirectory` is the seam; `UnconfiguredRfqBranchDirectory` answers null for everybody.
 
 ## 5. State machines (plan 1.2)
 
@@ -257,7 +247,7 @@ The platform's RFQ tables **follow `tc-mysql-live` table for table**, so the dat
 - **Proof of fit (28 Sept, local SQL Server 2022 in Docker, `SQL_Latin1_General_CP1_CI_AS` like `tricab-mel`):** all 68,482 live rows loaded from one read-only MySQL snapshot, and every row's SHA-256 matched. A deliberate one-space change was caught.
 - **Consequences for the design above:** the MySQL shape has no separate revision, comment or document tables. `rfq_draft_quotes.revision` is the revision counter, and history lives in `rfq_draft_activity` and `rfq_draft_row_edits`. Platform needs the source lacks (public IDs, document metadata, the migration ledger) are **added alongside** as new tables or nullable columns, never by reshaping these 15. The §6.4 writers map onto them: RFQs/lines/audit → `rfq_draft_quotes`, `rfq_draft_rows`, `rfq_draft_activity`, `rfq_draft_row_edits`; reader jobs → `rfq_reader_jobs`; sync → `rfq_sync_attempts`; outbox → `rfq_notification_outbox`; mail dedupe → `rfq_mail_audit`.
 - **The store (plan 2.4):** `RfqDraftStore` / `AzureSqlRfqDraftStore` write these tables with the source's storage behaviour ported exactly (`core/src/Rfq/Storage`: line identity, parser snapshot, change log, Python's JSON and number text), proven against the source's own output and all live lines. One transaction per write; a save locks the draft row and refuses a stale revision. The status a save leaves is the caller's (readiness, plan 5.3). `rfq_sync_attempts.payload` is written compact by the source (it is hashed); Phase 5 must match that.
-- **The queue (plan 2.4):** `AzureSqlRfqRepository` reads these tables for `rfq.queue.v1` / `rfq.detail.v1`. Scope is a `WHERE` clause; people are matched by email once (identity primary address or verified alias, and an address two users claim maps to nobody), and the same match decides both the record's owner and scope. `StoreProjection` holds the translations: public id = draft id as a UUID; reference `RFQ-` + 8 hex; channel; reader `done` → `proposed`/`applied`; the status map. On live data, 29 of 35 addresses match a user, and the 6 that do not own 60 drafts.
+- **The queue (plan 2.4):** `AzureSqlRfqRepository` reads these tables for `rfq.queue.v1` / `rfq.detail.v1`, with no scope clause (everyone who reads sees every RFQ) and a `branch` filter. People are matched by email once (identity primary address or verified alias; an address two users claim maps to nobody), which gives each record its owner and assignee: who may *work* it, and the `mine` filter. `StoreProjection` holds the translations: public id = draft id as a UUID; reference `RFQ-` + 8 hex; channel; reader `done` → `proposed`/`applied`; the status map. On live data, 29 of 35 addresses match a user; the 6 that do not own 60 drafts, which everyone still sees, and which only a manager can work until they are assigned.
 - **Access tables:** `rfq_roles`, `rfq_user_roles` and `rfq_identities` are carried for the history they hold. Platform access still comes from `RFQ.*` permissions (§4); they grant nothing.
 
 ## 7. Where things are
@@ -265,7 +255,7 @@ The platform's RFQ tables **follow `tc-mysql-live` table for table**, so the dat
 | Concern | Code | Tests |
 |---|---|---|
 | Permissions, roles | `core/src/Rfq/Module.php`, `database/scripts/development/seed-rfq-*.sql` | `core/tests/Rfq/Domain/RfqModuleTest.php`, `tests/Rfq/RfqSeedScriptTest.php` |
-| Scope and actions | `Domain/Service/RfqAccessPolicy.php` | `RfqAccessPolicyTest.php` |
+| Visibility and actions | `Domain/Service/RfqAccessPolicy.php` | `RfqAccessPolicyTest.php` |
 | State machines | `Domain/Service/*TransitionPolicy.php`, `ExtractionStatePolicy.php`, `LineApprovalPolicy.php` | `core/tests/Rfq/Domain/*` |
 | Contracts | `Application/DTO/*`, `Parser/*` | `core/tests/Rfq/Parser/ParserContractTest.php` |
 | Endpoints | `src/Http/Action/Rfq/*`, `AppBuilder::registerRfqRoutes()` | `tests/Http/RfqEndpointsTest.php`, `tests/Http/RfqRouteTableTest.php` |
@@ -279,9 +269,9 @@ Phase 1 started before the Phase 0 exit, on the owner's instruction (28 Sep 2026
 | Q1 | Keep or revert the live `needs_clarification` change | `LineMatchStatus::BLOCKING`; one test flips |
 | Q5 | Which store is live | **answered 28 Sep: MySQL (`tc-mysql-live`)**; `MAIL_AUTO_PUSH_4JS` and `RFQ_OPEN_DRAFT_ACCESS` are both on. The translator reads live MySQL; the 7 empty Azure SQL `rfq.*` tables from 5 Aug are left untouched |
 | Q6 | Who owns the mailbox | the Phase 6 rows of §6.4 |
-| Q7 | Where branch membership comes from | an `RfqBranchDirectory` implementation; **blocks plan 1.4** |
-| Q8 | Who gets pilot access; is `RFQ_OPEN_DRAFT_ACCESS` on | role assignments; possibly all scope |
+| Q7 | Where branch membership comes from | an `RfqBranchDirectory` implementation; the default branch filter and new-RFQ branch, **no longer access** |
+| Q8 | Who works RFQs in the pilot; may anyone work any draft, as `RFQ_OPEN_DRAFT_ACCESS=true` allows today | role assignments; one line in `allowedActions()`. **Reading answered 28 Sept: every employee reads every RFQ** |
 | Q9 | Hide or withhold pricing | `PricingSnapshot::toArray()` call site; role placement of `RFQ.PRICING.VIEW` |
-| Q10 | Unattributed RFQs: manager triage or admin queue | one rule in `RfqAccessPolicy::canSee()` |
+| Q10 | Unattributed RFQs: manager triage or admin queue | **answered 28 Sept: moot, everyone sees every RFQ**; `branch=none` filters them |
 | — | Scan-read lines syncing from the editor without approval (§5.3) | `LineApprovalPolicy::syncBlockReason()` |
 | — | Navigation fit of `/admin/rfqs` (plan 1.5) | web routes only |
