@@ -266,7 +266,7 @@ Phase 1 started before the Phase 0 exit, on the owner's instruction (28 Sep 2026
 | Q | Question | What moves |
 |---|---|---|
 | Q1 | Keep or revert the live `needs_clarification` change | `LineMatchStatus::BLOCKING`; one test flips |
-| Q5 | Which store is live | the Phase 7 translator source, not this design |
+| Q5 | Which store is live | **answered 28 Sep: MySQL (`tc-mysql-live`)**; `MAIL_AUTO_PUSH_4JS` and `RFQ_OPEN_DRAFT_ACCESS` are both on. The translator reads live MySQL; the 7 empty Azure SQL `rfq.*` tables from 5 Aug are left untouched |
 | Q6 | Who owns the mailbox | the Phase 6 rows of §6.4 |
 | Q7 | Where branch membership comes from | an `RfqBranchDirectory` implementation; **blocks plan 1.4** |
 | Q8 | Who gets pilot access; is `RFQ_OPEN_DRAFT_ACCESS` on | role assignments; possibly all scope |
