@@ -122,7 +122,7 @@ Seeded by `database/scripts/development/seed-rfq-permissions.sql`, module code `
 
 ### 4.2 Roles
 
-`seed-rfq-roles.sql` creates three roles and **assigns them to nobody**. They are generated from `Module::ROLE_PERMISSIONS`, and each is the one above plus more:
+`seed-rfq-roles.sql` creates three roles and **assigns them to nobody**; people are assigned separately (pilot: 2 admins, 27 sales on tricab-mel, 28 Sept). They are generated from `Module::ROLE_PERMISSIONS`, and each is the one above plus more:
 
 | Role | Adds |
 |---|---|
@@ -271,7 +271,7 @@ Phase 1 started before the Phase 0 exit, on the owner's instruction (28 Sep 2026
 | Q5 | Which store is live | **answered 28 Sep: MySQL (`tc-mysql-live`)**; `MAIL_AUTO_PUSH_4JS` and `RFQ_OPEN_DRAFT_ACCESS` are both on. The translator reads live MySQL; the 7 empty Azure SQL `rfq.*` tables from 5 Aug are left untouched |
 | Q6 | Who owns the mailbox | the Phase 6 rows of §6.4 |
 | Q7 | Where branch membership comes from | an `RfqBranchDirectory` implementation; the default branch filter and new-RFQ branch, **no longer access** |
-| Q8 | Who works RFQs in the pilot | role assignments. **Answered 28 Sept: every employee reads every RFQ; anyone with the permission works any RFQ; the last worker is the sales rep; the roles are sales and admin, no sales manager.** Still open: which people hold which role |
+| Q8 | Who works RFQs in the pilot | **Answered 28 Sept:** every employee reads every RFQ; anyone with the permission works any RFQ; the last worker is the sales rep; roles are sales and admin only. Assigned on tricab-mel: `RFQ_ADMIN` 2, `RFQ_SALES` 27 (`platform/rfq-pilot-roles/`) |
 | Q9 | Hide or withhold pricing | `PricingSnapshot::toArray()` call site; role placement of `RFQ.PRICING.VIEW` |
 | Q10 | Unattributed RFQs: manager triage or admin queue | **answered 28 Sept: moot, everyone sees every RFQ**; `branch=none` filters them |
 | — | Scan-read lines syncing from the editor without approval (§5.3) | `LineApprovalPolicy::syncBlockReason()` |
