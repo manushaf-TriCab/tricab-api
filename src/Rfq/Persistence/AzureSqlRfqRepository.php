@@ -13,12 +13,10 @@ use TriCab\Core\Rfq\Application\DTO\RfqRecord;
 use TriCab\Core\Rfq\Application\DTO\RfqSummary;
 use TriCab\Core\Rfq\Contract\RfqRepository;
 use TriCab\Core\Rfq\Domain\Service\ExtractionStatePolicy;
-use TriCab\Core\Rfq\Domain\Service\RfqAccessPolicy;
 use TriCab\Core\Rfq\Domain\ValueObject\Priority;
 use TriCab\Core\Rfq\Domain\ValueObject\ReaderJobStatus;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqOwnership;
-use TriCab\Core\Rfq\Domain\ValueObject\RfqScope;
 use TriCab\Core\Rfq\Domain\ValueObject\WorkflowStatus;
 use TriCab\Core\Rfq\Module;
 use TriCab\Core\Rfq\Storage\StoreFormat;
@@ -29,11 +27,11 @@ use TriCab\Core\Rfq\Storage\StoreProjection;
  * (`[rfq]`, the live MySQL shape, §6.5). Replaces `InMemoryRfqRepository` in
  * the azure-sql branch.
  *
- * ## Scope is in the query
+ * ## No scope
  *
- * `RfqAccessPolicy::canSee()` is reproduced as a `WHERE` clause, so a page
- * and its total are counted over visible rows only. The service re-checks
- * every row against the policy and fails loudly on a mismatch.
+ * Everyone who reads RFQs reads all of them (`RfqAccessPolicy::canSee()`,
+ * owner decision 28 Sep 2026). The query applies only the caller's filters,
+ * which narrow; branch is one of them.
  *
  * ## People are matched by email, once
  *
@@ -41,10 +39,10 @@ use TriCab\Core\Rfq\Storage\StoreProjection;
  * the source did. The `people` CTE maps a normalised address to exactly one
  * platform user: `identity.Users` primary addresses, plus verified, active
  * `identity.UserEmailAddresses`. An address claimed by two users maps to
- * nobody. The **same** CTE yields `ownerUserId`/`assigneeUserId` on the record
- * and decides the scope predicate, so the record the policy sees and the rows
- * the query admits cannot disagree. An address that matches nobody grants
- * nothing: the RFQ is then visible only at all scope, or by branch.
+ * nobody. The same CTE gives the record its owner and assignee, which decide
+ * who may *work* it, and serves the `mine` filter, so the two cannot disagree.
+ * An address that matches nobody makes the RFQ nobody's own: everyone still
+ * sees it, and only a manager can work it until it is assigned.
  *
  * ## Not here yet
  *
@@ -82,8 +80,7 @@ final class AzureSqlRfqRepository implements RfqRepository
             return ['items' => [], 'total' => 0];
         }
         $params = [];
-        $where = [$this->scopePredicate($actor, $params)];
-        $where = [...$where, ...$this->filterPredicates($actor, $query, $params)];
+        $where = ['1 = 1', ...$this->filterPredicates($actor, $query, $params)];
         $params['offset'] = ($query->page - 1) * $query->pageSize;
         $params['limit'] = $query->pageSize;
 
@@ -117,6 +114,18 @@ final class AzureSqlRfqRepository implements RfqRepository
         return $rows === [] ? null : $this->records($rows)[0];
     }
 
+    public function branches(): array
+    {
+        $rows = $this->connection->fetchAll(
+            "SELECT DISTINCT UPPER(LTRIM(RTRIM([branch]))) AS [branch]
+             FROM [rfq].[rfq_draft_quotes]
+             WHERE NULLIF(LTRIM(RTRIM([branch])), N'') IS NOT NULL
+             ORDER BY 1",
+        );
+
+        return array_map(static fn (array $r): string => AzureSqlValueMapper::stringValue($r['branch']), $rows);
+    }
+
     public function findDetail(RfqRecord $record, array $allowedActions): RfqDetail
     {
         return new RfqDetail(new RfqSummary($record, $allowedActions), null, [], [], []);
@@ -125,7 +134,7 @@ final class AzureSqlRfqRepository implements RfqRepository
     private function count(RfqActor $actor, RfqQueueQuery $query): int
     {
         $params = [];
-        $where = [$this->scopePredicate($actor, $params), ...$this->filterPredicates($actor, $query, $params)];
+        $where = ['1 = 1', ...$this->filterPredicates($actor, $query, $params)];
         $rows = $this->connection->fetchAll(
             self::PEOPLE . ' SELECT COUNT(*) AS [n] ' . self::from() . ' WHERE ' . implode(' AND ', array_filter($where)),
             $params,
@@ -161,29 +170,6 @@ final class AzureSqlRfqRepository implements RfqRepository
     }
 
     /**
-     * `RfqAccessPolicy::canSee()` for an actor already known to hold
-     * `RFQ.DRAFT.READ`, as SQL over the `from()` aliases.
-     *
-     * @param array<string, scalar|null> $params
-     */
-    private function scopePredicate(RfqActor $actor, array &$params): string
-    {
-        $scope = RfqAccessPolicy::effectiveScope($actor);
-        if ($scope->is(RfqScope::ALL)) {
-            return '1 = 1';
-        }
-        $params['scope_user'] = $actor->userId;
-        $mine = '(o.[UserId] = :scope_user OR a.[UserId] = :scope_user2)';
-        $params['scope_user2'] = $actor->userId;
-        if (!$scope->is(RfqScope::BRANCH) || $actor->branchCode === null) {
-            return $mine;
-        }
-        $params['scope_branch'] = strtoupper(trim($actor->branchCode));
-
-        return "({$mine} OR (NULLIF(LTRIM(RTRIM(d.[branch])), N'') IS NOT NULL AND UPPER(LTRIM(RTRIM(d.[branch]))) = :scope_branch))";
-    }
-
-    /**
      * The queue filters, which narrow and never widen.
      *
      * @param array<string, scalar|null> $params
@@ -202,6 +188,18 @@ final class AzureSqlRfqRepository implements RfqRepository
         if ($query->mineOnly) {
             $params['mine_user'] = $actor->userId;
             $where[] = 'a.[UserId] = :mine_user';
+        }
+        if ($query->branches !== []) {
+            $branch = 'UPPER(LTRIM(RTRIM(d.[branch])))';
+            $codes = array_values(array_filter($query->branches, static fn (string $b): bool => $b !== RfqQueueQuery::BRANCH_NONE));
+            $either = [];
+            if ($codes !== []) {
+                $either[] = "{$branch} IN (" . self::bindList('branch', $codes, $params) . ')';
+            }
+            if (in_array(RfqQueueQuery::BRANCH_NONE, $query->branches, true)) {
+                $either[] = "NULLIF(LTRIM(RTRIM(d.[branch])), N'') IS NULL";
+            }
+            $where[] = '(' . implode(' OR ', $either) . ')';
         }
         if ($query->statuses !== []) {
             $where[] = self::workflowStatusSql() . ' IN (' . self::bindList('status', array_map(

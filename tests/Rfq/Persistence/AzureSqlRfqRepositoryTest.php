@@ -26,10 +26,11 @@ use TriCab\Core\Shared\Time\SystemClock;
 /**
  * Plan 2.4, the read side: the queue and the record from the store's tables.
  *
- * The property that matters most is that **the SQL scope and the PHP policy
- * agree**: for every kind of actor, the rows the query returns are exactly
- * the drafts `RfqAccessPolicy::canSee()` allows, and the total counts only
- * those. The rest pins the mapping from the source's columns and the filters.
+ * The property that matters most is that **the query and the PHP policy
+ * agree**: for every kind of actor, the rows returned are exactly the drafts
+ * `RfqAccessPolicy::canSee()` allows (every one, for anyone who reads), and
+ * the total counts those. The rest pins the mapping from the source's columns
+ * and the filters, branch among them.
  *
  * Needs a local SQL Server ({@see LocalRfqSqlServer}); skips without one.
  */
@@ -63,13 +64,11 @@ final class AzureSqlRfqRepositoryTest extends TestCase
     public function testTheQueryAdmitsExactlyWhatThePolicyAllowsForEveryActor(): void
     {
         $actors = [
-            'no permission' => $this->actor('alice', [], 'VIC'),
-            'own (alice)' => $this->actor('alice', [Module::PERMISSION_DRAFT_READ], null),
-            'own (carol, by verified alias)' => $this->actor('carol', [Module::PERMISSION_DRAFT_READ], null),
-            'own (dave, unverified alias only)' => $this->actor('dave', [Module::PERMISSION_DRAFT_READ], null),
-            'branch VIC (bob)' => $this->actor('bob', [Module::PERMISSION_DRAFT_READ, Module::PERMISSION_SCOPE_BRANCH], ' vic '),
-            'branch without a branch (bob)' => $this->actor('bob', [Module::PERMISSION_DRAFT_READ, Module::PERMISSION_SCOPE_BRANCH], null),
-            'all' => $this->actor('erin', [Module::PERMISSION_DRAFT_READ, Module::PERMISSION_SCOPE_ALL], null),
+            'no permission' => $this->actor('alice', [Module::PERMISSION_ACCESS], 'VIC'),
+            'employee (alice)' => $this->actor('alice', Module::EMPLOYEE_PERMISSIONS, null),
+            'employee (dave, unverified alias only)' => $this->actor('dave', Module::EMPLOYEE_PERMISSIONS, null),
+            'sales in VIC (bob)' => $this->actor('bob', Module::ROLE_PERMISSIONS[Module::ROLE_SALES], 'VIC'),
+            'manager (erin)' => $this->actor('erin', Module::ROLE_PERMISSIONS[Module::ROLE_SALES_MANAGER], null),
         ];
         $all = $this->allRecords();
         self::assertCount(count($this->drafts), $all);
@@ -88,6 +87,8 @@ final class AzureSqlRfqRepositoryTest extends TestCase
                 self::assertSame(count($expected), $page['total'], "{$label} total");
             }
         }
+        self::assertCount(0, $this->repository->pageVisibleTo($actors['no permission'], RfqQueueQuery::defaults())['items']);
+        self::assertSame(count($this->drafts), $this->repository->pageVisibleTo($actors['employee (dave, unverified alias only)'], new RfqQueueQuery('', [], [], RfqQueueQuery::ARCHIVED_INCLUDE, false, 1, 100))['total'], 'every RFQ, for every reader');
         // And the service's own re-check never fires.
         foreach ($actors as $actor) {
             (new ReadRfqQueueService($this->repository))->page($actor, RfqQueueQuery::defaults());
@@ -126,7 +127,7 @@ final class AzureSqlRfqRepositoryTest extends TestCase
 
     public function testFiltersNarrowAsTheInMemoryRulesDo(): void
     {
-        $all = $this->actor('erin', [Module::PERMISSION_DRAFT_READ, Module::PERMISSION_SCOPE_ALL], null);
+        $all = $this->actor('erin', Module::EMPLOYEE_PERMISSIONS, null);
         $names = fn (RfqQueueQuery $q): array => $this->names($this->repository->pageVisibleTo($all, $q)['items']);
         $q = self::query(...);
 
@@ -144,13 +145,21 @@ final class AzureSqlRfqRepositoryTest extends TestCase
         self::assertSame(['archived'], $names($q('', [], [], RfqQueueQuery::ARCHIVED_ONLY)));
         self::assertNotContains('archived', $names($q()));
 
-        $carol = $this->actor('carol', [Module::PERMISSION_DRAFT_READ, Module::PERMISSION_SCOPE_ALL], null);
+        self::assertSame(['nsw'], $names(RfqQueueQuery::fromQueryParams(['branch' => 'NSW'])));
+        self::assertSame(['mine', 'urgent', 'vic'], self::sortedNames($names(RfqQueueQuery::fromQueryParams(['branch' => 'vic']))), 'branch compared upper-cased; archived excluded by default');
+        $none = $names(RfqQueueQuery::fromQueryParams(['branch' => 'none', 'pageSize' => '100']));
+        self::assertContains('unassigned', $none);
+        self::assertNotContains('nsw', $none);
+        self::assertSame(['nsw', 'unassigned'], self::sortedNames(array_values(array_intersect($names(RfqQueueQuery::fromQueryParams(['branch' => 'NSW,none', 'pageSize' => '100'])), ['nsw', 'unassigned', 'vic']))));
+        self::assertSame(['NSW', 'VIC'], $this->repository->branches());
+
+        $carol = $this->actor('carol', Module::EMPLOYEE_PERMISSIONS, null);
         self::assertSame(['email'], $this->names($this->repository->pageVisibleTo($carol, $q('', [], [], RfqQueueQuery::ARCHIVED_EXCLUDE, true))['items']), 'mine = assigned to me');
     }
 
     public function testOrderIsMostPressingThenNewestAndPagesCountTheWhole(): void
     {
-        $all = $this->actor('erin', [Module::PERMISSION_DRAFT_READ, Module::PERMISSION_SCOPE_ALL], null);
+        $all = $this->actor('erin', Module::EMPLOYEE_PERMISSIONS, null);
         $every = $this->repository->pageVisibleTo($all, new RfqQueueQuery('', [], [], RfqQueueQuery::ARCHIVED_INCLUDE, false, 1, 100));
         self::assertSame('urgent', $this->names($every['items'])[0]);
         $ranks = array_map(static fn (RfqRecord $r): int => $r->priority->rank(), $every['items']);
@@ -251,6 +260,18 @@ final class AzureSqlRfqRepositoryTest extends TestCase
     {
         $rows = array_map(static fn (int $i): array => ['raw_text' => "line {$i}"], range(1, $lines));
         $this->drafts[$name] = $this->store->create(new NewDraft($source, $label !== '' ? $label : $name, $header, $rows, null, $owner, $branch, $assignee));
+    }
+
+    /**
+     * @param list<string> $names
+     *
+     * @return list<string>
+     */
+    private static function sortedNames(array $names): array
+    {
+        sort($names);
+
+        return $names;
     }
 
     private function user(string $email, string $display): int

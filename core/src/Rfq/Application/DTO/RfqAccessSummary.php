@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Rfq\Application\DTO;
 
-use TriCab\Core\Rfq\Domain\Service\RfqAccessPolicy;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
 
 /**
@@ -16,10 +15,10 @@ use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
  * browser. Nothing here is cached by the server between requests, so a
  * revoked grant is gone on the next call (invariant 1, source quirk Q14).
  *
- * `branch.source` says where a branch came from. `unavailable` until platform
- * identity carries branch membership (Q7): the SPA then says why a
- * branch-scoped person sees only their own work, instead of showing an empty
- * branch queue that looks like a quiet day.
+ * There is no scope in it: everyone who reads RFQs reads all of them (owner
+ * decision, 28 Sep 2026). `branch` is the person's own branch, for a default
+ * queue filter; `branch.source` says where it came from, `unavailable` until
+ * platform identity carries branch membership (Q7).
  */
 final class RfqAccessSummary
 {
@@ -39,8 +38,6 @@ final class RfqAccessSummary
     {
         return [
             'permissions' => $this->actor->rfqPermissions(),
-            'grantedScope' => RfqAccessPolicy::grantedScope($this->actor)->toString(),
-            'effectiveScope' => RfqAccessPolicy::effectiveScope($this->actor)->toString(),
             'branch' => [
                 'code' => $this->actor->branchCode,
                 'source' => $this->branchSource,

@@ -9,13 +9,12 @@ use TriCab\Core\Rfq\Domain\ValueObject\Priority;
 use TriCab\Core\Rfq\Domain\ValueObject\WorkflowStatus;
 
 /**
- * The filters a caller may put on the queue. Scope is not one of them.
+ * The filters a caller may put on the queue. Every one only narrows.
  *
- * A caller narrows what they can already see; they cannot widen it. There is
- * deliberately no `branch=` or `scope=` parameter that the server trusts — the
- * scaffold's `branchLock` and `canSwitchBranch` were computed in the browser.
- * `mine=1` narrows to the caller's own assigned work, which is always within
- * scope.
+ * Everyone who reads RFQs reads all of them, so none of these is an access
+ * decision. `branch` is a comma-separated list of branch codes, compared
+ * upper-cased; `none` selects the RFQs that carry no branch. `mine=1` narrows
+ * to the caller's own assigned work.
  */
 final class RfqQueueQuery
 {
@@ -27,9 +26,15 @@ final class RfqQueueQuery
     public const MAX_PAGE_SIZE = 100;
     public const MAX_SEARCH_LENGTH = 200;
 
+    /** The branch filter value for RFQs that carry no branch. */
+    public const BRANCH_NONE = 'none';
+
+    private const BRANCH_PATTERN = '/^[A-Z0-9_-]{1,32}$/';
+
     /**
      * @param list<WorkflowStatus> $statuses empty = any
      * @param list<Priority> $priorities empty = any
+     * @param list<string> $branches upper-cased codes, or `BRANCH_NONE`; empty = any
      */
     public function __construct(
         public readonly string $search,
@@ -39,6 +44,7 @@ final class RfqQueueQuery
         public readonly bool $mineOnly,
         public readonly int $page,
         public readonly int $pageSize,
+        public readonly array $branches = [],
     ) {
     }
 
@@ -83,6 +89,14 @@ final class RfqQueueQuery
             throw InvalidRfqValue::forOneOf('mine filter', $mine, ['1', '0']);
         }
 
+        $branches = [];
+        foreach (self::csv($params, 'branch') as $branch) {
+            $branch = strtolower($branch) === self::BRANCH_NONE ? self::BRANCH_NONE : strtoupper($branch);
+            if ($branch !== self::BRANCH_NONE && preg_match(self::BRANCH_PATTERN, $branch) !== 1) {
+                throw InvalidRfqValue::forOneOf('branch filter', $branch, ['a branch code', self::BRANCH_NONE]);
+            }
+            $branches[] = $branch;
+        }
         $page = self::int($params, 'page', 1);
         if ($page < 1 || $page > 10_000) {
             throw InvalidRfqValue::outOfRange('page', $page, 1, 10_000);
@@ -101,6 +115,7 @@ final class RfqQueueQuery
             in_array($mine, ['1', 'true'], true),
             $page,
             $pageSize,
+            array_values(array_unique($branches)),
         );
     }
 

@@ -10,19 +10,20 @@
 
   The source's four roles (access.py), re-expressed as platform roles:
 
-    RFQ_SALES          work own and branch RFQs: create, edit, claim, workflow,
-                       comment, archive, sync and reconcile. Branch scope.
+    RFQ_SALES          work RFQs assigned to them: create, edit, claim,
+                       workflow, comment, archive, sync and reconcile.
     RFQ_SALES_MANAGER  sales + assign, restore, analytics, activity log.
-    RFQ_ADMIN          manager + all-branch reports, cost and margin, all scope,
-                       module administration.
+    RFQ_ADMIN          manager + all-branch reports, cost and margin, module
+                       administration.
     RFQ_DEVELOPER      admin + review logs, diagnostics, permanent delete.
 
   What is NOT decided, and why this is a draft:
 
     - Who holds these (owner question Q8). Nobody is assigned here. Assigning
       people is plan 1.4, through User Management, not this script.
-    - Branch scope does nothing yet: platform identity has no branch (Q7), so
-      RFQ.SCOPE.BRANCH resolves to own-scope for everybody.
+    - Seeing RFQs is not a role question: every employee reads every RFQ
+      (seed-rfq-permissions.sql, owner decision 28 Sep 2026). These roles add
+      the right to work them.
     - RFQ.PRICING.VIEW sits with admin and developer, where the source put
       pricing.view. In the source it HIDES prices in the browser rather than
       withholding them (Q9). If the answer is "withhold", sales and managers
@@ -100,7 +101,6 @@ BEGIN TRY
         (N'RFQ_SALES', N'RFQ.DRAFT.ARCHIVE'),
         (N'RFQ_SALES', N'RFQ.QUOTE.SYNC'),
         (N'RFQ_SALES', N'RFQ.QUOTE.RECONCILE'),
-        (N'RFQ_SALES', N'RFQ.SCOPE.BRANCH'),
         (N'RFQ_SALES_MANAGER', N'RFQ.ACCESS'),
         (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.READ'),
         (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.CREATE'),
@@ -111,7 +111,6 @@ BEGIN TRY
         (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.ARCHIVE'),
         (N'RFQ_SALES_MANAGER', N'RFQ.QUOTE.SYNC'),
         (N'RFQ_SALES_MANAGER', N'RFQ.QUOTE.RECONCILE'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.SCOPE.BRANCH'),
         (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.ASSIGN'),
         (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.RESTORE'),
         (N'RFQ_SALES_MANAGER', N'RFQ.ANALYTICS.READ'),
@@ -126,14 +125,12 @@ BEGIN TRY
         (N'RFQ_ADMIN', N'RFQ.DRAFT.ARCHIVE'),
         (N'RFQ_ADMIN', N'RFQ.QUOTE.SYNC'),
         (N'RFQ_ADMIN', N'RFQ.QUOTE.RECONCILE'),
-        (N'RFQ_ADMIN', N'RFQ.SCOPE.BRANCH'),
         (N'RFQ_ADMIN', N'RFQ.DRAFT.ASSIGN'),
         (N'RFQ_ADMIN', N'RFQ.DRAFT.RESTORE'),
         (N'RFQ_ADMIN', N'RFQ.ANALYTICS.READ'),
         (N'RFQ_ADMIN', N'RFQ.AUDIT.READ'),
         (N'RFQ_ADMIN', N'RFQ.REPORTS.READ'),
         (N'RFQ_ADMIN', N'RFQ.PRICING.VIEW'),
-        (N'RFQ_ADMIN', N'RFQ.SCOPE.ALL'),
         (N'RFQ_ADMIN', N'RFQ.ADMIN'),
         (N'RFQ_DEVELOPER', N'RFQ.ACCESS'),
         (N'RFQ_DEVELOPER', N'RFQ.DRAFT.READ'),
@@ -145,14 +142,12 @@ BEGIN TRY
         (N'RFQ_DEVELOPER', N'RFQ.DRAFT.ARCHIVE'),
         (N'RFQ_DEVELOPER', N'RFQ.QUOTE.SYNC'),
         (N'RFQ_DEVELOPER', N'RFQ.QUOTE.RECONCILE'),
-        (N'RFQ_DEVELOPER', N'RFQ.SCOPE.BRANCH'),
         (N'RFQ_DEVELOPER', N'RFQ.DRAFT.ASSIGN'),
         (N'RFQ_DEVELOPER', N'RFQ.DRAFT.RESTORE'),
         (N'RFQ_DEVELOPER', N'RFQ.ANALYTICS.READ'),
         (N'RFQ_DEVELOPER', N'RFQ.AUDIT.READ'),
         (N'RFQ_DEVELOPER', N'RFQ.REPORTS.READ'),
         (N'RFQ_DEVELOPER', N'RFQ.PRICING.VIEW'),
-        (N'RFQ_DEVELOPER', N'RFQ.SCOPE.ALL'),
         (N'RFQ_DEVELOPER', N'RFQ.ADMIN'),
         (N'RFQ_DEVELOPER', N'RFQ.REVIEWLOG.READ'),
         (N'RFQ_DEVELOPER', N'RFQ.TECHNICAL.READ'),

@@ -10,19 +10,18 @@ use TriCab\Core\Rfq\Application\DTO\RfqRecord;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
 
 /**
- * Reads RFQs. Writes arrive with the Phase 2 schema, behind their own methods
- * with revision checks.
+ * Reads RFQs for the queue and the detail. Writes are `RfqDraftStore`'s.
  *
- * **Implementations apply the scope rule themselves**, in the query, exactly as
- * `RfqAccessPolicy::canSee()` states it: a page and its total must be computed
- * over visible rows only, or a count leaks what the rows hide. The service
- * re-checks every returned record against the policy and fails loudly on a
- * mismatch, so a repository that gets this wrong breaks a test rather than
- * quietly widening a queue.
+ * Everyone who reads RFQs reads all of them (`RfqAccessPolicy::canSee()`), so
+ * there is no scope to apply here; the filters in `RfqQueueQuery` only narrow.
+ * The service still checks every returned record against the policy.
  */
 interface RfqRepository
 {
     /**
+     * A page of RFQs under the query's filters, and the total under them. The
+     * actor is for `mine` and for the permission check.
+     *
      * @return array{items: list<RfqRecord>, total: int}
      */
     public function pageVisibleTo(RfqActor $actor, RfqQueueQuery $query): array;
@@ -32,6 +31,14 @@ interface RfqRepository
      * that "not yours" and "does not exist" produce the same 404.
      */
     public function findRecord(string $publicId): ?RfqRecord;
+
+    /**
+     * The branch codes RFQs carry, upper-cased and sorted, for the queue's
+     * branch filter.
+     *
+     * @return list<string>
+     */
+    public function branches(): array;
 
     /**
      * Header, lines, documents, reads and attempts for a record the service

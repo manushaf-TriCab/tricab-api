@@ -13,8 +13,7 @@ namespace TriCab\Core\Rfq\Domain\ValueObject;
  * client payload and rewrite — has no equivalent here.
  *
  * `branchCode` is null until platform identity carries branch membership
- * (owner question Q7, plan 1.4). The access policy reads a null branch as
- * "no branch", which narrows a branch-scoped actor to their own work.
+ * (owner question Q7). It never limits what the actor sees.
  */
 final class RfqActor
 {

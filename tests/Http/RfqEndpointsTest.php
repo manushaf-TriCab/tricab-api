@@ -18,7 +18,8 @@ use TriCab\Core\Tests\Rfq\Application\ReadRfqQueueServiceTest;
 
 /**
  * Plan 1.5 exit: denied users cannot reach RFQ data even by calling the
- * endpoints directly, and scope is applied on the server to every record.
+ * endpoints directly. Everyone who reads RFQs reads all of them, every
+ * employee reads (owner decision, 28 Sep 2026), and branch is a filter.
  *
  * Written against permissions no database holds yet: the in-memory user
  * repository is the authority here, exactly as in `OnboardingEndpointsTest`.
@@ -80,9 +81,8 @@ final class RfqEndpointsTest extends TestCase
         self::assertIsArray($permissions);
         self::assertContains(Module::PERMISSION_DRAFT_READ, $permissions);
         self::assertNotContains('ACCOUNT.LOGIN', $permissions, 'Only RFQ.* codes are reported.');
-        // Branch-scoped by grant, own-scoped in effect: nobody has a branch yet (Q7).
-        self::assertSame('branch', $data['grantedScope']);
-        self::assertSame('own', $data['effectiveScope']);
+        self::assertArrayNotHasKey('grantedScope', $data, 'reading is not scoped');
+        self::assertArrayNotHasKey('effectiveScope', $data);
         self::assertSame(['code' => null, 'source' => 'unavailable'], $data['branch']);
     }
 
@@ -107,13 +107,13 @@ final class RfqEndpointsTest extends TestCase
 
         self::assertSame([], $data['items']);
         self::assertSame(0, $data['total']);
-        self::assertSame('own', $data['scope']);
+        self::assertSame([], $data['branches']);
     }
 
-    /** Invariant 1 over HTTP: the page and the total hold only visible RFQs. */
-    public function test_the_queue_holds_only_what_the_caller_may_see(): void
+    /** As in 4js: an employee sees every RFQ, a colleague's in another branch included. */
+    public function test_an_employee_sees_every_rfq(): void
     {
-        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $app = $this->app(['account.login', ...Module::EMPLOYEE_PERMISSIONS]);
         $this->seed($app);
 
         $response = $app->handle(TestAppFactory::request('GET', self::QUEUE));
@@ -121,17 +121,23 @@ final class RfqEndpointsTest extends TestCase
         $data = $this->data($response);
 
         self::assertSame(200, $response->getStatusCode(), $body);
-        self::assertSame(1, $data['total']);
+        self::assertSame(2, $data['total']);
         self::assertStringContainsString(self::OWN_RFQ, $body);
-        self::assertStringNotContainsString(self::COLLEAGUE_RFQ, $body);
+        self::assertStringContainsString(self::COLLEAGUE_RFQ, $body);
+        self::assertSame(['NSW', 'VIC'], $data['branches']);
     }
 
-    public function test_all_scope_sees_both(): void
+    public function test_branch_is_a_filter(): void
     {
-        $app = $this->app(['account.login', Module::PERMISSION_DRAFT_READ, Module::PERMISSION_SCOPE_ALL]);
+        $app = $this->app(['account.login', ...Module::EMPLOYEE_PERMISSIONS]);
         $this->seed($app);
 
-        self::assertSame(2, $this->data($app->handle(TestAppFactory::request('GET', self::QUEUE)))['total']);
+        $response = $app->handle(TestAppFactory::request('GET', self::QUEUE)->withQueryParams(['branch' => 'nsw']));
+        $body = (string) $response->getBody();
+
+        self::assertSame(1, $this->data($response)['total']);
+        self::assertStringContainsString(self::COLLEAGUE_RFQ, $body);
+        self::assertSame(400, $app->handle(TestAppFactory::request('GET', self::QUEUE)->withQueryParams(['branch' => "VIC'--"]))->getStatusCode());
     }
 
     /** The browser renders from `allowedActions`; a reader who holds nothing else gets `view`. */
@@ -150,20 +156,22 @@ final class RfqEndpointsTest extends TestCase
     /** No email address leaves the server in a queue item (invariant 11). */
     public function test_queue_items_carry_no_email_address(): void
     {
-        $app = $this->app(['account.login', Module::PERMISSION_DRAFT_READ, Module::PERMISSION_SCOPE_ALL]);
+        $app = $this->app(['account.login', Module::PERMISSION_DRAFT_READ]);
         $this->seed($app);
 
         self::assertStringNotContainsString('@', (string) $app->handle(TestAppFactory::request('GET', self::QUEUE))->getBody());
     }
 
-    public function test_a_query_string_cannot_widen_scope(): void
+    /** Reading is the only thing an employee holds: a colleague's RFQ offers `view`, nothing more. */
+    public function test_an_employee_may_view_a_colleague_s_rfq_and_not_work_it(): void
     {
-        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $app = $this->app(['account.login', ...Module::EMPLOYEE_PERMISSIONS]);
         $this->seed($app);
 
-        $response = $app->handle(TestAppFactory::request('GET', self::QUEUE)->withQueryParams(['scope' => 'all', 'branch' => 'NSW']));
+        $data = $this->data($app->handle(TestAppFactory::request('GET', self::QUEUE . '/' . self::COLLEAGUE_RFQ)));
 
-        self::assertSame(1, $this->data($response)['total']);
+        self::assertSame(self::COLLEAGUE_RFQ, $data['publicId']);
+        self::assertSame(['view'], $data['allowedActions']);
     }
 
     public function test_an_invalid_filter_is_a_400_not_an_ignored_filter(): void
@@ -180,7 +188,7 @@ final class RfqEndpointsTest extends TestCase
 
     // ----------------------------------------------------------------- detail
 
-    public function test_an_rfq_in_scope_is_returned(): void
+    public function test_an_rfq_is_returned(): void
     {
         $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
         $this->seed($app);
@@ -194,22 +202,17 @@ final class RfqEndpointsTest extends TestCase
         self::assertNull($data['latestRevision']);
     }
 
-    /** Source `…cross_branch_concealment`: out of scope is indistinguishable from absent. */
-    public function test_an_rfq_out_of_scope_is_a_404_like_one_that_does_not_exist(): void
+    public function test_an_unknown_or_malformed_id_is_a_404(): void
     {
-        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $app = $this->app(['account.login', ...Module::EMPLOYEE_PERMISSIONS]);
         $this->seed($app);
 
-        $hidden = $app->handle(TestAppFactory::request('GET', self::QUEUE . '/' . self::COLLEAGUE_RFQ));
         $absent = $app->handle(TestAppFactory::request('GET', self::QUEUE . '/33333333-3333-4333-8333-333333333333'));
         $garbage = $app->handle(TestAppFactory::request('GET', self::QUEUE . '/drop-table'));
 
-        foreach ([$hidden, $absent, $garbage] as $response) {
+        foreach ([$absent, $garbage] as $response) {
             self::assertSame(404, $response->getStatusCode());
         }
-        $hidden->getBody()->rewind();
-        $absent->getBody()->rewind();
-        self::assertSame((string) $absent->getBody(), (string) $hidden->getBody());
     }
 
     // ---------------------------------------------------------------- helpers
@@ -233,7 +236,7 @@ final class RfqEndpointsTest extends TestCase
 
     /**
      * Two RFQs: one the signed-in user owns, one a colleague in another branch
-     * owns. Nobody has a branch yet, so a salesperson sees only the first.
+     * owns. Everyone who reads sees both.
      *
      * @param App<ContainerInterface> $app
      */

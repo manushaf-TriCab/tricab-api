@@ -15,8 +15,8 @@ use TriCab\Core\Rfq\Application\Service\ResolveRfqActorService;
 /**
  * GET /api/v1/rfqs/{publicId} — one RFQ. Contract `rfq.detail.v1`.
  *
- * Out of scope and nonexistent both answer 404 `RFQ_NOT_FOUND`, so an id from
- * another branch tells the caller nothing. Gated on `RFQ.DRAFT.READ`.
+ * A nonexistent or malformed id answers 404 `RFQ_NOT_FOUND`. Gated on
+ * `RFQ.DRAFT.READ`, which reads every RFQ.
  */
 final class GetRfqAction
 {

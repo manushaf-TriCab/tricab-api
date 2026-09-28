@@ -7,7 +7,7 @@ namespace TriCab\Core\Rfq\Domain\ValueObject;
 use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
 
 /**
- * A closed set of lower-case string values: a status, a scope, a channel.
+ * A closed set of lower-case string values: a status, a priority, a channel.
  *
  * Two readers, deliberately different:
  *

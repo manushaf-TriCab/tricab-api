@@ -10,7 +10,7 @@
   Must match TriCab\Core\Rfq\Module::PERSON_PERMISSIONS and
   INTEGRATION_PERMISSIONS; tests/Rfq/RfqSeedScriptTest.php fails if they drift.
 
-  Role mapping, and why there is almost none:
+  Role mapping:
 
     ADMINISTRATOR   RFQ.ADMIN only. Module administration, which reads no RFQ.
                     The TriExpense and Onboarding pattern: a platform
@@ -18,10 +18,13 @@
                     every customer's quote. The source's WordPress
                     `manage_options` backstop — every WordPress admin held every
                     RFQ permission — is not carried.
-    EMPLOYEE        NOTHING. The source makes every signed-in staff member a
-                    salesperson (RFQ_DEFAULT_ROLE = sales). The platform plan
-                    forbids that implicit grant; who gets RFQ access for the
-                    pilot is owner question Q8.
+    EMPLOYEE        RFQ.ACCESS and RFQ.DRAFT.READ: every employee sees every
+                    RFQ, as everybody sees every quote in 4js (owner decision,
+                    28 Sep 2026; branch is a filter, not a limit). Nothing
+                    else: working an RFQ, cost and margin, and sending to 4js
+                    stay with the four RFQ roles. The source made every staff
+                    login a salesperson (RFQ_DEFAULT_ROLE = sales); that wider
+                    grant is still not carried (Q8).
     GUEST           NOTHING, ever. Guarded below.
 
   The four RFQ roles are created by seed-rfq-roles.sql, assigned to nobody.
@@ -50,19 +53,19 @@ BEGIN TRY
         (N'RFQ.ACCESS',            N'Access RFQs',
          N'Reach the RFQ module and see one''s own RFQ access. Grants no RFQ.'),
         (N'RFQ.DRAFT.READ',        N'Read RFQs',
-         N'List and open RFQs within the holder''s scope.'),
+         N'List and open every RFQ.'),
         (N'RFQ.DRAFT.CREATE',      N'Create RFQs',
          N'Create an RFQ from pasted text, files or images. The creator owns it.'),
         (N'RFQ.DRAFT.EDIT',        N'Edit RFQs',
-         N'Save a revision and resolve reader proposals, on RFQs assigned to the holder, or any in scope for a manager.'),
+         N'Save a revision and resolve reader proposals, on RFQs assigned to the holder, or any RFQ for a manager.'),
         (N'RFQ.DRAFT.CLAIM',       N'Claim RFQs',
-         N'Take an unassigned RFQ in scope.'),
+         N'Take an unassigned RFQ.'),
         (N'RFQ.DRAFT.ASSIGN',      N'Assign RFQs',
-         N'Assign and reassign, bulk actions, priority and due date. Also lets the holder work RFQs in scope that are not assigned to them.'),
+         N'Assign and reassign, bulk actions, priority and due date. Also lets the holder work RFQs that are not assigned to them.'),
         (N'RFQ.DRAFT.WORKFLOW',    N'Change RFQ workflow',
          N'Start, block and return RFQs to the queue, within the workflow rules.'),
         (N'RFQ.DRAFT.COMMENT',     N'Comment on RFQs',
-         N'Add comments to RFQs in scope.'),
+         N'Add comments to RFQs.'),
         (N'RFQ.DRAFT.ARCHIVE',     N'Archive RFQs',
          N'Archive an RFQ, with a reason.'),
         (N'RFQ.DRAFT.RESTORE',     N'Restore RFQs',
@@ -76,19 +79,15 @@ BEGIN TRY
         (N'RFQ.PRICING.VIEW',      N'See RFQ cost and margin',
          N'See cost, margin and sell prices on RFQs. Whether this hides or withholds is an open owner decision.'),
         (N'RFQ.ANALYTICS.READ',    N'Read RFQ analytics',
-         N'Scoped RFQ statistics.'),
+         N'RFQ statistics.'),
         (N'RFQ.REPORTS.READ',      N'Read RFQ reports',
          N'Review metrics and activity summaries across every branch.'),
         (N'RFQ.AUDIT.READ',        N'Read RFQ activity',
-         N'The RFQ activity log, within scope.'),
+         N'The RFQ activity log.'),
         (N'RFQ.REVIEWLOG.READ',    N'Read RFQ review logs',
          N'Raw review sessions and row edit history, including customer text.'),
         (N'RFQ.TECHNICAL.READ',    N'Read RFQ diagnostics',
          N'Parser, reader, catalogue and job diagnostics.'),
-        (N'RFQ.SCOPE.BRANCH',      N'RFQ scope: branch',
-         N'Widen RFQ reads from the holder''s own to their branch''s.'),
-        (N'RFQ.SCOPE.ALL',         N'RFQ scope: all branches',
-         N'Widen RFQ reads to every branch.'),
         (N'RFQ.ADMIN',             N'Administer RFQs',
          N'Administer the RFQ module. Reads no RFQ.'),
         (N'RFQ.MAIL.INGEST',       N'RFQ mailbox intake',
@@ -107,43 +106,54 @@ BEGIN TRY
     );
 
     /* ------------------------------------------------------------------
-       The one platform-role mapping this script owns.
+       The platform-role mappings this script owns.
        ------------------------------------------------------------------ */
+    DECLARE @Mappings TABLE (
+        [RoleCode]       NVARCHAR(100) NOT NULL,
+        [PermissionCode] NVARCHAR(150) NOT NULL,
+        PRIMARY KEY ([RoleCode], [PermissionCode])
+    );
+    INSERT INTO @Mappings ([RoleCode], [PermissionCode])
+    VALUES
+        (N'ADMINISTRATOR', N'RFQ.ADMIN'),
+        (N'EMPLOYEE',      N'RFQ.ACCESS'),
+        (N'EMPLOYEE',      N'RFQ.DRAFT.READ');
+
     INSERT INTO [identity].[RolePermissions] ([RoleId], [PermissionId], [IsActive])
     SELECT r.[RoleId], p.[PermissionId], 1
-    FROM [identity].[Roles] r
-    JOIN [identity].[Permissions] p ON UPPER(p.[PermissionCode]) = N'RFQ.ADMIN'
-    WHERE UPPER(r.[RoleCode]) = N'ADMINISTRATOR'
-      AND NOT EXISTS (
-          SELECT 1 FROM [identity].[RolePermissions] rp
-          WHERE rp.[RoleId] = r.[RoleId] AND rp.[PermissionId] = p.[PermissionId]
-      );
+    FROM @Mappings m
+    JOIN [identity].[Roles] r ON UPPER(r.[RoleCode]) = m.[RoleCode]
+    JOIN [identity].[Permissions] p ON UPPER(p.[PermissionCode]) = m.[PermissionCode]
+    WHERE NOT EXISTS (
+        SELECT 1 FROM [identity].[RolePermissions] rp
+        WHERE rp.[RoleId] = r.[RoleId] AND rp.[PermissionId] = p.[PermissionId]
+    );
 
     UPDATE rp
     SET rp.[IsActive] = 1
     FROM [identity].[RolePermissions] rp
     JOIN [identity].[Roles] r ON r.[RoleId] = rp.[RoleId]
     JOIN [identity].[Permissions] p ON p.[PermissionId] = rp.[PermissionId]
-    WHERE UPPER(r.[RoleCode]) = N'ADMINISTRATOR'
-      AND UPPER(p.[PermissionCode]) = N'RFQ.ADMIN'
-      AND rp.[IsActive] = 0;
+    JOIN @Mappings m ON m.[RoleCode] = UPPER(r.[RoleCode]) AND m.[PermissionCode] = UPPER(p.[PermissionCode])
+    WHERE rp.[IsActive] = 0;
 
     /* ------------------------------------------------------------------
        Guards. Each would be a serious fault, so each fails the script.
        ------------------------------------------------------------------ */
 
-    /* No implicit grant to all employees, and nothing to guests (plan). */
+    /* Every employee reads; nobody else is implicit, and guests get nothing. */
     IF EXISTS (
         SELECT 1
         FROM [identity].[RolePermissions] rp
         JOIN [identity].[Roles] r ON r.[RoleId] = rp.[RoleId]
         JOIN [identity].[Permissions] p ON p.[PermissionId] = rp.[PermissionId]
         WHERE rp.[IsActive] = 1
-          AND UPPER(r.[RoleCode]) IN (N'EMPLOYEE', N'GUEST')
           AND UPPER(p.[PermissionCode]) LIKE N'RFQ.%'
+          AND (UPPER(r.[RoleCode]) = N'GUEST'
+               OR (UPPER(r.[RoleCode]) = N'EMPLOYEE' AND UPPER(p.[PermissionCode]) NOT IN (N'RFQ.ACCESS', N'RFQ.DRAFT.READ')))
     )
     BEGIN
-        THROW 54001, N'An RFQ permission is mapped to EMPLOYEE or GUEST. RFQ access is granted explicitly, never to everybody. Refusing to continue.', 1;
+        THROW 54001, N'EMPLOYEE holds an RFQ permission beyond reading, or GUEST holds one. Working RFQs is granted through the RFQ roles only. Refusing to continue.', 1;
     END;
 
     /* The platform administrator administers the module and reads no RFQ. */

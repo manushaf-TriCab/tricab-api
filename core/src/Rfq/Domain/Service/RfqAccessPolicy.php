@@ -7,89 +7,41 @@ namespace TriCab\Core\Rfq\Domain\Service;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqAction;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqOwnership;
-use TriCab\Core\Rfq\Domain\ValueObject\RfqScope;
 use TriCab\Core\Rfq\Domain\ValueObject\WorkflowActor;
 use TriCab\Core\Rfq\Module;
 
 /**
- * Whose RFQs an actor may see, and what they may do to each one.
+ * Whether an actor may see RFQs, and what they may do to each one.
  *
  * Pure. Every endpoint that returns or changes an RFQ asks this on the
- * server, and a list query applies the same rule in SQL (invariant 1). The
- * browser receives the answer as `allowedActions` and renders from that.
+ * server; the browser receives the answer as `allowedActions` and renders
+ * from that.
  *
- * Ported from `can_see_draft`, `draft_is_mine` and `allowed_draft_actions` in
- * the pinned source (`draft_store.py`), with four deliberate differences.
- * Each is a place where the source's behaviour depended on something the
- * platform does not have, or contradicted an invariant:
+ * **Seeing is not scoped.** Anyone holding `RFQ.DRAFT.READ` sees every RFQ,
+ * as everybody sees every quote in 4js, and every employee holds it (owner
+ * decision, 28 Sep 2026). Branch is a queue filter, not a limit. Production
+ * sees the same: the source runs with `RFQ_OPEN_DRAFT_ACCESS` on, which
+ * replaces its own/branch/all `draft_scope` with "all".
  *
- *  1. **An assignee sees what is assigned to them.** The source matches only
- *     the owner, so work assigned across a branch boundary disappeared from
- *     the assignee's own list. (Assigning out of scope is refused in Phase 4.5.)
- *  2. **An unattributed RFQ is visible only at all scope.** The source also
- *     shows it to every `drafts.assign` holder in every branch, as a triage
- *     bucket. That is owner question Q10; until answered, the narrower rule.
- *  3. **A branch-scoped actor with no branch is own-scoped**, as in the source
- *     (`access.py` falls back to own). The source's reuse of a last-seen
- *     branch when the directory returns none is not carried.
- *  4. **`RFQ_OPEN_DRAFT_ACCESS` is not carried.** If production runs with it
- *     on (Q8), today's behaviour is a shared pool, and reproducing it is a
- *     grant of `RFQ.SCOPE.ALL` plus the manager permission — a role decision,
- *     not a flag.
+ * **Working is narrower.** Editing, workflow, sync, reconcile and archive
+ * belong to the assignee, or to a manager (`RFQ.DRAFT.ASSIGN`), and each still
+ * needs its own permission. Ported from `draft_is_mine` and
+ * `allowed_draft_actions` in the pinned source (`draft_store.py`), *without*
+ * the open-access flag: in production that flag also lets anyone with the
+ * permission work any draft. Whether to keep that is open (Q8).
  *
  * Permanent deletion is absent from {@see allowedActions()} on purpose: it has
  * no retention policy and no route (plan 1.3).
  */
 final class RfqAccessPolicy
 {
-    public static function effectiveScope(RfqActor $actor): RfqScope
-    {
-        if ($actor->can(Module::PERMISSION_SCOPE_ALL)) {
-            return RfqScope::all();
-        }
-
-        if ($actor->can(Module::PERMISSION_SCOPE_BRANCH) && self::hasBranch($actor)) {
-            return RfqScope::branch();
-        }
-
-        return RfqScope::own();
-    }
-
     /**
-     * The scope the actor's grants ask for, before branch membership is
-     * applied. Reported beside the effective scope so that "you are
-     * branch-scoped but have no branch" can be said out loud rather than
-     * looking like an empty queue.
+     * Every RFQ, for anyone who reads RFQs. `$rfq` is kept so that callers ask
+     * about a particular RFQ, which is where a rule would go if one returned.
      */
-    public static function grantedScope(RfqActor $actor): RfqScope
-    {
-        if ($actor->can(Module::PERMISSION_SCOPE_ALL)) {
-            return RfqScope::all();
-        }
-
-        return $actor->can(Module::PERMISSION_SCOPE_BRANCH) ? RfqScope::branch() : RfqScope::own();
-    }
-
     public static function canSee(RfqActor $actor, RfqOwnership $rfq): bool
     {
-        if (!$actor->can(Module::PERMISSION_DRAFT_READ)) {
-            return false;
-        }
-
-        $scope = self::effectiveScope($actor);
-        if ($scope->is(RfqScope::ALL)) {
-            return true;
-        }
-
-        if ($rfq->ownerUserId === $actor->userId || $rfq->assigneeUserId === $actor->userId) {
-            return true;
-        }
-
-        if ($scope->is(RfqScope::BRANCH) && !$rfq->isUnattributed()) {
-            return self::sameBranch($rfq->branchCode, $actor->branchCode);
-        }
-
-        return false;
+        return $actor->can(Module::PERMISSION_DRAFT_READ);
     }
 
     /** Assigned to this actor. The source's `draft_is_mine`, less the open-access flag. */
@@ -169,21 +121,5 @@ final class RfqAccessPolicy
         }
 
         return $actions;
-    }
-
-    private static function hasBranch(RfqActor $actor): bool
-    {
-        return $actor->branchCode !== null && trim($actor->branchCode) !== '';
-    }
-
-    private static function sameBranch(?string $a, ?string $b): bool
-    {
-        if ($a === null || $b === null) {
-            return false;
-        }
-
-        $a = strtoupper(trim($a));
-
-        return $a !== '' && $a === strtoupper(trim($b));
     }
 }

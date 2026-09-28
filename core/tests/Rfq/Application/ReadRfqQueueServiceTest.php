@@ -24,8 +24,8 @@ use TriCab\Core\Rfq\Infrastructure\InMemoryRfqRepository;
 use TriCab\Core\Rfq\Module;
 
 /**
- * The service between the endpoints and the store: scope on every record, and
- * a loud failure when a repository returns one it should not have.
+ * The service between the endpoints and the store: the permission on every
+ * record, and a loud failure when a repository returns one it should not have.
  */
 final class ReadRfqQueueServiceTest extends TestCase
 {
@@ -64,27 +64,35 @@ final class ReadRfqQueueServiceTest extends TestCase
         return new RfqActor(10, 'u10', Module::ROLE_PERMISSIONS[Module::ROLE_SALES], $branch);
     }
 
-    public function test_the_page_and_its_total_hold_only_what_the_actor_may_see(): void
+    public function test_a_reader_gets_every_rfq_and_the_branches_to_filter_by(): void
     {
         $repository = (new InMemoryRfqRepository())
             ->withRecord(self::record(self::MINE, 10, 'VIC'))
-            ->withRecord(self::record(self::OTHER_BRANCH, 20, 'NSW'));
+            ->withRecord(self::record(self::OTHER_BRANCH, 20, 'NSW'))
+            ->withRecord(self::record('33333333-3333-4333-8333-333333333333', null, null));
+        $service = new ReadRfqQueueService($repository);
 
-        $page = (new ReadRfqQueueService($repository))->page(self::sales('VIC'), RfqQueueQuery::defaults());
+        $page = $service->page(self::sales('VIC'), RfqQueueQuery::defaults());
+        self::assertSame(3, $page->total);
+        self::assertSame(['NSW', 'VIC'], $page->toArray()['branches']);
 
-        self::assertSame(1, $page->total);
-        self::assertSame(self::MINE, $page->items[0]->record->publicId);
-        self::assertSame('branch', $page->toArray()['scope']);
+        $nsw = $service->page(self::sales('VIC'), RfqQueueQuery::fromQueryParams(['branch' => 'nsw']));
+        self::assertSame([self::OTHER_BRANCH], array_map(static fn (RfqSummary $s): string => $s->record->publicId, $nsw->items));
+        $none = $service->page(self::sales('VIC'), RfqQueueQuery::fromQueryParams(['branch' => 'none,VIC']));
+        self::assertSame(2, $none->total, 'none is the RFQs with no branch');
     }
 
-    public function test_an_out_of_scope_id_and_an_unknown_id_are_the_same_answer(): void
+    public function test_without_read_an_rfq_and_an_unknown_id_are_the_same_answer(): void
     {
         $repository = (new InMemoryRfqRepository())->withRecord(self::record(self::OTHER_BRANCH, 20, 'NSW'));
         $service = new ReadRfqQueueService($repository);
+        $noRead = new RfqActor(10, 'u10', [Module::PERMISSION_ACCESS], null);
 
-        self::assertNull($service->detail(self::sales('VIC'), self::OTHER_BRANCH));
+        self::assertNotNull($service->detail(self::sales('VIC'), self::OTHER_BRANCH), 'another branch is visible');
+        self::assertNull($service->detail($noRead, self::OTHER_BRANCH));
         self::assertNull($service->detail(self::sales('VIC'), '33333333-3333-4333-8333-333333333333'));
         self::assertNull($service->detail(self::sales('VIC'), 'not-a-uuid'));
+        self::assertSame([], $service->page($noRead, RfqQueueQuery::defaults())->toArray()['branches']);
     }
 
     public function test_an_id_is_matched_case_insensitively(): void
@@ -94,8 +102,8 @@ final class ReadRfqQueueServiceTest extends TestCase
         self::assertNotNull((new ReadRfqQueueService($repository))->detail(self::sales('VIC'), strtoupper(self::MINE)));
     }
 
-    /** A repository whose query disagrees with the policy is a scope leak; it must not pass quietly. */
-    public function test_a_repository_that_leaks_scope_fails_loudly(): void
+    /** A repository that returns RFQs to somebody who may not read them must not pass quietly. */
+    public function test_a_repository_that_leaks_fails_loudly(): void
     {
         $leaky = new class implements RfqRepository {
             public function pageVisibleTo(RfqActor $actor, RfqQueueQuery $query): array
@@ -108,6 +116,11 @@ final class ReadRfqQueueServiceTest extends TestCase
                 return null;
             }
 
+            public function branches(): array
+            {
+                return [];
+            }
+
             public function findDetail(RfqRecord $record, array $allowedActions): RfqDetail
             {
                 return new RfqDetail(new RfqSummary($record, $allowedActions), null, [], [], []);
@@ -115,7 +128,7 @@ final class ReadRfqQueueServiceTest extends TestCase
         };
 
         $this->expectException(LogicException::class);
-        (new ReadRfqQueueService($leaky))->page(self::sales('VIC'), RfqQueueQuery::defaults());
+        (new ReadRfqQueueService($leaky))->page(new RfqActor(10, 'u10', [Module::PERMISSION_ACCESS], null), RfqQueueQuery::defaults());
     }
 
     public function test_the_queue_orders_by_priority_then_newest(): void

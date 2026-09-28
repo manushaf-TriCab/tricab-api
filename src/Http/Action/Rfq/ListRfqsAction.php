@@ -15,7 +15,7 @@ use TriCab\Core\Rfq\Application\Service\ResolveRfqActorService;
 use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
 
 /**
- * GET /api/v1/rfqs — the queue, scoped on the server. Contract `rfq.queue.v1`.
+ * GET /api/v1/rfqs — the queue, filtered on the server. Contract `rfq.queue.v1`.
  *
  * Filters narrow what the caller may already see; nothing in the query string
  * widens it. Gated on `RFQ.DRAFT.READ`.

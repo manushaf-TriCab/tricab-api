@@ -48,13 +48,23 @@ final class RfqSeedScriptTest extends TestCase
         self::assertSame(Module::ROLE_PERMISSIONS, $seeded);
     }
 
-    /** No implicit grant: neither script maps anything to EMPLOYEE or GUEST. */
-    public function test_neither_script_grants_to_every_employee_or_to_guests(): void
+    /**
+     * The platform roles get exactly what `Module` says: ADMINISTRATOR
+     * administers, EMPLOYEE reads every RFQ (owner decision, 28 Sep 2026), and
+     * GUEST gets nothing. The role seed touches none of the three.
+     */
+    public function test_platform_roles_get_exactly_the_module_grants_and_guests_nothing(): void
     {
-        foreach (['seed-rfq-permissions.sql', 'seed-rfq-roles.sql'] as $name) {
-            $sql = self::script($name);
-            self::assertDoesNotMatchRegularExpression("/\\(N'(EMPLOYEE|GUEST)',\\s*N'RFQ\\./", $sql, $name);
+        preg_match_all("/\\(N'([A-Z_]+)',\\s*N'(RFQ\\.[A-Z.]+)'\\)/", self::script('seed-rfq-permissions.sql'), $matches, PREG_SET_ORDER);
+        $mapped = [];
+        foreach ($matches as $match) {
+            $mapped[$match[1]][] = $match[2];
         }
+        self::assertSame(
+            ['ADMINISTRATOR' => Module::ADMINISTRATOR_PERMISSIONS, 'EMPLOYEE' => Module::EMPLOYEE_PERMISSIONS],
+            $mapped,
+        );
+        self::assertDoesNotMatchRegularExpression("/\\(N'(EMPLOYEE|GUEST|ADMINISTRATOR)',\\s*N'RFQ\\./", self::script('seed-rfq-roles.sql'));
     }
 
     public function test_both_scripts_are_part_of_the_local_rebuild(): void

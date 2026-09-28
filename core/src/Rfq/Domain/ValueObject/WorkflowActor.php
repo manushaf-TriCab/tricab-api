@@ -8,7 +8,7 @@ namespace TriCab\Core\Rfq\Domain\ValueObject;
  * Who is changing an RFQ's workflow status, for `WorkflowTransitionPolicy`.
  *
  *  - `assignee` — the person the RFQ is assigned to, without `RFQ.DRAFT.ASSIGN`.
- *  - `manager`  — a holder of `RFQ.DRAFT.ASSIGN` with the RFQ in scope.
+ *  - `manager`  — a holder of `RFQ.DRAFT.ASSIGN`.
  *  - `system`   — the platform itself: claim, first edit, a succeeded sync.
  *
  * Resolved by the application service from the actor and the record. Nobody

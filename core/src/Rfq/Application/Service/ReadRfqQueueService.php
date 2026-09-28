@@ -11,14 +11,13 @@ use TriCab\Core\Rfq\Application\DTO\RfqQueueQuery;
 use TriCab\Core\Rfq\Application\DTO\RfqSummary;
 use TriCab\Core\Rfq\Contract\RfqRepository;
 use TriCab\Core\Rfq\Domain\Service\RfqAccessPolicy;
+use TriCab\Core\Rfq\Module;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
 
 /**
- * The queue and one RFQ, scoped to the actor.
+ * The queue and one RFQ, for an actor who reads RFQs (every one of them).
  *
- * "Not visible" and "does not exist" are the same answer — null, and a 404 at
- * the endpoint — so a caller cannot learn another branch's RFQ exists by
- * guessing its id (source `test_dashboard_api::…cross_branch_concealment`).
+ * An unknown or malformed id is null, and a 404 at the endpoint.
  */
 final class ReadRfqQueueService
 {
@@ -37,10 +36,10 @@ final class ReadRfqQueueService
         $items = [];
         foreach ($result['items'] as $record) {
             // Defence in depth, and loud on purpose: a repository whose SQL
-            // disagrees with the policy is a scope leak, and a 500 in a test
+            // disagrees with the policy is a leak, and a 500 in a test
             // is how it should be found — not a quietly shortened page.
             if (!RfqAccessPolicy::canSee($actor, $record->ownership)) {
-                throw new LogicException('RFQ repository returned a record outside the actor\'s scope.');
+                throw new LogicException('RFQ repository returned a record the actor may not read.');
             }
             $items[] = new RfqSummary($record, RfqAccessPolicy::allowedActions($actor, $record->ownership));
         }
@@ -50,7 +49,7 @@ final class ReadRfqQueueService
             $result['total'],
             $query->page,
             $query->pageSize,
-            RfqAccessPolicy::effectiveScope($actor),
+            $actor->can(Module::PERMISSION_DRAFT_READ) ? $this->rfqs->branches() : [],
         );
     }
 

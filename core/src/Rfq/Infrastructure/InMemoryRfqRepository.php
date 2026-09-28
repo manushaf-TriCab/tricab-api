@@ -16,9 +16,9 @@ use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
  * The RFQ store until the Phase 2 schema lands — and, after it, the store the
  * tests use.
  *
- * Empty unless a test seeds it, so the Phase 1 endpoints answer an empty queue
- * rather than inventing one. It applies scope with `RfqAccessPolicy::canSee()`
- * directly, which is the rule the Azure SQL adapter must reproduce in SQL.
+ * Empty unless a test seeds it, so the endpoints answer an empty queue rather
+ * than inventing one. Its filters are the rules `AzureSqlRfqRepository`
+ * reproduces in SQL.
  */
 final class InMemoryRfqRepository implements RfqRepository
 {
@@ -52,6 +52,21 @@ final class InMemoryRfqRepository implements RfqRepository
         return $this->records[$publicId] ?? null;
     }
 
+    public function branches(): array
+    {
+        $branches = [];
+        foreach ($this->records as $record) {
+            $branch = strtoupper(trim((string) $record->ownership->branchCode));
+            if ($branch !== '') {
+                $branches[$branch] = true;
+            }
+        }
+        $branches = array_keys($branches);
+        sort($branches);
+
+        return array_map(strval(...), $branches);
+    }
+
     public function findDetail(RfqRecord $record, array $allowedActions): RfqDetail
     {
         return new RfqDetail(new RfqSummary($record, $allowedActions), null, [], [], []);
@@ -68,6 +83,12 @@ final class InMemoryRfqRepository implements RfqRepository
         }
         if ($q->mineOnly && !RfqAccessPolicy::isMine($actor, $r->ownership)) {
             return false;
+        }
+        if ($q->branches !== []) {
+            $branch = strtoupper(trim((string) $r->ownership->branchCode));
+            if (!in_array($branch === '' ? RfqQueueQuery::BRANCH_NONE : $branch, $q->branches, true)) {
+                return false;
+            }
         }
         if ($q->statuses !== [] && !$this->inList($r->workflowStatus->toString(), $q->statuses)) {
             return false;

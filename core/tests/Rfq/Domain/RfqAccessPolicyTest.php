@@ -11,8 +11,9 @@ use TriCab\Core\Rfq\Domain\ValueObject\RfqOwnership;
 use TriCab\Core\Rfq\Module;
 
 /**
- * Plan 1.3, invariant 1 — scope and allowed actions, re-expressed from the
- * source's `can_see_draft` / `allowed_draft_actions` against platform grants.
+ * Plan 1.3: who sees RFQs and what they may do to each, against platform
+ * grants. Seeing is not scoped (owner decision, 28 Sep 2026); working is the
+ * assignee's or a manager's, as in the source's `allowed_draft_actions`.
  * Named after the source tests where one exists.
  */
 final class RfqAccessPolicyTest extends TestCase
@@ -45,57 +46,36 @@ final class RfqAccessPolicyTest extends TestCase
 
     public function test_no_read_permission_sees_nothing_not_even_their_own(): void
     {
-        $actor = self::actor([Module::PERMISSION_ACCESS, Module::PERMISSION_SCOPE_ALL]);
+        $actor = self::actor([Module::PERMISSION_ACCESS, Module::PERMISSION_DRAFT_COMMENT]);
 
         self::assertFalse(RfqAccessPolicy::canSee($actor, self::rfq(self::ME, self::ME, 'VIC')));
         self::assertSame([], RfqAccessPolicy::allowedActions($actor, self::rfq(self::ME, self::ME, 'VIC')));
     }
 
-    /** Source `sales_sees_own_branch_but_not_another`. */
-    public function test_a_branch_scoped_person_sees_their_branch_and_not_another(): void
+    /** As in 4js: anyone who reads RFQs reads every one, whatever its branch or owner. */
+    public function test_a_reader_sees_every_rfq_whatever_its_branch_owner_or_assignee(): void
     {
-        $actor = self::actor(self::sales(), 'VIC');
-
-        self::assertTrue(RfqAccessPolicy::canSee($actor, self::rfq(self::COLLEAGUE, null, 'VIC')));
-        self::assertTrue(RfqAccessPolicy::canSee($actor, self::rfq(self::COLLEAGUE, null, ' vic ')));
-        self::assertFalse(RfqAccessPolicy::canSee($actor, self::rfq(self::COLLEAGUE, null, 'NSW')));
+        foreach ([self::actor(Module::EMPLOYEE_PERMISSIONS, null), self::actor(self::sales(), 'VIC'), self::actor(self::manager(), null)] as $actor) {
+            foreach ([
+                self::rfq(self::COLLEAGUE, null, 'NSW'),
+                self::rfq(self::COLLEAGUE, self::COLLEAGUE, 'VIC'),
+                self::rfq(null, null, null),
+                self::rfq(null, null, '  '),
+                self::rfq(self::ME, self::ME, 'NZNTH', archived: true),
+            ] as $rfq) {
+                self::assertTrue(RfqAccessPolicy::canSee($actor, $rfq));
+            }
+        }
     }
 
-    /** Source `branchless_user_falls_back_to_own_drafts_only` — today's state for everybody (Q7). */
-    public function test_a_branch_scoped_person_with_no_branch_sees_only_their_own(): void
+    /** Every employee reads; reading alone offers nothing that changes an RFQ. */
+    public function test_an_employee_may_view_and_do_nothing_else(): void
     {
-        $actor = self::actor(self::sales(), null);
+        $employee = self::actor(Module::EMPLOYEE_PERMISSIONS, null);
 
-        self::assertSame('branch', RfqAccessPolicy::grantedScope($actor)->toString());
-        self::assertSame('own', RfqAccessPolicy::effectiveScope($actor)->toString());
-        self::assertTrue(RfqAccessPolicy::canSee($actor, self::rfq(self::ME, null, 'VIC')));
-        self::assertFalse(RfqAccessPolicy::canSee($actor, self::rfq(self::COLLEAGUE, null, 'VIC')));
-    }
-
-    /** Source `developer_sees_everything`, as a grant rather than a role. */
-    public function test_all_scope_sees_every_branch_and_unattributed_work(): void
-    {
-        $actor = self::actor([Module::PERMISSION_DRAFT_READ, Module::PERMISSION_SCOPE_ALL], null);
-
-        self::assertTrue(RfqAccessPolicy::canSee($actor, self::rfq(self::COLLEAGUE, null, 'NSW')));
-        self::assertTrue(RfqAccessPolicy::canSee($actor, self::rfq(null, null, null)));
-    }
-
-    /** Difference 1: work assigned to me is on my list, even from another branch. */
-    public function test_an_assignee_sees_what_is_assigned_to_them(): void
-    {
-        $actor = self::actor(self::sales(), 'VIC');
-
-        self::assertTrue(RfqAccessPolicy::canSee($actor, self::rfq(self::COLLEAGUE, self::ME, 'NSW')));
-    }
-
-    /** Difference 2, pending owner question Q10: no cross-branch triage bucket for managers. */
-    public function test_an_unattributed_rfq_is_hidden_below_all_scope(): void
-    {
-        $manager = self::actor(self::manager(), 'VIC');
-
-        self::assertFalse(RfqAccessPolicy::canSee($manager, self::rfq(self::COLLEAGUE, null, null)));
-        self::assertFalse(RfqAccessPolicy::canSee($manager, self::rfq(self::COLLEAGUE, null, '  ')));
+        self::assertSame(['view'], RfqAccessPolicy::allowedActions($employee, self::rfq(self::ME, self::ME, 'VIC')));
+        self::assertSame(['view'], RfqAccessPolicy::allowedActions($employee, self::rfq(null, null, null)));
+        self::assertNull(RfqAccessPolicy::workflowActor($employee, self::rfq(self::ME, self::ME, 'VIC')));
     }
 
     public function test_an_unassigned_rfq_offers_claim_but_not_edit_to_a_salesperson(): void
@@ -113,15 +93,16 @@ final class RfqAccessPolicyTest extends TestCase
         self::assertSame(['view', 'comment', 'workflow', 'edit', 'sync', 'reconcile', 'archive'], $actions);
     }
 
-    /** Source: a salesperson in scope does not work somebody else's assigned RFQ. */
+    /** Source: a salesperson does not work somebody else's assigned RFQ, in any branch. */
     public function test_a_colleague_s_assigned_work_is_view_and_comment_only(): void
     {
-        $actions = RfqAccessPolicy::allowedActions(self::actor(self::sales()), self::rfq(self::COLLEAGUE, self::COLLEAGUE, 'VIC'));
-
-        self::assertSame(['view', 'comment'], $actions);
+        foreach (['VIC', 'NSW', null] as $branch) {
+            $actions = RfqAccessPolicy::allowedActions(self::actor(self::sales()), self::rfq(self::COLLEAGUE, self::COLLEAGUE, $branch));
+            self::assertSame(['view', 'comment'], $actions);
+        }
     }
 
-    public function test_a_manager_works_anything_in_scope(): void
+    public function test_a_manager_works_any_rfq(): void
     {
         $actions = RfqAccessPolicy::allowedActions(self::actor(self::manager()), self::rfq(self::COLLEAGUE, self::COLLEAGUE, 'VIC'));
 
@@ -144,9 +125,11 @@ final class RfqAccessPolicyTest extends TestCase
         self::assertNotContains('purge', RfqAccessPolicy::allowedActions($developer, self::rfq(self::ME, self::ME, 'VIC')));
     }
 
-    public function test_an_invisible_rfq_offers_no_actions_at_all(): void
+    public function test_without_read_no_rfq_offers_any_action(): void
     {
-        self::assertSame([], RfqAccessPolicy::allowedActions(self::actor(self::manager(), 'VIC'), self::rfq(self::COLLEAGUE, null, 'NSW')));
+        $noRead = array_values(array_diff(self::manager(), [Module::PERMISSION_DRAFT_READ]));
+
+        self::assertSame([], RfqAccessPolicy::allowedActions(self::actor($noRead), self::rfq(self::ME, self::ME, 'VIC')));
     }
 
     public function test_workflow_actor_is_manager_assignee_or_nobody(): void
@@ -161,9 +144,9 @@ final class RfqAccessPolicyTest extends TestCase
 
     public function test_permission_codes_are_matched_case_insensitively(): void
     {
-        $actor = self::actor(['rfq.draft.read', 'Rfq.Scope.All']);
+        $actor = self::actor(['rfq.draft.read', 'Rfq.Draft.Comment']);
 
         self::assertTrue(RfqAccessPolicy::canSee($actor, self::rfq(null, null, null)));
-        self::assertSame(['RFQ.DRAFT.READ', 'RFQ.SCOPE.ALL'], $actor->rfqPermissions());
+        self::assertSame(['RFQ.DRAFT.COMMENT', 'RFQ.DRAFT.READ'], $actor->rfqPermissions());
     }
 }
