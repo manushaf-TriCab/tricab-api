@@ -25,11 +25,13 @@ anything.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
 import tempfile
 import time
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -40,6 +42,7 @@ from tricab_cable_rules import ENGINE_VERSION
 from tricab_cable_rules.extractor import pair_circuit_label_lines
 
 from . import corrections, llm_fallback, normalizer, pipeline, table_shape
+from ._source import SOURCE_COMMIT
 from .file_parser import parse_file
 
 logging.basicConfig(level=logging.INFO)
@@ -99,6 +102,36 @@ def _corrections_from(raw: Any) -> dict[str, dict[str, Any]] | None:
     return out
 
 
+@lru_cache(maxsize=1)
+def _catalogue_fingerprint() -> str:
+    """First 16 hex digits of a SHA-256 over the catalogue files this process reads."""
+    digest = hashlib.sha256()
+    for path in (pipeline.PRODUCT_CSV, pipeline.STYLE_XLSX, pipeline.MARINE_XLSX):
+        if path.exists():
+            digest.update(path.name.encode("utf-8"))
+            digest.update(path.read_bytes())
+    return digest.hexdigest()[:16]
+
+
+def versions() -> dict[str, Any]:
+    """What produced an answer, stamped on every one (plan 3.6): the code grammar, the
+    source commit the parser was generated from, the catalogue, and the model of each
+    AI path that is switched on. An AI path that is off is absent, not null."""
+    models: dict[str, str] = {}
+    if llm_fallback.openrouter_enabled():
+        models["line_fallback"] = os.environ.get("OPENROUTER_MODEL", llm_fallback.DEFAULT_MODEL)
+    if normalizer.normalizer_enabled():
+        models["normalizer"] = normalizer.normalizer_model()
+    if table_shape.table_shape_enabled():
+        models["table_shape"] = table_shape.table_shape_model()
+    return {
+        "engine": ENGINE_VERSION,
+        "parser_source": SOURCE_COMMIT,
+        "catalogue": _catalogue_fingerprint(),
+        "models": models,
+    }
+
+
 def _match(items: list[dict[str, Any]], learned: dict[str, dict[str, Any]]) -> dict[str, Any]:
     budget = pipeline.new_llm_budget(line_count=len(items))
     started = time.monotonic()
@@ -108,6 +141,7 @@ def _match(items: list[dict[str, Any]], learned: dict[str, dict[str, Any]]) -> d
         "results": results,
         "llm_calls": budget["used"],
         "elapsed_ms": int((time.monotonic() - started) * 1000),
+        "versions": versions(),
     }
 
 
@@ -117,7 +151,7 @@ def api_health():
     return success(
         {
             "status": "ok",
-            "engine_version": ENGINE_VERSION,
+            "versions": versions(),
             "catalogue_loaded": pipeline.catalog.loaded,
             "ai": {
                 "line_fallback": llm_fallback.openrouter_enabled(),

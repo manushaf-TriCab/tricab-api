@@ -14,8 +14,9 @@ Without `--matcher` (or `RFQ_MATCHER_PATH`) the check reports SKIPPED rather tha
 passing, like `check_rules_sync.py`, so a CI job that lost the checkout does not
 read as green.
 
-**What is generated.** The parser modules in `PARSER_MODULES`, byte-for-byte
-after the import rewrite; `pipeline.py`, cut at the 4js push (Phase 5) and
+**What is generated.** `_source.py`, naming the source commit (the checkout
+must have no uncommitted changes under `matcher/` or `tests/`); the parser
+modules in `PARSER_MODULES`, byte-for-byte after the import rewrite; `pipeline.py`, cut at the 4js push (Phase 5) and
 patched by `PIPELINE_PATCHES`; and the source tests in `TESTS`, patched by
 `TEST_PATCHES`. **What is not.** `__init__.py`, `corrections.py`, `_unported.py`,
 `app.py` and `wsgi` wiring are the platform's own and are never overwritten.
@@ -36,6 +37,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -285,8 +287,37 @@ def build_test(name: str, source: str) -> str:
     return text
 
 
+def source_commit(matcher_root: Path) -> str:
+    """The commit the generated files come from. Refuses a checkout with uncommitted
+    changes to anything it reads: the files would then match no commit, and every
+    result the service stamps with this commit would name the wrong code."""
+    def git(*args: str) -> str:
+        return subprocess.run(
+            ["git", "-C", str(matcher_root), *args], capture_output=True, text=True, check=True
+        ).stdout.strip()
+
+    try:
+        commit = git("rev-parse", "HEAD")
+        dirty = git("status", "--porcelain", "--", "matcher", "tests")
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise SystemExit(f"rfq_parser sync: {matcher_root} must be a git checkout ({exc})") from exc
+    if dirty:
+        raise SystemExit(
+            "rfq_parser sync: the source checkout has uncommitted changes under matcher/ or tests/;\n"
+            "commit them first so the generated code names a real commit:\n" + dirty
+        )
+    return commit
+
+
 def expected_files(matcher_root: Path) -> dict[Path, str | bytes]:
     out: dict[Path, str | bytes] = {}
+    out[PACKAGE_DIR / "_source.py"] = (
+        "# Generated from the RFQ parser's checkout by tools/sync_rfq_parser.py.\n"
+        "# Change the source or the tool's declared patches, never this file.\n"
+        '"""The source commit every generated module in this package came from."""\n'
+        "\n"
+        f'SOURCE_COMMIT = "{source_commit(matcher_root)}"\n'
+    )
     for name in PARSER_MODULES:
         source = (matcher_root / "matcher" / f"{name}.py").read_text(encoding="utf-8")
         out[PACKAGE_DIR / f"{name}.py"] = HEADER.format(name=name) + _rewrite_imports(source)

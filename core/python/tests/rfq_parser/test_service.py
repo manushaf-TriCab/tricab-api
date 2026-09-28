@@ -45,6 +45,21 @@ def test_health_reports_flags_and_limits_but_no_setting_values(client, monkeypat
     assert "sk-secret-value" not in json.dumps(data)
 
 
+def test_every_answer_names_what_produced_it(client, monkeypatch):
+    from rfq_parser._source import SOURCE_COMMIT
+
+    data = _data(client.post("/api/parse/text", json={"text": "4C 16mm2 XLPE/PVC 120m"}))
+    versions = data["versions"]
+    assert versions["parser_source"] == SOURCE_COMMIT and len(SOURCE_COMMIT) == 40
+    assert versions["engine"].startswith("cable_code-")
+    assert len(versions["catalogue"]) == 16
+    assert versions["models"] == {}  # every AI path is off under test
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setenv("OPENROUTER_MODEL", "some/model")
+    assert service.versions()["models"] == {"line_fallback": "some/model"}
+
+
 def test_text_is_split_as_the_source_browser_splits_it(client):
     data = _data(client.post("/api/parse/text", json={"text": PASTE}))
     assert data["line_count"] == 3
