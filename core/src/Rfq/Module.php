@@ -23,16 +23,17 @@ namespace TriCab\Core\Rfq;
  * as everybody sees every quote in 4js, and every employee holds it
  * ({@see EMPLOYEE_PERMISSIONS}; owner decision, 28 Sep 2026). Branch is a
  * queue filter, not a limit. The source's `draft_scope` (own / branch / all)
- * is not carried. *Working* an RFQ is still narrower: the assignee, or a
- * manager (`RfqAccessPolicy::allowedActions()`).
+ * is not carried. *Working* an RFQ needs a role: anyone holding an action's
+ * permission may take it on any RFQ; assigning is an admin's
+ * (`RfqAccessPolicy::allowedActions()`).
  *
  * **`RFQ.ACCESS` grants no record.** It reaches the module entry and the
  * caller's own access summary. Every record read needs `RFQ.DRAFT.READ`.
  *
  * ## What is not decided yet (owner questions, Phase 0)
  *
- *  - Who works RFQs. {@see ROLE_PERMISSIONS} describes four roles; nobody is
- *    assigned to any of them (Q8). `EMPLOYEE` reads and does nothing else:
+ *  - Who holds the roles. {@see ROLE_PERMISSIONS} describes sales, admin and
+ *    developer; nobody is assigned to any of them yet (Q8). `EMPLOYEE` reads and does nothing else:
  *    the source made every signed-in staff member a salesperson, and that
  *    wider grant is not carried.
  *  - What `RFQ.PRICING.VIEW` withholds. In the source it hides prices in the
@@ -155,7 +156,6 @@ final class Module
     ];
 
     public const ROLE_SALES = 'RFQ_SALES';
-    public const ROLE_SALES_MANAGER = 'RFQ_SALES_MANAGER';
     public const ROLE_ADMIN = 'RFQ_ADMIN';
     public const ROLE_DEVELOPER = 'RFQ_DEVELOPER';
 
@@ -172,14 +172,11 @@ final class Module
         self::PERMISSION_QUOTE_RECONCILE,
     ];
 
-    private const MANAGER_ADDS = [
+    private const ADMIN_ADDS = [
         self::PERMISSION_DRAFT_ASSIGN,
         self::PERMISSION_DRAFT_RESTORE,
         self::PERMISSION_ANALYTICS_READ,
         self::PERMISSION_AUDIT_READ,
-    ];
-
-    private const ADMIN_ADDS = [
         self::PERMISSION_REPORTS_READ,
         self::PERMISSION_PRICING_VIEW,
         self::PERMISSION_ADMIN,
@@ -192,15 +189,18 @@ final class Module
     ];
 
     /**
-     * The four source roles, re-expressed as platform roles. **Draft, for owner
-     * review** — `seed-rfq-roles.sql` creates them with these permissions and
-     * assigns them to nobody.
+     * The source roles, re-expressed as platform roles. `seed-rfq-roles.sql`
+     * creates them with these permissions and assigns them to nobody.
      *
      * Parity notes, so a reviewer can see what moved:
      *
+     *  - The source's sales manager is not carried (owner decision, 28 Sep
+     *    2026: sales and admin are enough). Its assign, restore, analytics
+     *    and activity-log permissions sit with admin, so an admin is the
+     *    manager `RfqAccessPolicy::isManager()` means.
      *  - `drafts.delete` (a compatibility key nothing checked) is not carried.
      *  - `RFQ.PRICING.VIEW` sits with admin and developer only, where the
-     *    source puts `pricing.view`. Sales and managers price quotes today with
+     *    source puts `pricing.view`. Sales price quotes today with
      *    the prices hidden from their view, not withheld from their browser.
      *  - `RFQ.DRAFT.CREATE` is new and goes wherever `drafts.view` was.
      *  - `RFQ.QUOTE.RECONCILE` goes wherever `drafts.push` was.
@@ -209,9 +209,8 @@ final class Module
      */
     public const ROLE_PERMISSIONS = [
         self::ROLE_SALES => self::SALES,
-        self::ROLE_SALES_MANAGER => [...self::SALES, ...self::MANAGER_ADDS],
-        self::ROLE_ADMIN => [...self::SALES, ...self::MANAGER_ADDS, ...self::ADMIN_ADDS],
-        self::ROLE_DEVELOPER => [...self::SALES, ...self::MANAGER_ADDS, ...self::ADMIN_ADDS, ...self::DEVELOPER_ADDS],
+        self::ROLE_ADMIN => [...self::SALES, ...self::ADMIN_ADDS],
+        self::ROLE_DEVELOPER => [...self::SALES, ...self::ADMIN_ADDS, ...self::DEVELOPER_ADDS],
     ];
 
     /**

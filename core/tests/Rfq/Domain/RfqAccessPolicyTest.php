@@ -41,7 +41,7 @@ final class RfqAccessPolicyTest extends TestCase
     /** @return list<string> */
     private static function manager(): array
     {
-        return Module::ROLE_PERMISSIONS[Module::ROLE_SALES_MANAGER];
+        return Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN];
     }
 
     public function test_no_read_permission_sees_nothing_not_even_their_own(): void

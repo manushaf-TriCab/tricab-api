@@ -3,19 +3,22 @@
   DEVELOPMENT seed — RFQ roles. DRAFT FOR OWNER REVIEW (plan 1.3).
 
   - Idempotent / safe to re-run
-  - Creates four roles and ASSIGNS THEM TO NOBODY
+  - Creates three roles and ASSIGNS THEM TO NOBODY
+  - Retires RFQ_SALES_MANAGER if an earlier run created it
   - Does not modify permissions, EMPLOYEE, GUEST or ADMINISTRATOR
   - WRITTEN, NOT EXECUTED against any shared database (28 Sep 2026)
   - Run after seed-rfq-permissions.sql
 
-  The source's four roles (access.py), re-expressed as platform roles:
+  The source's roles (access.py), re-expressed as platform roles:
 
-    RFQ_SALES          work RFQs assigned to them: create, edit, claim,
-                       workflow, comment, archive, sync and reconcile.
-    RFQ_SALES_MANAGER  sales + assign, restore, analytics, activity log.
-    RFQ_ADMIN          manager + all-branch reports, cost and margin, module
-                       administration.
+    RFQ_SALES          work any RFQ: create, edit, claim, workflow, comment,
+                       archive, sync and reconcile.
+    RFQ_ADMIN          sales + assign, restore, analytics, activity log,
+                       reports, cost and margin, module administration.
     RFQ_DEVELOPER      admin + review logs, diagnostics, permanent delete.
+
+  The source's sales manager is not carried (owner decision, 28 Sep 2026:
+  sales and admin are enough). What it added now sits with RFQ_ADMIN.
 
   What is NOT decided, and why this is a draft:
 
@@ -32,7 +35,7 @@
       wherever drafts.push was.
 
   Must match TriCab\Core\Rfq\Module::ROLE_PERMISSIONS; tests/Rfq/RfqSeedScriptTest.php
-  fails if they drift. This script OWNS the RFQ.* mappings of these four roles:
+  fails if they drift. This script OWNS the RFQ.* mappings of these three roles:
   anything else RFQ.* on them is deactivated, never deleted.
 ================================================================================
 */
@@ -52,11 +55,9 @@ BEGIN TRY
     INSERT INTO @Roles ([RoleCode], [RoleName], [Description])
     VALUES
         (N'RFQ_SALES',         N'RFQ Sales',
-         N'Work own and branch RFQs: create, edit, claim, change workflow, comment, archive and send to 4js.'),
-        (N'RFQ_SALES_MANAGER', N'RFQ Sales Manager',
-         N'RFQ Sales, plus assigning work, restoring archived RFQs, analytics and the activity log.'),
+         N'Work any RFQ: create, edit, claim, change workflow, comment, archive and send to 4js.'),
         (N'RFQ_ADMIN',         N'RFQ Administrator',
-         N'RFQ Sales Manager across every branch, plus reports, cost and margin, and module administration.'),
+         N'RFQ Sales, plus assigning work, restoring archived RFQs, analytics, the activity log, reports, cost and margin, and module administration.'),
         (N'RFQ_DEVELOPER',     N'RFQ Developer',
          N'RFQ Administrator, plus review logs, parser diagnostics and permanent deletion.');
 
@@ -101,20 +102,6 @@ BEGIN TRY
         (N'RFQ_SALES', N'RFQ.DRAFT.ARCHIVE'),
         (N'RFQ_SALES', N'RFQ.QUOTE.SYNC'),
         (N'RFQ_SALES', N'RFQ.QUOTE.RECONCILE'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.ACCESS'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.READ'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.CREATE'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.EDIT'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.CLAIM'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.WORKFLOW'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.COMMENT'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.ARCHIVE'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.QUOTE.SYNC'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.QUOTE.RECONCILE'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.ASSIGN'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.DRAFT.RESTORE'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.ANALYTICS.READ'),
-        (N'RFQ_SALES_MANAGER', N'RFQ.AUDIT.READ'),
         (N'RFQ_ADMIN', N'RFQ.ACCESS'),
         (N'RFQ_ADMIN', N'RFQ.DRAFT.READ'),
         (N'RFQ_ADMIN', N'RFQ.DRAFT.CREATE'),
@@ -174,7 +161,24 @@ BEGIN TRY
      AND UPPER(g.[PermissionCode]) = UPPER(p.[PermissionCode])
     WHERE rp.[IsActive] = 0;
 
-    /* Withdraw any other RFQ.* mapping on these four roles. Scoped to RFQ.*:
+    /* Retire RFQ_SALES_MANAGER (owner decision, 28 Sep 2026). Deactivated,
+       never deleted: anyone an administrator put in it keeps a visible,
+       powerless role until they are moved to RFQ_SALES or RFQ_ADMIN. */
+    UPDATE rp
+    SET rp.[IsActive] = 0
+    FROM [identity].[RolePermissions] rp
+    JOIN [identity].[Roles] r ON r.[RoleId] = rp.[RoleId]
+    JOIN [identity].[Permissions] p ON p.[PermissionId] = rp.[PermissionId]
+    WHERE rp.[IsActive] = 1
+      AND UPPER(r.[RoleCode]) = N'RFQ_SALES_MANAGER'
+      AND UPPER(p.[PermissionCode]) LIKE N'RFQ.%';
+
+    UPDATE [identity].[Roles]
+    SET [IsActive] = 0,
+        [UpdatedAt] = SYSDATETIMEOFFSET()
+    WHERE UPPER([RoleCode]) = N'RFQ_SALES_MANAGER' AND [IsActive] = 1;
+
+    /* Withdraw any other RFQ.* mapping on these three roles. Scoped to RFQ.*:
        an unrelated permission somebody deliberately added in Roles &
        Permissions is theirs to unmake, not this script's. */
     UPDATE rp

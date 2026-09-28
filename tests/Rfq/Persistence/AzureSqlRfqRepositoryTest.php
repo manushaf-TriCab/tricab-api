@@ -68,7 +68,7 @@ final class AzureSqlRfqRepositoryTest extends TestCase
             'employee (alice)' => $this->actor('alice', Module::EMPLOYEE_PERMISSIONS, null),
             'employee (dave, unverified alias only)' => $this->actor('dave', Module::EMPLOYEE_PERMISSIONS, null),
             'sales in VIC (bob)' => $this->actor('bob', Module::ROLE_PERMISSIONS[Module::ROLE_SALES], 'VIC'),
-            'manager (erin)' => $this->actor('erin', Module::ROLE_PERMISSIONS[Module::ROLE_SALES_MANAGER], null),
+            'admin (erin)' => $this->actor('erin', Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN], null),
         ];
         $all = $this->allRecords();
         self::assertCount(count($this->drafts), $all);

@@ -43,7 +43,7 @@ final class RfqModuleTest extends TestCase
     /** Each role is the one below it plus more, as in the source role ladder. */
     public function test_the_roles_are_a_ladder(): void
     {
-        $ladder = [Module::ROLE_SALES, Module::ROLE_SALES_MANAGER, Module::ROLE_ADMIN, Module::ROLE_DEVELOPER];
+        $ladder = [Module::ROLE_SALES, Module::ROLE_ADMIN, Module::ROLE_DEVELOPER];
         for ($i = 1; $i < count($ladder); $i++) {
             $lower = Module::ROLE_PERMISSIONS[$ladder[$i - 1]];
             $upper = Module::ROLE_PERMISSIONS[$ladder[$i]];
@@ -52,12 +52,21 @@ final class RfqModuleTest extends TestCase
         }
     }
 
-    /** Parity: `pricing.view` sits with admin and developer in the source, not with sales or managers. */
+    /** Parity: `pricing.view` sits with admin and developer in the source, not with sales. */
     public function test_pricing_view_sits_where_the_source_put_it(): void
     {
         self::assertNotContains(Module::PERMISSION_PRICING_VIEW, Module::ROLE_PERMISSIONS[Module::ROLE_SALES]);
-        self::assertNotContains(Module::PERMISSION_PRICING_VIEW, Module::ROLE_PERMISSIONS[Module::ROLE_SALES_MANAGER]);
         self::assertContains(Module::PERMISSION_PRICING_VIEW, Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]);
+    }
+
+    /** Owner decision, 28 Sep 2026: no sales manager. Admin holds what a manager did. */
+    public function test_there_is_no_sales_manager_and_admin_is_the_manager(): void
+    {
+        self::assertSame([Module::ROLE_SALES, Module::ROLE_ADMIN, Module::ROLE_DEVELOPER], array_keys(Module::ROLE_PERMISSIONS));
+        self::assertNotContains(Module::PERMISSION_DRAFT_ASSIGN, Module::ROLE_PERMISSIONS[Module::ROLE_SALES]);
+        foreach ([Module::PERMISSION_DRAFT_ASSIGN, Module::PERMISSION_DRAFT_RESTORE, Module::PERMISSION_ANALYTICS_READ, Module::PERMISSION_AUDIT_READ] as $permission) {
+            self::assertContains($permission, Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]);
+        }
     }
 
     /** The platform administrator can grant RFQ access without reading a quote. */

@@ -120,16 +120,17 @@ Seeded by `database/scripts/development/seed-rfq-permissions.sql`, module code `
 
 **There is no scope.** The source's role-level `draft_scope` (own / branch / all) is not carried, and nor are the `RFQ.SCOPE.BRANCH` / `RFQ.SCOPE.ALL` grants an earlier draft of this catalogue had (owner decision, 28 Sept: as in 4js, anyone can see any quote).
 
-### 4.2 Roles: a draft for owner review
+### 4.2 Roles
 
-`seed-rfq-roles.sql` creates four roles and **assigns them to nobody**. They are generated from `Module::ROLE_PERMISSIONS`, and each is the one below plus more:
+`seed-rfq-roles.sql` creates three roles and **assigns them to nobody**. They are generated from `Module::ROLE_PERMISSIONS`, and each is the one above plus more:
 
 | Role | Adds |
 |---|---|
 | `RFQ_SALES` | access, read, create, edit, claim, workflow, comment, archive, sync, reconcile |
-| `RFQ_SALES_MANAGER` | assign, restore, analytics, activity log |
-| `RFQ_ADMIN` | reports, pricing view, module admin |
+| `RFQ_ADMIN` | assign, restore, analytics, activity log, reports, pricing view, module admin |
 | `RFQ_DEVELOPER` | review logs, diagnostics, purge |
+
+**There is no sales manager** (owner decision, 28 Sept: sales and admin are enough). What the source's manager added sits with `RFQ_ADMIN`, so an admin is the "manager" of `RfqAccessPolicy::isManager()` (a holder of `RFQ.DRAFT.ASSIGN`): assigning, returning work to `new`, priority and due date. The seed retires an `RFQ_SALES_MANAGER` an earlier run created: deactivated with its `RFQ.*` grants, never deleted.
 
 `ADMINISTRATOR` holds `RFQ.ADMIN` only (the TriExpense/Onboarding pattern). **`EMPLOYEE` holds `RFQ.ACCESS` and `RFQ.DRAFT.READ`** (`Module::EMPLOYEE_PERMISSIONS`): every employee reads every RFQ, warehouse staff who sign in by emailed code included, and does nothing else. `GUEST` holds nothing. The permissions seed refuses to run if `EMPLOYEE` ever holds more or `GUEST` holds anything. The source made every signed-in staff member a salesperson; that wider grant is still not carried, and who works RFQs in the pilot is owner question Q8.
 
@@ -138,7 +139,7 @@ Seeded by `database/scripts/development/seed-rfq-permissions.sql`, module code `
 `RfqAccessPolicy` is ported from `draft_is_mine` and `allowed_draft_actions`.
 
 - **Visible: every RFQ, to anyone holding `RFQ.DRAFT.READ`** (owner decision, 28 Sept: as in 4js, anyone can see any quote). Branch is a queue filter, never a limit. Production already behaves this way: it runs `RFQ_OPEN_DRAFT_ACCESS=true`, which makes the source's scope "all". An unknown or malformed id is 404.
-- **Allowed actions** come from the server on every record: `view`; `comment`; if archived, `restore` only; otherwise `claim` (unassigned), `assign` (manager, `RFQ.DRAFT.ASSIGN`), and `workflow`/`edit`/`sync`/`reconcile`/`archive` for **anyone** holding that action's permission (owner decision, 28 Sept: anyone works any RFQ, as production's `RFQ_OPEN_DRAFT_ACCESS=true` allows). Managers keep the wider workflow moves. `purge` is never offered. An employee who holds only read gets `view`.
+- **Allowed actions** come from the server on every record: `view`; `comment`; if archived, `restore` only; otherwise `claim` (unassigned), `assign` (admin, `RFQ.DRAFT.ASSIGN`), and `workflow`/`edit`/`sync`/`reconcile`/`archive` for **anyone** holding that action's permission (owner decision, 28 Sept: anyone works any RFQ, as production's `RFQ_OPEN_DRAFT_ACCESS=true` allows). Admins keep the manager's wider workflow moves. `purge` is never offered. An employee who holds only read gets `view`.
 - **The sales rep is the last worker** (owner decision, 28 Sept). Saving an RFQ's content, or sending it to 4js, makes the worker its assignee and puts their 4js operator code on the quote as `author` (`SalesRepAttribution`). The code comes from `RfqOperatorDirectory` (legacy `descript` desc_type 36, via `LegacyStaffUserMappings`, then the email login with the source's aliases). A worker with no confirmed code never overwrites a real author; a blank author gets the source's upper-cased-login fallback. The save's activity records the assignee change and `author_source`. The creator (`created_by_email`) stays as history. Live: 28 of the 35 staff on live RFQs have a confirmed code. The source set the author only at creation, so this is a deliberate change.
 
 **Branch membership has no source yet** (Q7). It no longer decides access. It is the default for the branch filter and the branch a new RFQ is stamped with, so it matters from Phase 4. `RfqBranchDirectory` is the seam; `UnconfiguredRfqBranchDirectory` answers null for everybody.
@@ -270,7 +271,7 @@ Phase 1 started before the Phase 0 exit, on the owner's instruction (28 Sep 2026
 | Q5 | Which store is live | **answered 28 Sep: MySQL (`tc-mysql-live`)**; `MAIL_AUTO_PUSH_4JS` and `RFQ_OPEN_DRAFT_ACCESS` are both on. The translator reads live MySQL; the 7 empty Azure SQL `rfq.*` tables from 5 Aug are left untouched |
 | Q6 | Who owns the mailbox | the Phase 6 rows of §6.4 |
 | Q7 | Where branch membership comes from | an `RfqBranchDirectory` implementation; the default branch filter and new-RFQ branch, **no longer access** |
-| Q8 | Who works RFQs in the pilot | role assignments. **Answered 28 Sept: every employee reads every RFQ; anyone with the permission works any RFQ; the last worker is the sales rep.** Still open: who holds the RFQ roles |
+| Q8 | Who works RFQs in the pilot | role assignments. **Answered 28 Sept: every employee reads every RFQ; anyone with the permission works any RFQ; the last worker is the sales rep; the roles are sales and admin, no sales manager.** Still open: which people hold which role |
 | Q9 | Hide or withhold pricing | `PricingSnapshot::toArray()` call site; role placement of `RFQ.PRICING.VIEW` |
 | Q10 | Unattributed RFQs: manager triage or admin queue | **answered 28 Sept: moot, everyone sees every RFQ**; `branch=none` filters them |
 | — | Scan-read lines syncing from the editor without approval (§5.3) | `LineApprovalPolicy::syncBlockReason()` |
