@@ -127,6 +127,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'alter-onboarding-policy-declarations.sql'
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-form-contributions.sql') # after onboarding: FKs to Assignments
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-migration-rows.sql')     # after legacy migration: FKs to LegacyMigrationBatches
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
+Invoke-SqlFile (Join-Path $DevScripts 'create-rfq-schema.sql')               # the live MySQL RFQ store's shape; no FKs outside [rfq]
 
 # --- seeds -----------------------------------------------------------------
 Write-Host "`n[4/6] Reference data and seeds" -ForegroundColor Cyan
@@ -140,6 +141,8 @@ foreach ($s in @(
     'seed-guest-role-and-login-permission.sql',
     'seed-onboarding-permissions.sql',   # after guest role: grants GUEST + EMPLOYEE self-service
     'seed-onboarding-roles.sql',         # after onboarding permissions: ONBOARDING_ADMIN
+    'seed-rfq-permissions.sql',          # RFQ.* catalogue; ADMINISTRATOR gets RFQ.ADMIN only
+    'seed-rfq-roles.sql',                # after rfq permissions: three RFQ roles, assigned to nobody
     'seed-product-catalogue-sample.sql',
     'seed-product-cable-reference.sql',      # after catalogue-sample
     'seed-customer-sample-data.sql'

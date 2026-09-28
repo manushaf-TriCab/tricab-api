@@ -59,6 +59,16 @@ final class PermissionAssurancePolicy
         // Phase 6: the completion feed is for a service identity; an emailed
         // code must never be enough to read everybody's completions.
         'ONBOARDING.COMPLETIONS.READ' => AuthenticationAssurance::SUBSTANTIAL,
+
+        // RFQ. Everyday quoting stays at LOW — the people who do it sign in with
+        // Microsoft and gain nothing from a floor — but the four that act on a
+        // live ERP, delete history, read raw customer text or administer the
+        // module do not open to an emailed code.
+        'RFQ.QUOTE.RECONCILE' => AuthenticationAssurance::SUBSTANTIAL,
+        'RFQ.DRAFT.PURGE' => AuthenticationAssurance::SUBSTANTIAL,
+        'RFQ.REVIEWLOG.READ' => AuthenticationAssurance::SUBSTANTIAL,
+        'RFQ.ADMIN' => AuthenticationAssurance::SUBSTANTIAL,
+        'RFQ.MAIL.INGEST' => AuthenticationAssurance::SUBSTANTIAL,
     ];
 
     public static function requiredFor(PermissionCode $permission): AuthenticationAssurance

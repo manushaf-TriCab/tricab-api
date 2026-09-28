@@ -1,9 +1,12 @@
-# Runtime dependencies for the product finder on the App Service.
+# Runtime dependencies for the product finder and the RFQ parser on the App Service.
 # Installed once into /home/data/python/venv — see docs/product-finder/DEPLOYMENT.md.
 Flask
 gunicorn
 python-dotenv
 openpyxl        # tricab_cable_rules.data reads the style workbooks
+pdfplumber      # rfq_parser.file_parser: PDF text layer (no OCR)
+python-docx     # rfq_parser.file_parser: .docx
+xlrd            # rfq_parser.xls_convert: legacy .xls
 
 # Not here on purpose:
 #   pyodbc / azure-identity — the finder no longer opens Azure SQL at all. It

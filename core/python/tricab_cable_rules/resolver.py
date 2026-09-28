@@ -67,8 +67,8 @@ SPECIAL_APPLICATION_STYLES = {
     "LN": ("termite", "nylon"),
     "XD": ("termite", "nylon"),
     # NB: DP is NOT a special-application style. It is the bare screened/VSD default
-    # (90C PVC, single earth) chosen by the family-target logic below; EMC is not a
-    # selection keyword (TriCab 2026-06-30). It used to live here keyed on "emc".
+    # (90C PVC, single earth) when EMC is absent. Explicit EMC follows the
+    # XU/KU/EU/EA tree below (TriCab 2026-09-24).
     "EZ": ("heavy duty", "flexing", "trailing", "reeling", "festoon"),
     "KG": ("braid",),
     # EH is the LSZH SDI fixed-wiring style, but the bare acronym "SDI" is a GENERIC
@@ -348,14 +348,15 @@ def _vsd_target_style_code(fields: dict[str, Any], haystack: str) -> str:
     """Screened / VSD / VFD family target (confirmed with TriCab 2026-06-30).
 
     Fire-rated VSD -> FH (the FR style is for non-VSD fire). Otherwise the
-    XU/KU/EU/EA family is specifically the symmetric multi-/split-earth config
-    (e.g. 3C+3E): XU (90C PVC) -> KU (110C PVC) -> EU (LSZH), and EA when armoured.
-    Every other core config (single earth, no earth, etc.) is DP (90C PVC screened);
+    XU/KU/EU/EA family applies to explicit EMC requests regardless of earth count
+    (TriCab 2026-09-24), or symmetric multi-/split-earth configs (e.g. 3C+3E):
+    XU (90C PVC) -> KU (110C PVC) -> EU (LSZH), and EA when armoured.
+    Without EMC, every other core config is DP (90C PVC screened);
     if such a line also asks for LSZH/armour, DP is gated out and it falls to
     clarification (e.g. "4C+E VSD LSZH" is not manufactured -> TSD)."""
     if fields.get("fire"):
         return "FH"
-    if (fields.get("earth_count") or 0) >= 2:
+    if re.search(r"\bEMC\b", haystack, re.I) or (fields.get("earth_count") or 0) >= 2:
         if fields.get("armoured"):
             return "EA"
         if fields.get("lszh"):
@@ -470,15 +471,15 @@ STYLE_DEFAULT_CONFIG = {
 # control (C*) config -- only 6 products in the whole 19k catalog are a power config at
 # >=6C -- so a line with more than 5 cores takes the control config even when nothing on
 # it says "control", and even on a power style (XL/KL/CC/XA/KA/FR) or a VSD/submersible/
-# solar/fire style. Without this the engine synthesises XL-PAXN/7C2.5OR, which is not a
-# product; the stocked row is XL-CAXN/7C2.5OR.
+# solar/fire style. Control constructions default to a black outer sheath, so an
+# unstated-colour request resolves to the C* configuration with BK.
 CONTROL_CORE_MIN = 6
 
 # Small single-insulated and earth conductors use LS by default. Above 10 mm2 the
 # ordinary earth/single-insulated default remains LP unless the request explicitly
 # names the LS construction (LS flex, LSZH, high temperature, fire or switchboard).
 LS_SMALL_CONDUCTOR_MAX_MM2 = 10
-_EARTH_CONTEXT_RE = re.compile(r"\b(?:EARTH|ECC|G/Y|GREEN\s*/?\s*YELLOW)\b", re.I)
+_EARTH_CONTEXT_RE = re.compile(r"\b(?:EARTH|ECC|G/Y|GN\s*/\s*YE|GREEN\s*/?\s*YELLOW)\b", re.I)
 _MAINS_CONTEXT_RE = re.compile(
     r"\b(?:MAINS?|POWER|XLPE|PVC|LSZH|\d+\s*C(?:ORE)?S?)\b", re.I
 )
@@ -1471,6 +1472,26 @@ def _resolve_line(
                 enriched_fields["config_core"] = selected.config_core
                 config_defaulted = True
 
+    # Treat the inferred control config and its sheath colour as one decision. If no
+    # colour was stated, force BK even when the catalog snapshot only contains an OR
+    # twin; _collapse_to_standard_form then produces the made-to-order BK code.
+    if (
+        selected
+        and "colour" not in explicit_fields
+        and (fields.get("cable_type_hint") == "Control" or is_high_core_control(enriched_fields))
+    ):
+        control_config = (selected.config_core or "").upper()
+        if is_high_core_control(enriched_fields) and not control_config.startswith("C"):
+            control_config = "CA"
+        if control_config and (selected.colour or "").upper() != "BK":
+            selected, syn = _collapse_to_standard_form(selected, catalog, control_config, "BK")
+            synthesised_form = synthesised_form or syn
+            product_candidates = [selected]
+            enriched_fields["config_core"] = selected.config_core
+            enriched_fields["colour"] = selected.colour
+        colour_defaulted = True
+        colour_default_note = "Colour not stated; defaulted to BK (control standard). Confirm."
+
     if selected and not missing and len(product_candidates) == 1:
         status = "matched"
         confidence = min(0.95, 0.55 + style_score + product_score(enriched_fields, selected))
@@ -1969,7 +1990,13 @@ def rank_styles(
     # Unlike the earth and single-insulated branches below it does NOT lean on
     # is_small_ls_conductor: a stock order of LSFLEX R-125 panel wire runs to 70 mm2, and
     # those sizes are as unsheathed as the 1 mm2 ones.
-    ls_style_requested = ls_flex_requested or bool(LS_R125_STYLE_RE.search(haystack))
+    # Building wire explicitly requests LS, including section headings and larger
+    # earth conductors that would otherwise default to LP.
+    ls_style_requested = (
+        ls_flex_requested
+        or bool(LS_R125_STYLE_RE.search(haystack))
+        or (not style_hint and bool(re.search(r"\bBUILDING[\s-]+WIRE\b", haystack, re.I)))
+    )
     if fields.get("earth_only"):
         # Up to 10 mm2 a standalone earth is LS, matching the small switchboard /
         # single-insulated range. A split-off earth beside an ordinary mains cable is
@@ -2234,6 +2261,11 @@ def _stated_default_config(fields: dict[str, Any], style: Style) -> str:
 def default_colour_for_fields(fields: dict[str, Any], style: Style) -> str:
     if fields.get("earth_only"):
         return "EA"
+    # Every control construction has a black outer sheath. This covers both an
+    # explicit Control classification and the >5 plain-core control boundary.
+    # Explicit customer colours bypass this default and remain authoritative.
+    if fields.get("cable_type_hint") == "Control" or is_high_core_control(fields):
+        return "BK"
     if fields.get("switchboard") and canonical_number(fields.get("count")) == "1":
         return "OR"
     if fields.get("conductor") == "A":

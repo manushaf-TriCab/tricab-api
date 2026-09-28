@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tricab-cable-python"
 version = "0.1.0"
-description = "TriCab cable-selection rules and the product finder that reads them"
+description = "TriCab cable-selection rules, and the product finder and RFQ parser that read them"
 requires-python = ">=3.11"
 
 # Deliberately no `dependencies` here: the App Service installs from
@@ -14,7 +14,7 @@ requires-python = ">=3.11"
 # package can be published.
 
 [tool.setuptools]
-packages = ["tricab_cable_rules", "product_finder"]
+packages = ["tricab_cable_rules", "product_finder", "rfq_parser"]
 
 [tool.setuptools.package-data]
 tricab_cable_rules = ["data/cable_rules/*.json", "data/catalog/*"]

@@ -767,6 +767,30 @@ final class ContainerFactory
             \TriCab\Core\Expense\Contract\ExpensePeriodRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpensePeriodRepository::class),
             \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
 
+            // RFQ. In-memory by default; the azure-sql branch below reads the
+            // store's tables (plan 2.4). Empty rather than invented either way,
+            // and the routes are gated on permissions nobody holds yet. Branch
+            // membership has no source (owner question Q7), and the parser is
+            // not packaged (plan 3.1), so both answer "not available".
+            \TriCab\Core\Rfq\Contract\RfqRepository::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\InMemoryRfqRepository::class),
+            \TriCab\Core\Rfq\Contract\RfqBranchDirectory::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqBranchDirectory::class),
+            \TriCab\Core\Rfq\Contract\RfqParserClient::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UndeployedRfqParserClient::class),
+            // The rep's 4js operator code, for the quote's author (SalesRepAttribution).
+            // Read only; falls back to "nobody confirmed" when the legacy database is absent.
+            \TriCab\Core\Rfq\Contract\RfqOperatorDirectory::class => static function (Container $container) use ($settings): \TriCab\Core\Rfq\Contract\RfqOperatorDirectory {
+                try {
+                    return new \TriCab\Api\Rfq\Legacy\DescriptRfqOperatorDirectory(
+                        self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                        $settings->usesAzureSqlUserRepository() ? self::get($container, SqlConnection::class) : null,
+                    );
+                } catch (\Throwable) {
+                    return new \TriCab\Core\Rfq\Infrastructure\UnavailableRfqOperatorDirectory();
+                }
+            },
+
             // Onboarding (Phase 3.1–3.3). In-memory by default, as Expense is:
             // the azure-sql branch below swaps in the real adapters. The doubles
             // are not merely test scaffolding — they are what `USER_REPOSITORY=memory`
@@ -2402,6 +2426,14 @@ final class ContainerFactory
             $definitions[\TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseBankFeedRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpensePeriodRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpensePeriodRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReminderLogRepository::class);
+            // RFQ plan 2.4: the draft store and the queue on the live MySQL
+            // store's shape (`create-rfq-schema.sql`). The store has no
+            // in-memory twin, and nothing calls it until the Phase 3/4
+            // endpoints do; the queue replaces InMemoryRfqRepository.
+            $definitions[\TriCab\Core\Rfq\Contract\RfqDraftStore::class]
+                = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
+            $definitions[\TriCab\Core\Rfq\Contract\RfqRepository::class]
+                = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqRepository::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingSelfServiceRepository::class);
             // Phase 3.3 — the write side. All four share one locator, whose single
