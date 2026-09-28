@@ -2414,6 +2414,11 @@ final class ContainerFactory
             $definitions[\TriCab\Core\Expense\Contract\ExpenseBankFeedRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseBankFeedRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpensePeriodRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpensePeriodRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReminderLogRepository::class);
+            // RFQ plan 2.4: the draft store on the live MySQL store's shape
+            // (`create-rfq-schema.sql`). Azure SQL only: there is no in-memory
+            // store, and nothing calls it until the Phase 3/4 endpoints do.
+            $definitions[\TriCab\Core\Rfq\Contract\RfqDraftStore::class]
+                = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingSelfServiceRepository::class);
             // Phase 3.3 — the write side. All four share one locator, whose single

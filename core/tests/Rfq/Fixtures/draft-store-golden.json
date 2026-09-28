@@ -1,0 +1,1149 @@
+{
+ "source": "wt-main-verified",
+ "frozen_now": "2026-09-28T01:02:03.456789+00:00",
+ "edit_text": [
+  {
+   "in": null,
+   "in_json": "null",
+   "out": ""
+  },
+  {
+   "in": "",
+   "in_json": "\"\"",
+   "out": ""
+  },
+  {
+   "in": "  ",
+   "in_json": "\"  \"",
+   "out": ""
+  },
+  {
+   "in": "100",
+   "in_json": "\"100\"",
+   "out": "100"
+  },
+  {
+   "in": "100.0",
+   "in_json": "\"100.0\"",
+   "out": "100"
+  },
+  {
+   "in": " 100 ",
+   "in_json": "\" 100 \"",
+   "out": "100"
+  },
+  {
+   "in": "1e3",
+   "in_json": "\"1e3\"",
+   "out": "1000"
+  },
+  {
+   "in": "1E-5",
+   "in_json": "\"1E-5\"",
+   "out": "1e-05"
+  },
+  {
+   "in": "0.00001234",
+   "in_json": "\"0.00001234\"",
+   "out": "1.234e-05"
+  },
+  {
+   "in": "123456",
+   "in_json": "\"123456\"",
+   "out": "123456"
+  },
+  {
+   "in": "1234567",
+   "in_json": "\"1234567\"",
+   "out": "1.23457e+06"
+  },
+  {
+   "in": "0.1",
+   "in_json": "\"0.1\"",
+   "out": "0.1"
+  },
+  {
+   "in": "1/2",
+   "in_json": "\"1/2\"",
+   "out": "1/2"
+  },
+  {
+   "in": "abc",
+   "in_json": "\"abc\"",
+   "out": "abc"
+  },
+  {
+   "in": "Ø 2.5mm²",
+   "in_json": "\"\\u00d8 2.5mm\\u00b2\"",
+   "out": "Ø 2.5mm²"
+  },
+  {
+   "in": "1_000",
+   "in_json": "\"1_000\"",
+   "out": "1000"
+  },
+  {
+   "in": "inf",
+   "in_json": "\"inf\"",
+   "out": "inf"
+  },
+  {
+   "in": "-Infinity",
+   "in_json": "\"-Infinity\"",
+   "out": "-inf"
+  },
+  {
+   "in": "nan",
+   "in_json": "\"nan\"",
+   "out": "nan"
+  },
+  {
+   "in": "+5",
+   "in_json": "\"+5\"",
+   "out": "5"
+  },
+  {
+   "in": "-0",
+   "in_json": "\"-0\"",
+   "out": "-0"
+  },
+  {
+   "in": ".5",
+   "in_json": "\".5\"",
+   "out": "0.5"
+  },
+  {
+   "in": "5.",
+   "in_json": "\"5.\"",
+   "out": "5"
+  },
+  {
+   "in": "0x10",
+   "in_json": "\"0x10\"",
+   "out": "0x10"
+  },
+  {
+   "in": "12,5",
+   "in_json": "\"12,5\"",
+   "out": "12,5"
+  },
+  {
+   "in": "2.5e+10",
+   "in_json": "\"2.5e+10\"",
+   "out": "2.5e+10"
+  },
+  {
+   "in": "999999.5",
+   "in_json": "\"999999.5\"",
+   "out": "1e+06"
+  },
+  {
+   "in": "0.0001",
+   "in_json": "\"0.0001\"",
+   "out": "0.0001"
+  },
+  {
+   "in": "0.00009999995",
+   "in_json": "\"0.00009999995\"",
+   "out": "0.0001"
+  },
+  {
+   "in": "1e16",
+   "in_json": "\"1e16\"",
+   "out": "1e+16"
+  },
+  {
+   "in": "3.14159265",
+   "in_json": "\"3.14159265\"",
+   "out": "3.14159"
+  },
+  {
+   "in": 100,
+   "in_json": "100",
+   "out": "100"
+  },
+  {
+   "in": 100.0,
+   "in_json": "100.0",
+   "out": "100"
+  },
+  {
+   "in": -0.0,
+   "in_json": "-0.0",
+   "out": "-0"
+  },
+  {
+   "in": 0,
+   "in_json": "0",
+   "out": "0"
+  },
+  {
+   "in": 1.5,
+   "in_json": "1.5",
+   "out": "1.5"
+  },
+  {
+   "in": 2.675,
+   "in_json": "2.675",
+   "out": "2.675"
+  },
+  {
+   "in": 1e-07,
+   "in_json": "1e-07",
+   "out": "1e-07"
+  },
+  {
+   "in": 123456789,
+   "in_json": "123456789",
+   "out": "1.23457e+08"
+  },
+  {
+   "in": 0.000123456789,
+   "in_json": "0.000123456789",
+   "out": "0.000123457"
+  },
+  {
+   "in": true,
+   "in_json": "true",
+   "out": "True"
+  },
+  {
+   "in": false,
+   "in_json": "false",
+   "out": "False"
+  },
+  {
+   "in": [
+    "a",
+    1
+   ],
+   "in_json": "[\"a\", 1]",
+   "out": "['a', 1]"
+  },
+  {
+   "in": {
+    "k": "v"
+   },
+   "in_json": "{\"k\": \"v\"}",
+   "out": "{'k': 'v'}"
+  },
+  {
+   "in": [],
+   "in_json": "[]",
+   "out": "[]"
+  },
+  {
+   "in": {},
+   "in_json": "{}",
+   "out": "{}"
+  }
+ ],
+ "tracked": [
+  {
+   "row": {
+    "raw_text": "10 x 100m 2C 2.5mm TPS",
+    "source": {
+     "original_text": "10 x 100m 2C 2.5mm TPS",
+     "row_number": 1
+    },
+    "final_product_code": "c1-tps2c2.5",
+    "length": {
+     "total_length": 1000,
+     "number_of_lengths": 10,
+     "length_each": 100
+    },
+    "unit_price": 1.25,
+    "margin_percent": 30,
+    "final_unit_price": 1.79,
+    "status": "matched",
+    "line_note": ""
+   },
+   "values": {
+    "product_code": "c1-tps2c2.5",
+    "quantity": "1000",
+    "cuts": "10",
+    "length_each": "100",
+    "base_cost": "1.25",
+    "margin_percent": "30",
+    "sell_price": "1.79",
+    "comment": "",
+    "status": "matched",
+    "description": "10 x 100m 2C 2.5mm TPS"
+   },
+   "summary": "c1-tps2c2.5 x 1000"
+  },
+  {
+   "row": {
+    "raw_text": "50 cable ties",
+    "selected_product_code": "ACC-TIE-300",
+    "length": {
+     "number_of_lengths": 50
+    },
+    "unit_price": 0.12,
+    "margin_percent": 40,
+    "final_unit_price": 0.2,
+    "status": "accessory"
+   },
+   "values": {
+    "product_code": "ACC-TIE-300",
+    "quantity": "50",
+    "cuts": "",
+    "length_each": "",
+    "base_cost": "0.12",
+    "margin_percent": "40",
+    "sell_price": "0.2",
+    "comment": "",
+    "status": "accessory",
+    "description": "50 cable ties"
+   },
+   "summary": "ACC-TIE-300 x 50"
+  },
+  {
+   "row": {
+    "raw_text": "Ø 16mm² × 3 core, flexible — see note",
+    "source": {
+     "original_text": "Ø 16mm² × 3 core, flexible — see note"
+    },
+    "final_product_code": "",
+    "length": {
+     "total_length": "",
+     "number_of_lengths": 2,
+     "length_each_m": 25.5
+    },
+    "status": "needs_review",
+    "line_note": "ask about colour / insulation",
+    "score": NaN
+   },
+   "values": {
+    "product_code": "",
+    "quantity": "2",
+    "cuts": "",
+    "length_each": "25.5",
+    "base_cost": "",
+    "margin_percent": "",
+    "sell_price": "",
+    "comment": "ask about colour / insulation",
+    "status": "needs_review",
+    "description": "Ø 16mm² × 3 core, flexible — see note"
+   },
+   "summary": "Ø 16mm² × 3 core, flexible — see note x 2"
+  },
+  {
+   "row": {
+    "raw_text": "4x 2.5 earth",
+    "final_product_code": "C1-E2.5GY",
+    "parent_product_code": "c1-e2.5",
+    "length": {
+     "total_length": 400.0,
+     "number_of_lengths": 4,
+     "length_each": 100.0
+    },
+    "unit_price": 0.5,
+    "margin_percent": 25.0,
+    "final_unit_price": 0.67,
+    "status": "matched"
+   },
+   "values": {
+    "product_code": "C1-E2.5GY",
+    "quantity": "400",
+    "cuts": "4",
+    "length_each": "100",
+    "base_cost": "0.5",
+    "margin_percent": "25",
+    "sell_price": "0.67",
+    "comment": "",
+    "status": "matched",
+    "description": "4x 2.5 earth"
+   },
+   "summary": "C1-E2.5GY x 400"
+  }
+ ],
+ "json_dumps": [
+  {
+   "value": {
+    "raw_text": "10 x 100m 2C 2.5mm TPS",
+    "source": {
+     "original_text": "10 x 100m 2C 2.5mm TPS",
+     "row_number": 1
+    },
+    "final_product_code": "c1-tps2c2.5",
+    "length": {
+     "total_length": 1000,
+     "number_of_lengths": 10,
+     "length_each": 100
+    },
+    "unit_price": 1.25,
+    "margin_percent": 30,
+    "final_unit_price": 1.79,
+    "status": "matched",
+    "line_note": ""
+   },
+   "text": "{\"raw_text\": \"10 x 100m 2C 2.5mm TPS\", \"source\": {\"original_text\": \"10 x 100m 2C 2.5mm TPS\", \"row_number\": 1}, \"final_product_code\": \"c1-tps2c2.5\", \"length\": {\"total_length\": 1000, \"number_of_lengths\": 10, \"length_each\": 100}, \"unit_price\": 1.25, \"margin_percent\": 30, \"final_unit_price\": 1.79, \"status\": \"matched\", \"line_note\": \"\"}"
+  },
+  {
+   "value": {
+    "customer_code": "12345",
+    "customer_name": "ACME Electrical",
+    "region": "VIC",
+    "contact": "Sam",
+    "cusref": "PO-1",
+    "author": "rep"
+   },
+   "text": "{\"customer_code\": \"12345\", \"customer_name\": \"ACME Electrical\", \"region\": \"VIC\", \"contact\": \"Sam\", \"cusref\": \"PO-1\", \"author\": \"rep\"}"
+  },
+  {
+   "value": {
+    "a": [
+     1,
+     2.0,
+     "x/y"
+    ],
+    "b": null,
+    "c": true,
+    "é": "ü\n\"\t"
+   },
+   "text": "{\"a\": [1, 2.0, \"x/y\"], \"b\": null, \"c\": true, \"\\u00e9\": \"\\u00fc\\n\\\"\\t\"}"
+  },
+  {
+   "value": {
+    "n": 1e+16,
+    "m": 0.1,
+    "big": 12345678901234567890,
+    "neg": -1.5e-07
+   },
+   "text": "{\"n\": 1e+16, \"m\": 0.1, \"big\": 12345678901234567890, \"neg\": -1.5e-07}"
+  }
+ ],
+ "json_dumps_nan": "{\"raw_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\", \"source\": {\"original_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\"}, \"final_product_code\": \"\", \"length\": {\"total_length\": \"\", \"number_of_lengths\": 2, \"length_each_m\": 25.5}, \"status\": \"needs_review\", \"line_note\": \"ask about colour / insulation\", \"score\": NaN}",
+ "scenarios": [
+  {
+   "name": "create",
+   "ids_used": 10,
+   "state": {
+    "draft": {
+     "id": "00000000000000000000000000000001",
+     "created_at": "2026-09-28T01:02:03.456789+00:00",
+     "source": "web",
+     "label": "ACME RFQ",
+     "status": "new",
+     "quote_details": "{\"customer_code\": \"12345\", \"customer_name\": \"ACME Electrical\", \"region\": \"VIC\", \"contact\": \"Sam\", \"cusref\": \"PO-1\", \"author\": \"rep\"}",
+     "email_meta": null,
+     "push_error": null,
+     "refno": null,
+     "refver": null,
+     "synced_at": null,
+     "sync_payload": null,
+     "updated_at": "2026-09-28T01:02:03.456789+00:00",
+     "created_by_email": "rep@tricab.com",
+     "branch": "VIC",
+     "assignee_email": "rep@tricab.com",
+     "priority": "normal",
+     "due_at": "2026-10-01T01:02:03.456789+00:00",
+     "archived_at": null,
+     "archived_by": null,
+     "archive_reason": null,
+     "revision": 1,
+     "sync_started_at": null,
+     "sync_revision": null
+    },
+    "rows": [
+     {
+      "id": "00000000000000000000000000000003",
+      "draft_id": "00000000000000000000000000000001",
+      "row_order": 0,
+      "row_data": "{\"raw_text\": \"10 x 100m 2C 2.5mm TPS\", \"source\": {\"original_text\": \"10 x 100m 2C 2.5mm TPS\", \"row_number\": 1}, \"final_product_code\": \"C1-TPS2C2.5\", \"length\": {\"total_length\": 1000, \"number_of_lengths\": 10, \"length_each\": 100}, \"unit_price\": 1.25, \"margin_percent\": 30, \"final_unit_price\": 1.79, \"status\": \"matched\", \"line_note\": \"\", \"line_uid\": \"00000000000000000000000000000002\"}",
+      "system_row_data": "{\"raw_text\": \"10 x 100m 2C 2.5mm TPS\", \"source\": {\"original_text\": \"10 x 100m 2C 2.5mm TPS\", \"row_number\": 1}, \"final_product_code\": \"C1-TPS2C2.5\", \"length\": {\"total_length\": 1000, \"number_of_lengths\": 10, \"length_each\": 100}, \"unit_price\": 1.25, \"margin_percent\": 30, \"final_unit_price\": 1.79, \"status\": \"matched\", \"line_note\": \"\", \"line_uid\": \"00000000000000000000000000000002\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "00000000000000000000000000000002"
+     },
+     {
+      "id": "00000000000000000000000000000005",
+      "draft_id": "00000000000000000000000000000001",
+      "row_order": 1,
+      "row_data": "{\"raw_text\": \"50 cable ties\", \"selected_product_code\": \"ACC-TIE-300\", \"length\": {\"number_of_lengths\": 50}, \"unit_price\": 0.12, \"margin_percent\": 40, \"final_unit_price\": 0.2, \"status\": \"accessory\", \"line_uid\": \"00000000000000000000000000000004\"}",
+      "system_row_data": "{\"raw_text\": \"50 cable ties\", \"selected_product_code\": \"ACC-TIE-300\", \"length\": {\"number_of_lengths\": 50}, \"unit_price\": 0.12, \"margin_percent\": 40, \"final_unit_price\": 0.2, \"status\": \"accessory\", \"line_uid\": \"00000000000000000000000000000004\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "00000000000000000000000000000004"
+     },
+     {
+      "id": "00000000000000000000000000000007",
+      "draft_id": "00000000000000000000000000000001",
+      "row_order": 2,
+      "row_data": "{\"raw_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\", \"source\": {\"original_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\"}, \"final_product_code\": \"\", \"length\": {\"total_length\": \"\", \"number_of_lengths\": 2, \"length_each_m\": 25.5}, \"status\": \"needs_review\", \"line_note\": \"ask about colour / insulation\", \"score\": NaN, \"line_uid\": \"00000000000000000000000000000006\"}",
+      "system_row_data": "{\"raw_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\", \"source\": {\"original_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\"}, \"final_product_code\": \"\", \"length\": {\"total_length\": \"\", \"number_of_lengths\": 2, \"length_each_m\": 25.5}, \"status\": \"needs_review\", \"line_note\": \"ask about colour / insulation\", \"score\": NaN, \"line_uid\": \"00000000000000000000000000000006\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "00000000000000000000000000000006"
+     },
+     {
+      "id": "00000000000000000000000000000009",
+      "draft_id": "00000000000000000000000000000001",
+      "row_order": 3,
+      "row_data": "{\"raw_text\": \"4x 2.5 earth\", \"final_product_code\": \"C1-E2.5GY\", \"parent_product_code\": \"C1-E2.5\", \"length\": {\"total_length\": 400.0, \"number_of_lengths\": 4, \"length_each\": 100.0}, \"unit_price\": 0.5, \"margin_percent\": 25.0, \"final_unit_price\": 0.67, \"status\": \"matched\", \"line_uid\": \"00000000000000000000000000000008\"}",
+      "system_row_data": "{\"raw_text\": \"4x 2.5 earth\", \"final_product_code\": \"C1-E2.5GY\", \"parent_product_code\": \"C1-E2.5\", \"length\": {\"total_length\": 400.0, \"number_of_lengths\": 4, \"length_each\": 100.0}, \"unit_price\": 0.5, \"margin_percent\": 25.0, \"final_unit_price\": 0.67, \"status\": \"matched\", \"line_uid\": \"00000000000000000000000000000008\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "00000000000000000000000000000008"
+     }
+    ],
+    "edits": [],
+    "activity": [
+     {
+      "id": "0000000000000000000000000000000a",
+      "draft_id": "00000000000000000000000000000001",
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "actor_branch": null,
+      "event_type": "created",
+      "message": null,
+      "detail": "{\"source\": \"web\", \"assignee_email\": \"rep@tricab.com\", \"branch\": \"VIC\"}",
+      "revision": 1
+     }
+    ]
+   }
+  },
+  {
+   "name": "edit",
+   "ids_start": 100,
+   "ids_used": 9,
+   "input_rows": [
+    {
+     "raw_text": "4x 2.5 earth",
+     "final_product_code": "C1-E2.5GY",
+     "parent_product_code": "C1-E2.5",
+     "length": {
+      "total_length": 400.0,
+      "number_of_lengths": 4,
+      "length_each": 100.0
+     },
+     "unit_price": 0.5,
+     "margin_percent": 25.0,
+     "final_unit_price": 0.67,
+     "status": "matched",
+     "line_uid": "00000000000000000000000000000008"
+    },
+    {
+     "raw_text": "10 x 100m 2C 2.5mm TPS",
+     "source": {
+      "original_text": "10 x 100m 2C 2.5mm TPS",
+      "row_number": 1
+     },
+     "final_product_code": "C1-TPS2C2.5",
+     "length": {
+      "total_length": "1000.0",
+      "number_of_lengths": 10,
+      "length_each": 100
+     },
+     "unit_price": 1.25,
+     "margin_percent": 30,
+     "final_unit_price": 1.79,
+     "status": "matched",
+     "line_note": "",
+     "line_uid": "00000000000000000000000000000002"
+    },
+    {
+     "raw_text": "50 cable ties",
+     "selected_product_code": "ACC-TIE-300",
+     "length": {
+      "number_of_lengths": 50
+     },
+     "unit_price": 0.12,
+     "margin_percent": 35,
+     "final_unit_price": 0.2,
+     "status": "accessory",
+     "line_uid": "00000000000000000000000000000004"
+    },
+    {
+     "raw_text": "extra glands",
+     "final_product_code": "acc-gland-20",
+     "length": {
+      "number_of_lengths": 6
+     },
+     "status": "manual"
+    }
+   ],
+   "input_header": {
+    "customer_code": "12345",
+    "customer_name": "ACME Electrical Pty Ltd",
+    "region": "NSW",
+    "contact": "Sam",
+    "cusref": "PO-1",
+    "author": "rep",
+    "phone": "0400"
+   },
+   "result": {
+    "ok": true,
+    "revision": 2,
+    "status": "in_progress",
+    "readiness": {
+     "ready": false,
+     "blocking_issues": [
+      {
+       "issue": "missing_header",
+       "field": "customer_id",
+       "reason": "Missing required field: customer_id"
+      },
+      {
+       "issue": "missing_header",
+       "field": "salesoffice",
+       "reason": "Missing required field: salesoffice"
+      },
+      {
+       "issue": "missing_header",
+       "field": "payterms",
+       "reason": "Missing required field: payterms"
+      },
+      {
+       "issue": "invalid_region",
+       "field": "region",
+       "reason": "Unknown region: NSW"
+      },
+      {
+       "row_number": 3,
+       "row_id": "00000000000000000000000000000004",
+       "code": "ACC-TIE-300",
+       "issue": "unresolved_line",
+       "reason": "status is accessory; resolve the line before syncing"
+      },
+      {
+       "row_number": 3,
+       "row_id": "00000000000000000000000000000004",
+       "code": "ACC-TIE-300",
+       "issue": "invalid_quantity_or_price",
+       "reason": "quantity and price must both be greater than 0 (check length and pricing)"
+      },
+      {
+       "row_number": 4,
+       "row_id": null,
+       "code": "acc-gland-20",
+       "issue": "unresolved_line",
+       "reason": "status is manual; resolve the line before syncing"
+      },
+      {
+       "row_number": 4,
+       "row_id": null,
+       "code": "acc-gland-20",
+       "issue": "invalid_quantity_or_price",
+       "reason": "quantity and price must both be greater than 0 (check length and pricing)"
+      }
+     ],
+     "excluded": [],
+     "included_count": 4,
+     "excluded_count": 0,
+     "row_states": [
+      {
+       "row_number": 1,
+       "row_id": "00000000000000000000000000000008",
+       "code": "C1-E2.5GY",
+       "state": "ready",
+       "notes": [],
+       "blocking_issues": [],
+       "exclusion_reason": null,
+       "codes": [],
+       "severity": "ready"
+      },
+      {
+       "row_number": 2,
+       "row_id": "00000000000000000000000000000002",
+       "code": "C1-TPS2C2.5",
+       "state": "ready",
+       "notes": [],
+       "blocking_issues": [],
+       "exclusion_reason": null,
+       "codes": [],
+       "severity": "ready"
+      },
+      {
+       "row_number": 3,
+       "row_id": "00000000000000000000000000000004",
+       "code": "ACC-TIE-300",
+       "state": "fix_required",
+       "notes": [],
+       "blocking_issues": [
+        "status is accessory; resolve the line before syncing",
+        "quantity and price must both be greater than 0 (check length and pricing)"
+       ],
+       "exclusion_reason": null,
+       "codes": [
+        {
+         "code": "accessory_review",
+         "severity": "fix_required",
+         "detail": "Accessories are quoted for review, not matched.",
+         "display": "fix_required"
+        },
+        {
+         "code": "quantity_invalid",
+         "severity": "fix_required",
+         "detail": "This line needs a length greater than 0.",
+         "display": "fix_required"
+        }
+       ],
+       "severity": "fix_required"
+      },
+      {
+       "row_number": 4,
+       "row_id": null,
+       "code": "acc-gland-20",
+       "state": "fix_required",
+       "notes": [],
+       "blocking_issues": [
+        "status is manual; resolve the line before syncing",
+        "quantity and price must both be greater than 0 (check length and pricing)"
+       ],
+       "exclusion_reason": null,
+       "codes": [
+        {
+         "code": "technical_unknown_status",
+         "severity": "fix_required",
+         "detail": "The parser reported an unrecognised state (manual). Confirm the product before syncing.",
+         "display": "fix_required"
+        },
+        {
+         "code": "quantity_invalid",
+         "severity": "fix_required",
+         "detail": "This line needs a length greater than 0.",
+         "display": "fix_required"
+        },
+        {
+         "code": "price_invalid",
+         "severity": "fix_required",
+         "detail": "This line needs a price greater than 0.",
+         "display": "note"
+        }
+       ],
+       "severity": "fix_required"
+      }
+     ]
+    }
+   },
+   "state": {
+    "draft": {
+     "id": "00000000000000000000000000000001",
+     "created_at": "2026-09-28T01:02:03.456789+00:00",
+     "source": "web",
+     "label": "ACME RFQ",
+     "status": "in_progress",
+     "quote_details": "{\"customer_code\": \"12345\", \"customer_name\": \"ACME Electrical Pty Ltd\", \"region\": \"NSW\", \"contact\": \"Sam\", \"cusref\": \"PO-1\", \"author\": \"rep\", \"phone\": \"0400\"}",
+     "email_meta": null,
+     "push_error": null,
+     "refno": null,
+     "refver": null,
+     "synced_at": null,
+     "sync_payload": null,
+     "updated_at": "2026-09-28T01:02:03.456789+00:00",
+     "created_by_email": "rep@tricab.com",
+     "branch": "VIC",
+     "assignee_email": "rep@tricab.com",
+     "priority": "normal",
+     "due_at": "2026-10-01T01:02:03.456789+00:00",
+     "archived_at": null,
+     "archived_by": null,
+     "archive_reason": null,
+     "revision": 2,
+     "sync_started_at": null,
+     "sync_revision": null
+    },
+    "rows": [
+     {
+      "id": "00000000000000000000000000000065",
+      "draft_id": "00000000000000000000000000000001",
+      "row_order": 0,
+      "row_data": "{\"raw_text\": \"4x 2.5 earth\", \"final_product_code\": \"C1-E2.5GY\", \"parent_product_code\": \"C1-E2.5\", \"length\": {\"total_length\": 400.0, \"number_of_lengths\": 4, \"length_each\": 100.0}, \"unit_price\": 0.5, \"margin_percent\": 25.0, \"final_unit_price\": 0.67, \"status\": \"matched\", \"line_uid\": \"00000000000000000000000000000008\"}",
+      "system_row_data": "{\"raw_text\": \"4x 2.5 earth\", \"final_product_code\": \"C1-E2.5GY\", \"parent_product_code\": \"C1-E2.5\", \"length\": {\"total_length\": 400.0, \"number_of_lengths\": 4, \"length_each\": 100.0}, \"unit_price\": 0.5, \"margin_percent\": 25.0, \"final_unit_price\": 0.67, \"status\": \"matched\", \"line_uid\": \"00000000000000000000000000000008\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "00000000000000000000000000000008"
+     },
+     {
+      "id": "00000000000000000000000000000066",
+      "draft_id": "00000000000000000000000000000001",
+      "row_order": 1,
+      "row_data": "{\"raw_text\": \"10 x 100m 2C 2.5mm TPS\", \"source\": {\"original_text\": \"10 x 100m 2C 2.5mm TPS\", \"row_number\": 1}, \"final_product_code\": \"C1-TPS2C2.5\", \"length\": {\"total_length\": \"1000.0\", \"number_of_lengths\": 10, \"length_each\": 100}, \"unit_price\": 1.25, \"margin_percent\": 30, \"final_unit_price\": 1.79, \"status\": \"matched\", \"line_note\": \"\", \"line_uid\": \"00000000000000000000000000000002\"}",
+      "system_row_data": "{\"raw_text\": \"10 x 100m 2C 2.5mm TPS\", \"source\": {\"original_text\": \"10 x 100m 2C 2.5mm TPS\", \"row_number\": 1}, \"final_product_code\": \"C1-TPS2C2.5\", \"length\": {\"total_length\": 1000, \"number_of_lengths\": 10, \"length_each\": 100}, \"unit_price\": 1.25, \"margin_percent\": 30, \"final_unit_price\": 1.79, \"status\": \"matched\", \"line_note\": \"\", \"line_uid\": \"00000000000000000000000000000002\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "00000000000000000000000000000002"
+     },
+     {
+      "id": "00000000000000000000000000000068",
+      "draft_id": "00000000000000000000000000000001",
+      "row_order": 2,
+      "row_data": "{\"raw_text\": \"50 cable ties\", \"selected_product_code\": \"ACC-TIE-300\", \"length\": {\"number_of_lengths\": 50}, \"unit_price\": 0.12, \"margin_percent\": 35, \"final_unit_price\": 0.2, \"status\": \"accessory\", \"line_uid\": \"00000000000000000000000000000004\"}",
+      "system_row_data": "{\"raw_text\": \"50 cable ties\", \"selected_product_code\": \"ACC-TIE-300\", \"length\": {\"number_of_lengths\": 50}, \"unit_price\": 0.12, \"margin_percent\": 40, \"final_unit_price\": 0.2, \"status\": \"accessory\", \"line_uid\": \"00000000000000000000000000000004\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "00000000000000000000000000000004"
+     },
+     {
+      "id": "0000000000000000000000000000006b",
+      "draft_id": "00000000000000000000000000000001",
+      "row_order": 3,
+      "row_data": "{\"raw_text\": \"extra glands\", \"final_product_code\": \"ACC-GLAND-20\", \"length\": {\"number_of_lengths\": 6}, \"status\": \"manual\", \"line_uid\": \"00000000000000000000000000000069\"}",
+      "system_row_data": "{\"raw_text\": \"extra glands\", \"final_product_code\": \"ACC-GLAND-20\", \"length\": {\"number_of_lengths\": 6}, \"status\": \"manual\", \"line_uid\": \"00000000000000000000000000000069\"}",
+      "system_snapshot_valid": 0,
+      "line_uid": "00000000000000000000000000000069"
+     }
+    ],
+    "edits": [
+     {
+      "id": "00000000000000000000000000000067",
+      "draft_id": "00000000000000000000000000000001",
+      "line_uid": "00000000000000000000000000000004",
+      "row_order": 2,
+      "revision": 2,
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": "rep@tricab.com",
+      "actor_role": "sales",
+      "view_mode": "simple",
+      "field": "margin_percent",
+      "old_value": "40",
+      "new_value": "35",
+      "from_system": 1
+     },
+     {
+      "id": "0000000000000000000000000000006a",
+      "draft_id": "00000000000000000000000000000001",
+      "line_uid": "00000000000000000000000000000069",
+      "row_order": 3,
+      "revision": 2,
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": "rep@tricab.com",
+      "actor_role": "sales",
+      "view_mode": "simple",
+      "field": "line",
+      "old_value": "",
+      "new_value": "ACC-GLAND-20 x 6",
+      "from_system": 0
+     },
+     {
+      "id": "0000000000000000000000000000006c",
+      "draft_id": "00000000000000000000000000000001",
+      "line_uid": "00000000000000000000000000000006",
+      "row_order": 2,
+      "revision": 2,
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": "rep@tricab.com",
+      "actor_role": "sales",
+      "view_mode": "simple",
+      "field": "line",
+      "old_value": "Ø 16mm² × 3 core, flexible — see note x 2",
+      "new_value": "",
+      "from_system": 1
+     }
+    ],
+    "activity": [
+     {
+      "id": "0000000000000000000000000000000a",
+      "draft_id": "00000000000000000000000000000001",
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "actor_branch": null,
+      "event_type": "created",
+      "message": null,
+      "detail": "{\"source\": \"web\", \"assignee_email\": \"rep@tricab.com\", \"branch\": \"VIC\"}",
+      "revision": 1
+     },
+     {
+      "id": "0000000000000000000000000000006d",
+      "draft_id": "00000000000000000000000000000001",
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": "rep@tricab.com",
+      "actor_role": "sales",
+      "actor_branch": "VIC",
+      "event_type": "content_updated",
+      "message": null,
+      "detail": "{\"from_status\": \"new\", \"to_status\": \"in_progress\", \"header_changes\": [{\"field\": \"customer_name\", \"from\": \"ACME Electrical\", \"to\": \"ACME Electrical Pty Ltd\"}, {\"field\": \"phone\", \"from\": \"\", \"to\": \"400\"}, {\"field\": \"region\", \"from\": \"VIC\", \"to\": \"NSW\"}]}",
+      "revision": 2
+     }
+    ]
+   }
+  },
+  {
+   "name": "legacy_positional",
+   "ids_start": 300,
+   "ids_used": 13,
+   "before": {
+    "draft": {
+     "id": "000000000000000000000000000000c9",
+     "created_at": "2026-09-28T01:02:03.456789+00:00",
+     "source": "email",
+     "label": "legacy",
+     "status": "new",
+     "quote_details": "{\"customer_code\": \"12345\", \"customer_name\": \"ACME Electrical\", \"region\": \"VIC\", \"contact\": \"Sam\", \"cusref\": \"PO-1\", \"author\": \"rep\"}",
+     "email_meta": "{\"from\": \"c@example.com\"}",
+     "push_error": null,
+     "refno": null,
+     "refver": null,
+     "synced_at": null,
+     "sync_payload": null,
+     "updated_at": "2026-09-28T01:02:03.456789+00:00",
+     "created_by_email": null,
+     "branch": null,
+     "assignee_email": null,
+     "priority": "normal",
+     "due_at": "2026-10-01T01:02:03.456789+00:00",
+     "archived_at": null,
+     "archived_by": null,
+     "archive_reason": null,
+     "revision": 1,
+     "sync_started_at": null,
+     "sync_revision": null
+    },
+    "rows": [
+     {
+      "id": "000000000000000000000000000000cb",
+      "draft_id": "000000000000000000000000000000c9",
+      "row_order": 0,
+      "row_data": "{\"raw_text\": \"10 x 100m 2C 2.5mm TPS\", \"source\": {\"original_text\": \"10 x 100m 2C 2.5mm TPS\", \"row_number\": 1}, \"final_product_code\": \"C1-TPS2C2.5\", \"length\": {\"total_length\": 1000, \"number_of_lengths\": 10, \"length_each\": 100}, \"unit_price\": 1.25, \"margin_percent\": 30, \"final_unit_price\": 1.79, \"status\": \"matched\", \"line_note\": \"\"}",
+      "system_row_data": "{\"raw_text\": \"10 x 100m 2C 2.5mm TPS\", \"source\": {\"original_text\": \"10 x 100m 2C 2.5mm TPS\", \"row_number\": 1}, \"final_product_code\": \"C1-TPS2C2.5\", \"length\": {\"total_length\": 1000, \"number_of_lengths\": 10, \"length_each\": 100}, \"unit_price\": 1.25, \"margin_percent\": 30, \"final_unit_price\": 1.79, \"status\": \"matched\", \"line_note\": \"\", \"line_uid\": \"000000000000000000000000000000ca\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": null
+     },
+     {
+      "id": "000000000000000000000000000000cd",
+      "draft_id": "000000000000000000000000000000c9",
+      "row_order": 1,
+      "row_data": "{\"raw_text\": \"50 cable ties\", \"selected_product_code\": \"ACC-TIE-300\", \"length\": {\"number_of_lengths\": 50}, \"unit_price\": 0.12, \"margin_percent\": 40, \"final_unit_price\": 0.2, \"status\": \"accessory\"}",
+      "system_row_data": "{\"raw_text\": \"50 cable ties\", \"selected_product_code\": \"ACC-TIE-300\", \"length\": {\"number_of_lengths\": 50}, \"unit_price\": 0.12, \"margin_percent\": 40, \"final_unit_price\": 0.2, \"status\": \"accessory\", \"line_uid\": \"000000000000000000000000000000cc\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": null
+     },
+     {
+      "id": "000000000000000000000000000000cf",
+      "draft_id": "000000000000000000000000000000c9",
+      "row_order": 2,
+      "row_data": "{\"raw_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\", \"source\": {\"original_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\"}, \"final_product_code\": \"\", \"length\": {\"total_length\": \"\", \"number_of_lengths\": 2, \"length_each_m\": 25.5}, \"status\": \"needs_review\", \"line_note\": \"ask about colour / insulation\", \"score\": NaN}",
+      "system_row_data": "{\"raw_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\", \"source\": {\"original_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\"}, \"final_product_code\": \"\", \"length\": {\"total_length\": \"\", \"number_of_lengths\": 2, \"length_each_m\": 25.5}, \"status\": \"needs_review\", \"line_note\": \"ask about colour / insulation\", \"score\": NaN, \"line_uid\": \"000000000000000000000000000000ce\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": null
+     }
+    ],
+    "edits": [],
+    "activity": [
+     {
+      "id": "000000000000000000000000000000d0",
+      "draft_id": "000000000000000000000000000000c9",
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "actor_branch": null,
+      "event_type": "created",
+      "message": null,
+      "detail": "{\"source\": \"email\", \"assignee_email\": \"\", \"branch\": \"\"}",
+      "revision": 1
+     }
+    ]
+   },
+   "input_rows": [
+    {
+     "raw_text": "10 x 100m 2C 2.5mm TPS",
+     "source": {
+      "original_text": "10 x 100m 2C 2.5mm TPS",
+      "row_number": 1
+     },
+     "final_product_code": "C1-TPS2C2.5",
+     "length": {
+      "total_length": 1000,
+      "number_of_lengths": 10,
+      "length_each": 100
+     },
+     "unit_price": 1.25,
+     "margin_percent": 30,
+     "final_unit_price": 1.79,
+     "status": "matched",
+     "line_note": "checked"
+    },
+    {
+     "raw_text": "50 cable ties",
+     "selected_product_code": "ACC-TIE-300",
+     "length": {
+      "number_of_lengths": 50
+     },
+     "unit_price": 0.12,
+     "margin_percent": 40,
+     "final_unit_price": 0.2,
+     "status": "accessory"
+    },
+    {
+     "raw_text": "new",
+     "length": {
+      "number_of_lengths": 1
+     }
+    }
+   ],
+   "state": {
+    "draft": {
+     "id": "000000000000000000000000000000c9",
+     "created_at": "2026-09-28T01:02:03.456789+00:00",
+     "source": "email",
+     "label": "legacy",
+     "status": "in_progress",
+     "quote_details": "{\"customer_code\": \"12345\", \"customer_name\": \"ACME Electrical\", \"region\": \"VIC\", \"contact\": \"Sam\", \"cusref\": \"PO-1\", \"author\": \"rep\"}",
+     "email_meta": "{\"from\": \"c@example.com\"}",
+     "push_error": null,
+     "refno": null,
+     "refver": null,
+     "synced_at": null,
+     "sync_payload": null,
+     "updated_at": "2026-09-28T01:02:03.456789+00:00",
+     "created_by_email": null,
+     "branch": null,
+     "assignee_email": null,
+     "priority": "normal",
+     "due_at": "2026-10-01T01:02:03.456789+00:00",
+     "archived_at": null,
+     "archived_by": null,
+     "archive_reason": null,
+     "revision": 2,
+     "sync_started_at": null,
+     "sync_revision": null
+    },
+    "rows": [
+     {
+      "id": "0000000000000000000000000000012f",
+      "draft_id": "000000000000000000000000000000c9",
+      "row_order": 0,
+      "row_data": "{\"raw_text\": \"10 x 100m 2C 2.5mm TPS\", \"source\": {\"original_text\": \"10 x 100m 2C 2.5mm TPS\", \"row_number\": 1}, \"final_product_code\": \"C1-TPS2C2.5\", \"length\": {\"total_length\": 1000, \"number_of_lengths\": 10, \"length_each\": 100}, \"unit_price\": 1.25, \"margin_percent\": 30, \"final_unit_price\": 1.79, \"status\": \"matched\", \"line_note\": \"checked\", \"line_uid\": \"0000000000000000000000000000012d\"}",
+      "system_row_data": "{\"raw_text\": \"10 x 100m 2C 2.5mm TPS\", \"source\": {\"original_text\": \"10 x 100m 2C 2.5mm TPS\", \"row_number\": 1}, \"final_product_code\": \"C1-TPS2C2.5\", \"length\": {\"total_length\": 1000, \"number_of_lengths\": 10, \"length_each\": 100}, \"unit_price\": 1.25, \"margin_percent\": 30, \"final_unit_price\": 1.79, \"status\": \"matched\", \"line_note\": \"\", \"line_uid\": \"000000000000000000000000000000ca\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "0000000000000000000000000000012d"
+     },
+     {
+      "id": "00000000000000000000000000000131",
+      "draft_id": "000000000000000000000000000000c9",
+      "row_order": 1,
+      "row_data": "{\"raw_text\": \"50 cable ties\", \"selected_product_code\": \"ACC-TIE-300\", \"length\": {\"number_of_lengths\": 50}, \"unit_price\": 0.12, \"margin_percent\": 40, \"final_unit_price\": 0.2, \"status\": \"accessory\", \"line_uid\": \"00000000000000000000000000000130\"}",
+      "system_row_data": "{\"raw_text\": \"50 cable ties\", \"selected_product_code\": \"ACC-TIE-300\", \"length\": {\"number_of_lengths\": 50}, \"unit_price\": 0.12, \"margin_percent\": 40, \"final_unit_price\": 0.2, \"status\": \"accessory\", \"line_uid\": \"000000000000000000000000000000cc\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "00000000000000000000000000000130"
+     },
+     {
+      "id": "00000000000000000000000000000138",
+      "draft_id": "000000000000000000000000000000c9",
+      "row_order": 2,
+      "row_data": "{\"raw_text\": \"new\", \"length\": {\"number_of_lengths\": 1}, \"line_uid\": \"00000000000000000000000000000132\"}",
+      "system_row_data": "{\"raw_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\", \"source\": {\"original_text\": \"\\u00d8 16mm\\u00b2 \\u00d7 3 core, flexible \\u2014 see note\"}, \"final_product_code\": \"\", \"length\": {\"total_length\": \"\", \"number_of_lengths\": 2, \"length_each_m\": 25.5}, \"status\": \"needs_review\", \"line_note\": \"ask about colour / insulation\", \"score\": NaN, \"line_uid\": \"000000000000000000000000000000ce\"}",
+      "system_snapshot_valid": 1,
+      "line_uid": "00000000000000000000000000000132"
+     }
+    ],
+    "edits": [
+     {
+      "id": "0000000000000000000000000000012e",
+      "draft_id": "000000000000000000000000000000c9",
+      "line_uid": "0000000000000000000000000000012d",
+      "row_order": 0,
+      "revision": 2,
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "view_mode": null,
+      "field": "comment",
+      "old_value": "",
+      "new_value": "checked",
+      "from_system": 1
+     },
+     {
+      "id": "00000000000000000000000000000133",
+      "draft_id": "000000000000000000000000000000c9",
+      "line_uid": "00000000000000000000000000000132",
+      "row_order": 2,
+      "revision": 2,
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "view_mode": null,
+      "field": "quantity",
+      "old_value": "2",
+      "new_value": "1",
+      "from_system": 1
+     },
+     {
+      "id": "00000000000000000000000000000134",
+      "draft_id": "000000000000000000000000000000c9",
+      "line_uid": "00000000000000000000000000000132",
+      "row_order": 2,
+      "revision": 2,
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "view_mode": null,
+      "field": "length_each",
+      "old_value": "25.5",
+      "new_value": "",
+      "from_system": 1
+     },
+     {
+      "id": "00000000000000000000000000000135",
+      "draft_id": "000000000000000000000000000000c9",
+      "line_uid": "00000000000000000000000000000132",
+      "row_order": 2,
+      "revision": 2,
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "view_mode": null,
+      "field": "comment",
+      "old_value": "ask about colour / insulation",
+      "new_value": "",
+      "from_system": 1
+     },
+     {
+      "id": "00000000000000000000000000000136",
+      "draft_id": "000000000000000000000000000000c9",
+      "line_uid": "00000000000000000000000000000132",
+      "row_order": 2,
+      "revision": 2,
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "view_mode": null,
+      "field": "status",
+      "old_value": "needs_review",
+      "new_value": "",
+      "from_system": 1
+     },
+     {
+      "id": "00000000000000000000000000000137",
+      "draft_id": "000000000000000000000000000000c9",
+      "line_uid": "00000000000000000000000000000132",
+      "row_order": 2,
+      "revision": 2,
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "view_mode": null,
+      "field": "description",
+      "old_value": "Ø 16mm² × 3 core, flexible — see note",
+      "new_value": "new",
+      "from_system": 1
+     }
+    ],
+    "activity": [
+     {
+      "id": "000000000000000000000000000000d0",
+      "draft_id": "000000000000000000000000000000c9",
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "actor_branch": null,
+      "event_type": "created",
+      "message": null,
+      "detail": "{\"source\": \"email\", \"assignee_email\": \"\", \"branch\": \"\"}",
+      "revision": 1
+     },
+     {
+      "id": "00000000000000000000000000000139",
+      "draft_id": "000000000000000000000000000000c9",
+      "created_at": "2026-09-28T01:02:03.456789+00:00",
+      "actor_email": null,
+      "actor_role": null,
+      "actor_branch": null,
+      "event_type": "content_updated",
+      "message": null,
+      "detail": "{\"from_status\": \"new\", \"to_status\": \"in_progress\"}",
+      "revision": 2
+     }
+    ]
+   }
+  }
+ ],
+ "conflict_current_revision": 2
+}
