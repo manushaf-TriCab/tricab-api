@@ -26,7 +26,7 @@ It owns intake, extraction results, editable review, persisted revisions, queues
       ▼
  ResolveRfqActorService       platform user → RfqActor (per request, never cached)
       ▼
- RfqAccessPolicy              read = every RFQ; work = assignee/manager
+ RfqAccessPolicy              every RFQ, read and worked, by permission
       ▼
  RFQ services ──► RfqRepository (Azure SQL, Phase 2; in-memory today)
       │
@@ -138,8 +138,8 @@ Seeded by `database/scripts/development/seed-rfq-permissions.sql`, module code `
 `RfqAccessPolicy` is ported from `draft_is_mine` and `allowed_draft_actions`.
 
 - **Visible: every RFQ, to anyone holding `RFQ.DRAFT.READ`** (owner decision, 28 Sept: as in 4js, anyone can see any quote). Branch is a queue filter, never a limit. Production already behaves this way: it runs `RFQ_OPEN_DRAFT_ACCESS=true`, which makes the source's scope "all". An unknown or malformed id is 404.
-- **Allowed actions** come from the server on every record: `view`; `comment`; if archived, `restore` only; otherwise `claim` (unassigned), `assign` (manager), and `workflow`/`edit`/`sync`/`reconcile`/`archive` when the RFQ is assigned to the actor or the actor is a manager (`RFQ.DRAFT.ASSIGN`), each with its own permission. `purge` is never offered. An employee who holds only read gets `view`.
-- **Open point (Q8):** in production, `RFQ_OPEN_DRAFT_ACCESS` also lifts the assignee reservation, so anyone whose role allows editing, syncing or archiving may do it to *any* draft. The platform keeps the reservation until the owner says otherwise; lifting it is one line in `allowedActions()`.
+- **Allowed actions** come from the server on every record: `view`; `comment`; if archived, `restore` only; otherwise `claim` (unassigned), `assign` (manager, `RFQ.DRAFT.ASSIGN`), and `workflow`/`edit`/`sync`/`reconcile`/`archive` for **anyone** holding that action's permission (owner decision, 28 Sept: anyone works any RFQ, as production's `RFQ_OPEN_DRAFT_ACCESS=true` allows). Managers keep the wider workflow moves. `purge` is never offered. An employee who holds only read gets `view`.
+- **The sales rep is the last worker** (owner decision, 28 Sept). Saving an RFQ's content, or sending it to 4js, makes the worker its assignee and puts their 4js operator code on the quote as `author` (`SalesRepAttribution`). The code comes from `RfqOperatorDirectory` (legacy `descript` desc_type 36, via `LegacyStaffUserMappings`, then the email login with the source's aliases). A worker with no confirmed code never overwrites a real author; a blank author gets the source's upper-cased-login fallback. The save's activity records the assignee change and `author_source`. The creator (`created_by_email`) stays as history. Live: 28 of the 35 staff on live RFQs have a confirmed code. The source set the author only at creation, so this is a deliberate change.
 
 **Branch membership has no source yet** (Q7). It no longer decides access. It is the default for the branch filter and the branch a new RFQ is stamped with, so it matters from Phase 4. `RfqBranchDirectory` is the seam; `UnconfiguredRfqBranchDirectory` answers null for everybody.
 
@@ -270,7 +270,7 @@ Phase 1 started before the Phase 0 exit, on the owner's instruction (28 Sep 2026
 | Q5 | Which store is live | **answered 28 Sep: MySQL (`tc-mysql-live`)**; `MAIL_AUTO_PUSH_4JS` and `RFQ_OPEN_DRAFT_ACCESS` are both on. The translator reads live MySQL; the 7 empty Azure SQL `rfq.*` tables from 5 Aug are left untouched |
 | Q6 | Who owns the mailbox | the Phase 6 rows of §6.4 |
 | Q7 | Where branch membership comes from | an `RfqBranchDirectory` implementation; the default branch filter and new-RFQ branch, **no longer access** |
-| Q8 | Who works RFQs in the pilot; may anyone work any draft, as `RFQ_OPEN_DRAFT_ACCESS=true` allows today | role assignments; one line in `allowedActions()`. **Reading answered 28 Sept: every employee reads every RFQ** |
+| Q8 | Who works RFQs in the pilot | role assignments. **Answered 28 Sept: every employee reads every RFQ; anyone with the permission works any RFQ; the last worker is the sales rep.** Still open: who holds the RFQ roles |
 | Q9 | Hide or withhold pricing | `PricingSnapshot::toArray()` call site; role placement of `RFQ.PRICING.VIEW` |
 | Q10 | Unattributed RFQs: manager triage or admin queue | **answered 28 Sept: moot, everyone sees every RFQ**; `branch=none` filters them |
 | — | Scan-read lines syncing from the editor without approval (§5.3) | `LineApprovalPolicy::syncBlockReason()` |
