@@ -43,7 +43,7 @@ final class RfqRouteTableTest extends TestCase
     public function test_every_rfq_route_is_in_the_table(): void
     {
         $registered = [];
-        foreach (TestAppFactory::create()->getRouteCollector()->getRoutes() as $route) {
+        foreach (TestAppFactory::create(['RFQ_MODULE_ENABLED' => 'true'])->getRouteCollector()->getRoutes() as $route) {
             if (!str_starts_with($route->getPattern(), '/api/v1/rfqs')) {
                 continue;
             }
@@ -81,7 +81,7 @@ final class RfqRouteTableTest extends TestCase
     private function statusFor(string $method, string $path, array $permissions): int
     {
         /** @var App<ContainerInterface> $app */
-        $app = TestAppFactory::create();
+        $app = TestAppFactory::create(['RFQ_MODULE_ENABLED' => 'true']);
         $container = $app->getContainer();
         self::assertInstanceOf(ContainerInterface::class, $container);
         $users = $container->get(UserRepository::class);

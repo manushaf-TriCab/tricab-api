@@ -418,13 +418,19 @@ final class AppBuilder
         $app->get('/api/v1/public/about', GetPublicAboutAction::class);
         $app->get('/api/v1/public/contact', GetPublicContactAction::class);
         self::registerOnboardingRoutes($app, $container);
-        self::registerRfqRoutes($app, $container);
+        if ($settings->rfqModuleEnabled) {
+            self::registerRfqRoutes($app, $container);
+        }
         self::registerAdminRoutes($app, $container);
     }
 
     /**
      * RFQ module — Phase 1 skeleton. Reads only; every write family (intake,
      * workflow, sync) lands with its phase, each on its own permission.
+     *
+     * Registered only when `RFQ_MODULE_ENABLED` is true (off by default), so the
+     * module can merge before it is finished: with it off these paths are plain
+     * 404s, whatever permissions a person holds.
      *
      * Every route carries exactly one `RFQ.*` permission, and every record the
      * handlers return is filtered by `RfqAccessPolicy` on top of it. The

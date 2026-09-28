@@ -224,7 +224,7 @@ final class RfqEndpointsTest extends TestCase
      */
     private function app(array $permissions, array $roles = ['EMPLOYEE']): App
     {
-        $app = TestAppFactory::create();
+        $app = TestAppFactory::create(['RFQ_MODULE_ENABLED' => 'true']);
         $container = $app->getContainer();
         self::assertInstanceOf(ContainerInterface::class, $container);
         $users = $container->get(UserRepository::class);

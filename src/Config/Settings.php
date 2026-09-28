@@ -157,6 +157,7 @@ final readonly class Settings
         public bool $productFinderEnabled = false,
         public string $productFinderBaseUrl = 'http://127.0.0.1:8001',
         public int $productFinderTimeoutSeconds = 20,
+        public bool $rfqModuleEnabled = false,
         public string $triexpenseMailFrom = 'ap@tricab.com',
         public bool $triexpenseEmailEnabled = false,
         public string $triexpenseEmailTestRecipient = '',
@@ -787,6 +788,12 @@ final readonly class Settings
         $pricingDefaultTmmktmMargin = trim(self::string($env, 'PRICING_DEFAULT_TMMKTM_MARGIN', '0'));
         self::assertPricingDefaultTmmktmMargin($pricingDefaultTmmktmMargin);
 
+        // The RFQ module is merged dark: off unless RFQ_MODULE_ENABLED is true. Off, its
+        // routes are not registered and /api/v1/me reports modules.rfq = false, which
+        // is what the web reads to hide every RFQ entry -- administrators included,
+        // who would otherwise see it because they hold every permission.
+        $rfqModuleEnabled = self::bool($env, 'RFQ_MODULE_ENABLED', false);
+
         $productFinderEnabled = self::bool($env, 'PRODUCT_FINDER_ENABLED', false);
         $productFinderBaseUrl = rtrim(self::string($env, 'PRODUCT_FINDER_BASE_URL', 'http://127.0.0.1:8001'), '/');
         $productFinderTimeoutSeconds = self::boundedInt($env, 'PRODUCT_FINDER_TIMEOUT_SECONDS', 20, 1, 120);
@@ -956,6 +963,7 @@ final readonly class Settings
             productFinderEnabled: $productFinderEnabled,
             productFinderBaseUrl: $productFinderBaseUrl,
             productFinderTimeoutSeconds: $productFinderTimeoutSeconds,
+            rfqModuleEnabled: $rfqModuleEnabled,
             triexpenseMailFrom: $triexpenseMailFrom,
             triexpenseEmailEnabled: $triexpenseEmailEnabled,
             triexpenseEmailTestRecipient: $triexpenseEmailTestRecipient,

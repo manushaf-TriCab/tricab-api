@@ -6,6 +6,7 @@ namespace TriCab\Api\Http\Action;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Http\Auth\IdentityResolutionErrorMapper;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
@@ -28,6 +29,7 @@ final class GetAuthenticatedUserAction
         private readonly JsonResponder $responder,
         private readonly EntraJwtValidationDebugLogger $debugLogger,
         private readonly IdentityResolutionErrorMapper $identityErrors,
+        private readonly Settings $settings,
     ) {
     }
 
@@ -88,6 +90,12 @@ final class GetAuthenticatedUserAction
             'status' => $user->status,
             'roles' => $user->roles,
             'permissions' => $user->permissions,
+            // Modules merged but switched off. A permission says who may use a
+            // module; this says whether it exists yet. The web hides a module that
+            // is off from everyone, administrators included.
+            'modules' => [
+                'rfq' => $this->settings->rfqModuleEnabled,
+            ],
             'customerContext' => $customerContext === null ? null : [
                 'userPublicId' => $customerContext->userPublicId,
                 'customerPublicIds' => $customerContext->customerPublicIds,
