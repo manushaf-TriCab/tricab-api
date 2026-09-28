@@ -33,7 +33,12 @@ ACCESSORY_RE = re.compile(
     # corpus it fires on 13 lines, 11 already covered by the barrel/crimp/copper spellings
     # above and one of the rest a Modern Slavery questionnaire asking for "a link".
     r"|reducing\s+links?|bi-?\s?metallic\s+links?"
-    r"|terminals?|insulators?|split\s*loom|loom\s*tube|conduits?|saddles?|reducers?|enlargers?"
+    # "Conduit wire" names the CABLE -- green/yellow conduit wire is an earth wire, and
+    # `73-Sohil` asks for 300 m of it. Conduit itself is an accessory. "wiring" is covered
+    # as well as "wire"/"cable": the spelling should not decide whether a 6mm2 earth is
+    # quoted as a cable or routed to the accessory panel with no product code.
+    # Other fitting nouns (e.g. glands) still match independently.
+    r"|terminals?|insulators?|split\s*loom|loom\s*tube|conduits?(?![\s-]+(?:wir(?:e|es|ing)|cables?)\b)|saddles?|reducers?|enlargers?"
     r"|end\s*caps?|breakouts?|plugs?|sockets?|isolators?|switches?|cable\s*mounts?|stockings?"
     # Crimp-termination vocabulary (docs/EMAIL_CORPUS_AUDIT.md 4.6). Without these
     # the bore size on the line reads as a conductor size and the row resolves to a
@@ -130,14 +135,14 @@ CORE_PLUS_E_RE = re.compile(r"\b(\d+)\s*C\s*\+\s*(\d+)?\s*E\b", re.I)
 # is still an earth conductor added to this one cable. Any earth quoted as its own
 # run has already been peeled off by the splitter before extraction, so a surviving
 # "+ earth" here is always additive: TriCab counts it as an extra core (4C -> 5C).
-ADDED_EARTH_RE = re.compile(r"\+\s*(\d+)?\s*(?:E|EARTH|ECC|G/?Y|GREEN\s*/?\s*YELLOW)\b", re.I)
+ADDED_EARTH_RE = re.compile(r"\+\s*(\d+)?\s*(?:E|EARTH|ECC|G/?Y|GN\s*/\s*YE|GREEN\s*/?\s*YELLOW)\b", re.I)
 # A standalone parenthesized "(E)" / "(EARTH)" suffix, e.g. "1C 10mm2 Cu PVC (E)".
 # This is the same "the customer marked this core as earth" signal as ADDED_EARTH_RE's
 # "+E", but the leading "+" is gone by the time this line reaches extract_entities:
 # the splitter already peeled a compound "... + 1C 10mm2 Cu PVC (E)" into its own
 # entry, consuming the "+". Without this, a split-off earth line is indistinguishable
 # from an ordinary 1-core cable and gets the wrong colour/style entirely.
-EARTH_SUFFIX_RE = re.compile(r"\(\s*(?:E|EARTH|ECC|G/?Y|GREEN\s*/?\s*YELLOW)\s*\)\s*$", re.I)
+EARTH_SUFFIX_RE = re.compile(r"\(\s*(?:E|EARTH|ECC|G/?Y|GN\s*/\s*YE|GREEN\s*/?\s*YELLOW)\s*\)\s*$", re.I)
 # The same "this conductor is the earth" signal without the brackets: a bare trailing "E"
 # pinned to a conductor size ("120mm2 E", "1C 120mm2 E CU", "95mm Cu E"). That is how an
 # earth-size column or an earth summary row is written in a spreadsheet, and without this
@@ -191,7 +196,7 @@ QUAD_RE = re.compile(r"\b(\d+)\s*(?:Q|QUAD|QUADS)\b", re.I)
 # followed by another m, never a boundary.
 LENGTH_RE = re.compile(r"(?<![\d.])(\d+(?:\.\d+)?)\s*m\b", re.I)
 RUNS_RE = re.compile(r"\b(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*m\b|\b(\d+)\s*x\s*(\d+(?:\.\d+)?)\s*m\s*runs?\b", re.I)
-DRUM_RE = re.compile(r"\b(\d+)\s*(?:x\s*)?(?:drums?|runs?|lengths?)\s*(?:x|of)?\s*(\d+(?:\.\d+)?)\s*m\b", re.I)
+DRUM_RE = re.compile(r"\b(\d+)\s*(?:x\s*)?(?:drums?|runs?|lengths?|cuts?)\s*(?:x|of)?\s*(\d+(?:\.\d+)?)\s*m\b", re.I)
 # DRUM_RE only fires when the length sits right after the drum count ("4 drums of 75m").
 # Written as a sentence, the cable description gets in between -- "4 drums of 400mm Cu XLPE
 # at 75 m each drum" -- and the count of 4 was being dropped, quoting a single 75 m drum.
@@ -201,6 +206,18 @@ DRUM_RE = re.compile(r"\b(\d+)\s*(?:x\s*)?(?:drums?|runs?|lengths?)\s*(?:x|of)?\
 # A digit must immediately precede the noun, which is what keeps the trailing "each drum"
 # (and the "75 m" before it) from being read as a count.
 DRUM_COUNT_RE = re.compile(r"\b(\d+)\s*(?:x\s*)?(?:drums?|reels?|coils?)\b", re.I)
+# "640m x 240mm 1C AL flex (8 cuts)" -- a cut count with no length of its own. Unlike
+# every other count in this function it DIVIDES rather than multiplies: the stated
+# length is the total and the count says how many pieces it arrives in, so 640 m in
+# 8 cuts is 8 x 80 m, not 8 x 640 m. "8 cuts of 40m" names both and is DRUM_RE's job.
+#
+# Nothing read this before, in any phrasing, which made it the most explicit thing a
+# customer can say about quantity and the one the text path could not hear. It matters
+# past the comment: `pipeline._prepack_applies` treats a row with no explicit cuts as
+# bulk and lets whole-spool rounding rewrite its lengths, and spools cannot be joined
+# into the continuous 80 m run the customer actually asked for. The table path has had
+# this since `file_parser.select_quantity`; this is the same rule for prose.
+CUT_COUNT_RE = re.compile(r"\b(\d+)\s*(?:off\s+)?cuts?\b", re.I)
 TRAILING_BARE_LENGTH_RE = re.compile(r"(?:\|\s*|\s+)(\d+(?:\.\d+)?)\s*$")
 # A trailing unitless "8 X 40" (often a quantity cell joined onto the row text,
 # 44-Amanda) is 8 cuts of 40 m, not a 40 m single -- and never a size: the
@@ -248,7 +265,7 @@ LEADING_RUN_MULT_RE = re.compile(r"^\s*(\d+)\s*[x×*]\s*[-–]?\s*(?=\d)", re.I)
 # is what flips the read from parallel single cores to a bundled multicore.
 SINGLE_CORE_PLUS_EARTH_RE = re.compile(
     r"(?:(?P<cables>\d+)\s*[x×]\s*[-–]?\s*)?(?P<cores>\d+)\s*[x×]\s*1\s*C\s*"
-    r"\+\s*(?P<earth>\d+)?\s*(?:E|EARTH|ECC|G/?Y|GREEN\s*/?\s*YELLOW)\b",
+    r"\+\s*(?P<earth>\d+)?\s*(?:E|EARTH|ECC|G/?Y|GN\s*/\s*YE|GREEN\s*/?\s*YELLOW)\b",
     re.I,
 )
 # A bundled multicore written as phase cores plus a reduced-size extra core, the
@@ -272,7 +289,7 @@ MULTICORE_PLUS_CORE_RE = re.compile(
 # (Nx1C, Nx1C+E) are handled elsewhere, so the caller ignores a 1-core token.
 MULTICORE_CABLE_MULT_RE = re.compile(
     r"^\s*(?P<cables>\d+)\s*[x×]\s*[-–]?\s*(?P<cores>\d+)\s*C\b"
-    r"(?P<earth>\s*\+\s*(?P<earthnum>\d+)?\s*(?:E|EARTH|ECC|G/?Y|GREEN\s*/?\s*YELLOW)\b)?",
+    r"(?P<earth>\s*\+\s*(?P<earthnum>\d+)?\s*(?:E|EARTH|ECC|G/?Y|GN\s*/\s*YE|GREEN\s*/?\s*YELLOW)\b)?",
     re.I,
 )
 # Circuit label / description that appears before the cable spec, separated by : or –.
@@ -284,8 +301,14 @@ NOTE_PREFIX_RE = re.compile(
     r"|\b(?:cu|al|xlpe|pvc|fire|vsd|control|power)\b)",
     re.I,
 )
+# The label needs a boundary on BOTH sides. Without the trailing `\b`, `TO` matched
+# inside the word "total" -- the commonest word in an RFQ length clause -- and the
+# capture returned "tal" as the circuit label: "8 x 240m (1920m total)" produced the
+# comment `tal) (8 x 240)`, on 9 of 178 lines of the text corpus. Worse, because
+# `_route_label` prefers any non-empty regex label over the AI's, a junk `tal)` beat a
+# correctly-read `MSSB-L3-4` from terra and suppressed it (verified live 2026-09-09).
 OCR_ROUTE_FIELD_RE = re.compile(
-    r"\b(?P<label>FROM|TO|CABLE\s*NO)\s*[:=]?\s*(?P<value>[^,|]+)",
+    r"\b(?P<label>FROM|TO|CABLE\s*NO)\b\s*[:=]?\s*(?P<value>[^,|]+)",
     re.I,
 )
 # Circuit label given on its own line immediately above the cable description,
@@ -509,7 +532,7 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
     elif SIZE_ATTACHED_AU_RE.search(upper):
         fields["conductor"] = "A"
 
-    if re.search(r"\bEARTH\b|\bECC\b|\bG/Y\b|\bGREEN\s*/?\s*YELLOW\b", upper):
+    if re.search(r"\bEARTH\b|\bECC\b|\bG/Y\b|\bGN\s*/\s*YE\b|\bGREEN\s*/?\s*YELLOW\b", upper):
         fields["earth"] = True
     if re.search(r"\bSWITCH\s*BOARD\b|\bSWITCHBOARD\b|\bPANEL\s+WIRE\b", upper):
         fields["switchboard"] = True
@@ -520,25 +543,28 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
     # phrase used to be inert prose, which let a "SINGLE INSULATED FLEXIBLE HF-110" heading
     # resolve on its HF-110 alone -- straight onto the sheathed KL rung of the temperature
     # ladder. See rank_styles for how the three are told apart.
+    orange_circular = bool(spec_search(r"\bORANGE\s+CIRC(?:ULAR)?\b|\bO/?C\b", upper))
+    if orange_circular:
+        fields["circular"] = True
     if SINGLE_INSULATED_RE.search(upper):
         fields["single_insulated"] = True
     if re.search(
         r"\bSCREEN(?:ED)?\b|\bSCR\b|\bSCN\b|\bVSD\b|\bVFD\b"
-        r"|\bO/?S\b|\bO/?C\b|\bOAS\b|\bI/S\b|\bIOS\b|\bIOC\b|\bIOAS\b|\bI\s*&\s*O\b"
+        r"|\bO/?S\b|\bOAS\b|\bI/S\b|\bIOS\b|\bIOC\b|\bIOAS\b|\bI\s*&\s*O\b"
         r"|\bOVERALL\s+SCREEN\b|\bINDIVIDUAL\s+SCREEN\b|\bCOLLECTIVE\s+SCREEN\b",
         upper,
     ):
-        # OS/OC = overall (collective) screen; IS = individual; IOS/IOC/IOAS = both.
+        # OS = overall (collective) screen; IS = individual; IOS/IOC/IOAS = both.
         # OAS = overall (collective) armoured screen -- IOAS without the individual screen.
-        # NB: EMC is intentionally NOT a trigger -- per TriCab it is not a selection
-        # keyword, only a use-context note (see cable-style-audit/TECHNICAL_QUESTIONS.md).
+        # EMC selects the drive-style ladder below, but does not independently
+        # specify screen construction.
         fields["screen"] = True
         # Collective vs individual+collective drives the instrumentation R-series
         # (Coll = R1/RE..., Ind+Coll = R3/RH...). "Individual" implies individual+overall
         # in that range -- there is no individual-only style -- so it maps to ind+coll.
         if re.search(r"\bI/S\b|\bINDIVIDUAL\b|\bIOS\b|\bIOC\b|\bIOAS\b|\bI\s*&\s*O\b", upper):
             fields["screen_type"] = "ind+coll"
-        elif re.search(r"\bO/?S\b|\bO/?C\b|\bOAS\b|\bOVERALL\b|\bCOLLECTIVE\b|\bCOLL\b", upper):
+        elif re.search(r"\bO/?S\b|\bOAS\b|\bOVERALL\b|\bCOLLECTIVE\b|\bCOLL\b", upper):
             fields["screen_type"] = "coll"
         # IOAS/OAS additionally denote an armoured screen.
         if re.search(r"\bIOAS\b|\bOAS\b", upper):
@@ -607,6 +633,9 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
         # A flexible multicore power cable (e.g. "Multicore flexible 0.6/1kV"). Without
         # this, no type signal is set and the ranker cannot separate XL (power) from XN
         # (nylon termite-resistant control); reached only after CONTROL etc. are ruled out.
+        fields["cable_type_hint"] = "Power"
+
+    if orange_circular and not fields.get("cable_type_hint"):
         fields["cable_type_hint"] = "Power"
 
     # X-HF-110 is a 110C insulation signal for the standard PVC temperature
@@ -950,7 +979,7 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
                 f"{fields.get('count')}C cables; confirm the cable count and total length."
             )
 
-    colour = extract_colour(upper)
+    colour = extract_colour(upper) or ("OR" if orange_circular else "")
     if colour:
         fields["colour"] = colour
 
@@ -1025,6 +1054,35 @@ def extract_quantity(text: str) -> dict[str, Any]:
     drum_prefix = int(drum_count.group(1)) if drum_count else None
     multiplier = runs_prefix or drum_prefix or 1
 
+    # A bare cut count ("(8 cuts)"), applied only to the branches below that read a
+    # single stated length -- there it is the total, and this says how many pieces it
+    # is cut into. Suppressed when a multiplier is already in play: "12no. ... 8 cuts"
+    # states the quantity twice in two directions, and guessing which one wins is how a
+    # quantity error gets made confidently. That row keeps today's behaviour and its
+    # existing warnings.
+    cut_match = CUT_COUNT_RE.search(text)
+    cut_count = int(cut_match.group(1)) if cut_match else None
+    if cut_count is not None and (cut_count < 2 or multiplier > 1):
+        cut_count = None
+
+    def _with_cuts(total):
+        """``total`` split into ``cut_count`` pieces, or None when no count applies.
+
+        The total is kept exactly as stated and only ``length_each_m`` is derived, so
+        this corrects the cut breakdown without moving the metres anything is priced
+        on. An uneven split is left uneven -- 650 m in 8 cuts is a real request, and
+        rounding it here would silently change what gets shipped.
+        """
+        if not cut_count:
+            return None
+        return {
+            "number_of_lengths": cut_count,
+            "length_each_m": total / cut_count,
+            "total_length_m": total,
+            "uom": "m",
+            "cuts_explicit": True,
+        }
+
     drum = DRUM_RE.search(text)
     if drum:
         result["number_of_lengths"] = int(drum.group(1))
@@ -1047,6 +1105,10 @@ def extract_quantity(text: str) -> dict[str, Any]:
 
     lengths = [float(value) for value in LENGTH_RE.findall(text)]
     if lengths:
+        split = _with_cuts(lengths[0])
+        if split:
+            result.update(split)
+            return result
         # In lines like "30m x 16mm", the first metre quantity is the cable length.
         result["length_each_m"] = lengths[0]
         result["number_of_lengths"] = multiplier
@@ -1070,6 +1132,10 @@ def extract_quantity(text: str) -> dict[str, Any]:
     if trailing_length and SIZE_RE.search(text[: trailing_length.start()]):
         # Some RFQs omit the metre unit and place the length after the cable description.
         length = float(trailing_length.group(1))
+        split = _with_cuts(length)
+        if split:
+            result.update(split)
+            return result
         result["length_each_m"] = length
         result["number_of_lengths"] = multiplier
         result["total_length_m"] = length * result["number_of_lengths"]
@@ -1287,9 +1353,11 @@ def extract_colour(upper: str) -> str:
     # so an earth colour resolves to EA rather than to one of its two halves. YELLOW and
     # BROWN/PINK/LIGHT BLUE were missing entirely, so a "10MM Yellow" building-wire line
     # silently took the style's default colour instead (OR on KL, EA on LS).
+    if re.search(r"\b(?:GREEN\s*/?\s*YELLOW|G/Y|GN\s*/\s*YE)\b", upper):
+        return "EA"
     for token in ["BLACK", "BLK", "LIGHT BLUE", "DARK BLUE", "BLUE", "RED", "ORANGE",
                   "WHITE", "PURPLE", "GREY", "GRAY",
-                  "GREEN/YELLOW", "GREEN YELLOW", "G/Y", "GREEN",
+                  "GREEN/YELLOW", "GREEN YELLOW", "GN/YE", "G/Y", "GREEN",
                   "YELLOW", "BROWN", "PINK"]:
         if re.search(rf"\b{re.escape(token)}\b", upper):
             return canonical_colour(token)

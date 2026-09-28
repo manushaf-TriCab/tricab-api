@@ -30,10 +30,10 @@ parser's specific work stays in the modules that wrap it.
 
 **Accessories.** ``accessories`` and ``accessory_text`` are carried because
 ``extractor`` and ``resolver`` import them unconditionally, not because the
-finder wants accessory answers. The 722-style register ships; the 7 MB
-``accessory_engine_snapshot.json`` does not, so accessory codes read here are
-unvalidated — a state ``load_specs`` already treats as first class ("cannot
-validate"), never as a good code.
+finder wants accessory answers. The 722-style register ships, and so does the
+7 MB ``accessory_engine_snapshot.json`` the RFQ parser validates accessory codes
+against; ``load_specs`` reads it lazily, so the finder, which never asks for an
+accessory, does not pay for it.
 
 **Until Phase 7 there are two copies** of these modules: this one and the RFQ
 parser's ``matcher/``. ``tools/check_rules_sync.py`` fails when they diverge

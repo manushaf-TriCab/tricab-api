@@ -50,9 +50,10 @@ SHARED_MODULES = (
     "resolver",
 )
 
-# Data the package carries. `accessory_engine_snapshot.json` is deliberately
-# absent -- 7 MB to validate accessory codes a cable finder never asks for; see
-# `load_specs`, which treats a missing snapshot as "cannot validate".
+# Data the package carries. `accessory_engine_snapshot.json` (7 MB) came across
+# with the RFQ parser, which validates accessory codes against it; the finder
+# never asks for an accessory, and `load_specs` reads the file lazily, so the
+# finder does not pay for it.
 SHARED_DATA = (
     "data/cable_rules/families.json",
     "data/cable_rules/earth_maps.json",
@@ -60,6 +61,7 @@ SHARED_DATA = (
     "data/catalog/current_cables.xlsx",
     "data/catalog/marine_offshore.xlsx",
     "data/catalog/accessory_styles.json",
+    "data/catalog/accessory_engine_snapshot.json",
 )
 
 # Where the parser keeps each shared data file, relative to its checkout root.
@@ -70,6 +72,7 @@ MATCHER_DATA_SOURCE = {
     "data/catalog/current_cables.xlsx": "data/catalog/current_cables.xlsx",
     "data/catalog/marine_offshore.xlsx": "data/catalog/marine_offshore.xlsx",
     "data/catalog/accessory_styles.json": "data/catalog/accessory_styles.json",
+    "data/catalog/accessory_engine_snapshot.json": "data/catalog/accessory_engine_snapshot.json",
 }
 
 # The complete, declared difference between the two copies. Each entry is
@@ -100,7 +103,13 @@ PATCHES: tuple[tuple[str, str, str], ...] = (
 
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    data = path.read_bytes()
+    # Text data compares by content, not line endings: the parser's checkout keeps
+    # the catalogue CSV with CRLF and this package keeps it with LF, and the rows are
+    # the same either way. Binary files (the style workbooks) compare as bytes.
+    if path.suffix in (".csv", ".json"):
+        data = data.replace(b"\r\n", b"\n")
+    return hashlib.sha256(data).hexdigest()
 
 
 def check_closed_subgraph() -> list[str]:

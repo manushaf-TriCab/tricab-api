@@ -11,6 +11,7 @@ COLOUR_ALIASES = {
     "GREEN/YELLOW": "EA",
     "GREEN YELLOW": "EA",
     "G/Y": "EA",
+    "GN/YE": "EA",
     "GYW": "EA",
     "EARTH": "EA",
     "ORANGE": "OR",
