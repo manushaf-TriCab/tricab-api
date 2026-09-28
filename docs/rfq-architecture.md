@@ -225,7 +225,7 @@ This follows the Product Finder pattern (`docs/product-finder/DEPLOYMENT.md`): a
 
 Anything slower than the interactive deadline is **enqueued as a job, never waited on**. An HTTP timeout must not lose work or cause a second submission.
 
-**nginx 1 MB.** `deploy/app-service/default` sets no `client_max_body_size`, so nginx's 1 MB default applies to the whole platform. That is the boundary behind the source's 413 on saves above about 175 lines. It must be raised on purpose, for the RFQ routes, before Phase 4 saves exist, and tested with PHP's `post_max_size` in plan 8.3.
+**nginx and PHP limits.** nginx's 1 MB default was the boundary behind the source's 413 on saves above about 175 lines. PR #21 (`fix/app-service-request-limits`) allows 25 MB on `/api/v1/rfqs` only and passes PHP `post_max_size=26M` / `upload_max_filesize=20M` through `fastcgi_param PHP_VALUE` (a `.user.ini` is read too late for `post_max_size`). Every other route stays at 1 MB. A chunked body is still held to 1 MB, because nginx checks it in `@tricab_api`; browsers send Content-Length. Verified against nginx 1.22 + php-fpm 8.3 in Docker on 28 Sept; the live measurement is plan 8.3.
 
 ### 6.3 Errors and correlation
 
