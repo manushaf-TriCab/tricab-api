@@ -142,7 +142,7 @@ foreach ($s in @(
     'seed-onboarding-permissions.sql',   # after guest role: grants GUEST + EMPLOYEE self-service
     'seed-onboarding-roles.sql',         # after onboarding permissions: ONBOARDING_ADMIN
     'seed-rfq-permissions.sql',          # RFQ.* catalogue; ADMINISTRATOR gets RFQ.ADMIN only
-    'seed-rfq-roles.sql',                # after rfq permissions: four RFQ roles, assigned to nobody
+    'seed-rfq-roles.sql',                # after rfq permissions: three RFQ roles, assigned to nobody
     'seed-product-catalogue-sample.sql',
     'seed-product-cable-reference.sql',      # after catalogue-sample
     'seed-customer-sample-data.sql'
