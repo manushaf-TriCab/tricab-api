@@ -28,6 +28,7 @@ final class RfqEndpointsTest extends TestCase
 {
     private const ME = '/api/v1/rfqs/me';
     private const QUEUE = '/api/v1/rfqs';
+    private const PARSE = '/api/v1/rfqs/parse';
 
     /** The id InMemoryApiUserRepository authenticates as. */
     private const SIGNED_IN_USER_ID = 1;
@@ -216,6 +217,119 @@ final class RfqEndpointsTest extends TestCase
     }
 
     // ---------------------------------------------------------------- helpers
+
+    // ------------------------------------------------------------ plan 3.7 writes
+
+    public function test_matching_and_saving_need_the_create_permission(): void
+    {
+        $app = $this->app(['account.login', Module::PERMISSION_ACCESS, Module::PERMISSION_DRAFT_READ]);
+        $parse = $app->handle(TestAppFactory::request('POST', self::PARSE)->withParsedBody(['text' => '4C 16mm2 120m']));
+        $create = $app->handle(TestAppFactory::request('POST', self::QUEUE)->withParsedBody(['parseToken' => 'x.y', 'header' => [], 'lines' => []]));
+
+        self::assertSame(403, $parse->getStatusCode());
+        self::assertSame(403, $create->getStatusCode());
+    }
+
+    public function test_match_text_with_no_parser_says_so(): void
+    {
+        // TestAppFactory has no RFQ_PARSER_ENABLED: the undeployed client answers.
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $response = $app->handle(TestAppFactory::request('POST', self::PARSE)->withParsedBody(['text' => '4C 16mm2 120m']));
+        $error = TestAppFactory::json($response)['error'] ?? null;
+
+        self::assertSame(503, $response->getStatusCode(), (string) $response->getBody());
+        self::assertIsArray($error);
+        self::assertSame('RFQ_PARSER_UNAVAILABLE', $error['code']);
+        self::assertTrue($error['retryable']);
+        self::assertIsString($error['correlationId']);
+    }
+
+    public function test_match_text_needs_text(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        foreach ([null, [], ['text' => 42]] as $body) {
+            $response = $app->handle(TestAppFactory::request('POST', self::PARSE)->withParsedBody($body));
+            self::assertSame(422, $response->getStatusCode(), json_encode($body) ?: '');
+        }
+        $blank = $app->handle(TestAppFactory::request('POST', self::PARSE)->withParsedBody(['text' => "  \n "]));
+        self::assertSame(422, $blank->getStatusCode(), 'blank text is refused before the parser is asked');
+    }
+
+    public function test_product_search_answers_from_two_characters_and_says_when_the_parser_is_down(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $short = $app->handle(TestAppFactory::request('GET', self::QUEUE . '/lookups/products?q=X'));
+        self::assertSame(200, $short->getStatusCode());
+        self::assertSame(['items' => []], $this->data($short));
+
+        $down = $app->handle(TestAppFactory::request('GET', self::QUEUE . '/lookups/products?q=XL-PAXN'));
+        self::assertSame(503, $down->getStatusCode());
+    }
+
+    public function test_readiness_is_validated_like_a_save(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        foreach ([
+            [],
+            ['parseToken' => 'x.y', 'header' => [], 'lines' => [['lineUid' => 'a', 'comment' => '', 'cuts' => 'four']]],
+            ['parseToken' => 'x.y', 'header' => [], 'lines' => [['lineUid' => 'a', 'comment' => '', 'productCode' => '<script>']]],
+        ] as $body) {
+            $response = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/readiness')->withParsedBody($body));
+            self::assertSame(422, $response->getStatusCode(), json_encode($body) ?: '');
+        }
+    }
+
+    public function test_save_as_draft_is_validated_before_anything_is_read(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $bad = [
+            null,
+            ['parseToken' => '', 'header' => [], 'lines' => []],
+            ['parseToken' => 42, 'header' => [], 'lines' => []],
+            ['parseToken' => 'x.y', 'header' => [], 'lines' => 'all'],
+            ['parseToken' => 'x.y', 'header' => 'ACME', 'lines' => []],
+            ['parseToken' => 'x.y', 'header' => ['customerId' => '12'], 'lines' => []],
+            ['parseToken' => 'x.y', 'header' => ['region' => 'mars'], 'lines' => []],
+            ['parseToken' => 'x.y', 'header' => ['validTill' => '31/12/26'], 'lines' => []],
+        ];
+        foreach ($bad as $body) {
+            $response = $app->handle(TestAppFactory::request('POST', self::QUEUE)->withParsedBody($body));
+            self::assertSame(422, $response->getStatusCode(), json_encode($body) ?: '');
+            $error = TestAppFactory::json($response)['error'] ?? null;
+            self::assertIsArray($error);
+            self::assertSame('RFQ_INPUT_INVALID', $error['code'] ?? null);
+        }
+    }
+
+    public function test_a_save_is_validated_before_anything_is_read(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $bad = [
+            null,
+            ['lines' => []],
+            ['expectedRevision' => 0, 'lines' => []],
+            ['expectedRevision' => 1, 'lines' => 'all'],
+            ['expectedRevision' => 1, 'lines' => [['lineUid' => 'a', 'approved' => 'yes', 'comment' => '']]],
+            ['expectedRevision' => 1, 'lines' => [['lineUid' => 'a', 'approved' => true]]],
+            ['expectedRevision' => 1, 'header' => ['currency' => 'EUR'], 'lines' => []],
+        ];
+        foreach ($bad as $body) {
+            $response = $app->handle(TestAppFactory::request('PATCH', self::QUEUE . '/' . self::OWN_RFQ)->withParsedBody($body));
+            self::assertSame(422, $response->getStatusCode(), json_encode($body) ?: '');
+            $error = TestAppFactory::json($response)['error'] ?? null;
+            self::assertIsArray($error);
+            self::assertSame('RFQ_INPUT_INVALID', $error['code'] ?? null);
+        }
+    }
+
+    public function test_saving_an_rfq_that_does_not_exist_is_not_found(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $response = $app->handle(TestAppFactory::request('PATCH', self::QUEUE . '/' . self::OWN_RFQ)
+            ->withParsedBody(['expectedRevision' => 1, 'lines' => []]));
+
+        self::assertSame(404, $response->getStatusCode());
+    }
 
     /**
      * @param list<string> $permissions

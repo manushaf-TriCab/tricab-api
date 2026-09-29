@@ -7,6 +7,9 @@ namespace TriCab\Core\Rfq\Application\DTO;
 use DateTimeImmutable;
 use DateTimeInterface;
 use TriCab\Core\Rfq\Domain\ValueObject\ReaderJobStatus;
+use TriCab\Core\Rfq\Storage\StoredReaderJob;
+use TriCab\Core\Rfq\Storage\StoreFormat;
+use TriCab\Core\Rfq\Storage\StoreProjection;
 
 /**
  * One background read of one document, and what it produced. Contract
@@ -33,6 +36,24 @@ final class ReaderResult
         public readonly ?string $note,
         public readonly DateTimeImmutable $updatedAtUtc,
     ) {
+    }
+
+    public static function fromStored(StoredReaderJob $job): self
+    {
+        $rows = is_array($job->proposal['rows'] ?? null) ? $job->proposal['rows'] : [];
+        $reader = is_string($job->proposal['reader'] ?? null) ? $job->proposal['reader'] : null;
+
+        return new self(
+            StoreProjection::publicId($job->id),
+            $job->documentId === null ? '' : StoreProjection::publicId($job->documentId),
+            $job->readerStatus(),
+            $job->attempts,
+            $job->baseRevision,
+            $reader,
+            count($rows),
+            $job->note,
+            StoreFormat::parseTime($job->updatedAt) ?? new DateTimeImmutable('@0'),
+        );
     }
 
     /**

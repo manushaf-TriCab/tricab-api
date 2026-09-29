@@ -11,6 +11,8 @@ use TriCab\Core\Rfq\Parser\CorrelationId;
 use TriCab\Core\Rfq\Parser\ParserContract;
 use TriCab\Core\Rfq\Parser\ParseRequest;
 use TriCab\Core\Rfq\Parser\ParseResponse;
+use TriCab\Core\Rfq\Parser\ReadRequest;
+use TriCab\Core\Rfq\Parser\ReadResponse;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
 use TriCab\Core\Rfq\Parser\RfqServiceLimits;
 
@@ -126,6 +128,72 @@ final class ParserContractTest extends TestCase
         $payload['coverage'] = ['inputRows' => 5, 'keptRows' => 1, 'excludedRows' => 1, 'skippedRows' => 1];
 
         self::assertFalse(ParseResponse::fromPayload($payload, $this->id)->isCoverageComplete());
+    }
+
+    /** Plan 3.4: a parse the parser could not account for is never complete. */
+    public function test_unmeasured_coverage_is_never_complete(): void
+    {
+        $payload = $this->validResponse();
+        $payload['coverage']['measured'] = false;
+        self::assertFalse(ParseResponse::fromPayload($payload, $this->id)->isCoverageComplete());
+
+        $payload['coverage']['measured'] = 'no';
+        $this->expectException(RfqParserFailure::class);
+        ParseResponse::fromPayload($payload, $this->id);
+    }
+
+    public function test_document_summaries_are_read_strictly(): void
+    {
+        $payload = $this->validResponse();
+        $payload['documents'] = [['documentPublicId' => 'upload-1', 'fileName' => 'a.xlsx', 'readerRoute' => true, 'lineCount' => 1, 'coverage' => []]];
+        self::assertSame(
+            [['documentPublicId' => 'upload-1', 'fileName' => 'a.xlsx', 'readerRoute' => true, 'lineCount' => 1]],
+            ParseResponse::fromPayload($payload, $this->id)->documents,
+        );
+
+        $payload['documents'][0]['readerRoute'] = 'yes';
+        $this->expectException(RfqParserFailure::class);
+        ParseResponse::fromPayload($payload, $this->id);
+    }
+
+    public function test_a_read_request_is_a_model_call_with_the_message_context(): void
+    {
+        $payload = ReadRequest::forDocument($this->id, 'doc-1', 'a.xlsx', 'application/vnd.ms-excel', 'bytes', 'RFQ label', ['a.xlsx', 'b.pdf'])->toPayload();
+        self::assertSame(['allowModel' => true, 'maxModelCalls' => RfqServiceLimits::MAX_MODEL_CALLS_PER_PARSE], $payload['options']);
+        self::assertSame(['subject' => 'RFQ label', 'attachments' => ['a.xlsx', 'b.pdf']], $payload['context']);
+        self::assertSame(RfqServiceLimits::BACKGROUND_READ_DEADLINE_MS, $payload['deadlineMs']);
+        self::assertSame(base64_encode('bytes'), $payload['document']['contentBase64']);
+    }
+
+    public function test_a_read_response_needs_lines_and_names_its_reader(): void
+    {
+        $answer = [
+            'contract' => ParserContract::VERSION,
+            'correlationId' => 'test-correlation-0001',
+            'lines' => [['raw_text' => '4C 16mm2']],
+            'notes' => [],
+            'degraded' => false,
+            'provider' => ['mode' => 'model', 'modelCalls' => 2, 'model' => 'gpt-test', 'models' => ['reader' => 'gpt-test', 'translator' => 'gpt-test'], 'answeredBy' => 'reader'],
+        ];
+        $read = ReadResponse::fromPayload($answer, $this->id);
+        self::assertSame('gpt-test', $read->readerName());
+        self::assertSame(2, $read->modelCalls);
+
+        $answer['lines'] = [];
+        $this->expectException(RfqParserFailure::class);
+        ReadResponse::fromPayload($answer, $this->id);
+    }
+
+    public function test_a_failed_read_arrives_as_its_typed_failure(): void
+    {
+        try {
+            ReadResponse::fromPayload(['contract' => ParserContract::VERSION, 'correlationId' => 'test-correlation-0001',
+                'error' => ['code' => 'provider_rejected', 'message' => "the model service refused the reader's credentials"]], $this->id);
+            self::fail('an error envelope must throw');
+        } catch (RfqParserFailure $failure) {
+            self::assertSame(RfqParserFailure::PROVIDER_REJECTED, $failure->failureCode);
+            self::assertFalse($failure->isRetryable());
+        }
     }
 
     public function test_another_contract_version_is_refused_not_interpreted(): void

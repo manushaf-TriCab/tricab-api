@@ -16,10 +16,12 @@ read as green.
 
 **What is generated.** `_source.py`, naming the source commit (the checkout
 must have no uncommitted changes under `matcher/` or `tests/`); the parser
-modules in `PARSER_MODULES`, byte-for-byte after the import rewrite; `pipeline.py`, cut at the 4js push (Phase 5) and
-patched by `PIPELINE_PATCHES`; and the source tests in `TESTS`, patched by
-`TEST_PATCHES`. **What is not.** `__init__.py`, `corrections.py`, `_unported.py`,
-`app.py` and `wsgi` wiring are the platform's own and are never overwritten.
+modules in `PARSER_MODULES`, byte-for-byte after the import rewrite and any
+`MODULE_PATCHES`; `pipeline.py`, cut at the 4js push (Phase 5) and
+patched by `PIPELINE_PATCHES`; `reader_intake.py`, the spans of `mail_ingest.py`
+in `READER_INTAKE_SPANS`; the `DATA_FILES`; and the source tests in `TESTS`,
+patched by `TEST_PATCHES`. **What is not.** `__init__.py`, `corrections.py`, `_unported.py`,
+`app.py`, `contract.py` and `wsgi` wiring are the platform's own and are never overwritten.
 
 **Import rewrite.** `matcher.<m>` becomes `tricab_cable_rules.<m>` for the seven
 shared rule modules (see `check_rules_sync.py`) and `rfq_parser.<m>` for the rest.
@@ -47,23 +49,92 @@ TESTS_DIR = HERE / "tests" / "rfq_parser"
 
 RULE_MODULES = frozenset({"normalize", "accessories", "cable_code", "accessory_text", "extractor", "data", "resolver"})
 
-# Copied whole. Together with the cut pipeline, the closed import graph of
-# `pipeline.match_items` and `file_parser.parse_file` once stores, mail, the
-# agent and 4js are left out.
+# Copied whole (plus any `MODULE_PATCHES`). Together with the cut pipeline and
+# `reader_intake`, the closed import graph of `pipeline.match_items`,
+# `file_parser.parse_file` and `reader_intake.read_one_file` once stores, mail, the
+# agent and 4js are left out. The reader modules (plan 3.3/3.5) are the terra reader,
+# its deterministic re-checks, the translator and vision OCR.
 PARSER_MODULES = (
+    "attachment_reader",
+    "attachment_validate",
     "cable_notation",
     "cost_api",
     "currency",
     "file_parser",
     "llm_fallback",
     "normalizer",
+    "product_search",
+    "quantity_check",
     "quote_readiness",
+    "reader_coverage",
+    "reader_normalizer",
     "reel_quantity",
     "schedule_arithmetic",
+    "schedule_source",
     "splitter",
     "table_shape",
     "table_units",
+    "vision_ocr",
     "xls_convert",
+)
+
+# (module, why, old, new): exact replacements in a copied module, applied to the source
+# text before the import rewrite. Each must match exactly once.
+MODULE_PATCHES: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "attachment_reader",
+        "no .env: the platform configures the reader through app settings only",
+        "from dotenv import load_dotenv\n",
+        "",
+    ),
+    (
+        "attachment_reader",
+        "no .env: the platform configures the reader through app settings only",
+        'load_dotenv(Path(__file__).resolve().parent.parent / ".env")\n',
+        "",
+    ),
+    (
+        "reader_coverage",
+        "the coverage baselines ship inside rfq_parser/data",
+        'BASELINES = Path(__file__).resolve().parent.parent / "data/catalog/rfq_coverage_baselines.json"',
+        'BASELINES = Path(__file__).resolve().parent / "data" / "rfq_coverage_baselines.json"',
+    ),
+)
+
+# Data files the parser reads, copied byte for byte (source <p> -> rfq_parser/<target>).
+DATA_FILES = (
+    ("data/catalog/rfq_coverage_baselines.json", "data/rfq_coverage_baselines.json"),
+)
+
+# `reader_intake` is cut from the source's `matcher/mail_ingest.py`: the one function
+# that reads one file into work items (`read_one_file`, which the source's mail path and
+# portal reader worker both call) and what it needs, without Graph, replies, invoices or
+# the 4js push that share that module. Each (start, end) span is copied from `start` up
+# to, not including, `end` (None: to the end of the file); both markers occur once.
+READER_INTAKE_SPANS: tuple[tuple[str, str | None], ...] = (
+    ("# Document types parse_file understands; anything else (images) goes to vision OCR.\n", "QUOTE_LINES_CSV_COLUMNS = [\n"),
+    ("def vision_rows_to_items(rows: list[dict]) -> list[dict]:\n", "def extract_items_from_attachments(\n"),
+    ("def _default_vision_ocr():\n", None),
+)
+READER_INTAKE_PRELUDE = (
+    '"""One file into work items: the source\'s `mail_ingest.read_one_file`, cut out whole.\n'
+    "\n"
+    "The source reads every file through this function, from the mailbox and from the\n"
+    "portal's background re-read alike; the platform's reader jobs call it too, so the\n"
+    "three entry points read one file one way. See `tools/sync_rfq_parser.py`.\n"
+    '"""\n'
+    "\n"
+    "from __future__ import annotations\n"
+    "\n"
+    "import os\n"
+    "from pathlib import Path\n"
+    "from tempfile import TemporaryDirectory\n"
+    "from typing import Any, Callable\n"
+    "\n"
+    "from matcher import attachment_reader\n"
+    "from matcher.file_parser import parse_file\n"
+    "\n"
+    "\n"
 )
 
 HEADER = (
@@ -95,9 +166,9 @@ PIPELINE_PATCHES: tuple[tuple[str, str, str, str], ...] = (
         "the review log is replaced by per-request corrections; the store backend is gone",
         "from matcher.log_store import ReviewLogStore\n",
         "from matcher.reel_quantity import extract_pipe_per_reel_quantity\n",
-        "from matcher import normalizer\n"
+        "from matcher import normalizer, reader_normalizer\n"
         "from rfq_parser import corrections\n"
-        "from rfq_parser._unported import agent, reader_normalizer\n",
+        "from rfq_parser._unported import agent\n",
     ),
     (
         "the catalogue ships inside tricab_cable_rules; no .env, no workspace fallback",
@@ -150,6 +221,18 @@ TESTS = (
     "test_summary_cuts",
     "test_table_shape",
     "test_voltage_gate",
+    # The reader (plan 3.3/3.5): terra's reads, their deterministic re-checks, the
+    # translator and vision OCR. `test_h1104` stays behind: its fixture is a real
+    # customer schedule, and customer files are not committed here. `test_reader_flags`
+    # stays too: it tests the mail path's auto-push gate (plans 5/6), not the reader.
+    "test_attachment_reader",
+    "test_attachment_validate",
+    "test_image_reader",
+    "test_reader_normalizer",
+    "test_text_reader",
+    "test_text_validation",
+    "test_vision_ocr",
+    "test_xls_convert",
 )
 
 # Fixture files the tests read, copied byte for byte (source tests/fixtures/<p> ->
@@ -220,6 +303,49 @@ TEST_PATCHES: tuple[tuple[str, str, str, str], ...] = (
         "ROOT / 'rfq_parser/fixtures/go_live/draft-proof-redacted.json'",
     ),
     (
+        "test_vision_ocr",
+        "the source's Flask app is not here; the OCR functions are tested directly",
+        "from app import app\n",
+        "",
+    ),
+    (
+        "test_vision_ocr",
+        "the source's Flask app is not here; the OCR functions are tested directly",
+        '    @patch("app.extract_table_with_qwen")\n    def test_endpoint_accepts_image_upload(self, extract):',
+        "    @unittest.skip(\"The source's vision-ocr route; the platform reads images through reader jobs.\")\n"
+        '    @patch("app.extract_table_with_qwen")\n    def test_endpoint_accepts_image_upload(self, extract):',
+    ),
+    (
+        "test_image_reader",
+        "the mail path's auto-push gate is not in rfq_parser",
+        "def test_both_push_gates_hold_an_image_row(stub):",
+        "@pytest.mark.skip(reason=\"The mail path's auto-push gate is not here; the platform's is LineApprovalPolicy (ungrounded rows need approval).\")\ndef test_both_push_gates_hold_an_image_row(stub):",
+    ),
+    (
+        "test_text_reader",
+        "the mail path's auto-push gate is not in rfq_parser",
+        "def test_ungrounded_rows_are_marked_so_they_cannot_auto_push(stub, monkeypatch):",
+        "@pytest.mark.skip(reason=\"The mail path's auto-push gate is not here; the platform's is LineApprovalPolicy (ungrounded rows need approval).\")\ndef test_ungrounded_rows_are_marked_so_they_cannot_auto_push(stub, monkeypatch):",
+    ),
+    (
+        "test_reader_normalizer",
+        "the agent is not ported",
+        "def test_the_translator_wins_over_the_agent(monkeypatch, stub):",
+        "@pytest.mark.skip(reason='The Foundry agent is not ported (production runs it off; see rfq_parser._unported).')\ndef test_the_translator_wins_over_the_agent(monkeypatch, stub):",
+    ),
+    (
+        "test_reader_normalizer",
+        "the agent is not ported",
+        "def test_a_row_with_no_reading_is_counted_against_the_translator(monkeypatch, stub):",
+        "@pytest.mark.skip(reason='The Foundry agent is not ported (production runs it off; see rfq_parser._unported).')\ndef test_a_row_with_no_reading_is_counted_against_the_translator(monkeypatch, stub):",
+    ),
+    (
+        "test_reader_normalizer",
+        "the source CLI is not here",
+        "def test_health_reports_the_switch_where_production_can_see_it(monkeypatch):",
+        "@pytest.mark.skip(reason=\"The source CLI's health action; the platform reports reader state on /api/health.\")\ndef test_health_reports_the_switch_where_production_can_see_it(monkeypatch):",
+    ),
+    (
         "test_summary_cuts",
         "the 4js push is not in rfq_parser (plan Phase 5 carries this check)",
         "    def test_the_pushed_line_comment_is_still_capped_at_200(self):",
@@ -276,6 +402,29 @@ def build_pipeline(source: str) -> str:
     return _rewrite_imports(text)
 
 
+def build_module(name: str, source: str) -> str:
+    for module, why, old, new in MODULE_PATCHES:
+        if module != name:
+            continue
+        count = source.count(old)
+        if count != 1:
+            raise SystemExit(f"module patch '{why}' ({name}): text occurs {count} times, expected once:\n  {old!r}")
+        source = source.replace(old, new)
+    return _rewrite_imports(source)
+
+
+def build_reader_intake(source: str) -> str:
+    parts = [READER_INTAKE_PRELUDE]
+    for start, end in READER_INTAKE_SPANS:
+        for marker in (start, end):
+            if marker is not None and source.count(marker) != 1:
+                raise SystemExit(f"reader_intake: marker occurs {source.count(marker)} times, expected once:\n  {marker!r}")
+        tail = source.split(start, 1)[1]
+        body = start + (tail.split(end, 1)[0] if end is not None else tail)
+        parts.append(body.rstrip("\n") + "\n\n\n")
+    return _rewrite_imports("".join(parts).rstrip("\n") + "\n")
+
+
 def build_test(name: str, source: str) -> str:
     text = _rewrite_imports(source).replace("from app import catalog", "from rfq_parser.pipeline import catalog")
     for module, why, old, new in TEST_PATCHES:
@@ -320,9 +469,13 @@ def expected_files(matcher_root: Path) -> dict[Path, str | bytes]:
     )
     for name in PARSER_MODULES:
         source = (matcher_root / "matcher" / f"{name}.py").read_text(encoding="utf-8")
-        out[PACKAGE_DIR / f"{name}.py"] = HEADER.format(name=name) + _rewrite_imports(source)
+        out[PACKAGE_DIR / f"{name}.py"] = HEADER.format(name=name) + build_module(name, source)
     pipeline = (matcher_root / "matcher" / "pipeline.py").read_text(encoding="utf-8")
     out[PACKAGE_DIR / "pipeline.py"] = HEADER.format(name="pipeline") + build_pipeline(pipeline)
+    mail_ingest = (matcher_root / "matcher" / "mail_ingest.py").read_text(encoding="utf-8")
+    out[PACKAGE_DIR / "reader_intake.py"] = HEADER.format(name="mail_ingest") + build_reader_intake(mail_ingest)
+    for source_path, target in DATA_FILES:
+        out[PACKAGE_DIR / target] = (matcher_root / source_path).read_bytes()
     for relative in FIXTURES:
         out[TESTS_DIR / "fixtures" / relative] = (matcher_root / "tests" / "fixtures" / relative).read_bytes()
     for name in TESTS:

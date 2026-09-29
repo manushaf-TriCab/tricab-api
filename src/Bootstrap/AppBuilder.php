@@ -180,8 +180,10 @@ use TriCab\Api\Http\Action\HealthAction;
 use TriCab\Api\Http\Action\Onboarding\DeleteOnboardingContentItemAction;
 use TriCab\Api\Http\Action\Onboarding\DeleteOnboardingPersonAction;
 use TriCab\Api\Http\Action\Rfq\GetRfqAccessAction;
+use TriCab\Api\Http\Action\Rfq\CreateRfqAction;
 use TriCab\Api\Http\Action\Rfq\GetRfqAction;
 use TriCab\Api\Http\Action\Rfq\ListRfqsAction;
+use TriCab\Api\Http\Action\Rfq\SaveRfqAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingAdminOverviewAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentContentAction;
 use TriCab\Api\Http\Action\Onboarding\GetOnboardingDocumentsAction;
@@ -425,8 +427,9 @@ final class AppBuilder
     }
 
     /**
-     * RFQ module — Phase 1 skeleton. Reads only; every write family (intake,
-     * workflow, sync) lands with its phase, each on its own permission.
+     * RFQ module. Reads, plus the first slice's two writes (plan 3.7): paste
+     * intake and a review save. Every other write family (workflow, sync)
+     * lands with its phase, each on its own permission.
      *
      * Registered only when `RFQ_MODULE_ENABLED` is true (off by default), so the
      * module can merge before it is finished: with it off these paths are plain
@@ -453,6 +456,38 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
         $app->get('/api/v1/rfqs/{publicId}', GetRfqAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        // Plan 3.7 and parity plan E2: Match Text (stores nothing), Save as Draft,
+        // and a review save. No external write on any of them.
+        $app->post('/api/v1/rfqs/parse', \TriCab\Api\Http\Action\Rfq\ParseRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
+        $app->post('/api/v1/rfqs', CreateRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
+        // Plans 2.5, 3.3 and 3.5: file intake, the background reads and their
+        // documents. Upload creates a draft; resolving a read is an edit.
+        $app->post('/api/v1/rfqs/upload', \TriCab\Api\Http\Action\Rfq\UploadRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
+        $app->get('/api/v1/rfqs/{publicId}/reads', \TriCab\Api\Http\Action\Rfq\ListRfqReadsAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        $app->post('/api/v1/rfqs/{publicId}/reads/{readId}', \TriCab\Api\Http\Action\Rfq\ResolveRfqReadAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
+        $app->get('/api/v1/rfqs/{publicId}/documents/{documentId}', \TriCab\Api\Http\Action\Rfq\DownloadRfqDocumentAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        $app->patch('/api/v1/rfqs/{publicId}', SaveRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
+        // Parity plan E3.5: readiness of the editor's lines, saved or not. Writes nothing.
+        $app->post('/api/v1/rfqs/readiness', \TriCab\Api\Http\Action\Rfq\CheckRfqReadinessAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
+        $app->post('/api/v1/rfqs/{publicId}/readiness', \TriCab\Api\Http\Action\Rfq\CheckRfqReadinessAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        // Parity plan E1: the quote header's lookups. Read only, internal data.
+        $app->get('/api/v1/rfqs/lookups/customers', \TriCab\Api\Http\Action\Rfq\SearchRfqCustomersAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
+        $app->get('/api/v1/rfqs/lookups/contacts', \TriCab\Api\Http\Action\Rfq\ListRfqContactsAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
+        $app->get('/api/v1/rfqs/lookups/pay-terms', \TriCab\Api\Http\Action\Rfq\ListRfqPayTermsAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
+        $app->get('/api/v1/rfqs/lookups/products', \TriCab\Api\Http\Action\Rfq\SearchRfqProductsAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
     }
 
     /**

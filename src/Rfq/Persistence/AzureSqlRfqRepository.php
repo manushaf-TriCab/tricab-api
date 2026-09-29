@@ -7,9 +7,13 @@ namespace TriCab\Api\Rfq\Persistence;
 use DateTimeImmutable;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Core\Rfq\Application\DTO\ReaderResult;
+use TriCab\Core\Rfq\Contract\RfqDocumentStore;
+use TriCab\Core\Rfq\Contract\RfqReaderJobStore;
 use TriCab\Core\Rfq\Application\DTO\RfqDetail;
 use TriCab\Core\Rfq\Application\DTO\RfqQueueQuery;
 use TriCab\Core\Rfq\Application\DTO\RfqRecord;
+use TriCab\Core\Rfq\Application\DTO\ReviewRevision;
 use TriCab\Core\Rfq\Application\DTO\RfqSummary;
 use TriCab\Core\Rfq\Contract\RfqRepository;
 use TriCab\Core\Rfq\Domain\Service\ExtractionStatePolicy;
@@ -19,6 +23,8 @@ use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqOwnership;
 use TriCab\Core\Rfq\Domain\ValueObject\WorkflowStatus;
 use TriCab\Core\Rfq\Module;
+use TriCab\Core\Rfq\Storage\PythonJson;
+use TriCab\Core\Rfq\Storage\StoredRevision;
 use TriCab\Core\Rfq\Storage\StoreFormat;
 use TriCab\Core\Rfq\Storage\StoreProjection;
 
@@ -46,10 +52,12 @@ use TriCab\Core\Rfq\Storage\StoreProjection;
  *
  * ## Not here yet
  *
- * The detail's revision (header and lines, Phase 4), reads (3), documents
- * (2.5/3) and sync attempts (5) join `findDetail` in their phases, as the
- * contract table says. Extraction coverage is not measured until plan 3.4, so
- * `ExtractionStatePolicy` is told so, and a settled RFQ reads `partial`.
+ * The detail carries the current header and lines (`StoredRevision`, plan
+ * 3.7), its documents and their reads (plan 3.3/3.5). Sync attempts (5)
+ * join `findDetail` in their phase. Extraction coverage is the accounting the
+ * parse recorded (`email_meta.parse.coverage`, plan 3.4): a draft with none,
+ * such as one made by the source, is unmeasured and reads `partial` once its
+ * reads settle.
  */
 final class AzureSqlRfqRepository implements RfqRepository
 {
@@ -70,8 +78,11 @@ final class AzureSqlRfqRepository implements RfqRepository
         )
         SQL;
 
-    public function __construct(private readonly SqlConnection $connection)
-    {
+    public function __construct(
+        private readonly SqlConnection $connection,
+        private readonly ?RfqDocumentStore $documents = null,
+        private readonly ?RfqReaderJobStore $readerJobs = null,
+    ) {
     }
 
     public function pageVisibleTo(RfqActor $actor, RfqQueueQuery $query): array
@@ -128,7 +139,59 @@ final class AzureSqlRfqRepository implements RfqRepository
 
     public function findDetail(RfqRecord $record, array $allowedActions): RfqDetail
     {
-        return new RfqDetail(new RfqSummary($record, $allowedActions), null, [], [], []);
+        $draftId = StoreProjection::draftId($record->publicId);
+        $documents = [];
+        $reads = [];
+        if ($draftId !== null) {
+            try {
+                $documents = $this->documents?->forDraft($draftId) ?? [];
+            } catch (\Throwable $failure) {
+                // `rfq_documents` arrives with its own migration; before it is
+                // applied a draft simply has no stored documents.
+                error_log('RFQ documents unavailable: ' . $failure::class);
+            }
+            $reads = array_map(ReaderResult::fromStored(...), $this->readerJobs?->forDraft($draftId) ?? []);
+        }
+
+        return new RfqDetail(new RfqSummary($record, $allowedActions), $this->latestRevision($record->publicId), $documents, $reads, []);
+    }
+
+    /**
+     * The header and lines as stored now: the store keeps one current
+     * revision per draft (the source's shape), so the latest is the only one.
+     */
+    private function latestRevision(string $publicId): ?ReviewRevision
+    {
+        $draftId = StoreProjection::draftId($publicId);
+        if ($draftId === null) {
+            return null;
+        }
+        $draft = $this->connection->fetchAll(
+            'SELECT [revision], [updated_at], [created_at], [quote_details] FROM [rfq].[rfq_draft_quotes] WHERE [id] = :id',
+            ['id' => $draftId],
+        )[0] ?? null;
+        if ($draft === null) {
+            return null;
+        }
+        $rows = $this->connection->fetchAll(
+            'SELECT [row_data] FROM [rfq].[rfq_draft_rows] WHERE [draft_id] = :id ORDER BY [row_order]',
+            ['id' => $draftId],
+        );
+        $savedAt = StoreFormat::parseTime(self::rawText($draft['updated_at']) ?? self::rawText($draft['created_at']))
+            ?? new DateTimeImmutable('@0');
+
+        return StoredRevision::project(
+            max(1, AzureSqlValueMapper::intValue($draft['revision'] ?? 1)),
+            $savedAt,
+            PythonJson::decodeObject(self::rawText($draft['quote_details'])),
+            array_map(static fn (array $r): array => PythonJson::decodeObject(self::rawText($r['row_data'])), $rows),
+        );
+    }
+
+    /** A text column as stored: JSON and source text are not trimmed. */
+    private static function rawText(mixed $value): ?string
+    {
+        return is_string($value) ? $value : null;
     }
 
     private function count(RfqActor $actor, RfqQueueQuery $query): int
@@ -150,6 +213,7 @@ final class AzureSqlRfqRepository implements RfqRepository
                    d.[refno], d.[revision], d.[branch], d.[archived_at],
                    CASE WHEN ISJSON(d.[quote_details]) = 1 THEN JSON_VALUE(d.[quote_details], \'$.customer_code\') END AS [customer_code],
                    CASE WHEN ISJSON(d.[quote_details]) = 1 THEN JSON_VALUE(d.[quote_details], \'$.customer_name\') END AS [customer_name],
+                   CASE WHEN ISJSON(d.[email_meta]) = 1 THEN JSON_QUERY(d.[email_meta], \'$.parse.coverage\') END AS [parse_coverage],
                    o.[UserId] AS [owner_user_id], ou.[DisplayName] AS [owner_name],
                    a.[UserId] AS [assignee_user_id], au.[DisplayName] AS [assignee_name],
                    (SELECT COUNT(*) FROM [rfq].[rfq_draft_rows] r WHERE r.[draft_id] = d.[id]) AS [line_count],
@@ -316,7 +380,7 @@ final class AzureSqlRfqRepository implements RfqRepository
                 priority: StoreProjection::priority($row['priority']),
                 dueAtUtc: StoreFormat::parseTime(AzureSqlValueMapper::nullableString($row['due_at'])),
                 channel: StoreProjection::channel($row['source']),
-                extractionState: ExtractionStatePolicy::derive($reads[$id] ?? [], false),
+                extractionState: ExtractionStatePolicy::derive($reads[$id] ?? [], StoreProjection::coverageComplete($row['parse_coverage'] ?? null)),
                 latestSyncState: $row['latest_sync_state'] === null ? null : StoreProjection::syncState($row['latest_sync_state']),
                 quoteNumber: AzureSqlValueMapper::nullableString($row['refno']),
                 lineCount: AzureSqlValueMapper::intValue($row['line_count']),

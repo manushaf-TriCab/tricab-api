@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace TriCab\Core\Rfq\Infrastructure;
 
 use TriCab\Core\Rfq\Contract\RfqParserClient;
+use TriCab\Core\Rfq\Parser\CorrelationId;
 use TriCab\Core\Rfq\Parser\ParseRequest;
 use TriCab\Core\Rfq\Parser\ParseResponse;
+use TriCab\Core\Rfq\Parser\QuoteReadiness;
+use TriCab\Core\Rfq\Parser\ReadRequest;
+use TriCab\Core\Rfq\Parser\ReadResponse;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
 
 /**
- * The parser client until `core/python/rfq_parser` is packaged (plan 3.1).
+ * The parser client wherever the parser is not switched on (`RFQ_PARSER_ENABLED`
+ * with an internal token): local runs without Python, tests, and production
+ * until the RFQ module ships.
  *
  * Refuses every parse as `unavailable` rather than returning an empty result,
  * for the reason {@see RfqParserClient} gives: "no lines" must never be the
@@ -24,6 +30,33 @@ final class UndeployedRfqParserClient implements RfqParserClient
             RfqParserFailure::UNAVAILABLE,
             'The RFQ parser is not deployed on this platform yet.',
             $request->correlationId,
+        );
+    }
+
+    public function read(ReadRequest $request): ReadResponse
+    {
+        throw RfqParserFailure::of(
+            RfqParserFailure::UNAVAILABLE,
+            'The RFQ parser is not deployed on this platform yet.',
+            $request->correlationId,
+        );
+    }
+
+    public function readiness(CorrelationId $correlationId, array $rows, array $quoteDetails): QuoteReadiness
+    {
+        throw RfqParserFailure::of(
+            RfqParserFailure::UNAVAILABLE,
+            'The RFQ parser is not deployed on this platform yet.',
+            $correlationId,
+        );
+    }
+
+    public function searchProducts(CorrelationId $correlationId, string $query, int $limit): array
+    {
+        throw RfqParserFailure::of(
+            RfqParserFailure::UNAVAILABLE,
+            'The RFQ parser is not deployed on this platform yet.',
+            $correlationId,
         );
     }
 

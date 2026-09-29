@@ -87,6 +87,37 @@ final class StoreProjection
         return ReaderJobStatus::fromStorage($status);
     }
 
+    /**
+     * Whether the accounting recorded with a draft's parse balances (plan 3.4):
+     * `email_meta.parse.coverage` as `rfq-parser.v1` answered it. Complete only
+     * when it was measured and every input row is kept, excluded or skipped.
+     * No record (a draft from before the platform measured it, or from the
+     * source) is unmeasured, never complete.
+     */
+    public static function coverageComplete(mixed $coverageJson): bool
+    {
+        if (!is_string($coverageJson) || $coverageJson === '') {
+            return false;
+        }
+        try {
+            $coverage = json_decode($coverageJson, true, 8, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return false;
+        }
+        if (!is_array($coverage) || ($coverage['measured'] ?? true) !== true) {
+            return false;
+        }
+        $counts = [];
+        foreach (['inputRows', 'keptRows', 'excludedRows', 'skippedRows'] as $key) {
+            if (!is_int($coverage[$key] ?? null) || $coverage[$key] < 0) {
+                return false;
+            }
+            $counts[$key] = $coverage[$key];
+        }
+
+        return $counts['inputRows'] === $counts['keptRows'] + $counts['excludedRows'] + $counts['skippedRows'];
+    }
+
     public static function syncState(mixed $state): SyncAttemptState
     {
         return SyncAttemptState::fromStorage($state);

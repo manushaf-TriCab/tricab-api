@@ -158,6 +158,12 @@ final readonly class Settings
         public string $productFinderBaseUrl = 'http://127.0.0.1:8001',
         public int $productFinderTimeoutSeconds = 20,
         public bool $rfqModuleEnabled = false,
+        public bool $rfqParserEnabled = false,
+        public string $rfqParserBaseUrl = 'http://127.0.0.1:8002',
+        public string $rfqParserInternalToken = '',
+        public bool $rfqParserAllowModel = false,
+        public string $blobContainerRfq = 'rfq-documents',
+        public string $rfqDefaultPayTermsCode = 'EOM030ND',
         public string $triexpenseMailFrom = 'ap@tricab.com',
         public bool $triexpenseEmailEnabled = false,
         public string $triexpenseEmailTestRecipient = '',
@@ -252,6 +258,24 @@ final readonly class Settings
         }
 
         $host = parse_url($this->productFinderBaseUrl, PHP_URL_HOST);
+
+        return is_string($host) && in_array(strtolower($host), self::PRODUCT_FINDER_ALLOWED_HOSTS, true);
+    }
+
+    /**
+     * The RFQ parser is the finder's loopback pattern with one addition: a
+     * bearer token (`RFQ_PARSER_INTERNAL_TOKEN`) the parser checks on every
+     * `/v1` call. Both are required; the parser refuses everything without a
+     * token, so switching it on without one could only ever fail. Same
+     * `RFQ_PARSER_ENABLED` setting as `startup.sh`, which starts the process.
+     */
+    public function isRfqParserEnabled(): bool
+    {
+        if (!$this->rfqParserEnabled || $this->rfqParserInternalToken === '') {
+            return false;
+        }
+
+        $host = parse_url($this->rfqParserBaseUrl, PHP_URL_HOST);
 
         return is_string($host) && in_array(strtolower($host), self::PRODUCT_FINDER_ALLOWED_HOSTS, true);
     }
@@ -793,6 +817,20 @@ final readonly class Settings
         // is what the web reads to hide every RFQ entry -- administrators included,
         // who would otherwise see it because they hold every permission.
         $rfqModuleEnabled = self::bool($env, 'RFQ_MODULE_ENABLED', false);
+        $rfqParserEnabled = self::bool($env, 'RFQ_PARSER_ENABLED', false);
+        $rfqParserBaseUrl = rtrim(self::string($env, 'RFQ_PARSER_BASE_URL', 'http://127.0.0.1:8002'), '/');
+        $rfqParserInternalToken = trim(self::string($env, 'RFQ_PARSER_INTERNAL_TOKEN', ''));
+        // The pay term a new quote's dropdown starts on: the source's MAIL_DEFAULT_PAYTERMS.
+        $rfqDefaultPayTermsCode = trim(self::string($env, 'RFQ_DEFAULT_PAY_TERMS', 'EOM030ND'));
+        if ($rfqParserEnabled) {
+            $rfqParserHost = parse_url($rfqParserBaseUrl, PHP_URL_HOST);
+            if (!is_string($rfqParserHost) || !in_array(strtolower($rfqParserHost), self::PRODUCT_FINDER_ALLOWED_HOSTS, true)) {
+                throw new InvalidArgumentException(
+                    'RFQ_PARSER_BASE_URL must point at the loopback interface; '
+                    . 'the RFQ parser runs inside this App Service and is not exposed.'
+                );
+            }
+        }
 
         $productFinderEnabled = self::bool($env, 'PRODUCT_FINDER_ENABLED', false);
         $productFinderBaseUrl = rtrim(self::string($env, 'PRODUCT_FINDER_BASE_URL', 'http://127.0.0.1:8001'), '/');
@@ -964,6 +1002,14 @@ final readonly class Settings
             productFinderBaseUrl: $productFinderBaseUrl,
             productFinderTimeoutSeconds: $productFinderTimeoutSeconds,
             rfqModuleEnabled: $rfqModuleEnabled,
+            rfqParserEnabled: $rfqParserEnabled,
+            rfqParserBaseUrl: $rfqParserBaseUrl,
+            rfqParserInternalToken: $rfqParserInternalToken,
+            // Plan 3.5: interactive parses may call a model only when this says so;
+            // reader jobs are model reads by definition and are not gated by it.
+            rfqParserAllowModel: self::bool($env, 'RFQ_PARSER_ALLOW_MODEL', false),
+            blobContainerRfq: self::string($env, 'BLOB_CONTAINER_RFQ', 'rfq-documents'),
+            rfqDefaultPayTermsCode: $rfqDefaultPayTermsCode,
             triexpenseMailFrom: $triexpenseMailFrom,
             triexpenseEmailEnabled: $triexpenseEmailEnabled,
             triexpenseEmailTestRecipient: $triexpenseEmailTestRecipient,

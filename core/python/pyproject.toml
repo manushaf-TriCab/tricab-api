@@ -18,6 +18,7 @@ packages = ["tricab_cable_rules", "product_finder", "rfq_parser"]
 
 [tool.setuptools.package-data]
 tricab_cable_rules = ["data/cable_rules/*.json", "data/catalog/*"]
+rfq_parser = ["data/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

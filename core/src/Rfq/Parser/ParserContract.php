@@ -44,6 +44,12 @@ final class ParserContract
     public const HEADER_AUTHORIZATION = 'Authorization';
 
     public const PATH_PARSE = '/v1/parse';
+    /** One document through the model reader, for a reader job (plan 3.5; `ReadRequest`). */
+    public const PATH_READ = '/v1/read';
+    /** The source's `quote_readiness` over a draft (`QuoteReadiness`), until plan 5.3 ports it. */
+    public const PATH_READINESS = '/v1/readiness';
+    /** The source's product-code autocomplete over the matcher's catalogue (parity plan E3.3). */
+    public const PATH_PRODUCT_SEARCH = '/v1/products/search';
     public const PATH_HEALTH = '/v1/health';
     public const PATH_READY = '/v1/ready';
 }

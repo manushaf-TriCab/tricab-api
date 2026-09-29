@@ -21,6 +21,11 @@ Two parse routes, one per source action, with the same answers:
 
 Both accept `corrections` (see `rfq_parser.corrections`). Neither stores
 anything.
+
+The PHP API does not call these. It calls `rfq-parser.v1` (`rfq_parser.contract`,
+registered below): the same functions behind the internal token, with source
+accounting and the contract envelope. These two stay as the parity surface that
+`tools/compare_rfq_parser.py` and the service tests hold to the source.
 """
 
 from __future__ import annotations
@@ -41,7 +46,8 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from tricab_cable_rules import ENGINE_VERSION
 from tricab_cable_rules.extractor import pair_circuit_label_lines
 
-from . import corrections, llm_fallback, normalizer, pipeline, table_shape
+from . import attachment_reader, corrections, llm_fallback, normalizer, pipeline, reader_normalizer, table_shape, vision_ocr
+from . import intake
 from ._source import SOURCE_COMMIT
 from .file_parser import parse_file
 
@@ -68,6 +74,10 @@ FILE_SUFFIXES = frozenset({".xlsx", ".xlsm", ".xls", ".docx", ".pdf", ".csv", ".
 
 app = Flask(__name__, static_folder=None)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES + 64 * 1024  # room for the form fields
+
+from .contract import v1 as _contract_v1  # noqa: E402 - needs the limits above
+
+app.register_blueprint(_contract_v1)
 
 
 def success(data: Any):
@@ -124,6 +134,12 @@ def versions() -> dict[str, Any]:
         models["normalizer"] = normalizer.normalizer_model()
     if table_shape.table_shape_enabled():
         models["table_shape"] = table_shape.table_shape_model()
+    if attachment_reader.reader_enabled():
+        models["reader"] = attachment_reader.reader_model()
+    if reader_normalizer.translator_enabled():
+        models["translator"] = reader_normalizer.translator_model()
+    if vision_ocr.vision_ocr_enabled():
+        models["vision_ocr"] = os.environ.get("VISION_OCR_PRIMARY_MODEL", vision_ocr.DEFAULT_PRIMARY_MODEL)
     return {
         "engine": ENGINE_VERSION,
         "parser_source": SOURCE_COMMIT,
@@ -157,8 +173,26 @@ def api_health():
                 "line_fallback": llm_fallback.openrouter_enabled(),
                 "normalizer": normalizer.normalizer_enabled(),
                 "table_shape": table_shape.table_shape_enabled(),
+                # The reader paths, per input (source `reader_route_enabled`), and the
+                # translator, which runs only for a reader job's message context.
+                "reader": {
+                    "spreadsheets": attachment_reader.reader_enabled(),
+                    "pdf": attachment_reader.pdf_reader_enabled(),
+                    "documents": attachment_reader.document_reader_enabled(),
+                    "images": attachment_reader.image_reader_enabled(),
+                },
+                "translator": reader_normalizer.translator_enabled(),
+                "vision_ocr": vision_ocr.vision_ocr_enabled(),
             },
-            "limits": {"max_upload_bytes": MAX_UPLOAD_BYTES, "max_text_chars": MAX_TEXT_CHARS, "max_lines": MAX_LINES},
+            "limits": {
+                "max_upload_bytes": MAX_UPLOAD_BYTES,
+                "max_text_chars": MAX_TEXT_CHARS,
+                "max_lines": MAX_LINES,
+                "max_unzipped_bytes": intake.MAX_UNZIPPED_BYTES,
+                "max_sheets": intake.MAX_SHEETS,
+                "max_pdf_pages": intake.MAX_PDF_PAGES,
+                "max_parse_seconds": intake.MAX_PARSE_SECONDS,
+            },
         }
     )
 

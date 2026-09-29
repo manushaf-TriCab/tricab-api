@@ -148,7 +148,7 @@ final class DraftChangeLog
      *
      * @return array<string, mixed>
      */
-    private static function object(mixed $value): array
+    public static function object(mixed $value): array
     {
         if (!is_array($value) || ($value !== [] && array_is_list($value))) {
             return [];

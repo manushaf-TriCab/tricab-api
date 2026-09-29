@@ -61,7 +61,7 @@ final class LocalRfqSqlServer
     /** Empties every RFQ table and the test's people, children first. */
     public static function truncate(PDO $pdo): void
     {
-        foreach (['rfq_draft_rows', 'rfq_draft_activity', 'rfq_draft_row_edits', 'rfq_entries', 'rfq_reader_jobs',
+        foreach (['rfq_documents', 'rfq_draft_rows', 'rfq_draft_activity', 'rfq_draft_row_edits', 'rfq_entries', 'rfq_reader_jobs',
             'rfq_sync_attempts', 'rfq_draft_quotes', 'rfq_sessions'] as $table) {
             $pdo->exec("DELETE FROM [rfq].[{$table}]");
         }
@@ -71,7 +71,7 @@ final class LocalRfqSqlServer
 
     private static function applySchema(PDO $pdo): void
     {
-        foreach (['create-identity-schema.sql', 'create-identity-user-email-addresses.sql', 'create-rfq-schema.sql'] as $file) {
+        foreach (['create-identity-schema.sql', 'create-identity-user-email-addresses.sql', 'create-rfq-schema.sql', 'create-rfq-documents-schema.sql'] as $file) {
             $script = file_get_contents(dirname(__DIR__, 3) . '/database/scripts/development/' . $file);
             if ($script === false) {
                 throw new RuntimeException("{$file} is missing.");

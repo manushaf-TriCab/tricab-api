@@ -14,7 +14,10 @@ namespace TriCab\Core\Rfq\Application\DTO;
  * margins on exactly those changes (`test_margin_persistence`).
  *
  * These are legacy 4js identities, held as the codes 4js uses. They are not
- * platform ids and are never mixed with them.
+ * platform ids and are never mixed with them. `customerId` is the 4js
+ * customer id (`cust.id`, the source's `customer_id`), which is what names the
+ * customer: 4js codes are not unique (parity plan E1). `contactCode` is the
+ * contact's name, as the source's header holds it.
  */
 final class QuoteHeader
 {
@@ -31,11 +34,16 @@ final class QuoteHeader
         public readonly ?string $currency,
         public readonly ?string $customerReference,
         public readonly ?string $projectReference,
+        public readonly ?string $customerId = null,
+        public readonly ?string $customerName = null,
+        public readonly ?string $contactPhone = null,
+        public readonly ?string $validTill = null,
+        public readonly ?string $comment = null,
     ) {
     }
 
     /** Fields that invalidate a pricing snapshot when they change. */
-    public const PRICING_INPUTS = ['customerCode', 'regionCode', 'currency'];
+    public const PRICING_INPUTS = ['customerId', 'customerCode', 'regionCode', 'currency'];
 
     /**
      * @return array<string, ?string>
@@ -52,6 +60,11 @@ final class QuoteHeader
             'currency' => $this->currency,
             'customerReference' => $this->customerReference,
             'projectReference' => $this->projectReference,
+            'customerId' => $this->customerId,
+            'customerName' => $this->customerName,
+            'contactPhone' => $this->contactPhone,
+            'validTill' => $this->validTill,
+            'comment' => $this->comment,
         ];
     }
 

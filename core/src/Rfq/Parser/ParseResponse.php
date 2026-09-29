@@ -15,8 +15,13 @@ namespace TriCab\Core\Rfq\Parser;
  *
  * `coverage` is the source accounting (plan 3.4, invariant 3): every input row
  * is kept, excluded or skipped, and {@see isCoverageComplete()} is false when
- * the three do not add up. A parse whose coverage does not balance cannot make
- * an RFQ ready, however well the returned rows match.
+ * the three do not add up, or when the parser says it could not measure them
+ * (`measured: false`: a PDF, or rows a model read). A parse whose coverage does
+ * not balance cannot make an RFQ ready, however well the returned rows match.
+ *
+ * `documents` is one summary per document sent (plan 3.3): its line count and
+ * whether a model reader will re-read it (`readerRoute`), which is what makes
+ * PHP enqueue a reader job for it.
  *
  * `engine` and `provider` are recorded with the result (plan 3.6), so a
  * changed code on a re-parse can be traced to a rules, catalogue or model
@@ -26,10 +31,11 @@ final class ParseResponse
 {
     /**
      * @param list<array<string, mixed>> $lines
-     * @param array{inputRows: int, keptRows: int, excludedRows: int, skippedRows: int} $coverage
+     * @param array{inputRows: int, keptRows: int, excludedRows: int, skippedRows: int, measured: bool} $coverage
      * @param array{version: string, rulesVersion: string, catalogueVersion: string} $engine
      * @param array{mode: string, modelCalls: int, model: ?string} $provider
      * @param list<string> $notes
+     * @param list<array{documentPublicId: string, fileName: string, readerRoute: bool, lineCount: int}> $documents
      */
     private function __construct(
         public readonly string $correlationId,
@@ -39,6 +45,7 @@ final class ParseResponse
         public readonly array $provider,
         public readonly bool $degraded,
         public readonly array $notes,
+        public readonly array $documents = [],
     ) {
     }
 
@@ -49,23 +56,7 @@ final class ParseResponse
      */
     public static function fromPayload(array $payload, CorrelationId $sent): self
     {
-        if (($payload['contract'] ?? null) !== ParserContract::VERSION) {
-            throw RfqParserFailure::of(
-                RfqParserFailure::CONTRACT_MISMATCH,
-                'The RFQ parser answered with a different contract version.',
-                $sent,
-            );
-        }
-
-        $error = $payload['error'] ?? null;
-        if (is_array($error)) {
-            $code = is_string($error['code'] ?? null) ? $error['code'] : RfqParserFailure::INTERNAL_ERROR;
-            $message = is_string($error['message'] ?? null) && $error['message'] !== ''
-                ? $error['message']
-                : 'The RFQ parser could not read this request.';
-
-            throw RfqParserFailure::of($code, $message, $sent);
-        }
+        self::assertEnvelope($payload, $sent);
 
         $lines = $payload['lines'] ?? null;
         if (!is_array($lines) || !array_is_list($lines)) {
@@ -84,11 +75,16 @@ final class ParseResponse
         if (!is_array($coverage)) {
             throw self::malformed($sent, 'coverage');
         }
+        $measured = $coverage['measured'] ?? true;
+        if (!is_bool($measured)) {
+            throw self::malformed($sent, 'coverage.measured');
+        }
         $coverage = [
             'inputRows' => self::count($coverage, 'inputRows', $sent),
             'keptRows' => self::count($coverage, 'keptRows', $sent),
             'excludedRows' => self::count($coverage, 'excludedRows', $sent),
             'skippedRows' => self::count($coverage, 'skippedRows', $sent),
+            'measured' => $measured,
         ];
 
         $engine = $payload['engine'] ?? null;
@@ -131,11 +127,6 @@ final class ParseResponse
             $typedNotes[] = $note;
         }
 
-        $returnedId = $payload['correlationId'] ?? null;
-        if ($returnedId !== $sent->toString()) {
-            throw self::malformed($sent, 'correlationId');
-        }
-
         return new self(
             $sent->toString(),
             $typedLines,
@@ -144,12 +135,79 @@ final class ParseResponse
             ['mode' => $mode, 'modelCalls' => $modelCalls, 'model' => $model],
             $degraded,
             $typedNotes,
+            self::documents($payload['documents'] ?? [], $sent),
         );
+    }
+
+    /**
+     * @return list<array{documentPublicId: string, fileName: string, readerRoute: bool, lineCount: int}>
+     *
+     * @throws RfqParserFailure
+     */
+    private static function documents(mixed $documents, CorrelationId $sent): array
+    {
+        if (!is_array($documents) || !array_is_list($documents)) {
+            throw self::malformed($sent, 'documents');
+        }
+        $out = [];
+        foreach ($documents as $document) {
+            if (!is_array($document)
+                || !is_string($document['documentPublicId'] ?? null)
+                || !is_string($document['fileName'] ?? null)
+                || !is_bool($document['readerRoute'] ?? null)
+                || !is_int($document['lineCount'] ?? null) || $document['lineCount'] < 0) {
+                throw self::malformed($sent, 'documents');
+            }
+            $out[] = [
+                'documentPublicId' => $document['documentPublicId'],
+                'fileName' => $document['fileName'],
+                'readerRoute' => $document['readerRoute'],
+                'lineCount' => $document['lineCount'],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * What every `rfq-parser.v1` answer must satisfy before its body is read:
+     * the same contract version, an error envelope read as the typed failure
+     * it names, and otherwise the correlation id PHP sent — an answer to
+     * somebody else's request is never taken for this one's.
+     *
+     * @param array<array-key, mixed> $payload
+     *
+     * @throws RfqParserFailure
+     */
+    public static function assertEnvelope(array $payload, CorrelationId $sent): void
+    {
+        if (($payload['contract'] ?? null) !== ParserContract::VERSION) {
+            throw RfqParserFailure::of(
+                RfqParserFailure::CONTRACT_MISMATCH,
+                'The RFQ parser answered with a different contract version.',
+                $sent,
+            );
+        }
+
+        $error = $payload['error'] ?? null;
+        if (is_array($error)) {
+            $code = is_string($error['code'] ?? null) ? $error['code'] : RfqParserFailure::INTERNAL_ERROR;
+            $message = is_string($error['message'] ?? null) && $error['message'] !== ''
+                ? $error['message']
+                : 'The RFQ parser could not read this request.';
+
+            throw RfqParserFailure::of($code, $message, $sent);
+        }
+
+        if (($payload['correlationId'] ?? null) !== $sent->toString()) {
+            throw self::malformed($sent, 'correlationId');
+        }
     }
 
     public function isCoverageComplete(): bool
     {
-        return $this->coverage['inputRows']
+        return $this->coverage['measured']
+            && $this->coverage['inputRows']
             === $this->coverage['keptRows'] + $this->coverage['excludedRows'] + $this->coverage['skippedRows'];
     }
 

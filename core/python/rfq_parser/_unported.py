@@ -1,17 +1,18 @@
-"""The two translators the source runs only for email, not yet brought across.
+"""The one translator the source runs that is not brought across: the Foundry agent.
 
 ``pipeline.match_items`` chooses between three AI translators: the terra
 translator (``reader_normalizer``), the Foundry agent (``agent``) and the
-OpenRouter normalizer. The first two run only when a ``message_context`` is
-passed — an email, or a portal upload re-read by the reader worker — and they
-belong to mailbox intake and the attachment reader, which arrive with plan
-Phases 3.5 and 6.
+OpenRouter normalizer. The terra translator came across with the reader (plan
+3.5) because production runs it. The agent did not: production has
+``RFQ_AGENT_ENABLED`` off, and it loses to the translator whenever both are on
+(``pipeline.match_items``), so porting it would add a second provider SDK
+(``anthropic``) and a Foundry credential for a path nothing takes.
 
-Until then these stand-ins answer "not enabled", which is exactly what the source
-does when their settings are off, so ``match_items`` stays byte-for-byte the
-source's code and simply never takes those branches. When the real modules are
-ported, delete this file and the pipeline patch that imports it; nothing else
-changes.
+Until someone decides to switch it on, this stand-in answers "not enabled",
+which is exactly what the source does when its settings are off, so
+``match_items`` stays byte-for-byte the source's code and never takes that
+branch. If it is ever wanted, port ``matcher/agent.py`` with the sync tool,
+delete this file and drop it from the pipeline patch that imports it.
 """
 
 from __future__ import annotations
@@ -25,9 +26,6 @@ class _NotPorted:
     def agent_enabled(self) -> bool:
         return False
 
-    def translator_enabled(self) -> bool:
-        return False
-
     def degraded_reason(self) -> str | None:
         return None
 
@@ -35,8 +33,7 @@ class _NotPorted:
         return dict(self._last_run)
 
     def normalize_items(self, *_args, **_kwargs):
-        raise RuntimeError(f"rfq_parser: {self._name} is not ported yet (plan Phase 3.5 / 6).")
+        raise RuntimeError(f"rfq_parser: {self._name} is not ported (production runs it off).")
 
 
 agent = _NotPorted("agent")
-reader_normalizer = _NotPorted("reader_normalizer")

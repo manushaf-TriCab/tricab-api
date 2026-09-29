@@ -768,16 +768,85 @@ final class ContainerFactory
             \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
 
             // RFQ. In-memory by default; the azure-sql branch below reads the
-            // store's tables (plan 2.4). Empty rather than invented either way,
-            // and the routes are gated on permissions nobody holds yet. Branch
-            // membership has no source (owner question Q7), and the parser is
-            // not packaged (plan 3.1), so both answer "not available".
+            // store's tables (plan 2.4). Empty rather than invented either way.
+            // Branch membership has no source (owner question Q7), so it answers
+            // "not available".
             \TriCab\Core\Rfq\Contract\RfqRepository::class
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\InMemoryRfqRepository::class),
             \TriCab\Core\Rfq\Contract\RfqBranchDirectory::class
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqBranchDirectory::class),
-            \TriCab\Core\Rfq\Contract\RfqParserClient::class
-                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UndeployedRfqParserClient::class),
+            \TriCab\Core\Rfq\Contract\RfqDraftStore::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqDraftStore::class),
+            // The parser: loopback HTTP when RFQ_PARSER_ENABLED and a token are set,
+            // otherwise a client that refuses every parse as `unavailable`.
+            \TriCab\Core\Rfq\Contract\RfqParserClient::class => static function () use ($settings): \TriCab\Core\Rfq\Contract\RfqParserClient {
+                if (!$settings->isRfqParserEnabled()) {
+                    return new \TriCab\Core\Rfq\Infrastructure\UndeployedRfqParserClient();
+                }
+
+                return new \TriCab\Api\Rfq\Parser\HttpRfqParserClient(
+                    new StreamJsonHttpClient(
+                        (\TriCab\Core\Rfq\Parser\RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS + \TriCab\Core\Rfq\Parser\RfqServiceLimits::TRANSPORT_GRACE_MS) / 1000,
+                        2.0,
+                    ),
+                    $settings->rfqParserBaseUrl,
+                    $settings->rfqParserInternalToken,
+                );
+            },
+            \TriCab\Core\Rfq\Contract\RfqReaderJobStore::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqReaderJobStore::class),
+            \TriCab\Core\Rfq\Contract\RfqDocumentStore::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqDocumentStore::class),
+            // Plans 3.3/3.5: uploads and the background reader. Its own parser client,
+            // because a read may take the background deadline (600 s) and the shared
+            // client's socket gives up after the interactive one.
+            \TriCab\Core\Rfq\Application\Service\RfqReaderService::class => static function (Container $container) use ($settings): \TriCab\Core\Rfq\Application\Service\RfqReaderService {
+                $parser = $settings->isRfqParserEnabled()
+                    ? new \TriCab\Api\Rfq\Parser\HttpRfqParserClient(
+                        new StreamJsonHttpClient(
+                            (\TriCab\Core\Rfq\Parser\RfqServiceLimits::BACKGROUND_READ_DEADLINE_MS + \TriCab\Core\Rfq\Parser\RfqServiceLimits::TRANSPORT_GRACE_MS) / 1000,
+                            2.0,
+                        ),
+                        $settings->rfqParserBaseUrl,
+                        $settings->rfqParserInternalToken,
+                    )
+                    : new \TriCab\Core\Rfq\Infrastructure\UndeployedRfqParserClient();
+
+                return new \TriCab\Core\Rfq\Application\Service\RfqReaderService(
+                    $parser,
+                    self::get($container, \TriCab\Core\Rfq\Contract\RfqDraftStore::class),
+                    self::get($container, \TriCab\Core\Rfq\Contract\RfqReaderJobStore::class),
+                    self::get($container, \TriCab\Core\Rfq\Contract\RfqDocumentStore::class),
+                    self::get($container, \TriCab\Core\Rfq\Contract\RfqRepository::class),
+                    self::get($container, \TriCab\Core\Rfq\Contract\RfqOperatorDirectory::class),
+                    self::get($container, Clock::class),
+                    $settings->rfqParserAllowModel,
+                );
+            },
+            // Parity plan D3: Match Text's answer is sealed under a key derived from the
+            // parser token, so there is no seal (and no parse) without the parser.
+            \TriCab\Core\Rfq\Application\Service\RfqReviewService::class => \DI\autowire()
+                ->constructorParameter('seal', $settings->isRfqParserEnabled()
+                    ? new \TriCab\Core\Rfq\Parser\ParseSeal($settings->rfqParserInternalToken)
+                    : null)
+                ->constructorParameter('allowModel', $settings->rfqParserAllowModel),
+            // Parity plan E1: the quote header's lookups. Customers and contacts come
+            // from the synced customer book (the azure-sql branch below); pay terms
+            // from the legacy `descript` table, read only and cached for an hour.
+            \TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqCustomerDirectory::class),
+            \TriCab\Core\Rfq\Contract\RfqPayTermsDirectory::class => static function (Container $container): \TriCab\Core\Rfq\Contract\RfqPayTermsDirectory {
+                try {
+                    return new \TriCab\Api\Rfq\Legacy\DescriptRfqPayTermsDirectory(
+                        self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                        self::get($container, ApplicationCache::class),
+                    );
+                } catch (\Throwable) {
+                    return new \TriCab\Core\Rfq\Infrastructure\UnavailableRfqPayTermsDirectory();
+                }
+            },
+            \TriCab\Core\Rfq\Application\Service\RfqLookupService::class => \DI\autowire(\TriCab\Core\Rfq\Application\Service\RfqLookupService::class)
+                ->constructorParameter('defaultPayTermsCode', $settings->rfqDefaultPayTermsCode),
             // The rep's 4js operator code, for the quote's author (SalesRepAttribution).
             // Read only; falls back to "nobody confirmed" when the legacy database is absent.
             \TriCab\Core\Rfq\Contract\RfqOperatorDirectory::class => static function (Container $container) use ($settings): \TriCab\Core\Rfq\Contract\RfqOperatorDirectory {
@@ -2434,6 +2503,22 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqRepository::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqRepository::class);
+            // Plans 2.5/3.5: reader jobs are written by the draft store (one
+            // transaction with the rows they replace); documents in their own
+            // private container (`BLOB_CONTAINER_RFQ`).
+            $definitions[\TriCab\Core\Rfq\Contract\RfqReaderJobStore::class]
+                = static fn (Container $container): \TriCab\Core\Rfq\Contract\RfqReaderJobStore
+                    => self::get($container, \TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
+            $definitions[\TriCab\Core\Rfq\Contract\RfqDocumentStore::class]
+                = static fn (Container $container): \TriCab\Core\Rfq\Contract\RfqDocumentStore
+                    => new \TriCab\Api\Rfq\Persistence\AzureSqlRfqDocumentStore(
+                        self::get($container, SqlConnection::class),
+                        self::get($container, ProductBlobStore::class),
+                        $settings->blobContainerRfq,
+                        self::get($container, Clock::class),
+                    );
+            $definitions[\TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class]
+                = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqCustomerDirectory::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingSelfServiceRepository::class);
             // Phase 3.3 — the write side. All four share one locator, whose single

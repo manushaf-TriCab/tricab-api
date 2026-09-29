@@ -118,7 +118,7 @@ final class AzureSqlRfqRepositoryTest extends TestCase
 
         self::assertTrue($this->record('alternative')->channel->is(IntakeChannel::WEB), 'staff tools are the web');
         self::assertTrue($this->record('unassigned')->extractionState->is(ExtractionState::READING));
-        self::assertTrue($this->record('mine')->extractionState->is(ExtractionState::PARTIAL), 'coverage is not measured until plan 3.4');
+        self::assertTrue($this->record('mine')->extractionState->is(ExtractionState::PARTIAL), 'a draft with no recorded parse is unmeasured');
         self::assertNull($this->record('ambiguous')->ownership->ownerUserId, 'an address two people claim belongs to nobody');
         self::assertNull($this->record('ambiguous')->ownerDisplayName);
         self::assertNull($this->record('dave')->ownership->ownerUserId, 'an unverified address grants nothing');

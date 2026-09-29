@@ -58,9 +58,12 @@ Each contract has a version string in its class docblock. A breaking change adds
 | `rfq.access.v1` | `RfqAccessSummary` | `GET /api/v1/rfqs/me` | **1 (live)** |
 | `rfq.queue.v1` | `RfqQueuePage`, `RfqSummary` (`rfq.summary.v1`) | `GET /api/v1/rfqs` | **1 (live)** |
 | `rfq.detail.v1` | `RfqDetail` | `GET /api/v1/rfqs/{publicId}` | **1 (live)** |
-| `rfq.revision.v1` | `ReviewRevision`, `QuoteHeader` (`rfq.header.v1`), `ParsedLine` (`rfq.line.v1`), `SourceRowRef` (`rfq.source-row.v1`) | `PATCH /api/v1/rfqs/{publicId}` with `expectedRevision` | 2, 4 |
-| `rfq.document.v1` | `SourceDocument` | intake, document download | 2.5, 3 |
-| `rfq.reader-result.v1` | `ReaderResult` | reads on the detail; resolve proposal | 3 |
+| `rfq.parsed.v1` | `ParsedRfq` | `POST /api/v1/rfqs/parse` (Match Text; stores nothing, parity plan D3) | **E2** |
+| `rfq.created.v1` | `CreatedRfq` | `POST /api/v1/rfqs` `{parseToken, header, lines}` (Save as Draft; the rows are the sealed parse, `ParseSeal`) | **E2** |
+| `rfq.revision.v1` | `ReviewRevision`, `QuoteHeader` (`rfq.header.v1`), `ParsedLine` (`rfq.line.v1`), `SourceRowRef` (`rfq.source-row.v1`) | `PATCH /api/v1/rfqs/{publicId}` with `expectedRevision` and an optional `header` (`QuoteHeaderEdit`) | 2, 4 |
+| `rfq.uploaded.v1` | `UploadedRfq` | `POST /api/v1/rfqs/upload` (files → draft, reads queued) | **3.3** |
+| `rfq.document.v1` | `SourceDocument` | detail, `GET /rfqs/{id}/reads`, `GET /rfqs/{id}/documents/{documentId}` | **2.5, 3** |
+| `rfq.reader-result.v1` | `ReaderResult` | detail, `GET /rfqs/{id}/reads`, `POST /rfqs/{id}/reads/{readId}` (accept/dismiss) | **3.5** |
 | `rfq.pricing.v1` | `PricingSnapshot` | pricing on the saved revision | 4 |
 | `rfq.sync-attempt.v1` | `SyncAttemptView` | sync, status, reconcile, retry PDF | 5 |
 | `rfq.audit-event.v1` | `RfqAuditEvent` | activity trail | 2.4, 4.5 |
@@ -81,7 +84,9 @@ Conventions carried by all of them:
 
 - **Request** (`ParseRequest`): `contract`, `correlationId`, `deadlineMs`, and either `text` or `documents[]` (`documentPublicId`, display `fileName`, `contentType`, `contentBase64`), plus `options.allowModel` and `options.maxModelCalls`. It names no actor, role, scope or branch. PHP decides `allowModel` from configuration; extracted text cannot turn it on.
 - **Response** (`ParseResponse`): `contract`, the same `correlationId`, `lines[]`, `coverage` (`inputRows`, `keptRows`, `excludedRows`, `skippedRows`), `engine` (`version`, `rulesVersion`, `catalogueVersion`), `provider` (`mode`, `modelCalls`, `model`), `degraded` and `notes[]`. It is parsed strictly. The wrong version, a different correlation id or any malformed field is a failure, never a partial result.
-- **Coverage must balance.** `isCoverageComplete()` is false unless every input row is kept, excluded or skipped, and an unbalanced parse leaves the RFQ `partial` (§5.2).
+- **Coverage must balance.** `isCoverageComplete()` is false unless every input row is kept, excluded or skipped, and an unbalanced parse leaves the RFQ `partial` (§5.2). `coverage.measured` is false where rows cannot be accounted for (PDFs, anything a model read), which is never complete. The counts come from `rfq_parser/accounting.py`; the draft keeps them in `email_meta.parse.coverage`, which the queue reads.
+- **Documents** (`POST /v1/parse` with `documents[]`, plan 3.3) are checked by `rfq_parser/intake.py` before any library opens them (type from the bytes, ZIP, sheet and page caps) and parsed in a child process killed at the deadline. Each answers `documents[].readerRoute`: whether a model reader will re-read it, which is PHP's cue to queue a reader job.
+- **Reads** (`POST /v1/read`, `ReadRequest`/`ReadResponse`, plan 3.5): one document through the source's `read_one_file` (terra; vision OCR behind it for images), matched with a message context so the translator runs. A document with no reader switched on is `unsupported_format` and the job is stood down; a read with no lines is a typed failure (`provider_rejected`: credentials or a refused request, no retry; `provider_unavailable`: quota, 5xx, unreachable, retried up to 3 attempts). No provider body reaches any message; the parser logs it under the correlation id.
 - **Errors** are an envelope, `{contract, correlationId, error: {code, message}}`, read into a typed `RfqParserFailure` (§6.3).
 
 Bytes travel inline, so the parser needs no storage credential. Lines stay as arrays at this boundary. Phase 3 maps them into `ParsedLine` after deterministic validation (invariant 2).
@@ -196,7 +201,9 @@ Unreadable stored values fall back to the reading that hides nothing and claims 
 
 This follows the Product Finder pattern (`docs/product-finder/DEPLOYMENT.md`): a persistent Python process in the same App Service zip, bound to loopback, with no nginx location, no second App Service and **no new Azure resource**. RFQ work is heavier than finder lookups, so the plan (3.6) calls for workload isolation from the finder: a separate process and port, sized after measuring long requests. The port, worker count and startup changes are Phase 3.6 decisions and are not made here.
 
-- **Endpoints:** `/v1/parse`, `/v1/health` (process up) and `/v1/ready` (catalogue and rules loaded). `RfqParserClient::isAlive()` and `isReady()` map to them.
+- **Endpoints:** `/v1/parse`, `/v1/read`, `/v1/readiness`, `/v1/products/search`, `/v1/health` (process up) and `/v1/ready` (catalogue and rules loaded). `RfqParserClient::isAlive()` and `isReady()` map to the last two.
+- **Reader jobs** are PHP's (`RfqReaderService`, `bin/run-rfq-reader-jobs.php`): the worker claims a draft's queued reads, sends each document's bytes to `/v1/read` with the 600 s background deadline (its own client, with a socket to match), and replaces an untouched draft's rows for that file or stores them as a proposal. Nothing schedules it yet. gunicorn's worker timeout is 660 s so a read is never killed mid-answer.
+- **Documents** are kept in a private blob container (`BLOB_CONTAINER_RFQ`, default `rfq-documents`) under `drafts/<draft>/<document>`, with a row in `rfq_documents` (`create-rfq-documents-schema.sql`, not yet applied). Downloads stream through the API for anyone who can read the RFQ.
 - **Internal authentication:** loopback keeps the parser off the network. A bearer token (`RFQ_PARSER_INTERNAL_TOKEN`, an app setting, never logged and never sent to the browser) keeps other processes on the instance from using it. The parser authorizes nothing else: it gets no actor.
 - **Today:** `UndeployedRfqParserClient` refuses every parse as `unavailable`. "No lines" is never the answer to "no parser".
 

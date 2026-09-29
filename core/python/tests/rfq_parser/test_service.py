@@ -41,7 +41,8 @@ def test_health_reports_flags_and_limits_but_no_setting_values(client, monkeypat
     monkeypatch.setenv("OPENROUTER_API_KEY", "sk-secret-value")
     data = _data(client.get("/api/health"))
     assert data["status"] == "ok"
-    assert set(data["ai"]) == {"line_fallback", "normalizer", "table_shape"}
+    assert set(data["ai"]) == {"line_fallback", "normalizer", "table_shape", "reader", "translator", "vision_ocr"}
+    assert set(data["ai"]["reader"]) == {"spreadsheets", "pdf", "documents", "images"}
     assert "sk-secret-value" not in json.dumps(data)
 
 
@@ -57,6 +58,10 @@ def test_every_answer_names_what_produced_it(client, monkeypatch):
 
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
     monkeypatch.setenv("OPENROUTER_MODEL", "some/model")
+    monkeypatch.setenv("VISION_OCR_PRIMARY_MODEL", "some/vision")
+    # As in the source, an OpenRouter key switches vision OCR on unless VISION_OCR_ENABLED says no.
+    assert service.versions()["models"] == {"line_fallback": "some/model", "vision_ocr": "some/vision"}
+    monkeypatch.setenv("VISION_OCR_ENABLED", "false")
     assert service.versions()["models"] == {"line_fallback": "some/model"}
 
 

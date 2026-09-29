@@ -55,8 +55,9 @@ from rfq_parser.llm_fallback import (
     should_try_llm,
 )
 from rfq_parser import normalizer
+from rfq_parser import reader_normalizer
 from rfq_parser import corrections
-from rfq_parser._unported import agent, reader_normalizer
+from rfq_parser._unported import agent
 from rfq_parser.reel_quantity import extract_pipe_per_reel_quantity
 from tricab_cable_rules.resolver import match_line
 from rfq_parser.splitter import split_compound_line
@@ -1675,11 +1676,16 @@ def prepack_allowed(result, pricing) -> bool:
     cable at any size, and for stock cable below 25mm2 -- the 200m/100m panel and
     building-wire spools, which really are sold pre-packed.
 
-    An unknown cost status (the price lookup failed, so there is no price to protect)
-    keeps the previous behaviour rather than silently dropping the rule.
+    An unknown cost status means the price lookup failed or found nothing, so there is
+    no stock/make answer to act on. The customer's quantities are then left as asked:
+    rounding them on a guess rewrote "4 x 55 m" as 5 x 50 m spools whenever the Cost API
+    was down (owner decision 2026-09-29). The rule applies when the line is priced again
+    with a real answer.
     """
     status = str((pricing or {}).get("cost_status") or "").upper()
-    if not status or status == "MAKE":
+    if not status:
+        return False
+    if status == "MAKE":
         return True
     size = prepack_cross_section(result)
     if size is None:

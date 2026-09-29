@@ -29,12 +29,20 @@ use TriCab\Core\Rfq\Domain\ValueObject\LineMatchStatus;
  * the customer (invariant 2: provenance and inference stay visible). `lineUid`
  * is stable across revisions and is what correction memory and edit history
  * key on.
+ *
+ * `warnings` is the parser's own prose for the rep, as the source shows it.
+ * `warningCodes` is its structured form and is filled when readiness moves
+ * to the server (plan 5.3); until then it is empty rather than guessed from
+ * the prose.
+ *
+ * `entry` is what the sales grid edits and shows ({@see LineEntry}).
  */
 final class ParsedLine
 {
     /**
      * @param list<string> $warningCodes codes from `quote_readiness.WARNING_CODES` / `STATUS_CODES`
      * @param list<string> $inferredFields
+     * @param list<string> $warnings
      */
     public function __construct(
         public readonly string $lineUid,
@@ -54,6 +62,8 @@ final class ParsedLine
         public readonly ?string $exclusionReason,
         public readonly array $warningCodes,
         public readonly array $inferredFields,
+        public readonly array $warnings = [],
+        public readonly ?LineEntry $entry = null,
     ) {
     }
 
@@ -80,6 +90,8 @@ final class ParsedLine
             'exclusionReason' => $this->exclusionReason,
             'warningCodes' => $this->warningCodes,
             'inferredFields' => $this->inferredFields,
+            'warnings' => $this->warnings,
+            'entry' => $this->entry?->toArray(),
         ];
     }
 }

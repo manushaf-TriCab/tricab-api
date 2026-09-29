@@ -35,6 +35,19 @@ final class RfqRouteTableTest extends TestCase
         'GET /api/v1/rfqs/me' => Module::PERMISSION_ACCESS,
         'GET /api/v1/rfqs' => Module::PERMISSION_DRAFT_READ,
         'GET /api/v1/rfqs/{publicId}' => Module::PERMISSION_DRAFT_READ,
+        'POST /api/v1/rfqs/parse' => Module::PERMISSION_DRAFT_CREATE,
+        'POST /api/v1/rfqs' => Module::PERMISSION_DRAFT_CREATE,
+        'PATCH /api/v1/rfqs/{publicId}' => Module::PERMISSION_DRAFT_EDIT,
+        'POST /api/v1/rfqs/readiness' => Module::PERMISSION_DRAFT_CREATE,
+        'POST /api/v1/rfqs/{publicId}/readiness' => Module::PERMISSION_DRAFT_READ,
+        'GET /api/v1/rfqs/lookups/customers' => Module::PERMISSION_DRAFT_EDIT,
+        'GET /api/v1/rfqs/lookups/contacts' => Module::PERMISSION_DRAFT_EDIT,
+        'GET /api/v1/rfqs/lookups/pay-terms' => Module::PERMISSION_DRAFT_EDIT,
+        'GET /api/v1/rfqs/lookups/products' => Module::PERMISSION_DRAFT_EDIT,
+        'POST /api/v1/rfqs/upload' => Module::PERMISSION_DRAFT_CREATE,
+        'GET /api/v1/rfqs/{publicId}/reads' => Module::PERMISSION_DRAFT_READ,
+        'POST /api/v1/rfqs/{publicId}/reads/{readId}' => Module::PERMISSION_DRAFT_EDIT,
+        'GET /api/v1/rfqs/{publicId}/documents/{documentId}' => Module::PERMISSION_DRAFT_READ,
     ];
 
     /** Platform permissions that must never stand in for an RFQ one. */

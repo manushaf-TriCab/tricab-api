@@ -9,6 +9,7 @@ use TriCab\Api\Identity\Persistence\AzureSqlTransaction;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Rfq\Contract\RfqDraftStore;
+use TriCab\Core\Rfq\Contract\RfqReaderJobStore;
 use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
 use TriCab\Core\Rfq\Domain\Exception\RfqDraftNotEditable;
 use TriCab\Core\Rfq\Domain\Exception\RfqRevisionConflict;
@@ -20,6 +21,7 @@ use TriCab\Core\Rfq\Storage\PythonJson;
 use TriCab\Core\Rfq\Storage\PythonText;
 use TriCab\Core\Rfq\Storage\SalesRepAttribution;
 use TriCab\Core\Rfq\Storage\StoredDraft;
+use TriCab\Core\Rfq\Storage\StoredReaderJob;
 use TriCab\Core\Rfq\Storage\StoreFormat;
 use TriCab\Core\Shared\Time\Clock;
 
@@ -42,8 +44,18 @@ use TriCab\Core\Shared\Time\Clock;
  *
  * Lines are inserted in chunks: SQL Server takes at most 2,100 parameters a
  * statement, and a 500-line quote is 3,500 values.
+ *
+ * ## Reader jobs (plan 3.5)
+ *
+ * The same class writes `rfq_reader_jobs` and a finished read's rows
+ * ({@see RfqReaderJobStore}), because a read that replaces a draft's rows must
+ * move the rows, the revision, the activity and the job in one transaction.
+ * A claim returns only the rows its own `UPDATE` claimed (`OUTPUT`), which
+ * closes the source's gap where a second worker picked up the first one's
+ * running jobs. The platform claims only jobs whose `spool_path` names a
+ * stored document (`rfq-document:<id>`): a job the source queued is never its.
  */
-final class AzureSqlRfqDraftStore implements RfqDraftStore
+final class AzureSqlRfqDraftStore implements RfqDraftStore, RfqReaderJobStore
 {
     use AzureSqlTransaction;
 
@@ -234,6 +246,311 @@ final class AzureSqlRfqDraftStore implements RfqDraftStore
                 '_system_snapshot_valid' => AzureSqlValueMapper::boolValue($r['system_snapshot_valid']),
             ], $rows),
             systemRows: array_map(static fn (array $r): array => PythonJson::decodeObject(self::text($r['system_row_data'])), $rows),
+        );
+    }
+
+    // ------------------------------------------------------------------ reader jobs
+
+    public function enqueue(string $draftId, string $documentId, string $fileName, ?string $contentType, string $uploaderEmail, int $baseRevision): string
+    {
+        $ids = $this->ids;
+        $jobId = $ids();
+        $now = $this->nowIso();
+        $this->connection->execute(
+            'INSERT INTO [rfq].[rfq_reader_jobs]
+                ([id], [created_at], [updated_at], [draft_id], [uploader_email], [file_name], [content_type], [spool_path], [status], [attempts], [base_revision])
+             VALUES (:id, :created_at, :updated_at, :draft_id, :uploader_email, :file_name, :content_type, :spool_path, N\'queued\', 0, :base_revision)',
+            [
+                'id' => $jobId,
+                'created_at' => $now,
+                'updated_at' => $now,
+                'draft_id' => $draftId,
+                'uploader_email' => $uploaderEmail !== '' ? $uploaderEmail : null,
+                'file_name' => $fileName,
+                'content_type' => $contentType !== null && $contentType !== '' ? $contentType : null,
+                'spool_path' => StoredReaderJob::spoolPath($documentId),
+                'base_revision' => $baseRevision,
+            ],
+        );
+
+        return $jobId;
+    }
+
+    public function requeueStale(string $beforeIso, int $maxAttempts): int
+    {
+        return $this->runInTransaction($this->connection, function () use ($beforeIso, $maxAttempts): int {
+            $now = $this->nowIso();
+            $failed = $this->connection->fetchAll(
+                "UPDATE [rfq].[rfq_reader_jobs]
+                 SET [status] = N'failed', [updated_at] = :now, [note] = N'The reader was interrupted repeatedly and gave up.'
+                 OUTPUT inserted.[id]
+                 WHERE [status] = N'running' AND [updated_at] < :before AND [attempts] >= :max AND [spool_path] LIKE N'rfq-document:%'",
+                ['now' => $now, 'before' => $beforeIso, 'max' => $maxAttempts],
+            );
+            $requeued = $this->connection->fetchAll(
+                "UPDATE [rfq].[rfq_reader_jobs] SET [status] = N'queued', [updated_at] = :now
+                 OUTPUT inserted.[id]
+                 WHERE [status] = N'running' AND [updated_at] < :before AND [spool_path] LIKE N'rfq-document:%'",
+                ['now' => $now, 'before' => $beforeIso],
+            );
+
+            return count($failed) + count($requeued);
+        });
+    }
+
+    public function nextDraft(): ?string
+    {
+        $row = $this->connection->fetchAll(
+            "SELECT TOP 1 [draft_id] FROM [rfq].[rfq_reader_jobs] WITH (READPAST)
+             WHERE [status] = N'queued' AND [draft_id] IS NOT NULL AND [spool_path] LIKE N'rfq-document:%'
+             ORDER BY [created_at], [id]",
+        )[0] ?? null;
+
+        return $row === null ? null : self::text($row['draft_id']);
+    }
+
+    public function claim(string $draftId): array
+    {
+        $rows = $this->connection->fetchAll(
+            "UPDATE [rfq].[rfq_reader_jobs]
+             SET [status] = N'running', [attempts] = [attempts] + 1, [updated_at] = :now
+             OUTPUT inserted.*
+             WHERE [draft_id] = :draft AND [status] = N'queued' AND [spool_path] LIKE N'rfq-document:%'",
+            ['now' => $this->nowIso(), 'draft' => $draftId],
+        );
+        $jobs = array_map(self::job(...), $rows);
+        usort($jobs, static fn (StoredReaderJob $a, StoredReaderJob $b): int => [$a->updatedAt, $a->id] <=> [$b->updatedAt, $b->id]);
+
+        return $jobs;
+    }
+
+    public function finish(string $jobId, string $status, ?string $note, ?array $proposal = null): void
+    {
+        if (!in_array($status, ['done', 'failed', 'superseded', 'queued'], true)) {
+            throw InvalidRfqValue::forOneOf('reader job status', $status, ['done', 'failed', 'superseded', 'queued']);
+        }
+        $this->connection->execute(
+            'UPDATE [rfq].[rfq_reader_jobs] SET [status] = :status, [updated_at] = :now, [note] = :note, [proposal] = :proposal WHERE [id] = :id',
+            [
+                'status' => $status,
+                'now' => $this->nowIso(),
+                'note' => $note !== null && $note !== '' ? $note : null,
+                'proposal' => $proposal !== null ? PythonJson::encode($proposal) : null,
+                'id' => $jobId,
+            ],
+        );
+    }
+
+    public function forDraft(string $draftId): array
+    {
+        return array_map(self::job(...), $this->connection->fetchAll(
+            'SELECT * FROM [rfq].[rfq_reader_jobs] WHERE [draft_id] = :draft ORDER BY [created_at], [id]',
+            ['draft' => $draftId],
+        ));
+    }
+
+    public function find(string $draftId, string $jobId): ?StoredReaderJob
+    {
+        $row = $this->connection->fetchAll(
+            'SELECT * FROM [rfq].[rfq_reader_jobs] WHERE [id] = :id AND [draft_id] = :draft',
+            ['id' => $jobId, 'draft' => $draftId],
+        )[0] ?? null;
+
+        return $row === null ? null : self::job($row);
+    }
+
+    public function isUntouched(string $draftId, ?int $baseRevision): bool
+    {
+        if ($baseRevision === null) {
+            return false;
+        }
+        $row = $this->connection->fetchAll(
+            'SELECT d.[revision], d.[archived_at],
+                    (SELECT COUNT(*) FROM [rfq].[rfq_draft_row_edits] e WHERE e.[draft_id] = d.[id]) AS [edits]
+             FROM [rfq].[rfq_draft_quotes] d WHERE d.[id] = :id',
+            ['id' => $draftId],
+        )[0] ?? null;
+        if ($row === null || DraftChangeLog::truthy($row['archived_at'])) {
+            return false;
+        }
+
+        return (AzureSqlValueMapper::intValue($row['revision']) ?: 1) === $baseRevision
+            && AzureSqlValueMapper::intValue($row['edits']) === 0;
+    }
+
+    public function applyRows(string $draftId, array $rowsByFile, ?int $expectedRevision, string $reader, string $message, array $finish = [], ?DraftActor $actor = null, string $eventType = 'reader_rows_replaced'): ?int
+    {
+        return $this->runInTransaction($this->connection, function () use ($draftId, $rowsByFile, $expectedRevision, $reader, $message, $finish, $actor, $eventType): ?int {
+            $current = $this->connection->fetchAll(
+                'SELECT [sync_started_at], [revision], [archived_at], [email_meta]
+                 FROM [rfq].[rfq_draft_quotes] WITH (UPDLOCK, HOLDLOCK, ROWLOCK) WHERE [id] = :id',
+                ['id' => $draftId],
+            )[0] ?? null;
+            if ($current === null) {
+                return null;
+            }
+            $revision = AzureSqlValueMapper::intValue($current['revision'] ?? 1) ?: 1;
+            if (DraftChangeLog::truthy($current['archived_at'])) {
+                throw RfqDraftNotEditable::archived();
+            }
+            if ($expectedRevision !== null && $expectedRevision !== $revision) {
+                throw new RfqRevisionConflict($revision, $expectedRevision);
+            }
+            if (DraftChangeLog::truthy($current['sync_started_at'])) {
+                throw RfqDraftNotEditable::syncRunning();
+            }
+            $existing = $this->connection->fetchAll(
+                'SELECT [row_data], [system_row_data], [system_snapshot_valid], [line_uid]
+                 FROM [rfq].[rfq_draft_rows] WHERE [draft_id] = :id ORDER BY [row_order]',
+                ['id' => $draftId],
+            );
+
+            // Each file's rows go where its first old row was, wholesale; the
+            // rest keep their text, snapshot and uid exactly.
+            $ordered = [];
+            $spliced = [];
+            foreach ($existing as $row) {
+                $data = PythonJson::decodeObject(self::text($row['row_data']));
+                $source = is_array($data['source'] ?? null) ? $data['source'] : [];
+                $file = is_string($source['file_name'] ?? null) ? $source['file_name'] : '';
+                if ($file !== '' && array_key_exists($file, $rowsByFile)) {
+                    if (!isset($spliced[$file])) {
+                        $spliced[$file] = true;
+                        foreach ($rowsByFile[$file] as $new) {
+                            $ordered[] = ['new' => $new];
+                        }
+                    }
+                    continue;
+                }
+                $ordered[] = ['kept' => $row];
+            }
+            foreach ($rowsByFile as $file => $rows) {
+                if (!isset($spliced[$file])) {
+                    foreach ($rows as $new) {
+                        $ordered[] = ['new' => $new];
+                    }
+                }
+            }
+
+            $ids = $this->ids;
+            $values = [];
+            foreach ($ordered as $order => $entry) {
+                if (isset($entry['kept'])) {
+                    $kept = $entry['kept'];
+                    $uid = self::text($kept['line_uid']) ?? '';
+                    $values[] = [
+                        'id' => $ids(),
+                        'draft_id' => $draftId,
+                        'row_order' => $order,
+                        'row_data' => (string) self::text($kept['row_data']),
+                        'system_row_data' => self::text($kept['system_row_data']),
+                        'system_snapshot_valid' => AzureSqlValueMapper::intValue($kept['system_snapshot_valid']) !== 0 ? 1 : 0,
+                        'line_uid' => $uid !== '' ? $uid : $ids(),
+                    ];
+                    continue;
+                }
+                $row = $entry['new'];
+                unset($row['_draft_row_id'], $row['_system_snapshot_valid']);
+                $uid = is_string($row['line_uid'] ?? null) && $row['line_uid'] !== '' ? $row['line_uid'] : $ids();
+                $row['line_uid'] = $uid;
+                $json = PythonJson::encode($row);
+                // The re-read is the machine's new answer, so it is the snapshot
+                // a rep's later edits are measured against (source `initial`).
+                $values[] = [
+                    'id' => $ids(),
+                    'draft_id' => $draftId,
+                    'row_order' => $order,
+                    'row_data' => $json,
+                    'system_row_data' => $json,
+                    'system_snapshot_valid' => 1,
+                    'line_uid' => $uid,
+                ];
+            }
+
+            $next = $revision + 1;
+            $this->connection->execute('DELETE FROM [rfq].[rfq_draft_rows] WHERE [draft_id] = :id', ['id' => $draftId]);
+            $this->insertRows($values);
+
+            $meta = PythonJson::decodeObject(self::text($current['email_meta']));
+            $parse = is_array($meta['parse'] ?? null) ? $meta['parse'] : [];
+            $coverage = is_array($parse['coverage'] ?? null) ? $parse['coverage'] : [];
+            $coverage['measured'] = false;
+            $parse['coverage'] = $coverage;
+            $parse['read_by'] = $reader;
+            $meta['parse'] = $parse;
+            $this->connection->execute(
+                'UPDATE [rfq].[rfq_draft_quotes] SET [updated_at] = :now, [revision] = :revision, [email_meta] = :meta WHERE [id] = :id',
+                ['now' => $this->nowIso(), 'revision' => $next, 'meta' => PythonJson::encode($meta), 'id' => $draftId],
+            );
+            $files = array_keys($rowsByFile);
+            sort($files);
+            $this->addActivity($draftId, $eventType, $actor, [
+                'reader' => $reader,
+                'files' => $files,
+                'rows_before' => count($existing),
+                'rows_after' => count($values),
+            ], $next, $message);
+            foreach ($finish as $jobId => $note) {
+                $this->finish((string) $jobId, 'done', $note);
+            }
+
+            return $next;
+        });
+    }
+
+    public function close(string $draftId, string $jobId, bool $accepted, bool $wasFailure, string $fileName, DraftActor $actor): void
+    {
+        $verb = $accepted ? 'accepted' : 'dismissed';
+        $this->runInTransaction($this->connection, function () use ($draftId, $jobId, $accepted, $wasFailure, $fileName, $actor, $verb): void {
+            $this->connection->execute(
+                'UPDATE [rfq].[rfq_reader_jobs] SET [status] = :status, [proposal] = NULL, [updated_at] = :now, [note] = :note WHERE [id] = :id AND [draft_id] = :draft',
+                ['status' => $accepted ? 'done' : 'dismissed', 'now' => $this->nowIso(), 'note' => "Proposal {$verb} by {$actor->email}", 'id' => $jobId, 'draft' => $draftId],
+            );
+            $this->addActivity(
+                $draftId,
+                "reader_proposal_{$verb}",
+                $actor,
+                ['job_id' => $jobId, 'file_name' => $fileName],
+                null,
+                $wasFailure ? "{$fileName}: failed read acknowledged" : "{$fileName}: re-read {$verb}",
+            );
+        });
+    }
+
+    public function recordEvent(string $draftId, string $eventType, string $message, array $detail = []): void
+    {
+        $this->addActivity($draftId, $eventType, null, $detail, null, $message);
+    }
+
+    public function refreshStatus(string $draftId, bool $ready): void
+    {
+        $this->connection->execute(
+            "UPDATE [rfq].[rfq_draft_quotes] SET [status] = :target, [updated_at] = :now
+             WHERE [id] = :id AND ISNULL(NULLIF(LTRIM(RTRIM([status])), N''), N'new') IN (N'new', N'in_progress', N'ready_to_sync', N'pending')
+               AND ISNULL(NULLIF(LTRIM(RTRIM([status])), N''), N'new') <> :current",
+            ['target' => $ready ? 'ready_to_sync' : 'in_progress', 'current' => $ready ? 'ready_to_sync' : 'in_progress', 'now' => $this->nowIso(), 'id' => $draftId],
+        );
+    }
+
+    /** @param array<string, mixed> $row */
+    private static function job(array $row): StoredReaderJob
+    {
+        $proposal = self::text($row['proposal'] ?? null);
+        $decoded = $proposal !== null && trim($proposal) !== '' && !in_array(trim($proposal), ['{}', 'null'], true) ? PythonJson::decodeObject($proposal) : null;
+        $base = $row['base_revision'] ?? null;
+
+        return new StoredReaderJob(
+            id: (string) self::text($row['id']),
+            draftId: (string) self::text($row['draft_id']),
+            fileName: (string) self::text($row['file_name']),
+            contentType: self::text($row['content_type'] ?? null),
+            status: strtolower(trim((string) self::text($row['status']))),
+            attempts: AzureSqlValueMapper::intValue($row['attempts']),
+            baseRevision: $base === null ? null : AzureSqlValueMapper::intValue($base),
+            note: self::text($row['note'] ?? null),
+            proposal: $decoded === [] ? null : $decoded,
+            documentId: StoredReaderJob::documentIdFrom(self::text($row['spool_path'] ?? null)),
+            updatedAt: (string) self::text($row['updated_at'] ?? ''),
         );
     }
 

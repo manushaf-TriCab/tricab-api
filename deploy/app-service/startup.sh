@@ -149,6 +149,11 @@ fi
 RFQ_LOG_DIR=/home/LogFiles/rfq-parser
 RFQ_BIND=127.0.0.1:8002
 RFQ_WORKERS="${RFQ_PARSER_WORKERS:-2}"
+# A reader job's read waits on the model for up to its 600 s deadline
+# (`RfqServiceLimits::BACKGROUND_READ_DEADLINE_MS`); the worker must outlive it,
+# or gunicorn kills the read and the job is retried from nothing. The worker CLI
+# reads one draft at a time, so one worker is always left for interactive parses.
+RFQ_WORKER_TIMEOUT="${RFQ_PARSER_WORKER_TIMEOUT_SECONDS:-660}"
 
 start_rfq_parser() {
     if [ "${RFQ_PARSER_ENABLED:-false}" != "true" ]; then
@@ -166,14 +171,14 @@ start_rfq_parser() {
         delay=2
         while true; do
             log "starting the RFQ parser on $RFQ_BIND ($RFQ_WORKERS workers)"
-            # --timeout above the API's own RFQ_PARSER_TIMEOUT_SECONDS (120), so PHP
-            # gives up first and reports it, rather than gunicorn killing a worker
-            # mid-answer.
+            # --timeout above every deadline PHP sends (interactive 60 s, a read
+            # 600 s), so the parser answers `timeout` itself rather than gunicorn
+            # killing a worker mid-answer.
             "$PYTHON_BIN" -m gunicorn \
                 --chdir "$APP_PYTHON" \
                 --bind "$RFQ_BIND" \
                 --workers "$RFQ_WORKERS" \
-                --timeout 180 \
+                --timeout "$RFQ_WORKER_TIMEOUT" \
                 --graceful-timeout 30 \
                 --access-logfile "$RFQ_LOG_DIR/access.log" \
                 --error-logfile "$RFQ_LOG_DIR/error.log" \
