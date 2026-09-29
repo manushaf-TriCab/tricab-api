@@ -39,7 +39,7 @@ interface PriceLookupPriceRepository
 
     /**
      * Every product code in the product master (tpro), upper-cased, distinct and sorted,
-     * without mask codes. Codes only: never costs or prices.
+     * without mask codes or XX codes of styles that can't have one. Codes only: never costs or prices.
      *
      * @return list<string>
      */

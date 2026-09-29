@@ -27,6 +27,7 @@ LEFT JOIN tstkwh_p tp_au ON tman.id = tp_au.stk AND tp_au.wh = 7
 WHERE p.code LIKE :pattern
   AND p.dbco = :dbco
   AND p.code NOT REGEXP :maskPattern
+  AND NOT (p.code REGEXP :xxCodePattern AND p.code NOT REGEXP :xxStylePattern)
 GROUP BY p.code, p.cost, p.setup, p.dc, tp_au.st
 ORDER BY p.code ASC
 LIMIT :limit
@@ -64,6 +65,7 @@ FROM tpro t
 WHERE t.ida IS NOT NULL
   AND TRIM(t.ida) <> ''
   AND UPPER(TRIM(t.ida)) NOT REGEXP :maskPattern
+  AND NOT (UPPER(TRIM(t.ida)) REGEXP :xxCodePattern AND UPPER(TRIM(t.ida)) NOT REGEXP :xxStylePattern)
 ORDER BY productCode ASC
 LIMIT :limit
 SQL;
@@ -81,6 +83,8 @@ SQL;
                 'pattern' => $likePattern,
                 'dbco' => $dbco,
                 'maskPattern' => PriceLookupColourMask::SQL_MASK_PATTERN,
+                'xxCodePattern' => PriceLookupColourMask::SQL_XX_CODE_PATTERN,
+                'xxStylePattern' => PriceLookupColourMask::SQL_XX_PRODUCT_STYLE_PATTERN,
                 'limit' => max(1, $limit),
             ],
             'price-lookup',
@@ -127,6 +131,8 @@ SQL;
             self::PRODUCT_CODES_SQL,
             [
                 'maskPattern' => PriceLookupColourMask::SQL_MASK_PATTERN,
+                'xxCodePattern' => PriceLookupColourMask::SQL_XX_CODE_PATTERN,
+                'xxStylePattern' => PriceLookupColourMask::SQL_XX_PRODUCT_STYLE_PATTERN,
                 'limit' => max(1, $limit),
             ],
             'price-lookup',

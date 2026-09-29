@@ -20,6 +20,21 @@ final class PriceLookupColourMask
     /** Jacket letters that may end a style: UPA/UPB/UPC/UPM are jacket variants of UP. */
     private const JACKET_LETTERS = ['A', 'B', 'C', 'M'];
 
+    /**
+     * The single-insulated styles, the only ones whose real product codes can have XX in the
+     * core-configuration position (LS-XXXN/1C120BK). Every other style's XX code is invalid.
+     */
+    private const XX_PRODUCT_STYLES = ['LS', 'LP', 'UP', 'UPA', 'UPB', 'UPC', 'UPM'];
+
+    private const XX_CODE_PATTERN = '/^([A-Z0-9]{2,4})-XX/';
+
+    /**
+     * MySQL REGEXP twins of XX_CODE_PATTERN and XX_PRODUCT_STYLES: a row is left out when it
+     * matches the first and not the second. Keep in step with the PHP versions.
+     */
+    public const SQL_XX_CODE_PATTERN = '^[A-Z0-9]{2,4}-XX';
+    public const SQL_XX_PRODUCT_STYLE_PATTERN = '^(LS|LP|UP[ABCM]?)-';
+
     private const CODE_PATTERN = '/^([A-Z0-9]{2,4})-([A-Z0-9]{2})([A-Z0-9]{2,3})\/([0-9]{1,2}[CPTQA](?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)(?:\/0)?)([A-Z][A-Z0-9\/]*)?$/';
 
     /** Keep in step with SQL_MASK_PATTERN. */
@@ -70,5 +85,22 @@ final class PriceLookupColourMask
     public function isMask(string $code): bool
     {
         return preg_match(self::MASK_PATTERN, strtoupper(trim($code))) === 1;
+    }
+
+    /**
+     * An XX code (colour or not) whose style can't have one, such as KL-XXXN/4C120OR.
+     * Wildcard patterns aren't codes, so they never count.
+     */
+    public function isXxCodeOfOtherStyle(string $code): bool
+    {
+        $code = strtoupper(trim($code));
+        if (str_contains($code, '*') || str_contains($code, '?')) {
+            return false;
+        }
+        if (preg_match(self::XX_CODE_PATTERN, $code, $m) !== 1) {
+            return false;
+        }
+
+        return !in_array($m[1], self::XX_PRODUCT_STYLES, true);
     }
 }

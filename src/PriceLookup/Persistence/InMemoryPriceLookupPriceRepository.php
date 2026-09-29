@@ -62,7 +62,10 @@ final class InMemoryPriceLookupPriceRepository implements PriceLookupPriceReposi
             if ((string) $row['dbco'] !== $dbco) {
                 continue;
             }
-            if (!preg_match($regex, $row['productCode']) || $this->colourMask->isMask($row['productCode'])) {
+            if (!preg_match($regex, $row['productCode'])
+                || $this->colourMask->isMask($row['productCode'])
+                || $this->colourMask->isXxCodeOfOtherStyle($row['productCode'])
+            ) {
                 continue;
             }
             $out[] = $this->withoutDbco($row);
@@ -96,7 +99,7 @@ final class InMemoryPriceLookupPriceRepository implements PriceLookupPriceReposi
     {
         $codes = array_values(array_filter(
             array_map('strval', array_keys($this->warehouseStatuses)),
-            fn (string $code): bool => !$this->colourMask->isMask($code),
+            fn (string $code): bool => !$this->colourMask->isMask($code) && !$this->colourMask->isXxCodeOfOtherStyle($code),
         ));
         sort($codes);
 

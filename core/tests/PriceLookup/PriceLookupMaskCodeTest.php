@@ -21,7 +21,8 @@ use TriCab\Core\PriceLookup\Domain\PriceLookupDbcoMapper;
 
 /**
  * Mask-code fallback and rejection (PRICE-LOOKUP-MASK-CODE-WORK-ORDER.md, section 5 matrix
- * plus the 29 Sep decisions: jacket styles, .75 and AWG sizes, US-only JD cables).
+ * plus the 29 Sep decisions: jacket styles, .75 and AWG sizes, and XX codes only for the
+ * single-insulated LS, LP and UP styles).
  * The cost API fake has no seeds, so every quote prices from tc.price like a disabled gateway.
  */
 final class PriceLookupMaskCodeTest extends TestCase
@@ -45,6 +46,8 @@ final class PriceLookupMaskCodeTest extends TestCase
             'UPA-XXXD/1C70' => '35.00',
             'UP-XXXD/1C70' => '34.00',
             'UP-XXXD/1C.75' => '2.00',
+            'KL-XXXN/6C2.5BK' => '8.00',
+            'LP-XXXN/1C16BK' => '3.00',
         ];
         foreach ($tca as $code => $cost) {
             $this->seedPrice($code, $cost, PriceLookupDbcoMapper::DBCO_TCA);
@@ -238,43 +241,66 @@ final class PriceLookupMaskCodeTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string, string, string}>
+     * @return iterable<string, array{string, string}>
      */
-    public static function usOnlyCables(): iterable
+    public static function xxCodesOfOtherStyles(): iterable
     {
-        yield 'mm2' => ['JD-XXXD/1C4EA', 'JD-XXXD/1C4', '10.00'];
-        yield 'awg' => ['JD-XXXD/1A4BK', 'JD-XXXD/1A4', '2.00'];
-        yield 'awg aught' => ['JD-XXXN/1A4/0BK', 'JD-XXXN/1A4/0', '20.00'];
+        yield 'unpriced, has a mask' => ['KL-XXXN/4C120OR', 'TCA'];
+        yield 'has its own price row' => ['KL-XXXN/6C2.5BK', 'TCA'];
+        yield 'lower case' => ['kl-xxxn/4c120or', 'TCA'];
+        yield 'armour letter' => ['KA-XXJN/1C35EA', 'TCA'];
+        yield 'jd in TCUS' => ['JD-XXXD/1C4EA', 'TCUS'];
+        yield 'jd awg in TCUS' => ['JD-XXXD/1A4BK', 'TCUS'];
+        yield 'ls1 is not an LS variant' => ['LS1-XXXN/1C16BK', 'TCA'];
+        yield 'partial code' => ['KL-XXXN/4', 'TCA'];
     }
 
-    #[DataProvider('usOnlyCables')]
-    public function test_us_only_cable_prices_in_tcus_usd_feet(string $code, string $mask, string $usdPerFoot): void
+    #[DataProvider('xxCodesOfOtherStyles')]
+    public function test_xx_codes_are_only_valid_for_ls_lp_and_up(string $code, string $company): void
     {
-        self::assertSame([[$code, $mask]], $this->searchHits($code, 'TCUS'));
-
-        $quote = $this->quote($code, 'TCUS', 'USD', 'foot');
-        self::assertSame($usdPerFoot, $quote->adjustedCost);
-        self::assertSame($mask, $quote->pricedFromMask);
-        self::assertSame('USD', $quote->currency);
-        self::assertSame('foot', $quote->metric);
+        foreach ([fn () => $this->search($code, $company), fn () => $this->quote($code, $company)] as $lookup) {
+            try {
+                $lookup();
+                self::fail('Expected INVALID_PRODUCT_CODE for ' . $code);
+            } catch (PriceLookupValidationException $e) {
+                self::assertSame('INVALID_PRODUCT_CODE', $e->errorCode);
+                self::assertSame(strtoupper($code) . ' is not a valid product code.', $e->getMessage());
+            }
+        }
     }
 
-    #[DataProvider('usOnlyCables')]
-    public function test_us_only_cable_is_not_found_in_tca(string $code): void
+    public function test_ls_lp_and_up_variants_can_have_xx_codes(): void
     {
-        $this->assertNotFound(fn () => $this->search($code));
-        $this->assertNotFound(fn () => $this->quote($code));
+        $colourMask = new PriceLookupColourMask();
+        foreach (['LS-XXXN/1C120BK', 'LP-XXXN/1C16BK', 'UP-XXXD/1C120BK', 'UPA-XXXD/1C120BK', 'UPB-XXXD/1C16BK', 'UPC-XXXD/1C16BK', 'UPM-XXXD/1C16BK', 'KL-PAXN/5C10BK', 'KL-XX*'] as $code) {
+            self::assertFalse($colourMask->isXxCodeOfOtherStyle($code), $code);
+        }
+
+        self::assertSame('3.00', $this->quote('LP-XXXN/1C16BK')->adjustedCost);
     }
 
-    public function test_code_list_is_the_product_master_without_masks(): void
+    public function test_prefix_search_leaves_out_xx_codes_of_other_styles(): void
+    {
+        self::assertSame([['KL-PAXN/5C10BK', null]], $this->searchHits('KL-'));
+        $this->assertNotFound(fn () => $this->search('KL-XX*'));
+    }
+
+    public function test_masks_of_other_styles_still_price_their_cables(): void
+    {
+        self::assertSame('KL-XXXN/5C16', $this->quote('KL-PAXN/5C16OR')->pricedFromMask);
+    }
+
+    public function test_code_list_is_the_product_master_without_masks_or_other_styles_xx_codes(): void
     {
         $this->prices->seedProduct('KL-PAXN/5C10BK');
         $this->prices->seedProduct('ls-xxxn/1c120bk');
         $this->prices->seedProduct('JD-XXXD/1C4EA');
+        $this->prices->seedProduct('KL-XXXN/6C2.5BK');
+        $this->prices->seedProduct('UPA-XXXD/1C120BK');
         $this->prices->seedProduct('KL-XXXN/5C16');
 
         self::assertSame(
-            ['JD-XXXD/1C4EA', 'KL-PAXN/5C10BK', 'KL-PAXN/5C16OR', 'LS-XXXN/1C120BK'],
+            ['KL-PAXN/5C10BK', 'KL-PAXN/5C16OR', 'LS-XXXN/1C120BK', 'UPA-XXXD/1C120BK'],
             (new ListPriceLookupCodesService($this->prices))->execute(),
         );
     }

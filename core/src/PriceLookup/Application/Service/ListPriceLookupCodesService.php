@@ -11,7 +11,7 @@ use TriCab\Core\PriceLookup\Module;
 /**
  * Product codes for Price Lookup's type-ahead, loaded once when the page opens so typing
  * doesn't query tc. Codes come from the product master, so cables priced from a mask are
- * suggested too; masks themselves never are.
+ * suggested too; masks themselves never are, nor XX codes of styles that can't have one.
  */
 final class ListPriceLookupCodesService
 {
@@ -31,6 +31,6 @@ final class ListPriceLookupCodesService
             error_log('[price-lookup] code_list_truncated limit=' . Module::CODE_LIST_LIMIT);
         }
 
-        return array_values(array_filter($codes, fn (string $code): bool => !$this->colourMask->isMask($code)));
+        return array_values(array_filter($codes, fn (string $code): bool => !$this->colourMask->isMask($code) && !$this->colourMask->isXxCodeOfOtherStyle($code)));
     }
 }

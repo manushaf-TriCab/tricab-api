@@ -58,6 +58,9 @@ final class SearchPriceLookupService
         if ($this->colourMask->isMask($query)) {
             throw PriceLookupValidationException::maskCodeNotAllowed($query);
         }
+        if ($this->colourMask->isXxCodeOfOtherStyle($query)) {
+            throw PriceLookupValidationException::xxCodeNotValidForStyle($query);
+        }
 
         $like = $this->patterns->toLikePattern($query);
         $rows = $this->prices->searchByPrefix($dbco, $like, Module::SEARCH_LIMIT);

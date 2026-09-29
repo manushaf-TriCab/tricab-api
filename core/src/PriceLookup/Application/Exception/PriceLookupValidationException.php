@@ -53,6 +53,11 @@ final class PriceLookupValidationException extends RuntimeException
         );
     }
 
+    public static function xxCodeNotValidForStyle(string $code): self
+    {
+        return new self('INVALID_PRODUCT_CODE', strtoupper(trim($code)) . ' is not a valid product code.');
+    }
+
     public static function invalidLength(string $value): self
     {
         return new self('INVALID_LENGTH', 'Length must be a positive number when provided.');

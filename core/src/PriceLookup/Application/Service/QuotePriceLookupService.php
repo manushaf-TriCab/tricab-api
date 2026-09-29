@@ -64,6 +64,9 @@ final class QuotePriceLookupService
         if ($this->colourMask->isMask($code)) {
             throw PriceLookupValidationException::maskCodeNotAllowed($code);
         }
+        if ($this->colourMask->isXxCodeOfOtherStyle($code)) {
+            throw PriceLookupValidationException::xxCodeNotValidForStyle($code);
+        }
 
         if ($length !== null && trim($length) !== '' && trim($length) !== '0') {
             $this->assertPositiveLength($length);
