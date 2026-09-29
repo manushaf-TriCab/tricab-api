@@ -177,6 +177,28 @@ final class PriceLookupServiceTest extends TestCase
         self::assertSame('50.00', $result->sell);
     }
 
+    public function test_quote_returns_the_unrounded_adjusted_cost_the_sell_comes_from(): void
+    {
+        $prices = new InMemoryPriceLookupPriceRepository();
+        $prices->seed([
+            'productCode' => 'LSUP-THIRDS',
+            'cost' => '100',
+            'setupLength' => '100',
+            'lastUpdated' => "1st Jan'26",
+            'warehouseStatus' => null,
+            'dbco' => '2507',
+        ]);
+        $fx = new InMemoryPriceLookupFxRepository(['AUD' => '3']);
+
+        $service = new QuotePriceLookupService($prices, $fx, new FakeLegacyCostCalculationGateway());
+        $result = $service->execute('LSUP-THIRDS', 'TCA', 'AUD', 'metre', null, '50');
+
+        // 33.33 / 0.5 would be 66.66; the sell comes from the unrounded cost.
+        self::assertSame('33.33', $result->adjustedCost);
+        self::assertSame('33.333333333333', $result->adjustedCostExact);
+        self::assertSame('66.67', $result->sell);
+    }
+
     public function test_pa_large_cable_uses_cost_api_when_available(): void
     {
         $prices = new InMemoryPriceLookupPriceRepository();

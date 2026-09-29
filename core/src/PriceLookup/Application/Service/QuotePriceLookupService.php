@@ -130,6 +130,7 @@ final class QuotePriceLookupService
             lastUpdated: $row['lastUpdated'] ?? '',
             costSource: $costSource,
             pricedFromMask: $pricedFromMask,
+            adjustedCostExact: $adjusted,
         );
     }
 

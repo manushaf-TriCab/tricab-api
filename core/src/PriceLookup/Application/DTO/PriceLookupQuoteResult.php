@@ -21,6 +21,11 @@ final readonly class PriceLookupQuoteResult
         public string $costSource,
         /** Mask code the price came from, when the product has no price of its own. */
         public ?string $pricedFromMask = null,
+        /**
+         * Adjusted cost before display rounding (12 dp). `sell` is the staff margin
+         * formula applied to this, so a client can re-apply a margin without a new quote.
+         */
+        public string $adjustedCostExact = '',
     ) {
     }
 }

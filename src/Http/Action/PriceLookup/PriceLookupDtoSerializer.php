@@ -45,6 +45,7 @@ final class PriceLookupDtoSerializer
             'currency' => $result->currency,
             'metric' => $result->metric,
             'adjustedCost' => $result->adjustedCost,
+            'adjustedCostExact' => $result->adjustedCostExact,
             'sell' => $result->sell,
             'baseCost' => $result->baseCost,
             'setupLength' => $result->setupLength,
