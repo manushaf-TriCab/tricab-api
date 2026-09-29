@@ -30,4 +30,18 @@ interface PriceLookupPriceRepository
      * }|null
      */
     public function findByCode(string $dbco, string $code): ?array;
+
+    /**
+     * AU warehouse (wh 7) stock status for a product code, read from the product master rather
+     * than tc.price. Masks aren't in tpro, so a mask-priced cable reads its own status here.
+     */
+    public function findWarehouseStatusByCode(string $code): mixed;
+
+    /**
+     * Every product code in the product master (tpro), upper-cased, distinct and sorted,
+     * without mask codes. Codes only: never costs or prices.
+     *
+     * @return list<string>
+     */
+    public function listProductCodes(int $limit): array;
 }

@@ -5,47 +5,70 @@ declare(strict_types=1);
 namespace TriCab\Core\PriceLookup\Domain;
 
 /**
- * Port of getMaskCodeForCatCodeForLookup from template-price-lookup.php.
- * Colour-code mask fallback when prefix search returns empty.
+ * Mask codes: the price row a cable falls back to when it has no price of its own.
+ *
+ * A mask is the product code with the two core-configuration characters replaced by XX and the
+ * colour dropped; armour and conductor letters stay. KL-PASN/4C16OR → KL-XXSN/4C16.
+ * Same shape tc-web's ProductConfigurator joins price_mask on.
+ *
+ * Size is mm² (C cores, P pairs, T triads, Q quads) or AWG (A), with or without a leading
+ * zero (1C.75) and with AWG aughts (1A4/0). Colour is whatever follows the size, starting
+ * with a letter (BK, G1, G/Y).
  */
 final class PriceLookupColourMask
 {
-    /** @var list<string> */
-    private const COLOR_CODES = [
-        'BL', 'GR', 'GY', 'RE', 'WH', 'YE', 'OR', 'BK', 'MA', 'G1', 'BR', 'LTBL', 'EA', 'DKBL', 'NO', 'VI', 'PI',
-        'RB', 'B1', 'B2', 'B3', 'L1', 'BLPI', 'L2', 'N2', 'N1', 'CL', 'DB', 'DBPI', 'D2', 'D1', 'LB', 'LG', 'O2',
-        'P1', 'O1', 'P3', 'PIDB', 'PU', 'M1', 'M2', 'REBK', 'REDB', 'REPU', 'R1', 'R2', 'Y1', 'Y2', 'L3', 'YEBL',
-        'LBWH', 'B4', 'Y3', 'YR', 'ORGY', 'BG', 'BRBL', 'REPI', 'MG', 'NATURAL', 'L4', 'R4', 'R3', 'L5', 'W1',
-        'W4', 'FG', 'BKRE', 'BRBK', 'BLBK', 'ORBK', 'YEBK', 'WHBK', 'GRBK', 'BKWH', 'BLRE', 'WHRE', 'WHPU',
-        'WHBL', 'WHBR', 'WHYE', 'BRRE', 'BRPU', 'BRYE', 'PUWH', 'BKGR', 'BKOR', 'BKBL', 'WHGR', 'DG', 'BLWH',
-        'IV', 'RP', 'BROR', 'YERE', 'O3', 'C1', 'C2', 'C3', 'C4', 'C5', 'SA', 'ORRE', 'GRWH', 'REWH', 'B5', 'NT',
-        'RT', 'RW', 'BRWH', 'GW', 'P2', 'P4', 'P5', 'M3', 'M4',
-    ];
+    /** Jacket letters that may end a style: UPA/UPB/UPC/UPM are jacket variants of UP. */
+    private const JACKET_LETTERS = ['A', 'B', 'C', 'M'];
 
-    public function maskForLookup(string $productCode): string
+    private const CODE_PATTERN = '/^([A-Z0-9]{2,4})-([A-Z0-9]{2})([A-Z0-9]{2,3})\/([0-9]{1,2}[CPTQA](?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)(?:\/0)?)([A-Z][A-Z0-9\/]*)?$/';
+
+    /** Keep in step with SQL_MASK_PATTERN. */
+    private const MASK_PATTERN = '/^[A-Z0-9]{2,4}-XX[A-Z0-9]{2,3}\/[0-9]{1,2}[CPTQA](?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)(?:\/0)?$/';
+
+    /**
+     * MySQL REGEXP twin of MASK_PATTERN, for keeping masks out of search results.
+     * Keep in step with MASK_PATTERN.
+     */
+    public const SQL_MASK_PATTERN = '^[A-Z0-9]{2,4}-XX[A-Z0-9]{2,3}/[0-9]{1,2}[CPTQA]([0-9]+([.][0-9]+)?|[.][0-9]+)(/0)?$';
+
+    /**
+     * The code's own mask, or null when the code isn't a full cable code (partials, wildcards).
+     */
+    public function maskForLookup(string $productCode): ?string
     {
-        $upper = strtoupper(trim($productCode));
+        return $this->masksForLookup($productCode)[0] ?? null;
+    }
 
-        if (preg_match('/^([A-Z]{2,4}-?)([A-Z]{2,4})([A-Z])(\/[0-9C.]+)([A-Z0-9]*)$/', $upper, $m) !== 1) {
-            return $productCode;
+    /**
+     * Masks to try in order: the code's own mask, then, for a jacket-variant style, the base
+     * style's mask (UPA-XXXD/1C120BK → UPA-XXXD/1C120, then UP-XXXD/1C120).
+     *
+     * @return list<string>
+     */
+    public function masksForLookup(string $productCode): array
+    {
+        $code = strtoupper(trim($productCode));
+        if (preg_match(self::CODE_PATTERN, $code, $m) !== 1) {
+            return [];
         }
 
-        $prefix = $m[1];
-        $variantLetters = $m[2];
-        $conductorLetter = $m[3];
-        $spec = $m[4];
-        $suffix = $m[5];
+        [, $style, , $armourConductor, $size] = $m;
+        $tail = '-XX' . $armourConductor . '/' . $size;
+        $masks = [$style . $tail];
 
-        $xxxVariant = str_repeat('X', strlen($variantLetters));
-
-        $cleanSuffix = $suffix;
-        foreach (self::COLOR_CODES as $color) {
-            if (str_ends_with($suffix, $color)) {
-                $cleanSuffix = '';
-                break;
-            }
+        if (strlen($style) >= 3 && in_array(substr($style, -1), self::JACKET_LETTERS, true)) {
+            $masks[] = substr($style, 0, -1) . $tail;
         }
 
-        return $prefix . $xxxVariant . $conductorLetter . $spec . $cleanSuffix;
+        return $masks;
+    }
+
+    /**
+     * A code is a mask only when the configuration is XX and there is no colour.
+     * LS-XXXN/1C120BK is a real base cable, not a mask.
+     */
+    public function isMask(string $code): bool
+    {
+        return preg_match(self::MASK_PATTERN, strtoupper(trim($code))) === 1;
     }
 }

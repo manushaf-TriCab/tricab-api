@@ -163,6 +163,7 @@ use TriCab\Api\Http\Action\Technical\ListTechnicalSectionsAction;
 use TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueAction;
 use TriCab\Api\Http\Action\PdfCatalogue\GetPdfCatalogueFileAction;
 use TriCab\Api\Http\Action\PdfCatalogue\ListPdfCataloguesAction;
+use TriCab\Api\Http\Action\PriceLookup\ListPriceLookupCodesAction;
 use TriCab\Api\Http\Action\PriceLookup\QuotePriceLookupAction;
 use TriCab\Api\Http\Action\PriceLookup\SearchPriceLookupAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
@@ -886,6 +887,7 @@ final class AppBuilder
     {
         $require = new RequirePermission($container);
         $gate = \TriCab\Core\PriceLookup\Module::PERMISSION_READ;
+        $app->get('/api/v1/price-lookup/codes', ListPriceLookupCodesAction::class)->add(($require)($gate));
         $app->get('/api/v1/price-lookup/search', SearchPriceLookupAction::class)->add(($require)($gate));
         $app->post('/api/v1/price-lookup/quote', QuotePriceLookupAction::class)->add(($require)($gate));
     }

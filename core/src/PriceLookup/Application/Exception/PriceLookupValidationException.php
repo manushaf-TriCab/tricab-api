@@ -45,6 +45,14 @@ final class PriceLookupValidationException extends RuntimeException
         return new self('INVALID_QUERY', 'Search query q is required.');
     }
 
+    public static function maskCodeNotAllowed(string $code): self
+    {
+        return new self(
+            'MASK_CODE_NOT_ALLOWED',
+            strtoupper(trim($code)) . ' is a mask code, not a valid product code. Please enter the full product code.',
+        );
+    }
+
     public static function invalidLength(string $value): self
     {
         return new self('INVALID_LENGTH', 'Length must be a positive number when provided.');

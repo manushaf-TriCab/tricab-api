@@ -19,6 +19,8 @@ final readonly class PriceLookupQuoteResult
         public string $setupPremium,
         public string $lastUpdated,
         public string $costSource,
+        /** Mask code the price came from, when the product has no price of its own. */
+        public ?string $pricedFromMask = null,
     ) {
     }
 }

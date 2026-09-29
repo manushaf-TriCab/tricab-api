@@ -20,6 +20,9 @@ final class Module
 
     public const FULL_LIST_LIMIT = 10;
 
+    /** Safety cap on the type-ahead code list (tpro holds roughly 20k codes). */
+    public const CODE_LIST_LIMIT = 50000;
+
     /** @var list<string> */
     public const PERMISSIONS = [
         self::PERMISSION_READ,

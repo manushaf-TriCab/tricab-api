@@ -13,6 +13,7 @@ use TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository;
 use TriCab\Core\PriceLookup\Domain\CostPerMeterFallback;
 use TriCab\Core\PriceLookup\Domain\MakeStockStatus;
 use TriCab\Core\PriceLookup\Domain\PaLargeCableDetector;
+use TriCab\Core\PriceLookup\Domain\PriceLookupColourMask;
 use TriCab\Core\PriceLookup\Domain\PriceLookupDbcoMapper;
 use TriCab\Core\PriceLookup\Domain\PriceLookupMetricRate;
 use TriCab\Core\PriceLookup\Domain\PriceLookupMoney;
@@ -26,6 +27,8 @@ final class QuotePriceLookupService
     public const COST_SOURCE_LEGACY_FALLBACK = 'LEGACY_FALLBACK';
     public const COST_SOURCE_BASE = 'BASE_COST';
 
+    private readonly PriceLookupMaskFallback $maskFallback;
+
     public function __construct(
         private readonly PriceLookupPriceRepository $prices,
         private readonly PriceLookupFxRepository $fx,
@@ -37,7 +40,9 @@ final class QuotePriceLookupService
         private readonly CostPerMeterFallback $fallback = new CostPerMeterFallback(),
         private readonly MakeStockStatus $makeStock = new MakeStockStatus(),
         private readonly PaLargeCableDetector $paLargeCable = new PaLargeCableDetector(),
+        private readonly PriceLookupColourMask $colourMask = new PriceLookupColourMask(),
     ) {
+        $this->maskFallback = new PriceLookupMaskFallback($prices, $colourMask);
     }
 
     public function execute(
@@ -56,22 +61,37 @@ final class QuotePriceLookupService
         if ($code === '') {
             throw PriceLookupValidationException::invalidProductCode();
         }
+        if ($this->colourMask->isMask($code)) {
+            throw PriceLookupValidationException::maskCodeNotAllowed($code);
+        }
 
         if ($length !== null && trim($length) !== '' && trim($length) !== '0') {
             $this->assertPositiveLength($length);
         }
 
+        $pricedFromMask = null;
         $row = $this->prices->findByCode($dbco, $code);
-        if ($row === null) {
-            throw new PriceLookupProductNotFound($code);
+        if ($row !== null) {
+            $warehouseStatus = $row['warehouseStatus'];
+        } else {
+            $fallback = $this->maskFallback->find($dbco, $code, $companyCode);
+            if ($fallback === null) {
+                throw new PriceLookupProductNotFound($code);
+            }
+            $pricedFromMask = $fallback['mask'];
+            $row = $fallback['row'];
+            // Masks aren't in tpro, so stock status comes from the cable that was entered.
+            $warehouseStatus = $this->prices->findWarehouseStatusByCode($code);
         }
+        // The mask is the code that has a price, so costing (Cost API, fallback, setup) uses it.
+        $pricedCode = $pricedFromMask ?? $code;
 
         $crate = $this->resolveFxRate($currencyCode);
         $mrate = $this->metricRate->mrate($metricCode, $dbco);
-        $status = $this->makeStock->fromWarehouseStatus($row['warehouseStatus']);
+        $status = $this->makeStock->fromWarehouseStatus($warehouseStatus);
         $baseCostRaw = $row['cost'];
         $setupLength = $row['setupLength'] ?? '';
-        $setupPremium = $this->money->roundDisplay($this->fallback->setupPremium($code));
+        $setupPremium = $this->money->roundDisplay($this->fallback->setupPremium($pricedCode));
 
         // Legacy template-price-lookup: Cost API length = (length != 0 ? length : setup).
         $apiLength = $this->lengthForCostApi($length, $setupLength !== '' ? $setupLength : null);
@@ -79,7 +99,7 @@ final class QuotePriceLookupService
         $userLengthForFallback = $this->userLengthForFallback($length);
 
         [$unitCost, $costSource] = $this->resolveUnitCost(
-            $code,
+            $pricedCode,
             $dbco,
             $status,
             $baseCostRaw,
@@ -106,6 +126,7 @@ final class QuotePriceLookupService
             setupPremium: $setupPremium,
             lastUpdated: $row['lastUpdated'] ?? '',
             costSource: $costSource,
+            pricedFromMask: $pricedFromMask,
         );
     }
 

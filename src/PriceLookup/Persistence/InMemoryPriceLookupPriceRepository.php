@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace TriCab\Api\PriceLookup\Persistence;
 
 use TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository;
+use TriCab\Core\PriceLookup\Domain\PriceLookupColourMask;
 
 final class InMemoryPriceLookupPriceRepository implements PriceLookupPriceRepository
 {
+    /** @var array<string, mixed> product code → AU warehouse status, standing in for tpro/tstkwh_p (keys are the product master) */
+    private array $warehouseStatuses = [];
+
     /**
      * @param list<array{
      *     productCode: string,
@@ -20,7 +24,19 @@ final class InMemoryPriceLookupPriceRepository implements PriceLookupPriceReposi
      */
     public function __construct(
         private array $rows = [],
+        private readonly PriceLookupColourMask $colourMask = new PriceLookupColourMask(),
     ) {
+    }
+
+    public function seedWarehouseStatus(string $code, mixed $status): void
+    {
+        $this->warehouseStatuses[strtoupper($code)] = $status;
+    }
+
+    /** Adds a product-master (tpro) code with no AU warehouse row. */
+    public function seedProduct(string $code): void
+    {
+        $this->warehouseStatuses[strtoupper($code)] ??= null;
     }
 
     /**
@@ -46,7 +62,7 @@ final class InMemoryPriceLookupPriceRepository implements PriceLookupPriceReposi
             if ((string) $row['dbco'] !== $dbco) {
                 continue;
             }
-            if (!preg_match($regex, $row['productCode'])) {
+            if (!preg_match($regex, $row['productCode']) || $this->colourMask->isMask($row['productCode'])) {
                 continue;
             }
             $out[] = $this->withoutDbco($row);
@@ -69,6 +85,22 @@ final class InMemoryPriceLookupPriceRepository implements PriceLookupPriceReposi
         }
 
         return null;
+    }
+
+    public function findWarehouseStatusByCode(string $code): mixed
+    {
+        return $this->warehouseStatuses[strtoupper($code)] ?? null;
+    }
+
+    public function listProductCodes(int $limit): array
+    {
+        $codes = array_values(array_filter(
+            array_map('strval', array_keys($this->warehouseStatuses)),
+            fn (string $code): bool => !$this->colourMask->isMask($code),
+        ));
+        sort($codes);
+
+        return array_slice($codes, 0, max(1, $limit));
     }
 
     /**

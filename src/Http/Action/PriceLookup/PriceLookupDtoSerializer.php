@@ -21,6 +21,7 @@ final class PriceLookupDtoSerializer
                 'status' => $item->status,
                 'setupLength' => $item->setupLength,
                 'lastUpdated' => $item->lastUpdated,
+                'pricedFromMask' => $item->pricedFromMask,
             ];
         }
 
@@ -33,7 +34,7 @@ final class PriceLookupDtoSerializer
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, string|null>
      */
     public static function quote(PriceLookupQuoteResult $result): array
     {
@@ -50,6 +51,7 @@ final class PriceLookupDtoSerializer
             'setupPremium' => $result->setupPremium,
             'lastUpdated' => $result->lastUpdated,
             'costSource' => $result->costSource,
+            'pricedFromMask' => $result->pricedFromMask,
         ];
     }
 }

@@ -1921,6 +1921,9 @@ final class ContainerFactory
             \TriCab\Core\PriceLookup\Application\Service\QuotePriceLookupService::class => \DI\autowire(
                 \TriCab\Core\PriceLookup\Application\Service\QuotePriceLookupService::class,
             ),
+            \TriCab\Core\PriceLookup\Application\Service\ListPriceLookupCodesService::class => \DI\autowire(
+                \TriCab\Core\PriceLookup\Application\Service\ListPriceLookupCodesService::class,
+            ),
 
             \TriCab\Core\PdfCatalogue\Contract\PdfCatalogueRepository::class => static function (): \TriCab\Core\PdfCatalogue\Contract\PdfCatalogueRepository {
                 return new \TriCab\Api\PdfCatalogue\Persistence\InMemoryPdfCatalogueRepository();

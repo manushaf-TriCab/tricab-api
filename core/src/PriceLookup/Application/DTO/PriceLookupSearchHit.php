@@ -11,6 +11,8 @@ final readonly class PriceLookupSearchHit
         public ?string $status = null,
         public ?string $setupLength = null,
         public ?string $lastUpdated = null,
+        /** Mask code the price came from, when the product has no price of its own. */
+        public ?string $pricedFromMask = null,
     ) {
     }
 }

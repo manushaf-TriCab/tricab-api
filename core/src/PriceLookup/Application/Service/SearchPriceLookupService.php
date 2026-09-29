@@ -18,6 +18,8 @@ use TriCab\Core\PriceLookup\Module;
 
 final class SearchPriceLookupService
 {
+    private readonly PriceLookupMaskFallback $maskFallback;
+
     public function __construct(
         private readonly PriceLookupPriceRepository $prices,
         private readonly PriceLookupDbcoMapper $dbcoMapper = new PriceLookupDbcoMapper(),
@@ -25,6 +27,7 @@ final class SearchPriceLookupService
         private readonly PriceLookupColourMask $colourMask = new PriceLookupColourMask(),
         private readonly MakeStockStatus $makeStock = new MakeStockStatus(),
     ) {
+        $this->maskFallback = new PriceLookupMaskFallback($prices, $colourMask);
     }
 
     /**
@@ -52,23 +55,32 @@ final class SearchPriceLookupService
             return $this->toResult($rows, $companyCode, $query);
         }
 
-        $like = $this->patterns->toLikePattern($query);
-        $rows = $this->prices->searchByPrefix($dbco, $like, Module::SEARCH_LIMIT);
-
-        if ($rows === []) {
-            $masked = $this->colourMask->maskForLookup($query);
-            if ($masked !== $query) {
-                $maskedLike = $this->patterns->toLikePattern($masked);
-                error_log('[price-lookup] first query empty, trying mask pattern for company=' . $companyCode);
-                $rows = $this->prices->searchByPrefix($dbco, $maskedLike, Module::SEARCH_LIMIT);
-            }
+        if ($this->colourMask->isMask($query)) {
+            throw PriceLookupValidationException::maskCodeNotAllowed($query);
         }
 
-        if ($rows === []) {
+        $like = $this->patterns->toLikePattern($query);
+        $rows = $this->prices->searchByPrefix($dbco, $like, Module::SEARCH_LIMIT);
+        if ($rows !== []) {
+            return $this->toResult($rows, $companyCode, $query);
+        }
+
+        // One hit for the code as entered, priced from its mask; picking it quotes the same code.
+        $code = strtoupper($query);
+        $fallback = $this->maskFallback->find($dbco, $code, $companyCode);
+        if ($fallback === null) {
             throw new PriceLookupProductNotFound($query);
         }
 
-        return $this->toResult($rows, $companyCode, $query);
+        $hit = new PriceLookupSearchHit(
+            productCode: $code,
+            status: $this->makeStock->fromWarehouseStatus($this->prices->findWarehouseStatusByCode($code)),
+            setupLength: $fallback['row']['setupLength'],
+            lastUpdated: $fallback['row']['lastUpdated'],
+            pricedFromMask: $fallback['mask'],
+        );
+
+        return new PriceLookupSearchResult([$hit], 1, $companyCode, $query);
     }
 
     /**
