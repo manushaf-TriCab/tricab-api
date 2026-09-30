@@ -38,6 +38,11 @@ interface PriceLookupPriceRepository
     public function findWarehouseStatusByCode(string $code): mixed;
 
     /**
+     * Whether the code is in the product master (tpro), whatever its stock status.
+     */
+    public function isProduct(string $code): bool;
+
+    /**
      * Every product code in the product master (tpro), upper-cased, distinct and sorted,
      * without mask codes or XX codes of styles that can't have one. Codes only: never costs or prices.
      *

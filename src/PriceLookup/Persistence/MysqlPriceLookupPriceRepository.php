@@ -59,6 +59,13 @@ WHERE t.ida = :code
 LIMIT 1
 SQL;
 
+    private const IS_PRODUCT_SQL = <<<'SQL'
+SELECT 1 AS found
+FROM tpro t
+WHERE t.ida = :code
+LIMIT 1
+SQL;
+
     private const PRODUCT_CODES_SQL = <<<'SQL'
 SELECT DISTINCT UPPER(TRIM(t.ida)) AS productCode
 FROM tpro t
@@ -123,6 +130,11 @@ SQL;
         );
 
         return $rows[0]['warehouseStatus'] ?? null;
+    }
+
+    public function isProduct(string $code): bool
+    {
+        return $this->tc->query(self::IS_PRODUCT_SQL, ['code' => $code], 'price-lookup', 'isProduct') !== [];
     }
 
     public function listProductCodes(int $limit): array
