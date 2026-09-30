@@ -95,6 +95,11 @@ final class InMemoryPriceLookupPriceRepository implements PriceLookupPriceReposi
         return $this->warehouseStatuses[strtoupper($code)] ?? null;
     }
 
+    public function isProduct(string $code): bool
+    {
+        return array_key_exists(strtoupper($code), $this->warehouseStatuses);
+    }
+
     public function listProductCodes(int $limit): array
     {
         $codes = array_values(array_filter(

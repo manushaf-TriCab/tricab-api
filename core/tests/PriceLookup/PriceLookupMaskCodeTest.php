@@ -36,6 +36,7 @@ final class PriceLookupMaskCodeTest extends TestCase
         $tca = [
             'KL-PAXN/5C10BK' => '12.50',
             'KL-XXXN/5C16' => '20.00',
+            'KL-XXXD/1C120' => '28.24',
             'KL-XXSN/4C16' => '30.00',
             'KL-XXXN/4C16' => '99.00',
             'KL-XXXN/1C10' => '5.00',
@@ -266,6 +267,57 @@ final class PriceLookupMaskCodeTest extends TestCase
                 self::assertSame('INVALID_PRODUCT_CODE', $e->errorCode);
                 self::assertSame(strtoupper($code) . ' is not a valid product code.', $e->getMessage());
             }
+        }
+    }
+
+    /**
+     * @return iterable<string, array{string, string}>
+     */
+    public static function unfinishedCodes(): iterable
+    {
+        yield 'mask has a price' => ['KL-PBXD/1C120', 'TCA'];
+        yield 'lower case' => ['kl-pbxd/1c120', 'TCA'];
+        yield 'jacket style' => ['UPA-PAXD/1C120', 'TCA'];
+        yield 'no mask either' => ['KL-PAXN/7C25', 'TCA'];
+    }
+
+    #[DataProvider('unfinishedCodes')]
+    public function test_a_colourless_code_that_is_not_a_product_is_rejected(string $code, string $company): void
+    {
+        foreach ([fn () => $this->search($code, $company), fn () => $this->quote($code, $company)] as $lookup) {
+            try {
+                $lookup();
+                self::fail('Expected INVALID_PRODUCT_CODE for ' . $code);
+            } catch (PriceLookupValidationException $e) {
+                self::assertSame('INVALID_PRODUCT_CODE', $e->errorCode);
+                self::assertSame(strtoupper($code) . ' is missing its colour. Please enter the full product code.', $e->getMessage());
+            }
+        }
+    }
+
+    public function test_a_colourless_product_is_still_priced_from_its_mask(): void
+    {
+        $this->prices->seedProduct('KL-PBXD/1C120');
+
+        self::assertSame([['KL-PBXD/1C120', 'KL-XXXD/1C120']], $this->searchHits('KL-PBXD/1C120'));
+        self::assertSame('KL-XXXD/1C120', $this->quote('KL-PBXD/1C120')->pricedFromMask);
+    }
+
+    public function test_a_colourless_code_with_its_own_price_is_quoted(): void
+    {
+        $this->seedPrice('KL-PAXN/9C10', '7.00', PriceLookupDbcoMapper::DBCO_TCA);
+
+        self::assertSame('7.00', $this->quote('KL-PAXN/9C10')->adjustedCost);
+    }
+
+    public function test_is_colourless(): void
+    {
+        $colourMask = new PriceLookupColourMask();
+        foreach (['KL-PBXD/1C120', ' kl-paxn/5c10 ', 'JD-PAXN/1A4/0', 'KL-XXXN/5C10'] as $code) {
+            self::assertTrue($colourMask->isColourless($code), $code);
+        }
+        foreach (['KL-PBXD/1C120BK', 'KL-PBXD/1C120*', 'KL-PB', 'CS-PAXN/1C10G/Y'] as $code) {
+            self::assertFalse($colourMask->isColourless($code), $code);
         }
     }
 

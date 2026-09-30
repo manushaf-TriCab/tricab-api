@@ -88,6 +88,17 @@ final class PriceLookupColourMask
     }
 
     /**
+     * A full cable code with nothing after the size, such as KL-PBXD/1C120. Many are real
+     * products (in tpro), but one that isn't is a code someone hasn't finished typing.
+     */
+    public function isColourless(string $code): bool
+    {
+        $code = strtoupper(trim($code));
+
+        return preg_match(self::CODE_PATTERN, $code, $m) === 1 && ($m[5] ?? '') === '';
+    }
+
+    /**
      * An XX code (colour or not) whose style can't have one, such as KL-XXXN/4C120OR.
      * Wildcard patterns aren't codes, so they never count.
      */
