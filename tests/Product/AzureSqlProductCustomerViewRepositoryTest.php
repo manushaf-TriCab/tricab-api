@@ -12,7 +12,7 @@ use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 
 final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
 {
-    public function test_variant_matrix_values_query_filters_technical_dimension_codes(): void
+    public function test_variant_matrix_values_query_filters_the_selected_column_definitions(): void
     {
         $publicId = '550e8400-e29b-41d4-a716-446655440000';
         $definitionId = '550e8400-e29b-41d4-a716-446655440001';
@@ -36,6 +36,7 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
         for ($i = 0; $i < 8; ++$i) {
             $connection->queueFetch([]);
         }
+        $connection->queueFetch([['FamilyCode' => 'CABLE']]);
         $connection->queueFetch([
             [
                 'DefinitionPublicId' => $definitionId,
@@ -69,13 +70,13 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
 
         $valueSql = null;
         foreach ($connection->calls as $call) {
-            if (str_contains($call['sql'], 'ProductVariantSpecificationValues')) {
+            if (str_contains($call['sql'], 'cv.matrix_values')) {
                 $valueSql = $call['sql'];
                 break;
             }
         }
         self::assertNotNull($valueSql);
-        self::assertStringContainsString('DefinitionCode] IN', $valueSql);
+        self::assertStringContainsString('[PublicId] IN', $valueSql);
         self::assertMatchesRegularExpression(
             '/FROM\s+\[product\]\.\[SpecificationDefinitions\]/i',
             $valueSql,
@@ -83,13 +84,20 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
         self::assertStringNotContainsString('ORDER BY', $valueSql);
         $valueCall = null;
         foreach ($connection->calls as $call) {
-            if (str_contains($call['sql'], 'ProductVariantSpecificationValues')) {
+            if (str_contains($call['sql'], 'cv.matrix_values')) {
                 $valueCall = $call;
                 break;
             }
         }
         self::assertNotNull($valueCall);
-        self::assertArrayHasKey(':code0', $valueCall['params']);
+        self::assertSame($definitionId, $valueCall['params'][':def0']);
+        $columnsSql = '';
+        foreach ($connection->calls as $call) {
+            if (str_contains($call['sql'], 'cv.matrix_columns')) {
+                $columnsSql = $call['sql'];
+            }
+        }
+        self::assertStringContainsString("NOT LIKE N'CODE[_]%'", $columnsSql, 'CODE_* definitions are never matrix columns');
     }
 
     public function test_variant_matrix_preserves_cells_nulls_decimals_and_options(): void
@@ -127,6 +135,7 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
         for ($i = 0; $i < 5; ++$i) {
             $connection->queueFetch([]);
         }
+        $connection->queueFetch([['FamilyCode' => 'CABLE']]);
         $connection->queueFetch([
             $this->columnRow($sizeId, 'SIZE', 'Size', 'text'),
             $this->columnRow($weightId, 'APPROX-WEIGHT', 'Approx Weight', 'decimal'),
@@ -177,6 +186,91 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
         self::assertNull($rowB->cells[$currentId]);
         self::assertCount(3, $rowA->cells);
         self::assertCount(3, $rowB->cells);
+    }
+
+    public function test_cable_matrix_keeps_the_seven_technical_columns_in_catalogue_order_even_without_values(): void
+    {
+        $ids = [];
+        $rows = [];
+        // returned in a scrambled order, with an extra variant definition that has values: cables still show exactly the 7
+        foreach (['APPROX-WEIGHT', 'SIZE', 'CURRENT', 'NOM-CABLE-OD', 'MIN-BEND-RADIUS', 'NOM-INS-OD', 'NOM-COND-OD', 'OVERALL-LENGTH'] as $i => $code) {
+            $ids[$code] = sprintf('550e8400-e29b-41d4-a716-4466554401%02d', $i);
+            $rows[] = $this->columnRow($ids[$code], $code, $code, 'decimal') + ['HasValues' => $code === 'OVERALL-LENGTH' ? 1 : 0];
+        }
+        $detail = $this->detailWithMatrix('CABLE', $rows, []);
+        self::assertSame(['SIZE', 'MIN-BEND-RADIUS', 'NOM-COND-OD', 'NOM-INS-OD', 'NOM-CABLE-OD', 'CURRENT', 'APPROX-WEIGHT'],
+            array_map(static fn ($c): string => $c->code, $detail->variantMatrix->columns));
+        self::assertSame([1, 2, 3, 4, 5, 6, 7], array_map(static fn ($c): int => $c->displayOrder, $detail->variantMatrix->columns));
+        self::assertSame('grouped', $detail->variantMatrix->layout, 'cables keep the size-grouped table');
+    }
+
+    public function test_accessory_matrix_derives_columns_from_its_values_in_group_then_definition_order(): void
+    {
+        // the A09 shape: 7 accessory dimensions over two groups, no cable technical dimension; the 7 cable definitions exist without values
+        $defs = [
+            ['OVERALL-LENGTH', 20, 300], ['WIDTH', 20, 301], ['BARREL-LENGTH', 20, 305], ['BARREL-OD', 20, 309], ['PIN-DIAMETER', 20, 312],
+            ['MIN-COND-CSA', 30, 314], ['MAX-COND-CSA', 30, 315],
+        ];
+        $rows = [];
+        $ids = [];
+        foreach (array_reverse($defs) as $i => [$code, $group, $order]) {
+            $ids[$code] = sprintf('550e8400-e29b-41d4-a716-4466554402%02d', $i);
+            $rows[] = ['DefinitionPublicId' => $ids[$code], 'Code' => $code, 'Name' => $code, 'GroupName' => 'G' . $group, 'Unit' => 'mm', 'DataTypeCode' => 'decimal',
+                'DisplayOrder' => $order, 'ValidationRulesJson' => null, 'GroupDisplayOrder' => $group, 'HasValues' => 1];
+        }
+        foreach (['SIZE', 'CURRENT'] as $j => $code) {
+            $rows[] = $this->columnRow(sprintf('550e8400-e29b-41d4-a716-4466554403%02d', $j), $code, $code, 'decimal') + ['HasValues' => 0];
+        }
+        $variant = '550e8400-e29b-41d4-a716-446655440010';
+        $values = [];
+        foreach ($ids as $code => $id) {
+            $values[] = $this->valueRow($variant, $id, valueDecimal: '12.000000');
+        }
+        $detail = $this->detailWithMatrix('ACCESSORIES', $rows, $values, [$this->variantRow($variant, 'Pin 12mm', 1)],
+            [['VariantPublicId' => strtoupper($variant), 'PackagingDescription' => '100 per pack', 'ColourLabel' => 'Red']]);
+        self::assertSame('flat', $detail->variantMatrix->layout);
+        self::assertSame('ACCESSORIES', $detail->variantMatrix->familyCode);
+        self::assertSame(['Red', '100 per pack'], [$detail->variantMatrix->rows[0]->colour, $detail->variantMatrix->rows[0]->packSize]);
+        self::assertNotContains('CODE_JACKET_COLOUR', array_map(static fn ($c): string => $c->code, $detail->variantMatrix->columns), 'colour is a presentation column, never a technical one');
+        self::assertSame(['OVERALL-LENGTH', 'WIDTH', 'BARREL-LENGTH', 'BARREL-OD', 'PIN-DIAMETER', 'MIN-COND-CSA', 'MAX-COND-CSA'],
+            array_map(static fn ($c): string => $c->code, $detail->variantMatrix->columns));
+        self::assertSame([1, 2, 3, 4, 5, 6, 7], array_map(static fn ($c): int => $c->displayOrder, $detail->variantMatrix->columns));
+        self::assertCount(7, $detail->variantMatrix->rows[0]->cells);
+        self::assertSame(['12'], array_values(array_unique($detail->variantMatrix->rows[0]->cells)));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $columnRows
+     * @param list<array<string, mixed>> $valueRows
+     * @param list<array<string, mixed>> $variants
+     */
+    private function detailWithMatrix(string $family, array $columnRows, array $valueRows, array $variants = [], array $presentationRows = []): \TriCab\Core\Product\Application\DTO\ProductCustomerViewDetail
+    {
+        $publicId = '550e8400-e29b-41d4-a716-446655440000';
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([[
+            'PublicId' => $publicId, 'ProductName' => 'P', 'InternalCode' => 'X01', 'ShortDescription' => null, 'FullDescription' => null,
+            'FamilyName' => null, 'CategoryName' => null, 'SeriesName' => null, 'StatusCode' => 'draft', 'LifecycleStatusCode' => 'concept',
+            'IsArchived' => 0, 'Slug' => 'p',
+        ]]);
+        $connection->queueFetch([]);
+        $connection->queueFetch([]);
+        $connection->queueFetch($variants);
+        for ($i = 0; $i < 5; ++$i) {
+            $connection->queueFetch([]);
+        }
+        $connection->queueFetch([['FamilyCode' => $family]]);
+        $connection->queueFetch($columnRows);
+        $connection->queueFetch($valueRows);
+        if ($family !== 'CABLE' && $variants !== []) {
+            $connection->queueFetch($presentationRows);
+        }
+        $connection->queueFetch([]);
+        $repository = new AzureSqlProductCustomerViewRepository($connection, $this->createStub(Product3DModelRepository::class), false);
+        $detail = $repository->findByPublicId(ProductPublicId::fromString($publicId));
+        self::assertNotNull($detail);
+
+        return $detail;
     }
 
     /**

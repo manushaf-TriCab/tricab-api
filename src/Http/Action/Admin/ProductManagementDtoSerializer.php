@@ -308,6 +308,8 @@ final class ProductManagementDtoSerializer
                 $detail->approvalCertificates,
             ),
             'variantMatrix' => [
+                'layout' => $detail->variantMatrix->layout,
+                'familyCode' => $detail->variantMatrix->familyCode,
                 'columns' => array_map(self::customerViewMatrixColumn(...), $detail->variantMatrix->columns),
                 'rows' => array_map(self::customerViewMatrixRow(...), $detail->variantMatrix->rows),
             ],
@@ -347,7 +349,9 @@ final class ProductManagementDtoSerializer
             'statusCode' => $row->statusCode,
             'displayOrder' => $row->displayOrder,
             'isActive' => $row->isActive,
-            'cells' => $row->cells,
+            'cells' => $row->cells === [] ? new \stdClass() : $row->cells, // always a JSON object (a product may have no matrix columns)
+            'colour' => $row->colour,
+            'packSize' => $row->packSize,
         ];
     }
 

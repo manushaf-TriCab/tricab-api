@@ -1002,6 +1002,22 @@ final class InMemoryProductStore
         $this->variants[$variantId->toInt()] = $record;
     }
 
+    public function familyCodeForId(?ProductFamilyId $familyId): ?string
+    {
+        if ($familyId === null) {
+            return null;
+        }
+        foreach ($this->families as $row) {
+            if (($row['id'] ?? 0) === $familyId->toInt()) {
+                $code = $row['code'] ?? null;
+
+                return is_string($code) ? $code : null;
+            }
+        }
+
+        return null;
+    }
+
     public function familyNameForId(?ProductFamilyId $familyId): ?string
     {
         if ($familyId === null) {
