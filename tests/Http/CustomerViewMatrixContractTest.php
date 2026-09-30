@@ -33,12 +33,12 @@ final class CustomerViewMatrixContractTest extends TestCase
 
         self::assertSame('flat', $matrix['layout']);
         self::assertSame('ACCESSORIES', $matrix['familyCode']);
-        self::assertSame($codes, array_column($matrix['columns'], 'code'));
+        self::assertSame($codes, $matrix['columnCodes']);
         self::assertCount(3, $matrix['rows']);
         self::assertSame(21, $this->populated($matrix));
         self::assertSame(['Red', 'Blue', 'Yellow'], array_column($matrix['rows'], 'colour'));
-        self::assertSame(['100 per pack'], array_values(array_unique(array_column($matrix['rows'], 'packSize'))));
-        self::assertSame([], array_values(array_intersect(self::CABLE_ONLY_CODES, array_column($matrix['columns'], 'code'))),
+        self::assertSame(['100 per pack'], array_values(array_unique(array_map('strval', array_column($matrix['rows'], 'packSize')))));
+        self::assertSame([], array_values(array_intersect(self::CABLE_ONLY_CODES, $matrix['columnCodes'])),
             'an accessory must not fall back to the cable Technical Dimensions columns');
     }
 
@@ -51,12 +51,12 @@ final class CustomerViewMatrixContractTest extends TestCase
         ]);
 
         self::assertSame('flat', $matrix['layout']);
-        self::assertSame($codes, array_column($matrix['columns'], 'code'));
+        self::assertSame($codes, $matrix['columnCodes']);
         self::assertCount(2, $matrix['rows']);
         self::assertSame(12, $this->populated($matrix));
         self::assertSame(['Grey', 'Grey'], array_column($matrix['rows'], 'colour'));
         self::assertSame(['20 per pack', '20 per pack'], array_column($matrix['rows'], 'packSize'));
-        self::assertSame([], array_values(array_intersect(self::CABLE_ONLY_CODES, array_column($matrix['columns'], 'code'))));
+        self::assertSame([], array_values(array_intersect(self::CABLE_ONLY_CODES, $matrix['columnCodes'])));
     }
 
     public function test_cable_keeps_the_grouped_matrix_and_its_seven_fixed_columns(): void
@@ -70,7 +70,8 @@ final class CustomerViewMatrixContractTest extends TestCase
         $matrix = $this->serializedMatrix('CABLE', $rows, $values, [$this->variantRow($variant, 'R4 16mm', 1)], null);
 
         self::assertSame('grouped', $matrix['layout']);
-        self::assertSame(self::CABLE_ONLY_CODES, array_column($matrix['columns'], 'code'));
+        self::assertSame(self::CABLE_ONLY_CODES, $matrix['columnCodes']);
+        self::assertCount(1, $matrix['rows']);
         self::assertNull($matrix['rows'][0]['colour']);
         self::assertNull($matrix['rows'][0]['packSize']);
     }
@@ -79,7 +80,7 @@ final class CustomerViewMatrixContractTest extends TestCase
      * @param list<string> $codes
      * @param list<array{0: string, 1: string, 2: string}> $variants
      *
-     * @return array<string, mixed>
+     * @return array{layout: string|null, familyCode: string|null, columnCodes: list<string>, rows: list<array{colour: string|null, packSize: string|null, cells: array<array-key, mixed>}>}
      */
     private function accessoryMatrix(array $codes, array $variants): array
     {
@@ -107,7 +108,7 @@ final class CustomerViewMatrixContractTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $matrix
+     * @param array{layout: string|null, familyCode: string|null, columnCodes: list<string>, rows: list<array{colour: string|null, packSize: string|null, cells: array<array-key, mixed>}>} $matrix
      */
     private function populated(array $matrix): int
     {
@@ -127,7 +128,7 @@ final class CustomerViewMatrixContractTest extends TestCase
      * @param list<array<string, mixed>> $variants
      * @param list<array<string, mixed>>|null $presentationRows
      *
-     * @return array<string, mixed>
+     * @return array{layout: string|null, familyCode: string|null, columnCodes: list<string>, rows: list<array{colour: string|null, packSize: string|null, cells: array<array-key, mixed>}>}
      */
     private function serializedMatrix(string $family, array $columnRows, array $valueRows, array $variants, ?array $presentationRows): array
     {
@@ -158,9 +159,42 @@ final class CustomerViewMatrixContractTest extends TestCase
         // round-trip through JSON: this is the payload the browser receives
         $payload = json_decode((string) json_encode(ProductManagementDtoSerializer::customerViewDetail($detail)), true);
         self::assertIsArray($payload);
-        self::assertIsArray($payload['variantMatrix']);
 
-        return $payload['variantMatrix'];
+        return self::matrixShape($payload['variantMatrix'] ?? null);
+    }
+
+    /**
+     * Validates the decoded variantMatrix JSON and narrows it to the contract the web consumes.
+     *
+     * @return array{layout: string|null, familyCode: string|null, columnCodes: list<string>, rows: list<array{colour: string|null, packSize: string|null, cells: array<array-key, mixed>}>}
+     */
+    private static function matrixShape(mixed $matrix): array
+    {
+        self::assertIsArray($matrix);
+        self::assertIsArray($matrix['columns'] ?? null);
+        self::assertIsArray($matrix['rows'] ?? null);
+        $layout = $matrix['layout'] ?? null;
+        $family = $matrix['familyCode'] ?? null;
+        self::assertTrue($layout === null || is_string($layout));
+        self::assertTrue($family === null || is_string($family));
+        $codes = [];
+        foreach ($matrix['columns'] as $column) {
+            self::assertIsArray($column);
+            self::assertIsString($column['code'] ?? null);
+            $codes[] = $column['code'];
+        }
+        $rows = [];
+        foreach ($matrix['rows'] as $row) {
+            self::assertIsArray($row);
+            $colour = $row['colour'] ?? null;
+            $pack = $row['packSize'] ?? null;
+            self::assertTrue($colour === null || is_string($colour));
+            self::assertTrue($pack === null || is_string($pack));
+            self::assertIsArray($row['cells'] ?? null);
+            $rows[] = ['colour' => $colour, 'packSize' => $pack, 'cells' => $row['cells']];
+        }
+
+        return ['layout' => $layout, 'familyCode' => $family, 'columnCodes' => $codes, 'rows' => $rows];
     }
 
     private function definitionId(int $i): string
