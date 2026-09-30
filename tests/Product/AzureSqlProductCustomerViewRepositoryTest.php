@@ -243,6 +243,7 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
      * @param list<array<string, mixed>> $columnRows
      * @param list<array<string, mixed>> $valueRows
      * @param list<array<string, mixed>> $variants
+     * @param list<array<string, mixed>> $presentationRows
      */
     private function detailWithMatrix(string $family, array $columnRows, array $valueRows, array $variants = [], array $presentationRows = []): \TriCab\Core\Product\Application\DTO\ProductCustomerViewDetail
     {
