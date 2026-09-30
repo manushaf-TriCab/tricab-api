@@ -357,18 +357,30 @@ SQL,
     ];
 
     /**
+     * Matrix columns:
+     *   - CABLE family (or no family): exactly the Technical Dimensions columns, in TECHNICAL_DIMENSION_CODES order (unchanged)
+     *   - every other family: the variant-scoped definitions this product's active variants have values for; the
+     *     Technical Dimensions codes first in their fixed order, then SpecificationGroups.DisplayOrder →
+     *     SpecificationDefinitions.DisplayOrder → DefinitionCode
+     * CODE_* definitions (code-derived facets such as colour) are never matrix columns; admin-only / non-public
+     * definitions are excluded as before.
+     *
      * @param list<ProductVariantSummary> $variants
      */
     private function buildVariantMatrix(ProductPublicId $productPublicId, array $variants): ProductCustomerViewVariantMatrix
     {
-        $placeholders = [];
-        $params = [];
-        foreach (self::TECHNICAL_DIMENSION_CODES as $index => $code) {
-            $key = ':code' . $index;
-            $placeholders[] = $key;
-            $params[$key] = $code;
-        }
-        $inList = implode(', ', $placeholders);
+        $familyRows = $this->connection->fetchAll(
+            <<<'SQL'
+/*q:cv.matrix_family*/
+SELECT f.[FamilyCode]
+FROM [product].[Products] p
+LEFT JOIN [product].[ProductFamilies] f ON f.[ProductFamilyId] = p.[ProductFamilyId]
+WHERE p.[PublicId] = :productPublicId
+SQL,
+            [':productPublicId' => $productPublicId->toString()],
+        );
+        $familyCode = strtoupper(AzureSqlValueMapper::stringValue($familyRows[0]['FamilyCode'] ?? ''));
+        $isCable = $familyCode === '' || $familyCode === 'CABLE'; // no family: fixed columns (unchanged behaviour)
 
         $columnRows = $this->connection->fetchAll(
             <<<SQL
@@ -382,18 +394,31 @@ SELECT
     sd.[DataTypeCode],
     sd.[DisplayOrder],
     sd.[ValidationRulesJson],
-    sg.[DisplayOrder] AS [GroupDisplayOrder]
+    sg.[DisplayOrder] AS [GroupDisplayOrder],
+    CASE WHEN EXISTS (
+        SELECT 1
+        FROM [product].[ProductVariantSpecificationValues] psv
+        INNER JOIN [product].[ProductVariants] v
+            ON v.[ProductVariantId] = psv.[ProductVariantId]
+           AND v.[DeletedAtUtc] IS NULL
+           AND v.[IsActive] = 1
+        INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
+        WHERE psv.[SpecificationDefinitionId] = sd.[SpecificationDefinitionId]
+          AND psv.[DeletedAtUtc] IS NULL
+          AND p.[PublicId] = :productPublicId
+    ) THEN 1 ELSE 0 END AS [HasValues]
 FROM [product].[SpecificationDefinitions] sd
 LEFT JOIN [product].[SpecificationGroups] sg ON sg.[SpecificationGroupId] = sd.[SpecificationGroupId]
 WHERE sd.[DeletedAtUtc] IS NULL
   AND sd.[IsActive] = 1
   AND sd.[ScopeCode] IN (N'variant', N'both')
-  AND sd.[DefinitionCode] IN ({$inList})
+  AND sd.[DefinitionCode] NOT LIKE N'CODE[_]%'
 SQL,
-            $params,
+            [':productPublicId' => $productPublicId->toString()],
         );
 
-        $columnsByCode = [];
+        $technical = [];
+        $others = [];
         foreach ($columnRows as $row) {
             $rules = SpecificationValidationRules::fromJson(
                 AzureSqlValueMapper::nullableString($row['ValidationRulesJson'] ?? null),
@@ -402,32 +427,53 @@ SQL,
                 continue;
             }
             $code = AzureSqlValueMapper::stringValue($row['Code'] ?? '');
-            $columnsByCode[$code] = $row;
+            $hasValues = AzureSqlValueMapper::stringValue($row['HasValues'] ?? '0') === '1';
+            $position = array_search($code, self::TECHNICAL_DIMENSION_CODES, true);
+            if ($position !== false) {
+                if ($isCable || $hasValues) {
+                    $technical[(int) $position] = $row;
+                }
+            } elseif (!$isCable && $hasValues) {
+                $others[] = $row;
+            }
         }
+        ksort($technical);
+        $order = static fn (mixed $v): int => $v === null || $v === '' ? PHP_INT_MAX : (int) AzureSqlValueMapper::stringValue($v);
+        usort($others, static fn (array $a, array $b): int => [$order($a['GroupDisplayOrder'] ?? null), $order($a['DisplayOrder'] ?? null), AzureSqlValueMapper::stringValue($a['Code'] ?? '')]
+            <=> [$order($b['GroupDisplayOrder'] ?? null), $order($b['DisplayOrder'] ?? null), AzureSqlValueMapper::stringValue($b['Code'] ?? '')]);
 
         $columns = [];
         $columnIds = [];
-        foreach (self::TECHNICAL_DIMENSION_CODES as $index => $code) {
-            $row = $columnsByCode[$code] ?? null;
-            if ($row === null) {
-                continue;
-            }
+        $ordered = [];
+        foreach ($technical as $position => $row) {
+            $ordered[] = [$isCable ? $position + 1 : count($ordered) + 1, $row]; // cables: unchanged catalogue positions
+        }
+        foreach ($others as $row) {
+            $ordered[] = [count($ordered) + 1, $row];
+        }
+        foreach ($ordered as [$displayOrder, $row]) {
             $definitionPublicId = AzureSqlValueMapper::stringValue($row['DefinitionPublicId'] ?? '');
             $columns[] = new ProductCustomerViewMatrixColumn(
                 definitionPublicId: $definitionPublicId,
-                code: $code,
+                code: AzureSqlValueMapper::stringValue($row['Code'] ?? ''),
                 name: AzureSqlValueMapper::stringValue($row['Name'] ?? ''),
                 groupName: AzureSqlValueMapper::nullableString($row['GroupName'] ?? null),
                 unit: AzureSqlValueMapper::nullableString($row['Unit'] ?? null),
                 dataTypeCode: AzureSqlValueMapper::stringValue($row['DataTypeCode'] ?? ''),
-                displayOrder: $index + 1,
+                displayOrder: $displayOrder,
             );
             $columnIds[] = $definitionPublicId;
         }
 
         $valueRows = [];
         if ($columnIds !== []) {
-            $valueParams = [':productPublicId' => $productPublicId->toString()] + $params;
+            $valueParams = [':productPublicId' => $productPublicId->toString()];
+            $idPlaceholders = [];
+            foreach ($columnIds as $i => $id) {
+                $idPlaceholders[] = ':def' . $i;
+                $valueParams[':def' . $i] = $id;
+            }
+            $idList = implode(', ', $idPlaceholders);
             $valueRows = $this->connection->fetchAll(
                 <<<SQL
 /*q:cv.matrix_values*/
@@ -454,7 +500,7 @@ INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
 LEFT JOIN [product].[SpecificationOptions] so ON so.[SpecificationOptionId] = psv.[SpecificationOptionId]
 WHERE p.[PublicId] = :productPublicId
   AND sd.[DeletedAtUtc] IS NULL
-  AND sd.[DefinitionCode] IN ({$inList})
+  AND sd.[PublicId] IN ({$idList})
 SQL,
                 $valueParams,
             );
@@ -481,8 +527,43 @@ SQL,
                 : null;
         }
 
+        // flat layout: per-variant presentation columns (display colour from CODE_JACKET_COLOUR, pack size from
+        // PackagingDescription). Cables keep the grouped table and get neither (unchanged payload values).
+        $presentation = [];
+        if (!$isCable && $variants !== []) {
+            $presRows = $this->connection->fetchAll(
+                <<<'SQL'
+/*q:cv.matrix_presentation*/
+SELECT
+    CONVERT(NVARCHAR(36), v.[PublicId]) AS [VariantPublicId],
+    v.[PackagingDescription],
+    so.[OptionLabel] AS [ColourLabel]
+FROM [product].[ProductVariants] v
+INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
+LEFT JOIN [product].[SpecificationDefinitions] sd
+    ON sd.[DefinitionCode] = N'CODE_JACKET_COLOUR' AND sd.[DeletedAtUtc] IS NULL
+LEFT JOIN [product].[ProductVariantSpecificationValues] psv
+    ON psv.[ProductVariantId] = v.[ProductVariantId]
+   AND psv.[SpecificationDefinitionId] = sd.[SpecificationDefinitionId]
+   AND psv.[DeletedAtUtc] IS NULL
+LEFT JOIN [product].[SpecificationOptions] so
+    ON so.[SpecificationOptionId] = psv.[SpecificationOptionId] AND so.[DeletedAtUtc] IS NULL
+WHERE p.[PublicId] = :productPublicId
+  AND v.[DeletedAtUtc] IS NULL
+SQL,
+                [':productPublicId' => $productPublicId->toString()],
+            );
+            foreach ($presRows as $row) {
+                $vid = strtolower(AzureSqlValueMapper::stringValue($row['VariantPublicId'] ?? ''));
+                $pack = trim(AzureSqlValueMapper::stringValue($row['PackagingDescription'] ?? ''));
+                $colour = trim(AzureSqlValueMapper::stringValue($row['ColourLabel'] ?? ''));
+                $presentation[$vid] = ['colour' => $colour === '' ? null : $colour, 'packSize' => $pack === '' ? null : $pack];
+            }
+        }
+
         $matrixRows = [];
         foreach ($variants as $variant) {
+            $pres = $presentation[strtolower($variant->publicId)] ?? ['colour' => null, 'packSize' => null];
             $matrixRows[] = new ProductCustomerViewMatrixRow(
                 publicId: $variant->publicId,
                 variantName: $variant->variantName,
@@ -492,10 +573,13 @@ SQL,
                 displayOrder: $variant->displayOrder,
                 isActive: $variant->isActive,
                 cells: $cellsByVariant[$variant->publicId] ?? array_fill_keys($columnIds, null),
+                colour: $pres['colour'],
+                packSize: $pres['packSize'],
             );
         }
 
-        return new ProductCustomerViewVariantMatrix($columns, $matrixRows);
+        return new ProductCustomerViewVariantMatrix($columns, $matrixRows,
+            $isCable ? ProductCustomerViewVariantMatrix::LAYOUT_GROUPED : ProductCustomerViewVariantMatrix::LAYOUT_FLAT, $familyCode === '' ? null : $familyCode);
     }
 
     /**

@@ -89,7 +89,8 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
             industryNames: $this->listNames($publicId, 'industries'),
             relationships: $this->listPublicRelationships($publicId),
             specifications: $this->listCustomerSpecifications($publicId),
-            variantMatrix: $this->buildVariantMatrix($variants),
+            variantMatrix: $this->buildVariantMatrix($variants, self::usesFixedMatrixColumns($this->store->familyCodeForId($product->familyId())),
+                $this->store->familyCodeForId($product->familyId())),
             statusCode: $statusCode,
             lifecycleStatusCode: $product->lifecycleStatus()->toString(),
             isPublished: $product->status()->isPublished(),
@@ -230,11 +231,32 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
     ];
 
     /**
+     * Mirrors AzureSqlProductCustomerViewRepository::buildVariantMatrix: CABLE family → exactly the Technical
+     * Dimensions columns in their fixed order; other families → the variant-scoped definitions with values on this
+     * product (Technical Dimensions first, then group order → definition order → code). CODE_* never. A product with
+     * no family keeps the fixed columns (unchanged behaviour).
+     */
+    private static function usesFixedMatrixColumns(?string $familyCode): bool
+    {
+        return $familyCode === null || $familyCode === '' || strtoupper($familyCode) === 'CABLE';
+    }
+
+    /**
      * @param list<ProductVariantSummary> $variants
      */
-    private function buildVariantMatrix(array $variants): ProductCustomerViewVariantMatrix
+    private function buildVariantMatrix(array $variants, bool $isCable = true, ?string $familyCode = null): ProductCustomerViewVariantMatrix
     {
-        $columnDefsByCode = [];
+        $variantIds = array_flip(array_map(static fn (ProductVariantSummary $v): string => $v->publicId, $variants));
+        $withValues = [];
+        foreach ($this->store->variantSpecValues() as $row) {
+            $vid = $row['variantPublicId'] ?? null;
+            $did = $row['definitionPublicId'] ?? null;
+            if (is_string($vid) && is_string($did) && isset($variantIds[$vid])) {
+                $withValues[$did] = true;
+            }
+        }
+        $technical = [];
+        $others = [];
         foreach ($this->store->specDefinitions() as $definition) {
             if (($definition['isActive'] ?? true) === false) {
                 continue;
@@ -247,32 +269,45 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
                 continue;
             }
             $code = is_string($definition['code'] ?? null) ? $definition['code'] : '';
-            if ($code === '' || !in_array($code, self::TECHNICAL_DIMENSION_CODES, true)) {
-                continue;
-            }
             $publicId = $definition['publicId'] ?? null;
-            if (!is_string($publicId) || $publicId === '') {
+            if ($code === '' || str_starts_with($code, 'CODE_') || !is_string($publicId) || $publicId === '') {
                 continue;
             }
-            $columnDefsByCode[$code] = $definition;
+            $hasValues = isset($withValues[$publicId]);
+            $position = array_search($code, self::TECHNICAL_DIMENSION_CODES, true);
+            if ($position !== false) {
+                if ($isCable || $hasValues) {
+                    $technical[(int) $position] = $definition;
+                }
+            } elseif (!$isCable && $hasValues) {
+                $others[] = $definition;
+            }
+        }
+        ksort($technical);
+        $order = static fn (mixed $v): int => is_int($v) || (is_string($v) && is_numeric($v)) ? (int) $v : PHP_INT_MAX;
+        $codeOf = static fn (array $d): string => is_string($d['code'] ?? null) ? $d['code'] : '';
+        usort($others, static fn (array $a, array $b): int => [$order($a['groupDisplayOrder'] ?? null), $order($a['displayOrder'] ?? null), $codeOf($a)]
+            <=> [$order($b['groupDisplayOrder'] ?? null), $order($b['displayOrder'] ?? null), $codeOf($b)]);
+        $ordered = [];
+        foreach ($technical as $position => $definition) {
+            $ordered[] = [$isCable ? $position + 1 : count($ordered) + 1, $definition];
+        }
+        foreach ($others as $definition) {
+            $ordered[] = [count($ordered) + 1, $definition];
         }
 
         $columns = [];
         $columnIds = [];
-        foreach (self::TECHNICAL_DIMENSION_CODES as $index => $code) {
-            $definition = $columnDefsByCode[$code] ?? null;
-            if ($definition === null) {
-                continue;
-            }
+        foreach ($ordered as [$displayOrder, $definition]) {
             $definitionPublicId = (string) $definition['publicId'];
             $columns[] = new ProductCustomerViewMatrixColumn(
                 definitionPublicId: $definitionPublicId,
-                code: $code,
+                code: is_string($definition['code'] ?? null) ? $definition['code'] : '',
                 name: is_string($definition['name'] ?? null) ? $definition['name'] : 'Specification',
                 groupName: is_string($definition['groupName'] ?? null) ? $definition['groupName'] : null,
                 unit: is_string($definition['unit'] ?? null) ? $definition['unit'] : null,
                 dataTypeCode: is_string($definition['dataTypeCode'] ?? null) ? $definition['dataTypeCode'] : 'text',
-                displayOrder: $index + 1,
+                displayOrder: $displayOrder,
             );
             $columnIds[] = $definitionPublicId;
         }
@@ -298,8 +333,10 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
                 : null;
         }
 
+        $presentation = $isCable ? [] : $this->flatPresentation($variantIds);
         $matrixRows = [];
         foreach ($variants as $variant) {
+            $pres = $presentation[$variant->publicId] ?? ['colour' => null, 'packSize' => null];
             $matrixRows[] = new ProductCustomerViewMatrixRow(
                 publicId: $variant->publicId,
                 variantName: $variant->variantName,
@@ -309,10 +346,47 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
                 displayOrder: $variant->displayOrder,
                 isActive: $variant->isActive,
                 cells: $cellsByVariant[$variant->publicId] ?? array_fill_keys($columnIds, null),
+                colour: $pres['colour'],
+                packSize: $pres['packSize'],
             );
         }
 
-        return new ProductCustomerViewVariantMatrix($columns, $matrixRows);
+        return new ProductCustomerViewVariantMatrix($columns, $matrixRows,
+            $isCable ? ProductCustomerViewVariantMatrix::LAYOUT_GROUPED : ProductCustomerViewVariantMatrix::LAYOUT_FLAT,
+            $familyCode === null || $familyCode === '' ? null : strtoupper($familyCode));
+    }
+
+    /**
+     * Flat layout presentation columns: display colour (CODE_JACKET_COLOUR option label) and pack size (PackagingDescription).
+     *
+     * @param array<string, int> $variantIds variant public id => index
+     * @return array<string, array{colour: ?string, packSize: ?string}>
+     */
+    private function flatPresentation(array $variantIds): array
+    {
+        $colourDefinitionIds = [];
+        foreach ($this->store->specDefinitions() as $definition) {
+            if (($definition['code'] ?? null) === 'CODE_JACKET_COLOUR' && is_string($definition['publicId'] ?? null)) {
+                $colourDefinitionIds[$definition['publicId']] = true;
+            }
+        }
+        $out = [];
+        foreach ($this->store->variantRecords() as $record) {
+            $id = $record['variant']->publicId()->toString();
+            if (isset($variantIds[$id])) {
+                $pack = trim((string) $record['variant']->packagingDescription());
+                $out[$id] = ['colour' => null, 'packSize' => $pack === '' ? null : $pack];
+            }
+        }
+        foreach ($this->store->variantSpecValues() as $row) {
+            $vid = $row['variantPublicId'] ?? null;
+            $did = $row['definitionPublicId'] ?? null;
+            if (is_string($vid) && is_string($did) && isset($out[$vid], $colourDefinitionIds[$did]) && is_string($row['optionLabel'] ?? null) && $row['optionLabel'] !== '') {
+                $out[$vid]['colour'] = $row['optionLabel'];
+            }
+        }
+
+        return $out;
     }
 
     /**

@@ -18,6 +18,10 @@ final readonly class ProductCustomerViewMatrixRow
         public int $displayOrder,
         public bool $isActive,
         public array $cells,
+        /** Display colour (CODE_JACKET_COLOUR option label); flat layout only. Not a technical column. */
+        public ?string $colour = null,
+        /** ProductVariants.PackagingDescription (commercial data, not a specification); flat layout only. */
+        public ?string $packSize = null,
     ) {
     }
 }
