@@ -368,6 +368,7 @@ final class CustomerContactReportFileTest extends TestCase
             ['signature' => $png, 'icarOperatorName' => 'Thilan', 'rowVersion' => $signed->rowVersion],
             new CustomerContactReportVisibility(false, 1, 'thilanh@tricab.com'),
         ));
+        $hidden = null;
         try {
             $sign->execute(
                 $this->person(9, 'reader@tricab.com', 'Reader'),
@@ -375,10 +376,10 @@ final class CustomerContactReportFileTest extends TestCase
                 ['signature' => $png, 'icarOperatorName' => 'Reader', 'rowVersion' => $signed->rowVersion],
                 new CustomerContactReportVisibility(false, 9, 'reader@tricab.com'),
             );
-            self::fail('An unrelated employee opened the signature.');
-        } catch (CustomerContactReportNotFound) {
-            self::assertTrue(true);
+        } catch (CustomerContactReportNotFound $exception) {
+            $hidden = $exception;
         }
+        self::assertInstanceOf(CustomerContactReportNotFound::class, $hidden, 'An unrelated employee opened the signature.');
         $this->assertFileCode(CustomerContactReportFileFailure::SIGNATURE_NOT_ALLOWED, fn () => $sign->execute(
             $this->person(9, 'reader@tricab.com', 'Reader'),
             $report->publicId,

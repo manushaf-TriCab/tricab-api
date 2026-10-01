@@ -216,7 +216,7 @@ final class CustomerContactReportNotificationTest extends TestCase
             'note' => 'Not <approved>',
             'rowVersion' => $pending->approval->rowVersion,
         ]);
-        $decline = $mail->sent[array_key_last($mail->sent)];
+        $decline = $this->latestNotice($mail);
         self::assertSame('approval_decided', $decline->event);
         self::assertSame('Not <approved>', $decline->fields['Reason']);
         self::assertNotContains('accounts@tricab.com', $decline->recipients);
@@ -231,7 +231,7 @@ final class CustomerContactReportNotificationTest extends TestCase
             'decision' => 'approved',
             'rowVersion' => $credit->approval->rowVersion,
         ]);
-        $decision = $mail->sent[array_key_last($mail->sent)];
+        $decision = $this->latestNotice($mail);
         self::assertContains('accounts-copy@tricab.com', $decision->recipients);
         self::assertNotNull($approved->settlement);
 
@@ -505,6 +505,14 @@ final class CustomerContactReportNotificationTest extends TestCase
             'status' => $status,
             'body' => json_encode($body, JSON_THROW_ON_ERROR),
         ];
+    }
+
+    private function latestNotice(InMemoryCustomerContactReportNotifier $mail): CustomerContactReportNotice
+    {
+        $index = array_key_last($mail->sent);
+        self::assertNotNull($index);
+
+        return $mail->sent[$index];
     }
 
     /**

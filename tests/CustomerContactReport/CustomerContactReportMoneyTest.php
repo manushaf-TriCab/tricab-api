@@ -30,12 +30,13 @@ final class CustomerContactReportMoneyTest extends TestCase
     public function test_negative_and_over_precise_amounts_are_rejected(): void
     {
         foreach (['-1', '-0.01', '1000.001', '1.234', '10000000000000000.00', 'abc'] as $raw) {
+            $rejected = null;
             try {
                 CustomerContactReportMoney::fromDecimal($raw, 'creditTotal');
-                self::fail($raw . ' was accepted.');
-            } catch (InvalidCustomerContactReportValue) {
-                self::assertTrue(true);
+            } catch (InvalidCustomerContactReportValue $exception) {
+                $rejected = $exception;
             }
+            self::assertInstanceOf(InvalidCustomerContactReportValue::class, $rejected, $raw . ' was accepted.');
         }
     }
 
