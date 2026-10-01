@@ -547,6 +547,43 @@ final class SettingsTest extends TestCase
         self::assertFalse($production->usesFakePasskeyCeremony());
     }
 
+    public function test_customer_contact_e2e_mode_defaults_off(): void
+    {
+        $settings = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+        ]);
+
+        self::assertFalse($settings->customerContactE2eMode);
+    }
+
+    public function test_customer_contact_e2e_mode_refuses_azure_sql(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('CUSTOMER_CONTACT_E2E_MODE cannot be enabled');
+
+        Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'USER_REPOSITORY' => 'azure-sql',
+            'CUSTOMER_CONTACT_E2E_MODE' => 'true',
+        ]);
+    }
+
+    public function test_customer_contact_e2e_mode_refuses_production_even_with_memory_override(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('CUSTOMER_CONTACT_E2E_MODE cannot be enabled');
+
+        Settings::fromEnvironment([
+            'APP_ENV' => 'production',
+            'USER_REPOSITORY' => 'memory',
+            'ALLOW_IN_MEMORY_REPOSITORY_IN_PRODUCTION' => 'true',
+            'CUSTOMER_CONTACT_E2E_MODE' => 'true',
+            'GUEST_EMAIL_PROVIDER' => 'postmark',
+            'POSTMARK_SERVER_TOKEN' => 'token',
+            'POSTMARK_FROM_EMAIL' => 'noreply@tricab.com',
+        ]);
+    }
+
     /**
      * @param array<string, string|null> $overrides
      * @return array<string, string|null>

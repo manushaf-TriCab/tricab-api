@@ -26,6 +26,15 @@ final class CorsMiddleware implements MiddlewareInterface
     ) {
     }
 
+    private function allowedHeaders(): string
+    {
+        if (!$this->settings->customerContactE2eMode) {
+            return self::ALLOWED_HEADERS;
+        }
+
+        return self::ALLOWED_HEADERS . ', X-Dev-Entra-Tenant, X-Dev-Entra-Subject, X-Dev-Entra-Email, X-Customer-Contact-E2e-Fail-Put';
+    }
+
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $origin = trim($request->getHeaderLine('Origin'));
@@ -66,7 +75,7 @@ final class CorsMiddleware implements MiddlewareInterface
             ->withHeader('Access-Control-Allow-Origin', $allowedOrigin)
             ->withHeader('Access-Control-Allow-Credentials', 'true')
             ->withHeader('Access-Control-Allow-Methods', self::ALLOWED_METHODS)
-            ->withHeader('Access-Control-Allow-Headers', self::ALLOWED_HEADERS)
+            ->withHeader('Access-Control-Allow-Headers', $this->allowedHeaders())
             ->withHeader('Access-Control-Expose-Headers', self::EXPOSED_HEADERS)
             ->withHeader('Access-Control-Max-Age', '86400')
             ->withHeader('Vary', 'Origin');

@@ -1176,6 +1176,61 @@ final class ContainerFactory
             \TriCab\Core\Expense\Domain\Service\ExpenseNearMissDiagnostics::class => \DI\autowire(\TriCab\Core\Expense\Domain\Service\ExpenseNearMissDiagnostics::class),
 
             \TriCab\Core\LogNote\Contract\LogNoteRepository::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\InMemoryLogNoteRepository::class),
+            \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportRepository::class => \DI\autowire(\TriCab\Api\CustomerContactReport\Persistence\InMemoryCustomerContactReportRepository::class),
+            \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportAssigneeDirectory::class => \DI\autowire(\TriCab\Api\CustomerContactReport\Identity\IdentityCustomerContactReportAssigneeDirectory::class),
+            \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportReportingLine::class => static function (\DI\Container $container) use ($settings): \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportReportingLine {
+                $staff = $container->get(\TriCab\Core\CustomerContactReport\Contract\CustomerContactReportAssigneeDirectory::class);
+                if (!$staff instanceof \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportAssigneeDirectory) {
+                    throw new \RuntimeException('Customer Contact staff directory is not available.');
+                }
+
+                return new \TriCab\Api\CustomerContactReport\Identity\GraphCustomerContactReportReportingLine(
+                    new \TriCab\Api\Infrastructure\Http\StreamJsonHttpClient(15.0),
+                    $settings->graphTenantId,
+                    $settings->graphClientId,
+                    $settings->graphClientSecret,
+                    $staff,
+                );
+            },
+            \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportNotificationSettings::class => \DI\factory(static function () use ($settings): \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportNotificationSettings {
+                return new \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportNotificationSettings(
+                    webBaseUrl: $settings->customerContactWebBaseUrl,
+                    coordinatorLogin: $settings->customerContactCoordinatorLogin,
+                    accountsMailbox: $settings->customerContactAccountsMailbox,
+                );
+            }),
+            \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportNotifier::class => static function () use ($settings): \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportNotifier {
+                if (!$settings->customerContactEmailEnabled || trim($settings->customerContactMailFrom) === '') {
+                    return new \TriCab\Api\CustomerContactReport\Email\InMemoryCustomerContactReportNotifier();
+                }
+
+                return new \TriCab\Api\CustomerContactReport\Email\GraphCustomerContactReportNotifier(
+                    new \TriCab\Api\Infrastructure\Http\StreamJsonHttpClient(15.0),
+                    new \TriCab\Api\CustomerContactReport\Email\CustomerContactReportEmailTemplate(),
+                    $settings->graphTenantId,
+                    $settings->graphClientId,
+                    $settings->graphClientSecret,
+                    $settings->customerContactMailFrom,
+                    true,
+                );
+            },
+            \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAccountsLogin::class => \DI\factory(static function (\TriCab\Api\Config\Settings $settings): \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAccountsLogin {
+                return new \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAccountsLogin($settings->customerContactAccountsLogin);
+            }),
+            \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportFileStore::class => static function (\DI\Container $container) use ($settings): \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportFileStore {
+                if ($settings->usesMemoryProductBlobStore()) {
+                    return new \TriCab\Api\CustomerContactReport\Storage\InMemoryCustomerContactReportFileStore();
+                }
+                $blobs = $container->get(\TriCab\Core\Product\Contract\ProductBlobStore::class);
+                if (!$blobs instanceof \TriCab\Core\Product\Contract\ProductBlobStore) {
+                    throw new \RuntimeException('Product blob storage is not available.');
+                }
+
+                return new \TriCab\Api\CustomerContactReport\Storage\ProductBackedCustomerContactReportFileStore(
+                    $blobs,
+                    $settings->blobContainerTriexpense,
+                );
+            },
             \TriCab\Core\LogNote\Contract\LogNoteAuditRecorder::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\InMemoryLogNoteAuditRecorder::class),
             \TriCab\Core\LogNote\Contract\CustomerNoteExternalSync::class => \DI\autowire(\TriCab\Api\LogNote\Persistence\DisabledCustomerNoteExternalSync::class),
             \TriCab\Api\LogNote\Infrastructure\DeterministicLogNoteSummariser::class => \DI\autowire(\TriCab\Api\LogNote\Infrastructure\DeterministicLogNoteSummariser::class),
@@ -2478,6 +2533,7 @@ final class ContainerFactory
             $definitions[AdminMutationTransaction::class] = \DI\autowire(AdminMutationTransaction::class);
             $definitions[CustomerRepository::class] = \DI\autowire(AzureSqlCustomerRepository::class);
             $definitions[\TriCab\Core\LogNote\Contract\LogNoteRepository::class] = \DI\autowire(\TriCab\Api\LogNote\Persistence\AzureSqlLogNoteRepository::class);
+            $definitions[\TriCab\Core\CustomerContactReport\Contract\CustomerContactReportRepository::class] = \DI\autowire(\TriCab\Api\CustomerContactReport\Persistence\AzureSqlCustomerContactReportRepository::class);
             $definitions[\TriCab\Core\LogNote\Contract\LogNoteAuditRecorder::class] = \DI\autowire(\TriCab\Api\LogNote\Persistence\AzureSqlLogNoteAuditRecorder::class);
             $definitions[\TriCab\Core\PdfCatalogue\Contract\PdfCatalogueRepository::class] = \DI\autowire(\TriCab\Api\PdfCatalogue\Persistence\AzureSqlPdfCatalogueRepository::class);
             $definitions[CustomerContactRepository::class] = \DI\autowire(AzureSqlCustomerContactRepository::class);
@@ -2753,9 +2809,91 @@ SQL,
             };
         }
 
+        if ($settings->customerContactE2eMode) {
+            self::addCustomerContactE2eDefinitions($definitions, $settings);
+        }
+
         $builder->addDefinitions($definitions);
+        if ($settings->customerContactE2eMode) {
+            $builder->addDefinitions(self::customerContactE2eDecorators());
+        }
 
         return $builder->build();
+    }
+
+    /**
+     * Browser harness bindings. Settings already refused production and Azure SQL.
+     *
+     * @param array<string, mixed> $definitions
+     */
+    private static function addCustomerContactE2eDefinitions(array &$definitions, Settings $settings): void
+    {
+        if ($settings->isProduction() || $settings->usesAzureSqlUserRepository()) {
+            throw new InvalidArgumentException(
+                'CUSTOMER_CONTACT_E2E_MODE cannot be enabled when APP_ENV=production or USER_REPOSITORY=azure-sql. '
+                . 'E2E mode does not replace Azure Customer Contact persistence. Refusing to start.',
+            );
+        }
+
+        $definitions[\TriCab\Core\CustomerContactReport\Contract\CustomerContactReportRepository::class] = static function (): \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportRepository {
+            return new \TriCab\Api\CustomerContactReport\Persistence\DevelopmentFileCustomerContactReportRepository(
+                \TriCab\Api\CustomerContactReport\Persistence\CustomerContactE2ePaths::repositoryFile(),
+            );
+        };
+        $definitions[\TriCab\Core\CustomerContactReport\Contract\CustomerContactReportFileStore::class] = static function (): \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportFileStore {
+            return new \TriCab\Api\CustomerContactReport\Storage\DevelopmentFileCustomerContactReportFileStore(
+                \TriCab\Api\CustomerContactReport\Persistence\CustomerContactE2ePaths::fileDirectory(),
+            );
+        };
+        $definitions[\TriCab\Core\CustomerContactReport\Contract\CustomerContactReportReportingLine::class] = static function (Container $container): \TriCab\Core\CustomerContactReport\Contract\CustomerContactReportReportingLine {
+            return new \TriCab\Api\CustomerContactReport\Identity\DevelopmentCustomerContactReportReportingLine(
+                self::get($container, \TriCab\Core\Identity\Contract\UserRepository::class),
+            );
+        };
+        $accountsLogin = $settings->customerContactAccountsLogin !== ''
+            ? $settings->customerContactAccountsLogin
+            : \TriCab\Api\CustomerContactReport\Identity\CustomerContactE2eDirectory::ACCOUNTS_LOGIN;
+        $definitions[\TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAccountsLogin::class] = static function () use ($accountsLogin): \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAccountsLogin {
+            return new \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAccountsLogin($accountsLogin);
+        };
+    }
+
+    /**
+     * Applied after the main definitions so PHP-DI still has the memory repositories to wrap.
+     *
+     * @return array<string, mixed>
+     */
+    private static function customerContactE2eDecorators(): array
+    {
+        return [
+            UserRepository::class => \DI\decorate(
+                static function (object $repository): object {
+                    if ($repository instanceof \TriCab\Api\Identity\Persistence\InMemoryApiUserRepository) {
+                        \TriCab\Api\CustomerContactReport\Identity\CustomerContactE2eDirectory::seedAuthentication($repository);
+                    }
+
+                    return $repository;
+                },
+            ),
+            \TriCab\Api\Identity\Persistence\InMemoryUserManagementStore::class => \DI\decorate(
+                static function (object $store): object {
+                    if ($store instanceof \TriCab\Api\Identity\Persistence\InMemoryUserManagementStore) {
+                        \TriCab\Api\CustomerContactReport\Identity\CustomerContactE2eDirectory::seedDirectory($store);
+                    }
+
+                    return $store;
+                },
+            ),
+            \TriCab\Api\Customer\Persistence\InMemory\InMemoryCustomerStore::class => \DI\decorate(
+                static function (object $store): object {
+                    if ($store instanceof \TriCab\Api\Customer\Persistence\InMemory\InMemoryCustomerStore) {
+                        \TriCab\Api\CustomerContactReport\Identity\CustomerContactE2eDirectory::seedCustomer($store);
+                    }
+
+                    return $store;
+                },
+            ),
+        ];
     }
 
     /**

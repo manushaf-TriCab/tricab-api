@@ -35,7 +35,7 @@ final class RfqModuleSwitchTest extends TestCase
         foreach (self::PATHS as $path) {
             self::assertSame(404, $app->handle(TestAppFactory::request('GET', $path))->getStatusCode(), $path);
         }
-        self::assertSame(['rfq' => false], $this->modules($app));
+        self::assertSame(['rfq' => false, 'customerContacts' => false], $this->modules($app));
     }
 
     public function test_switched_on_the_routes_exist_and_me_says_so(): void
@@ -52,13 +52,13 @@ final class RfqModuleSwitchTest extends TestCase
         // An unknown id is a real 404 once the module is on, so only these two are asked.
         self::assertSame(200, $app->handle(TestAppFactory::request('GET', '/api/v1/rfqs/me'))->getStatusCode());
         self::assertSame(200, $app->handle(TestAppFactory::request('GET', '/api/v1/rfqs'))->getStatusCode());
-        self::assertSame(['rfq' => true], $this->modules($app));
+        self::assertSame(['rfq' => true, 'customerContacts' => false], $this->modules($app));
     }
 
     public function test_anything_but_true_leaves_it_off(): void
     {
         foreach (['false', '0', '', 'no'] as $value) {
-            self::assertSame(['rfq' => false], $this->modules($this->app(['RFQ_MODULE_ENABLED' => $value], ['account.login'])), $value);
+            self::assertSame(['rfq' => false, 'customerContacts' => false], $this->modules($this->app(['RFQ_MODULE_ENABLED' => $value], ['account.login'])), $value);
         }
     }
 

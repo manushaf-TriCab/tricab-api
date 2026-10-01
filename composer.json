@@ -46,7 +46,8 @@
             "@python-test"
         ],
         "verify-core": "php bin/verify-core-import.php",
-        "start": "PHP_CLI_SERVER_WORKERS=8 php -S 127.0.0.1:8080 -t public public/router.php",
+        "start": "CUSTOMER_CONTACT_E2E_MODE=false PHP_CLI_SERVER_WORKERS=8 php -S 127.0.0.1:8080 -t public public/router.php",
+        "customer-contact-e2e": "bash scripts/customer-contact-e2e.sh",
         "python-test": "if [ -x .venv/bin/python ]; then .venv/bin/python -m pytest core/python; else python3 -m pytest core/python; fi",
         "python-check": "python3 core/python/tools/check_rules_sync.py"
     },

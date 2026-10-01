@@ -340,6 +340,9 @@ final class AppBuilder
 
         /** @var Settings $settings */
         $settings = $container->get(Settings::class);
+        if ($settings->customerContactE2eMode) {
+            $app->add(new \TriCab\Api\Http\Middleware\CustomerContactE2eFailPutMiddleware());
+        }
         $app->addErrorMiddleware($settings->appDebug, true, true);
 
         /** @var RequestPerformanceMiddleware $performanceMiddleware */
@@ -423,6 +426,9 @@ final class AppBuilder
         self::registerOnboardingRoutes($app, $container);
         if ($settings->rfqModuleEnabled) {
             self::registerRfqRoutes($app, $container);
+        }
+        if ($settings->customerContactModuleEnabled) {
+            self::registerCustomerContactReportRoutes($app, $container);
         }
         self::registerAdminRoutes($app, $container);
     }
@@ -831,6 +837,49 @@ final class AppBuilder
             ->add(($require)($gate));
         $app->get('/api/v1/orders/{id}', \TriCab\Api\Http\Action\QuoteOrder\GetOrderAction::class)
             ->add(($require)($gate));
+    }
+
+    /**
+     * Customer Contact reports (the complaint register). Not the person-contact
+     * routes under /api/v1/admin/customer-contacts.
+     *
+     * Registered only when CUSTOMER_CONTACT_MODULE_ENABLED is true. Off, these
+     * paths are 404s. /api/v1/me also requires CUSTOMER_CONTACT.ACCESS before
+     * it reports the module as available.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerCustomerContactReportRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $module = \TriCab\Core\CustomerContactReport\Module::class;
+
+        $app->get('/api/v1/customer-contacts', \TriCab\Api\Http\Action\CustomerContactReport\ListCustomerContactReportsAction::class)
+            ->add(($require)($module::PERMISSION_READ));
+        $app->post('/api/v1/customer-contacts', \TriCab\Api\Http\Action\CustomerContactReport\CreateCustomerContactReportAction::class)
+            ->add(($require)($module::PERMISSION_CREATE));
+        $app->post('/api/v1/customer-contacts/{publicId}/assign', \TriCab\Api\Http\Action\CustomerContactReport\AssignCustomerContactReportAction::class)
+            ->add(($require)($module::PERMISSION_ASSIGN));
+        $app->post('/api/v1/customer-contacts/{publicId}/complete', \TriCab\Api\Http\Action\CustomerContactReport\CompleteCustomerContactReportAction::class)
+            ->add(($require)($module::PERMISSION_COMPLETE));
+        $app->post('/api/v1/customer-contacts/{publicId}/close', \TriCab\Api\Http\Action\CustomerContactReport\CloseCustomerContactReportAction::class)
+            ->add(($require)($module::PERMISSION_CLOSE));
+        $app->post('/api/v1/customer-contacts/{publicId}/reopen', \TriCab\Api\Http\Action\CustomerContactReport\ReopenCustomerContactReportAction::class)
+            ->add(($require)($module::PERMISSION_REOPEN));
+        $app->post('/api/v1/customer-contacts/{publicId}/approvals/{kind}/request', \TriCab\Api\Http\Action\CustomerContactReport\RequestCustomerContactReportApprovalAction::class)
+            ->add(($require)($module::PERMISSION_REMEDY));
+        $app->post('/api/v1/customer-contacts/{publicId}/approvals/{kind}/decision', \TriCab\Api\Http\Action\CustomerContactReport\DecideCustomerContactReportApprovalAction::class)
+            ->add(($require)($module::PERMISSION_APPROVE));
+        $app->post('/api/v1/customer-contacts/{publicId}/attachments', \TriCab\Api\Http\Action\CustomerContactReport\AttachCustomerContactReportEvidenceAction::class)
+            ->add(($require)($module::PERMISSION_CREATE));
+        $app->get('/api/v1/customer-contacts/{publicId}/attachments', \TriCab\Api\Http\Action\CustomerContactReport\ListCustomerContactReportAttachmentsAction::class)
+            ->add(($require)($module::PERMISSION_READ));
+        $app->post('/api/v1/customer-contacts/{publicId}/credit-note', \TriCab\Api\Http\Action\CustomerContactReport\CompleteCustomerContactReportSettlementAction::class)
+            ->add(($require)($module::PERMISSION_ACCESS));
+        $app->post('/api/v1/customer-contacts/{publicId}/icar-signature', \TriCab\Api\Http\Action\CustomerContactReport\SaveCustomerContactReportSignatureAction::class)
+            ->add(($require)($module::PERMISSION_ICAR_SIGN));
+        $app->get('/api/v1/customer-contacts/{publicId}', \TriCab\Api\Http\Action\CustomerContactReport\GetCustomerContactReportAction::class)
+            ->add(($require)($module::PERMISSION_READ));
     }
 
     /**

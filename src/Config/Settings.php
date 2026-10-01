@@ -158,6 +158,13 @@ final readonly class Settings
         public string $productFinderBaseUrl = 'http://127.0.0.1:8001',
         public int $productFinderTimeoutSeconds = 20,
         public bool $rfqModuleEnabled = false,
+        public bool $customerContactModuleEnabled = false,
+        public string $customerContactAccountsLogin = '',
+        public string $customerContactCoordinatorLogin = '',
+        public string $customerContactAccountsMailbox = '',
+        public string $customerContactWebBaseUrl = '',
+        public string $customerContactMailFrom = '',
+        public bool $customerContactEmailEnabled = false,
         public bool $rfqParserEnabled = false,
         public string $rfqParserBaseUrl = 'http://127.0.0.1:8002',
         public string $rfqParserInternalToken = '',
@@ -191,6 +198,7 @@ final readonly class Settings
         public ?string $quotesOrdersLegacyWriteSslMode = null,
         public ?string $quotesOrdersLegacyWriteTableSuffix = null,
         public bool $quotesOrdersLegacyWriteTableSuffixConfigured = false,
+        public bool $customerContactE2eMode = false,
     ) {
     }
 
@@ -817,6 +825,32 @@ final readonly class Settings
         // is what the web reads to hide every RFQ entry -- administrators included,
         // who would otherwise see it because they hold every permission.
         $rfqModuleEnabled = self::bool($env, 'RFQ_MODULE_ENABLED', false);
+        $customerContactModuleEnabled = self::bool($env, 'CUSTOMER_CONTACT_MODULE_ENABLED', false);
+        $customerContactCoordinatorLogin = strtolower(trim(self::string($env, 'CUSTOMER_CONTACT_COORDINATOR_LOGIN', '')));
+        $customerContactAccountsMailbox = strtolower(trim(self::string($env, 'CUSTOMER_CONTACT_ACCOUNTS_MAILBOX', '')));
+        if ($customerContactAccountsMailbox !== '' && !str_contains($customerContactAccountsMailbox, '@')) {
+            throw new InvalidArgumentException('CUSTOMER_CONTACT_ACCOUNTS_MAILBOX must be a mailbox address when set.');
+        }
+        $customerContactWebBaseUrl = rtrim(trim(self::string($env, 'CUSTOMER_CONTACT_WEB_BASE_URL', '')), '/');
+        if ($customerContactWebBaseUrl !== '' && !str_starts_with(strtolower($customerContactWebBaseUrl), 'https://')) {
+            if ($appEnv === 'production' || !str_starts_with(strtolower($customerContactWebBaseUrl), 'http://')) {
+                throw new InvalidArgumentException(
+                    'CUSTOMER_CONTACT_WEB_BASE_URL must be an HTTPS URL (plain HTTP is accepted outside production only).',
+                );
+            }
+        }
+        $customerContactMailFrom = strtolower(trim(self::string($env, 'CUSTOMER_CONTACT_MAIL_FROM', '')));
+        if ($customerContactMailFrom !== '' && !str_contains($customerContactMailFrom, '@')) {
+            throw new InvalidArgumentException('CUSTOMER_CONTACT_MAIL_FROM must be a mailbox address when set.');
+        }
+        $customerContactEmailEnabled = self::bool($env, 'CUSTOMER_CONTACT_EMAIL_ENABLED', false);
+        $customerContactE2eMode = self::bool($env, 'CUSTOMER_CONTACT_E2E_MODE', false);
+        if ($customerContactE2eMode && ($appEnv === 'production' || $userRepository === self::USER_REPOSITORY_AZURE_SQL)) {
+            throw new InvalidArgumentException(
+                'CUSTOMER_CONTACT_E2E_MODE cannot be enabled when APP_ENV=production or USER_REPOSITORY=azure-sql. '
+                . 'E2E mode does not replace Azure Customer Contact persistence. Refusing to start.',
+            );
+        }
         $rfqParserEnabled = self::bool($env, 'RFQ_PARSER_ENABLED', false);
         $rfqParserBaseUrl = rtrim(self::string($env, 'RFQ_PARSER_BASE_URL', 'http://127.0.0.1:8002'), '/');
         $rfqParserInternalToken = trim(self::string($env, 'RFQ_PARSER_INTERNAL_TOKEN', ''));
@@ -1002,6 +1036,13 @@ final readonly class Settings
             productFinderBaseUrl: $productFinderBaseUrl,
             productFinderTimeoutSeconds: $productFinderTimeoutSeconds,
             rfqModuleEnabled: $rfqModuleEnabled,
+            customerContactModuleEnabled: $customerContactModuleEnabled,
+            customerContactAccountsLogin: strtolower(trim(self::string($env, 'CUSTOMER_CONTACT_ACCOUNTS_LOGIN', ''))),
+            customerContactCoordinatorLogin: $customerContactCoordinatorLogin,
+            customerContactAccountsMailbox: $customerContactAccountsMailbox,
+            customerContactWebBaseUrl: $customerContactWebBaseUrl,
+            customerContactMailFrom: $customerContactMailFrom,
+            customerContactEmailEnabled: $customerContactEmailEnabled,
             rfqParserEnabled: $rfqParserEnabled,
             rfqParserBaseUrl: $rfqParserBaseUrl,
             rfqParserInternalToken: $rfqParserInternalToken,
@@ -1037,6 +1078,7 @@ final readonly class Settings
             quotesOrdersLegacyWriteSslMode: $writeConfig->sslMode,
             quotesOrdersLegacyWriteTableSuffix: $writeConfig->tableSuffix,
             quotesOrdersLegacyWriteTableSuffixConfigured: $writeConfig->tableSuffixConfigured,
+            customerContactE2eMode: $customerContactE2eMode,
         );
     }
 
