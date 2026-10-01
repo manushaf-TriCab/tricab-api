@@ -7,6 +7,7 @@ namespace TriCab\Api\Tests\CustomerContactReport;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\TestCase;
+use TriCab\Api\CustomerContactReport\Email\InMemoryCustomerContactReportNotifier;
 use TriCab\Api\CustomerContactReport\Identity\CustomerContactE2eDirectory;
 use TriCab\Api\CustomerContactReport\Identity\DevelopmentCustomerContactReportReportingLine;
 use TriCab\Api\CustomerContactReport\Persistence\CustomerContactE2ePaths;
@@ -69,7 +70,15 @@ final class CustomerContactE2eHarnessTest extends TestCase
                     \RecursiveIteratorIterator::CHILD_FIRST,
                 );
                 foreach ($files as $file) {
-                    $file->isDir() ? rmdir($file->getPathname()) : unlink($file->getPathname());
+                    if (!$file instanceof \SplFileInfo) {
+                        continue;
+                    }
+                    $pathname = $file->getPathname();
+                    if ($file->isDir()) {
+                        rmdir($pathname);
+                    } else {
+                        unlink($pathname);
+                    }
                 }
                 rmdir($directory);
             }
@@ -118,7 +127,6 @@ final class CustomerContactE2eHarnessTest extends TestCase
                 'BLOB_AUTH_MODE' => 'memory',
             ]);
             $container = $app->getContainer();
-            self::assertNotNull($container);
 
             $reports = $container->get(CustomerContactReportRepository::class);
             $files = $container->get(CustomerContactReportFileStore::class);
@@ -126,11 +134,11 @@ final class CustomerContactE2eHarnessTest extends TestCase
             $line = $container->get(CustomerContactReportReportingLine::class);
             $users = $container->get(UserRepository::class);
 
+            self::assertNotInstanceOf(InMemoryCustomerContactReportRepository::class, $reports);
             self::assertInstanceOf(DevelopmentFileCustomerContactReportRepository::class, $reports);
             self::assertInstanceOf(DevelopmentFileCustomerContactReportFileStore::class, $files);
             self::assertInstanceOf(DevelopmentCustomerContactReportReportingLine::class, $line);
-            self::assertStringContainsString('InMemory', $mail::class);
-            self::assertNotInstanceOf(InMemoryCustomerContactReportRepository::class, $reports);
+            self::assertInstanceOf(InMemoryCustomerContactReportNotifier::class, $mail);
 
             self::assertInstanceOf(InMemoryApiUserRepository::class, $users);
             $admin = $users->findByEmail(EmailAddress::fromString(DevelopmentUserManagementCatalog::USER_EMAIL));
@@ -165,7 +173,6 @@ final class CustomerContactE2eHarnessTest extends TestCase
             'CUSTOMER_CONTACT_EMAIL_ENABLED' => 'false',
         ]);
         $container = $app->getContainer();
-        self::assertNotNull($container);
         self::assertInstanceOf(
             InMemoryCustomerContactReportRepository::class,
             $container->get(CustomerContactReportRepository::class),
