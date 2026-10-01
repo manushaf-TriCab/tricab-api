@@ -51,6 +51,8 @@ final readonly class ProductCustomerViewDetail
         /** @var list<ProductApprovalCertificateItem> */
         public array $approvalCertificates = [],
         public ?string $thumbnailBackgroundColor = null,
+        public ?string $descriptionImageWidth = null,
+        public ?string $descriptionImageAlignment = null,
     ) {
     }
 }

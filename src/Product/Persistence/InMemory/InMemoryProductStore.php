@@ -105,6 +105,9 @@ final class InMemoryProductStore
     /** @var array<string, string> */
     private array $thumbnailBackgroundColors = [];
 
+    /** @var array<string, array{width: string, alignment: string}> */
+    private array $pageMediaLayouts = [];
+
     /** @var list<array<string, mixed>> */
     private array $redirects = [];
 
@@ -1234,6 +1237,22 @@ final class InMemoryProductStore
         }
 
         $this->thumbnailBackgroundColors[$key] = $color;
+    }
+
+    /**
+     * @return array{width: string, alignment: string}|null
+     */
+    public function pageMediaLayoutForProduct(ProductPublicId $publicId): ?array
+    {
+        return $this->pageMediaLayouts[$publicId->toString()] ?? null;
+    }
+
+    public function setPageMediaLayout(ProductPublicId $publicId, string $width, string $alignment): void
+    {
+        $this->pageMediaLayouts[$publicId->toString()] = [
+            'width' => $width,
+            'alignment' => $alignment,
+        ];
     }
 
     /**

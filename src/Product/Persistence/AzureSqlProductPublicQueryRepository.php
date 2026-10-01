@@ -14,6 +14,7 @@ use TriCab\Core\Product\Application\DTO\ProductPublicRelationshipItem;
 use TriCab\Core\Product\Application\DTO\ProductPublicSpecificationItem;
 use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Contract\Product3DModelRepository;
+use TriCab\Core\Product\Contract\ProductPageMediaLayoutRepository;
 use TriCab\Core\Product\Contract\ProductPublicQueryRepository;
 use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
@@ -45,6 +46,7 @@ SQL;
         private readonly SqlConnection $connection,
         private readonly Product3DModelRepository $threeDModels,
         private readonly bool $product3dEnabled = true,
+        private readonly ?ProductPageMediaLayoutRepository $pageMedia = null,
     ) {
     }
 
@@ -202,6 +204,7 @@ SQL,
                 }
             }
         }
+        $pageMedia = $this->pageMedia?->find($pid);
 
         return new ProductPublicDetail(
             publicId: $publicId,
@@ -230,6 +233,8 @@ SQL,
             threeD: $this->product3dEnabled
                 ? $this->threeDModels->listPublicByProduct($pid)
                 : ProductPublic3DPayload::empty(),
+            descriptionImageWidth: $pageMedia?->width(),
+            descriptionImageAlignment: $pageMedia?->alignment(),
         );
     }
 

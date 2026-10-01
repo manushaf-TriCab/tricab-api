@@ -104,6 +104,8 @@ final class EnrichPublicProductWithStyleInheritanceService
                     $detail->threeD,
                 ),
             ),
+            descriptionImageWidth: $detail->descriptionImageWidth,
+            descriptionImageAlignment: $detail->descriptionImageAlignment,
             spin360: $this->mergeSpin360(
                 $this->effective->assetsForProduct($detail->publicId, StyleResourceType::fromString(StyleResourceType::SPIN_360)),
                 $detail,

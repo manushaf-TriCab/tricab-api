@@ -32,6 +32,7 @@ final class PresentationMediaResolver
         return match ($role) {
             PresentationMediaRole::PRODUCT_THUMBNAIL => self::legacyThumbnail($media),
             PresentationMediaRole::PRIMARY => self::legacyPrimary($media),
+            PresentationMediaRole::PRIMARY_SECONDARY => null,
             PresentationMediaRole::CROSS_SECTION => self::legacyCrossSection($media),
             default => null,
         };

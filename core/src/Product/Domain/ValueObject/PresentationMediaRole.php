@@ -14,11 +14,14 @@ final class PresentationMediaRole
 {
     public const PRODUCT_THUMBNAIL = 'product-thumbnail';
     public const PRIMARY = 'primary';
+    /** Optional second image in the left product-page column. At most one. */
+    public const PRIMARY_SECONDARY = 'primary-secondary';
     public const CROSS_SECTION = 'cross-section';
 
     private const ALLOWED = [
         self::PRODUCT_THUMBNAIL,
         self::PRIMARY,
+        self::PRIMARY_SECONDARY,
         self::CROSS_SECTION,
     ];
 

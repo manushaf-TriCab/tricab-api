@@ -139,6 +139,7 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
                 }
             }
         }
+        $pageMedia = $this->store->pageMediaLayoutForProduct($product->publicId());
 
         return new ProductPublicDetail(
             publicId: $publicId,
@@ -163,6 +164,8 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
             threeD: $this->product3dEnabled
                 ? $this->threeDModels->listPublicByProduct(ProductPublicId::fromString($publicId))
                 : ProductPublic3DPayload::empty(),
+            descriptionImageWidth: $pageMedia === null ? null : $pageMedia['width'],
+            descriptionImageAlignment: $pageMedia === null ? null : $pageMedia['alignment'],
         );
     }
 

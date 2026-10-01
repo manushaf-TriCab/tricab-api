@@ -70,6 +70,7 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
         $slug = $primarySlug ?? '';
         $statusCode = $product->status()->toString();
         $variants = $this->listPreviewVariants($product);
+        $pageMedia = $this->store->pageMediaLayoutForProduct($product->publicId());
 
         return new ProductCustomerViewDetail(
             publicId: $publicId,
@@ -100,6 +101,8 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
                 ? $this->threeDModels->listPublicByProduct(ProductPublicId::fromString($publicId))
                 : ProductPublic3DPayload::empty(),
             thumbnailBackgroundColor: $this->store->thumbnailBackgroundColorForProduct($product->publicId()),
+            descriptionImageWidth: $pageMedia === null ? null : $pageMedia['width'],
+            descriptionImageAlignment: $pageMedia === null ? null : $pageMedia['alignment'],
         );
     }
 

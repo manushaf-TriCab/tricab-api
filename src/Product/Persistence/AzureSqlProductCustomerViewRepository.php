@@ -19,6 +19,7 @@ use TriCab\Core\Product\Application\DTO\ProductVariantSummary;
 use TriCab\Core\Product\Application\DTO\SpecificationValidationRules;
 use TriCab\Core\Product\Contract\Product3DModelRepository;
 use TriCab\Core\Product\Contract\ProductCustomerViewQueryRepository;
+use TriCab\Core\Product\Contract\ProductPageMediaLayoutRepository;
 use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Product\Domain\ValueObject\ThumbnailBackgroundColor;
@@ -36,6 +37,7 @@ final class AzureSqlProductCustomerViewRepository implements ProductCustomerView
         private readonly SqlConnection $connection,
         private readonly Product3DModelRepository $threeDModels,
         private readonly bool $product3dEnabled = true,
+        private readonly ?ProductPageMediaLayoutRepository $pageMedia = null,
     ) {
     }
 
@@ -107,6 +109,7 @@ SQL,
         $styleAssignment = $this->loadStyleAssignment($pid);
 
         $internalCode = AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null);
+        $pageMedia = $this->pageMedia?->find($pid);
 
         return new ProductCustomerViewDetail(
             publicId: $publicId,
@@ -139,6 +142,8 @@ SQL,
             thumbnailBackgroundColor: ThumbnailBackgroundColor::tryFromString(
                 AzureSqlValueMapper::nullableString($row['ThumbnailBackgroundColor'] ?? null),
             )?->toString(),
+            descriptionImageWidth: $pageMedia?->width(),
+            descriptionImageAlignment: $pageMedia?->alignment(),
         );
     }
 

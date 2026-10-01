@@ -47,7 +47,7 @@ BEGIN TRY
             CONSTRAINT [FK_product_ProductImageRoleAssignments_UpdatedBy]
                 FOREIGN KEY ([UpdatedByUserId]) REFERENCES [identity].[Users] ([UserId]),
             CONSTRAINT [CK_product_ProductImageRoleAssignments_Role]
-                CHECK ([RoleCode] IN (N'product-thumbnail', N'primary', N'cross-section'))
+                CHECK ([RoleCode] IN (N'product-thumbnail', N'primary', N'primary-secondary', N'cross-section'))
         );
     END;
 

@@ -193,6 +193,36 @@ final class ProductImageRoleAssignmentServiceTest extends TestCase
         self::assertContains('cross-section', $after->presentationRoles);
     }
 
+    public function testSecondaryLeftImageIsOptionalAndCanBeCleared(): void
+    {
+        $productId = '11111111-1111-4111-8111-111111111111';
+        $primaryId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+        $secondaryId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+        $this->assign($productId, $primaryId, 'primary');
+
+        $before = $this->media->listByProduct(ProductPublicId::fromString($productId));
+        self::assertNull(PresentationMediaResolver::select($before, PresentationMediaRole::PRIMARY_SECONDARY));
+
+        $this->assign($productId, $secondaryId, PresentationMediaRole::PRIMARY_SECONDARY);
+        $assigned = $this->media->listByProduct(ProductPublicId::fromString($productId));
+        $primary = PresentationMediaResolver::select($assigned, PresentationMediaRole::PRIMARY);
+        $secondary = PresentationMediaResolver::select($assigned, PresentationMediaRole::PRIMARY_SECONDARY);
+        self::assertNotNull($primary);
+        self::assertNotNull($secondary);
+        self::assertSame($primaryId, $primary->publicId);
+        self::assertSame($secondaryId, $secondary->publicId);
+
+        $this->clearRole->execute(
+            $this->actor,
+            new ClearProductPresentationMediaRoleCommand($productId, PresentationMediaRole::PRIMARY_SECONDARY),
+        );
+        $cleared = $this->media->listByProduct(ProductPublicId::fromString($productId));
+        self::assertNull(PresentationMediaResolver::select($cleared, PresentationMediaRole::PRIMARY_SECONDARY));
+        $stillPrimary = PresentationMediaResolver::select($cleared, PresentationMediaRole::PRIMARY);
+        self::assertNotNull($stillPrimary);
+        self::assertSame($primaryId, $stillPrimary->publicId);
+    }
+
     public function testRejectsPresentationRoleOnNonPublicEligibleMedia(): void
     {
         $productId = '55555555-5555-4555-8555-555555555555';

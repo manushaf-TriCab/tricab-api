@@ -46,6 +46,8 @@ final readonly class ProductPublicDetail
         public array $spin360 = [],
         /** @var list<ProductApprovalCertificateItem> */
         public array $approvalCertificates = [],
+        public ?string $descriptionImageWidth = null,
+        public ?string $descriptionImageAlignment = null,
     ) {
     }
 }

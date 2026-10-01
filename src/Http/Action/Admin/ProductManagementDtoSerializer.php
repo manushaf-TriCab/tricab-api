@@ -36,6 +36,7 @@ use TriCab\Core\Product\Application\DTO\ProductMediaFileRecord;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
 use TriCab\Core\Product\Application\Service\PresentationMediaResolver;
 use TriCab\Core\Product\Application\Service\ProductThumbnailImageResolver;
+use TriCab\Core\Product\Domain\ValueObject\DescriptionImagePresentation;
 use TriCab\Core\Product\Domain\ValueObject\PresentationMediaRole;
 use TriCab\Core\Product\Application\DTO\ProductDocumentDownloadResult;
 use TriCab\Core\Product\Application\DTO\ProductUploadSessionResult;
@@ -209,6 +210,7 @@ final class ProductManagementDtoSerializer
                 ProductThumbnailImageResolver::fromMediaSummaries($detail->media),
             ),
             'thumbnailBackgroundColor' => $detail->thumbnailBackgroundColor ?? null,
+            'pageMedia' => self::pageMedia($detail->descriptionImageWidth, $detail->descriptionImageAlignment),
             'variants' => array_map(self::variantSummary(...), $detail->variants),
             'media' => $media,
             'documents' => array_map(
@@ -262,6 +264,10 @@ final class ProductManagementDtoSerializer
             $detail->media,
             PresentationMediaRole::CROSS_SECTION,
         );
+        $primarySecondary = PresentationMediaResolver::select(
+            $detail->media,
+            PresentationMediaRole::PRIMARY_SECONDARY,
+        );
 
         return [
             'preview' => [
@@ -292,7 +298,11 @@ final class ProductManagementDtoSerializer
                 'crossSection' => $crossSection === null
                     ? null
                     : self::publicMediaSummary($crossSection, $devUrls),
+                'primarySecondary' => $primarySecondary === null
+                    ? null
+                    : self::publicMediaSummary($primarySecondary, $devUrls),
             ],
+            'pageMedia' => self::pageMedia($detail->descriptionImageWidth, $detail->descriptionImageAlignment),
             'variants' => array_map(self::variantSummary(...), $detail->variants),
             'media' => $media,
             'documents' => array_map(
@@ -1178,6 +1188,19 @@ final class ProductManagementDtoSerializer
             'parentPublicId' => $item->parentPublicId,
             'displayOrder' => $item->displayOrder,
             'isActive' => $item->isActive,
+        ];
+    }
+
+    /**
+     * @return array{descriptionImageWidth: string, descriptionImageAlignment: string}
+     */
+    private static function pageMedia(?string $width, ?string $alignment): array
+    {
+        $presentation = DescriptionImagePresentation::resolve($width, $alignment);
+
+        return [
+            'descriptionImageWidth' => $presentation->width(),
+            'descriptionImageAlignment' => $presentation->alignment(),
         ];
     }
 
