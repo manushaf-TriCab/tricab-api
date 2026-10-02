@@ -32,11 +32,11 @@ final class ParsedRfq
     }
 
     /** @return array<string, mixed> */
-    public function toArray(): array
+    public function toArray(bool $withPricing = false): array
     {
         return [
             'parseToken' => $this->parseToken,
-            'lines' => array_map(static fn (ParsedLine $line): array => $line->toArray(), $this->lines),
+            'lines' => array_map(static fn (ParsedLine $line): array => $line->toArray($withPricing), $this->lines),
             'coverage' => $this->coverage,
             'coverageComplete' => $this->coverageComplete,
             'degraded' => $this->degraded,

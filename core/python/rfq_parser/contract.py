@@ -12,6 +12,13 @@ functions, in the shape `TriCab\\Core\\Rfq\\Parser\\ParseRequest` sends and
   (`documents[].readerRoute`), which is PHP's cue to enqueue a reader job.
 - `POST /v1/read` — one document through the model reader, for a reader job
   (`rfq_parser.reading`): the source's portal re-read, with the job held by PHP.
+- `POST /v1/ocr` — one screenshot through vision OCR, for Scan Screenshot: the
+  transcribed text for the rep to review before it is matched (the source's
+  `/api/vision-ocr`). It creates no lines and stores nothing.
+- `POST /v1/price` — a draft's rows priced as the source editor does (cost, MOQ,
+  prepack, currency, then margin, sell price and total), parity plan E5.
+- `POST /v1/products/styles` — the catalogue's style for each product code, for
+  the customer default margin lookup.
 - `POST /v1/readiness` — the source's `quote_readiness` over a draft's rows and
   header, so the status a save leaves is the source's rule, not a PHP copy of it.
 - `POST /v1/products/search` — the source's product-code autocomplete
@@ -47,10 +54,10 @@ from flask import Blueprint, jsonify, request
 from tricab_cable_rules import ENGINE_VERSION
 from tricab_cable_rules.extractor import pair_circuit_label_lines
 
-from . import accounting, corrections, intake, pipeline, reading
+from . import accounting, corrections, intake, pipeline, quote_pricing, reading, vision_ocr
 from .product_search import search_products
 from ._source import SOURCE_COMMIT
-from .quote_readiness import exclusion_reason, quote_readiness
+from .quote_readiness import REGION_PROFILE, SUPPORTED_CURRENCIES, exclusion_reason, quote_readiness
 
 log = logging.getLogger("rfq-parser")
 
@@ -64,6 +71,8 @@ _CORRELATION_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{7,63}$")
 MAX_DEADLINE_MS = 600_000
 MIN_DEADLINE_MS = 1_000
 MAX_READINESS_ROWS = 2_000
+# The correction memory a parse carries; the live table held 1,9xx keys on 28 Sep.
+MAX_CORRECTIONS = 50_000
 # `RfqServiceLimits::MAX_DOCUMENTS_PER_INTAKE`, `MAX_DOCUMENT_BYTES`, `MAX_IMAGE_BYTES`.
 MAX_DOCUMENTS = 10
 MAX_DOCUMENT_BYTES = 20 * 1024 * 1024
@@ -221,6 +230,22 @@ def _documents(raw: Any) -> list[intake.Document]:
     return out
 
 
+def _learned(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """The request's `corrections`: correction memory the API holds, `{key: {product_code, confirmations}}`.
+
+    Keys are :func:`corrections.correction_key` of a line's text, as `/v1/corrections/keys`
+    made them; a key two codes tie on is left out by the API, as the source declines it.
+    """
+    from .app import _corrections_from
+
+    if len(payload.get("corrections") or {}) > MAX_CORRECTIONS:
+        raise ContractError("input_too_large", f"More than {MAX_CORRECTIONS} corrections.", 413)
+    learned = _corrections_from(payload.get("corrections"))
+    if learned is None:
+        raise ContractError("invalid_request", "corrections must map a key to {product_code, confirmations}.", 400)
+    return learned
+
+
 _STATUS = {"unsupported_format": 415, "input_too_large": 413, "timeout": 504, "invalid_request": 400}
 
 
@@ -270,7 +295,7 @@ def _parse_documents(documents: list[intake.Document], payload: dict[str, Any], 
             raise ContractError("input_too_large", f"The documents have more than {MAX_LINES} rows to read.", 413)
         if document.suffix == ".pdf" and [i["text"] for i in parsed] == [_NO_PDF_TEXT]:
             notes.append(f"{document.file_name} has no text layer (a scan); " + ("it is being read from the page images by the reader." if route else "no reader is switched on to read it."))
-        with corrections.using({}):
+        with corrections.using(_learned(payload)):
             results = pipeline.match_items(items, budget=budget)
         cov = accounting.balance(rows, results, items=items, default_file=document.file_name)
         summary.update(lineCount=len(results), coverage=cov.to_contract())
@@ -308,7 +333,7 @@ def parse():
             if len(items) > MAX_LINES:
                 raise ContractError("input_too_large", f"The text has more than {MAX_LINES} lines.", 413)
             budget = _budget(payload, len(items))
-            with corrections.using({}):
+            with corrections.using(_learned(payload)):
                 results = pipeline.match_items(items, budget=budget)
             cov = text_coverage(text, items, results)
             summaries, notes = [], []
@@ -378,7 +403,7 @@ def read():
         if len(outcome.items) > MAX_LINES:
             raise ContractError("input_too_large", f"The reader returned more than {MAX_LINES} rows.", 413)
         max_calls = options.get("maxModelCalls") if isinstance(options.get("maxModelCalls"), int) else 0
-        with corrections.using({}):
+        with corrections.using(_learned(payload)):
             results, degraded, budget = reading.match(outcome.items, subject=subject, attachments=attachments or [document.file_name], max_calls=max_calls)
     except ContractError as exc:
         return _refuse(correlation_id, exc.code, exc.message, exc.status)
@@ -412,6 +437,179 @@ def read():
             "elapsedMs": elapsed_ms,
         },
     )
+
+
+@v1.post("/v1/ocr")
+def ocr():
+    """One screenshot through vision OCR; answers the text, never lines.
+
+    Request: the envelope, `deadlineMs` and one `document` (as in `/v1/parse`) that is
+    a png, jpeg or webp. Answer: `{text, confidence, model, escalated}`, where `text`
+    is the table's rows as one line each, for the textarea. A provider failure is
+    typed as in `/v1/read` (`provider_rejected` / `provider_unavailable`), with plain
+    words and never the provider's body.
+    """
+    started = time.monotonic()
+    correlation_id = None
+    try:
+        payload, correlation_id = _envelope(request.get_json(silent=True))
+        deadline_ms = _deadline(payload)
+        (document,) = _documents([payload.get("document")]) if isinstance(payload.get("document"), dict) else (None,)
+        if document is None:
+            raise ContractError("invalid_request", "document is required.", 400)
+        if not document.is_image:
+            raise ContractError("unsupported_format", "Scan Screenshot reads png, jpeg and webp images.", 415)
+        if not vision_ocr.vision_ocr_enabled():
+            raise ContractError("provider_rejected", "Screenshot reading is not switched on.", 502)
+        result = vision_ocr.extract_table_with_qwen(document.data, document.content_type or "")
+    except ContractError as exc:
+        return _refuse(correlation_id, exc.code, exc.message, exc.status)
+    except Exception:  # noqa: BLE001
+        log.exception("v1 ocr failed (correlation %s)", correlation_id)
+        return _refuse(correlation_id, "internal_error", "The screenshot could not be read.", 500)
+
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    if not result.ok:
+        log.warning("v1 ocr %s failed: %s", correlation_id, (result.error or "")[:500])
+        if result.error == "No RFQ rows found.":
+            return _refuse(correlation_id, "invalid_request", "No RFQ rows were found in that screenshot.", 422)
+        code, words = reading.classify(result.error)
+        return _refuse(correlation_id, code, f"The screenshot could not be read: {words}.", 502 if code.startswith("provider") else 500)
+    if elapsed_ms > deadline_ms:
+        return _refuse(correlation_id, "timeout", "Reading the screenshot took longer than its deadline.", 504)
+    log.info("v1 ocr %s: %d rows, confidence %.2f, %d ms", correlation_id, len(result.rows), result.confidence, elapsed_ms)
+    return _answer(
+        correlation_id,
+        {
+            "text": result.text,
+            "rowCount": len(result.rows),
+            "confidence": result.confidence,
+            "model": result.model,
+            "escalated": result.escalated,
+            "elapsedMs": elapsed_ms,
+        },
+    )
+
+
+MAX_PRICE_ROWS = 600
+
+
+@v1.post("/v1/price")
+def price():
+    """The rows priced; the source's `/api/prices` plus the browser's margin pass.
+
+    Request: the envelope, `deadlineMs` and `draftJson`, one JSON string (as in
+    `/v1/readiness`, so rows keep `{}`, `NaN` and large integers) of
+    `{rows, region, currency, defaultMargins, reprice}`. `defaultMargins` maps a
+    product code to the customer's default margin; `reprice` false only re-derives
+    margin, sell price and total from the cost the rows already hold.
+
+    Answer: `{rows, unpriced, engine}`, the rows in the order sent.
+    """
+    started = time.monotonic()
+    correlation_id = None
+    try:
+        payload, correlation_id = _envelope(request.get_json(silent=True))
+        deadline_ms = _deadline(payload)
+        try:
+            draft = json.loads(payload.get("draftJson") or "")
+        except (TypeError, ValueError):
+            raise ContractError("invalid_request", "draftJson must be a JSON object.", 400) from None
+        if not isinstance(draft, dict):
+            raise ContractError("invalid_request", "draftJson must be a JSON object.", 400)
+        rows = draft.get("rows")
+        if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
+            raise ContractError("invalid_request", "rows must be a list of objects.", 400)
+        if len(rows) > MAX_PRICE_ROWS:
+            raise ContractError("input_too_large", f"More than {MAX_PRICE_ROWS} rows to price.", 413)
+        region = draft.get("region")
+        currency = draft.get("currency")
+        if region not in REGION_PROFILE:
+            raise ContractError("invalid_request", "region is not one the Cost API prices.", 400)
+        if currency not in SUPPORTED_CURRENCIES:
+            raise ContractError("invalid_request", "currency is not one of AUD, NZD, USD, SGD.", 400)
+        margins = draft.get("defaultMargins")
+        if margins is None:
+            margins = {}
+        if not isinstance(margins, dict) or not all(
+            v == quote_pricing.COST_RULE or (isinstance(v, (int, float)) and not isinstance(v, bool)) for v in margins.values()
+        ):
+            raise ContractError("invalid_request", 'defaultMargins must map a product code to a margin, or to "cost".', 400)
+        reprice = draft.get("reprice")
+        if not isinstance(reprice, bool):
+            raise ContractError("invalid_request", "reprice must be true or false.", 400)
+        priced = quote_pricing.price_rows(
+            rows,
+            region=region,
+            currency=currency,
+            default_margins={str(code).upper(): value for code, value in margins.items()},
+            reprice=reprice,
+        )
+        unpriced = quote_pricing.unpriced_count(priced)
+    except ContractError as exc:
+        return _refuse(correlation_id, exc.code, exc.message, exc.status)
+    except Exception:  # noqa: BLE001
+        log.exception("v1 price failed (correlation %s)", correlation_id)
+        return _refuse(correlation_id, "internal_error", "The RFQ parser could not price these rows.", 500)
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    if elapsed_ms > deadline_ms:
+        return _refuse(correlation_id, "timeout", "Pricing took longer than its deadline.", 504)
+    log.info("v1 price %s: %d rows, reprice=%s, %d unpriced, %d ms", correlation_id, len(priced), reprice, unpriced, elapsed_ms)
+    return _answer(correlation_id, {"rows": priced, "unpriced": unpriced, "engine": _engine(), "elapsedMs": elapsed_ms})
+
+
+@v1.post("/v1/products/styles")
+def products_styles():
+    correlation_id = None
+    try:
+        payload, correlation_id = _envelope(request.get_json(silent=True))
+        codes = payload.get("codes")
+        if not isinstance(codes, list) or len(codes) > MAX_READINESS_ROWS or not all(isinstance(c, str) and len(c) <= 100 for c in codes):
+            raise ContractError("invalid_request", "codes must be a list of product codes.", 400)
+        products = pipeline.catalog.products_by_code
+        styles = {}
+        for code in codes:
+            product = products.get(code.strip().upper())
+            if product is not None and getattr(product, "style", ""):
+                styles[code.strip().upper()] = str(product.style).upper()
+    except ContractError as exc:
+        return _refuse(correlation_id, exc.code, exc.message, exc.status)
+    except Exception:  # noqa: BLE001
+        log.exception("v1 styles failed (correlation %s)", correlation_id)
+        return _refuse(correlation_id, "internal_error", "The product styles could not be read.", 500)
+    return _answer(correlation_id, {"styles": styles})
+
+
+@v1.post("/v1/corrections/keys")
+def correction_keys():
+    """What Save Review may learn (the source's `learn_approved_corrections`).
+
+    `lines`: `[{text, productCode}]`, the approved lines. Answer: `entries`, one per
+    line that can be learned, in order: `{index, key, productCode}`. A line is
+    skipped when its text has no key or its code is not in the catalogue, as the
+    source skips it. The API owns the table and writes these; nothing is stored here.
+    """
+    correlation_id = None
+    try:
+        payload, correlation_id = _envelope(request.get_json(silent=True))
+        lines = payload.get("lines")
+        if not isinstance(lines, list) or len(lines) > MAX_READINESS_ROWS or not all(
+            isinstance(line, dict) and isinstance(line.get("text"), str) and isinstance(line.get("productCode"), str) for line in lines
+        ):
+            raise ContractError("invalid_request", "lines must be a list of {text, productCode}.", 400)
+        products = pipeline.catalog.products_by_code
+        entries = []
+        for index, line in enumerate(lines):
+            code = line["productCode"].strip().upper()
+            key = corrections.correction_key(line["text"])
+            if key and code in products:
+                entries.append({"index": index, "key": key, "productCode": code})
+    except ContractError as exc:
+        return _refuse(correlation_id, exc.code, exc.message, exc.status)
+    except Exception:  # noqa: BLE001
+        log.exception("v1 correction keys failed (correlation %s)", correlation_id)
+        return _refuse(correlation_id, "internal_error", "The correction keys could not be made.", 500)
+    return _answer(correlation_id, {"entries": entries})
 
 
 @v1.post("/v1/readiness")

@@ -266,6 +266,64 @@ final class RfqEndpointsTest extends TestCase
         self::assertSame(503, $down->getStatusCode());
     }
 
+    public function test_scan_screenshot_is_validated_before_the_parser_is_asked(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $none = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/ocr'));
+        self::assertSame(422, $none->getStatusCode());
+
+        $sheet = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/ocr')->withUploadedFiles(['file' => $this->upload('rfq.xlsx', 'application/vnd.ms-excel')]));
+        self::assertSame(422, $sheet->getStatusCode(), 'a spreadsheet is not a screenshot');
+
+        // A real image reaches the parser; TestAppFactory has none deployed.
+        $down = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/ocr')->withUploadedFiles(['file' => $this->upload('shot.png', 'image/png')]));
+        self::assertSame(503, $down->getStatusCode());
+        $error = TestAppFactory::json($down)['error'] ?? null;
+        self::assertIsArray($error);
+        self::assertSame('RFQ_PARSER_UNAVAILABLE', $error['code']);
+    }
+
+    public function test_scan_screenshot_needs_the_create_permission(): void
+    {
+        $app = $this->app(['account.login', Module::PERMISSION_ACCESS, Module::PERMISSION_DRAFT_READ]);
+        $response = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/ocr')->withUploadedFiles(['file' => $this->upload('shot.png', 'image/png')]));
+
+        self::assertSame(403, $response->getStatusCode());
+    }
+
+    private function upload(string $name, string $type): \Slim\Psr7\UploadedFile
+    {
+        $bytes = "\x89PNG\r\n\x1a\n" . str_repeat('0', 16);
+
+        return new \Slim\Psr7\UploadedFile((new \Slim\Psr7\Factory\StreamFactory())->createStream($bytes), $name, $type, strlen($bytes), UPLOAD_ERR_OK);
+    }
+
+    public function test_margin_and_sell_price_decisions_are_validated(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]]);
+        foreach ([
+            ['marginPercent' => '100'],
+            ['marginPercent' => 33],
+            ['marginPercent' => 'abc'],
+            ['sellPrice' => '0'],
+            ['sellPrice' => '-4'],
+            ['sellPrice' => 12],
+        ] as $decision) {
+            $line = ['lineUid' => 'a', 'comment' => '', ...$decision];
+            $response = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/readiness')->withParsedBody(['parseToken' => 'x.y', 'header' => [], 'lines' => [$line]]));
+            self::assertSame(422, $response->getStatusCode(), json_encode($decision) ?: '');
+        }
+    }
+
+    public function test_sales_cannot_set_a_margin(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $line = ['lineUid' => 'a', 'comment' => '', 'marginPercent' => '30'];
+        $response = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/readiness')->withParsedBody(['parseToken' => null, 'header' => [], 'lines' => [$line]]));
+
+        self::assertSame(403, $response->getStatusCode(), (string) $response->getBody());
+    }
+
     public function test_readiness_is_validated_like_a_save(): void
     {
         $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);

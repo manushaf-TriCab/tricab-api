@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace TriCab\Core\Rfq\Application\Service;
 
 use TriCab\Core\Rfq\Application\DTO\ParsedRfq;
+use TriCab\Core\Rfq\Application\DTO\RfqPricingView;
 use TriCab\Core\Rfq\Application\DTO\RfqCustomerOption;
 use TriCab\Core\Rfq\Application\DTO\RfqReadinessView;
+use TriCab\Core\Rfq\Application\DTO\SavedReview;
+use TriCab\Core\Rfq\Contract\RfqCorrectionMemory;
 use TriCab\Core\Rfq\Contract\RfqCustomerDirectory;
+use TriCab\Core\Rfq\Contract\RfqDefaultMargins;
 use TriCab\Core\Rfq\Contract\RfqDraftStore;
 use TriCab\Core\Rfq\Contract\RfqOperatorDirectory;
 use TriCab\Core\Rfq\Contract\RfqParserClient;
@@ -28,8 +32,10 @@ use TriCab\Core\Rfq\Parser\ParseRequest;
 use TriCab\Core\Rfq\Parser\ParseSeal;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
 use TriCab\Core\Rfq\Storage\DraftActor;
+use TriCab\Core\Rfq\Storage\DraftChangeLog;
 use TriCab\Core\Rfq\Storage\DraftLineEdits;
 use TriCab\Core\Rfq\Storage\NewDraft;
+use TriCab\Core\Rfq\Storage\PythonText;
 use TriCab\Core\Rfq\Storage\QuoteHeaderEdit;
 use TriCab\Core\Rfq\Storage\SalesRepAttribution;
 use TriCab\Core\Rfq\Storage\StoreFormat;
@@ -66,6 +72,9 @@ final class RfqReviewService
     /** The label with no customer yet; the source's form is "<customer> – dd Mon yyyy". */
     private const PASTE_LABEL = 'Pasted text';
 
+    /** The source's `REGION_PROFILE`: the currency a region quotes in unless told otherwise. */
+    private const REGION_CURRENCY = ['australia' => 'AUD', 'newzealand' => 'NZD', 'usa' => 'USD', 'asia' => 'USD'];
+
     public function __construct(
         private readonly RfqParserClient $parser,
         private readonly RfqDraftStore $drafts,
@@ -75,6 +84,8 @@ final class RfqReviewService
         private readonly Clock $clock,
         private readonly ?ParseSeal $seal,
         private readonly bool $allowModel = false,
+        private readonly ?RfqDefaultMargins $margins = null,
+        private readonly ?RfqCorrectionMemory $memory = null,
     ) {
     }
 
@@ -93,7 +104,7 @@ final class RfqReviewService
         }
         // Plan 3.5: a model may run only when `RFQ_PARSER_ALLOW_MODEL` says so,
         // whatever the parser's own configuration; the text cannot turn it on.
-        $parsed = $this->parser->parse(ParseRequest::forText($id, $text, $this->allowModel));
+        $parsed = $this->parser->parse(ParseRequest::forText($id, $text, $this->allowModel)->withCorrections($this->corrections()));
         if ($parsed->lines === []) {
             throw InvalidRfqValue::required('RFQ lines', 'nothing in the text could be read as a line.');
         }
@@ -131,7 +142,7 @@ final class RfqReviewService
      * header, the decisions made on it and the lines typed in, becomes a new
      * draft.
      *
-     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool}> $lines every line to keep, in order
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}> $lines every line to keep, in order
      *
      * @throws InvalidRfqValue      for a seal that is not this person's or has expired, an unknown
      *                              line or customer, or nothing left to save
@@ -145,6 +156,7 @@ final class RfqReviewService
         if (!$actor->can(Module::PERMISSION_DRAFT_CREATE)) {
             throw new RfqActionForbidden('create RFQs');
         }
+        self::guardPricingChoices($actor, $lines);
         $sealed = $this->openSeal($parseToken, $email, $id);
         $rows = DraftLineEdits::apply($sealed['rows'], $lines, $header->region);
         if ($rows === []) {
@@ -154,6 +166,8 @@ final class RfqReviewService
 
         $worker = $this->draftActor($actor, $email);
         $rep = SalesRepAttribution::apply($header->applyTo([], $customer), null, $worker, $worker->operatorCode);
+        // Priced in the header's region and currency, with the customer's default margins.
+        $rows = $this->priced($rows, $rep['quoteDetails'], $id, true)['rows'];
         $meta = [
             'owner_email' => $worker->email,
             'rep_email' => $worker->email,
@@ -198,7 +212,7 @@ final class RfqReviewService
     }
 
     /**
-     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool}> $lines every line to keep, in order
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}> $lines every line to keep, in order
      * @param QuoteHeaderEdit|null $header the header as filled in; null keeps the stored one
      *
      * @return int|null the new revision; null when there is no such RFQ for this actor
@@ -228,8 +242,10 @@ final class RfqReviewService
             throw new RfqRevisionConflict($stored->revision, $expectedRevision);
         }
 
+        self::guardPricingChoices($actor, $lines);
         $details = $header === null ? $stored->quoteDetails : $header->applyTo($stored->quoteDetails, $this->customer($header));
         $rows = DraftLineEdits::apply($stored->rows, $lines, self::region($details));
+        $rows = $this->priced($rows, $details, $id, true)['rows'];
         $worker = $this->draftActor($actor, $email);
         $currentAssignee = is_string($stored->columns['assignee_email'] ?? null) ? $stored->columns['assignee_email'] : null;
         // Readiness judges the header the store is about to write: the worker's
@@ -247,11 +263,98 @@ final class RfqReviewService
     }
 
     /**
+     * Save Review (parity plan E5.5): log the saved revision as a review
+     * session, a line each, and teach the correction memory every approved
+     * line's code. Only the revision as saved: unsaved edits would log lines
+     * the draft does not hold.
+     *
+     * The parser keys the lines (the key is its normalisation, not ours); a
+     * parser failure stops the save before anything is written.
+     *
+     * @return SavedReview|null null when there is no such RFQ for this actor
+     *
+     * @throws RfqActionForbidden  when the actor may not edit it
+     * @throws RfqRevisionConflict when the revision is not the saved one
+     * @throws RfqParserFailure    when the parser cannot key the lines
+     * @throws RfqStoreUnavailable where there is no RFQ store or memory
+     */
+    public function saveReview(RfqActor $actor, string $email, string $publicId, int $expectedRevision, CorrelationId $id): ?SavedReview
+    {
+        $record = $this->rfqs->findRecord(strtolower(trim($publicId)));
+        if ($record === null || !RfqAccessPolicy::canSee($actor, $record->ownership)) {
+            return null;
+        }
+        if (!in_array(RfqAction::EDIT, RfqAccessPolicy::allowedActions($actor, $record->ownership), true)) {
+            throw new RfqActionForbidden('edit this RFQ');
+        }
+        $memory = $this->memory ?? throw new RfqStoreUnavailable();
+        $draftId = StoreProjection::draftId($publicId);
+        $stored = $draftId === null ? null : $this->drafts->load($draftId);
+        if ($draftId === null || $stored === null) {
+            return null;
+        }
+        if ($stored->revision !== $expectedRevision) {
+            throw new RfqRevisionConflict($stored->revision, $expectedRevision);
+        }
+
+        // `learn_approved_corrections`: approved lines with a code, keyed on their raw text.
+        $approved = [];
+        foreach ($stored->rows as $row) {
+            if (PythonText::str($row['final_status'] ?? '') !== 'approved') {
+                continue;
+            }
+            $code = strtoupper(trim(PythonText::str($row['final_product_code'] ?? '') ?: PythonText::str($row['selected_product_code'] ?? '')));
+            $text = PythonText::str($row['raw_text'] ?? '');
+            if ($code !== '' && trim($text) !== '') {
+                $approved[] = ['text' => $text, 'productCode' => $code];
+            }
+        }
+        $learned = [];
+        foreach ($this->parser->correctionKeys($id, $approved) as $entry) {
+            $learned[] = ['key' => $entry['key'], 'productCode' => $entry['productCode']];
+        }
+        $systemRows = array_values(array_map(
+            static fn (mixed $row): array => is_array($row) ? $row : [],
+            $stored->systemRows,
+        ));
+        $sessionId = $memory->recordReview(
+            $draftId,
+            $stored->revision,
+            $stored->quoteDetails,
+            array_values($stored->rows),
+            $systemRows,
+            $email,
+            $actor->branchCode,
+            $learned,
+        );
+
+        return new SavedReview($sessionId, count($stored->rows), count($learned));
+    }
+
+    /**
+     * The correction memory a parse is sent. A memory that cannot be read
+     * costs the parse its corrections, never the parse.
+     *
+     * @return array<string, array{product_code: string, confirmations: int}>
+     */
+    private function corrections(): array
+    {
+        if ($this->memory === null) {
+            return [];
+        }
+        try {
+            return $this->memory->resolved();
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    /**
      * Readiness of an unsaved match as the editor holds it: the sealed rows
      * with the decisions applied, and the header as filled in. Nothing is
      * stored.
      *
-     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool}> $lines
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}> $lines
      *
      * @throws InvalidRfqValue|RfqActionForbidden|RfqParserFailure
      */
@@ -260,18 +363,19 @@ final class RfqReviewService
         if (!$actor->can(Module::PERMISSION_DRAFT_CREATE)) {
             throw new RfqActionForbidden('create RFQs');
         }
+        self::guardPricingChoices($actor, $lines);
         $rows = DraftLineEdits::apply($this->openSeal($parseToken, $email, $id)['rows'], $lines, $header->region);
         $worker = $this->draftActor($actor, $email);
         $details = SalesRepAttribution::apply($header->applyTo([], self::namedOnly($header)), null, $worker, $worker->operatorCode)['quoteDetails'];
 
-        return RfqReadinessView::from($this->parser->readiness($id, self::clean($rows), $details), $rows);
+        return $this->readiness($actor, $rows, $details, $id);
     }
 
     /**
      * Readiness of a draft as the editor holds it, saved or not. Anyone who
      * can read the RFQ can ask; nothing is stored.
      *
-     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool}>|null $lines null for the lines as saved
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}>|null $lines null for the lines as saved
      *
      * @return RfqReadinessView|null null when there is no such RFQ for this actor
      *
@@ -294,7 +398,235 @@ final class RfqReviewService
         $currentAssignee = is_string($stored->columns['assignee_email'] ?? null) ? $stored->columns['assignee_email'] : null;
         $details = SalesRepAttribution::apply($details, $currentAssignee, $worker, $worker->operatorCode)['quoteDetails'];
 
-        return RfqReadinessView::from($this->parser->readiness($id, self::clean($rows), $details), $rows);
+        return $this->readiness($actor, $rows, $details, $id);
+    }
+
+    /**
+     * Readiness over the rows as a save would price them. A person who may see
+     * prices also gets them, from the same pricing pass, so what the detailed
+     * view shows is what readiness judged. Anyone else has lines priced only
+     * when a price is missing, because readiness needs one.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @param array<string, mixed>       $details
+     *
+     * @throws RfqParserFailure
+     */
+    private function readiness(RfqActor $actor, array $rows, array $details, CorrelationId $id): RfqReadinessView
+    {
+        $withPrices = $actor->can(Module::PERMISSION_PRICING_VIEW);
+        $priced = $this->priced($rows, $details, $id, $withPrices);
+        $view = RfqReadinessView::from($this->parser->readiness($id, self::clean($priced['rows']), $details), $priced['rows']);
+
+        return $withPrices ? $view->withPricing(self::pricingView($priced['rows'], self::currency($details), $priced['error'])) : $view;
+    }
+
+    /**
+     * Without `RFQ.PRICING.VIEW` nobody sets a margin or a sell price: those are
+     * the cost and margin the permission withholds, so they are refused rather
+     * than ignored.
+     *
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}> $lines
+     *
+     * @throws RfqActionForbidden
+     */
+    private static function guardPricingChoices(RfqActor $actor, array $lines): void
+    {
+        if ($actor->can(Module::PERMISSION_PRICING_VIEW)) {
+            return;
+        }
+        foreach ($lines as $line) {
+            if (isset($line['marginPercent']) || isset($line['sellPrice'])) {
+                throw new RfqActionForbidden('set margins or sell prices');
+            }
+        }
+    }
+
+    /**
+     * The rows priced as the source editor prices them (parity plan E5): cost,
+     * MOQ, prepack and currency from the Cost API when a line needs a price or
+     * the header's region or currency moved, then the customer's default
+     * margin, the sell price and the line total. `$always` runs the margin
+     * pass even when no price is needed (a save, or a view that shows prices).
+     *
+     * A parser or cost book that cannot answer never loses a save: the rows
+     * come back as they were, with `error` saying why.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @param array<string, mixed>       $details
+     *
+     * @return array{rows: list<array<string, mixed>>, error: ?string}
+     */
+    private function priced(array $rows, array $details, CorrelationId $id, bool $always): array
+    {
+        $region = self::region($details);
+        $currency = self::currency($details);
+        $reprice = self::needsPricing($rows, $region, $currency);
+        if ($rows === [] || (!$reprice && !$always)) {
+            return ['rows' => $rows, 'error' => null];
+        }
+        try {
+            $sent = self::clean($rows);
+            $answer = $this->parser->priceRows($id, $sent, $region, $currency, $this->defaultMargins($details, $sent, $id), $reprice);
+        } catch (RfqParserFailure $failure) {
+            error_log(sprintf('RFQ pricing unavailable (%s, correlation %s); stale prices cleared', $failure->failureCode, $id->toString()));
+            $error = 'Prices are not available right now. Retry in a minute.';
+
+            return ['rows' => $reprice ? self::withoutStalePrices($rows, $region, $currency, $error) : $rows, 'error' => $error];
+        }
+        $out = [];
+        foreach ($answer->rows as $i => $row) {
+            // The store's bookkeeping is not the parser's to know; it stays with the row.
+            foreach (['_draft_row_id', '_system_snapshot_valid'] as $key) {
+                if (array_key_exists($key, $rows[$i])) {
+                    $row[$key] = $rows[$i][$key];
+                }
+            }
+            $out[] = $row;
+        }
+
+        return ['rows' => $out, 'error' => null];
+    }
+
+    /**
+     * Whether any line with a product has no usable price for this region and
+     * currency: still pending, failed, never asked, or priced for another
+     * region or currency. A code the Cost API does not carry, or a line with no
+     * length yet, stays as it is until something about it changes.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    private static function needsPricing(array $rows, string $region, string $currency): bool
+    {
+        foreach ($rows as $row) {
+            if (self::rowNeedsPricing($row, $region, $currency)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** @param array<string, mixed> $row */
+    private static function rowNeedsPricing(array $row, string $region, string $currency): bool
+    {
+        if (DraftLineEdits::productCode($row) === '') {
+            return false;
+        }
+        $pricing = DraftChangeLog::object($row['pricing'] ?? null);
+        $status = strtolower(PythonText::str($pricing['status'] ?? ''));
+        if ($status === '' || in_array($status, ['pending', 'loading', 'error'], true)) {
+            return true;
+        }
+        if (in_array($status, ['missing_code', 'missing_length'], true)) {
+            return false;
+        }
+        $priced = PythonText::str($pricing['quote_currency'] ?? '');
+
+        return PythonText::str($pricing['region'] ?? '') !== $region || ($priced !== '' && $priced !== $currency);
+    }
+
+    /**
+     * Pricing was needed and could not be had: every line whose price was for
+     * another region or currency, or for a code or quantity since changed,
+     * loses its cost, sell price and total and reads `error`, so the view
+     * counts it unpriced and a save does not keep the old numbers under the
+     * new currency. A typed sell price was typed for the old terms and goes too.
+     *
+     * @param list<array<string, mixed>> $rows
+     *
+     * @return list<array<string, mixed>>
+     */
+    private static function withoutStalePrices(array $rows, string $region, string $currency, string $error): array
+    {
+        foreach ($rows as $i => $row) {
+            if (!self::rowNeedsPricing($row, $region, $currency)) {
+                continue;
+            }
+            $pricing = DraftChangeLog::object($row['pricing'] ?? null);
+            $hasPrice = false;
+            foreach (['unit_price', 'final_unit_price', 'line_total'] as $key) {
+                $hasPrice = $hasPrice || !in_array($row[$key] ?? null, [null, ''], true);
+            }
+            if (!$hasPrice && in_array(strtolower(PythonText::str($pricing['status'] ?? '')), ['', 'pending', 'loading', 'error'], true)) {
+                // Nothing stale to clear: the line already reads as not priced.
+                continue;
+            }
+            unset($pricing['quote_currency'], $pricing['cost_status']);
+            $pricing['status'] = 'error';
+            $pricing['error'] = $error;
+            $pricing['region'] = $region;
+            $row['pricing'] = $pricing;
+            $row['unit_price'] = '';
+            $row['final_unit_price'] = '';
+            $row['line_total'] = '';
+            unset($row['sell_price_locked']);
+            $rows[$i] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The customer's default margin for each product on the rows. Soft: a
+     * customer, style or lookup that is missing leaves the margin the line has.
+     *
+     * @param array<string, mixed>       $details
+     * @param list<array<string, mixed>> $rows
+     *
+     * @return array<string, int|string>
+     *
+     * @throws RfqParserFailure
+     */
+    private function defaultMargins(array $details, array $rows, CorrelationId $id): array
+    {
+        $customerId = is_numeric($details['customer_id'] ?? null) ? (int) $details['customer_id'] : 0;
+        if ($customerId < 1 || $this->margins === null) {
+            return [];
+        }
+        $codes = [];
+        foreach ($rows as $row) {
+            $code = strtoupper(DraftLineEdits::productCode($row));
+            if ($code !== '') {
+                $codes[$code] = true;
+            }
+        }
+
+        return $this->margins->forCustomer($customerId, $this->parser->productStyles($id, array_keys($codes)));
+    }
+
+    /**
+     * What the detailed view shows of the rows: each line's price, the quote
+     * total over the lines being quoted, and how many of them have no price.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    private static function pricingView(array $rows, string $currency, ?string $error): RfqPricingView
+    {
+        $lines = [];
+        $quoted = 0;
+        $unpriced = 0;
+        $cents = 0;
+        foreach ($rows as $row) {
+            $line = StoredRevision::line($row);
+            $pricing = $line->pricing;
+            if ($pricing === null) {
+                continue;
+            }
+            $lines[] = ['lineUid' => $line->lineUid, 'pricing' => $pricing];
+            if ($line->disposition->toString() === 'excluded' || ($line->productCode ?? '') === '') {
+                continue;
+            }
+            ++$quoted;
+            if ($pricing->lineTotal !== null) {
+                $cents += (int) round((float) $pricing->lineTotal * 100);
+            }
+            if ($pricing->unitSell === null && in_array($pricing->priceStatus, ['not_found', 'error'], true)) {
+                ++$unpriced;
+            }
+        }
+
+        return new RfqPricingView($currency, $quoted === 0 ? null : sprintf('%d.%02d', intdiv($cents, 100), $cents % 100), $unpriced, $quoted, $lines, $error);
     }
 
     /**
@@ -327,7 +659,22 @@ final class RfqReviewService
     /** @param array<string, mixed> $details */
     private static function region(array $details): string
     {
-        return is_string($details['region'] ?? null) && $details['region'] !== '' ? $details['region'] : 'australia';
+        $region = $details['region'] ?? null;
+
+        return is_string($region) && isset(self::REGION_CURRENCY[$region]) ? $region : 'australia';
+    }
+
+    /**
+     * The quote's currency: the header's, else the region's own (the source's
+     * `REGION_PROFILE`).
+     *
+     * @param array<string, mixed> $details
+     */
+    private static function currency(array $details): string
+    {
+        $currency = $details['currency'] ?? null;
+
+        return is_string($currency) && in_array($currency, ['AUD', 'NZD', 'USD', 'SGD'], true) ? $currency : self::REGION_CURRENCY[self::region($details)];
     }
 
     /**

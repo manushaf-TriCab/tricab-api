@@ -33,6 +33,9 @@ use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
  *    On an accessory the cuts are whole sellable packs.
  *  - **New line** (E3.6) — the source's `blankRow`, under the uid the browser
  *    gave it. A new line with nothing in it is not saved (`quoteRows`).
+ *  - **Status, correction reason, reviewer note** (E5.4) — the row detail's
+ *    `final_status` select, `correction_reason` select and `reviewer_note`
+ *    input. Choosing `approved` there is Approve, with its refusals.
  *  - **Delete** — a line left out of the save is removed. The change log
  *    records it (`DraftRowSet`).
  *
@@ -45,6 +48,22 @@ use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
  */
 final class DraftLineEdits
 {
+    /** The row detail's status select (`static/app.js`). */
+    public const STATUSES = [
+        'matched', 'needs_clarification', 'multiple_candidates', 'accessory',
+        'not_cable', 'unresolved', 'approved', 'flagged',
+    ];
+
+    /** The row detail's correction reasons; `''` is none. */
+    public const CORRECTION_REASONS = [
+        '', 'compound_line_split', 'wrong_series', 'wrong_core_count', 'wrong_cross_section',
+        'wrong_conductor', 'wrong_earth_preference', 'wrong_screen_or_armour',
+        'wrong_length_or_quantity', 'manual_product_code', 'other',
+    ];
+
+    /** `reviewer_note`'s cap, as `line_note`'s. */
+    public const MAX_REVIEWER_NOTE = 2_000;
+
     /** `QUANTITY_WARNING_PREFIXES`: warnings a manual quantity makes untrue. */
     private const QUANTITY_WARNING_PREFIXES = [
         'MAKE cable quantity rounded to MOQ multiple:',
@@ -63,7 +82,7 @@ final class DraftLineEdits
 
     /**
      * @param list<array<string, mixed>> $stored the rows as `StoredDraft` holds them
-     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool}> $lines
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}> $lines
      *        every line to keep, in order, with its decisions
      * @param string $region the header's region, for a pricing placeholder
      *
@@ -120,7 +139,7 @@ final class DraftLineEdits
 
     /**
      * @param array<string, mixed> $row
-     * @param array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool} $edit
+     * @param array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string} $edit
      *
      * @return array<string, mixed>
      */
@@ -142,8 +161,46 @@ final class DraftLineEdits
         }
 
         $row = self::quantity($row, $edit['cuts'] ?? null, $edit['lengthEach'] ?? null, $region);
+        $row = self::pricingChoices($row, $edit['marginPercent'] ?? null, $edit['sellPrice'] ?? null);
 
-        return self::approval($row, $edit['approved']);
+        $before = $row['final_status'] ?? null;
+        $row = self::review($row, $edit['status'] ?? null, $edit['correctionReason'] ?? null, $edit['reviewerNote'] ?? null);
+
+        // A status chosen in the row detail is the decision; the Approve flag
+        // sent beside it describes the line as it was.
+        return ($row['final_status'] ?? null) !== $before ? $row : self::approval($row, $edit['approved']);
+    }
+
+    /**
+     * The row detail's review fields. A status the line already shows (its
+     * `final_status`, else the parser's `status`) changes nothing, so a save
+     * that merely repeats it does not take the line off the parser's answer.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array<string, mixed>
+     */
+    private static function review(array $row, ?string $status, ?string $reason, ?string $note): array
+    {
+        if ($status !== null) {
+            $status = strtolower(trim($status));
+            $shown = PythonText::str($row['final_status'] ?? ($row['status'] ?? ''));
+            if ($status !== '' && $status !== $shown) {
+                if ($status === 'approved') {
+                    $row = self::approval($row, true);
+                } else {
+                    $row['final_status'] = $status;
+                }
+            }
+        }
+        if ($reason !== null && trim($reason) !== PythonText::str($row['correction_reason'] ?? '')) {
+            $row['correction_reason'] = trim($reason);
+        }
+        if ($note !== null && PythonText::strip($note) !== PythonText::editText($row['reviewer_note'] ?? null)) {
+            $row['reviewer_note'] = PythonText::strip($note);
+        }
+
+        return $row;
     }
 
     /**
@@ -185,6 +242,44 @@ final class DraftLineEdits
             $status = DraftChangeLog::object($row['pricing'] ?? null)['status'] ?? null;
             if ($status !== 'pending' && $status !== 'loading') {
                 $row['pricing'] = self::pricingPlaceholder('pending', $region);
+            }
+        }
+
+        return $row;
+    }
+
+    /**
+     * What the rep chose about the price, as the source's editor records it
+     * (parity plan E5.3): a typed margin (`margin_locked`) outranks the
+     * customer's default and takes the line off a typed sell price; a typed sell
+     * price (`sell_price_locked`) holds and the margin is derived from it. Blank
+     * hands the line back to the margin it would have had. The price itself is
+     * worked out by the parser's pricing pass, never here.
+     *
+     * @param array<string, mixed> $row
+     *
+     * @return array<string, mixed>
+     */
+    private static function pricingChoices(array $row, ?string $margin, ?string $sell): array
+    {
+        if ($margin !== null) {
+            $typed = trim($margin);
+            if ($typed === '') {
+                unset($row['margin_locked']);
+            } else {
+                $row['margin_percent'] = (int) floor((float) $typed);
+                $row['margin_locked'] = true;
+                unset($row['sell_price_locked']);
+            }
+        }
+        if ($sell !== null) {
+            $typed = trim($sell);
+            if ($typed === '') {
+                unset($row['sell_price_locked']);
+            } else {
+                // Three decimals, as 4js holds a price; a price is never zero.
+                $row['final_unit_price'] = round((float) $typed, 3);
+                $row['sell_price_locked'] = true;
             }
         }
 

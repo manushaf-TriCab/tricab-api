@@ -42,7 +42,7 @@ final class ReviewRevision
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function toArray(bool $withPricing = false): array
     {
         return [
             'revision' => $this->revision,
@@ -50,7 +50,7 @@ final class ReviewRevision
             'cause' => $this->cause,
             'savedAt' => $this->savedAtUtc->format(DateTimeInterface::ATOM),
             'header' => $this->header->toArray(),
-            'lines' => array_map(static fn (ParsedLine $l): array => $l->toArray(), $this->lines),
+            'lines' => array_map(static fn (ParsedLine $l): array => $l->toArray($withPricing), $this->lines),
         ];
     }
 }

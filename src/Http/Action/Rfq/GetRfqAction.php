@@ -39,11 +39,12 @@ final class GetRfqAction
             return $this->responder->error('UNAUTHENTICATED', 'Authentication is required.', 401);
         }
 
-        $detail = $this->queue->detail($this->actors->forUser($user), $args['publicId'] ?? '');
+        $actor = $this->actors->forUser($user);
+        $detail = $this->queue->detail($actor, $args['publicId'] ?? '');
         if ($detail === null) {
             return $this->responder->error('RFQ_NOT_FOUND', 'RFQ not found.', 404);
         }
 
-        return $this->responder->success($detail->toArray());
+        return $this->responder->success($detail->toArray($actor->can(\TriCab\Core\Rfq\Module::PERMISSION_PRICING_VIEW)));
     }
 }

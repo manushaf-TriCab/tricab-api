@@ -35,7 +35,14 @@ use TriCab\Core\Rfq\Domain\ValueObject\LineMatchStatus;
  * to the server (plan 5.3); until then it is empty rather than guessed from
  * the prose.
  *
- * `entry` is what the sales grid edits and shows ({@see LineEntry}).
+ * `entry` is what the sales grid edits and shows ({@see LineEntry}). `pricing` is
+ * its price ({@see LinePricing}), sent only to those who may see cost and margin.
+ * `confidence` is the parser's own, 0 to 1, as the detailed view's bar shows it.
+ *
+ * The row detail (parity plan E5.4): `status` is the line's status select as
+ * stored (`final_status`, else the parser's `status`; `approved` included),
+ * with the `correctionReason` and `reviewerNote` a reviewer gave, and
+ * `normalizedText`, the text the parser matched on after normalising it.
  */
 final class ParsedLine
 {
@@ -64,13 +71,22 @@ final class ParsedLine
         public readonly array $inferredFields,
         public readonly array $warnings = [],
         public readonly ?LineEntry $entry = null,
+        public readonly ?LinePricing $pricing = null,
+        public readonly ?float $confidence = null,
+        public readonly ?string $status = null,
+        public readonly string $correctionReason = '',
+        public readonly string $reviewerNote = '',
+        public readonly ?string $normalizedText = null,
     ) {
     }
 
     /**
+     * @param bool $withPricing whether the caller may see cost and margin (`RFQ.PRICING.VIEW`);
+     *                          when not, `pricing` is null: withheld, not merely hidden
+     *
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function toArray(bool $withPricing = false): array
     {
         return [
             'lineUid' => $this->lineUid,
@@ -92,6 +108,12 @@ final class ParsedLine
             'inferredFields' => $this->inferredFields,
             'warnings' => $this->warnings,
             'entry' => $this->entry?->toArray(),
+            'pricing' => $withPricing ? $this->pricing?->toArray() : null,
+            'confidence' => $this->confidence,
+            'status' => $this->status,
+            'correctionReason' => $this->correctionReason,
+            'reviewerNote' => $this->reviewerNote,
+            'normalizedText' => $this->normalizedText,
         ];
     }
 }

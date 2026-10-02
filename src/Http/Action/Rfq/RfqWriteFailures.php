@@ -15,6 +15,7 @@ use TriCab\Core\Rfq\Domain\Exception\RfqRevisionConflict;
 use TriCab\Core\Rfq\Domain\Exception\RfqStoreUnavailable;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
 use TriCab\Core\Rfq\Parser\RfqServiceLimits;
+use TriCab\Core\Rfq\Storage\DraftLineEdits;
 
 /**
  * How an RFQ write's typed failures read at the public endpoint (architecture
@@ -68,7 +69,7 @@ trait RfqWriteFailures
      * `productCode`, `cuts` and `lengthEach` are sent only when edited
      * (quantities as decimal strings); `isNew` marks a line a person added.
      *
-     * @return list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool}>|string
+     * @return list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}>|string
      *         the lines, or what is wrong with them
      */
     private static function lineDecisions(mixed $lines): array|string
@@ -108,6 +109,42 @@ trait RfqWriteFailures
                     return sprintf('lines[%d].%s must be a decimal number, as text, or blank.', $i, $field);
                 }
                 $decision[$field] = $value;
+            }
+            $margin = $line['marginPercent'] ?? null;
+            if ($margin !== null) {
+                // Whole percent, under 100: 4js truncates the margin it shows.
+                if (!is_string($margin) || preg_match('/^\s*(\d{1,2}(\.\d{1,5})?)?\s*$/', $margin) !== 1) {
+                    return sprintf('lines[%d].marginPercent must be a percentage under 100, as text, or blank.', $i);
+                }
+                $decision['marginPercent'] = $margin;
+            }
+            $sell = $line['sellPrice'] ?? null;
+            if ($sell !== null) {
+                if (!is_string($sell) || preg_match('/^\s*(\d{1,9}(\.\d{1,6})?)?\s*$/', $sell) !== 1 || (trim($sell) !== '' && round((float) $sell, 3) <= 0.0)) {
+                    return sprintf('lines[%d].sellPrice must be a price above zero, as text, or blank.', $i);
+                }
+                $decision['sellPrice'] = $sell;
+            }
+            $status = $line['status'] ?? null;
+            if ($status !== null) {
+                if (!is_string($status) || !in_array($status, DraftLineEdits::STATUSES, true)) {
+                    return sprintf('lines[%d].status must be one of %s.', $i, implode(', ', DraftLineEdits::STATUSES));
+                }
+                $decision['status'] = $status;
+            }
+            $reason = $line['correctionReason'] ?? null;
+            if ($reason !== null) {
+                if (!is_string($reason) || !in_array($reason, DraftLineEdits::CORRECTION_REASONS, true)) {
+                    return sprintf('lines[%d].correctionReason must be blank or one of %s.', $i, implode(', ', array_filter(DraftLineEdits::CORRECTION_REASONS)));
+                }
+                $decision['correctionReason'] = $reason;
+            }
+            $note = $line['reviewerNote'] ?? null;
+            if ($note !== null) {
+                if (!is_string($note) || mb_strlen($note) > DraftLineEdits::MAX_REVIEWER_NOTE) {
+                    return sprintf('lines[%d].reviewerNote must be text of up to 2,000 characters.', $i);
+                }
+                $decision['reviewerNote'] = $note;
             }
             if (($line['isNew'] ?? false) === true) {
                 $decision['isNew'] = true;

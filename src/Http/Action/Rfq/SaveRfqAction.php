@@ -77,7 +77,7 @@ final class SaveRfqAction
             return $this->responder->error('RFQ_NOT_FOUND', 'RFQ not found.', 404);
         }
 
-        return $this->responder->success($detail->toArray());
+        return $this->responder->success($detail->toArray($actor->can(\TriCab\Core\Rfq\Module::PERMISSION_PRICING_VIEW)));
     }
 
     /**

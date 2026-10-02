@@ -6,6 +6,7 @@ namespace TriCab\Core\Rfq\Storage;
 
 use DateTimeImmutable;
 use TriCab\Core\Rfq\Application\DTO\LineEntry;
+use TriCab\Core\Rfq\Application\DTO\LinePricing;
 use TriCab\Core\Rfq\Application\DTO\ParsedLine;
 use TriCab\Core\Rfq\Application\DTO\QuoteHeader;
 use TriCab\Core\Rfq\Application\DTO\ReviewRevision;
@@ -34,8 +35,9 @@ use TriCab\Core\Rfq\Domain\ValueObject\LineMatchStatus;
  *  - **exclusion** `disposition` = `excluded` or a directive's exclusion,
  *    with the source's reasons (`quote_readiness.exclusion_reason`).
  *
- * Nothing is inferred that the row does not say. Pricing is left out: who
- * may see cost and margin is owner question Q9 (plan 4.3). Source row
+ * Nothing is inferred that the row does not say. Pricing is projected
+ * ({@see pricing()}) but sent only to those who hold `RFQ.PRICING.VIEW`
+ * (Q9, decided: withheld). Source row
  * references wait for stored documents (plan 2.5), so `source` is null and
  * the text the customer wrote is `requestedText`.
  */
@@ -115,6 +117,38 @@ final class StoredRevision
             inferredFields: self::strings($row['inferred_fields'] ?? null),
             warnings: self::strings($row['warnings'] ?? null),
             entry: self::entry($row),
+            pricing: self::pricing($row),
+            confidence: is_numeric($row['confidence'] ?? null) && is_finite((float) $row['confidence']) ? max(0.0, min(1.0, round((float) $row['confidence'], 2))) : null,
+            status: $finalStatus !== '' ? $finalStatus : self::text($row['status'] ?? null),
+            correctionReason: PythonText::str($row['correction_reason'] ?? ''),
+            reviewerNote: PythonText::str($row['reviewer_note'] ?? ''),
+            normalizedText: self::text($source['normalized_text'] ?? null),
+        );
+    }
+
+    /**
+     * A row's price as the detailed view shows it: cost from the Cost API,
+     * then margin, sell price and total worked out by the parser (parity plan
+     * E5). A row nobody has priced yet reads `pending`.
+     *
+     * @param array<string, mixed> $row
+     */
+    public static function pricing(array $row): LinePricing
+    {
+        $pricing = DraftChangeLog::object($row['pricing'] ?? null);
+        $margin = $row['margin_percent'] ?? null;
+
+        return new LinePricing(
+            self::decimal($row['unit_price'] ?? null),
+            self::text($pricing['cost_status'] ?? null),
+            strtolower(self::text($pricing['status'] ?? null) ?? 'pending'),
+            self::text($pricing['error'] ?? null),
+            is_numeric($margin) ? (int) floor((float) $margin) : null,
+            DraftChangeLog::truthy($row['margin_locked'] ?? null),
+            self::decimal($row['final_unit_price'] ?? null),
+            DraftChangeLog::truthy($row['sell_price_locked'] ?? null),
+            self::decimal($row['line_total'] ?? null),
+            self::text($pricing['quote_currency'] ?? null),
         );
     }
 

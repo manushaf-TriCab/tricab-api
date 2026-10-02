@@ -19,6 +19,12 @@ use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
  */
 final class ReadRequest
 {
+    /** `contract.MAX_CORRECTIONS`. */
+    public const MAX_CORRECTIONS = 50_000;
+
+    /** @var array<string, array{product_code: string, confirmations: int}> */
+    private array $corrections = [];
+
     /**
      * @param list<string> $attachments display names of the files uploaded together
      */
@@ -60,10 +66,26 @@ final class ReadRequest
         return new self($correlationId, $deadlineMs, $documentPublicId, $fileName, $contentType, $bytes, $subject, $attachments, RfqServiceLimits::MAX_MODEL_CALLS_PER_PARSE);
     }
 
+    /**
+     * The same request carrying correction memory: `{key => {product_code,
+     * confirmations}}`, keys as `/v1/corrections/keys` makes them, ties
+     * already left out ({@see \TriCab\Core\Rfq\Contract\RfqCorrectionMemory}).
+     * At most {@see self::MAX_CORRECTIONS}; the parser refuses more.
+     *
+     * @param array<string, array{product_code: string, confirmations: int}> $corrections
+     */
+    public function withCorrections(array $corrections): self
+    {
+        $copy = clone $this;
+        $copy->corrections = array_slice($corrections, 0, self::MAX_CORRECTIONS, true);
+
+        return $copy;
+    }
+
     /** @return array<string, mixed> */
     public function toPayload(): array
     {
-        return [
+        $payload = [
             'contract' => ParserContract::VERSION,
             'correlationId' => $this->correlationId->toString(),
             'deadlineMs' => $this->deadlineMs,
@@ -76,5 +98,11 @@ final class ReadRequest
             'options' => ['allowModel' => true, 'maxModelCalls' => $this->maxModelCalls],
             'context' => ['subject' => $this->subject, 'attachments' => $this->attachments],
         ];
+        if ($this->corrections !== []) {
+            // An object even when every key looks like an index.
+            $payload['corrections'] = (object) $this->corrections;
+        }
+
+        return $payload;
     }
 }

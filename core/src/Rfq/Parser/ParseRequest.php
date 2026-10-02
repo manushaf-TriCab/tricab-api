@@ -21,6 +21,12 @@ use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
  */
 final class ParseRequest
 {
+    /** `contract.MAX_CORRECTIONS`. */
+    public const MAX_CORRECTIONS = 50_000;
+
+    /** @var array<string, array{product_code: string, confirmations: int}> */
+    private array $corrections = [];
+
     /**
      * @param list<array{documentPublicId: string, fileName: string, contentType: string, bytes: string}> $documents
      */
@@ -81,6 +87,22 @@ final class ParseRequest
     }
 
     /**
+     * The same request carrying correction memory: `{key => {product_code,
+     * confirmations}}`, keys as `/v1/corrections/keys` makes them, ties
+     * already left out ({@see \TriCab\Core\Rfq\Contract\RfqCorrectionMemory}).
+     * At most {@see self::MAX_CORRECTIONS}; the parser refuses more.
+     *
+     * @param array<string, array{product_code: string, confirmations: int}> $corrections
+     */
+    public function withCorrections(array $corrections): self
+    {
+        $copy = clone $this;
+        $copy->corrections = array_slice($corrections, 0, self::MAX_CORRECTIONS, true);
+
+        return $copy;
+    }
+
+    /**
      * The JSON body. File names are display metadata, sent so the parser can
      * pick a reader by extension and label its source rows — never used as a
      * path on either side.
@@ -89,7 +111,7 @@ final class ParseRequest
      */
     public function toPayload(): array
     {
-        return [
+        $payload = [
             'contract' => ParserContract::VERSION,
             'correlationId' => $this->correlationId->toString(),
             'deadlineMs' => $this->deadlineMs,
@@ -108,6 +130,12 @@ final class ParseRequest
                 'maxModelCalls' => $this->maxModelCalls,
             ],
         ];
+        if ($this->corrections !== []) {
+            // An object even when every key looks like an index.
+            $payload['corrections'] = (object) $this->corrections;
+        }
+
+        return $payload;
     }
 
     private static function deadline(int $deadlineMs): int

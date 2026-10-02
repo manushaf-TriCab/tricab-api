@@ -62,7 +62,7 @@ final class LocalRfqSqlServer
     public static function truncate(PDO $pdo): void
     {
         foreach (['rfq_documents', 'rfq_draft_rows', 'rfq_draft_activity', 'rfq_draft_row_edits', 'rfq_entries', 'rfq_reader_jobs',
-            'rfq_sync_attempts', 'rfq_draft_quotes', 'rfq_sessions'] as $table) {
+            'rfq_sync_attempts', 'rfq_draft_quotes', 'rfq_sessions', 'rfq_correction_memory'] as $table) {
             $pdo->exec("DELETE FROM [rfq].[{$table}]");
         }
         $pdo->exec('DELETE FROM [identity].[UserEmailAddresses]');

@@ -156,6 +156,33 @@ final class HttpRfqParserClientTest extends TestCase
         );
     }
 
+    public function test_correction_keys_are_asked_of_the_parser_and_checked(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "entries": [{"index": 0, "key": "4c 16mm2", "productCode": "XL-PAXN/4C16OR"}]}';
+
+        $keys = $this->client($http)->correctionKeys($this->id, [['text' => '4C 16mm2', 'productCode' => 'XL-PAXN/4C16OR']]);
+
+        self::assertSame([['index' => 0, 'key' => '4c 16mm2', 'productCode' => 'XL-PAXN/4C16OR']], $keys);
+        self::assertSame('http://127.0.0.1:8002/v1/corrections/keys', $http->calls[0]['url']);
+        self::assertSame([], $this->client(new FakeJsonHttpClient())->correctionKeys($this->id, []), 'nothing to key, nothing asked');
+
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "entries": [{"index": 4, "key": "x", "productCode": "Y"}]}';
+        $this->expectException(RfqParserFailure::class);
+        $this->client($http)->correctionKeys($this->id, [['text' => 'x', 'productCode' => 'Y']]);
+    }
+
+    public function test_a_parse_carries_the_correction_memory_as_an_object(): void
+    {
+        $request = ParseRequest::forText($this->id, '4C 16mm2', false)
+            ->withCorrections(['4c 16mm2' => ['product_code' => 'XL-PAXN/4C16OR', 'confirmations' => 2]]);
+        self::assertSame(
+            '{"4c 16mm2":{"product_code":"XL-PAXN/4C16OR","confirmations":2}}',
+            json_encode($request->toPayload()['corrections'], JSON_UNESCAPED_SLASHES),
+        );
+        self::assertArrayNotHasKey('corrections', ParseRequest::forText($this->id, 'x', false)->toPayload());
+    }
+
     public function test_product_search_names_the_description(): void
     {
         $http = new FakeJsonHttpClient();
@@ -166,6 +193,97 @@ final class HttpRfqParserClientTest extends TestCase
         self::assertSame([['code' => 'XL-PAXN/4C16OR', 'style' => 'XL-PAXN', 'description' => '4C 16mm2']], $items);
         self::assertSame('http://127.0.0.1:8002/v1/products/search', $http->calls[0]['url']);
         self::assertSame('xl-paxn', $http->calls[0]['payload']['q'] ?? null);
+    }
+
+    public function test_a_screenshot_goes_to_ocr_and_comes_back_as_text(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "text": "4C 16mm2 120m", "rowCount": 1, "confidence": 0.9, "model": "qwen-test", "escalated": false}';
+
+        $text = $this->client($http)->readScreenshot($this->id, 'shot.png', 'image/png', "\x89PNG-bytes");
+
+        $call = $http->calls[0];
+        self::assertSame('http://127.0.0.1:8002/v1/ocr', $call['url']);
+        $document = $call['payload']['document'] ?? null;
+        self::assertIsArray($document);
+        self::assertSame(base64_encode("\x89PNG-bytes"), $document['contentBase64']);
+        self::assertSame('image/png', $document['contentType']);
+        self::assertSame(['text' => '4C 16mm2 120m', 'rowCount' => 1, 'confidence' => 0.9, 'model' => 'qwen-test', 'escalated' => false], $text->toArray());
+    }
+
+    public function test_a_screenshot_over_the_limit_never_reaches_the_parser(): void
+    {
+        $http = new FakeJsonHttpClient();
+        try {
+            $this->client($http)->readScreenshot($this->id, 'big.png', 'image/png', str_repeat('x', 8 * 1024 * 1024 + 1));
+            self::fail('expected a failure');
+        } catch (RfqParserFailure $failure) {
+            self::assertSame(RfqParserFailure::INPUT_TOO_LARGE, $failure->failureCode);
+        }
+        self::assertSame([], $http->calls);
+    }
+
+    public function test_an_ocr_provider_refusal_keeps_its_type_and_words(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->status = 502;
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "error": {"code": "provider_rejected", "message": "Screenshot reading is not switched on."}}';
+
+        try {
+            $this->client($http)->readScreenshot($this->id, 'shot.png', 'image/png', 'x');
+            self::fail('expected a failure');
+        } catch (RfqParserFailure $failure) {
+            self::assertSame(RfqParserFailure::PROVIDER_REJECTED, $failure->failureCode);
+            self::assertSame('Screenshot reading is not switched on.', $failure->getMessage());
+        }
+    }
+
+    public function test_an_empty_ocr_text_is_not_an_answer(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "text": "  ", "rowCount": 0, "confidence": 0.9, "model": "qwen-test", "escalated": false}';
+
+        $this->expectException(RfqParserFailure::class);
+        $this->client($http)->readScreenshot($this->id, 'shot.png', 'image/png', 'x');
+    }
+
+    public function test_pricing_sends_the_rows_as_one_string_and_reads_them_back_in_order(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "rows": [{"unit_price": 10.0, "length": {}}, {"unit_price": null}], "unpriced": 1}';
+
+        $priced = $this->client($http)->priceRows($this->id, [['final_product_code' => 'A', 'length' => new stdClass()], ['final_product_code' => 'B']], 'australia', 'NZD', ['A' => 33, 'B' => 'cost'], true);
+
+        $call = $http->calls[0];
+        self::assertSame('http://127.0.0.1:8002/v1/price', $call['url']);
+        $draftJson = $call['payload']['draftJson'] ?? null;
+        self::assertIsString($draftJson);
+        $draft = json_decode($draftJson, true);
+        self::assertIsArray($draft);
+        self::assertSame(['A' => 33, 'B' => 'cost'], $draft['defaultMargins']);
+        self::assertSame(['australia', 'NZD', true], [$draft['region'], $draft['currency'], $draft['reprice']]);
+        self::assertMatchesRegularExpression('/"length":\s*\{\}/', $draftJson, 'an empty object stays an object');
+        self::assertCount(2, $priced->rows);
+        self::assertSame(1, $priced->unpriced);
+    }
+
+    public function test_prices_for_a_different_number_of_rows_are_refused(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "rows": [{}], "unpriced": 0}';
+
+        $this->expectException(RfqParserFailure::class);
+        $this->client($http)->priceRows($this->id, [['a' => 1], ['b' => 2]], 'australia', 'AUD', [], false);
+    }
+
+    public function test_product_styles_are_asked_only_when_there_are_codes(): void
+    {
+        $http = new FakeJsonHttpClient();
+        self::assertSame([], $this->client($http)->productStyles($this->id, []));
+        self::assertSame([], $http->calls);
+
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "styles": {"XL-PAXN/4C16OR": "XL"}}';
+        self::assertSame(['XL-PAXN/4C16OR' => 'XL'], $this->client($http)->productStyles($this->id, ['XL-PAXN/4C16OR']));
     }
 
     public function test_probes_answer_true_only_for_the_contract(): void

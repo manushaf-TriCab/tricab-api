@@ -9,6 +9,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
 use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
+use TriCab\Api\Rfq\Persistence\AzureSqlRfqCorrectionMemory;
 use TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore;
 use TriCab\Api\Rfq\Persistence\AzureSqlRfqRepository;
 use TriCab\Api\Tests\Rfq\Persistence\LocalRfqSqlServer;
@@ -83,6 +84,9 @@ final class RfqFirstSliceTest extends TestCase
             new RecordingCustomerDirectory(),
             FixedClock::utc('2026-09-28T02:00:00'),
             new ParseSeal('test-parser-token'),
+            false,
+            null,
+            new AzureSqlRfqCorrectionMemory($connection, FixedClock::utc('2026-09-28T02:00:00')),
         );
         $this->queue = new ReadRfqQueueService($repository);
     }
@@ -237,6 +241,40 @@ final class RfqFirstSliceTest extends TestCase
         self::assertSame('3', $entry->cuts);
         self::assertSame('60', $entry->lengthEach);
         self::assertSame('(3 x 60)', $saved[2]->comment);
+    }
+
+    public function test_save_review_logs_the_saved_revision_and_the_next_parse_is_sent_what_it_learned(): void
+    {
+        $rep = $this->sales($this->repId);
+        $created = $this->paste($rep, 'rep@tricab.com', "4C 16mm2 XLPE/PVC 120m\n3C 2.5mm TPS 4 x 55m per cut");
+        $lines = $this->lines($this->open($rep, $created->publicId));
+        $this->review->save($rep, 'rep@tricab.com', $created->publicId, 1, [
+            ['lineUid' => $lines[0]->lineUid, 'approved' => true, 'comment' => '', 'reviewerNote' => 'checked', 'correctionReason' => 'wrong_series'],
+            ['lineUid' => $lines[1]->lineUid, 'approved' => null, 'comment' => '', 'status' => 'flagged'],
+        ], CorrelationId::generate());
+
+        try {
+            $this->review->saveReview($rep, 'rep@tricab.com', $created->publicId, 1, CorrelationId::generate());
+            self::fail('expected a conflict: only the saved revision is logged');
+        } catch (RfqRevisionConflict $conflict) {
+            self::assertSame(2, $conflict->currentRevision);
+        }
+        $saved = $this->review->saveReview($rep, 'rep@tricab.com', $created->publicId, 2, CorrelationId::generate());
+        self::assertNotNull($saved);
+        self::assertSame([2, 1], [$saved->savedEntries, $saved->learnedCorrections]);
+
+        $statement = $this->pdo->prepare('SELECT [final_status], [reviewer_note], [correction_reason] FROM [rfq].[rfq_entries] WHERE [session_id] = ? ORDER BY [final_status]');
+        $statement->execute([$saved->sessionId]);
+        /** @var list<array<string, mixed>> $entries */
+        $entries = $statement->fetchAll(PDO::FETCH_ASSOC);
+        self::assertSame(['approved', 'flagged'], array_map(static fn (array $e): string => self::str($e['final_status']), $entries));
+        self::assertSame(['checked', 'wrong_series'], [self::str($entries[0]['reviewer_note']), self::str($entries[0]['correction_reason'])]);
+
+        $this->review->parse($rep, 'rep@tricab.com', '4C 16mm2', CorrelationId::generate());
+        $sent = end($this->parser->parses);
+        self::assertNotFalse($sent);
+        $corrections = (array) ($sent->toPayload()['corrections'] ?? []);
+        self::assertSame(['product_code' => 'XL-PAXN/4C16OR', 'confirmations' => 1], array_values($corrections)[0] ?? null);
     }
 
     public function test_an_unknown_rfq_is_not_found(): void

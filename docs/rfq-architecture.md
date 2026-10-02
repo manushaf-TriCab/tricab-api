@@ -64,6 +64,8 @@ Each contract has a version string in its class docblock. A breaking change adds
 | `rfq.uploaded.v1` | `UploadedRfq` | `POST /api/v1/rfqs/upload` (files → draft, reads queued) | **3.3** |
 | `rfq.document.v1` | `SourceDocument` | detail, `GET /rfqs/{id}/reads`, `GET /rfqs/{id}/documents/{documentId}` | **2.5, 3** |
 | `rfq.reader-result.v1` | `ReaderResult` | detail, `GET /rfqs/{id}/reads`, `POST /rfqs/{id}/reads/{readId}` (accept/dismiss) | **3.5** |
+| `rfq.screenshot-text.v1` | `ScreenshotText` | `POST /api/v1/rfqs/ocr` (Scan Screenshot: vision OCR text for the rep to review; no lines, nothing stored; parity plan E4.3) | **E4.3** |
+| `rfq.line-pricing.v1` | `LinePricing`, `RfqPricingView` | `pricing` on each `rfq.line.v1`, and on `rfq.readiness.v1` as `pricing` (lines, quote total, unpriced count). **Withheld** from anyone without `RFQ.PRICING.VIEW` (Q9, decided 2 Oct); margin and sell-price decisions are refused without it | **E5** |
 | `rfq.pricing.v1` | `PricingSnapshot` | pricing on the saved revision | 4 |
 | `rfq.sync-attempt.v1` | `SyncAttemptView` | sync, status, reconcile, retry PDF | 5 |
 | `rfq.audit-event.v1` | `RfqAuditEvent` | activity trail | 2.4, 4.5 |
@@ -201,7 +203,7 @@ Unreadable stored values fall back to the reading that hides nothing and claims 
 
 This follows the Product Finder pattern (`docs/product-finder/DEPLOYMENT.md`): a persistent Python process in the same App Service zip, bound to loopback, with no nginx location, no second App Service and **no new Azure resource**. RFQ work is heavier than finder lookups, so the plan (3.6) calls for workload isolation from the finder: a separate process and port, sized after measuring long requests. The port, worker count and startup changes are Phase 3.6 decisions and are not made here.
 
-- **Endpoints:** `/v1/parse`, `/v1/read`, `/v1/readiness`, `/v1/products/search`, `/v1/health` (process up) and `/v1/ready` (catalogue and rules loaded). `RfqParserClient::isAlive()` and `isReady()` map to the last two.
+- **Endpoints:** `/v1/parse`, `/v1/read`, `/v1/ocr`, `/v1/price`, `/v1/products/styles`, `/v1/readiness`, `/v1/products/search`, `/v1/health` (process up) and `/v1/ready` (catalogue and rules loaded). `RfqParserClient::isAlive()` and `isReady()` map to the last two.
 - **Reader jobs** are PHP's (`RfqReaderService`, `bin/run-rfq-reader-jobs.php`): the worker claims a draft's queued reads, sends each document's bytes to `/v1/read` with the 600 s background deadline (its own client, with a socket to match), and replaces an untouched draft's rows for that file or stores them as a proposal. Nothing schedules it yet. gunicorn's worker timeout is 660 s so a read is never killed mid-answer.
 - **Documents** are kept in a private blob container (`BLOB_CONTAINER_RFQ`, default `rfq-documents`) under `drafts/<draft>/<document>`, with a row in `rfq_documents` (`create-rfq-documents-schema.sql`, not yet applied). Downloads stream through the API for anyone who can read the RFQ.
 - **Internal authentication:** loopback keeps the parser off the network. A bearer token (`RFQ_PARSER_INTERNAL_TOKEN`, an app setting, never logged and never sent to the browser) keeps other processes on the instance from using it. The parser authorizes nothing else: it gets no actor.
@@ -279,7 +281,7 @@ Phase 1 started before the Phase 0 exit, on the owner's instruction (28 Sep 2026
 | Q6 | Who owns the mailbox | the Phase 6 rows of §6.4 |
 | Q7 | Where branch membership comes from | an `RfqBranchDirectory` implementation; the default branch filter and new-RFQ branch, **no longer access** |
 | Q8 | Who works RFQs in the pilot | **Answered 28 Sept:** every employee reads every RFQ; anyone with the permission works any RFQ; the last worker is the sales rep; roles are sales and admin only. Assigned on tricab-mel: `RFQ_ADMIN` 2, `RFQ_SALES` 27 (`platform/rfq-pilot-roles/`) |
-| Q9 | Hide or withhold pricing | `PricingSnapshot::toArray()` call site; role placement of `RFQ.PRICING.VIEW` |
+| Q9 | Hide or withhold pricing | **Decided 2 Oct 2026 (assistant's default, owner to confirm): withhold.** `ParsedLine::toArray($withPricing)` and `RfqReadinessView::toArray($withPricing)`; the actions pass `$actor->can(PRICING_VIEW)`. One call site each to reverse |
 | Q10 | Unattributed RFQs: manager triage or admin queue | **answered 28 Sept: moot, everyone sees every RFQ**; `branch=none` filters them |
 | — | Scan-read lines syncing from the editor without approval (§5.3) | `LineApprovalPolicy::syncBlockReason()` |
 | — | Navigation fit of `/admin/rfqs` (plan 1.5) | web routes only |

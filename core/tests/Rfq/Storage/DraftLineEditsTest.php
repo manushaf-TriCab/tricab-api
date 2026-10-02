@@ -72,6 +72,35 @@ final class DraftLineEditsTest extends TestCase
         self::assertArrayNotHasKey('final_status', $again[0]);
     }
 
+    public function test_the_row_details_status_reason_and_note_are_saved(): void
+    {
+        $stored = self::stored();
+        $edit = self::keep($stored[1]) + ['status' => 'flagged', 'correctionReason' => 'wrong_series', 'reviewerNote' => '  ask the customer  '];
+        $rows = DraftLineEdits::apply($stored, [self::keep($stored[0]), $edit, self::keep($stored[2])]);
+
+        self::assertSame('flagged', $rows[1]['final_status']);
+        self::assertSame($stored[1]['status'], $rows[1]['status'], "the parser's status is kept");
+        self::assertSame('wrong_series', $rows[1]['correction_reason']);
+        self::assertSame('ask the customer', $rows[1]['reviewer_note']);
+
+        // The status the line already shows changes nothing.
+        $same = DraftLineEdits::apply($stored, [self::keep($stored[0]) + ['status' => (string) $stored[0]['status']], self::keep($stored[1]), self::keep($stored[2])]);
+        self::assertSame($stored[0], $same[0]);
+    }
+
+    public function test_choosing_approved_as_the_status_is_approve(): void
+    {
+        $stored = self::stored();
+        $rows = DraftLineEdits::apply($stored, [self::keep($stored[0]) + ['status' => 'approved'], self::keep($stored[1]), self::keep($stored[2])]);
+
+        self::assertSame('approved', $rows[0]['final_status']);
+        self::assertArrayHasKey('confirmed_fields', $rows[0]);
+
+        $stored[0]['final_product_code'] = '';
+        $this->expectException(InvalidRfqValue::class);
+        DraftLineEdits::apply($stored, [self::keep($stored[0]) + ['status' => 'approved'], self::keep($stored[1]), self::keep($stored[2])]);
+    }
+
     public function test_a_line_with_no_product_cannot_be_approved(): void
     {
         $stored = self::stored();

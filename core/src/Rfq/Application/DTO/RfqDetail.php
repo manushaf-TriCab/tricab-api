@@ -34,11 +34,11 @@ final class RfqDetail
     /**
      * @return array<string, mixed>
      */
-    public function toArray(): array
+    public function toArray(bool $withPricing = false): array
     {
         return [
             ...$this->summary->toArray(),
-            'latestRevision' => $this->revision?->toArray(),
+            'latestRevision' => $this->revision?->toArray($withPricing),
             'documents' => array_map(static fn (SourceDocument $d): array => $d->toArray(), $this->documents),
             'reads' => array_map(static fn (ReaderResult $r): array => $r->toArray(), $this->reads),
             'syncAttempts' => array_map(static fn (SyncAttemptView $s): array => $s->toArray(), $this->syncAttempts),

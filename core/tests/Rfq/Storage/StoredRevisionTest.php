@@ -74,6 +74,20 @@ final class StoredRevisionTest extends TestCase
         self::assertSame('excluded by a directive: by customer', StoredRevision::line($row)->exclusionReason);
     }
 
+    public function test_the_row_detail_reads_status_reason_note_and_normalised_text(): void
+    {
+        $row = FixtureRfqParserClient::lines()[0];
+        $line = StoredRevision::line($row)->toArray();
+        self::assertSame([$row['status'], '', ''], [$line['status'], $line['correctionReason'], $line['reviewerNote']], "unreviewed: the parser's status");
+
+        $row['final_status'] = 'flagged';
+        $row['correction_reason'] = 'wrong_series';
+        $row['reviewer_note'] = 'check';
+        $row['source'] = ['original_text' => '4C 16MM2', 'normalized_text' => '4c 16mm2'];
+        $line = StoredRevision::line($row)->toArray();
+        self::assertSame(['flagged', 'wrong_series', 'check', '4c 16mm2'], [$line['status'], $line['correctionReason'], $line['reviewerNote'], $line['normalizedText']]);
+    }
+
     public function test_an_accessory_counts_in_units(): void
     {
         $line = StoredRevision::line([

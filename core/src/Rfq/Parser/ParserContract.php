@@ -50,6 +50,14 @@ final class ParserContract
     public const PATH_READINESS = '/v1/readiness';
     /** The source's product-code autocomplete over the matcher's catalogue (parity plan E3.3). */
     public const PATH_PRODUCT_SEARCH = '/v1/products/search';
+    /** One screenshot through vision OCR, answered as text (parity plan E4.3; `ScreenshotText`). */
+    public const PATH_OCR = '/v1/ocr';
+    /** A draft's rows priced as the source editor does (`PricedRows`, parity plan E5). */
+    public const PATH_PRICE = '/v1/price';
+    /** The catalogue's style per product code, for the customer default margin lookup. */
+    public const PATH_PRODUCT_STYLES = '/v1/products/styles';
+    /** The correction-memory key for each approved line, for Save Review (parity plan E5.5). */
+    public const PATH_CORRECTION_KEYS = '/v1/corrections/keys';
     public const PATH_HEALTH = '/v1/health';
     public const PATH_READY = '/v1/ready';
 }

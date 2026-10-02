@@ -702,9 +702,15 @@ SQL,
         }
         $out = [];
         foreach ($decoded as $item) {
-            if (is_array($item)) {
-                $out[] = $item;
+            if (!is_array($item)) {
+                continue;
             }
+            // JSON object keys are strings; PHP turns numeric ones into ints.
+            $row = [];
+            foreach ($item as $key => $field) {
+                $row[(string) $key] = $field;
+            }
+            $out[] = $row;
         }
 
         return $out;

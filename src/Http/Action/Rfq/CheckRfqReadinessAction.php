@@ -88,6 +88,6 @@ final class CheckRfqReadinessAction
             return $this->failure($this->responder, $failure);
         }
 
-        return $this->responder->success($view->toArray());
+        return $this->responder->success($view->toArray($actor->can(\TriCab\Core\Rfq\Module::PERMISSION_PRICING_VIEW)));
     }
 }

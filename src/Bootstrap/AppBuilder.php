@@ -473,6 +473,9 @@ final class AppBuilder
         // documents. Upload creates a draft; resolving a read is an edit.
         $app->post('/api/v1/rfqs/upload', \TriCab\Api\Http\Action\Rfq\UploadRfqAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
+        // Parity plan E4.3: Scan Screenshot. Text back for the rep to review; no lines, no draft.
+        $app->post('/api/v1/rfqs/ocr', \TriCab\Api\Http\Action\Rfq\ScanRfqScreenshotAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
         $app->get('/api/v1/rfqs/{publicId}/reads', \TriCab\Api\Http\Action\Rfq\ListRfqReadsAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
         $app->post('/api/v1/rfqs/{publicId}/reads/{readId}', \TriCab\Api\Http\Action\Rfq\ResolveRfqReadAction::class)
@@ -481,6 +484,10 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
         $app->patch('/api/v1/rfqs/{publicId}', SaveRfqAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
+        // Parity plan E5.5: Save Review logs the saved revision and teaches the
+        // correction memory. Managers only; the service also checks the edit.
+        $app->post('/api/v1/rfqs/{publicId}/review', \TriCab\Api\Http\Action\Rfq\SaveRfqReviewAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_PRICING_VIEW));
         // Parity plan E3.5: readiness of the editor's lines, saved or not. Writes nothing.
         $app->post('/api/v1/rfqs/readiness', \TriCab\Api\Http\Action\Rfq\CheckRfqReadinessAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));

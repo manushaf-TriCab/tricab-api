@@ -7,6 +7,7 @@ a field renamed here fails there.
 
 from __future__ import annotations
 
+import base64
 import json
 
 import pytest
@@ -45,7 +46,7 @@ def _parse(client, text: str, **extra):
 # ------------------------------------------------------------------ authentication
 
 
-@pytest.mark.parametrize("path,method", [("/v1/parse", "post"), ("/v1/readiness", "post"), ("/v1/products/search", "post"), ("/v1/health", "get"), ("/v1/ready", "get")])
+@pytest.mark.parametrize("path,method", [("/v1/parse", "post"), ("/v1/readiness", "post"), ("/v1/products/search", "post"), ("/v1/ocr", "post"), ("/v1/price", "post"), ("/v1/products/styles", "post"), ("/v1/corrections/keys", "post"), ("/v1/health", "get"), ("/v1/ready", "get")])
 def test_every_route_refuses_a_caller_without_the_token(client, path, method):
     for headers in ({}, _auth("wrong"), {"Authorization": TOKEN}):
         response = getattr(client, method)(path, json={}, headers=headers)
@@ -227,6 +228,70 @@ def test_product_search_refuses_what_the_contract_does_not_allow(client, change)
     assert response.get_json()["error"]["code"] == "invalid_request"
 
 
+PNG = base64.b64encode(b"\x89PNG\r\n\x1a\n" + b"0" * 32).decode()
+
+
+def _ocr(client, **document):
+    entry = {"documentPublicId": "doc-1", "fileName": "shot.png", "contentType": "image/png", "contentBase64": PNG, **document}
+    return client.post(
+        "/v1/ocr",
+        json={"contract": contract.CONTRACT, "correlationId": CID, "deadlineMs": 60_000, "document": entry},
+        headers=_auth(),
+    )
+
+
+def _vision(monkeypatch, result):
+    monkeypatch.setattr(contract.vision_ocr, "vision_ocr_enabled", lambda: True)
+    monkeypatch.setattr(contract.vision_ocr, "extract_table_with_qwen", lambda data, mime: result)
+
+
+def test_ocr_answers_the_text_and_nothing_else(client, monkeypatch):
+    rows = [{"description": "4C 16mm2 XLPE 120m"}, {"description": "3C 2.5 TPS 55m"}]
+    _vision(monkeypatch, contract.vision_ocr.VisionOcrResult(True, "qwen-test", rows, "4C 16mm2 XLPE 120m\n3C 2.5 TPS 55m", 0.91))
+    response = _ocr(client)
+    body = response.get_json()
+    assert response.status_code == 200 and body["correlationId"] == CID
+    assert body["text"] == "4C 16mm2 XLPE 120m\n3C 2.5 TPS 55m"
+    assert (body["rowCount"], body["confidence"], body["model"], body["escalated"]) == (2, 0.91, "qwen-test", False)
+    assert "lines" not in body and "rows" not in body
+
+
+def test_ocr_off_is_a_typed_refusal_not_an_empty_answer(client, monkeypatch):
+    monkeypatch.setattr(contract.vision_ocr, "vision_ocr_enabled", lambda: False)
+    response = _ocr(client)
+    assert response.status_code == 502
+    assert response.get_json()["error"] == {"code": "provider_rejected", "message": "Screenshot reading is not switched on."}
+
+
+def test_ocr_refuses_what_is_not_a_screenshot(client, monkeypatch):
+    _vision(monkeypatch, None)
+    assert _ocr(client, fileName="rfq.xlsx", contentType="application/vnd.ms-excel").status_code in (400, 415)
+    wrong = _ocr(client, contentBase64=base64.b64encode(b"not a png at all").decode())
+    assert wrong.status_code == 415 and wrong.get_json()["error"]["code"] == "unsupported_format"
+
+
+@pytest.mark.parametrize(
+    "error,code,status",
+    [
+        ("OpenRouter HTTP 401: secret body", "provider_rejected", 502),
+        ("OpenRouter HTTP 429: slow down", "provider_unavailable", 502),
+        ("OpenRouter vision request failed: timed out", "provider_unavailable", 502),
+    ],
+)
+def test_ocr_provider_failures_keep_the_provider_body_out(client, monkeypatch, error, code, status):
+    _vision(monkeypatch, contract.vision_ocr.VisionOcrResult(False, "qwen-test", [], "", 0, error=error))
+    response = _ocr(client)
+    body = response.get_json()
+    assert response.status_code == status and body["error"]["code"] == code
+    assert "secret" not in json.dumps(body) and "slow down" not in json.dumps(body)
+
+
+def test_ocr_with_no_rows_says_so(client, monkeypatch):
+    _vision(monkeypatch, contract.vision_ocr.VisionOcrResult(False, "qwen-test", [], "", 0.2, error="No RFQ rows found."))
+    response = _ocr(client)
+    assert response.status_code == 422 and "No RFQ rows" in response.get_json()["error"]["message"]
+
+
 def test_readiness_reads_nan_as_the_store_holds_it(client):
     """18 live rows carry a NaN score; PHP sends them as Python wrote them."""
     rows = _parse(client, "4C 16mm2 XLPE/PVC 120m").get_json()["lines"]
@@ -255,3 +320,35 @@ def test_health_and_ready(client):
     assert client.get("/v1/health", headers=_auth()).get_json()["status"] == "ok"
     ready = client.get("/v1/ready", headers=_auth()).get_json()
     assert ready["status"] == "ready" and ready["products"] > 0
+
+
+# ------------------------------------------------------------------ correction memory
+
+
+def test_correction_keys_are_the_sources_and_skip_what_cannot_be_learned(client):
+    from rfq_parser.corrections import correction_key
+    from rfq_parser.pipeline import catalog
+
+    code = next(iter(catalog.products_by_code))
+    lines = [{"text": "  4C 16mm2 XLPE/PVC  ", "productCode": code.lower()}, {"text": "", "productCode": code}, {"text": "x", "productCode": "NOT-A-CODE"}]
+    body = client.post(
+        "/v1/corrections/keys", json={"contract": contract.CONTRACT, "correlationId": CID, "lines": lines}, headers=_auth()
+    ).get_json()
+    assert body["entries"] == [{"index": 0, "key": correction_key("  4C 16mm2 XLPE/PVC  "), "productCode": code.upper()}]
+
+
+def test_a_parse_applies_the_correction_memory_it_is_sent(client):
+    from rfq_parser.corrections import correction_key
+    from rfq_parser.pipeline import catalog
+
+    text = "4C 16mm2 XLPE/PVC 120m"
+    before = _parse(client, text).get_json()["lines"][0]
+    other = next(c for c in catalog.products_by_code if c != before.get("selected_product_code"))
+    learned = {correction_key(text): {"product_code": other, "confirmations": 3}}
+    after = _parse(client, text, corrections=learned).get_json()["lines"][0]
+    assert after["selected_product_code"] == other
+
+
+def test_malformed_corrections_are_refused(client):
+    response = _parse(client, "4C 16mm2 XLPE/PVC 120m", corrections={"k": {"confirmations": 1}})
+    assert response.status_code == 400 and response.get_json()["error"]["code"] == "invalid_request"

@@ -797,6 +797,9 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqReaderJobStore::class),
             \TriCab\Core\Rfq\Contract\RfqDocumentStore::class
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqDocumentStore::class),
+            // Parity plan E5.5: correction memory and the review log (azure-sql below).
+            \TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqCorrectionMemory::class),
             // Plans 3.3/3.5: uploads and the background reader. Its own parser client,
             // because a read may take the background deadline (600 s) and the shared
             // client's socket gives up after the interactive one.
@@ -821,6 +824,7 @@ final class ContainerFactory
                     self::get($container, \TriCab\Core\Rfq\Contract\RfqOperatorDirectory::class),
                     self::get($container, Clock::class),
                     $settings->rfqParserAllowModel,
+                    self::get($container, \TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class),
                 );
             },
             // Parity plan D3: Match Text's answer is sealed under a key derived from the
@@ -829,7 +833,8 @@ final class ContainerFactory
                 ->constructorParameter('seal', $settings->isRfqParserEnabled()
                     ? new \TriCab\Core\Rfq\Parser\ParseSeal($settings->rfqParserInternalToken)
                     : null)
-                ->constructorParameter('allowModel', $settings->rfqParserAllowModel),
+                ->constructorParameter('allowModel', $settings->rfqParserAllowModel)
+                ->constructorParameter('memory', \DI\get(\TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class)),
             // Parity plan E1: the quote header's lookups. Customers and contacts come
             // from the synced customer book (the azure-sql branch below); pay terms
             // from the legacy `descript` table, read only and cached for an hour.
@@ -843,6 +848,18 @@ final class ContainerFactory
                     );
                 } catch (\Throwable) {
                     return new \TriCab\Core\Rfq\Infrastructure\UnavailableRfqPayTermsDirectory();
+                }
+            },
+            // Parity plan E5.3: the customer's default margin per product, read only from the
+            // legacy mirror; without it lines keep the margin they have.
+            \TriCab\Core\Rfq\Contract\RfqDefaultMargins::class => static function (Container $container): \TriCab\Core\Rfq\Contract\RfqDefaultMargins {
+                try {
+                    return new \TriCab\Api\Rfq\Legacy\LegacyRfqDefaultMargins(
+                        self::get($container, \TriCab\Core\Product\Migration\Live\LegacyReadOnlyConnection::class),
+                        self::get($container, ApplicationCache::class),
+                    );
+                } catch (\Throwable) {
+                    return new \TriCab\Core\Rfq\Infrastructure\UnavailableRfqDefaultMargins();
                 }
             },
             \TriCab\Core\Rfq\Application\Service\RfqLookupService::class => \DI\autowire(\TriCab\Core\Rfq\Application\Service\RfqLookupService::class)
@@ -2578,6 +2595,9 @@ final class ContainerFactory
                     );
             $definitions[\TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqCustomerDirectory::class);
+            // Parity plan E5.5: correction memory and Save Review's log.
+            $definitions[\TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class]
+                = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqCorrectionMemory::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingSelfServiceRepository::class);
             // Phase 3.3 — the write side. All four share one locator, whose single

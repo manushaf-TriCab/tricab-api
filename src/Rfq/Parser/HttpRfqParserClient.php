@@ -9,16 +9,19 @@ use stdClass;
 use Throwable;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
 use TriCab\Core\Rfq\Contract\RfqParserClient;
+use TriCab\Core\Rfq\Parser\CorrectionKeys;
 use TriCab\Core\Rfq\Parser\CorrelationId;
 use TriCab\Core\Rfq\Parser\ParserContract;
 use TriCab\Core\Rfq\Parser\ParseRequest;
 use TriCab\Core\Rfq\Parser\ParseResponse;
+use TriCab\Core\Rfq\Parser\PricedRows;
 use TriCab\Core\Rfq\Parser\ProductMatches;
 use TriCab\Core\Rfq\Parser\QuoteReadiness;
 use TriCab\Core\Rfq\Parser\ReadRequest;
 use TriCab\Core\Rfq\Parser\ReadResponse;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
 use TriCab\Core\Rfq\Parser\RfqServiceLimits;
+use TriCab\Core\Rfq\Parser\ScreenshotText;
 use TriCab\Core\Rfq\Storage\PythonJson;
 
 /**
@@ -93,6 +96,74 @@ final class HttpRfqParserClient implements RfqParserClient
         ], $correlationId, RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS);
 
         return ProductMatches::fromPayload($body, $correlationId);
+    }
+
+    public function readScreenshot(CorrelationId $correlationId, string $fileName, string $contentType, string $bytes): ScreenshotText
+    {
+        $size = strlen($bytes);
+        if ($size === 0 || $size > RfqServiceLimits::MAX_IMAGE_BYTES) {
+            throw RfqParserFailure::of(RfqParserFailure::INPUT_TOO_LARGE, sprintf('A screenshot must be between 1 byte and %d MB.', RfqServiceLimits::MAX_IMAGE_BYTES / (1024 * 1024)), $correlationId);
+        }
+        $body = $this->post(ParserContract::PATH_OCR, [
+            'contract' => ParserContract::VERSION,
+            'correlationId' => $correlationId->toString(),
+            'deadlineMs' => RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS,
+            'document' => [
+                'documentPublicId' => 'screenshot',
+                'fileName' => $fileName,
+                'contentType' => $contentType,
+                'contentBase64' => base64_encode($bytes),
+            ],
+        ], $correlationId, RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS);
+
+        return ScreenshotText::fromPayload($body, $correlationId);
+    }
+
+    public function priceRows(CorrelationId $correlationId, array $rows, string $region, string $currency, array $defaultMargins, bool $reprice): PricedRows
+    {
+        $body = $this->post(ParserContract::PATH_PRICE, [
+            'contract' => ParserContract::VERSION,
+            'correlationId' => $correlationId->toString(),
+            'deadlineMs' => RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS,
+            // One string, so rows keep `{}`, `NaN` and large integers as the store holds them.
+            'draftJson' => PythonJson::encode([
+                'rows' => $rows,
+                'region' => $region,
+                'currency' => $currency,
+                'defaultMargins' => $defaultMargins === [] ? new stdClass() : $defaultMargins,
+                'reprice' => $reprice,
+            ]),
+        ], $correlationId, RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS);
+
+        return PricedRows::fromPayload($body, $correlationId, count($rows));
+    }
+
+    public function productStyles(CorrelationId $correlationId, array $codes): array
+    {
+        if ($codes === []) {
+            return [];
+        }
+        $body = $this->post(ParserContract::PATH_PRODUCT_STYLES, [
+            'contract' => ParserContract::VERSION,
+            'correlationId' => $correlationId->toString(),
+            'codes' => $codes,
+        ], $correlationId, RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS);
+
+        return ProductMatches::stylesFromPayload($body, $correlationId);
+    }
+
+    public function correctionKeys(CorrelationId $correlationId, array $lines): array
+    {
+        if ($lines === []) {
+            return [];
+        }
+        $body = $this->post(ParserContract::PATH_CORRECTION_KEYS, [
+            'contract' => ParserContract::VERSION,
+            'correlationId' => $correlationId->toString(),
+            'lines' => $lines,
+        ], $correlationId, RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS);
+
+        return CorrectionKeys::fromPayload($body, $correlationId, count($lines));
     }
 
     public function isAlive(): bool

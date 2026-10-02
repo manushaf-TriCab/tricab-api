@@ -27,7 +27,14 @@ final class RfqReadinessView
         public readonly bool $ready,
         public readonly array $blockingIssues,
         public readonly array $lines,
+        public readonly ?RfqPricingView $pricing = null,
     ) {
+    }
+
+    /** The same answer with the prices of the lines it was asked about (parity plan E5). */
+    public function withPricing(RfqPricingView $pricing): self
+    {
+        return new self($this->ready, $this->blockingIssues, $this->lines, $pricing);
     }
 
     /**
@@ -76,9 +83,18 @@ final class RfqReadinessView
         return new self($readiness->ready, $issues, $lines);
     }
 
-    /** @return array<string, mixed> */
-    public function toArray(): array
+    /**
+     * @param bool $withPricing whether the caller may see cost and margin (`RFQ.PRICING.VIEW`)
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(bool $withPricing = false): array
     {
-        return ['ready' => $this->ready, 'blockingIssues' => $this->blockingIssues, 'lines' => $this->lines];
+        return [
+            'ready' => $this->ready,
+            'blockingIssues' => $this->blockingIssues,
+            'lines' => $this->lines,
+            'pricing' => $withPricing ? $this->pricing?->toArray() : null,
+        ];
     }
 }

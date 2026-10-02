@@ -23,7 +23,7 @@ import sync_rfq_parser  # noqa: E402
 # Third-party packages the parser may import, each in requirements.txt (or, for
 # werkzeug, installed by Flask, which is).
 ALLOWED_THIRD_PARTY = {"openpyxl", "pdfplumber", "pypdfium2", "docx", "xlrd", "flask", "werkzeug"}  # werkzeug ships with Flask, pypdfium2 with pdfplumber
-PLATFORM_OWNED = {"__init__", "accounting", "corrections", "intake", "_unported", "app", "contract", "reading"}
+PLATFORM_OWNED = {"__init__", "accounting", "corrections", "intake", "_unported", "app", "contract", "reading", "quote_pricing"}
 
 
 def _imports(path: Path) -> set[str]:

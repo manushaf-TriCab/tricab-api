@@ -12,6 +12,33 @@ namespace TriCab\Core\Rfq\Parser;
 final class ProductMatches
 {
     /**
+     * The answer to `POST /v1/products/styles`.
+     *
+     * @param array<array-key, mixed> $payload
+     *
+     * @return array<string, string> code => style
+     *
+     * @throws RfqParserFailure
+     */
+    public static function stylesFromPayload(array $payload, CorrelationId $sent): array
+    {
+        ParseResponse::assertEnvelope($payload, $sent);
+        $styles = $payload['styles'] ?? null;
+        if (!is_array($styles) || ($styles !== [] && array_is_list($styles))) {
+            throw RfqParserFailure::of(RfqParserFailure::INTERNAL_ERROR, 'The RFQ parser returned unreadable product styles.', $sent);
+        }
+        $out = [];
+        foreach ($styles as $code => $style) {
+            if (!is_string($style) || $style === '') {
+                throw RfqParserFailure::of(RfqParserFailure::INTERNAL_ERROR, 'The RFQ parser returned unreadable product styles.', $sent);
+            }
+            $out[(string) $code] = $style;
+        }
+
+        return $out;
+    }
+
+    /**
      * @param array<array-key, mixed> $payload
      *
      * @return list<array{code: string, style: string, description: string}>

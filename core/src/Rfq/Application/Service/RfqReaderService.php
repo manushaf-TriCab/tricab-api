@@ -9,6 +9,7 @@ use Throwable;
 use TriCab\Core\Rfq\Application\DTO\ReaderResult;
 use TriCab\Core\Rfq\Application\DTO\SourceDocument;
 use TriCab\Core\Rfq\Application\DTO\UploadedRfq;
+use TriCab\Core\Rfq\Contract\RfqCorrectionMemory;
 use TriCab\Core\Rfq\Contract\RfqDocumentStore;
 use TriCab\Core\Rfq\Contract\RfqDraftStore;
 use TriCab\Core\Rfq\Contract\RfqOperatorDirectory;
@@ -74,6 +75,7 @@ final class RfqReaderService
         private readonly RfqOperatorDirectory $operators,
         private readonly Clock $clock,
         private readonly bool $allowModel = false,
+        private readonly ?RfqCorrectionMemory $memory = null,
     ) {
     }
 
@@ -98,7 +100,7 @@ final class RfqReaderService
                 'bytes' => $file['bytes'],
             ];
         }
-        $parsed = $this->parser->parse(ParseRequest::forDocuments($id, $documents, $this->allowModel));
+        $parsed = $this->parser->parse(ParseRequest::forDocuments($id, $documents, $this->allowModel)->withCorrections($this->corrections()));
         $routes = [];
         foreach ($parsed->documents as $summary) {
             $routes[$summary['documentPublicId']] = $summary['readerRoute'];
@@ -246,7 +248,7 @@ final class RfqReaderService
                     $bytes,
                     $subject,
                     $attachments,
-                ));
+                )->withCorrections($this->corrections()));
             } catch (RfqParserFailure $failure) {
                 $summary[$this->handleFailure($draftId, $job, $failure)]++;
                 continue;
@@ -495,6 +497,24 @@ final class RfqReaderService
         $base = basename(str_replace('\\', '/', $name));
 
         return $base !== '' ? mb_substr($base, 0, 255) : 'upload';
+    }
+
+    /**
+     * The correction memory a parse or read is sent. A memory that cannot be
+     * read costs it its corrections, never the read.
+     *
+     * @return array<string, array{product_code: string, confirmations: int}>
+     */
+    private function corrections(): array
+    {
+        if ($this->memory === null) {
+            return [];
+        }
+        try {
+            return $this->memory->resolved();
+        } catch (Throwable) {
+            return [];
+        }
     }
 
     private function draftActor(RfqActor $actor, string $email): DraftActor

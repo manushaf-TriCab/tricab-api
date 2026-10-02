@@ -52,12 +52,13 @@ final class ParseRfqAction
         }
 
         $id = CorrelationId::fromHeaderOrGenerate($request->getHeaderLine(ParserContract::HEADER_CORRELATION_ID));
+        $actor = $this->actors->forUser($user);
         try {
-            $parsed = $this->review->parse($this->actors->forUser($user), $user->emailAddress, $text, $id);
+            $parsed = $this->review->parse($actor, $user->emailAddress, $text, $id);
         } catch (InvalidRfqValue|RfqActionForbidden|RfqParserFailure $failure) {
             return $this->failure($this->responder, $failure);
         }
 
-        return $this->responder->success($parsed->toArray());
+        return $this->responder->success($parsed->toArray($actor->can(\TriCab\Core\Rfq\Module::PERMISSION_PRICING_VIEW)));
     }
 }
