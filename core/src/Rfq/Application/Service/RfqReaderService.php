@@ -10,6 +10,7 @@ use TriCab\Core\Rfq\Application\DTO\ReaderResult;
 use TriCab\Core\Rfq\Application\DTO\SourceDocument;
 use TriCab\Core\Rfq\Application\DTO\UploadedRfq;
 use TriCab\Core\Rfq\Contract\RfqCorrectionMemory;
+use TriCab\Core\Rfq\Contract\RfqCustomerDirectory;
 use TriCab\Core\Rfq\Contract\RfqDocumentStore;
 use TriCab\Core\Rfq\Contract\RfqDraftStore;
 use TriCab\Core\Rfq\Contract\RfqOperatorDirectory;
@@ -19,6 +20,7 @@ use TriCab\Core\Rfq\Contract\RfqRepository;
 use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
 use TriCab\Core\Rfq\Domain\Exception\RfqActionForbidden;
 use TriCab\Core\Rfq\Domain\Exception\RfqDraftNotEditable;
+use TriCab\Core\Rfq\Domain\Exception\RfqLookupUnavailable;
 use TriCab\Core\Rfq\Domain\Exception\RfqRevisionConflict;
 use TriCab\Core\Rfq\Domain\Service\ReaderJobTransitionPolicy;
 use TriCab\Core\Rfq\Domain\Service\RfqAccessPolicy;
@@ -76,6 +78,7 @@ final class RfqReaderService
         private readonly Clock $clock,
         private readonly bool $allowModel = false,
         private readonly ?RfqCorrectionMemory $memory = null,
+        private readonly ?RfqCustomerDirectory $customers = null,
     ) {
     }
 
@@ -110,6 +113,16 @@ final class RfqReaderService
             throw InvalidRfqValue::required('RFQ lines', 'nothing in the files could be read as a line.');
         }
 
+        $quotes = [];
+        foreach ($parsed->documents as $summary) {
+            if (isset($summary['quoteImport'])) {
+                $quotes[] = $summary['quoteImport'];
+            }
+        }
+        // Only an upload made entirely of recognised quotes is named after them, and only a
+        // single quote gives the draft its header (the source's `upload_draft_identity`).
+        $allQuotes = $quotes !== [] && count($quotes) === count($documents);
+
         $rows = array_map(static function (array $row): array {
             $row['line_uid'] = StoreFormat::newId();
 
@@ -139,10 +152,23 @@ final class RfqReaderService
         if ($rep['authorSource'] !== null) {
             $meta['author_source'] = $rep['authorSource'];
         }
+        if ($quotes !== []) {
+            $meta['quote_imports'] = array_map(static fn (array $q): array => [
+                'template' => is_string($q['template'] ?? null) ? $q['template'] : '',
+                'quote_number' => is_string($q['quote_number'] ?? null) ? $q['quote_number'] : '',
+                'status' => is_string($q['status'] ?? null) ? $q['status'] : '',
+                'label' => is_string($q['label'] ?? null) ? $q['label'] : '',
+            ], $quotes);
+        }
+        $quoteDetails = $rep['quoteDetails'];
+        if ($allQuotes && count($quotes) === 1 && is_array($quotes[0]['quote_details'] ?? null)) {
+            $quoteDetails = $this->importedHeader($quoteDetails, $quotes[0]['quote_details']);
+        }
+        $label = $allQuotes ? self::quoteLabel($quotes) : '';
         $draftId = $this->drafts->create(new NewDraft(
             source: 'web',
-            label: self::label(array_column($documents, 'fileName'), $this->clock->now()),
-            quoteDetails: $rep['quoteDetails'],
+            label: $label !== '' ? $label : self::label(array_column($documents, 'fileName'), $this->clock->now()),
+            quoteDetails: $quoteDetails,
             rows: $rows,
             emailMeta: $meta,
             creatorEmail: $email,
@@ -490,6 +516,62 @@ final class RfqReaderService
         $first = $names[0] . (count($names) > 1 ? ' +' . (count($names) - 1) . ' more' : '');
 
         return $first . " \u{2013} " . $now->format('d M Y');
+    }
+
+    /** @param list<array<string, mixed>> $quotes */
+    private static function quoteLabel(array $quotes): string
+    {
+        $labels = array_values(array_filter(
+            array_map(static fn (array $q): string => is_string($q['label'] ?? null) ? trim($q['label']) : '', $quotes),
+            static fn (string $label): bool => $label !== '',
+        ));
+
+        return mb_substr(implode(' + ', $labels), 0, 255);
+    }
+
+    /**
+     * The draft header a single imported quote carries (`quote_import.imported_quote_details`):
+     * its printed customer, contact, reference, comments, currency and region. The printed
+     * 4js customer code is looked up in the customer book and taken only on an exact match;
+     * otherwise the printed name stays for the rep to choose. Never the old quote's number.
+     *
+     * @param array<string, mixed> $details   the header the upload already has (the rep)
+     * @param array<string, mixed> $imported
+     *
+     * @return array<string, mixed>
+     */
+    private function importedHeader(array $details, array $imported): array
+    {
+        foreach (['customer_code', 'customer_name', 'contact', 'phone', 'cusref', 'comment', 'currency', 'region'] as $field) {
+            $value = $imported[$field] ?? null;
+            if (is_string($value) && trim($value) !== '') {
+                $details[$field] = $value;
+            }
+        }
+        if (is_array($imported['imported_quote_header'] ?? null)) {
+            $details['imported_quote_header'] = $imported['imported_quote_header'];
+        }
+        $code = is_string($imported['customer_code'] ?? null) ? trim($imported['customer_code']) : '';
+        if ($code === '' || $this->customers === null) {
+            return $details;
+        }
+        try {
+            foreach ($this->customers->search($code, 10) as $customer) {
+                if (strcasecmp($customer->code, $code) === 0) {
+                    $details['customer_id'] = (string) $customer->id;
+                    $details['customer_code'] = $customer->code;
+                    $details['customer_name'] = $customer->name;
+                    if ($customer->salesOfficeCode !== '') {
+                        $details['salesoffice'] = $customer->salesOfficeCode;
+                    }
+                    break;
+                }
+            }
+        } catch (RfqLookupUnavailable) {
+            // The printed details stay for the rep to confirm; a lookup outage never fails an upload.
+        }
+
+        return $details;
     }
 
     private static function displayName(string $name): string

@@ -210,6 +210,56 @@ class CommsAndArmourTests(unittest.TestCase):
         self.assertEqual(result["item_type"], "comms")
         self.assertEqual(result["status"], "not_available")
 
+    def test_tps_flat_is_excluded_rather_than_matched_to_fd(self):
+        # "TPS flat" used to resolve confidently to an FD flat code that Sales deleted by
+        # hand on every quote. TriCab does not sell TPS.
+        for text in ("2.5mm TPS flat 100m", "2C+E 2.5mm2 tps flat 200m", "2.5mm T.P.S. 100m"):
+            result = match_line(text, catalog)
+            self.assertEqual(result["status"], "not_available", text)
+            self.assertEqual(result["item_type"], "not_sold", text)
+            self.assertEqual(result["selected_product_code"], "", text)
+            self.assertEqual(result["disposition"], "excluded", text)
+            self.assertEqual(result["exclusion_reason"], "TriCab does not sell TPS cable", text)
+
+    def test_tps_rule_leaves_other_lines_alone(self):
+        # A real TriCab code on the line is still quoted as written; "flat" without TPS
+        # is still FD; TPS inside another word is not TPS.
+        self.assertEqual(
+            match_line("FD-PAXN/3C2.5OR 100m TPS alternative", catalog)["selected_product_code"],
+            "FD-PAXN/3C2.5OR",
+        )
+        self.assertTrue(
+            match_line("2.5mm flat 2C+E 100m", catalog)["selected_product_code"].startswith("FD-")
+        )
+        self.assertNotIn("disposition", match_line("Steps 4C 16mm XLPE 100m", catalog))
+
+    def test_tps_row_is_excluded_from_the_quote_and_held_from_auto_push(self):
+        from rfq_parser.quote_readiness import quote_readiness
+
+        tps = match_line("2.5mm TPS flat 100m", catalog)
+        cable = match_line("4C 16mm XLPE 100m", catalog)
+        readiness = quote_readiness([tps, cable], {})
+        self.assertEqual([row["row_number"] for row in readiness["excluded"]], [1])
+        self.assertEqual(readiness["row_states"][0]["severity"], "excluded")
+
+    def test_tps_lines_are_dropped_from_the_quote(self):
+        # Sales want TPS lines gone, not struck through. Only the TPS half of a compound
+        # line goes; the rest of the quote is untouched.
+        from unittest.mock import patch
+        from rfq_parser import pipeline
+
+        items = [
+            {"text": "2.5mm TPS flat 100m", "source": {"line_number": 1}},
+            {"text": "2.5mm TPS flat 100m and 4C 16mm XLPE 100m", "source": {"line_number": 2}},
+            {"text": "2.5mm flat 2C+E 100m", "source": {"line_number": 3}},
+        ]
+        with patch.dict("os.environ", {"RFQ_NORMALIZER_ENABLED": "false", "OPENROUTER_API_KEY": ""}):
+            results = pipeline.match_items(items)
+        codes = [row["selected_product_code"] for row in results]
+        self.assertEqual(len(codes), 2)
+        self.assertTrue(codes[0].startswith("XL-"))
+        self.assertTrue(codes[1].startswith("FD-"))
+
     def test_unspecified_armour_prefers_unarmoured_power(self):
         # "LV power, orange" with no armour stated must not pick the armoured KA family.
         # PVC stated, no temperature -> house default is XL (90C); KL is the 110C variant.

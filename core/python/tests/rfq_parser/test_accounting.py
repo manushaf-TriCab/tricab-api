@@ -57,7 +57,7 @@ def test_comment_text_mentioning_accessories_is_a_note_not_a_line(tmp_path):
         HEADER,
         [1, "4C 16mm2 Cu XLPE/PVC 0.6/1kV", 120],
         ["Price to include glands, lugs and cleats for all cables"],
-        [2, "3C 2.5mm2 TPS", 55],
+        [2, "3C 2.5mm2 XLPE/PVC", 55],
     ]})
     cov, results = _account(path)
 
@@ -217,7 +217,7 @@ def test_an_image_is_not_read_deterministically_and_says_so(client):
 def test_several_documents_add_up(client, tmp_path):
     a = _workbook(tmp_path / "a.xlsx", {"S": [HEADER, [1, "4C 16mm2 Cu XLPE/PVC", 120]]})
     b = tmp_path / "b.csv"
-    b.write_text("Description,Qty (m)\n3C 2.5mm2 TPS,55\n", encoding="utf-8")
+    b.write_text("Description,Qty (m)\n3C 2.5mm2 XLPE/PVC,55\n", encoding="utf-8")
     body = _post_documents(client, _document("a.xlsx", a.read_bytes(), "d1"), _document("b.csv", b.read_bytes(), "d2")).get_json()
     assert len(body["lines"]) == 2
     assert body["coverage"]["inputRows"] == 4 and body["coverage"]["keptRows"] == 2

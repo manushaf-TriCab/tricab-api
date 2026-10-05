@@ -103,7 +103,7 @@ def test_a_code_the_cost_api_does_not_carry_is_unpriced(cost):
 def test_changing_currency_converts_cost_then_margins_again(cost):
     (result,) = priced([row(margin_percent=20, margin_locked=True)], currency="NZD")
     assert result["pricing"]["quote_currency"] == "NZD"
-    assert result["unit_price"] == 12.109 and result["final_unit_price"] == 15.137
+    assert result["unit_price"] == 12.351 and result["final_unit_price"] == 15.439
 
 
 @pytest.mark.parametrize("value,expected", [(23.987, 23), ("33", 33), (-5, 0), ("x", 0), (None, 0), (float("nan"), 0)])

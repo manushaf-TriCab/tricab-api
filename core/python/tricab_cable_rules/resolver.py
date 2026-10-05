@@ -972,6 +972,28 @@ def _resolve_line(
             accessory,
         )
 
+    if fields.get("not_sold_hint"):
+        # A family TriCab does not sell (NOT_SOLD_PATTERNS). Checked after the exact
+        # codes above, so a line naming a real TriCab code is still quoted as written.
+        # The row is kept and marked excluded rather than dropped: it stays visible
+        # (struck through) so the rep can see what the customer asked for, and it is
+        # never synced to 4js (quote_readiness.exclusion_reason).
+        label = fields["not_sold_hint"]
+        result = build_result(
+            raw_text,
+            source,
+            extracted,
+            status="not_available",
+            item_type="not_sold",
+            selected=None,
+            candidates=[],
+            confidence=0.95,
+            warnings=[],
+        )
+        result["disposition"] = "excluded"
+        result["exclusion_reason"] = f"TriCab does not sell {label} cable"
+        return result
+
     if fields.get("comms_hint"):
         # TriCab does not manufacture comms/data cables (fibre, cat5/6, etc.).
         return build_result(

@@ -845,6 +845,7 @@ final class ContainerFactory
                     self::get($container, Clock::class),
                     $settings->rfqParserAllowModel,
                     self::get($container, \TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class),
+                    self::get($container, \TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class),
                 );
             },
             // Parity plan D3: Match Text's answer is sealed under a key derived from the

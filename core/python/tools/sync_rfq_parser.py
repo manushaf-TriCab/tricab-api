@@ -65,6 +65,7 @@ PARSER_MODULES = (
     "normalizer",
     "product_search",
     "quantity_check",
+    "quote_import",
     "quote_readiness",
     "reader_coverage",
     "reader_normalizer",
@@ -92,6 +93,13 @@ MODULE_PATCHES: tuple[tuple[str, str, str, str], ...] = (
         "no .env: the platform configures the reader through app settings only",
         'load_dotenv(Path(__file__).resolve().parent.parent / ".env")\n',
         "",
+    ),
+    (
+        "quote_import",
+        "no matcher.db: the source looks the printed 4js customer up in its own store; the"
+        " platform keeps the printed details and PHP resolves the customer",
+        "            from matcher.db import find_customer_by_label as resolve_customer\n",
+        "            def resolve_customer(**_kwargs):\n                return None\n",
     ),
     (
         "reader_coverage",
@@ -251,6 +259,21 @@ _BROWSER = (
 # Every one is about where a file sits or what no longer exists here, never about what
 # the parser does.
 TEST_PATCHES: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "test_resolver",
+        "mail_ingest (the mail path's flag reasons, plans 5/6) is not brought across; the"
+        " readiness half of this test still runs",
+        "        from rfq_parser import mail_ingest\n",
+        "",
+    ),
+    (
+        "test_resolver",
+        "mail_ingest is not brought across (see above)",
+        "        self.assertEqual(\n"
+        "            mail_ingest._flag_reason(tps), \"left off the quote: TriCab does not sell TPS cable\"\n"
+        "        )\n",
+        "",
+    ),
     (
         "test_cable_code",
         "the catalogue ships inside tricab_cable_rules",

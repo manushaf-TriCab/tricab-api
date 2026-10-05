@@ -2,21 +2,21 @@
 # Change the source or the tool's declared patches, never this file.
 """Temporary fixed quote-currency conversion schedule.
 
-The matrix was supplied by Finance with an effective date of 2026-08-31.  Rows are
+The matrix was supplied by Finance with an effective date of 2026-09-30.  Rows are
 the target currency and columns are the source/base currency.
 """
 from __future__ import annotations
 
 from typing import Any
 
-RATE_EFFECTIVE_DATE = "2026-08-31"
+RATE_EFFECTIVE_DATE = "2026-09-30"
 SUPPORTED_CURRENCIES = ("AUD", "NZD", "USD", "SGD")
 
 RATES = {
-    "AUD": {"AUD": 1.0000, "USD": 1.3955, "NZD": 0.8258, "SGD": 1.0963},
-    "USD": {"AUD": 0.7166, "USD": 1.0000, "NZD": 0.5918, "SGD": 0.7856},
-    "NZD": {"AUD": 1.2109, "USD": 1.6899, "NZD": 1.0000, "SGD": 1.3276},
-    "SGD": {"AUD": 0.9122, "USD": 1.2729, "NZD": 0.7533, "SGD": 1.0000},
+    "AUD": {"AUD": 1.0000, "USD": 1.4333, "NZD": 0.8097, "SGD": 1.1221},
+    "USD": {"AUD": 0.6977, "USD": 1.0000, "NZD": 0.5649, "SGD": 0.7829},
+    "NZD": {"AUD": 1.2351, "USD": 1.7702, "NZD": 1.0000, "SGD": 1.3858},
+    "SGD": {"AUD": 0.8912, "USD": 1.2773, "NZD": 0.7216, "SGD": 1.0000},
 }
 
 REGION_BASE_CURRENCY = {

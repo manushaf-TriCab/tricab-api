@@ -63,7 +63,7 @@ from flask import Blueprint, jsonify, request
 from tricab_cable_rules import ENGINE_VERSION
 from tricab_cable_rules.extractor import pair_circuit_label_lines
 
-from . import accounting, aliflex, corrections, intake, pipeline, quote_export, quote_pricing, quote_sync, reading, vision_ocr
+from . import accounting, aliflex, corrections, intake, pipeline, quote_export, quote_import, quote_pricing, quote_sync, reading, vision_ocr
 from .product_search import search_products
 from ._source import SOURCE_COMMIT
 from .quote_readiness import REGION_PROFILE, SUPPORTED_CURRENCIES, exclusion_reason, quote_readiness
@@ -293,6 +293,25 @@ def _parse_documents(documents: list[intake.Document], payload: dict[str, Any], 
             notes.append(f"{document.file_name} is an image; " + ("it is being read by the reader." if route else "no image reader is switched on, so it was not read."))
             total.add(cov)
             summaries.append(summary)
+            continue
+        quote = quote_import.read_upload_quote(document.data, document.file_name)
+        if quote is not None:
+            # A TriCab quotation (4js or Dynamics) is read by its own reader and never by
+            # the RFQ parser or the model reader, as the source's upload does: the generic
+            # parser would read headings, page numbers and doubled bold text as lines.
+            read = quote_import.quote_upload_result(quote)
+            results = read["results"]
+            if len(lines) + len(results) > MAX_LINES:
+                raise ContractError("input_too_large", f"The documents have more than {MAX_LINES} rows to read.", 413)
+            excluded = sum(1 for row in results if row.get("disposition") == "excluded")
+            cov = accounting.Coverage(input_rows=len(results), kept=len(results) - excluded, excluded=excluded)
+            summary.update(readerRoute=False, lineCount=len(results), coverage=cov.to_contract(), quoteImport=read["quote_import"])
+            notes.append(f"{document.file_name} was read as TriCab quote {read['quote_import']['quote_number'] or '(no number)'}: {len(results)} {'line' if len(results) == 1 else 'lines'}.")
+            notes.extend(problem["error"] for problem in read["errors"])
+            total.add(cov)
+            summaries.append(summary)
+            lines.extend(results)
+            log.info("v1 parse %s: quote %s, %d lines", correlation_id, read["quote_import"]["template"], len(results))
             continue
         remaining = deadline_ms / 1000 - (time.monotonic() - started)
         try:

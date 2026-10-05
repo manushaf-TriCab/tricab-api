@@ -2,4 +2,4 @@
 # Change the source or the tool's declared patches, never this file.
 """The source commit every generated module in this package came from."""
 
-SOURCE_COMMIT = "6e70ee3db03a31376eaaa924752e0d6bed33c166"
+SOURCE_COMMIT = "b3fb84de7fe56d4213aad3fa42665ffe80ccdaaa"

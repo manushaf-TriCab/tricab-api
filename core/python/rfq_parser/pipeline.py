@@ -906,6 +906,10 @@ def match_items(items, *, budget=None, message_context=None, degraded=None):
             )
         results.extend(row_results)
 
+    # A product TriCab does not sell (e.g. TPS; see NOT_SOLD_PATTERNS) is dropped from
+    # the quote outright. Sales asked for these lines to be gone, not struck through.
+    results = [result for result in results if result.get("item_type") != "not_sold"]
+
     # Priced once, in one concurrent quote-wide pass. Pricing each row here as
     # well only duplicated the work apply_quote_pricing redoes below.
     apply_quote_pricing(results)
@@ -1676,16 +1680,11 @@ def prepack_allowed(result, pricing) -> bool:
     cable at any size, and for stock cable below 25mm2 -- the 200m/100m panel and
     building-wire spools, which really are sold pre-packed.
 
-    An unknown cost status means the price lookup failed or found nothing, so there is
-    no stock/make answer to act on. The customer's quantities are then left as asked:
-    rounding them on a guess rewrote "4 x 55 m" as 5 x 50 m spools whenever the Cost API
-    was down (owner decision 2026-09-29). The rule applies when the line is priced again
-    with a real answer.
+    An unknown cost status (the price lookup failed, so there is no price to protect)
+    keeps the previous behaviour rather than silently dropping the rule.
     """
     status = str((pricing or {}).get("cost_status") or "").upper()
-    if not status:
-        return False
-    if status == "MAKE":
+    if not status or status == "MAKE":
         return True
     size = prepack_cross_section(result)
     if size is None:

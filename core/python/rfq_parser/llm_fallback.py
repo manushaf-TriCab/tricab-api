@@ -319,7 +319,7 @@ def _cable_length_missing(result: dict[str, Any]) -> bool:
 
 
 def _cable_needs_ai(result: dict[str, Any], *, unknown_needs_keywords: bool) -> bool:
-    if result.get("item_type") in {"accessory", "admin", "comms"}:
+    if result.get("item_type") in {"accessory", "admin", "comms", "not_sold"}:
         return False
     if result.get("fields", {}).get("exact_product_code"):
         return False

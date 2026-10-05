@@ -5,10 +5,10 @@ from rfq_parser.pipeline import apply_quote_pricing
 
 
 def test_supplied_matrix_rates_are_oriented_source_to_target():
-    assert conversion_rate("AUD", "NZD") == 1.2109
-    assert conversion_rate("AUD", "USD") == 0.7166
-    assert conversion_rate("AUD", "SGD") == 0.9122
-    assert conversion_rate("NZD", "AUD") == 0.8258
+    assert conversion_rate("AUD", "NZD") == 1.2351
+    assert conversion_rate("AUD", "USD") == 0.6977
+    assert conversion_rate("AUD", "SGD") == 0.8912
+    assert conversion_rate("NZD", "AUD") == 0.8097
 
 
 def test_pricing_converts_aud_cost_and_records_rate(monkeypatch):
@@ -25,11 +25,11 @@ def test_pricing_converts_aud_cost_and_records_rate(monkeypatch):
 
     result = apply_quote_pricing([row], region="australia", currency="NZD")["rows"][0]
 
-    assert result["unit_price"] == 121.09
-    assert result["final_unit_price"] == 121.09
-    assert result["line_total"] == 1210.9
+    assert result["unit_price"] == 123.51
+    assert result["final_unit_price"] == 123.51
+    assert result["line_total"] == 1235.1
     assert result["pricing"]["quote_currency"] == "NZD"
-    assert result["pricing"]["exchange_rate"] == 1.2109
+    assert result["pricing"]["exchange_rate"] == 1.2351
     assert result["pricing"]["exchange_rate_date"] == RATE_EFFECTIVE_DATE
 
 
@@ -50,5 +50,5 @@ def test_locked_sell_converts_from_previous_quote_currency(monkeypatch):
 
     result = apply_quote_pricing([row], region="australia", currency="USD")["rows"][0]
 
-    assert result["unit_price"] == 71.66
-    assert result["final_unit_price"] == 107.49
+    assert result["unit_price"] == 69.77
+    assert result["final_unit_price"] == 104.655

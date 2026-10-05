@@ -87,6 +87,12 @@ COMMS_RE = re.compile(
     r"|cat\s*-?\s*[567][ae]?|category\s*[567]|os[12]\b|om[1-4]\b|rj45|ethernet)\b",
     re.I,
 )
+# Cable families TriCab does not sell. Left unflagged, "2.5mm TPS flat" resolves
+# confidently to an FD flat product that Sales then deletes by hand on every quote, so
+# the line is excluded from the quote instead. The label is what the rep reads.
+NOT_SOLD_PATTERNS = (
+    ("TPS", re.compile(r"\bT\.?P\.?S\b", re.I)),
+)
 PRODUCT_CODE_RE = re.compile(r"\b[A-Z0-9]{1,3}[A-Z]?-[A-Z0-9]+/\d+(?:\.\d+)?[A-Z][0-9A-Z.]*[A-Z]{1,3}\b")
 # Sales sometimes appends a spool/reel length directly onto a product code with no
 # separator, e.g. "LS-XXXD/1C1.5EA200" for the LS-XXXD/1C1.5EA product cut to 200m.
@@ -98,6 +104,14 @@ PRODUCT_CODE_RE = re.compile(r"\b[A-Z0-9]{1,3}[A-Z]?-[A-Z0-9]+/\d+(?:\.\d+)?[A-Z
 # (e.g. "KP-PDXN/4C120", where the digits are load-bearing, not a length suffix).
 PRODUCT_CODE_WITH_LENGTH_RE = re.compile(
     r"\b([A-Z0-9]{1,3}[A-Z]?-[A-Z0-9]+/\d+(?:\.\d+)?[A-Z][0-9A-Z.]*[A-Z]{1,3})(\d{2,5})\b"
+)
+# A code with its colour left off, the colour written as a word elsewhere on the row:
+# "LS-XXXD/1C1.5 cable, Black" (Interlec, 2026-09-28). Nothing read the stem, so the
+# row went to the AI, which named the LS style on one run and not the next -- and with
+# no style the resolver defaulted to XL-PAXN/FR-PAXN. The stem plus the colour is joined
+# only when the result is a real catalog code; otherwise the stem still states the style.
+PRODUCT_CODE_STEM_RE = re.compile(
+    r"\b(([A-Z0-9]{1,3}[A-Z]?)-[A-Z0-9]+/\d+(?:\.\d+)?[A-Z][0-9A-Z.]*[0-9])(?![0-9A-Z.])"
 )
 # Square-millimetre unit, as customers actually spell it. "sqmm" / "sq.mm" /
 # "sq mm" are routine in RFQs routed through Indian and Gulf offices, and were
@@ -388,7 +402,23 @@ def find_exact_product_code(text: str, known_codes: set[str]) -> tuple[str, floa
         base_code, length_suffix = match.group(1), match.group(2)
         if base_code in known_codes or parse_code(base_code).get("valid"):
             return base_code, float(length_suffix)
+    for match in PRODUCT_CODE_STEM_RE.finditer(upper):
+        # Catalog membership only, never grammar validity: a grammar-valid join is a
+        # generated code the customer did not write, and this path would quote it as
+        # an exact match.
+        colour = extract_colour(upper[: match.start()] + " " + upper[match.end() :])
+        if colour and match.group(1) + colour in known_codes:
+            return match.group(1) + colour, None
     return None
+
+
+def product_code_stem_style(text: str) -> str | None:
+    """The style a colourless code stem names ("LS-XXXD/1C1.5" -> "LS"), unvalidated.
+
+    The resolver checks it against the catalog's styles, as it does an "X Series" hint.
+    """
+    match = PRODUCT_CODE_STEM_RE.search(text.upper())
+    return match.group(2)[:2] if match else None
 
 
 def flattened_schedule_fields(upper: str) -> dict[str, Any]:
@@ -500,9 +530,15 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
     series_match = re.search(r"\b([A-Z][A-Z0-9])\s*SERIES\b", upper)
     if series_match:
         fields["explicit_style_hint"] = series_match.group(1)
+    elif not exact_match and product_code_stem_style(upper):
+        fields["explicit_style_hint"] = product_code_stem_style(upper)
 
     if COMMS_RE.search(text):
         fields["comms_hint"] = True
+    for label, pattern in NOT_SOLD_PATTERNS:
+        if pattern.search(text):
+            fields["not_sold_hint"] = label
+            break
     if ACCESSORY_RE.search(text):
         fields["accessory_hint"] = True
     elif CUT_SERVICE_RE.search(text) and not _CABLE_EVIDENCE_RE.search(text):

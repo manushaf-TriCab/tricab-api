@@ -71,7 +71,7 @@ def test_the_parity_routes_are_unchanged(client):
 
 
 def test_parse_answers_in_the_contract_shape(client):
-    response = _parse(client, "4C 16mm2 XLPE/PVC 120m\n3C 2.5mm TPS 4 x 55m per cut")
+    response = _parse(client, "4C 16mm2 XLPE/PVC 120m\n3C 2.5mm XLPE/PVC 4 x 55m per cut")
     body = response.get_json()
 
     assert response.status_code == 200, body
@@ -89,14 +89,14 @@ def test_parse_answers_in_the_contract_shape(client):
 
 def test_the_lines_are_the_paste_routes_rows_exactly(client):
     """A draft created through v1 holds what the source's paste would have matched."""
-    text = "DB-1\n3C 2.5mm TPS 4 x 55m per cut\nsupply and install lighting"
+    text = "DB-1\n3C 2.5mm XLPE/PVC 4 x 55m per cut\nsupply and install lighting"
     v1_lines = _parse(client, text).get_json()["lines"]
     parity = client.post("/api/parse/text", json={"text": text}).get_json()["data"]["results"]
     assert v1_lines == parity
 
 
 def test_a_folded_circuit_label_is_kept_with_its_line(client):
-    body = _parse(client, "DB-1\n3C 2.5mm TPS 4 x 55m per cut").get_json()
+    body = _parse(client, "DB-1\n3C 2.5mm XLPE/PVC 4 x 55m per cut").get_json()
     assert len(body["lines"]) == 1
     assert _counts(body["coverage"]) == {"inputRows": 2, "keptRows": 2, "excludedRows": 0, "skippedRows": 0}
 

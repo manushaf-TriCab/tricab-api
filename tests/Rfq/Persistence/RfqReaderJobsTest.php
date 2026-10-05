@@ -13,7 +13,9 @@ use TriCab\Api\Product\Storage\InMemoryProductBlobStore;
 use TriCab\Api\Rfq\Persistence\AzureSqlRfqDocumentStore;
 use TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore;
 use TriCab\Api\Rfq\Persistence\AzureSqlRfqRepository;
+use TriCab\Core\Rfq\Application\DTO\RfqCustomerOption;
 use TriCab\Core\Rfq\Application\Service\RfqReaderService;
+use TriCab\Core\Rfq\Contract\RfqCustomerDirectory;
 use TriCab\Core\Rfq\Contract\RfqOperatorDirectory;
 use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
 use TriCab\Core\Rfq\Domain\ValueObject\ExtractionState;
@@ -155,6 +157,102 @@ final class RfqReaderJobsTest extends TestCase
         self::assertSame(['schedule.xlsx', 'queued', '1'], [$job['file_name'], $job['status'], $job['base_revision']]);
         self::assertStringStartsWith('rfq-document:', (string) $job['spool_path']);
         self::assertTrue($this->record($publicId)->extractionState->is(ExtractionState::READING));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $documents
+     */
+    private function quoteReader(array $documents): RfqReaderService
+    {
+        $this->parser->documentsAnswer['documents'] = $documents;
+        $customers = new class () implements RfqCustomerDirectory {
+            public function search(string $query, int $limit): array
+            {
+                return [
+                    new RfqCustomerOption(41, 'TESTCUSAU10', 'Not this one', null, 'VIC'),
+                    new RfqCustomerOption(42, 'TESTCUSAU1', 'Test Customer Australia 1', null, 'MEL'),
+                ];
+            }
+
+            public function contacts(int $customerId, int $limit): array
+            {
+                return [];
+            }
+
+            public function find(int $customerId): ?RfqCustomerOption
+            {
+                return null;
+            }
+        };
+        $operators = new class () implements RfqOperatorDirectory {
+            public function codeFor(string $email): ?string
+            {
+                return null;
+            }
+        };
+        $documentStore = new AzureSqlRfqDocumentStore(new PdoSqlConnection($this->pdo, new RequestPerformanceMetrics()), new InMemoryProductBlobStore(), 'rfq-documents', new SystemClock());
+
+        return new RfqReaderService($this->parser, $this->store, $this->store, $documentStore, $this->repository, $operators, new SystemClock(), false, null, $customers);
+    }
+
+    /** @return array<string, mixed> */
+    private static function quoteImport(): array
+    {
+        return [
+            'template' => '4js', 'quote_number' => '740388', 'status' => 'review_required', 'line_count' => 3,
+            'label' => 'Imported 4js quote 740388 · Test Customer Australia 1',
+            'quote_details' => [
+                'customer_id' => '', 'salesoffice' => '', 'phone' => '', 'customer_code' => 'TESTCUSAU1',
+                'customer_name' => 'Test Customer Australia 1', 'contact' => 'Sanjay Kumar', 'cusref' => 'pricing test ali 2',
+                'comment' => "Drums remain the property of TriCab.\nPayment Terms: 30 Days", 'currency' => 'AUD', 'region' => 'australia',
+                'imported_quote_header' => ['quote_number' => '740388', 'printed_total' => '8072.29'],
+            ],
+        ];
+    }
+
+    public function test_a_single_uploaded_quote_names_the_draft_and_fills_its_header(): void
+    {
+        $reader = $this->quoteReader([
+            ['documentPublicId' => 'upload-1', 'fileName' => 'ali-quote.pdf', 'readerRoute' => false, 'lineCount' => 3, 'quoteImport' => self::quoteImport()],
+        ]);
+        $uploaded = $reader->upload(self::sales(), 'rep@tricab.com', [
+            ['fileName' => 'ali-quote.pdf', 'contentType' => 'application/pdf', 'bytes' => '%PDF quote'],
+        ], CorrelationId::generate());
+        $draftId = (string) StoreProjection::draftId($uploaded->publicId);
+
+        $draft = $this->store->load($draftId);
+        self::assertNotNull($draft);
+        self::assertSame('Imported 4js quote 740388 · Test Customer Australia 1', $draft->columns['label']);
+        self::assertSame('web', $draft->columns['source']);
+        $header = $draft->quoteDetails;
+        self::assertSame(['42', 'TESTCUSAU1', 'Test Customer Australia 1', 'MEL'], [$header['customer_id'], $header['customer_code'], $header['customer_name'], $header['salesoffice']], 'the exact code, not the one it prefixes');
+        self::assertSame(['Sanjay Kumar', 'pricing test ali 2', 'AUD', 'australia'], [$header['contact'], $header['cusref'], $header['currency'], $header['region']]);
+        self::assertIsString($header['comment']);
+        self::assertStringContainsString('Payment Terms: 30 Days', $header['comment']);
+        self::assertIsArray($header['imported_quote_header']);
+        self::assertSame('740388', $header['imported_quote_header']['quote_number'] ?? null);
+        self::assertSame([['template' => '4js', 'quote_number' => '740388', 'status' => 'review_required', 'label' => 'Imported 4js quote 740388 · Test Customer Australia 1']], $draft->emailMeta['quote_imports'] ?? null);
+        self::assertSame([], $this->query("SELECT [id] FROM [rfq].[rfq_reader_jobs] WHERE [draft_id] = '{$draftId}'"), 'a quote is never re-read by the model');
+    }
+
+    public function test_a_quote_uploaded_with_an_rfq_file_keeps_the_usual_label_and_no_header(): void
+    {
+        $reader = $this->quoteReader([
+            ['documentPublicId' => 'upload-1', 'fileName' => 'ali-quote.pdf', 'readerRoute' => false, 'lineCount' => 3, 'quoteImport' => self::quoteImport()],
+            ['documentPublicId' => 'upload-2', 'fileName' => 'notes.csv', 'readerRoute' => false, 'lineCount' => 0],
+        ]);
+        $uploaded = $reader->upload(self::sales(), 'rep@tricab.com', [
+            ['fileName' => 'ali-quote.pdf', 'contentType' => 'application/pdf', 'bytes' => '%PDF quote'],
+            ['fileName' => 'notes.csv', 'contentType' => 'text/csv', 'bytes' => "a,b\n"],
+        ], CorrelationId::generate());
+
+        $draft = $this->store->load((string) StoreProjection::draftId($uploaded->publicId));
+        self::assertNotNull($draft);
+        self::assertIsString($draft->columns['label']);
+        self::assertMatchesRegularExpression('/^ali-quote\.pdf \+1 more \x{2013} /u', $draft->columns['label']);
+        self::assertArrayNotHasKey('customer_code', $draft->quoteDetails);
+        self::assertIsArray($draft->emailMeta['quote_imports'] ?? null);
+        self::assertCount(1, $draft->emailMeta['quote_imports']);
     }
 
     public function test_a_read_replaces_an_untouched_drafts_rows_for_its_file(): void

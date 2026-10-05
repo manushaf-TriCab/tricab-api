@@ -35,7 +35,7 @@ final class ParseResponse
      * @param array{version: string, rulesVersion: string, catalogueVersion: string} $engine
      * @param array{mode: string, modelCalls: int, model: ?string} $provider
      * @param list<string> $notes
-     * @param list<array{documentPublicId: string, fileName: string, readerRoute: bool, lineCount: int}> $documents
+     * @param list<array{documentPublicId: string, fileName: string, readerRoute: bool, lineCount: int, quoteImport?: array<string, mixed>}> $documents
      */
     private function __construct(
         public readonly string $correlationId,
@@ -140,7 +140,7 @@ final class ParseResponse
     }
 
     /**
-     * @return list<array{documentPublicId: string, fileName: string, readerRoute: bool, lineCount: int}>
+     * @return list<array{documentPublicId: string, fileName: string, readerRoute: bool, lineCount: int, quoteImport?: array<string, mixed>}>
      *
      * @throws RfqParserFailure
      */
@@ -158,12 +158,17 @@ final class ParseResponse
                 || !is_int($document['lineCount'] ?? null) || $document['lineCount'] < 0) {
                 throw self::malformed($sent, 'documents');
             }
-            $out[] = [
+            $summary = [
                 'documentPublicId' => $document['documentPublicId'],
                 'fileName' => $document['fileName'],
                 'readerRoute' => $document['readerRoute'],
                 'lineCount' => $document['lineCount'],
             ];
+            // A TriCab quote read by its own reader (`quote_import`): its label and printed header.
+            if (is_array($document['quoteImport'] ?? null)) {
+                $summary['quoteImport'] = $document['quoteImport'];
+            }
+            $out[] = $summary;
         }
 
         return $out;
