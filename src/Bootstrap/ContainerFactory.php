@@ -782,6 +782,21 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqBranchDirectory::class),
             \TriCab\Core\Rfq\Contract\RfqDraftStore::class
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqDraftStore::class),
+            // Parity plan E6: the workflow panel's writes and its owner picker.
+            \TriCab\Core\Rfq\Contract\RfqWorkflowStore::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqWorkflowStore::class),
+            \TriCab\Core\Rfq\Contract\RfqPeopleDirectory::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqPeopleDirectory::class),
+            // Parity plan E7.3: Sync to 4js. The ledger is the draft store's; the gateway is
+            // deliberately unwired in every environment (no live 4js adapter exists), and the
+            // whole path is off unless RFQ_SYNC_ENABLED is exactly `true`.
+            \TriCab\Core\Rfq\Contract\RfqSyncStore::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqSyncStore::class),
+            \TriCab\Core\Rfq\Contract\RfqQuoteGateway::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnwiredRfqQuoteGateway::class),
+            \TriCab\Core\Rfq\Application\Service\RfqSyncService::class => \DI\autowire()
+                ->constructorParameter('margins', \DI\get(\TriCab\Core\Rfq\Contract\RfqDefaultMargins::class))
+                ->constructorParameter('enabled', $settings->rfqSyncEnabled),
             // The parser: loopback HTTP when RFQ_PARSER_ENABLED and a token are set,
             // otherwise a client that refuses every parse as `unavailable`.
             \TriCab\Core\Rfq\Contract\RfqParserClient::class => static function () use ($settings): \TriCab\Core\Rfq\Contract\RfqParserClient {
@@ -839,7 +854,17 @@ final class ContainerFactory
                     ? new \TriCab\Core\Rfq\Parser\ParseSeal($settings->rfqParserInternalToken)
                     : null)
                 ->constructorParameter('allowModel', $settings->rfqParserAllowModel)
-                ->constructorParameter('memory', \DI\get(\TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class)),
+                ->constructorParameter('memory', \DI\get(\TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class))
+                ->constructorParameter('accessories', \DI\get(\TriCab\Core\Rfq\Application\Service\RfqAccessoryMatcher::class)),
+            // Parity plan E7.2: Match Accessories. The engine is tc-web's rules over the legacy `tc`
+            // database, which is not ported: until it is, the engine answers "not available", as the source does.
+            \TriCab\Core\Rfq\Contract\RfqAccessoryEngine::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnavailableRfqAccessoryEngine::class),
+            \TriCab\Core\Rfq\Application\Service\RfqAccessoryMatcher::class => static fn (Container $container): \TriCab\Core\Rfq\Application\Service\RfqAccessoryMatcher
+                => new \TriCab\Core\Rfq\Application\Service\RfqAccessoryMatcher(
+                    self::get($container, \TriCab\Core\Rfq\Contract\RfqAccessoryEngine::class),
+                    $settings->isRfqParserEnabled() ? new \TriCab\Core\Rfq\Parser\AccessorySeal($settings->rfqParserInternalToken) : null,
+                ),
             // Parity plan E1: the quote header's lookups. Customers and contacts come
             // from the synced customer book (the azure-sql branch below); pay terms
             // from the legacy `descript` table, read only and cached for an hour.
@@ -2586,6 +2611,16 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqRepository::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqRepository::class);
+            // Parity plan E6: workflow writes share the draft store (one lock, one
+            // transaction with the activity row); people are active identity users.
+            $definitions[\TriCab\Core\Rfq\Contract\RfqWorkflowStore::class]
+                = static fn (Container $container): \TriCab\Core\Rfq\Contract\RfqWorkflowStore
+                    => self::get($container, \TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
+            $definitions[\TriCab\Core\Rfq\Contract\RfqSyncStore::class]
+                = static fn (Container $container): \TriCab\Core\Rfq\Contract\RfqSyncStore
+                    => self::get($container, \TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
+            $definitions[\TriCab\Core\Rfq\Contract\RfqPeopleDirectory::class]
+                = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqPeopleDirectory::class);
             // Plans 2.5/3.5: reader jobs are written by the draft store (one
             // transaction with the rows they replace); documents in their own
             // private container (`BLOB_CONTAINER_RFQ`).

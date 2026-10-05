@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Rfq\Application\DTO;
 
 use DateTimeInterface;
+use TriCab\Core\Rfq\Domain\ValueObject\WorkflowStatus;
 
 /**
  * `GET /api/v1/rfqs` item — contract `rfq.summary.v1`.
@@ -46,6 +47,7 @@ final class RfqSummary
             'assignee' => $r->assigneeDisplayName,
             'workflowStatus' => $r->workflowStatus->toString(),
             'priority' => $r->priority->toString(),
+            'blockedReason' => $r->workflowStatus->is(WorkflowStatus::BLOCKED) ? $r->blockedReason : null,
             'dueAt' => $r->dueAtUtc?->format(DateTimeInterface::ATOM),
             'archived' => $r->ownership->archived,
             'channel' => $r->channel->toString(),

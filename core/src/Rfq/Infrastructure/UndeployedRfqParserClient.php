@@ -9,6 +9,9 @@ use TriCab\Core\Rfq\Parser\CorrelationId;
 use TriCab\Core\Rfq\Parser\ParseRequest;
 use TriCab\Core\Rfq\Parser\ParseResponse;
 use TriCab\Core\Rfq\Parser\PricedRows;
+use TriCab\Core\Rfq\Parser\AliflexConversion;
+use TriCab\Core\Rfq\Parser\QuoteExport;
+use TriCab\Core\Rfq\Parser\QuotePlan;
 use TriCab\Core\Rfq\Parser\QuoteReadiness;
 use TriCab\Core\Rfq\Parser\ReadRequest;
 use TriCab\Core\Rfq\Parser\ReadResponse;
@@ -72,6 +75,33 @@ final class UndeployedRfqParserClient implements RfqParserClient
     }
 
     public function priceRows(CorrelationId $correlationId, array $rows, string $region, string $currency, array $defaultMargins, bool $reprice): PricedRows
+    {
+        throw RfqParserFailure::of(
+            RfqParserFailure::UNAVAILABLE,
+            'The RFQ parser is not deployed on this platform yet.',
+            $correlationId,
+        );
+    }
+
+    public function exportRows(CorrelationId $correlationId, array $rows, bool $includePrices): QuoteExport
+    {
+        throw RfqParserFailure::of(
+            RfqParserFailure::UNAVAILABLE,
+            'The RFQ parser is not deployed on this platform yet.',
+            $correlationId,
+        );
+    }
+
+    public function aliflex(CorrelationId $correlationId, array $rows, array $quoteDetails, string $label): AliflexConversion
+    {
+        throw RfqParserFailure::of(
+            RfqParserFailure::UNAVAILABLE,
+            'The RFQ parser is not deployed on this platform yet.',
+            $correlationId,
+        );
+    }
+
+    public function syncPlan(CorrelationId $correlationId, array $rows, array $quoteDetails, array $margins, string $today, ?string $existingRefno, ?int $version, string $origin): QuotePlan
     {
         throw RfqParserFailure::of(
             RfqParserFailure::UNAVAILABLE,

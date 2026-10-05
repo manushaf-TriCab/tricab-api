@@ -46,7 +46,7 @@ def _parse(client, text: str, **extra):
 # ------------------------------------------------------------------ authentication
 
 
-@pytest.mark.parametrize("path,method", [("/v1/parse", "post"), ("/v1/readiness", "post"), ("/v1/products/search", "post"), ("/v1/ocr", "post"), ("/v1/price", "post"), ("/v1/products/styles", "post"), ("/v1/corrections/keys", "post"), ("/v1/health", "get"), ("/v1/ready", "get")])
+@pytest.mark.parametrize("path,method", [("/v1/parse", "post"), ("/v1/readiness", "post"), ("/v1/products/search", "post"), ("/v1/ocr", "post"), ("/v1/price", "post"), ("/v1/products/styles", "post"), ("/v1/sync-plan", "post"), ("/v1/aliflex", "post"), ("/v1/corrections/keys", "post"), ("/v1/health", "get"), ("/v1/ready", "get")])
 def test_every_route_refuses_a_caller_without_the_token(client, path, method):
     for headers in ({}, _auth("wrong"), {"Authorization": TOKEN}):
         response = getattr(client, method)(path, json={}, headers=headers)

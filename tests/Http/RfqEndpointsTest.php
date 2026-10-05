@@ -337,6 +337,45 @@ final class RfqEndpointsTest extends TestCase
         }
     }
 
+    public function test_the_summary_and_exports_are_validated_like_a_save(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        foreach (['/summary', '/exports/quote-lines', '/exports/summary-lines'] as $path) {
+            foreach ([
+                [],
+                ['parseToken' => 'x.y', 'header' => [], 'lines' => 'all'],
+                ['parseToken' => 'x.y', 'header' => [], 'lines' => [], 'includePrices' => 'yes'],
+                ['parseToken' => 'x.y', 'header' => [], 'lines' => [['lineUid' => 'a', 'comment' => '', 'cuts' => 'four']]],
+            ] as $body) {
+                $response = $app->handle(TestAppFactory::request('POST', self::QUEUE . $path)->withParsedBody($body));
+                self::assertSame(422, $response->getStatusCode(), $path . ' ' . json_encode($body));
+            }
+        }
+    }
+
+    public function test_sales_cannot_export_prices_and_a_missing_parser_is_a_503_not_a_file(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $body = ['parseToken' => null, 'header' => [], 'lines' => [], 'includePrices' => true];
+        foreach (['/summary', '/exports/quote-lines', '/exports/summary-lines'] as $path) {
+            $response = $app->handle(TestAppFactory::request('POST', self::QUEUE . $path)->withParsedBody($body));
+            self::assertSame(403, $response->getStatusCode(), $path . ' ' . (string) $response->getBody());
+        }
+
+        $free = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/exports/quote-lines')->withParsedBody(['parseToken' => null, 'header' => [], 'lines' => []]));
+        self::assertSame(503, $free->getStatusCode());
+        self::assertStringNotContainsString('text/csv', $free->getHeaderLine('Content-Type'));
+    }
+
+    public function test_an_unknown_rfq_has_no_summary_or_file(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        foreach (['/summary', '/exports/quote-lines', '/exports/summary-lines'] as $path) {
+            $response = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/11111111-1111-4111-8111-111111111111' . $path)->withParsedBody(['header' => []]));
+            self::assertContains($response->getStatusCode(), [404, 503], $path . ' ' . (string) $response->getBody());
+        }
+    }
+
     public function test_save_as_draft_is_validated_before_anything_is_read(): void
     {
         $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
@@ -389,6 +428,85 @@ final class RfqEndpointsTest extends TestCase
         self::assertSame(404, $response->getStatusCode());
     }
 
+    // ------------------------------------------------------- workflow panel (E6)
+
+    public function test_every_workflow_write_needs_the_revision_and_validates_its_body(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES], ...Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]]);
+        $this->seed($app);
+        $rfq = self::QUEUE . '/' . self::COLLEAGUE_RFQ;
+        $cases = [
+            ['POST', '/claim', null],
+            ['POST', '/claim', ['expectedRevision' => 0]],
+            ['POST', '/claim', ['expectedRevision' => '1']],
+            ['PATCH', '/assignment', ['expectedRevision' => 1]],
+            ['PATCH', '/assignment', ['expectedRevision' => 1, 'assigneeId' => 5]],
+            ['PATCH', '/workflow', ['expectedRevision' => 1, 'status' => 'new']],
+            ['PATCH', '/workflow', ['expectedRevision' => 1, 'status' => 'synced', 'priority' => 'normal', 'reason' => '']],
+            ['PATCH', '/workflow', ['expectedRevision' => 1, 'status' => 'new', 'priority' => 'normal', 'reason' => ['x']]],
+            ['POST', '/archive', ['expectedRevision' => 1]],
+            ['POST', '/archive', ['expectedRevision' => 1, 'reason' => '   ']],
+            ['POST', '/archive', ['expectedRevision' => 1, 'reason' => str_repeat('x', 501)]],
+            ['POST', '/restore', ['expectedRevision' => -1]],
+            ['POST', '/comments', ['expectedRevision' => 1, 'message' => '']],
+            ['POST', '/comments', ['expectedRevision' => 1, 'message' => str_repeat('x', 2001)]],
+        ];
+        foreach ($cases as [$method, $suffix, $body]) {
+            $response = $app->handle(TestAppFactory::request($method, $rfq . $suffix)->withParsedBody($body));
+            self::assertSame(422, $response->getStatusCode(), $method . ' ' . $suffix . ' ' . json_encode($body));
+            $error = TestAppFactory::json($response)['error'] ?? null;
+            self::assertIsArray($error);
+            self::assertSame('RFQ_INPUT_INVALID', $error['code'] ?? null);
+        }
+    }
+
+    public function test_workflow_writes_on_an_unknown_rfq_are_404_and_without_a_store_they_are_503(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES], ...Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]]);
+        $this->seed($app);
+        $body = ['expectedRevision' => 1, 'status' => 'in_progress', 'priority' => 'normal', 'reason' => '', 'message' => 'hi', 'assigneeId' => null];
+
+        foreach ([['POST', '/claim'], ['PATCH', '/workflow'], ['POST', '/comments'], ['GET', '/activity']] as [$method, $suffix]) {
+            $missing = $app->handle(TestAppFactory::request($method, self::QUEUE . '/33333333-3333-4333-8333-333333333333' . $suffix)->withParsedBody($body));
+            self::assertSame(404, $missing->getStatusCode(), $method . ' ' . $suffix);
+            self::assertSame('RFQ_NOT_FOUND', $this->errorCode($missing));
+        }
+        // The RFQ is there; the memory build has no store to write to, and says so.
+        $unwritable = $app->handle(TestAppFactory::request('POST', self::QUEUE . '/' . self::COLLEAGUE_RFQ . '/comments')->withParsedBody($body));
+        self::assertSame(503, $unwritable->getStatusCode());
+        self::assertSame('RFQ_STORE_UNAVAILABLE', $this->errorCode($unwritable));
+    }
+
+    public function test_a_rep_may_not_assign_and_the_people_lookup_is_for_managers(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES]]);
+        $this->seed($app);
+
+        $assign = $app->handle(TestAppFactory::request('PATCH', self::QUEUE . '/' . self::COLLEAGUE_RFQ . '/assignment')
+            ->withParsedBody(['expectedRevision' => 1, 'assigneeId' => null]));
+        self::assertSame(403, $assign->getStatusCode(), 'no RFQ.DRAFT.ASSIGN');
+        self::assertSame(403, $app->handle(TestAppFactory::request('GET', self::QUEUE . '/lookups/people?q=a'))->getStatusCode());
+    }
+
+    public function test_the_people_lookup_and_the_activity_trail_answer_items(): void
+    {
+        $app = $this->app(['account.login', ...Module::ROLE_PERMISSIONS[Module::ROLE_SALES], ...Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]]);
+        $this->seed($app);
+
+        self::assertSame(['items' => []], $this->data($app->handle(TestAppFactory::request('GET', self::QUEUE . '/lookups/people?q=pat'))));
+        self::assertSame(['items' => []], $this->data($app->handle(TestAppFactory::request('GET', self::QUEUE . '/' . self::COLLEAGUE_RFQ . '/activity'))));
+    }
+
+    public function test_a_summary_names_no_blocked_reason_unless_the_rfq_is_blocked(): void
+    {
+        $app = $this->app(['account.login', Module::PERMISSION_DRAFT_READ]);
+        $this->seed($app);
+
+        $detail = $this->data($app->handle(TestAppFactory::request('GET', self::QUEUE . '/' . self::OWN_RFQ)));
+        self::assertArrayHasKey('blockedReason', $detail);
+        self::assertNull($detail['blockedReason']);
+    }
+
     /**
      * @param list<string> $permissions
      * @param list<string> $roles
@@ -396,7 +514,7 @@ final class RfqEndpointsTest extends TestCase
      */
     private function app(array $permissions, array $roles = ['EMPLOYEE']): App
     {
-        $app = TestAppFactory::create(['RFQ_MODULE_ENABLED' => 'true']);
+        $app = TestAppFactory::create();
         $container = $app->getContainer();
         self::assertInstanceOf(ContainerInterface::class, $container);
         $users = $container->get(UserRepository::class);
@@ -422,6 +540,14 @@ final class RfqEndpointsTest extends TestCase
         $repository
             ->withRecord(ReadRfqQueueServiceTest::record(self::OWN_RFQ, self::SIGNED_IN_USER_ID, 'VIC'))
             ->withRecord(ReadRfqQueueServiceTest::record(self::COLLEAGUE_RFQ, 99, 'NSW'));
+    }
+
+    private function errorCode(ResponseInterface $response): mixed
+    {
+        $error = TestAppFactory::json($response)['error'] ?? null;
+        self::assertIsArray($error);
+
+        return $error['code'] ?? null;
     }
 
     /**

@@ -575,4 +575,145 @@ final class RfqReviewServiceTest extends TestCase
         self::assertIsArray($pricing);
         self::assertSame(['AUD', '200.00', 0], [$pricing['currency'], $pricing['total'], $pricing['unpriced']]);
     }
+    private function publicDraftId(): string
+    {
+        return StoreProjection::publicId(self::DRAFT_ID);
+    }
+
+    public function test_the_summary_groups_a_draft_by_product_and_carries_no_cost_margin_or_price(): void
+    {
+        $this->audPricedDraft();
+        $view = $this->service()->exportDraft(self::sales(), 'rep@tricab.com', $this->publicDraftId(), null, null, false, CorrelationId::generate());
+
+        self::assertNotNull($view);
+        $summary = $view->summaryToArray();
+        self::assertSame(1, $summary['exportableProducts']);
+        $products = $summary['products'];
+        self::assertIsArray($products);
+        self::assertSame(
+            ['productCode' => 'XL-PAXN/4C16OR', 'lineCount' => 1, 'requestedTotalLength' => 10.0, 'quotedTotalLength' => 10.0, 'costStatus' => 'STOCK', 'moq' => null, 'moqApplied' => false, 'prepackApplied' => false, 'cutsText' => '(1 x 10)', 'lineUids' => ['line-aud-1']],
+            $products[0],
+        );
+        $json = (string) json_encode($summary);
+        foreach (['unit_price', 'unitPrice', 'unitCost', 'cost"', 'margin', 'sell', 'line_total', 'lineTotal'] as $leak) {
+            self::assertStringNotContainsString($leak, $json, $leak);
+        }
+        self::assertFalse($this->parser->exportCalls[0]['includePrices']);
+    }
+
+    public function test_the_money_columns_go_only_to_a_holder_of_the_pricing_permission_who_asks(): void
+    {
+        $this->audPricedDraft();
+        $service = $this->service();
+
+        $free = $service->exportDraft(self::sales(), 'rep@tricab.com', $this->publicDraftId(), null, null, false, CorrelationId::generate());
+        self::assertNotNull($free);
+        self::assertSame("\u{FEFF}Serial Number,Product Description,Product Code,Cuts,Cut Length,Total Length\r\n1,4C 16mm2 10m,XL-PAXN/4C16OR,1,10,10\r\n", $free->csv('quote-lines'));
+        self::assertStringNotContainsString('200', $free->csv('summary-quote-lines'));
+
+        try {
+            $service->exportDraft(self::sales(), 'rep@tricab.com', $this->publicDraftId(), null, null, true, CorrelationId::generate());
+            self::fail('a sales rep asked for prices and got them');
+        } catch (RfqActionForbidden) {
+            self::assertCount(1, $this->parser->exportCalls, 'the parser was not even asked');
+        }
+
+        $priced = $service->exportDraft(self::admin(), 'boss@tricab.com', $this->publicDraftId(), null, null, true, CorrelationId::generate());
+        self::assertNotNull($priced);
+        self::assertStringContainsString("Total Length,Price,Total Price\r\n1,4C 16mm2 10m,XL-PAXN/4C16OR,1,10,10,20,200\r\n", $priced->csv('quote-lines'));
+        self::assertStringContainsString('Summary quote - XL-PAXN/4C16OR,XL-PAXN/4C16OR,1,10,10,20,200', $priced->csv('summary-quote-lines'));
+        self::assertTrue($this->parser->exportCalls[1]['includePrices']);
+    }
+
+    public function test_cost_and_margin_are_not_in_what_the_parser_is_asked_to_write_for_a_viewer(): void
+    {
+        $this->audPricedDraft();
+        $view = $this->service()->exportDraft(self::admin(), 'boss@tricab.com', $this->publicDraftId(), null, null, true, CorrelationId::generate());
+
+        self::assertNotNull($view);
+        $csv = $view->csv('quote-lines') . $view->csv('summary-quote-lines');
+        // cost 10 a metre and margin 50 are on the row; neither is a column.
+        self::assertStringNotContainsString(',10.0,', $csv);
+        self::assertStringNotContainsString('margin', strtolower($csv));
+        self::assertStringNotContainsString('Cost', $csv);
+    }
+
+    public function test_a_customers_formula_in_a_description_is_neutralised_in_the_file(): void
+    {
+        $this->audPricedDraft();
+        assert($this->stored !== null);
+        $rows = $this->stored->rows;
+        $rows[0]['raw_text'] = '=HYPERLINK("http://evil.example","x"),cmd';
+        $this->stored = new StoredDraft(self::DRAFT_ID, 3, 'draft', [], $this->stored->quoteDetails, [], $rows, []);
+        $view = $this->service()->exportDraft(self::sales(), 'rep@tricab.com', $this->publicDraftId(), null, null, false, CorrelationId::generate());
+
+        self::assertNotNull($view);
+        self::assertStringContainsString("1,\"'=HYPERLINK(\"\"http://evil.example\"\",\"\"x\"\"),cmd\",XL-PAXN", $view->csv('quote-lines'));
+    }
+
+    public function test_an_export_uses_the_unsaved_edits_not_the_saved_lines(): void
+    {
+        $this->audPricedDraft();
+        $this->parser->costs = ['TPS3C25' => 4.0];
+        $edit = [['lineUid' => 'line-aud-1', 'approved' => null, 'comment' => '', 'productCode' => 'tps3c25', 'cuts' => '2', 'lengthEach' => '30']];
+        $view = $this->service()->exportDraft(self::sales(), 'rep@tricab.com', $this->publicDraftId(), null, $edit, false, CorrelationId::generate());
+
+        self::assertNotNull($view);
+        self::assertSame('TPS3C25', $view->products[0]['productCode']);
+        self::assertEquals(60, $view->products[0]['quotedTotalLength']);
+        self::assertSame('(2 x 30)', $view->products[0]['cutsText']);
+        self::assertSame([], array_filter($this->savedRows), 'asking stores nothing');
+    }
+
+    public function test_prices_that_cannot_be_had_are_reported_so_a_file_is_never_silently_incomplete(): void
+    {
+        $this->audPricedDraft();
+        $this->parser->priceFailure = RfqParserFailure::of(RfqParserFailure::TIMEOUT, 'slow');
+        $view = $this->service()->exportDraft(self::admin(), 'boss@tricab.com', $this->publicDraftId(), QuoteHeaderEdit::fromInput(['currency' => 'USD']), null, true, CorrelationId::generate());
+
+        self::assertNotNull($view);
+        self::assertNotNull($view->summaryToArray()['pricingError']);
+        self::assertTrue($view->needsPrices('quote-lines'));
+        self::assertTrue($view->needsPrices('summary-quote-lines'));
+        $free = $this->service()->exportDraft(self::admin(), 'boss@tricab.com', $this->publicDraftId(), QuoteHeaderEdit::fromInput(['currency' => 'USD']), null, false, CorrelationId::generate());
+        self::assertNotNull($free);
+        self::assertFalse($free->needsPrices('quote-lines'), 'a file without prices does not need them');
+        self::assertTrue($free->needsPrices('summary-quote-lines'), 'but the summary file lists only priced products');
+    }
+
+    public function test_headings_and_non_cable_lines_with_no_code_are_not_exported_but_unresolved_ones_are(): void
+    {
+        $this->audPricedDraft();
+        assert($this->stored !== null);
+        $rows = $this->stored->rows;
+        $rows[] = ['line_uid' => 'l-admin', 'raw_text' => 'supply and install', 'status' => 'admin', 'final_product_code' => '', 'length' => []];
+        $rows[] = ['line_uid' => 'l-head', 'raw_text' => 'DB-1', 'status' => 'matched', 'final_status' => 'not_cable', 'length' => []];
+        $rows[] = ['line_uid' => 'l-open', 'raw_text' => 'mystery cable', 'status' => 'unresolved', 'length' => []];
+        $this->stored = new StoredDraft(self::DRAFT_ID, 3, 'draft', [], $this->stored->quoteDetails, [], $rows, []);
+        $view = $this->service()->exportDraft(self::sales(), 'rep@tricab.com', $this->publicDraftId(), null, null, false, CorrelationId::generate());
+
+        self::assertNotNull($view);
+        self::assertSame(2, $view->lineCount('quote-lines'));
+        self::assertStringContainsString('mystery cable', $view->csv('quote-lines'));
+        self::assertStringNotContainsString('supply and install', $view->csv('quote-lines'));
+        self::assertStringNotContainsString('DB-1', $view->csv('quote-lines'));
+    }
+
+    public function test_an_unknown_draft_is_not_found_and_an_unsaved_match_exports_what_a_save_would_write(): void
+    {
+        $service = $this->service();
+        self::assertNull($service->exportDraft(self::sales(), 'rep@tricab.com', StoreProjection::publicId(self::DRAFT_ID), null, null, false, CorrelationId::generate()));
+
+        $parsed = $service->parse(self::sales(), 'rep@tricab.com', '4C 16mm2', CorrelationId::generate());
+        $keep = [['lineUid' => $parsed->lines[0]->lineUid, 'approved' => null, 'comment' => '']];
+        $view = $service->exportNew(self::sales(), 'rep@tricab.com', $parsed->parseToken, QuoteHeaderEdit::fromInput([]), $keep, false, CorrelationId::generate());
+
+        self::assertSame(1, $view->lineCount('quote-lines'));
+        self::assertSame([], $this->created, 'nothing was created');
+        try {
+            $service->exportNew(self::sales(), 'rep@tricab.com', $parsed->parseToken, QuoteHeaderEdit::fromInput([]), $keep, true, CorrelationId::generate());
+            self::fail('prices were exported to a sales rep');
+        } catch (RfqActionForbidden) {
+        }
+    }
 }

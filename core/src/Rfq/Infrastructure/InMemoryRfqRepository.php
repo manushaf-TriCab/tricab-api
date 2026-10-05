@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Rfq\Infrastructure;
 
+use TriCab\Core\Rfq\Application\DTO\RfqAuditEvent;
 use TriCab\Core\Rfq\Application\DTO\RfqDetail;
 use TriCab\Core\Rfq\Application\DTO\RfqQueueQuery;
 use TriCab\Core\Rfq\Application\DTO\RfqRecord;
@@ -30,6 +31,24 @@ final class InMemoryRfqRepository implements RfqRepository
         $this->records[$record->publicId] = $record;
 
         return $this;
+    }
+
+    /** @var array<string, list<RfqAuditEvent>> */
+    private array $activity = [];
+
+    public function withActivity(string $publicId, RfqAuditEvent $event): self
+    {
+        $this->activity[$publicId][] = $event;
+
+        return $this;
+    }
+
+    public function activity(string $publicId, int $limit): array
+    {
+        $events = $this->activity[$publicId] ?? [];
+        usort($events, static fn (RfqAuditEvent $a, RfqAuditEvent $b): int => $b->occurredAtUtc <=> $a->occurredAtUtc);
+
+        return array_slice($events, 0, $limit);
     }
 
     public function pageVisibleTo(RfqActor $actor, RfqQueueQuery $query): array

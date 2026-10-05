@@ -8,6 +8,9 @@ use TriCab\Core\Rfq\Parser\CorrelationId;
 use TriCab\Core\Rfq\Parser\ParseRequest;
 use TriCab\Core\Rfq\Parser\ParseResponse;
 use TriCab\Core\Rfq\Parser\PricedRows;
+use TriCab\Core\Rfq\Parser\AliflexConversion;
+use TriCab\Core\Rfq\Parser\QuoteExport;
+use TriCab\Core\Rfq\Parser\QuotePlan;
 use TriCab\Core\Rfq\Parser\QuoteReadiness;
 use TriCab\Core\Rfq\Parser\ReadRequest;
 use TriCab\Core\Rfq\Parser\ReadResponse;
@@ -88,6 +91,45 @@ interface RfqParserClient
      * @throws RfqParserFailure
      */
     public function priceRows(CorrelationId $correlationId, array $rows, string $region, string $currency, array $defaultMargins, bool $reprice): PricedRows;
+
+    /**
+     * The Product Summary and the cells of `quote-lines.csv` and
+     * `summary-quote-lines.csv` over rows already priced (parity plan E7.1).
+     * `$includePrices` false drops the sell price and line total columns; cost
+     * and margin are never cells. The summary's `line_indexes` index into `$rows`.
+     *
+     * @param list<array<string, mixed>> $rows
+     *
+     * @throws RfqParserFailure
+     */
+    public function exportRows(CorrelationId $correlationId, array $rows, bool $includePrices): QuoteExport;
+
+    /**
+     * A finished quote's rows as the ALI-FLEX alternative (parity plan E7.4): the
+     * source's agreed copper-to-aluminium mapping. Pure: it prices nothing and
+     * stores nothing.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @param array<string, mixed>       $quoteDetails
+     *
+     * @throws RfqParserFailure
+     */
+    public function aliflex(CorrelationId $correlationId, array $rows, array $quoteDetails, string $label): AliflexConversion;
+
+    /**
+     * The 4js quote plan for a draft's rows, or why none can be made (parity
+     * plan E7.3): the source's `prepare_quote_push`, which sends nothing. The
+     * customer's default margins and today's date (`YYYY-MM-DD`) are the
+     * caller's. `$existingRefno` and `$version` (2 or more) raise a new version
+     * of a quote already in 4js.
+     *
+     * @param list<array<string, mixed>>   $rows
+     * @param array<string, mixed>         $quoteDetails
+     * @param array<string, int|string>    $margins
+     *
+     * @throws RfqParserFailure
+     */
+    public function syncPlan(CorrelationId $correlationId, array $rows, array $quoteDetails, array $margins, string $today, ?string $existingRefno, ?int $version, string $origin): QuotePlan;
 
     /**
      * The catalogue's style (upper case) for each product code it knows.

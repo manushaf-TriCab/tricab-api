@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Rfq\Contract;
 
+use TriCab\Core\Rfq\Application\DTO\RfqAuditEvent;
 use TriCab\Core\Rfq\Application\DTO\RfqDetail;
 use TriCab\Core\Rfq\Application\DTO\RfqQueueQuery;
 use TriCab\Core\Rfq\Application\DTO\RfqRecord;
@@ -28,9 +29,19 @@ interface RfqRepository
 
     /**
      * The RFQ, whether or not the actor may see it — the service decides, so
-     * that "not yours" and "does not exist" produce the same 404.
+     * that "not yours" and "does not exist" produce the same 404. Carries
+     * `blockedReason` (queue pages do not: it costs a query each).
      */
     public function findRecord(string $publicId): ?RfqRecord;
+
+    /**
+     * The RFQ's activity trail, newest first. People are named, never
+     * addressed: an email in an event's detail is replaced by the person's
+     * display name. The service has already found the RFQ visible.
+     *
+     * @return list<RfqAuditEvent>
+     */
+    public function activity(string $publicId, int $limit): array;
 
     /**
      * The branch codes RFQs carry, upper-cased and sorted, for the queue's

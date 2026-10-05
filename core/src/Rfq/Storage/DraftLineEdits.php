@@ -33,6 +33,7 @@ use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
  *    On an accessory the cuts are whole sellable packs.
  *  - **New line** (E3.6) — the source's `blankRow`, under the uid the browser
  *    gave it. A new line with nothing in it is not saved (`quoteRows`).
+ *    An added accessory (E7.2) starts from the sealed row the server proposed.
  *  - **Status, correction reason, reviewer note** (E5.4) — the row detail's
  *    `final_status` select, `correction_reason` select and `reviewer_note`
  *    input. Choosing `approved` there is Approve, with its refusals.
@@ -85,12 +86,14 @@ final class DraftLineEdits
      * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}> $lines
      *        every line to keep, in order, with its decisions
      * @param string $region the header's region, for a pricing placeholder
+     * @param array<string, array<string, mixed>> $accessories the sealed accessory rows by the uid of the new line that
+     *        adds each (parity plan E7.2); such a line starts from that row, not from a blank one
      *
      * @return list<array<string, mixed>> the rows to save
      *
      * @throws InvalidRfqValue for an unknown or repeated line, or an approval the line cannot take
      */
-    public static function apply(array $stored, array $lines, string $region = 'australia'): array
+    public static function apply(array $stored, array $lines, string $region = 'australia', array $accessories = []): array
     {
         $byUid = [];
         foreach ($stored as $row) {
@@ -109,7 +112,7 @@ final class DraftLineEdits
                 if (isset($byUid[$uid]) || !StoreFormat::isId($uid)) {
                     throw InvalidRfqValue::required('line', sprintf('new line %s needs an unused 32-character id.', $uid));
                 }
-                $row = self::edit(self::blankRow($uid, $region), $line, $region);
+                $row = self::edit($accessories[$uid] ?? self::blankRow($uid, $region), $line, $region);
                 if (!self::isBlank($row)) {
                     $rows[] = $row;
                 }

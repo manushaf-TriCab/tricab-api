@@ -23,7 +23,7 @@ final class RfqLookupRoutesTest extends TestCase
     private function get(string $path): array
     {
         /** @var App<ContainerInterface> $app */
-        $app = TestAppFactory::create(['RFQ_MODULE_ENABLED' => 'true']);
+        $app = TestAppFactory::create();
         $container = $app->getContainer();
         self::assertInstanceOf(ContainerInterface::class, $container);
         $users = $container->get(UserRepository::class);

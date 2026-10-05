@@ -157,7 +157,6 @@ final readonly class Settings
         public bool $productFinderEnabled = false,
         public string $productFinderBaseUrl = 'http://127.0.0.1:8001',
         public int $productFinderTimeoutSeconds = 20,
-        public bool $rfqModuleEnabled = false,
         public bool $customerContactModuleEnabled = false,
         public string $customerContactAccountsLogin = '',
         public string $customerContactCoordinatorLogin = '',
@@ -171,6 +170,7 @@ final readonly class Settings
         public bool $rfqParserAllowModel = false,
         public string $blobContainerRfq = 'rfq-documents',
         public string $rfqDefaultPayTermsCode = 'EOM030ND',
+        public bool $rfqSyncEnabled = false,
         public string $triexpenseMailFrom = 'ap@tricab.com',
         public bool $triexpenseEmailEnabled = false,
         public string $triexpenseEmailTestRecipient = '',
@@ -820,11 +820,6 @@ final readonly class Settings
         $pricingDefaultTmmktmMargin = trim(self::string($env, 'PRICING_DEFAULT_TMMKTM_MARGIN', '0'));
         self::assertPricingDefaultTmmktmMargin($pricingDefaultTmmktmMargin);
 
-        // The RFQ module is merged dark: off unless RFQ_MODULE_ENABLED is true. Off, its
-        // routes are not registered and /api/v1/me reports modules.rfq = false, which
-        // is what the web reads to hide every RFQ entry -- administrators included,
-        // who would otherwise see it because they hold every permission.
-        $rfqModuleEnabled = self::bool($env, 'RFQ_MODULE_ENABLED', false);
         $customerContactModuleEnabled = self::bool($env, 'CUSTOMER_CONTACT_MODULE_ENABLED', false);
         $customerContactCoordinatorLogin = strtolower(trim(self::string($env, 'CUSTOMER_CONTACT_COORDINATOR_LOGIN', '')));
         $customerContactAccountsMailbox = strtolower(trim(self::string($env, 'CUSTOMER_CONTACT_ACCOUNTS_MAILBOX', '')));
@@ -1035,7 +1030,6 @@ final readonly class Settings
             productFinderEnabled: $productFinderEnabled,
             productFinderBaseUrl: $productFinderBaseUrl,
             productFinderTimeoutSeconds: $productFinderTimeoutSeconds,
-            rfqModuleEnabled: $rfqModuleEnabled,
             customerContactModuleEnabled: $customerContactModuleEnabled,
             customerContactAccountsLogin: strtolower(trim(self::string($env, 'CUSTOMER_CONTACT_ACCOUNTS_LOGIN', ''))),
             customerContactCoordinatorLogin: $customerContactCoordinatorLogin,
@@ -1051,6 +1045,9 @@ final readonly class Settings
             rfqParserAllowModel: self::bool($env, 'RFQ_PARSER_ALLOW_MODEL', false),
             blobContainerRfq: self::string($env, 'BLOB_CONTAINER_RFQ', 'rfq-documents'),
             rfqDefaultPayTermsCode: $rfqDefaultPayTermsCode,
+            // Sending a quote to 4js is an external production write. Only the exact text `true` turns it on:
+            // not `1`, `yes`, `on` or `TRUE`, which `bool()` would accept. Owner decision, parity plan E7.3.
+            rfqSyncEnabled: ($env['RFQ_SYNC_ENABLED'] ?? '') === 'true',
             triexpenseMailFrom: $triexpenseMailFrom,
             triexpenseEmailEnabled: $triexpenseEmailEnabled,
             triexpenseEmailTestRecipient: $triexpenseEmailTestRecipient,

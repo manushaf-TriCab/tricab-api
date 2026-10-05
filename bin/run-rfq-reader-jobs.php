@@ -29,8 +29,8 @@ $loop = isset($options['loop']) ? max(5, (int) $options['loop']) : 0;
 $dotenv = Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->safeLoad();
 $settings = Settings::fromEnvironment(array_merge($_ENV, $_SERVER));
-if (!$settings->rfqModuleEnabled || !$settings->isRfqParserEnabled()) {
-    fwrite(STDERR, "RFQ reader: RFQ_MODULE_ENABLED and RFQ_PARSER_ENABLED (with a token) must both be on.\n");
+if (!$settings->isRfqParserEnabled()) {
+    fwrite(STDERR, "RFQ reader: RFQ_PARSER_ENABLED (with a token) must be on.\n");
     exit(2);
 }
 $reader = ContainerFactory::create($settings)->get(RfqReaderService::class);

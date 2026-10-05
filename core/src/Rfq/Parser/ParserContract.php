@@ -54,7 +54,11 @@ final class ParserContract
     public const PATH_OCR = '/v1/ocr';
     /** A draft's rows priced as the source editor does (`PricedRows`, parity plan E5). */
     public const PATH_PRICE = '/v1/price';
+    /** The product summary and the cells of both quote CSVs over priced rows (`QuoteExport`, parity plan E7.1). */
+    public const PATH_EXPORT = '/v1/export';
     /** The catalogue's style per product code, for the customer default margin lookup. */
+    public const PATH_ALIFLEX = '/v1/aliflex';
+    public const PATH_SYNC_PLAN = '/v1/sync-plan';
     public const PATH_PRODUCT_STYLES = '/v1/products/styles';
     /** The correction-memory key for each approved line, for Save Review (parity plan E5.5). */
     public const PATH_CORRECTION_KEYS = '/v1/corrections/keys';

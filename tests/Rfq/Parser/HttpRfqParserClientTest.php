@@ -276,6 +276,93 @@ final class HttpRfqParserClientTest extends TestCase
         $this->client($http)->priceRows($this->id, [['a' => 1], ['b' => 2]], 'australia', 'AUD', [], false);
     }
 
+    public function test_the_export_sends_the_rows_as_one_string_with_the_price_flag(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "summary": [], "quoteLines": {"columns": ["A"], "rows": [["1"]]}, "summaryLines": {"columns": ["A"], "rows": []}}';
+
+        $export = $this->client($http)->exportRows($this->id, [['final_product_code' => 'A', 'length' => new stdClass()]], false);
+
+        $call = $http->calls[0];
+        self::assertSame('http://127.0.0.1:8002/v1/export', $call['url']);
+        $draftJson = $call['payload']['draftJson'] ?? null;
+        self::assertIsString($draftJson);
+        self::assertMatchesRegularExpression('/"includePrices":\s*false/', $draftJson);
+        self::assertMatchesRegularExpression('/"length":\s*\{\}/', $draftJson, 'an empty object stays an object');
+        self::assertSame([['1']], $export->quoteLines['rows']);
+    }
+
+    public function test_the_sync_plan_sends_the_draft_as_one_string_and_reads_the_plan_strictly(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $plan = '{"is_update": false, "existing_refno": "", "push_version": "0", "hdr_params": {"ref": "0"}, "line_items": [], "excluded": [], "fallback_margin": [], "customer_id": "1", "cusref": ""}';
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "plan": ' . $plan . '}';
+
+        $answer = $this->client($http)->syncPlan($this->id, [['final_product_code' => 'A']], ['customer_id' => '1'], ['A' => 25], '2026-10-02', '721999', 3, 'portal');
+
+        $call = $http->calls[0];
+        self::assertSame('http://127.0.0.1:8002/v1/sync-plan', $call['url']);
+        $draftJson = $call['payload']['draftJson'] ?? null;
+        self::assertIsString($draftJson);
+        self::assertMatchesRegularExpression('/"today":\s*"2026-10-02"/', $draftJson);
+        self::assertMatchesRegularExpression('/"existing_refno":\s*"721999"/', $draftJson);
+        self::assertMatchesRegularExpression('/"version":\s*3/', $draftJson);
+        self::assertMatchesRegularExpression('/"margins":\s*\{"A":\s*25\}/', $draftJson);
+        self::assertNotNull($answer->plan);
+        self::assertNull($answer->problem);
+        self::assertSame('0', $answer->plan['push_version']);
+    }
+
+    public function test_a_sync_problem_is_an_answer_and_a_malformed_one_is_a_failure(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "problem": {"status": 400, "payload": {"ok": false, "error": "no"}}}';
+        $answer = $this->client($http)->syncPlan($this->id, [], [], [], '2026-10-02', null, null, '');
+        self::assertNull($answer->plan);
+        self::assertSame(400, $answer->problem['status'] ?? null);
+
+        foreach (['{"plan": {"hdr_params": []}}', '{"plan": {}, "problem": {"status": 400, "payload": {}}}', '{}', '{"problem": {"status": "400", "payload": {}}}'] as $bad) {
+            $http = new FakeJsonHttpClient();
+            $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", ' . substr($bad, 1);
+            try {
+                $this->client($http)->syncPlan($this->id, [], [], [], '2026-10-02', null, null, '');
+                self::fail('expected an unreadable plan to be refused: ' . $bad);
+            } catch (\TriCab\Core\Rfq\Parser\RfqParserFailure $failure) {
+                self::assertSame('internal_error', $failure->failureCode);
+            }
+        }
+    }
+
+    public function test_aliflex_sends_the_quote_as_one_string_and_reads_the_conversion_strictly(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $conversion = '{"policy_version": "aliflex-map/2", "rows": [{"final_product_code": "KL-PAXA/1C35BK"}], "quote_details": {"comment": "n"}, "label": "ALI-FLEX alternative", "counts": {"changed": 1, "unchanged": 0, "review": 0}, "message": "1 line(s) changed to ALI-FLEX."}';
+        $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", "conversion": ' . $conversion . '}';
+
+        $answer = $this->client($http)->aliflex($this->id, [['final_product_code' => 'XL-PAXN/1C25OR', 'length' => new stdClass()]], ['customer_id' => '1'], 'Westelec');
+
+        $call = $http->calls[0];
+        self::assertSame('http://127.0.0.1:8002/v1/aliflex', $call['url']);
+        $draftJson = $call['payload']['draftJson'] ?? null;
+        self::assertIsString($draftJson);
+        self::assertMatchesRegularExpression('/"label":\s*"Westelec"/', $draftJson);
+        self::assertMatchesRegularExpression('/"length":\s*\{\}/', $draftJson, 'an empty object stays an object');
+        self::assertSame(1, $answer->counts['changed']);
+        self::assertSame('KL-PAXA/1C35BK', $answer->rows[0]['final_product_code']);
+        self::assertSame('aliflex-map/2', $answer->policyVersion);
+
+        foreach (['{}', '{"conversion": {"rows": "x"}}', '{"conversion": {"rows": [], "quote_details": {}, "label": "l", "counts": {"changed": -1, "unchanged": 0, "review": 0}, "message": "m", "policy_version": "p"}}'] as $bad) {
+            $http = new FakeJsonHttpClient();
+            $http->body = '{"contract": "rfq-parser.v1", "correlationId": "corr-client-000001", ' . substr($bad, 1);
+            try {
+                $this->client($http)->aliflex($this->id, [], [], '');
+                self::fail('expected an unreadable conversion to be refused: ' . $bad);
+            } catch (\TriCab\Core\Rfq\Parser\RfqParserFailure $failure) {
+                self::assertSame('internal_error', $failure->failureCode);
+            }
+        }
+    }
+
     public function test_product_styles_are_asked_only_when_there_are_codes(): void
     {
         $http = new FakeJsonHttpClient();

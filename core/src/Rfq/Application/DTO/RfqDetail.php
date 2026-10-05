@@ -28,6 +28,9 @@ final class RfqDetail
         public readonly array $documents,
         public readonly array $reads,
         public readonly array $syncAttempts,
+        /** Whether ALI-FLEX can be made from this quote now, and if not why (parity plan E7.4). */
+        public readonly ?bool $aliflexEligible = null,
+        public readonly ?string $aliflexReason = null,
     ) {
     }
 
@@ -42,6 +45,7 @@ final class RfqDetail
             'documents' => array_map(static fn (SourceDocument $d): array => $d->toArray(), $this->documents),
             'reads' => array_map(static fn (ReaderResult $r): array => $r->toArray(), $this->reads),
             'syncAttempts' => array_map(static fn (SyncAttemptView $s): array => $s->toArray(), $this->syncAttempts),
+            'aliflex' => ['eligible' => $this->aliflexEligible ?? false, 'reason' => $this->aliflexEligible === true ? null : ($this->aliflexReason ?? 'Not available for this quote.')],
         ];
     }
 }

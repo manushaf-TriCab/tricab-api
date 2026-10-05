@@ -94,7 +94,6 @@ final class GetAuthenticatedUserAction
             // module; this says whether it exists yet. The web hides a module that
             // is off from everyone, administrators included.
             'modules' => [
-                'rfq' => $this->settings->rfqModuleEnabled,
                 'customerContacts' => $this->settings->customerContactModuleEnabled
                     && in_array(\TriCab\Core\CustomerContactReport\Module::PERMISSION_ACCESS, $user->permissions, true),
             ],

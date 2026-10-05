@@ -425,9 +425,7 @@ final class AppBuilder
         $app->get('/api/v1/public/about', GetPublicAboutAction::class);
         $app->get('/api/v1/public/contact', GetPublicContactAction::class);
         self::registerOnboardingRoutes($app, $container);
-        if ($settings->rfqModuleEnabled) {
-            self::registerRfqRoutes($app, $container);
-        }
+        self::registerRfqRoutes($app, $container);
         if ($settings->customerContactModuleEnabled) {
             self::registerCustomerContactReportRoutes($app, $container);
         }
@@ -438,10 +436,6 @@ final class AppBuilder
      * RFQ module. Reads, plus the first slice's two writes (plan 3.7): paste
      * intake and a review save. Every other write family (workflow, sync)
      * lands with its phase, each on its own permission.
-     *
-     * Registered only when `RFQ_MODULE_ENABLED` is true (off by default), so the
-     * module can merge before it is finished: with it off these paths are plain
-     * 404s, whatever permissions a person holds.
      *
      * Every route carries exactly one `RFQ.*` permission, and every record the
      * handlers return is filtered by `RfqAccessPolicy` on top of it. The
@@ -494,6 +488,36 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
         $app->post('/api/v1/rfqs/{publicId}/readiness', \TriCab\Api\Http\Action\Rfq\CheckRfqReadinessAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        // Parity plan E7.1: the Product Summary and the two CSV exports, over the lines a save would write.
+        $app->post('/api/v1/rfqs/summary', \TriCab\Api\Http\Action\Rfq\RfqOutputAction::class)
+            ->setArgument('output', 'summary')
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
+        $app->post('/api/v1/rfqs/{publicId}/summary', \TriCab\Api\Http\Action\Rfq\RfqOutputAction::class)
+            ->setArgument('output', 'summary')
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        $app->post('/api/v1/rfqs/exports/quote-lines', \TriCab\Api\Http\Action\Rfq\RfqOutputAction::class)
+            ->setArgument('output', 'quote-lines')
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
+        $app->post('/api/v1/rfqs/{publicId}/exports/quote-lines', \TriCab\Api\Http\Action\Rfq\RfqOutputAction::class)
+            ->setArgument('output', 'quote-lines')
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        $app->post('/api/v1/rfqs/exports/summary-lines', \TriCab\Api\Http\Action\Rfq\RfqOutputAction::class)
+            ->setArgument('output', 'summary-quote-lines')
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
+        $app->post('/api/v1/rfqs/{publicId}/exports/summary-lines', \TriCab\Api\Http\Action\Rfq\RfqOutputAction::class)
+            ->setArgument('output', 'summary-quote-lines')
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        // Parity plan E7.2: Match Accessories. Cost is in the answer, so both are pricing holders'.
+        $app->post('/api/v1/rfqs/accessories', \TriCab\Api\Http\Action\Rfq\MatchRfqAccessoriesAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_PRICING_VIEW));
+        $app->post('/api/v1/rfqs/{publicId}/accessories', \TriCab\Api\Http\Action\Rfq\MatchRfqAccessoriesAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_PRICING_VIEW));
+        // Parity plan E7.3: Sync to 4js. Off unless RFQ_SYNC_ENABLED is `true`, and no live adapter is wired.
+        $app->post('/api/v1/rfqs/{publicId}/sync', \TriCab\Api\Http\Action\Rfq\SyncRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_QUOTE_SYNC));
+        // Parity plan E7.4: ALIFLEX makes a new draft from a finished quote, so it is a create.
+        $app->post('/api/v1/rfqs/{publicId}/aliflex', \TriCab\Api\Http\Action\Rfq\CreateRfqAliflexAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
         // Parity plan E1: the quote header's lookups. Read only, internal data.
         $app->get('/api/v1/rfqs/lookups/customers', \TriCab\Api\Http\Action\Rfq\SearchRfqCustomersAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
@@ -503,6 +527,24 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
         $app->get('/api/v1/rfqs/lookups/products', \TriCab\Api\Http\Action\Rfq\SearchRfqProductsAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_EDIT));
+        $app->get('/api/v1/rfqs/lookups/people', \TriCab\Api\Http\Action\Rfq\SearchRfqPeopleAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_ASSIGN));
+        // Parity plan E6: the workflow panel. Every write carries `expectedRevision`
+        // and answers the fresh summary; none bumps the revision.
+        $app->get('/api/v1/rfqs/{publicId}/activity', \TriCab\Api\Http\Action\Rfq\ListRfqActivityAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        $app->post('/api/v1/rfqs/{publicId}/claim', \TriCab\Api\Http\Action\Rfq\ClaimRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CLAIM));
+        $app->patch('/api/v1/rfqs/{publicId}/assignment', \TriCab\Api\Http\Action\Rfq\AssignRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_ASSIGN));
+        $app->patch('/api/v1/rfqs/{publicId}/workflow', \TriCab\Api\Http\Action\Rfq\UpdateRfqWorkflowAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_WORKFLOW));
+        $app->post('/api/v1/rfqs/{publicId}/archive', \TriCab\Api\Http\Action\Rfq\ArchiveRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_ARCHIVE));
+        $app->post('/api/v1/rfqs/{publicId}/restore', \TriCab\Api\Http\Action\Rfq\RestoreRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_RESTORE));
+        $app->post('/api/v1/rfqs/{publicId}/comments', \TriCab\Api\Http\Action\Rfq\CommentOnRfqAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_COMMENT));
     }
 
     /**

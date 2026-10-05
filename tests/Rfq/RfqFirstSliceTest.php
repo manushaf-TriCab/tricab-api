@@ -16,13 +16,16 @@ use TriCab\Api\Tests\Rfq\Persistence\LocalRfqSqlServer;
 use TriCab\Core\Rfq\Application\DTO\CreatedRfq;
 use TriCab\Core\Rfq\Application\DTO\ParsedLine;
 use TriCab\Core\Rfq\Application\DTO\RfqDetail;
+use TriCab\Core\Rfq\Application\DTO\AccessoryMatch;
 use TriCab\Core\Rfq\Application\Service\ReadRfqQueueService;
+use TriCab\Core\Rfq\Application\Service\RfqAccessoryMatcher;
 use TriCab\Core\Rfq\Application\Service\RfqReviewService;
 use TriCab\Core\Rfq\Contract\RfqOperatorDirectory;
 use TriCab\Core\Rfq\Domain\Exception\RfqActionForbidden;
 use TriCab\Core\Rfq\Domain\Exception\RfqRevisionConflict;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
 use TriCab\Core\Rfq\Module;
+use TriCab\Core\Rfq\Parser\AccessorySeal;
 use TriCab\Core\Rfq\Parser\CorrelationId;
 use TriCab\Core\Rfq\Parser\ParseSeal;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
@@ -31,6 +34,7 @@ use TriCab\Core\Rfq\Storage\QuoteHeaderEdit;
 use TriCab\Core\Rfq\Storage\StoreProjection;
 use TriCab\Core\Tests\Identity\Doubles\FixedClock;
 use TriCab\Core\Tests\Rfq\Fixtures\FixtureRfqParserClient;
+use TriCab\Core\Tests\Rfq\Fixtures\RecordingAccessoryEngine;
 use TriCab\Core\Tests\Rfq\Fixtures\RecordingCustomerDirectory;
 
 /**
@@ -47,6 +51,8 @@ final class RfqFirstSliceTest extends TestCase
     private PDO $pdo;
 
     private FixtureRfqParserClient $parser;
+
+    private RecordingAccessoryEngine $engine;
 
     private RfqReviewService $review;
 
@@ -76,6 +82,7 @@ final class RfqFirstSliceTest extends TestCase
             }
         };
         $this->parser = new FixtureRfqParserClient();
+        $this->engine = new RecordingAccessoryEngine();
         $this->review = new RfqReviewService(
             $this->parser,
             new AzureSqlRfqDraftStore($connection, FixedClock::utc('2026-09-28T02:00:00')),
@@ -87,6 +94,7 @@ final class RfqFirstSliceTest extends TestCase
             false,
             null,
             new AzureSqlRfqCorrectionMemory($connection, FixedClock::utc('2026-09-28T02:00:00')),
+            new RfqAccessoryMatcher($this->engine, new AccessorySeal('test-parser-token')),
         );
         $this->queue = new ReadRfqQueueService($repository);
     }
@@ -107,14 +115,19 @@ final class RfqFirstSliceTest extends TestCase
         self::assertSame('REPCODE', $opened->revision?->header->authorCode);
         self::assertSame('XL-PAXN/4C16OR', $lines[0]->productCode);
 
-        // The system snapshot is the parser's rows, byte for byte, and valid.
+        // The system snapshot is the parser's rows, byte for byte, and valid, apart from
+        // `pricing`: the draft is priced in the quote's region and currency as it is
+        // created (plan E5), so the snapshot carries that pass's answer, not the parse's.
         $draftId = (string) StoreProjection::draftId($created->publicId);
         $parsed = FixtureRfqParserClient::lines();
         foreach ($this->column($draftId, 'rfq_draft_rows', '[system_row_data], [system_snapshot_valid]', '[row_order]') as $i => $snapshot) {
             self::assertSame('1', self::str($snapshot['system_snapshot_valid']));
             $withUid = PythonJson::decodeObject(self::str($snapshot['system_row_data']));
             unset($withUid['line_uid']);
-            self::assertSame(PythonJson::encode($parsed[$i]), PythonJson::encode($withUid));
+            self::assertIsArray($withUid['pricing'] ?? null);
+            $expected = $parsed[$i];
+            unset($expected['pricing'], $withUid['pricing']);
+            self::assertSame(PythonJson::encode($expected), PythonJson::encode($withUid));
         }
 
         // Review: approve the first, comment the second, delete the third. A colleague saves.
@@ -241,6 +254,71 @@ final class RfqFirstSliceTest extends TestCase
         self::assertSame('3', $entry->cuts);
         self::assertSame('60', $entry->lengthEach);
         self::assertSame('(3 x 60)', $saved[2]->comment);
+    }
+
+    public function test_the_summary_and_exports_are_built_from_the_stored_draft_and_the_unsaved_edits(): void
+    {
+        $rep = $this->sales($this->repId);
+        $created = $this->paste($rep, 'rep@tricab.com', "DB-1\n4C 16mm2 XLPE/PVC 120m\n3C 2.5mm TPS 4 x 55m per cut");
+        $lines = $this->lines($this->open($rep, $created->publicId));
+
+        $saved = $this->review->exportDraft($rep, 'rep@tricab.com', $created->publicId, null, null, false, CorrelationId::generate());
+        self::assertNotNull($saved);
+        self::assertCount(2, $saved->products);
+        self::assertSame(3, $saved->lineCount('quote-lines'), 'every line the grid shows, unresolved ones too');
+        self::assertStringStartsWith("\xEF\xBB\xBFSerial Number,Product Description,Product Code,Cuts,Cut Length,Total Length\r\n", $saved->csv('quote-lines'));
+        self::assertStringNotContainsString('Price', $saved->csv('quote-lines'));
+
+        // An unsaved edit shows in the file; nothing was stored by asking.
+        $edited = $this->review->exportDraft($rep, 'rep@tricab.com', $created->publicId, null, [
+            ['lineUid' => $lines[0]->lineUid, 'approved' => null, 'comment' => (string) $lines[0]->comment, 'productCode' => 'xl-paxn/4c25or'],
+        ], false, CorrelationId::generate());
+        self::assertNotNull($edited);
+        self::assertSame(1, $edited->lineCount('quote-lines'));
+        self::assertSame('XL-PAXN/4C25OR', $edited->products[0]['productCode']);
+        self::assertCount(3, $this->lines($this->open($rep, $created->publicId)), 'the draft is as it was');
+        self::assertSame(1, $this->open($rep, $created->publicId)->summary->record->revision);
+
+        try {
+            $this->review->exportDraft($rep, 'rep@tricab.com', $created->publicId, null, null, true, CorrelationId::generate());
+            self::fail('a rep asked for prices and got them');
+        } catch (RfqActionForbidden) {
+        }
+        self::assertNull($this->review->exportDraft($rep, 'rep@tricab.com', StoreProjection::publicId(str_repeat('a', 32)), null, null, false, CorrelationId::generate()));
+    }
+
+    public function test_an_accessory_the_engine_proposed_is_saved_with_its_parent_and_pack_and_reopens_as_an_accessory_line(): void
+    {
+        $rep = new RfqActor($this->repId, 'user-' . $this->repId, [...Module::ROLE_PERMISSIONS[Module::ROLE_SALES], Module::PERMISSION_PRICING_VIEW], 'VIC');
+        $created = $this->paste($rep, 'rep@tricab.com', "DB-1\n4C 16mm2 XLPE/PVC 120m");
+        $lines = $this->lines($this->open($rep, $created->publicId));
+        $keep = array_map(static fn (ParsedLine $l): array => ['lineUid' => $l->lineUid, 'approved' => null, 'comment' => (string) $l->comment], $lines);
+        $header = QuoteHeaderEdit::fromInput(['customerId' => 37193, 'contact' => 'Jane Buyer', 'salesOffice' => 'MEL', 'payTerms' => 'EOM030ND']);
+        $this->review->save($rep, 'rep@tricab.com', $created->publicId, 1, $keep, CorrelationId::generate(), $header);
+
+        $this->engine->matches['XL-PAXN/4C16OR'] = [new AccessoryMatch('D08-N2G/20BK', 'Gland, nylon', 10.0, 12.0)];
+        $found = $this->review->accessoriesDraft($rep, 'rep@tricab.com', $created->publicId, null, null, null, CorrelationId::generate());
+        self::assertNotNull($found);
+        $candidate = $found->parents[0]['candidates'][0];
+        self::assertSame(37193, $this->engine->asked[0]['customerId']);
+
+        $parentUid = $lines[0]->lineUid;
+        $revision = $this->review->save($rep, 'rep@tricab.com', $created->publicId, 2, [
+            ['lineUid' => $parentUid, 'approved' => null, 'comment' => (string) $lines[0]->comment],
+            ['lineUid' => $candidate['line']->lineUid, 'approved' => null, 'comment' => '', 'isNew' => true, 'accessoryToken' => $candidate['token'], 'cuts' => '30'],
+        ], CorrelationId::generate());
+        self::assertSame(3, $revision);
+
+        $reopened = $this->lines($this->open($rep, $created->publicId));
+        self::assertCount(2, $reopened);
+        self::assertSame($candidate['line']->lineUid, $reopened[1]->lineUid);
+        self::assertSame('D08-N2G/20BK', $reopened[1]->productCode);
+        self::assertTrue($reopened[1]->entry?->accessory);
+        self::assertSame(10, $reopened[1]->entry->packSize);
+        self::assertSame('30', $reopened[1]->entry->cuts);
+        $draftId = (string) StoreProjection::draftId($created->publicId);
+        $stored = PythonJson::decodeObject(self::str($this->column($draftId, 'rfq_draft_rows', '[row_data]', '[row_order]')[1]['row_data']));
+        self::assertSame('XL-PAXN/4C16OR', $stored['parent_product_code']);
     }
 
     public function test_save_review_logs_the_saved_revision_and_the_next_parse_is_sent_what_it_learned(): void

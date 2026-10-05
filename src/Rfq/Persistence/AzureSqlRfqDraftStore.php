@@ -9,10 +9,18 @@ use TriCab\Api\Identity\Persistence\AzureSqlTransaction;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Rfq\Contract\RfqDraftStore;
+use TriCab\Core\Rfq\Application\DTO\SyncAttemptView;
 use TriCab\Core\Rfq\Contract\RfqReaderJobStore;
+use TriCab\Core\Rfq\Contract\RfqSyncStore;
+use TriCab\Core\Rfq\Contract\RfqWorkflowStore;
+use TriCab\Core\Rfq\Storage\StoreProjection;
 use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
 use TriCab\Core\Rfq\Domain\Exception\RfqDraftNotEditable;
 use TriCab\Core\Rfq\Domain\Exception\RfqRevisionConflict;
+use TriCab\Core\Rfq\Domain\Exception\RfqSyncNeedsReconciliation;
+use TriCab\Core\Rfq\Domain\Service\SyncAttemptTransitionPolicy;
+use TriCab\Core\Rfq\Domain\ValueObject\SyncAttemptState;
+use TriCab\Core\Rfq\Domain\ValueObject\SyncHeaderState;
 use TriCab\Core\Rfq\Storage\DraftActor;
 use TriCab\Core\Rfq\Storage\DraftChangeLog;
 use TriCab\Core\Rfq\Storage\DraftRowSet;
@@ -54,8 +62,24 @@ use TriCab\Core\Shared\Time\Clock;
  * closes the source's gap where a second worker picked up the first one's
  * running jobs. The platform claims only jobs whose `spool_path` names a
  * stored document (`rfq-document:<id>`): a job the source queued is never its.
+ *
+ * ## Workflow writes (parity plan E6)
+ *
+ * The same class implements {@see RfqWorkflowStore}: claim, assign, workflow,
+ * archive, restore and comment. Each locks the draft row like a content save,
+ * checks the revision, writes one activity row, and leaves the revision and
+ * `updated_at` alone (they describe saved content).
+ *
+ * ## The sync ledger (parity plan E7.3)
+ *
+ * And {@see RfqSyncStore}: one `rfq_sync_attempts` row per attempt to put a
+ * revision into 4js, written before 4js is contacted and checkpointed as each
+ * step settles. `begin` and `finish` lock the draft row, so a sync, a save and
+ * an archive cannot interleave, and settle the draft in the same transaction.
+ * The checkpoints in between are one small transaction each, as the source's
+ * are: a crash between two of them leaves the row saying how far it got.
  */
-final class AzureSqlRfqDraftStore implements RfqDraftStore, RfqReaderJobStore
+final class AzureSqlRfqDraftStore implements RfqDraftStore, RfqReaderJobStore, RfqWorkflowStore, RfqSyncStore
 {
     use AzureSqlTransaction;
 
@@ -247,6 +271,549 @@ final class AzureSqlRfqDraftStore implements RfqDraftStore, RfqReaderJobStore
             ], $rows),
             systemRows: array_map(static fn (array $r): array => PythonJson::decodeObject(self::text($r['system_row_data'])), $rows),
         );
+    }
+
+    // ------------------------------------------------------------------ workflow (E6)
+
+    public function claimForActor(string $draftId, int $expectedRevision, DraftActor $actor, ?string $actorName): bool
+    {
+        return $this->workflowWrite($draftId, $expectedRevision, function (array $current) use ($draftId, $actor, $actorName): void {
+            if (DraftChangeLog::truthy($current['archived_at'])) {
+                throw RfqDraftNotEditable::archived();
+            }
+            if (DraftChangeLog::truthy($current['assignee_email'])) {
+                throw RfqDraftNotEditable::alreadyAssigned();
+            }
+            $this->connection->execute('UPDATE [rfq].[rfq_draft_quotes] SET [assignee_email] = :assignee WHERE [id] = :id', ['assignee' => $actor->email, 'id' => $draftId]);
+            $this->addActivity($draftId, 'claimed', $actor, ['from' => null, 'to' => $actorName], self::revisionOf($current));
+        });
+    }
+
+    public function assign(string $draftId, int $expectedRevision, ?string $assigneeEmail, ?string $fromName, ?string $toName, DraftActor $actor): bool
+    {
+        return $this->workflowWrite($draftId, $expectedRevision, function (array $current) use ($draftId, $assigneeEmail, $fromName, $toName, $actor): void {
+            if (DraftChangeLog::truthy($current['archived_at'])) {
+                throw RfqDraftNotEditable::archived();
+            }
+            $email = $assigneeEmail === null ? '' : StoreFormat::email($assigneeEmail);
+            $this->connection->execute(
+                'UPDATE [rfq].[rfq_draft_quotes] SET [assignee_email] = :assignee WHERE [id] = :id',
+                ['assignee' => $email !== '' ? $email : null, 'id' => $draftId],
+            );
+            $this->addActivity($draftId, 'assigned', $actor, ['from' => $fromName, 'to' => $toName], self::revisionOf($current));
+        });
+    }
+
+    public function setWorkflow(string $draftId, int $expectedRevision, Closure $decide, DraftActor $actor): bool
+    {
+        return $this->workflowWrite($draftId, $expectedRevision, function (array $current) use ($draftId, $decide, $actor): void {
+            $change = $decide(
+                StoreProjection::workflowStatus($current['status']),
+                StoreProjection::priority($current['priority']),
+                DraftChangeLog::truthy($current['archived_at']),
+            );
+            if ($change->storeStatus !== null && !in_array($change->storeStatus, StoreFormat::STATUSES, true)) {
+                throw InvalidRfqValue::forOneOf('draft status', $change->storeStatus, StoreFormat::STATUSES);
+            }
+            if ($change->storeStatus !== null) {
+                // A person moving the status clears the last sync's error, as a content save does.
+                $this->connection->execute(
+                    'UPDATE [rfq].[rfq_draft_quotes] SET [status] = :status, [priority] = :priority, [push_error] = NULL WHERE [id] = :id',
+                    ['status' => $change->storeStatus, 'priority' => $change->priority->toString(), 'id' => $draftId],
+                );
+            } else {
+                $this->connection->execute(
+                    'UPDATE [rfq].[rfq_draft_quotes] SET [priority] = :priority WHERE [id] = :id',
+                    ['priority' => $change->priority->toString(), 'id' => $draftId],
+                );
+            }
+            $this->addActivity($draftId, 'workflow_updated', $actor, $change->detail, self::revisionOf($current));
+        });
+    }
+
+    public function archive(string $draftId, int $expectedRevision, string $reason, DraftActor $actor): bool
+    {
+        return $this->workflowWrite($draftId, $expectedRevision, function (array $current) use ($draftId, $reason, $actor): void {
+            if (DraftChangeLog::truthy($current['archived_at'])) {
+                throw RfqDraftNotEditable::archived();
+            }
+            if (DraftChangeLog::truthy($current['sync_started_at'])) {
+                throw RfqDraftNotEditable::syncRunning();
+            }
+            $this->connection->execute(
+                'UPDATE [rfq].[rfq_draft_quotes]
+                 SET [archived_at] = :at, [archived_by] = :by, [archive_reason] = :reason WHERE [id] = :id',
+                ['at' => $this->nowIso(), 'by' => $actor->email, 'reason' => $reason, 'id' => $draftId],
+            );
+            $this->addActivity($draftId, 'archived', $actor, ['reason' => $reason], self::revisionOf($current));
+        });
+    }
+
+    public function restore(string $draftId, int $expectedRevision, DraftActor $actor): bool
+    {
+        return $this->workflowWrite($draftId, $expectedRevision, function (array $current) use ($draftId, $actor): void {
+            if (!DraftChangeLog::truthy($current['archived_at'])) {
+                throw RfqDraftNotEditable::notArchived();
+            }
+            $this->connection->execute(
+                'UPDATE [rfq].[rfq_draft_quotes] SET [archived_at] = NULL, [archived_by] = NULL, [archive_reason] = NULL WHERE [id] = :id',
+                ['id' => $draftId],
+            );
+            $this->addActivity($draftId, 'restored', $actor, null, self::revisionOf($current));
+        });
+    }
+
+    public function comment(string $draftId, int $expectedRevision, string $message, DraftActor $actor): bool
+    {
+        return $this->workflowWrite($draftId, $expectedRevision, function (array $current) use ($draftId, $message, $actor): void {
+            $this->addActivity($draftId, 'commented', $actor, null, self::revisionOf($current), $message);
+        });
+    }
+
+    /**
+     * One workflow write: lock the draft row, check the revision, run `$write`
+     * with the locked row, commit. False when there is no such draft.
+     *
+     * @param callable(array<string, mixed>): void $write
+     */
+    private function workflowWrite(string $draftId, int $expectedRevision, callable $write): bool
+    {
+        if (!StoreFormat::isId($draftId)) {
+            return false;
+        }
+
+        return $this->runInTransaction($this->connection, function () use ($draftId, $expectedRevision, $write): bool {
+            $current = $this->connection->fetchAll(
+                'SELECT [sync_started_at], [status], [priority], [revision], [archived_at], [assignee_email]
+                 FROM [rfq].[rfq_draft_quotes] WITH (UPDLOCK, HOLDLOCK, ROWLOCK)
+                 WHERE [id] = :id',
+                ['id' => $draftId],
+            )[0] ?? null;
+            if ($current === null) {
+                return false;
+            }
+            $revision = self::revisionOf($current);
+            if ($expectedRevision !== $revision) {
+                throw new RfqRevisionConflict($revision, $expectedRevision);
+            }
+            $write($current);
+
+            return true;
+        });
+    }
+
+    /** @param array<string, mixed> $row */
+    private static function revisionOf(array $row): int
+    {
+        return AzureSqlValueMapper::intValue($row['revision'] ?? 1) ?: 1;
+    }
+
+
+    // ------------------------------------------------------------------ sync ledger (E7.3)
+
+    /** Stored errors per attempt are trimmed, as the source trims them (`_STORED_PUSH_ERRORS`). */
+    private const STORED_PUSH_ERRORS = 50;
+
+    public function begin(string $draftId, int $expectedRevision, DraftActor $actor, array $rep, array $plan, string $payload, string $payloadSha256, string $correlationId, string $origin): ?string
+    {
+        if (!StoreFormat::isId($draftId)) {
+            return null;
+        }
+        $ids = $this->ids;
+
+        return $this->runInTransaction($this->connection, function () use ($draftId, $expectedRevision, $actor, $rep, $plan, $payload, $payloadSha256, $correlationId, $origin, $ids): ?string {
+            $current = $this->connection->fetchAll(
+                'SELECT [sync_started_at], [status], [revision], [archived_at], [quote_details], [refno], [refver]
+                 FROM [rfq].[rfq_draft_quotes] WITH (UPDLOCK, HOLDLOCK, ROWLOCK)
+                 WHERE [id] = :id',
+                ['id' => $draftId],
+            )[0] ?? null;
+            if ($current === null) {
+                return null;
+            }
+            $revision = self::revisionOf($current);
+            if ($expectedRevision !== $revision) {
+                throw new RfqRevisionConflict($revision, $expectedRevision);
+            }
+            if (DraftChangeLog::truthy($current['archived_at'])) {
+                throw RfqDraftNotEditable::archived();
+            }
+            if (DraftChangeLog::truthy($current['sync_started_at'])) {
+                throw RfqDraftNotEditable::syncBlocked('A sync for this RFQ is already running.');
+            }
+            if (self::normaliseStatus($current['status']) === 'synced') {
+                throw RfqDraftNotEditable::alreadySynced(self::text($current['refno']), self::text($current['refver']));
+            }
+            $this->assertReadsSettled($draftId);
+            $this->assertNoOpenAttempt($draftId);
+
+            $now = $this->nowIso();
+            $details = PythonJson::decodeObject(self::text($current['quote_details']));
+            $rewrite = ($rep['quoteDetails']['author'] ?? null) !== ($details['author'] ?? null);
+            $this->connection->execute(
+                'UPDATE [rfq].[rfq_draft_quotes]
+                 SET [sync_started_at] = :now, [sync_revision] = :revision, [assignee_email] = :assignee'
+                . ($rewrite ? ', [quote_details] = :details' : '') . '
+                 WHERE [id] = :id',
+                ['now' => $now, 'revision' => $revision, 'assignee' => $rep['assignee'], 'id' => $draftId]
+                + ($rewrite ? ['details' => PythonJson::encode($rep['quoteDetails'] === [] ? new \stdClass() : $rep['quoteDetails'])] : []),
+            );
+
+            $attemptId = $ids();
+            $lines = is_array($plan['line_items'] ?? null) ? count($plan['line_items']) : 0;
+            $this->connection->execute(
+                'INSERT INTO [rfq].[rfq_sync_attempts]
+                    ([id], [draft_id], [created_at], [updated_at], [state], [revision], [actor_email], [actor_role], [actor_branch], [origin],
+                     [payload], [payload_sha256], [attempt_no], [header_state], [lines_total], [lines_sent], [lines_failed], [next_line], [progress])
+                 VALUES (:id, :draft, :created, :updated, N\'running\', :revision, :email, :role, :branch, :origin,
+                     :payload, :sha, 1, N\'pending\', :total, 0, 0, 0, :progress)',
+                [
+                    'id' => $attemptId,
+                    'draft' => $draftId,
+                    'created' => $now,
+                    'updated' => $now,
+                    'revision' => $revision,
+                    'email' => $actor->email,
+                    'role' => $actor->role,
+                    'branch' => $actor->branch,
+                    'origin' => $origin !== '' ? $origin : null,
+                    'payload' => $payload,
+                    'sha' => $payloadSha256,
+                    'total' => $lines,
+                    // The correlation id and the local idempotency key travel with the attempt (plan 5.4).
+                    // 4js has no idempotency key of its own, so this is a local guard, not a delivery guarantee.
+                    'progress' => PythonJson::encode([
+                        'pushed_items' => [],
+                        'errors' => [],
+                        'correlation_id' => $correlationId,
+                        'idempotency_key' => sprintf('%s:%d:%s', $draftId, $revision, $payloadSha256),
+                    ]),
+                ],
+            );
+            $detail = ['attempt_id' => $attemptId, 'payload_sha256' => $payloadSha256, 'correlation_id' => $correlationId];
+            if ($rep['assigneeChange'] !== null) {
+                $detail['assignee'] = $rep['assigneeChange'];
+            }
+            if ($rep['authorSource'] !== null) {
+                $detail['author_source'] = $rep['authorSource'];
+            }
+            $this->addActivity($draftId, 'sync_queued', $actor, $detail, $revision, sprintf('Queued for 4js: %d line(s)', $lines));
+
+            return $attemptId;
+        });
+    }
+
+    /**
+     * The source's `acquire_sync_lock` checks on the draft's document reads,
+     * with its wording: a read in flight, a failed one, or a proposal nobody
+     * has accepted or dismissed all mean the rows to be quoted are not the
+     * rows this RFQ has.
+     */
+    private function assertReadsSettled(string $draftId): void
+    {
+        $pending = $this->connection->fetchAll(
+            "SELECT TOP 1 [id] FROM [rfq].[rfq_reader_jobs] WHERE [draft_id] = :id AND [status] IN (N'queued', N'running')",
+            ['id' => $draftId],
+        );
+        if ($pending !== []) {
+            throw RfqDraftNotEditable::syncBlocked('A document is still being read. Wait for the resulting lines before syncing.');
+        }
+        $open = $this->connection->fetchAll(
+            "SELECT TOP 1 [file_name], [status] FROM [rfq].[rfq_reader_jobs]
+             WHERE [draft_id] = :id AND ([status] = N'failed'
+               OR (NULLIF(LTRIM(RTRIM([proposal])), N'') IS NOT NULL AND [proposal] NOT IN (N'{}', N'null') AND [status] NOT IN (N'superseded', N'dismissed')))",
+            ['id' => $draftId],
+        )[0] ?? null;
+        if ($open !== null) {
+            $name = trim((string) self::text($open['file_name'])) !== '' ? (string) self::text($open['file_name']) : 'a document';
+            throw RfqDraftNotEditable::syncBlocked(
+                strtolower((string) self::text($open['status'])) === 'failed'
+                    ? $name . ' could not be read, so its lines are not on this quote. Add them by hand or dismiss the failed read before syncing.'
+                    : 'A re-read of ' . $name . ' is offering replacement lines. Accept or dismiss it before syncing.',
+            );
+        }
+    }
+
+    /**
+     * `SyncAttemptTransitionPolicy::mayEnqueue`: an open or uncertain attempt is
+     * the lock. An uncertain one is named, because only a person can resolve it.
+     */
+    private function assertNoOpenAttempt(string $draftId): void
+    {
+        $rows = $this->connection->fetchAll('SELECT * FROM [rfq].[rfq_sync_attempts] WHERE [draft_id] = :id ORDER BY [created_at], [id]', ['id' => $draftId]);
+        $states = array_map(static fn (array $r): SyncAttemptState => SyncAttemptState::fromStorage($r['state']), $rows);
+        if (SyncAttemptTransitionPolicy::mayEnqueue($states)) {
+            return;
+        }
+        foreach ($rows as $row) {
+            if (SyncAttemptState::fromStorage($row['state'])->is(SyncAttemptState::UNCERTAIN)) {
+                throw new RfqSyncNeedsReconciliation(StoreProjection::syncAttemptView($row));
+            }
+        }
+        throw RfqDraftNotEditable::syncBlocked('A sync for this RFQ is already running.');
+    }
+
+    public function noteHeaderIntent(string $attemptId): void
+    {
+        $now = $this->nowIso();
+        $this->connection->execute(
+            "UPDATE [rfq].[rfq_sync_attempts] SET [header_state] = N'sent', [header_sent_at] = :now, [updated_at] = :now2 WHERE [id] = :id AND [state] = N'running'",
+            ['now' => $now, 'now2' => $now, 'id' => $attemptId],
+        );
+    }
+
+    public function noteHeaderOk(string $attemptId, string $refno, string $refver): void
+    {
+        $this->runInTransaction($this->connection, function () use ($attemptId, $refno, $refver): void {
+            $now = $this->nowIso();
+            $this->connection->execute(
+                "UPDATE [rfq].[rfq_sync_attempts] SET [header_state] = N'confirmed', [refno] = :refno, [refver] = :refver, [updated_at] = :now WHERE [id] = :id AND [state] = N'running'",
+                ['refno' => $refno, 'refver' => $refver, 'now' => $now, 'id' => $attemptId],
+            );
+            $row = $this->connection->fetchAll('SELECT [draft_id] FROM [rfq].[rfq_sync_attempts] WHERE [id] = :id', ['id' => $attemptId])[0] ?? null;
+            if ($row !== null) {
+                // Onto the draft too, at once: the quote number exists in 4js from this moment, whatever happens next.
+                $this->connection->execute(
+                    "UPDATE [rfq].[rfq_draft_quotes] SET [refno] = :refno, [refver] = :refver WHERE [id] = :draft AND ([refno] IS NULL OR [refno] = N'')",
+                    ['refno' => $refno, 'refver' => $refver, 'draft' => self::text($row['draft_id'])],
+                );
+            }
+        });
+    }
+
+    public function noteHeaderFailed(string $attemptId, string $error, bool $certain): void
+    {
+        $this->connection->execute(
+            "UPDATE [rfq].[rfq_sync_attempts] SET [header_state] = :state, [error] = :error, [updated_at] = :now WHERE [id] = :id AND [state] = N'running'",
+            [
+                'state' => $certain ? SyncHeaderState::REJECTED : SyncHeaderState::UNKNOWN,
+                'error' => mb_substr($error, 0, 2_000),
+                'now' => $this->nowIso(),
+                'id' => $attemptId,
+            ],
+        );
+    }
+
+    public function noteLine(string $attemptId, int $index, bool $accepted, array $detail, int $nextLine): void
+    {
+        $this->runInTransaction($this->connection, function () use ($attemptId, $index, $accepted, $detail, $nextLine): void {
+            $row = $this->connection->fetchAll(
+                'SELECT [progress] FROM [rfq].[rfq_sync_attempts] WITH (UPDLOCK, ROWLOCK) WHERE [id] = :id',
+                ['id' => $attemptId],
+            )[0] ?? null;
+            if ($row === null) {
+                return;
+            }
+            $progress = PythonJson::decodeObject(self::text($row['progress']));
+            $sent = is_array($progress['pushed_items'] ?? null) ? $progress['pushed_items'] : [];
+            $errors = is_array($progress['errors'] ?? null) ? $progress['errors'] : [];
+            if ($accepted) {
+                $sent[] = $detail;
+            } else {
+                $errors[] = $detail + ['row_index' => $index];
+            }
+            $progress['pushed_items'] = $sent;
+            $progress['errors'] = $errors;
+            $this->connection->execute(
+                "UPDATE [rfq].[rfq_sync_attempts]
+                 SET [progress] = :progress, [lines_sent] = :sent, [lines_failed] = :failed, [next_line] = :next, [updated_at] = :now
+                 WHERE [id] = :id AND [state] = N'running'",
+                ['progress' => PythonJson::encode($progress), 'sent' => count($sent), 'failed' => count($errors), 'next' => $nextLine, 'now' => $this->nowIso(), 'id' => $attemptId],
+            );
+        });
+    }
+
+    public function finishAttempt(string $attemptId, SyncAttemptState $state, array $result, string $error, string $reconcileNote, DraftActor $actor): void
+    {
+        $this->runInTransaction($this->connection, function () use ($attemptId, $state, $result, $error, $reconcileNote, $actor): void {
+            $attempt = $this->connection->fetchAll(
+                'SELECT * FROM [rfq].[rfq_sync_attempts] WITH (UPDLOCK, ROWLOCK) WHERE [id] = :id',
+                ['id' => $attemptId],
+            )[0] ?? null;
+            if ($attempt === null) {
+                throw new \LogicException('No such sync attempt.');
+            }
+            $draftId = (string) self::text($attempt['draft_id']);
+            $from = SyncAttemptState::fromStorage($attempt['state']);
+            $header = SyncHeaderState::fromStorage($attempt['header_state']);
+            $refno = trim((string) self::text($attempt['refno']));
+            SyncAttemptTransitionPolicy::assertSystemMay($from, $state);
+            SyncAttemptTransitionPolicy::assertMayFinish($state, $header, $refno !== '');
+
+            $this->closeAttempt($attemptId, $state, $result, $error, $reconcileNote);
+            $this->settleDraft($draftId, $attempt, $state, $result, $error, $actor, $refno, trim((string) self::text($attempt['refver'])));
+        });
+    }
+
+    /** @param array<string, mixed> $result */
+    private function closeAttempt(string $attemptId, SyncAttemptState $state, array $result, string $error, string $reconcileNote): void
+    {
+        $this->connection->execute(
+            'UPDATE [rfq].[rfq_sync_attempts] SET [state] = :state, [result] = :result, [error] = :error, [reconcile_note] = :note, [updated_at] = :now WHERE [id] = :id',
+            [
+                'state' => $state->toString(),
+                'result' => PythonJson::encode($result === [] ? new \stdClass() : $result),
+                'error' => $error !== '' ? mb_substr($error, 0, 2_000) : null,
+                'note' => $reconcileNote !== '' ? $reconcileNote : null,
+                'now' => $this->nowIso(),
+                'id' => $attemptId,
+            ],
+        );
+    }
+
+    /**
+     * What the finished attempt does to the draft, in the attempt's transaction:
+     * `synced` with its quote number on success (the system's `completed`), else
+     * `failed` with the reason and any quote number kept, so a retry versions
+     * that quote. Releases the sync lock and advances the revision, as the
+     * source's `mark_synced` and `mark_push_failed` do.
+     *
+     * @param array<string, mixed> $attempt the attempt row
+     * @param array<string, mixed> $result
+     */
+    private function settleDraft(string $draftId, array $attempt, SyncAttemptState $state, array $result, string $error, ?DraftActor $actor, string $refno, string $refver): void
+    {
+        $draft = $this->connection->fetchAll(
+            'SELECT [revision], [refno], [refver] FROM [rfq].[rfq_draft_quotes] WITH (UPDLOCK, HOLDLOCK, ROWLOCK) WHERE [id] = :id',
+            ['id' => $draftId],
+        )[0] ?? null;
+        if ($draft === null) {
+            return;
+        }
+        $next = self::revisionOf($draft) + 1;
+        $now = $this->nowIso();
+        $syncedRevision = AzureSqlValueMapper::intValue($attempt['revision'] ?? 1) ?: 1;
+        $nextRefno = $refno !== '' ? $refno : (string) self::text($draft['refno']);
+        $nextRefver = $refver !== '' ? $refver : (string) self::text($draft['refver']);
+
+        if ($state->is(SyncAttemptState::SUCCEEDED)) {
+            $this->connection->execute(
+                "UPDATE [rfq].[rfq_draft_quotes]
+                 SET [status] = N'synced', [push_error] = NULL, [refno] = :refno, [refver] = :refver, [synced_at] = :now, [sync_payload] = :payload,
+                     [sync_started_at] = NULL, [sync_revision] = NULL, [updated_at] = :now2, [revision] = :revision
+                 WHERE [id] = :id",
+                [
+                    'refno' => $nextRefno,
+                    'refver' => $nextRefver,
+                    'now' => $now,
+                    'payload' => PythonJson::encode($result + ['synced_revision' => $syncedRevision]),
+                    'now2' => $now,
+                    'revision' => $next,
+                    'id' => $draftId,
+                ],
+            );
+        } else {
+            $errors = is_array($result['errors'] ?? null) ? $result['errors'] : [];
+            $outcome = [
+                'ok' => false,
+                'pushed' => AzureSqlValueMapper::intValue($result['pushed'] ?? 0),
+                'failed' => count($errors),
+                'total' => AzureSqlValueMapper::intValue($result['pushed'] ?? 0) + count($errors),
+                'refno' => $nextRefno,
+                'refver' => $nextRefver,
+                'errors' => array_map(
+                    static fn (mixed $e): array => ['code' => PythonText::str(is_array($e) ? ($e['code'] ?? '') : ''), 'error' => PythonText::str(is_array($e) ? ($e['error'] ?? '') : '')],
+                    array_slice($errors, 0, self::STORED_PUSH_ERRORS),
+                ),
+                'errors_truncated' => max(0, count($errors) - self::STORED_PUSH_ERRORS),
+                'recorded_at' => $now,
+            ];
+            $this->connection->execute(
+                "UPDATE [rfq].[rfq_draft_quotes]
+                 SET [status] = N'failed', [push_error] = :error, [refno] = :refno, [refver] = :refver, [sync_payload] = :payload,
+                     [sync_started_at] = NULL, [sync_revision] = NULL, [updated_at] = :now, [revision] = :revision
+                 WHERE [id] = :id",
+                [
+                    'error' => mb_substr($error, 0, 2_000),
+                    'refno' => $nextRefno !== '' ? $nextRefno : null,
+                    'refver' => $nextRefver !== '' ? $nextRefver : null,
+                    'payload' => PythonJson::encode($outcome),
+                    'now' => $now,
+                    'revision' => $next,
+                    'id' => $draftId,
+                ],
+            );
+        }
+        $detail = [
+            'attempt_id' => (string) self::text($attempt['id']),
+            'state' => $state->toString(),
+            'lines_sent' => AzureSqlValueMapper::intValue($result['pushed'] ?? 0),
+            'lines_failed' => is_array($result['errors'] ?? null) ? count($result['errors']) : 0,
+        ];
+        if ($nextRefno !== '') {
+            $detail['refno'] = $nextRefno;
+            $detail['refver'] = $nextRefver;
+        }
+        $this->addActivity(
+            $draftId,
+            'sync_finished',
+            $actor,
+            $detail,
+            $next,
+            $state->is(SyncAttemptState::SUCCEEDED) ? sprintf('Quote %s v%s synced to 4js', $nextRefno, $nextRefver) : $error,
+        );
+    }
+
+    public function attempt(string $attemptId): ?SyncAttemptView
+    {
+        $row = $this->connection->fetchAll('SELECT * FROM [rfq].[rfq_sync_attempts] WHERE [id] = :id', ['id' => $attemptId])[0] ?? null;
+
+        return $row === null ? null : StoreProjection::syncAttemptView($row);
+    }
+
+    public function attemptsFor(string $draftId, int $limit): array
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT TOP (' . max(1, min(100, $limit)) . ') * FROM [rfq].[rfq_sync_attempts] WHERE [draft_id] = :id ORDER BY [created_at] DESC, [attempt_no] DESC, [id]',
+            ['id' => $draftId],
+        );
+
+        return array_map(StoreProjection::syncAttemptView(...), $rows);
+    }
+
+    public function sweepStale(string $draftId, string $beforeIso): int
+    {
+        if (!StoreFormat::isId($draftId)) {
+            return 0;
+        }
+
+        return $this->runInTransaction($this->connection, function () use ($draftId, $beforeIso): int {
+            // The draft first, so a sweep cannot interleave with a sync starting or finishing.
+            $draft = $this->connection->fetchAll('SELECT [revision] FROM [rfq].[rfq_draft_quotes] WITH (UPDLOCK, HOLDLOCK, ROWLOCK) WHERE [id] = :id', ['id' => $draftId])[0] ?? null;
+            if ($draft === null) {
+                return 0;
+            }
+            $stale = $this->connection->fetchAll(
+                "SELECT * FROM [rfq].[rfq_sync_attempts] WHERE [draft_id] = :id AND [state] = N'running' AND [updated_at] < :before ORDER BY [created_at], [id]",
+                ['id' => $draftId, 'before' => $beforeIso],
+            );
+            foreach ($stale as $attempt) {
+                $header = SyncHeaderState::fromStorage($attempt['header_state']);
+                $refno = trim((string) self::text($attempt['refno']));
+                $outcome = SyncAttemptTransitionPolicy::sweepOutcome($header, $refno !== '', AzureSqlValueMapper::intValue($attempt['attempt_no']));
+                $sent = AzureSqlValueMapper::intValue($attempt['lines_sent']);
+                if ($outcome->is(SyncAttemptState::UNCERTAIN)) {
+                    $state = SyncAttemptState::fromString(SyncAttemptState::UNCERTAIN);
+                    $error = 'The sync was interrupted while the quote header was being sent, so 4js may hold a quote nobody has the number of.';
+                    $note = 'The quote header request may not have completed. Do not sync again until 4js has been checked for a DRAFT quote for this customer raised around '
+                        . ((string) self::text($attempt['header_sent_at']) ?: 'the attempt time') . '.';
+                } else {
+                    // Nothing resumes a half-sent attempt in this slice, so it is closed, with the reason. If the header landed
+                    // its number is on the draft, and the next sync raises a new version of that quote, never a second quote.
+                    $state = SyncAttemptState::fromString(SyncAttemptState::FAILED);
+                    $error = $refno !== ''
+                        ? sprintf('The sync was interrupted after quote %s was created (%d of %d line(s) sent). Syncing again raises a new version of that quote.', $refno, $sent, AzureSqlValueMapper::intValue($attempt['lines_total']))
+                        : 'The sync was interrupted before anything was sent to 4js. Syncing again starts a new attempt.';
+                    $note = '';
+                }
+                $progress = PythonJson::decodeObject(self::text($attempt['progress']));
+                $errors = is_array($progress['errors'] ?? null) ? $progress['errors'] : [];
+                $this->closeAttempt((string) self::text($attempt['id']), $state, ['ok' => false, 'pushed' => $sent, 'errors' => $errors, 'swept' => true], $error, $note);
+                $this->settleDraft($draftId, $attempt, $state, ['pushed' => $sent, 'errors' => $errors], $error, null, $refno, trim((string) self::text($attempt['refver'])));
+            }
+
+            return count($stale);
+        });
     }
 
     // ------------------------------------------------------------------ reader jobs

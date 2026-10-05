@@ -11,6 +11,9 @@ use TriCab\Core\Rfq\Parser\ParserContract;
 use TriCab\Core\Rfq\Parser\ParseRequest;
 use TriCab\Core\Rfq\Parser\ParseResponse;
 use TriCab\Core\Rfq\Parser\PricedRows;
+use TriCab\Core\Rfq\Parser\AliflexConversion;
+use TriCab\Core\Rfq\Parser\QuoteExport;
+use TriCab\Core\Rfq\Parser\QuotePlan;
 use TriCab\Core\Rfq\Parser\QuoteReadiness;
 use TriCab\Core\Rfq\Parser\ReadRequest;
 use TriCab\Core\Rfq\Parser\ReadResponse;
@@ -55,6 +58,11 @@ final class FixtureRfqParserClient implements RfqParserClient
 
     /** @var list<array{rows: list<array<string, mixed>>, quoteDetails: array<string, mixed>}> */
     public array $readinessCalls = [];
+
+    /** @var list<array{rows: list<array<string, mixed>>, includePrices: bool}> */
+    public array $exportCalls = [];
+
+    public ?RfqParserFailure $exportFailure = null;
 
     /** @var list<list<array{text: string, productCode: string}>> */
     public array $correctionKeyCalls = [];
@@ -210,6 +218,209 @@ final class FixtureRfqParserClient implements RfqParserClient
         }
 
         return PricedRows::fromPayload(['contract' => ParserContract::VERSION, 'correlationId' => $correlationId->toString(), 'rows' => array_values($rows), 'unpriced' => $unpriced], $correlationId, count($rows));
+    }
+
+    /**
+     * A small stand-in for the Python `quote_export`: one summary entry per
+     * product code (in code order) and the quote cells, with a summary line
+     * only for a product that has a sell price. The real shapes are asserted
+     * in the Python tests; this one is read through the same strict
+     * `QuoteExport::fromPayload`.
+     */
+    public function exportRows(CorrelationId $correlationId, array $rows, bool $includePrices): QuoteExport
+    {
+        $this->exportCalls[] = ['rows' => $rows, 'includePrices' => $includePrices];
+        if ($this->exportFailure !== null) {
+            throw $this->exportFailure;
+        }
+        $columns = ['Serial Number', 'Product Description', 'Product Code', 'Cuts', 'Cut Length', 'Total Length'];
+        if ($includePrices) {
+            $columns = [...$columns, 'Price', 'Total Price'];
+        }
+        $quote = [];
+        $groups = [];
+        foreach ($rows as $i => $row) {
+            $code = (string) ($row['final_product_code'] ?? $row['selected_product_code'] ?? '');
+            $length = is_array($row['length'] ?? null) ? $row['length'] : [];
+            $cells = [(string) ($i + 1), (string) ($row['raw_text'] ?? ''), $code, (string) ($length['number_of_lengths'] ?? ''), (string) ($length['length_each'] ?? ''), (string) ($length['total_length'] ?? '')];
+            if ($includePrices) {
+                $cells = [...$cells, (string) ($row['final_unit_price'] ?? ''), (string) ($row['line_total'] ?? '')];
+            }
+            $quote[] = $cells;
+            if ($code !== '') {
+                $groups[strtoupper($code)][] = $i;
+            }
+        }
+        ksort($groups);
+        $summary = [];
+        $summaryRows = [];
+        foreach ($groups as $code => $indexes) {
+            $total = 0.0;
+            $sell = 0.0;
+            $cuts = [];
+            foreach ($indexes as $i) {
+                $length = is_array($rows[$i]['length'] ?? null) ? $rows[$i]['length'] : [];
+                $total += (float) ($length['total_length'] ?? 0);
+                $sell += (float) ($rows[$i]['line_total'] ?? 0);
+                $cuts[] = sprintf('(%s x %s)', $length['number_of_lengths'] ?? 1, $length['length_each'] ?? $length['total_length'] ?? 0);
+            }
+            $summary[] = [
+                'product_code' => $code,
+                'line_count' => count($indexes),
+                'requested_total_length' => $total,
+                'quoted_total_length' => $total,
+                'line_indexes' => $indexes,
+                'cost_status' => (string) ($rows[$indexes[0]]['pricing']['cost_status'] ?? ''),
+                'unit_price' => $rows[$indexes[0]]['unit_price'] ?? null,
+                'moq' => null,
+                'moq_applied' => false,
+                'prepack_applied' => false,
+                'cuts_text' => implode(', ', $cuts),
+            ];
+            if ($sell > 0.0 && $total > 0.0) {
+                $cells = ['1', 'Summary quote - ' . $code, $code, '1', (string) $total, (string) $total];
+                $summaryRows[] = $includePrices ? [...$cells, (string) round($sell / $total, 3), (string) round($sell, 2)] : $cells;
+            }
+        }
+
+        return QuoteExport::fromPayload([
+            'contract' => ParserContract::VERSION,
+            'correlationId' => $correlationId->toString(),
+            'summary' => $summary,
+            'quoteLines' => ['columns' => $columns, 'rows' => $quote],
+            'summaryLines' => ['columns' => $columns, 'rows' => $summaryRows],
+        ], $correlationId);
+    }
+
+    /** @var list<array{rows: list<array<string, mixed>>, quoteDetails: array<string, mixed>, label: string}> */
+    public array $aliflexCalls = [];
+
+    public ?RfqParserFailure $aliflexFailure = null;
+
+    /** @var array<string, mixed>|null a conversion to answer instead of the stand-in one */
+    public ?array $aliflexAnswer = null;
+
+    /**
+     * A small stand-in for the Python `aliflex.convert`: every row whose code
+     * starts `XL-` is "changed" to the same code with `KL-` and its prices
+     * cleared, the rest are unchanged. The real mapping is proved in the Python
+     * tests; this answer is read through the same strict `AliflexConversion`.
+     */
+    public function aliflex(CorrelationId $correlationId, array $rows, array $quoteDetails, string $label): AliflexConversion
+    {
+        $this->aliflexCalls[] = ['rows' => $rows, 'quoteDetails' => $quoteDetails, 'label' => $label];
+        if ($this->aliflexFailure !== null) {
+            throw $this->aliflexFailure;
+        }
+        $counts = ['changed' => 0, 'unchanged' => 0, 'review' => 0];
+        $out = [];
+        foreach ($rows as $row) {
+            unset($row['line_uid']);
+            $code = (string) ($row['final_product_code'] ?? $row['selected_product_code'] ?? '');
+            if (str_starts_with($code, 'XL-')) {
+                ++$counts['changed'];
+                $row['selected_product_code'] = 'KL-' . substr($code, 3);
+                $row['final_product_code'] = 'KL-' . substr($code, 3);
+                foreach (['pricing', 'unit_price', 'final_unit_price', 'margin_percent', 'line_total'] as $key) {
+                    unset($row[$key]);
+                }
+                $row['line_note'] = trim(((string) ($row['line_note'] ?? '')) . '; ALIFLEX Alt', '; ');
+                $row['aliflex'] = ['status' => 'changed', 'source_code' => $code];
+            } else {
+                ++$counts['unchanged'];
+                $row['aliflex'] = ['status' => 'unchanged', 'source_code' => $code];
+            }
+            $out[] = $row;
+        }
+        $conversion = $this->aliflexAnswer ?? [
+            'policy_version' => 'aliflex-map/2',
+            'rows' => $out,
+            'quote_details' => array_replace($quoteDetails, ['comment' => trim(((string) ($quoteDetails['comment'] ?? '')) . "\nALI-FLEX alternatives have been proposed.")]),
+            'label' => 'ALI-FLEX alternative · ' . $label,
+            'counts' => $counts,
+            'message' => $counts['changed'] > 0 ? $counts['changed'] . ' line(s) changed to ALI-FLEX. Cable calculations must confirm sizing before ordering.' : 'No line matches the ALI-FLEX rule, so no alternative was made.',
+        ];
+
+        return AliflexConversion::fromPayload(['contract' => ParserContract::VERSION, 'correlationId' => $correlationId->toString(), 'conversion' => $conversion], $correlationId);
+    }
+
+    /** @var list<array{rows: list<array<string, mixed>>, quoteDetails: array<string, mixed>, margins: array<string, int|string>, today: string, existingRefno: ?string, version: ?int, origin: string}> */
+    public array $syncPlanCalls = [];
+
+    public ?RfqParserFailure $syncPlanFailure = null;
+
+    /** @var array{status: int, payload: array<string, mixed>}|null what the parser says stops the quote; null for a plan */
+    public ?array $syncProblem = null;
+
+    /** @var array<string, mixed>|null a plan to answer instead of the stand-in one */
+    public ?array $syncPlan = null;
+
+    /**
+     * A small stand-in for the Python `quote_sync`: one line per row that has a
+     * code, priced at its sell price, under the header the details give, or
+     * the plan / problem a test set. The real rules are in the Python tests;
+     * this one is read through the same strict `QuotePlan::fromPayload`.
+     */
+    public function syncPlan(CorrelationId $correlationId, array $rows, array $quoteDetails, array $margins, string $today, ?string $existingRefno, ?int $version, string $origin): QuotePlan
+    {
+        $this->syncPlanCalls[] = ['rows' => $rows, 'quoteDetails' => $quoteDetails, 'margins' => $margins, 'today' => $today, 'existingRefno' => $existingRefno, 'version' => $version, 'origin' => $origin];
+        if ($this->syncPlanFailure !== null) {
+            throw $this->syncPlanFailure;
+        }
+        $body = ['contract' => ParserContract::VERSION, 'correlationId' => $correlationId->toString()];
+        if ($this->syncProblem !== null) {
+            return QuotePlan::fromPayload($body + ['problem' => $this->syncProblem], $correlationId);
+        }
+        $update = $existingRefno !== null && $version !== null;
+        $items = [];
+        foreach ($rows as $index => $row) {
+            $code = (string) ($row['final_product_code'] ?? $row['selected_product_code'] ?? '');
+            if ($code === '') {
+                continue;
+            }
+            $length = is_array($row['length'] ?? null) ? $row['length'] : [];
+            $items[] = [
+                'code' => $code,
+                'quantity' => (float) ($length['total_length'] ?? $length['total_length_m'] ?? 1),
+                'price' => (float) ($row['final_unit_price'] ?? 0),
+                'cprc' => (float) ($row['unit_price'] ?? 0),
+                'comment' => (string) ($row['line_note'] ?? ''),
+                'unitsys' => ($row['line_kind'] ?? '') === 'accessory' ? 'U' : 'M',
+                'row_number' => $index + 1,
+                'row_id' => $row['line_uid'] ?? null,
+            ];
+        }
+        $plan = $this->syncPlan ?? [
+            'is_update' => $update,
+            'existing_refno' => (string) $existingRefno,
+            'push_version' => $update ? (string) $version : '0',
+            'hdr_params' => [
+                'ref' => $update ? (string) $existingRefno : '0',
+                'cust' => (string) ($quoteDetails['customer_id'] ?? ''),
+                'debtor' => 'TCA',
+                'currency' => (string) ($quoteDetails['currency'] ?? 'AUD'),
+                'unitsys' => 'M',
+                'salesoffice' => (string) ($quoteDetails['salesoffice'] ?? ''),
+                'payterms' => (string) ($quoteDetails['payterms'] ?? ''),
+                'author' => (string) ($quoteDetails['author'] ?? ''),
+                'validtill' => (string) ($quoteDetails['validtill'] ?? '09/10/26'),
+                'carrier' => '',
+                'contact' => (string) ($quoteDetails['contact'] ?? ''),
+                'phone' => '',
+                'comment' => $origin === 'portal' ? trim((string) ($quoteDetails['comment'] ?? '') . ' - Auto-created from RFQ portal by ' . ($quoteDetails['author'] ?? ''), ' -') : (string) ($quoteDetails['comment'] ?? ''),
+                'cusref' => (string) ($quoteDetails['cusref'] ?? ''),
+                'status' => 'DRAFT',
+                'date' => substr($today, 8, 2) . '/' . substr($today, 5, 2) . '/' . substr($today, 2, 2),
+                'version' => $update ? (string) $version : '0',
+            ],
+            'line_items' => $items,
+            'excluded' => [],
+            'fallback_margin' => [],
+            'customer_id' => (string) ($quoteDetails['customer_id'] ?? ''),
+            'cusref' => (string) ($quoteDetails['cusref'] ?? ''),
+        ];
+
+        return QuotePlan::fromPayload($body + ['plan' => $plan], $correlationId);
     }
 
     public function productStyles(CorrelationId $correlationId, array $codes): array

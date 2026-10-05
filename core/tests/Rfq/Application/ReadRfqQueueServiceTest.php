@@ -116,6 +116,11 @@ final class ReadRfqQueueServiceTest extends TestCase
                 return null;
             }
 
+            public function activity(string $publicId, int $limit): array
+            {
+                return [];
+            }
+
             public function branches(): array
             {
                 return [];

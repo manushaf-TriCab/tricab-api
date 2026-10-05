@@ -13,6 +13,10 @@ use TriCab\Core\Rfq\Domain\Exception\RfqDraftNotEditable;
 use TriCab\Core\Rfq\Domain\Exception\RfqLookupUnavailable;
 use TriCab\Core\Rfq\Domain\Exception\RfqRevisionConflict;
 use TriCab\Core\Rfq\Domain\Exception\RfqStoreUnavailable;
+use TriCab\Core\Rfq\Domain\Exception\RfqSyncBlocked;
+use TriCab\Core\Rfq\Domain\Exception\RfqSyncNeedsReconciliation;
+use TriCab\Core\Rfq\Domain\Exception\RfqSyncUnavailable;
+use TriCab\Core\Rfq\Parser\AccessorySeal;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
 use TriCab\Core\Rfq\Parser\RfqServiceLimits;
 use TriCab\Core\Rfq\Storage\DraftLineEdits;
@@ -31,6 +35,9 @@ use TriCab\Core\Rfq\Storage\DraftLineEdits;
  * | `RfqStoreUnavailable`  | 503    | `RFQ_STORE_UNAVAILABLE`  |
  * | `RfqLookupUnavailable` | 503    | `RFQ_LOOKUP_UNAVAILABLE` (the customer book, naming the header's customer) |
  * | `RfqParserFailure`     | its `httpStatus()` | `RFQ_PARSER_<CODE>`, with `retryable` and `correlationId` |
+ * | `RfqSyncUnavailable`   | 503    | `RFQ_SYNC_DISABLED` (the switch is off) or `RFQ_SYNC_UNAVAILABLE` (no 4js connection); nothing was sent |
+ * | `RfqSyncBlocked`       | 422 or 409 | `RFQ_SYNC_BLOCKED`, or `RFQ_SYNC_PRICES_CHANGED` (409), with `issues`; nothing was sent |
+ * | `RfqSyncNeedsReconciliation` | 409 | `RFQ_SYNC_NEEDS_RECONCILIATION`, with the `attempt` |
  */
 trait RfqWriteFailures
 {
@@ -50,6 +57,27 @@ trait RfqWriteFailures
             $failure instanceof RfqDraftNotEditable => $responder->error('RFQ_NOT_EDITABLE', $failure->getMessage(), 409),
             $failure instanceof RfqStoreUnavailable => $responder->error('RFQ_STORE_UNAVAILABLE', $failure->getMessage(), 503),
             $failure instanceof RfqLookupUnavailable => $responder->error('RFQ_LOOKUP_UNAVAILABLE', $failure->getMessage(), 503),
+            $failure instanceof RfqSyncUnavailable => $responder->error(
+                $failure->reason === RfqSyncUnavailable::DISABLED ? 'RFQ_SYNC_DISABLED' : 'RFQ_SYNC_UNAVAILABLE',
+                $failure->getMessage(),
+                503,
+            ),
+            $failure instanceof RfqSyncBlocked => $responder->payload([
+                'success' => false,
+                'error' => [
+                    'code' => $failure->pricesChanged ? 'RFQ_SYNC_PRICES_CHANGED' : 'RFQ_SYNC_BLOCKED',
+                    'message' => $failure->getMessage(),
+                    'issues' => $failure->issues,
+                ],
+            ], $failure->pricesChanged ? 409 : 422),
+            $failure instanceof RfqSyncNeedsReconciliation => $responder->payload([
+                'success' => false,
+                'error' => [
+                    'code' => 'RFQ_SYNC_NEEDS_RECONCILIATION',
+                    'message' => $failure->getMessage(),
+                    'attempt' => $failure->attempt->toArray(),
+                ],
+            ], 409),
             $failure instanceof RfqParserFailure => $responder->payload([
                 'success' => false,
                 'error' => [
@@ -67,9 +95,9 @@ trait RfqWriteFailures
      * A save's `lines`: every line to keep, in order, with what the person
      * decided. `approved` may be left out, which keeps the stored approval;
      * `productCode`, `cuts` and `lengthEach` are sent only when edited
-     * (quantities as decimal strings); `isNew` marks a line a person added.
+     * (quantities as decimal strings); `isNew` marks a line a person added, and `accessoryToken` (only on a new line) names an accessory Match Accessories proposed.
      *
-     * @return list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}>|string
+     * @return list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string, accessoryToken?: string}>|string
      *         the lines, or what is wrong with them
      */
     private static function lineDecisions(mixed $lines): array|string
@@ -150,6 +178,14 @@ trait RfqWriteFailures
                 $decision['isNew'] = true;
             } elseif (array_key_exists('isNew', $line) && $line['isNew'] !== false) {
                 return sprintf('lines[%d].isNew must be true or false.', $i);
+            }
+            $accessory = $line['accessoryToken'] ?? null;
+            if ($accessory !== null) {
+                // An accessory the engine proposed, added as a new line (E7.2): the token is the server's, and says the rest.
+                if (!is_string($accessory) || $accessory === '' || strlen($accessory) > AccessorySeal::MAX_TOKEN_BYTES || ($decision['isNew'] ?? false) !== true) {
+                    return sprintf('lines[%d].accessoryToken must be an accessory match, on a new line.', $i);
+                }
+                $decision['accessoryToken'] = $accessory;
             }
             $out[] = $decision;
         }

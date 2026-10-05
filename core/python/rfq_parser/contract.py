@@ -17,6 +17,14 @@ functions, in the shape `TriCab\\Core\\Rfq\\Parser\\ParseRequest` sends and
   `/api/vision-ocr`). It creates no lines and stores nothing.
 - `POST /v1/price` — a draft's rows priced as the source editor does (cost, MOQ,
   prepack, currency, then margin, sell price and total), parity plan E5.
+- `POST /v1/export` — the product summary and the cells of both quote CSVs over
+  rows already priced (`quote_export`), parity plan E7.1.
+- `POST /v1/sync-plan` — the 4js quote plan for a draft's rows (`quote_sync`, the
+  source's `prepare_quote_push`): the header, the priced lines, the exclusions, or why
+  the quote cannot be sent. Pure: it contacts nothing, parity plan E7.3.
+- `POST /v1/aliflex` — a finished quote's rows converted to the ALI-FLEX alternative
+  (`aliflex`, the source's mapping policy `aliflex-map/2`). Pure; prices, margins and the
+  store are PHP's, parity plan E7.4.
 - `POST /v1/products/styles` — the catalogue's style for each product code, for
   the customer default margin lookup.
 - `POST /v1/readiness` — the source's `quote_readiness` over a draft's rows and
@@ -46,6 +54,7 @@ import logging
 import os
 import re
 import time
+from datetime import date
 from pathlib import PurePath
 from typing import Any
 
@@ -54,7 +63,7 @@ from flask import Blueprint, jsonify, request
 from tricab_cable_rules import ENGINE_VERSION
 from tricab_cable_rules.extractor import pair_circuit_label_lines
 
-from . import accounting, corrections, intake, pipeline, quote_pricing, reading, vision_ocr
+from . import accounting, aliflex, corrections, intake, pipeline, quote_export, quote_pricing, quote_sync, reading, vision_ocr
 from .product_search import search_products
 from ._source import SOURCE_COMMIT
 from .quote_readiness import REGION_PROFILE, SUPPORTED_CURRENCIES, exclusion_reason, quote_readiness
@@ -556,6 +565,170 @@ def price():
         return _refuse(correlation_id, "timeout", "Pricing took longer than its deadline.", 504)
     log.info("v1 price %s: %d rows, reprice=%s, %d unpriced, %d ms", correlation_id, len(priced), reprice, unpriced, elapsed_ms)
     return _answer(correlation_id, {"rows": priced, "unpriced": unpriced, "engine": _engine(), "elapsedMs": elapsed_ms})
+
+
+@v1.post("/v1/export")
+def export():
+    """The product summary and the CSV cells, over rows as the price route left them.
+
+    Request: the envelope, `deadlineMs` and `draftJson`, one JSON string of
+    `{rows, includePrices}`. `includePrices` false drops the two money columns.
+
+    Answer: `{summary, quoteLines, summaryLines, engine}`. `summary` is the source's
+    `build_product_summary` (`line_indexes` index into `rows`); the two tables are
+    `{columns, rows}` of text cells. The CSV text, and its escaping, are PHP's.
+    """
+    started = time.monotonic()
+    correlation_id = None
+    try:
+        payload, correlation_id = _envelope(request.get_json(silent=True))
+        deadline_ms = _deadline(payload)
+        try:
+            draft = json.loads(payload.get("draftJson") or "")
+        except (TypeError, ValueError):
+            raise ContractError("invalid_request", "draftJson must be a JSON object.", 400) from None
+        if not isinstance(draft, dict):
+            raise ContractError("invalid_request", "draftJson must be a JSON object.", 400)
+        rows = draft.get("rows")
+        if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
+            raise ContractError("invalid_request", "rows must be a list of objects.", 400)
+        if len(rows) > MAX_PRICE_ROWS:
+            raise ContractError("input_too_large", f"More than {MAX_PRICE_ROWS} rows to export.", 413)
+        include_prices = draft.get("includePrices")
+        if not isinstance(include_prices, bool):
+            raise ContractError("invalid_request", "includePrices must be true or false.", 400)
+        built = quote_export.build_export(rows, include_prices=include_prices)
+    except ContractError as exc:
+        return _refuse(correlation_id, exc.code, exc.message, exc.status)
+    except Exception:  # noqa: BLE001
+        log.exception("v1 export failed (correlation %s)", correlation_id)
+        return _refuse(correlation_id, "internal_error", "The RFQ parser could not build the export.", 500)
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    if elapsed_ms > deadline_ms:
+        return _refuse(correlation_id, "timeout", "The export took longer than its deadline.", 504)
+    return _answer(correlation_id, {**built, "engine": _engine(), "elapsedMs": elapsed_ms})
+
+
+@v1.post("/v1/sync-plan")
+def sync_plan():
+    """The plan a sync would freeze, or why none can be made. Sends nothing.
+
+    Request: the envelope, `deadlineMs` and `draftJson`, one JSON string of
+    `{rows, quote_details, margins, today, existing_refno, version, origin}`:
+    the rows and header as stored, the customer's default margin per product code,
+    today's date (`YYYY-MM-DD`, the caller's clock and zone), and for a new version
+    of a quote already in 4js its number and the version to raise.
+
+    Answer: `{plan}` or `{problem: {status, payload}}`. A problem is an answer, not a
+    failure: 400 for a header or lines that are not ready, 409 when a reviewed price
+    differs from what the customer's rule requires. The source's `blocking_issues`
+    ride in `payload`.
+    """
+    started = time.monotonic()
+    correlation_id = None
+    try:
+        payload, correlation_id = _envelope(request.get_json(silent=True))
+        deadline_ms = _deadline(payload)
+        try:
+            draft = json.loads(payload.get("draftJson") or "")
+        except (TypeError, ValueError):
+            raise ContractError("invalid_request", "draftJson must be a JSON object.", 400) from None
+        if not isinstance(draft, dict):
+            raise ContractError("invalid_request", "draftJson must be a JSON object.", 400)
+        rows = draft.get("rows")
+        details = draft.get("quote_details")
+        margins = draft.get("margins")
+        if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
+            raise ContractError("invalid_request", "rows must be a list of objects.", 400)
+        if len(rows) > MAX_READINESS_ROWS:
+            raise ContractError("input_too_large", f"More than {MAX_READINESS_ROWS} rows.", 413)
+        if not isinstance(details, dict):
+            raise ContractError("invalid_request", "quote_details must be an object.", 400)
+        if not isinstance(margins, dict):
+            raise ContractError("invalid_request", "margins must map a product code to a margin.", 400)
+        try:
+            today = date.fromisoformat(str(draft.get("today")))
+        except ValueError:
+            raise ContractError("invalid_request", "today must be a date (YYYY-MM-DD).", 400) from None
+        existing = draft.get("existing_refno")
+        version = draft.get("version")
+        if existing is not None and not isinstance(existing, str):
+            raise ContractError("invalid_request", "existing_refno must be text or null.", 400)
+        if version is not None and (not isinstance(version, int) or isinstance(version, bool) or version < 2):
+            raise ContractError("invalid_request", "version must be 2 or more, or null.", 400)
+        if (existing or None) is None and version is not None:
+            raise ContractError("invalid_request", "version needs existing_refno.", 400)
+        origin = draft.get("origin", "")
+        if origin not in ("", quote_sync.QUOTE_ORIGIN_PORTAL, quote_sync.QUOTE_ORIGIN_EMAIL):
+            raise ContractError("invalid_request", "origin must be portal, email or blank.", 400)
+        plan, problem = quote_sync.prepare_quote_push(
+            rows,
+            details,
+            margins={str(code).upper(): value for code, value in margins.items()},
+            today=today,
+            existing_refno=existing or None,
+            version=version,
+            origin=origin,
+            reviewed=True,
+        )
+    except ContractError as exc:
+        return _refuse(correlation_id, exc.code, exc.message, exc.status)
+    except Exception:  # noqa: BLE001
+        log.exception("v1 sync-plan failed (correlation %s)", correlation_id)
+        return _refuse(correlation_id, "internal_error", "The RFQ parser could not plan this sync.", 500)
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    if elapsed_ms > deadline_ms:
+        return _refuse(correlation_id, "timeout", "Planning took longer than its deadline.", 504)
+    body: dict[str, Any] = {"engine": _engine(), "elapsedMs": elapsed_ms}
+    if plan is not None:
+        body["plan"] = plan
+    else:
+        assert problem is not None
+        body["problem"] = {"payload": problem[0], "status": problem[1]}
+    return _answer(correlation_id, body)
+
+
+@v1.post("/v1/aliflex")
+def aliflex_convert():
+    """A finished quote's rows as the ALI-FLEX alternative: the agreed copper-to-aluminium
+    proposal per line, the header with the customer-facing note, the label and the counts.
+
+    Request: the envelope, `deadlineMs` and `draftJson`, one JSON string of
+    `{rows, quote_details, label}`. Answer: `{conversion}` with `rows` (one per source row,
+    in order, nothing dropped), `quote_details`, `label`, `counts`
+    (`changed`/`unchanged`/`review`), `message` and `policy_version`. Prices are not asked
+    for: a changed row has its source prices cleared for the caller to price afresh.
+    """
+    started = time.monotonic()
+    correlation_id = None
+    try:
+        payload, correlation_id = _envelope(request.get_json(silent=True))
+        deadline_ms = _deadline(payload)
+        try:
+            draft = json.loads(payload.get("draftJson") or "")
+        except (TypeError, ValueError):
+            raise ContractError("invalid_request", "draftJson must be a JSON object.", 400) from None
+        if not isinstance(draft, dict):
+            raise ContractError("invalid_request", "draftJson must be a JSON object.", 400)
+        rows = draft.get("rows")
+        details = draft.get("quote_details")
+        label = draft.get("label", "")
+        if not isinstance(rows, list) or not all(isinstance(r, dict) for r in rows):
+            raise ContractError("invalid_request", "rows must be a list of objects.", 400)
+        if len(rows) > MAX_READINESS_ROWS:
+            raise ContractError("input_too_large", f"More than {MAX_READINESS_ROWS} rows.", 413)
+        if not isinstance(details, dict) or not isinstance(label, str):
+            raise ContractError("invalid_request", "quote_details must be an object and label text.", 400)
+        conversion = aliflex.convert(rows, details, label)
+    except ContractError as exc:
+        return _refuse(correlation_id, exc.code, exc.message, exc.status)
+    except Exception:  # noqa: BLE001
+        log.exception("v1 aliflex failed (correlation %s)", correlation_id)
+        return _refuse(correlation_id, "internal_error", "The RFQ parser could not convert this quote.", 500)
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    if elapsed_ms > deadline_ms:
+        return _refuse(correlation_id, "timeout", "The conversion took longer than its deadline.", 504)
+    return _answer(correlation_id, {"conversion": conversion, "engine": _engine(), "elapsedMs": elapsed_ms})
 
 
 @v1.post("/v1/products/styles")

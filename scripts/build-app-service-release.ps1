@@ -251,6 +251,13 @@ Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\api\index.php') -
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\default') -Destination (Join-Path $releaseRoot 'default') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\startup.sh') -Destination (Join-Path $releaseRoot 'startup.sh') -Force
 
+# The RFQ reader worker and the continuous WebJob that runs it on the existing slot.
+$readerJobRoot = Join-Path $releaseRoot 'App_Data\jobs\continuous\rfq-reader'
+New-Item -ItemType Directory -Path (Join-Path $appRoot 'bin') -Force | Out-Null
+New-Item -ItemType Directory -Path $readerJobRoot -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\run-rfq-reader-jobs.php') -Destination (Join-Path $appRoot 'bin\run-rfq-reader-jobs.php') -Force
+Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\rfq-reader\run.sh') -Destination (Join-Path $readerJobRoot 'run.sh') -Force
+
 if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
 }

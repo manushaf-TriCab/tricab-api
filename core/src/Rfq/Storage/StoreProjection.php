@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Rfq\Storage;
 
+use DateTimeImmutable;
+use TriCab\Core\Rfq\Application\DTO\SyncAttemptView;
 use TriCab\Core\Rfq\Domain\ValueObject\IntakeChannel;
 use TriCab\Core\Rfq\Domain\ValueObject\Priority;
 use TriCab\Core\Rfq\Domain\ValueObject\ReaderJobStatus;
 use TriCab\Core\Rfq\Domain\ValueObject\SyncAttemptState;
+use TriCab\Core\Rfq\Domain\ValueObject\SyncHeaderState;
 use TriCab\Core\Rfq\Domain\ValueObject\WorkflowStatus;
 
 /**
@@ -121,5 +124,37 @@ final class StoreProjection
     public static function syncState(mixed $state): SyncAttemptState
     {
         return SyncAttemptState::fromStorage($state);
+    }
+
+    /**
+     * One `rfq_sync_attempts` row as the contract `rfq.sync-attempt.v1`. The
+     * actor, the frozen payload and the result stay in the store: the browser
+     * gets the state, how far it got, the quote number and the error.
+     *
+     * @param array<string, mixed> $row
+     */
+    public static function syncAttemptView(array $row): SyncAttemptView
+    {
+        $text = static fn (mixed $v): ?string => is_string($v) && trim($v) !== '' ? $v : null;
+        $int = static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0;
+        $created = StoreFormat::parseTime($text($row['created_at'] ?? null)) ?? new DateTimeImmutable('@0');
+
+        return new SyncAttemptView(
+            self::publicId(is_string($row['draft_id'] ?? null) ? $row['draft_id'] : str_repeat('0', 32)),
+            max(1, $int($row['revision'] ?? 1)),
+            SyncAttemptState::fromStorage($row['state'] ?? null),
+            SyncHeaderState::fromStorage($row['header_state'] ?? null),
+            $int($row['attempt_no'] ?? 0),
+            $text($row['refno'] ?? null),
+            $text($row['refver'] ?? null),
+            $int($row['lines_total'] ?? 0),
+            $int($row['lines_sent'] ?? 0),
+            $int($row['lines_failed'] ?? 0),
+            is_string($row['payload_sha256'] ?? null) ? $row['payload_sha256'] : '',
+            $text($row['error'] ?? null),
+            $text($row['reconcile_note'] ?? null),
+            $created,
+            StoreFormat::parseTime($text($row['updated_at'] ?? null)) ?? $created,
+        );
     }
 }

@@ -10,11 +10,14 @@ use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Rfq\Application\DTO\ReaderResult;
 use TriCab\Core\Rfq\Contract\RfqDocumentStore;
 use TriCab\Core\Rfq\Contract\RfqReaderJobStore;
+use TriCab\Core\Rfq\Application\DTO\RfqAuditEvent;
 use TriCab\Core\Rfq\Application\DTO\RfqDetail;
 use TriCab\Core\Rfq\Application\DTO\RfqQueueQuery;
 use TriCab\Core\Rfq\Application\DTO\RfqRecord;
 use TriCab\Core\Rfq\Application\DTO\ReviewRevision;
 use TriCab\Core\Rfq\Application\DTO\RfqSummary;
+use TriCab\Core\Rfq\Application\DTO\SyncAttemptView;
+use TriCab\Core\Rfq\Domain\Service\AliflexEligibility;
 use TriCab\Core\Rfq\Contract\RfqRepository;
 use TriCab\Core\Rfq\Domain\Service\ExtractionStatePolicy;
 use TriCab\Core\Rfq\Domain\ValueObject\Priority;
@@ -122,7 +125,160 @@ final class AzureSqlRfqRepository implements RfqRepository
         }
         $rows = $this->connection->fetchAll(self::PEOPLE . self::select() . ' WHERE d.[id] = :id', ['id' => $draftId]);
 
-        return $rows === [] ? null : $this->records($rows)[0];
+        if ($rows === []) {
+            return null;
+        }
+        $record = $this->records($rows)[0];
+
+        return $record->workflowStatus->is(WorkflowStatus::BLOCKED)
+            ? $record->withBlockedReason($this->blockedReason((string) $draftId))
+            : $record;
+    }
+
+    /**
+     * Why it is blocked: the latest `workflow_updated` activity that gave a
+     * reason. No schema column holds it; the status is `blocked` only through
+     * that event, which requires one. A later save that keeps it blocked
+     * without a new reason leaves the earlier one standing.
+     */
+    private function blockedReason(string $draftId): ?string
+    {
+        $row = $this->connection->fetchAll(
+            "SELECT TOP 1 JSON_VALUE([detail], '$.reason') AS [reason]
+             FROM [rfq].[rfq_draft_activity]
+             WHERE [draft_id] = :id AND [event_type] = N'workflow_updated' AND ISJSON([detail]) = 1
+               AND NULLIF(LTRIM(RTRIM(JSON_VALUE([detail], '$.reason'))), N'') IS NOT NULL
+             ORDER BY [created_at] DESC, [id] DESC",
+            ['id' => $draftId],
+        )[0] ?? null;
+
+        return $row === null ? null : AzureSqlValueMapper::nullableString($row['reason']);
+    }
+
+    public function activity(string $publicId, int $limit): array
+    {
+        $draftId = StoreProjection::draftId($publicId);
+        if ($draftId === null) {
+            return [];
+        }
+        $rows = $this->connection->fetchAll(
+            self::PEOPLE . '
+             SELECT TOP (' . max(1, $limit) . ') act.[id], act.[event_type], act.[message], act.[detail], act.[revision], act.[created_at],
+                    p.[UserId] AS [actor_user_id], u.[DisplayName] AS [actor_name]
+             FROM [rfq].[rfq_draft_activity] act
+             LEFT JOIN [people] p ON p.[address] = LOWER(LTRIM(RTRIM(act.[actor_email])))
+             LEFT JOIN [identity].[Users] u ON u.[UserId] = p.[UserId]
+             WHERE act.[draft_id] = :id
+             ORDER BY act.[created_at] DESC, act.[id] DESC',
+            ['id' => $draftId],
+        );
+        $details = array_map(static fn (array $r): array => PythonJson::decodeObject(self::rawText($r['detail'] ?? null)), $rows);
+        $names = $this->namesByEmail($details);
+
+        $events = [];
+        foreach ($rows as $i => $row) {
+            $events[] = new RfqAuditEvent(
+                publicId: AzureSqlValueMapper::stringValue($row['id']),
+                type: AzureSqlValueMapper::stringValue($row['event_type']),
+                actorUserId: AzureSqlValueMapper::nullableInt($row['actor_user_id']),
+                actorDisplayName: AzureSqlValueMapper::nullableString($row['actor_name']),
+                revision: AzureSqlValueMapper::nullableInt($row['revision']),
+                message: is_string($row['message']) && $row['message'] !== '' ? $row['message'] : null,
+                detail: self::withoutEmails($details[$i], $names),
+                occurredAtUtc: StoreFormat::parseTime(AzureSqlValueMapper::nullableString($row['created_at'])) ?? new DateTimeImmutable('@0'),
+            );
+        }
+
+        return $events;
+    }
+
+    /**
+     * Display names for every address found in the events' details, by
+     * normalised address. An address nobody owns is absent.
+     *
+     * @param list<array<string, mixed>> $details
+     *
+     * @return array<string, string>
+     */
+    private function namesByEmail(array $details): array
+    {
+        $emails = [];
+        $collect = static function (mixed $value) use (&$collect, &$emails): void {
+            if (is_array($value)) {
+                foreach ($value as $item) {
+                    $collect($item);
+                }
+            } elseif (is_string($value) && self::isEmail($value)) {
+                $emails[strtolower(trim($value))] = true;
+            }
+        };
+        foreach ($details as $detail) {
+            $collect($detail);
+        }
+        if ($emails === []) {
+            return [];
+        }
+        $params = [];
+        $rows = $this->connection->fetchAll(
+            self::PEOPLE . ' SELECT p.[address], u.[DisplayName] FROM [people] p
+             INNER JOIN [identity].[Users] u ON u.[UserId] = p.[UserId]
+             WHERE p.[address] IN (' . self::bindList('email', array_keys($emails), $params) . ')',
+            $params,
+        );
+        $names = [];
+        foreach ($rows as $row) {
+            $name = AzureSqlValueMapper::nullableString($row['DisplayName']);
+            if ($name !== null) {
+                $names[AzureSqlValueMapper::stringValue($row['address'])] = $name;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * Emails never leave the server (invariant 11), and activity written
+     * before the platform (and by the content save) names people by address.
+     * Keys ending `_email` are dropped; an address as a value becomes the
+     * person's display name, or "Unknown user".
+     *
+     * @param array<string, mixed>  $detail
+     * @param array<string, string> $names
+     *
+     * @return array<string, mixed>
+     */
+    private static function withoutEmails(array $detail, array $names): array
+    {
+        $out = [];
+        foreach ($detail as $key => $value) {
+            if (!str_ends_with(strtolower($key), '_email')) {
+                $out[$key] = self::withoutEmailsIn($value, $names);
+            }
+        }
+
+        return $out;
+    }
+
+    /** @param array<string, string> $names */
+    private static function withoutEmailsIn(mixed $value, array $names): mixed
+    {
+        if (is_array($value)) {
+            $out = [];
+            foreach ($value as $key => $item) {
+                if (!(is_string($key) && str_ends_with(strtolower($key), '_email'))) {
+                    $out[$key] = self::withoutEmailsIn($item, $names);
+                }
+            }
+
+            return $out;
+        }
+
+        return is_string($value) && self::isEmail($value) ? ($names[strtolower(trim($value))] ?? 'Unknown user') : $value;
+    }
+
+    private static function isEmail(string $value): bool
+    {
+        return preg_match('/^[^@\s]+@[^@\s]+\.[^@\s]+$/', trim($value)) === 1;
     }
 
     public function branches(): array
@@ -153,7 +309,55 @@ final class AzureSqlRfqRepository implements RfqRepository
             $reads = array_map(ReaderResult::fromStored(...), $this->readerJobs?->forDraft($draftId) ?? []);
         }
 
-        return new RfqDetail(new RfqSummary($record, $allowedActions), $this->latestRevision($record->publicId), $documents, $reads, []);
+        $aliflex = $draftId === null ? ['eligible' => false, 'reason' => null] : $this->aliflexEligibility($draftId);
+
+        return new RfqDetail(
+            new RfqSummary($record, $allowedActions),
+            $this->latestRevision($record->publicId),
+            $documents,
+            $reads,
+            $draftId === null ? [] : $this->syncAttempts($draftId),
+            $aliflex['eligible'],
+            $aliflex['reason'],
+        );
+    }
+
+    /**
+     * Whether ALI-FLEX can be made from the saved quote (parity plan E7.4), by the
+     * source's rule ({@see AliflexEligibility}), read from the stored rows and meta.
+     *
+     * @return array{eligible: bool, reason: ?string}
+     */
+    private function aliflexEligibility(string $draftId): array
+    {
+        $draft = $this->connection->fetchAll('SELECT [status], [email_meta] FROM [rfq].[rfq_draft_quotes] WHERE [id] = :id', ['id' => $draftId])[0] ?? null;
+        if ($draft === null) {
+            return ['eligible' => false, 'reason' => null];
+        }
+        $rows = $this->connection->fetchAll('SELECT [row_data] FROM [rfq].[rfq_draft_rows] WHERE [draft_id] = :id', ['id' => $draftId]);
+
+        return AliflexEligibility::check(
+            StoreProjection::sourceStatus($draft['status']),
+            array_map(static fn (array $r): array => PythonJson::decodeObject(self::rawText($r['row_data'])), $rows),
+            PythonJson::decodeObject(self::rawText($draft['email_meta'])),
+        );
+    }
+
+    /**
+     * The latest attempts to put this RFQ into 4js, newest first (parity plan
+     * E7.3). The actor, the frozen payload and the result stay in the store.
+     *
+     * @return list<SyncAttemptView>
+     */
+    private function syncAttempts(string $draftId): array
+    {
+        return array_map(
+            StoreProjection::syncAttemptView(...),
+            $this->connection->fetchAll(
+                'SELECT TOP (20) * FROM [rfq].[rfq_sync_attempts] WHERE [draft_id] = :id ORDER BY [created_at] DESC, [attempt_no] DESC, [id]',
+                ['id' => $draftId],
+            ),
+        );
     }
 
     /**

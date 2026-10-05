@@ -46,6 +46,38 @@ final class RfqRecord
         public readonly int $revision,
         public readonly DateTimeImmutable $receivedAtUtc,
         public readonly DateTimeImmutable $updatedAtUtc,
+        public readonly ?string $blockedReason = null,
     ) {
+    }
+
+    /**
+     * The same record with the reason it is blocked (the latest
+     * `workflow_updated` activity's, while the status is `blocked`). Read for
+     * one RFQ, not for a queue page, which leaves it null.
+     */
+    public function withBlockedReason(?string $reason): self
+    {
+        return new self(
+            $this->publicId,
+            $this->reference,
+            $this->title,
+            $this->customerCode,
+            $this->customerName,
+            $this->ownership,
+            $this->ownerDisplayName,
+            $this->assigneeDisplayName,
+            $this->workflowStatus,
+            $this->priority,
+            $this->dueAtUtc,
+            $this->channel,
+            $this->extractionState,
+            $this->latestSyncState,
+            $this->quoteNumber,
+            $this->lineCount,
+            $this->revision,
+            $this->receivedAtUtc,
+            $this->updatedAtUtc,
+            $reason,
+        );
     }
 }

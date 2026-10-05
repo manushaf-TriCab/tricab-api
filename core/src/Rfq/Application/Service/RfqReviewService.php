@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Rfq\Application\Service;
 
+use TriCab\Core\Rfq\Application\DTO\AccessoryCandidates;
 use TriCab\Core\Rfq\Application\DTO\ParsedRfq;
 use TriCab\Core\Rfq\Application\DTO\RfqPricingView;
 use TriCab\Core\Rfq\Application\DTO\RfqCustomerOption;
+use TriCab\Core\Rfq\Application\DTO\RfqExportView;
 use TriCab\Core\Rfq\Application\DTO\RfqReadinessView;
 use TriCab\Core\Rfq\Application\DTO\SavedReview;
 use TriCab\Core\Rfq\Contract\RfqCorrectionMemory;
@@ -86,6 +88,7 @@ final class RfqReviewService
         private readonly bool $allowModel = false,
         private readonly ?RfqDefaultMargins $margins = null,
         private readonly ?RfqCorrectionMemory $memory = null,
+        private readonly ?RfqAccessoryMatcher $accessories = null,
     ) {
     }
 
@@ -158,7 +161,7 @@ final class RfqReviewService
         }
         self::guardPricingChoices($actor, $lines);
         $sealed = $this->openSeal($parseToken, $email, $id);
-        $rows = DraftLineEdits::apply($sealed['rows'], $lines, $header->region);
+        $rows = $this->applyLines($sealed['rows'], $lines, $header->region, $email);
         if ($rows === []) {
             throw new InvalidRfqValue('No lines to save. Match an RFQ first.');
         }
@@ -212,6 +215,78 @@ final class RfqReviewService
     }
 
     /**
+     * A new draft made from rows the server already holds (the ALI-FLEX alternative,
+     * parity plan E7.4), not from a parse: priced in the quote's region and
+     * currency with the customer's default margins, owned by, assigned to and
+     * authored by the person ({@see SalesRepAttribution}), recorded as an
+     * `alternative`. Its lines were taken from a finished quote, so there was
+     * nothing to read and the parse accounting is complete, as for lines typed in.
+     *
+     * Only the lines whose `aliflex.status` is `changed` are priced; the rest keep
+     * the price and margin they had. A parser or cost book that cannot price never
+     * loses the draft: it is made with those lines unpriced and `pricingError` says so.
+     *
+     * @param array<string, mixed>       $details the header as it stands
+     * @param list<array<string, mixed>> $rows
+     * @param array<string, mixed>       $extraMeta recorded with the draft
+     *
+     * @return array{publicId: string, lineCount: int, pricingError: ?string}
+     *
+     * @throws RfqActionForbidden   without `RFQ.DRAFT.CREATE`
+     * @throws RfqStoreUnavailable  where there is no RFQ store
+     */
+    public function createAlternative(RfqActor $actor, string $email, array $details, array $rows, string $label, array $extraMeta, CorrelationId $id): array
+    {
+        if (!$actor->can(Module::PERMISSION_DRAFT_CREATE)) {
+            throw new RfqActionForbidden('create RFQs');
+        }
+        $worker = $this->draftActor($actor, $email);
+        $rep = SalesRepAttribution::apply($details, null, $worker, $worker->operatorCode);
+        // Only the lines the mapping changed are priced, as the source prices only them: an unchanged line is
+        // the source line and keeps the price and margin it had.
+        $changed = [];
+        foreach ($rows as $at => $row) {
+            if (($row['aliflex']['status'] ?? null) === 'changed') {
+                $changed[$at] = $row;
+            }
+        }
+        $priced = ['rows' => $rows, 'error' => null];
+        if ($changed !== []) {
+            $answer = $this->priced(array_values($changed), $rep['quoteDetails'], $id, true);
+            $priced['error'] = $answer['error'];
+            foreach (array_keys($changed) as $n => $at) {
+                $priced['rows'][$at] = $answer['rows'][$n];
+            }
+        }
+
+        $meta = ['owner_email' => $worker->email, 'rep_email' => $worker->email];
+        $login = SalesRepAttribution::login($email);
+        if ($login !== '') {
+            $meta['owner_login'] = $login;
+        }
+        if ($worker->branch !== null) {
+            $meta['owner_branch'] = $worker->branch;
+        }
+        if ($rep['authorSource'] !== null) {
+            $meta['author_source'] = $rep['authorSource'];
+        }
+        $count = count($priced['rows']);
+        $meta['parse'] = ['coverage' => ['inputRows' => $count, 'keptRows' => $count, 'excludedRows' => 0, 'skippedRows' => 0, 'measured' => true]];
+
+        $draftId = $this->drafts->create(new NewDraft(
+            source: 'alternative',
+            label: $label,
+            quoteDetails: $rep['quoteDetails'],
+            rows: $priced['rows'],
+            emailMeta: $meta + $extraMeta,
+            creatorEmail: $email,
+            branch: $worker->branch ?? '',
+        ));
+
+        return ['publicId' => StoreProjection::publicId($draftId), 'lineCount' => $count, 'pricingError' => $priced['error']];
+    }
+
+    /**
      * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}> $lines every line to keep, in order
      * @param QuoteHeaderEdit|null $header the header as filled in; null keeps the stored one
      *
@@ -244,7 +319,7 @@ final class RfqReviewService
 
         self::guardPricingChoices($actor, $lines);
         $details = $header === null ? $stored->quoteDetails : $header->applyTo($stored->quoteDetails, $this->customer($header));
-        $rows = DraftLineEdits::apply($stored->rows, $lines, self::region($details));
+        $rows = $this->applyLines($stored->rows, $lines, self::region($details), $email);
         $rows = $this->priced($rows, $details, $id, true)['rows'];
         $worker = $this->draftActor($actor, $email);
         $currentAssignee = is_string($stored->columns['assignee_email'] ?? null) ? $stored->columns['assignee_email'] : null;
@@ -260,6 +335,130 @@ final class RfqReviewService
             $this->nextStatus($id, $rows, $judged),
             $worker,
         );
+    }
+
+    /**
+     * The decisions applied to the stored lines. A line added from Match
+     * Accessories names its proposal by a sealed token; the token is opened here
+     * (it is this person's and not stale) and the line starts from the server's
+     * row, so the browser never writes an accessory's code, pack or price.
+     *
+     * @param list<array<string, mixed>> $stored
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string, accessoryToken?: string}> $lines
+     *
+     * @return list<array<string, mixed>>
+     *
+     * @throws InvalidRfqValue
+     */
+    private function applyLines(array $stored, array $lines, string $region, string $email): array
+    {
+        $sealed = [];
+        foreach ($lines as $line) {
+            $token = $line['accessoryToken'] ?? null;
+            if ($token === null) {
+                continue;
+            }
+            if (($line['isNew'] ?? false) !== true || $this->accessories === null) {
+                throw new InvalidRfqValue('An accessory can only be added as a new line.');
+            }
+            $sealed[$line['lineUid']] = $this->accessories->open($token, $line['lineUid'], $email, $this->clock->now());
+        }
+
+        return DraftLineEdits::apply($stored, $lines, $region, $sealed);
+    }
+
+    /**
+     * Match Accessories on an unsaved match (parity plan E7.2): the accessories
+     * the engine proposes for the lines the editor holds, priced as the lines
+     * would be. Nothing is stored. Needs `RFQ.PRICING.VIEW` (the answer carries
+     * cost) and a customer, whose margins and market the engine applies.
+     *
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string, accessoryToken?: string}> $lines
+     * @param list<string>|null $parentUids the lines to ask about; null for every cable line
+     *
+     * @throws InvalidRfqValue|RfqActionForbidden|RfqParserFailure
+     */
+    public function accessoriesNew(RfqActor $actor, string $email, ?string $parseToken, QuoteHeaderEdit $header, array $lines, ?array $parentUids, CorrelationId $id): AccessoryCandidates
+    {
+        self::guardAccessories($actor);
+        ['rows' => $rows, 'details' => $details] = $this->unsavedRows($actor, $email, $parseToken, $header, $lines, $id);
+
+        return $this->candidates($email, $rows, $details, $parentUids, $id);
+    }
+
+    /**
+     * Match Accessories on a draft, with the editor's unsaved edits or as saved
+     * when `$lines` is null.
+     *
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string, accessoryToken?: string}>|null $lines
+     * @param list<string>|null $parentUids
+     *
+     * @return AccessoryCandidates|null null when there is no such RFQ for this actor
+     *
+     * @throws InvalidRfqValue|RfqActionForbidden|RfqParserFailure|RfqStoreUnavailable
+     */
+    public function accessoriesDraft(RfqActor $actor, string $email, string $publicId, ?QuoteHeaderEdit $header, ?array $lines, ?array $parentUids, CorrelationId $id): ?AccessoryCandidates
+    {
+        self::guardAccessories($actor);
+        if ($lines !== null) {
+            self::guardPricingChoices($actor, $lines);
+        }
+        $held = $this->draftRows($actor, $email, $publicId, $header, $lines);
+
+        return $held === null ? null : $this->candidates($email, $held['rows'], $held['details'], $parentUids, $id);
+    }
+
+    /** The proposals and their prices need cost, which is `RFQ.PRICING.VIEW`'s. */
+    private static function guardAccessories(RfqActor $actor): void
+    {
+        if (!$actor->can(Module::PERMISSION_PRICING_VIEW)) {
+            throw new RfqActionForbidden('match accessories');
+        }
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @param array<string, mixed>       $details
+     * @param list<string>|null          $parentUids
+     *
+     * @throws InvalidRfqValue|RfqParserFailure
+     */
+    private function candidates(string $email, array $rows, array $details, ?array $parentUids, CorrelationId $id): AccessoryCandidates
+    {
+        $matcher = $this->accessories;
+        if ($matcher === null || !$matcher->engine()->isAvailable()) {
+            return AccessoryCandidates::unavailable($matcher?->engine()->unavailableNote() ?? 'Accessories are not available on this server.');
+        }
+        $customerId = is_numeric($details['customer_id'] ?? null) ? (int) $details['customer_id'] : 0;
+        if ($customerId < 1) {
+            throw new InvalidRfqValue('Choose the customer before matching accessories: their market decides which accessories apply.');
+        }
+        $region = self::region($details);
+        $proposed = $matcher->propose($rows, $parentUids, $customerId, $region, self::currency($details));
+
+        // One pricing pass over every proposal, as the lines would be priced once added.
+        $flat = [];
+        foreach ($proposed['parents'] as $parent) {
+            foreach ($parent['rows'] as $row) {
+                $flat[] = $row;
+            }
+        }
+        $priced = $flat === [] ? ['rows' => [], 'error' => null] : $this->priced($flat, $details, $id, true);
+
+        $now = $this->clock->now();
+        $at = 0;
+        $parents = [];
+        foreach ($proposed['parents'] as $parent) {
+            $candidates = [];
+            foreach ($parent['rows'] as $unpriced) {
+                $row = $priced['rows'][$at++];
+                $row['line_uid'] = StoreFormat::newId();
+                $candidates[] = ['token' => $matcher->seal($email, $now, $unpriced), 'description' => PythonText::str($unpriced['description'] ?? ''), 'line' => StoredRevision::line($row)];
+            }
+            $parents[] = ['lineUid' => $parent['lineUid'], 'productCode' => $parent['productCode'], 'candidates' => $candidates];
+        }
+
+        return AccessoryCandidates::available($parents, $proposed['skipped'], $priced['error']);
     }
 
     /**
@@ -360,15 +559,31 @@ final class RfqReviewService
      */
     public function previewNew(RfqActor $actor, string $email, ?string $parseToken, QuoteHeaderEdit $header, array $lines, CorrelationId $id): RfqReadinessView
     {
+        ['rows' => $rows, 'details' => $details] = $this->unsavedRows($actor, $email, $parseToken, $header, $lines, $id);
+
+        return $this->readiness($actor, $rows, $details, $id);
+    }
+
+    /**
+     * The rows and header of an unsaved match as a save would write them.
+     *
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}> $lines
+     *
+     * @return array{rows: list<array<string, mixed>>, details: array<string, mixed>}
+     *
+     * @throws InvalidRfqValue|RfqActionForbidden|RfqParserFailure
+     */
+    private function unsavedRows(RfqActor $actor, string $email, ?string $parseToken, QuoteHeaderEdit $header, array $lines, CorrelationId $id): array
+    {
         if (!$actor->can(Module::PERMISSION_DRAFT_CREATE)) {
             throw new RfqActionForbidden('create RFQs');
         }
         self::guardPricingChoices($actor, $lines);
-        $rows = DraftLineEdits::apply($this->openSeal($parseToken, $email, $id)['rows'], $lines, $header->region);
+        $rows = $this->applyLines($this->openSeal($parseToken, $email, $id)['rows'], $lines, $header->region, $email);
         $worker = $this->draftActor($actor, $email);
         $details = SalesRepAttribution::apply($header->applyTo([], self::namedOnly($header)), null, $worker, $worker->operatorCode)['quoteDetails'];
 
-        return $this->readiness($actor, $rows, $details, $id);
+        return ['rows' => $rows, 'details' => $details];
     }
 
     /**
@@ -383,6 +598,23 @@ final class RfqReviewService
      */
     public function previewDraft(RfqActor $actor, string $email, string $publicId, ?QuoteHeaderEdit $header, ?array $lines, CorrelationId $id): ?RfqReadinessView
     {
+        $held = $this->draftRows($actor, $email, $publicId, $header, $lines);
+
+        return $held === null ? null : $this->readiness($actor, $held['rows'], $held['details'], $id);
+    }
+
+    /**
+     * The rows and header of a draft as the editor holds them, saved or not;
+     * null when there is no such RFQ for this actor.
+     *
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}>|null $lines null for the lines as saved
+     *
+     * @return array{rows: list<array<string, mixed>>, details: array<string, mixed>}|null
+     *
+     * @throws InvalidRfqValue|RfqStoreUnavailable
+     */
+    private function draftRows(RfqActor $actor, string $email, string $publicId, ?QuoteHeaderEdit $header, ?array $lines): ?array
+    {
         $record = $this->rfqs->findRecord(strtolower(trim($publicId)));
         if ($record === null || !RfqAccessPolicy::canSee($actor, $record->ownership)) {
             return null;
@@ -393,12 +625,101 @@ final class RfqReviewService
             return null;
         }
         $details = $header === null ? $stored->quoteDetails : $header->applyTo($stored->quoteDetails, self::namedOnly($header));
-        $rows = $lines === null ? $stored->rows : DraftLineEdits::apply($stored->rows, $lines, self::region($details));
+        $rows = $lines === null ? $stored->rows : $this->applyLines($stored->rows, $lines, self::region($details), $email);
         $worker = $this->draftActor($actor, $email);
         $currentAssignee = is_string($stored->columns['assignee_email'] ?? null) ? $stored->columns['assignee_email'] : null;
         $details = SalesRepAttribution::apply($details, $currentAssignee, $worker, $worker->operatorCode)['quoteDetails'];
 
-        return $this->readiness($actor, $rows, $details, $id);
+        return ['rows' => $rows, 'details' => $details];
+    }
+
+    /**
+     * The Product Summary and both quote CSVs of an unsaved match, as a save
+     * would write the lines (parity plan E7.1). Nothing is stored.
+     *
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}> $lines
+     *
+     * @throws InvalidRfqValue|RfqActionForbidden|RfqParserFailure
+     */
+    public function exportNew(RfqActor $actor, string $email, ?string $parseToken, QuoteHeaderEdit $header, array $lines, bool $includePrices, CorrelationId $id): RfqExportView
+    {
+        self::guardPriceColumns($actor, $includePrices);
+        ['rows' => $rows, 'details' => $details] = $this->unsavedRows($actor, $email, $parseToken, $header, $lines, $id);
+
+        return $this->exported($rows, $details, $includePrices, $id);
+    }
+
+    /**
+     * The Product Summary and both quote CSVs of a draft with the editor's
+     * unsaved edits, or as saved when `$lines` is null. Anyone who can read the
+     * RFQ can ask, but the sell price and line total columns only go to a
+     * holder of `RFQ.PRICING.VIEW` who asks for them. Nothing is stored.
+     *
+     * @param list<array{lineUid: string, approved: ?bool, comment: string, productCode?: ?string, cuts?: ?string, lengthEach?: ?string, isNew?: bool, marginPercent?: ?string, sellPrice?: ?string, status?: ?string, correctionReason?: ?string, reviewerNote?: ?string}>|null $lines
+     *
+     * @return RfqExportView|null null when there is no such RFQ for this actor
+     *
+     * @throws InvalidRfqValue|RfqActionForbidden|RfqParserFailure|RfqStoreUnavailable
+     */
+    public function exportDraft(RfqActor $actor, string $email, string $publicId, ?QuoteHeaderEdit $header, ?array $lines, bool $includePrices, CorrelationId $id): ?RfqExportView
+    {
+        self::guardPriceColumns($actor, $includePrices);
+        if ($lines !== null) {
+            self::guardPricingChoices($actor, $lines);
+        }
+        $held = $this->draftRows($actor, $email, $publicId, $header, $lines);
+
+        return $held === null ? null : $this->exported($held['rows'], $held['details'], $includePrices, $id);
+    }
+
+    /**
+     * The rows priced as a save would price them (every line gets its margin
+     * and sell price, so the summary can say which products can be quoted), then
+     * the summary and the CSV cells over them. Sell prices only leave in the
+     * cells when `$includePrices`, which {@see guardPriceColumns} has allowed.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @param array<string, mixed>       $details
+     *
+     * @throws RfqParserFailure
+     */
+    private function exported(array $rows, array $details, bool $includePrices, CorrelationId $id): RfqExportView
+    {
+        // The source's grid never holds headings and non-cable lines with no code
+        // (`isHiddenReviewRow`), so its exports never list them either.
+        $rows = array_values(array_filter($rows, static fn (array $row): bool => !self::hiddenFromGrid($row)));
+        $priced = $this->priced($rows, $details, $id, true);
+
+        return RfqExportView::from($this->parser->exportRows($id, self::clean($priced['rows']), $includePrices), $priced['rows'], $priced['error'], $includePrices);
+    }
+
+    /**
+     * The source's `isHiddenReviewRow`: a `not_cable` or `admin` line with no
+     * product code. Kept in the draft, never drawn and never exported.
+     *
+     * @param array<string, mixed> $row
+     */
+    private static function hiddenFromGrid(array $row): bool
+    {
+        $final = $row['final_status'] ?? null;
+        $plain = $row['status'] ?? null;
+        $status = strtolower(trim(is_string($final) && $final !== '' ? $final : (is_string($plain) ? $plain : '')));
+
+        return in_array($status, ['not_cable', 'admin'], true) && trim(DraftLineEdits::productCode($row)) === '';
+    }
+
+    /**
+     * Sell prices in an export are for people who may see prices (`RFQ.PRICING.VIEW`),
+     * as in the source, where only the detailed view exports them. Asking
+     * without the permission is refused, not quietly dropped.
+     *
+     * @throws RfqActionForbidden
+     */
+    private static function guardPriceColumns(RfqActor $actor, bool $includePrices): void
+    {
+        if ($includePrices && !$actor->can(Module::PERMISSION_PRICING_VIEW)) {
+            throw new RfqActionForbidden('export prices');
+        }
     }
 
     /**

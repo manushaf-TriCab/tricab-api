@@ -606,4 +606,15 @@ final class SettingsTest extends TestCase
             'PASSKEY_PUBLIC_APP_BASE_URL' => 'https://www.tricab.com',
         ], $overrides);
     }
+
+    public function test_rfq_sync_is_off_unless_the_setting_is_exactly_true(): void
+    {
+        $base = ['APP_ENV' => 'development', 'USER_REPOSITORY' => 'memory'];
+
+        self::assertFalse(Settings::fromEnvironment($base)->rfqSyncEnabled);
+        foreach (['', 'false', '1', 'yes', 'on', 'TRUE', 'True', ' true', 'true ', 'enabled'] as $value) {
+            self::assertFalse(Settings::fromEnvironment($base + ['RFQ_SYNC_ENABLED' => $value])->rfqSyncEnabled, var_export($value, true));
+        }
+        self::assertTrue(Settings::fromEnvironment($base + ['RFQ_SYNC_ENABLED' => 'true'])->rfqSyncEnabled);
+    }
 }

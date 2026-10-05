@@ -16,6 +16,9 @@ use TriCab\Core\Rfq\Parser\ParseRequest;
 use TriCab\Core\Rfq\Parser\ParseResponse;
 use TriCab\Core\Rfq\Parser\PricedRows;
 use TriCab\Core\Rfq\Parser\ProductMatches;
+use TriCab\Core\Rfq\Parser\AliflexConversion;
+use TriCab\Core\Rfq\Parser\QuoteExport;
+use TriCab\Core\Rfq\Parser\QuotePlan;
 use TriCab\Core\Rfq\Parser\QuoteReadiness;
 use TriCab\Core\Rfq\Parser\ReadRequest;
 use TriCab\Core\Rfq\Parser\ReadResponse;
@@ -136,6 +139,53 @@ final class HttpRfqParserClient implements RfqParserClient
         ], $correlationId, RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS);
 
         return PricedRows::fromPayload($body, $correlationId, count($rows));
+    }
+
+    public function exportRows(CorrelationId $correlationId, array $rows, bool $includePrices): QuoteExport
+    {
+        $body = $this->post(ParserContract::PATH_EXPORT, [
+            'contract' => ParserContract::VERSION,
+            'correlationId' => $correlationId->toString(),
+            'deadlineMs' => RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS,
+            // One string, as for pricing, so rows keep `{}`, `NaN` and large integers.
+            'draftJson' => PythonJson::encode(['rows' => $rows, 'includePrices' => $includePrices]),
+        ], $correlationId, RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS);
+
+        return QuoteExport::fromPayload($body, $correlationId);
+    }
+
+    public function aliflex(CorrelationId $correlationId, array $rows, array $quoteDetails, string $label): AliflexConversion
+    {
+        $body = $this->post(ParserContract::PATH_ALIFLEX, [
+            'contract' => ParserContract::VERSION,
+            'correlationId' => $correlationId->toString(),
+            'deadlineMs' => RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS,
+            // One string, as for readiness, so rows keep `{}`, `NaN` and large integers.
+            'draftJson' => PythonJson::encode(['rows' => $rows, 'quote_details' => $quoteDetails === [] ? new \stdClass() : $quoteDetails, 'label' => $label]),
+        ], $correlationId, RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS);
+
+        return AliflexConversion::fromPayload($body, $correlationId);
+    }
+
+    public function syncPlan(CorrelationId $correlationId, array $rows, array $quoteDetails, array $margins, string $today, ?string $existingRefno, ?int $version, string $origin): QuotePlan
+    {
+        $body = $this->post(ParserContract::PATH_SYNC_PLAN, [
+            'contract' => ParserContract::VERSION,
+            'correlationId' => $correlationId->toString(),
+            'deadlineMs' => RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS,
+            // One string, as for readiness, so rows keep `{}`, `NaN` and large integers.
+            'draftJson' => PythonJson::encode([
+                'rows' => $rows,
+                'quote_details' => $quoteDetails === [] ? new \stdClass() : $quoteDetails,
+                'margins' => $margins === [] ? new \stdClass() : $margins,
+                'today' => $today,
+                'existing_refno' => $existingRefno,
+                'version' => $version,
+                'origin' => $origin,
+            ]),
+        ], $correlationId, RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS);
+
+        return QuotePlan::fromPayload($body, $correlationId);
     }
 
     public function productStyles(CorrelationId $correlationId, array $codes): array

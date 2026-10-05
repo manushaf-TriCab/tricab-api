@@ -41,6 +41,16 @@ final class RfqRouteTableTest extends TestCase
         'POST /api/v1/rfqs/{publicId}/review' => Module::PERMISSION_PRICING_VIEW,
         'POST /api/v1/rfqs/readiness' => Module::PERMISSION_DRAFT_CREATE,
         'POST /api/v1/rfqs/{publicId}/readiness' => Module::PERMISSION_DRAFT_READ,
+        'POST /api/v1/rfqs/summary' => Module::PERMISSION_DRAFT_CREATE,
+        'POST /api/v1/rfqs/{publicId}/summary' => Module::PERMISSION_DRAFT_READ,
+        'POST /api/v1/rfqs/exports/quote-lines' => Module::PERMISSION_DRAFT_CREATE,
+        'POST /api/v1/rfqs/{publicId}/exports/quote-lines' => Module::PERMISSION_DRAFT_READ,
+        'POST /api/v1/rfqs/exports/summary-lines' => Module::PERMISSION_DRAFT_CREATE,
+        'POST /api/v1/rfqs/{publicId}/exports/summary-lines' => Module::PERMISSION_DRAFT_READ,
+        'POST /api/v1/rfqs/accessories' => Module::PERMISSION_PRICING_VIEW,
+        'POST /api/v1/rfqs/{publicId}/accessories' => Module::PERMISSION_PRICING_VIEW,
+        'POST /api/v1/rfqs/{publicId}/sync' => Module::PERMISSION_QUOTE_SYNC,
+        'POST /api/v1/rfqs/{publicId}/aliflex' => Module::PERMISSION_DRAFT_CREATE,
         'GET /api/v1/rfqs/lookups/customers' => Module::PERMISSION_DRAFT_EDIT,
         'GET /api/v1/rfqs/lookups/contacts' => Module::PERMISSION_DRAFT_EDIT,
         'GET /api/v1/rfqs/lookups/pay-terms' => Module::PERMISSION_DRAFT_EDIT,
@@ -50,6 +60,14 @@ final class RfqRouteTableTest extends TestCase
         'GET /api/v1/rfqs/{publicId}/reads' => Module::PERMISSION_DRAFT_READ,
         'POST /api/v1/rfqs/{publicId}/reads/{readId}' => Module::PERMISSION_DRAFT_EDIT,
         'GET /api/v1/rfqs/{publicId}/documents/{documentId}' => Module::PERMISSION_DRAFT_READ,
+        'GET /api/v1/rfqs/lookups/people' => Module::PERMISSION_DRAFT_ASSIGN,
+        'GET /api/v1/rfqs/{publicId}/activity' => Module::PERMISSION_DRAFT_READ,
+        'POST /api/v1/rfqs/{publicId}/claim' => Module::PERMISSION_DRAFT_CLAIM,
+        'PATCH /api/v1/rfqs/{publicId}/assignment' => Module::PERMISSION_DRAFT_ASSIGN,
+        'PATCH /api/v1/rfqs/{publicId}/workflow' => Module::PERMISSION_DRAFT_WORKFLOW,
+        'POST /api/v1/rfqs/{publicId}/archive' => Module::PERMISSION_DRAFT_ARCHIVE,
+        'POST /api/v1/rfqs/{publicId}/restore' => Module::PERMISSION_DRAFT_RESTORE,
+        'POST /api/v1/rfqs/{publicId}/comments' => Module::PERMISSION_DRAFT_COMMENT,
     ];
 
     /** Platform permissions that must never stand in for an RFQ one. */
@@ -58,7 +76,7 @@ final class RfqRouteTableTest extends TestCase
     public function test_every_rfq_route_is_in_the_table(): void
     {
         $registered = [];
-        foreach (TestAppFactory::create(['RFQ_MODULE_ENABLED' => 'true'])->getRouteCollector()->getRoutes() as $route) {
+        foreach (TestAppFactory::create()->getRouteCollector()->getRoutes() as $route) {
             if (!str_starts_with($route->getPattern(), '/api/v1/rfqs')) {
                 continue;
             }
@@ -96,7 +114,7 @@ final class RfqRouteTableTest extends TestCase
     private function statusFor(string $method, string $path, array $permissions): int
     {
         /** @var App<ContainerInterface> $app */
-        $app = TestAppFactory::create(['RFQ_MODULE_ENABLED' => 'true']);
+        $app = TestAppFactory::create();
         $container = $app->getContainer();
         self::assertInstanceOf(ContainerInterface::class, $container);
         $users = $container->get(UserRepository::class);

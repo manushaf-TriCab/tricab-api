@@ -80,6 +80,8 @@ for required in \
     "$web_root/package-lock.json" \
     "$api_root/deploy/app-service/default" \
     "$api_root/deploy/app-service/startup.sh" \
+    "$api_root/deploy/app-service/webjobs/rfq-reader/run.sh" \
+    "$api_root/bin/run-rfq-reader-jobs.php" \
     "$api_root/deploy/app-service/api/index.php" \
     "$api_root/core/python/requirements.txt" \
     "$api_root/core/python/wsgi.py"
@@ -309,6 +311,13 @@ mkdir -p "$api_public_root"
 cp "$api_root/deploy/app-service/api/index.php" "$api_public_root/index.php"
 cp "$api_root/deploy/app-service/default" "$release_root/default"
 cp "$api_root/deploy/app-service/startup.sh" "$release_root/startup.sh"
+
+# The RFQ reader worker and the continuous WebJob that runs it on the existing
+# slot. The job is inert while RFQ_PARSER_ENABLED is not true.
+mkdir -p "$app_root/bin" "$release_root/App_Data/jobs/continuous/rfq-reader"
+cp "$api_root/bin/run-rfq-reader-jobs.php" "$app_root/bin/run-rfq-reader-jobs.php"
+cp "$api_root/deploy/app-service/webjobs/rfq-reader/run.sh" "$release_root/App_Data/jobs/continuous/rfq-reader/run.sh"
+chmod +x "$release_root/App_Data/jobs/continuous/rfq-reader/run.sh"
 
 # Nothing in the archive may be a symlink -- App Service unpacks it verbatim.
 assert_no_symlinks "$release_root"
