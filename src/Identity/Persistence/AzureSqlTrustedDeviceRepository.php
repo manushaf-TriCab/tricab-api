@@ -131,7 +131,14 @@ SQL;
 
     private function insert(TrustedDevice $device): void
     {
-        $sql = <<<'SQL'
+        // pdo_sqlsrv sends an unbound NULL as varchar(max). SQL Server will not
+        // implicitly convert that into BINARY(32), so a first registration (no
+        // previous hash) must write a typed NULL instead of a null parameter.
+        $previousHashSql = $device->previousCredentialHash() === null
+            ? 'CAST(NULL AS BINARY(32))'
+            : ':previousCredentialHash';
+
+        $sql = <<<SQL
 INSERT INTO [identity].[TrustedDevices] (
     [PublicId],
     [UserId],
@@ -154,7 +161,7 @@ VALUES (
     :publicId,
     :userId,
     :credentialHash,
-    :previousCredentialHash,
+    {$previousHashSql},
     :previousCredentialValidUntilUtc,
     :installationId,
     :platform,
@@ -186,11 +193,15 @@ SQL;
             throw IdentityPersistenceException::insertFailed('TrustedDevice');
         }
 
-        $sql = <<<'SQL'
+        $previousHashSql = $device->previousCredentialHash() === null
+            ? 'CAST(NULL AS BINARY(32))'
+            : ':previousCredentialHash';
+
+        $sql = <<<SQL
 UPDATE [identity].[TrustedDevices]
 SET
     [CredentialHash] = :credentialHash,
-    [PreviousCredentialHash] = :previousCredentialHash,
+    [PreviousCredentialHash] = {$previousHashSql},
     [PreviousCredentialValidUntilUtc] = :previousCredentialValidUntilUtc,
     [CredentialVersion] = :credentialVersion,
     [LastUsedAtUtc] = :lastUsedAtUtc,
@@ -199,11 +210,14 @@ SET
 WHERE [TrustedDeviceId] = :id
 SQL;
 
-        $this->connection->execute($sql, [
+        $params = [
             ':credentialHash' => new SqlBinary($device->credentialHash()->toBinary()),
-            ':previousCredentialHash' => $device->previousCredentialHash() === null
-                ? null
-                : new SqlBinary($device->previousCredentialHash()->toBinary()),
+        ];
+        if ($device->previousCredentialHash() !== null) {
+            $params[':previousCredentialHash'] = new SqlBinary($device->previousCredentialHash()->toBinary());
+        }
+        $this->connection->execute($sql, [
+            ...$params,
             ':previousCredentialValidUntilUtc' => $device->previousCredentialValidUntilUtc() === null
                 ? null
                 : AzureSqlValueMapper::formatDateTime($device->previousCredentialValidUntilUtc()),
@@ -224,13 +238,10 @@ SQL;
      */
     private function params(TrustedDevice $device): array
     {
-        return [
+        $params = [
             ':publicId' => $device->publicId()->toString(),
             ':userId' => $device->userId()->toInt(),
             ':credentialHash' => new SqlBinary($device->credentialHash()->toBinary()),
-            ':previousCredentialHash' => $device->previousCredentialHash() === null
-                ? null
-                : new SqlBinary($device->previousCredentialHash()->toBinary()),
             ':previousCredentialValidUntilUtc' => $device->previousCredentialValidUntilUtc() === null
                 ? null
                 : AzureSqlValueMapper::formatDateTime($device->previousCredentialValidUntilUtc()),
@@ -249,6 +260,11 @@ SQL;
             ':createdIp' => $device->createdIp(),
             ':lastUsedIp' => $device->lastUsedIp(),
         ];
+        if ($device->previousCredentialHash() !== null) {
+            $params[':previousCredentialHash'] = new SqlBinary($device->previousCredentialHash()->toBinary());
+        }
+
+        return $params;
     }
 
     /**
