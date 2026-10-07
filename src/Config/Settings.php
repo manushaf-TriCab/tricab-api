@@ -168,6 +168,7 @@ final readonly class Settings
         public string $rfqParserBaseUrl = 'http://127.0.0.1:8002',
         public string $rfqParserInternalToken = '',
         public bool $rfqParserAllowModel = false,
+        public string $rfqReaderWakePath = 'var/rfq-reader',
         public string $blobContainerRfq = 'rfq-documents',
         public string $rfqDefaultPayTermsCode = 'EOM030ND',
         public bool $rfqSyncEnabled = false,
@@ -1043,6 +1044,10 @@ final readonly class Settings
             // Plan 3.5: interactive parses may call a model only when this says so;
             // reader jobs are model reads by definition and are not gated by it.
             rfqParserAllowModel: self::bool($env, 'RFQ_PARSER_ALLOW_MODEL', false),
+            // Where an upload leaves word for the reader WebJob, so its idle passes
+            // never touch (and so never wake) the serverless database. Relative paths
+            // are under the app root, which the web app and the WebJob share.
+            rfqReaderWakePath: self::string($env, 'RFQ_READER_WAKE_PATH', 'var/rfq-reader'),
             blobContainerRfq: self::string($env, 'BLOB_CONTAINER_RFQ', 'rfq-documents'),
             rfqDefaultPayTermsCode: $rfqDefaultPayTermsCode,
             // Sending a quote to 4js is an external production write. Only the exact text `true` turns it on:

@@ -3,6 +3,10 @@
 # existing slot, so no new Azure resource. Runs one pass a minute, as the source's
 # `rfq-portal-worker-webjob` did.
 #
+# `--if-woken` keeps idle passes off the database: a pass reads the queue only
+# after an upload signals, while reads are outstanding, or once a day, so the
+# serverless `tc` database can still pause. Exit 75 is that database resuming.
+#
 # WebJobs inherit the app settings. The worker is safe to run twice at once (a
 # claim returns only the jobs that call claimed), so a second instance during a
 # slot swap does no harm. When the parser is off the worker exits 2; sleeping
@@ -10,7 +14,7 @@
 set -u
 cd /home/site/wwwroot/app || exit 1
 while true; do
-    php bin/run-rfq-reader-jobs.php --drafts=1
+    php bin/run-rfq-reader-jobs.php --drafts=1 --if-woken
     status=$?
     if [ "$status" -ne 0 ]; then
         echo "[$(date -u +%FT%TZ)] rfq reader pass exited $status" >&2

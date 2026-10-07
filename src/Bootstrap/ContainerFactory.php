@@ -846,8 +846,13 @@ final class ContainerFactory
                     $settings->rfqParserAllowModel,
                     self::get($container, \TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class),
                     self::get($container, \TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class),
+                    self::get($container, \TriCab\Core\Rfq\Contract\RfqReaderWake::class),
                 );
             },
+            // An upload that queues a read wakes the reader WebJob, whose idle passes
+            // then leave the serverless database alone (bin/run-rfq-reader-jobs.php).
+            \TriCab\Core\Rfq\Contract\RfqReaderWake::class
+                => static fn (): \TriCab\Api\Rfq\Reader\FileRfqReaderWake => \TriCab\Api\Rfq\Reader\FileRfqReaderWake::fromSettings($settings),
             // Parity plan D3: Match Text's answer is sealed under a key derived from the
             // parser token, so there is no seal (and no parse) without the parser.
             \TriCab\Core\Rfq\Application\Service\RfqReviewService::class => \DI\autowire()

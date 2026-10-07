@@ -30,6 +30,11 @@ final class UnconfiguredRfqReaderJobStore implements RfqReaderJobStore
         return null;
     }
 
+    public function outstanding(): int
+    {
+        return 0;
+    }
+
     public function claim(string $draftId): array
     {
         return [];

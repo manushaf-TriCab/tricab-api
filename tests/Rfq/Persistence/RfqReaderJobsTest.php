@@ -27,6 +27,7 @@ use TriCab\Core\Rfq\Parser\RfqParserFailure;
 use TriCab\Core\Rfq\Storage\DraftActor;
 use TriCab\Core\Rfq\Storage\StoreProjection;
 use TriCab\Core\Shared\Time\SystemClock;
+use TriCab\Core\Tests\Rfq\Fixtures\CountingReaderWake;
 use TriCab\Core\Tests\Rfq\Fixtures\FixtureRfqParserClient;
 
 /**
@@ -46,6 +47,7 @@ final class RfqReaderJobsTest extends TestCase
     private AzureSqlRfqDraftStore $store;
     private AzureSqlRfqRepository $repository;
     private FixtureRfqParserClient $parser;
+    private CountingReaderWake $wake;
     private RfqReaderService $reader;
 
     protected function setUp(): void
@@ -83,7 +85,8 @@ final class RfqReaderJobsTest extends TestCase
                 return null;
             }
         };
-        $this->reader = new RfqReaderService($this->parser, $this->store, $this->store, $documents, $this->repository, $operators, $clock);
+        $this->wake = new CountingReaderWake();
+        $this->reader = new RfqReaderService($this->parser, $this->store, $this->store, $documents, $this->repository, $operators, $clock, false, null, null, $this->wake);
     }
 
     private static function sales(): RfqActor
@@ -157,6 +160,22 @@ final class RfqReaderJobsTest extends TestCase
         self::assertSame(['schedule.xlsx', 'queued', '1'], [$job['file_name'], $job['status'], $job['base_revision']]);
         self::assertStringStartsWith('rfq-document:', (string) $job['spool_path']);
         self::assertTrue($this->record($publicId)->extractionState->is(ExtractionState::READING));
+        self::assertSame(1, $this->wake->signals, 'one wake-up per upload, after its reads are queued');
+        self::assertSame(1, $this->store->outstanding());
+    }
+
+    public function test_an_upload_with_nothing_to_re_read_does_not_wake_the_worker(): void
+    {
+        $this->parser->documentsAnswer['documents'] = [
+            ['documentPublicId' => 'upload-1', 'fileName' => 'schedule.xlsx', 'readerRoute' => false, 'lineCount' => 3],
+            ['documentPublicId' => 'upload-2', 'fileName' => 'notes.csv', 'readerRoute' => false, 'lineCount' => 0],
+        ];
+
+        $this->upload();
+
+        self::assertSame(0, $this->wake->signals);
+        self::assertSame(0, $this->store->outstanding());
+        self::assertSame(0, $this->reader->runWorker()['outstanding']);
     }
 
     /**
@@ -263,7 +282,7 @@ final class RfqReaderJobsTest extends TestCase
 
         $summary = $this->reader->runWorker();
 
-        self::assertSame(['drafts' => 1, 'jobs' => 1, 'applied' => 1, 'proposed' => 0, 'failed' => 0], array_intersect_key($summary, array_flip(['drafts', 'jobs', 'applied', 'proposed', 'failed'])));
+        self::assertSame(['drafts' => 1, 'jobs' => 1, 'applied' => 1, 'proposed' => 0, 'failed' => 0, 'outstanding' => 0], array_intersect_key($summary, array_flip(['drafts', 'jobs', 'applied', 'proposed', 'failed', 'outstanding'])));
         $draft = $this->store->load($draftId);
         self::assertNotNull($draft);
         self::assertSame(2, $draft->revision);
@@ -332,10 +351,12 @@ final class RfqReaderJobsTest extends TestCase
         $draftId = (string) StoreProjection::draftId($publicId);
         $this->parser->readFailure = RfqParserFailure::of(RfqParserFailure::PROVIDER_UNAVAILABLE, 'the model service is throttling requests');
 
-        self::assertSame(1, $this->reader->runWorker()['retried']);
+        $first = $this->reader->runWorker();
+        self::assertSame([1, 1], [$first['retried'], $first['outstanding']], 'a retry keeps the worker checking');
         self::assertSame(['queued', '1'], [$this->job($draftId)['status'], $this->job($draftId)['attempts']]);
         self::assertSame(1, $this->reader->runWorker()['retried']);
-        self::assertSame(1, $this->reader->runWorker()['failed'], 'the third attempt is the last');
+        $last = $this->reader->runWorker();
+        self::assertSame([1, 0], [$last['failed'], $last['outstanding']], 'the third attempt is the last');
 
         $job = $this->job($draftId);
         self::assertSame('failed', $job['status']);
@@ -382,6 +403,7 @@ final class RfqReaderJobsTest extends TestCase
         self::assertSame(['schedule.xlsx'], array_map(static fn ($j): string => $j->fileName, $first));
         self::assertSame([], $this->store->claim($draftId), 'a second claim gets nothing');
         self::assertNull($this->store->nextDraft(), "the source's queued job is not the platform's");
+        self::assertSame(1, $this->store->outstanding(), "the claimed read is outstanding; the source's job is not counted");
     }
 
     public function test_an_abandoned_claim_is_recovered_and_then_given_up(): void

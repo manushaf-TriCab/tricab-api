@@ -16,6 +16,7 @@ use TriCab\Core\Rfq\Contract\RfqDraftStore;
 use TriCab\Core\Rfq\Contract\RfqOperatorDirectory;
 use TriCab\Core\Rfq\Contract\RfqParserClient;
 use TriCab\Core\Rfq\Contract\RfqReaderJobStore;
+use TriCab\Core\Rfq\Contract\RfqReaderWake;
 use TriCab\Core\Rfq\Contract\RfqRepository;
 use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
 use TriCab\Core\Rfq\Domain\Exception\RfqActionForbidden;
@@ -79,6 +80,7 @@ final class RfqReaderService
         private readonly bool $allowModel = false,
         private readonly ?RfqCorrectionMemory $memory = null,
         private readonly ?RfqCustomerDirectory $customers = null,
+        private readonly ?RfqReaderWake $wake = null,
     ) {
     }
 
@@ -192,6 +194,9 @@ final class RfqReaderService
             }
             $reads[] = ['fileName' => $document['fileName'], 'queued' => $queued];
         }
+        if (in_array(true, array_column($reads, 'queued'), true)) {
+            $this->wake?->signal();
+        }
         if ($errors !== []) {
             $this->jobs->recordEvent(
                 $draftId,
@@ -214,9 +219,11 @@ final class RfqReaderService
 
     /**
      * One pass of the reader worker: recover stale claims, then read up to
-     * `$maxDrafts` drafts' queued documents.
+     * `$maxDrafts` drafts' queued documents. `outstanding` counts the reads
+     * still unfinished afterwards; while it is above zero the worker keeps
+     * checking every pass, and at zero it waits for {@see RfqReaderWake}.
      *
-     * @return array{recovered: int, drafts: int, jobs: int, applied: int, proposed: int, failed: int, retried: int, superseded: int}
+     * @return array{recovered: int, drafts: int, jobs: int, applied: int, proposed: int, failed: int, retried: int, superseded: int, outstanding: int}
      */
     public function runWorker(int $maxDrafts = 1): array
     {
@@ -238,7 +245,7 @@ final class RfqReaderService
             $this->readDraft($draftId, $claimed, $summary);
         }
 
-        return $summary;
+        return $summary + ['outstanding' => $this->jobs->outstanding()];
     }
 
     /**

@@ -41,6 +41,12 @@ interface RfqReaderJobStore
     public function nextDraft(): ?string;
 
     /**
+     * Platform reads not yet finished: queued, or running (claimed by a worker,
+     * or abandoned and waiting for {@see requeueStale()}).
+     */
+    public function outstanding(): int;
+
+    /**
      * Claim every queued platform read of one draft: `running`, attempts + 1.
      * Only the rows this call claimed are returned, so two workers cannot both
      * hold one job.

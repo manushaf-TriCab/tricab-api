@@ -876,6 +876,16 @@ final class AzureSqlRfqDraftStore implements RfqDraftStore, RfqReaderJobStore, R
         return $row === null ? null : self::text($row['draft_id']);
     }
 
+    public function outstanding(): int
+    {
+        $row = $this->connection->fetchAll(
+            "SELECT COUNT(*) AS [outstanding] FROM [rfq].[rfq_reader_jobs]
+             WHERE [status] IN (N'queued', N'running') AND [spool_path] LIKE N'rfq-document:%'",
+        )[0] ?? null;
+
+        return $row === null ? 0 : AzureSqlValueMapper::intValue($row['outstanding']);
+    }
+
     public function claim(string $draftId): array
     {
         $rows = $this->connection->fetchAll(
