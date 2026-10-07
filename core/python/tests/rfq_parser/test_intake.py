@@ -38,12 +38,27 @@ def _refused(name: str, data: bytes) -> intake.IntakeRefused:
         ("schedule.xlsx", b"not a zip at all"),
         ("schedule.xls", b"PK\x03\x04 a zip calling itself xls"),
         ("drawing.pdf", b"PK\x03\x04 a zip calling itself pdf"),
-        ("scan.png", b"\xff\xd8\xff a jpeg calling itself png"),
+        ("scan.png", b"%PDF-1.7 a pdf calling itself png"),
         ("lines.csv", b"a,b\x00\x00binary"),
     ],
 )
 def test_the_bytes_must_agree_with_the_name(name, data):
     assert _refused(name, data).code == "unsupported_format"
+
+
+@pytest.mark.parametrize(
+    "name,supplied,data,suffix,content_type",
+    [
+        ("screenshot.jpg", "image/jpeg", b"\x89PNG\r\n\x1a\n a png", ".png", "image/png"),
+        ("scan.png", "image/png", b"\xff\xd8\xff a jpeg", ".jpg", "image/jpeg"),
+        ("photo.jpeg", "", b"RIFF\x00\x00\x00\x00WEBP a webp", ".webp", "image/webp"),
+        ("table.png", "image/png", b"\x89PNG\r\n\x1a\n a png", ".png", "image/png"),
+    ],
+)
+def test_an_image_is_typed_by_its_bytes_not_its_name(name, supplied, data, suffix, content_type):
+    document = intake.check("doc", name, supplied, data)
+    assert (document.file_name, document.suffix, document.content_type) == (name, suffix, content_type)
+    assert document.is_image
 
 
 def test_an_unknown_type_and_an_empty_file_are_refused():

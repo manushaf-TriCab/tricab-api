@@ -5,8 +5,10 @@ per-action timeout. Here every document is checked before any library reads it:
 
 - **Type from the bytes, not the name.** The suffix picks the reader, as in the
   source, and the leading bytes must agree with it: an `.xlsx` is a ZIP, an `.xls`
-  an OLE compound file, a `.pdf` starts `%PDF`, an image is PNG, JPEG or WEBP. A
-  file whose bytes say otherwise is `unsupported_format`, never parsed on a guess.
+  an OLE compound file, a `.pdf` starts `%PDF`. A file whose bytes say otherwise is
+  `unsupported_format`, never parsed on a guess. An image only has to be a PNG, JPEG
+  or WEBP: screenshots often carry another image type's extension, so its suffix and
+  content type are taken from the bytes.
 - **Bounded decompression.** An OOXML file is a ZIP, so a few kilobytes can inflate
   to gigabytes. The central directory is read without extracting anything, and the
   total declared size, the entry count and the ratio are capped. A ZIP whose
@@ -91,12 +93,31 @@ def check(public_id: str, file_name: Any, content_type: Any, data: bytes) -> Doc
         raise IntakeRefused("unsupported_format", f"{suffix or 'A file with no extension'} is not a supported RFQ format.")
     if not data:
         raise IntakeRefused("invalid_request", f"{name} is empty.")
-    _check_signature(name, suffix, data)
+    content_type = str(content_type or "").split(";", 1)[0].strip().lower()
+    if suffix in IMAGE_SUFFIXES:
+        # Screenshots are often saved under the wrong image extension, and the source
+        # opened them by content. Take the type from the bytes, so the model is not
+        # sent a PNG labelled image/jpeg.
+        suffix, content_type = _image_type(name, data)
+    else:
+        _check_signature(name, suffix, data)
     if suffix in OOXML_SUFFIXES:
         _check_zip(name, suffix, data)
     if suffix == ".pdf":
         _check_pdf(name, data)
-    return Document(public_id, name, suffix, str(content_type or "").split(";", 1)[0].strip().lower(), data)
+    return Document(public_id, name, suffix, content_type, data)
+
+
+def _image_type(name: str, data: bytes) -> tuple[str, str]:
+    """The image's real suffix and content type, whatever its name says."""
+    head = data[:16]
+    if head.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png", "image/png"
+    if head.startswith(b"\xff\xd8\xff"):
+        return ".jpg", "image/jpeg"
+    if head[:4] == b"RIFF" and head[8:12] == b"WEBP":
+        return ".webp", "image/webp"
+    raise IntakeRefused("unsupported_format", f"{name} is not a PNG, JPEG or WebP image.")
 
 
 def _check_signature(name: str, suffix: str, data: bytes) -> None:
@@ -107,10 +128,6 @@ def _check_signature(name: str, suffix: str, data: bytes) -> None:
         ".docx": head.startswith(b"PK\x03\x04"),
         ".xls": head.startswith(_OLE),
         ".pdf": b"%PDF" in data[:1024],
-        ".png": head.startswith(b"\x89PNG\r\n\x1a\n"),
-        ".jpg": head.startswith(b"\xff\xd8\xff"),
-        ".jpeg": head.startswith(b"\xff\xd8\xff"),
-        ".webp": head[:4] == b"RIFF" and head[8:12] == b"WEBP",
     }.get(suffix)
     if expected is False:
         raise IntakeRefused("unsupported_format", f"{name} does not contain what its {suffix} name says.")
