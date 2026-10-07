@@ -27,6 +27,19 @@ final class InvalidRfqValue extends InvalidArgumentException
         return new self(sprintf('A %s is required: %s', $type, $reason));
     }
 
+    /**
+     * Nothing became a line. The parser's notes say why (an image with no reader
+     * switched on, a sheet with no headers), and the rep needs that, not a bare refusal.
+     *
+     * @param list<string> $notes
+     */
+    public static function nothingRead(string $source, array $notes): self
+    {
+        $why = implode(' ', array_filter(array_map('trim', $notes), static fn (string $note): bool => $note !== ''));
+
+        return new self(rtrim(sprintf('Nothing in the %s could be read as an RFQ line. %s', $source, $why)));
+    }
+
     public static function outOfRange(string $type, int $value, int $min, int $max): self
     {
         return new self(sprintf('Invalid %s: %d. Must be between %d and %d.', $type, $value, $min, $max));

@@ -109,7 +109,7 @@ final class RfqReviewService
         // whatever the parser's own configuration; the text cannot turn it on.
         $parsed = $this->parser->parse(ParseRequest::forText($id, $text, $this->allowModel)->withCorrections($this->corrections()));
         if ($parsed->lines === []) {
-            throw InvalidRfqValue::required('RFQ lines', 'nothing in the text could be read as a line.');
+            throw InvalidRfqValue::nothingRead('text', $parsed->notes);
         }
         $seal = $this->seal ?? throw RfqParserFailure::of(RfqParserFailure::UNAVAILABLE, 'The RFQ parser is not configured on this server.', $id);
 

@@ -112,7 +112,7 @@ final class RfqReaderService
         }
         $queueable = array_filter($documents, static fn (array $d): bool => $routes[$d['documentPublicId']] ?? false);
         if ($parsed->lines === [] && $queueable === []) {
-            throw InvalidRfqValue::required('RFQ lines', 'nothing in the files could be read as a line.');
+            throw InvalidRfqValue::nothingRead('files', $parsed->notes);
         }
 
         $quotes = [];

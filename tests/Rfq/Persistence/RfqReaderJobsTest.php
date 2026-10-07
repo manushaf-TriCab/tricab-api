@@ -164,6 +164,23 @@ final class RfqReaderJobsTest extends TestCase
         self::assertSame(1, $this->store->outstanding());
     }
 
+    public function test_an_upload_that_gives_no_lines_says_why(): void
+    {
+        $this->parser->documentsAnswer['lines'] = [];
+        $this->parser->documentsAnswer['notes'] = ['scan.jpg is an image; no image reader is switched on, so it was not read.'];
+        $this->parser->documentsAnswer['documents'] = [
+            ['documentPublicId' => 'upload-1', 'fileName' => 'scan.jpg', 'readerRoute' => false, 'lineCount' => 0],
+        ];
+
+        try {
+            $this->reader->upload(self::sales(), 'rep@tricab.com', [['fileName' => 'scan.jpg', 'contentType' => 'image/jpeg', 'bytes' => 'png bytes']], CorrelationId::generate());
+            self::fail('an upload with nothing read must be refused');
+        } catch (InvalidRfqValue $refused) {
+            self::assertSame('Nothing in the files could be read as an RFQ line. scan.jpg is an image; no image reader is switched on, so it was not read.', $refused->getMessage());
+        }
+        self::assertSame([], $this->query('SELECT [id] FROM [rfq].[rfq_draft_quotes]'), 'no draft is created');
+    }
+
     public function test_an_upload_with_nothing_to_re_read_does_not_wake_the_worker(): void
     {
         $this->parser->documentsAnswer['documents'] = [
