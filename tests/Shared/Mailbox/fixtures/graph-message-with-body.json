@@ -1,0 +1,21 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('ap%40example.test')/messages(id,subject,from,receivedDateTime,hasAttachments,bodyPreview,body,toRecipients,ccRecipients)/$entity",
+  "@odata.etag": "W/\"CQAAABYAAAAIvyzEqTR3EmYHUx4SJ0AAAB5S9yu\"",
+  "id": "AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg0A-IMMUTABLE-ID-0001=",
+  "subject": "Invoice INV-1042 for September",
+  "bodyPreview": "Hi, please find attached our invoice for September services.",
+  "hasAttachments": true,
+  "receivedDateTime": "2026-10-06T23:14:07Z",
+  "from": { "emailAddress": { "name": "Example Supplier", "address": "Billing@Supplier.Example" } },
+  "toRecipients": [
+    { "emailAddress": { "name": "Accounts Payable", "address": "AP@example.test" } }
+  ],
+  "ccRecipients": [
+    { "emailAddress": { "name": "", "address": "Boss@Supplier.Example" } },
+    { "emailAddress": { "name": "No address" } }
+  ],
+  "body": {
+    "contentType": "html",
+    "content": "<html><body><p>Hi, please find attached our invoice.</p><script>alert('x')</script></body></html>"
+  }
+}

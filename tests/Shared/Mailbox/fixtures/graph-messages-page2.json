@@ -1,0 +1,14 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('ap%40example.test')/messages(id,subject,from,receivedDateTime,hasAttachments,bodyPreview)",
+  "value": [
+    {
+      "@odata.etag": "W/\"CQAAABYAAAAIvyzEqTR3EmYHUx4SJ0AAAB5S9yw\"",
+      "id": "AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg0A-IMMUTABLE-ID-0003=",
+      "subject": "Statement of account",
+      "bodyPreview": "",
+      "hasAttachments": true,
+      "receivedDateTime": "2026-10-05T01:30:00Z",
+      "from": { "emailAddress": { "name": "", "address": "accounts@vendor.example" } }
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TriCab\Api\Tests\Finance;
+
+use PDO;
+use PDOException;
+use RuntimeException;
+
+/**
+ * A disposable SQL Server for the finance repository tests: a database of its own
+ * on a LOCAL server (Docker), with the finance schema scripts (shared tables, jobs, attachments, access, Odoo, Tri-Task and Tri-AR) applied. It is never
+ * the shared `tc` database, and it refuses any server that is not this machine.
+ *
+ *     FINANCE_TEST_SQLSERVER=localhost,1433 FINANCE_TEST_SQLSERVER_PASSWORD=… \
+ *         php vendor/bin/phpunit --filter Finance
+ *
+ * Unset, the tests skip. The collation matches `tricab-mel`'s.
+ */
+final class LocalFinanceSqlServer
+{
+    public const DATABASE = 'finance_store_test';
+
+    public static function connect(): ?PDO
+    {
+        $server = getenv('FINANCE_TEST_SQLSERVER') ?: '';
+        $password = getenv('FINANCE_TEST_SQLSERVER_PASSWORD') ?: '';
+        if ($server === '' || $password === '') {
+            return null;
+        }
+        $host = strtolower(trim(explode(',', $server)[0]));
+        if (!in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+            throw new RuntimeException('The finance repository tests only run against a local SQL Server, not ' . $host . '.');
+        }
+        $user = getenv('FINANCE_TEST_SQLSERVER_USER') ?: 'sa';
+        try {
+            $master = self::open($server, 'master', $user, $password);
+            $master->exec("IF DB_ID(N'" . self::DATABASE . "') IS NULL CREATE DATABASE [" . self::DATABASE . '] COLLATE SQL_Latin1_General_CP1_CI_AS');
+            $pdo = self::open($server, self::DATABASE, $user, $password);
+        } catch (PDOException) {
+            return null;
+        }
+        self::applySchema($pdo);
+
+        return $pdo;
+    }
+
+    public static function open(string $server, string $database, string $user, string $password): PDO
+    {
+        return new PDO(
+            "sqlsrv:Server={$server};Database={$database};Encrypt=yes;TrustServerCertificate=yes;LoginTimeout=5",
+            $user,
+            $password,
+            [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::SQLSRV_ATTR_ENCODING => PDO::SQLSRV_ENCODING_UTF8],
+        );
+    }
+
+    /** Empties every finance table, children first. */
+    public static function truncate(PDO $pdo): void
+    {
+        foreach (['ar_remittance_lines', 'ar_email_attachments', 'ar_outbound_messages', 'ar_email_records', 'ar_credit_note_requests', 'ar_scan_runs', 'ar_option_lists', 'ar_deleted_messages', 'task_mail_links', 'task_report_recipients', 'task_member_profiles', 'task_history', 'task_dependencies', 'task_tasks', 'task_templates', 'task_statement_areas', 'task_projects', 'task_entities', 'odoo_sync_runs', 'odoo_records', 'audit_events', 'job_runs', 'attachments', 'access_scopes', 'portal_user_map', 'mail_deliveries', 'mailbox_grants', 'mailboxes'] as $table) {
+            $pdo->exec("DELETE FROM [finance].[{$table}]");
+        }
+    }
+
+    private static function applySchema(PDO $pdo): void
+    {
+        foreach (['create-finance-schema.sql', 'create-finance-jobs-schema.sql', 'create-finance-attachments-schema.sql', 'create-finance-access-schema.sql', 'create-finance-odoo-schema.sql', 'create-finance-task-schema.sql', 'create-finance-ar-schema.sql', 'alter-finance-mail-status-suppressed.sql'] as $file) {
+            $script = file_get_contents(dirname(__DIR__, 2) . '/database/scripts/development/' . $file);
+            if ($script === false) {
+                throw new RuntimeException($file . ' is missing.');
+            }
+            foreach (preg_split('/^\s*GO\s*$/mi', $script) ?: [] as $batch) {
+                if (trim($batch) !== '') {
+                    $pdo->exec($batch);
+                }
+            }
+        }
+    }
+}

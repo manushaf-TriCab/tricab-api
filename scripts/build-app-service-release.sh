@@ -82,6 +82,8 @@ for required in \
     "$api_root/deploy/app-service/startup.sh" \
     "$api_root/deploy/app-service/webjobs/rfq-reader/run.sh" \
     "$api_root/bin/run-rfq-reader-jobs.php" \
+    "$api_root/deploy/app-service/webjobs/finance-jobs/run.sh" \
+    "$api_root/bin/run-finance-jobs.php" \
     "$api_root/deploy/app-service/api/index.php" \
     "$api_root/core/python/requirements.txt" \
     "$api_root/core/python/wsgi.py"
@@ -318,6 +320,13 @@ mkdir -p "$app_root/bin" "$release_root/App_Data/jobs/continuous/rfq-reader"
 cp "$api_root/bin/run-rfq-reader-jobs.php" "$app_root/bin/run-rfq-reader-jobs.php"
 cp "$api_root/deploy/app-service/webjobs/rfq-reader/run.sh" "$release_root/App_Data/jobs/continuous/rfq-reader/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/rfq-reader/run.sh"
+
+# The finance job runner and its continuous WebJob (F1.8), the same way. The job is inert
+# while FINANCE_MODULE_ENABLED is not true: the runner prints one line and exits.
+mkdir -p "$release_root/App_Data/jobs/continuous/finance-jobs"
+cp "$api_root/bin/run-finance-jobs.php" "$app_root/bin/run-finance-jobs.php"
+cp "$api_root/deploy/app-service/webjobs/finance-jobs/run.sh" "$release_root/App_Data/jobs/continuous/finance-jobs/run.sh"
+chmod +x "$release_root/App_Data/jobs/continuous/finance-jobs/run.sh"
 
 # Nothing in the archive may be a symlink -- App Service unpacks it verbatim.
 assert_no_symlinks "$release_root"

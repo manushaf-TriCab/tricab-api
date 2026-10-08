@@ -178,6 +178,7 @@ final readonly class Settings
         public string $onboardingReminderEmails = '',
         public string $onboardingEmailTestRecipient = '',
         public string $blobContainerOnboarding = 'onboarding',
+        public string $blobContainerFinance = 'finance-attachments',
         public string $triexpenseAppBaseUrl = '',
         public int $triexpenseGraphConnectTimeoutSeconds = 5,
         public int $triexpenseGraphRequestTimeoutSeconds = 15,
@@ -200,7 +201,151 @@ final readonly class Settings
         public ?string $quotesOrdersLegacyWriteTableSuffix = null,
         public bool $quotesOrdersLegacyWriteTableSuffixConfigured = false,
         public bool $customerContactE2eMode = false,
+        public bool $financeModuleEnabled = false,
+        public bool $financeTaskEnabled = false,
+        public bool $financeCreditEnabled = false,
+        public bool $financeCollectEnabled = false,
+        public bool $financeArEnabled = false,
+        public bool $financeApEnabled = false,
+        public bool $financeMailEnabled = false,
+        public string $financeMailTestRecipient = '',
+        public string $financeGraphTenantId = '',
+        public string $financeGraphClientId = '',
+        public string $financeGraphClientSecret = '',
+        public bool $financeMailboxReadEnabled = false,
+        public string $odooUrl = '',
+        public string $odooApiKey = '',
+        public string $odooCompanyIds = '',
+        public string $odooApiKeyExpires = '',
+        public bool $financeAiEnabled = false,
+        public string $financeAiBaseUrl = 'http://127.0.0.1:8003',
+        public string $financeAiInternalToken = '',
+        public string $financeTaskTimezone = 'Australia/Melbourne',
+        public string $financeTaskMailFrom = '',
+        public string $financeArMailbox = 'ar@tricab.com',
+        public string $financeArCreditNotesUrl = '',
+        public string $financeArTimezone = 'Australia/Melbourne',
+        public bool $financeArSendingEnabled = false,
+        public string $financeArPublicOrigin = '',
+        public int $financeArFormLinkHours = 72,
+        public bool $financeArSampleFiles = false,
     ) {
+    }
+
+    /**
+     * The finance AI service answers over loopback inside the App Service, and like
+     * the RFQ parser it has no authentication of its own beyond the internal token, so
+     * enabled with an empty token counts as disabled: the service refuses every call
+     * without one, and switching it on could only ever fail. Same `FINANCE_AI_ENABLED`
+     * setting as `startup.sh`, which starts the process. The base URL is checked
+     * to be loopback when the service is enabled, at load.
+     */
+    public function isFinanceAiEnabled(): bool
+    {
+        if (!$this->financeAiEnabled || $this->financeAiInternalToken === '') {
+            return false;
+        }
+
+        $host = parse_url($this->financeAiBaseUrl, PHP_URL_HOST);
+
+        return is_string($host) && in_array(strtolower($host), self::PRODUCT_FINDER_ALLOWED_HOSTS, true);
+    }
+
+    /**
+     * Finance mail sends only when switched on AND the finance Graph registration
+     * (its own tenant, client id and secret, never the platform's `GRAPH_*`) is
+     * complete. Enabled with any of the three empty counts as disabled, as the RFQ
+     * parser's setting does.
+     */
+    public function isFinanceMailSendingEnabled(): bool
+    {
+        return $this->financeMailEnabled
+            && trim($this->financeGraphTenantId) !== ''
+            && trim($this->financeGraphClientId) !== ''
+            && trim($this->financeGraphClientSecret) !== '';
+    }
+
+    /**
+     * Mailbox reading is its own switch (F1.11): reading real mail needs the registration's
+     * Mail.Read consent, which sending does not, so FINANCE_MAIL_ENABLED never turns it on.
+     * On with any of the three finance Graph settings empty is treated as off.
+     */
+    public function isFinanceMailboxReadingEnabled(): bool
+    {
+        return $this->financeMailboxReadEnabled
+            && trim($this->financeGraphTenantId) !== ''
+            && trim($this->financeGraphClientId) !== ''
+            && trim($this->financeGraphClientSecret) !== '';
+    }
+    /**
+     * The Odoo base URL, only when it is an `https://` address with a host and no embedded
+     * credentials (the API key goes in a header, never a URL); null otherwise, which
+     * counts as not configured. An `http` Odoo would send the key in clear.
+     */
+    public function odooBaseUrlOrNull(): ?string
+    {
+        $url = trim($this->odooUrl);
+        $parts = parse_url($url);
+        if ($parts === false || strtolower((string) ($parts['scheme'] ?? '')) !== 'https' || ($parts['host'] ?? '') === '' || isset($parts['user']) || isset($parts['pass'])) {
+            return null;
+        }
+
+        return rtrim($url, '/');
+    }
+
+    /**
+     * `ODOO_COMPANY_IDS` as numbers, `2,4` as `[2, 4]`; anything that is not a whole number is dropped.
+     *
+     * @return list<int>
+     */
+    public function odooCompanyIdList(): array
+    {
+        $ids = [];
+        foreach (explode(',', $this->odooCompanyIds) as $part) {
+            $part = trim($part);
+            if ($part !== '' && ctype_digit($part) && (int) $part > 0) {
+                $ids[] = (int) $part;
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * The Odoo reference-list sync is configured: an https URL, a key, and at least one
+     * company id (the portal's rule). Not configured, the sync refuses and no job is registered.
+     */
+    public function isOdooConfigured(): bool
+    {
+        return $this->odooBaseUrlOrNull() !== null && trim($this->odooApiKey) !== '' && $this->odooCompanyIdList() !== [];
+    }
+
+    public function financeMailTestRecipientOrNull(): ?string
+    {
+        $recipient = strtolower(trim($this->financeMailTestRecipient));
+
+        return $recipient !== '' ? $recipient : null;
+    }
+
+    /**
+     * Finance (the five finance apps). An app switch does nothing while the
+     * module switch is off, so a half-built app can never be reached by turning
+     * one setting on.
+     */
+    public function financeAppEnabled(string $appKey): bool
+    {
+        if (!$this->financeModuleEnabled) {
+            return false;
+        }
+
+        return match ($appKey) {
+            'TASK' => $this->financeTaskEnabled,
+            'CREDIT' => $this->financeCreditEnabled,
+            'COLLECT' => $this->financeCollectEnabled,
+            'AR' => $this->financeArEnabled,
+            'AP' => $this->financeApEnabled,
+            default => false,
+        };
     }
 
     /**
@@ -862,6 +1007,71 @@ final readonly class Settings
             }
         }
 
+        // Exactly `true`, as startup.sh tests it: "yes" or "1" must not make PHP expect a service that never started.
+        $financeAiEnabled = ($env['FINANCE_AI_ENABLED'] ?? '') === 'true';
+        $financeAiBaseUrl = rtrim(self::string($env, 'FINANCE_AI_BASE_URL', 'http://127.0.0.1:8003'), '/');
+        if ($financeAiEnabled) {
+            $financeAiHost = parse_url($financeAiBaseUrl, PHP_URL_HOST);
+            if (!is_string($financeAiHost) || !in_array(strtolower($financeAiHost), self::PRODUCT_FINDER_ALLOWED_HOSTS, true)) {
+                throw new InvalidArgumentException(
+                    'FINANCE_AI_BASE_URL must point at the loopback interface; '
+                    . 'the finance AI service runs inside this App Service and is not exposed.'
+                );
+            }
+        }
+
+        // Tri-Task decides "today" and "overdue" in this zone (decision D17), replacing the source's APP_TIMEZONE.
+        $financeTaskTimezone = trim(self::string($env, 'FINANCE_TASK_TIMEZONE', 'Australia/Melbourne'));
+        if ($financeTaskTimezone === '') {
+            $financeTaskTimezone = 'Australia/Melbourne';
+        }
+        if (!in_array($financeTaskTimezone, \DateTimeZone::listIdentifiers(), true)) {
+            throw new InvalidArgumentException('FINANCE_TASK_TIMEZONE must be a time zone name such as Australia/Melbourne.');
+        }
+
+        // Tri-AR decides "today", "overdue" and the register's local days in this zone (decision D17, H4).
+        $financeArTimezone = trim(self::string($env, 'FINANCE_AR_TIMEZONE', 'Australia/Melbourne'));
+        if ($financeArTimezone === '') {
+            $financeArTimezone = 'Australia/Melbourne';
+        }
+        if (!in_array($financeArTimezone, \DateTimeZone::listIdentifiers(), true)) {
+            throw new InvalidArgumentException('FINANCE_AR_TIMEZONE must be a time zone name such as Australia/Melbourne.');
+        }
+        $financeArMailbox = strtolower(trim(self::string($env, 'FINANCE_AR_MAILBOX', 'ar@tricab.com')));
+        if ($financeArMailbox === '') {
+            $financeArMailbox = 'ar@tricab.com';
+        }
+
+        // The origin the credit-note form links are built from (H3, decision D57): no default, because a wrong one mails
+        // a rep a dead link. An origin only (scheme, host, port); https, or http for a developer's own machine.
+        $financeArPublicOrigin = rtrim(trim(self::string($env, 'FINANCE_AR_PUBLIC_ORIGIN', '')), '/');
+        if ($financeArPublicOrigin !== '') {
+            $originParts = parse_url($financeArPublicOrigin);
+            $originScheme = is_array($originParts) ? strtolower((string) ($originParts['scheme'] ?? '')) : '';
+            $originHost = is_array($originParts) ? strtolower((string) ($originParts['host'] ?? '')) : '';
+            $originLocal = in_array($originHost, ['localhost', '127.0.0.1'], true);
+            if (
+                !is_array($originParts) || $originHost === '' || ($originScheme !== 'https' && !($originScheme === 'http' && $originLocal))
+                || isset($originParts['path']) || isset($originParts['query']) || isset($originParts['fragment']) || isset($originParts['user']) || isset($originParts['pass'])
+            ) {
+                throw new InvalidArgumentException('FINANCE_AR_PUBLIC_ORIGIN must be an origin such as https://tricab.ai (https, no path).');
+            }
+        }
+
+        // Tri-AR's invented sample PDFs, put into the in-memory blob store as the container is built (decision D52). They
+        // are for a developer's own machine: refused in production and with any blob store but the memory one, so they can
+        // never be written to a shared store.
+        $financeArSampleFiles = self::bool($env, 'FINANCE_AR_SAMPLE_FILES', false);
+        if ($financeArSampleFiles) {
+            $sampleBlobMode = strtolower(self::string($env, 'BLOB_AUTH_MODE', self::BLOB_AUTH_MODE_DISABLED));
+            if (
+                strtolower(self::string($env, 'APP_ENV', 'development')) === 'production'
+                || !in_array($sampleBlobMode, [self::BLOB_AUTH_MODE_MEMORY, self::BLOB_AUTH_MODE_DISABLED], true)
+            ) {
+                throw new InvalidArgumentException('FINANCE_AR_SAMPLE_FILES is for local development with the in-memory blob store only (APP_ENV not production, BLOB_AUTH_MODE memory or disabled).');
+            }
+        }
+
         $productFinderEnabled = self::bool($env, 'PRODUCT_FINDER_ENABLED', false);
         $productFinderBaseUrl = rtrim(self::string($env, 'PRODUCT_FINDER_BASE_URL', 'http://127.0.0.1:8001'), '/');
         $productFinderTimeoutSeconds = self::boundedInt($env, 'PRODUCT_FINDER_TIMEOUT_SECONDS', 20, 1, 120);
@@ -1059,6 +1269,7 @@ final readonly class Settings
             onboardingReminderEmails: $onboardingReminderEmails,
             onboardingEmailTestRecipient: $onboardingEmailTestRecipient,
             blobContainerOnboarding: self::string($env, 'BLOB_CONTAINER_ONBOARDING', 'onboarding'),
+            blobContainerFinance: self::string($env, 'BLOB_CONTAINER_FINANCE', 'finance-attachments'),
             triexpenseAppBaseUrl: $triexpenseAppBaseUrl,
             triexpenseGraphConnectTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_GRAPH_CONNECT_TIMEOUT_SECONDS', 5, 1, 30),
             triexpenseGraphRequestTimeoutSeconds: self::boundedInt($env, 'TRIEXPENSE_GRAPH_REQUEST_TIMEOUT_SECONDS', 15, 1, 60),
@@ -1081,6 +1292,34 @@ final readonly class Settings
             quotesOrdersLegacyWriteTableSuffix: $writeConfig->tableSuffix,
             quotesOrdersLegacyWriteTableSuffixConfigured: $writeConfig->tableSuffixConfigured,
             customerContactE2eMode: $customerContactE2eMode,
+            financeModuleEnabled: self::bool($env, 'FINANCE_MODULE_ENABLED', false),
+            financeTaskEnabled: self::bool($env, 'FINANCE_TASK_ENABLED', false),
+            financeCreditEnabled: self::bool($env, 'FINANCE_CREDIT_ENABLED', false),
+            financeCollectEnabled: self::bool($env, 'FINANCE_COLLECT_ENABLED', false),
+            financeArEnabled: self::bool($env, 'FINANCE_AR_ENABLED', false),
+            financeApEnabled: self::bool($env, 'FINANCE_AP_ENABLED', false),
+            financeMailEnabled: self::bool($env, 'FINANCE_MAIL_ENABLED', false),
+            financeMailTestRecipient: trim(self::string($env, 'FINANCE_MAIL_TEST_RECIPIENT', '')),
+            financeGraphTenantId: trim(self::string($env, 'FINANCE_GRAPH_TENANT_ID', '')),
+            financeGraphClientId: trim(self::string($env, 'FINANCE_GRAPH_CLIENT_ID', '')),
+            financeGraphClientSecret: trim(self::string($env, 'FINANCE_GRAPH_CLIENT_SECRET', '')),
+            financeMailboxReadEnabled: self::bool($env, 'FINANCE_MAILBOX_READ_ENABLED', false),
+            odooUrl: trim(self::string($env, 'ODOO_URL', '')),
+            odooApiKey: trim(self::string($env, 'ODOO_API_KEY', '')),
+            odooCompanyIds: trim(self::string($env, 'ODOO_COMPANY_IDS', '')),
+            odooApiKeyExpires: trim(self::string($env, 'ODOO_API_KEY_EXPIRES', '')),
+            financeAiEnabled: $financeAiEnabled,
+            financeAiBaseUrl: $financeAiBaseUrl,
+            financeAiInternalToken: trim(self::string($env, 'FINANCE_AI_INTERNAL_TOKEN', '')),
+            financeTaskTimezone: $financeTaskTimezone,
+            financeTaskMailFrom: strtolower(trim(self::string($env, 'FINANCE_TASK_MAIL_FROM', ''))),
+            financeArMailbox: $financeArMailbox,
+            financeArCreditNotesUrl: rtrim(trim(self::string($env, 'FINANCE_AR_CREDIT_NOTES_URL', '')), '/'),
+            financeArTimezone: $financeArTimezone,
+            financeArSendingEnabled: self::bool($env, 'FINANCE_AR_SENDING_ENABLED', false),
+            financeArPublicOrigin: $financeArPublicOrigin,
+            financeArFormLinkHours: self::boundedInt($env, 'FINANCE_AR_FORM_LINK_HOURS', 72, 1, 720),
+            financeArSampleFiles: $financeArSampleFiles,
         );
     }
 

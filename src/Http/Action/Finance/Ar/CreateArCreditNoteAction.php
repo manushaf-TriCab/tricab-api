@@ -1,0 +1,40 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TriCab\Api\Http\Action\Finance\Ar;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Core\Finance\Ar\Domain\ArFailure;
+use TriCab\Core\Finance\Ar\Service\ArCreditNoteService;
+
+/** POST /api/v1/finance/ar/credit-notes (source route 23): records a credit-note request and mails the rep the link, which is shown once. */
+final class CreateArCreditNoteAction
+{
+    use ArActionSupport;
+
+    public function __construct(
+        private readonly ArCreditNoteService $service,
+        private readonly JsonResponder $responder,
+    ) {
+    }
+
+    /**
+     * @param array<string, string> $args
+     */
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, array $args = []): ResponseInterface
+    {
+        unset($response);
+        $actor = $this->actorOf($request);
+        if ($actor === null) {
+            return $this->unauthenticated($this->responder);
+        }
+        try {
+            return $this->ok($this->responder, $this->service->create($actor, $this->bodyOf($request)));
+        } catch (ArFailure $failure) {
+            return $this->failure($this->responder, $failure);
+        }
+    }
+}

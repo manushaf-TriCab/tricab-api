@@ -7,6 +7,7 @@
         "php": "^8.3",
         "dompdf/dompdf": "^3.1",
         "firebase/php-jwt": "^6.10",
+        "openspout/openspout": "^4.32",
         "php-di/php-di": "^7.0",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",
@@ -52,7 +53,8 @@
         "python-check": "python3 core/python/tools/check_rules_sync.py"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "platform-check": "php-only"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

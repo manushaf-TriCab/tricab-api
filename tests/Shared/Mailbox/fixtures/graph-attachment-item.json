@@ -1,0 +1,9 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('ap%40example.test')/messages('AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg0A-IMMUTABLE-ID-0001%3D')/attachments/$entity",
+  "@odata.type": "#microsoft.graph.itemAttachment",
+  "id": "AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg0A-ATT-0003=",
+  "name": "Forwarded message",
+  "contentType": "message/rfc822",
+  "size": 4096,
+  "isInline": false
+}

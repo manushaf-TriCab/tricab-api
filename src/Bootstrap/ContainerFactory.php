@@ -817,6 +817,369 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqReaderJobStore::class),
             \TriCab\Core\Rfq\Contract\RfqDocumentStore::class
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqDocumentStore::class),
+            // Finance mail (F1.4). In memory by default, so tests and a database-less run
+            // leave a ledger and send nothing; the azure-sql branch below swaps in the
+            // tables. The transport is Graph only when FINANCE_MAIL_ENABLED is true and
+            // the finance Graph registration is complete; otherwise it refuses, and the
+            // ledger records a failed send without a network call.
+            \TriCab\Core\Finance\Shared\Mail\FinanceMailboxRegistry::class
+                => \DI\autowire(\TriCab\Api\Finance\Mail\InMemoryFinanceMailboxRegistry::class),
+            \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class
+                => \DI\autowire(\TriCab\Api\Finance\Mail\InMemoryFinanceMailLedger::class),
+            \TriCab\Core\Finance\Shared\Mail\FinanceMailTransport::class
+                => static function () use ($settings): \TriCab\Core\Finance\Shared\Mail\FinanceMailTransport {
+                    if (!$settings->isFinanceMailSendingEnabled()) {
+                        return new \TriCab\Api\Finance\Mail\DisabledFinanceMailTransport();
+                    }
+
+                    return new \TriCab\Api\Finance\Mail\GraphFinanceMailTransport(
+                        new StreamJsonHttpClient(20.0, 5.0),
+                        $settings->financeGraphTenantId,
+                        $settings->financeGraphClientId,
+                        $settings->financeGraphClientSecret,
+                        $settings->financeMailTestRecipientOrNull(),
+                    );
+                },
+            \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class
+                => \DI\autowire(\TriCab\Core\Finance\Shared\Mail\FinanceMailService::class),
+            // Mailbox reading (F1.11): the platform's reader, shared with RFQ, and finance's rules
+            // in front of it. Graph only when FINANCE_MAILBOX_READ_ENABLED is true AND the finance
+            // Graph registration is complete; otherwise every read refuses and touches no network.
+            \TriCab\Core\Shared\Mailbox\MailboxReader::class
+                => static function () use ($settings): \TriCab\Core\Shared\Mailbox\MailboxReader {
+                    if (!$settings->isFinanceMailboxReadingEnabled()) {
+                        return new \TriCab\Api\Shared\Mailbox\DisabledMailboxReader();
+                    }
+
+                    return new \TriCab\Api\Shared\Mailbox\GraphMailboxReader(
+                        new StreamJsonHttpClient(20.0, 5.0),
+                        $settings->financeGraphTenantId,
+                        $settings->financeGraphClientId,
+                        $settings->financeGraphClientSecret,
+                    );
+                },
+            \TriCab\Core\Finance\Shared\Mailbox\FinanceMailboxReader::class
+                => \DI\autowire(\TriCab\Core\Finance\Shared\Mailbox\FinanceMailboxReadService::class),
+            // Odoo reference lists (F1.12). The client is real only with an https ODOO_URL, a key
+            // and at least one company id; the stores are in memory here and the tables in the
+            // azure-sql branch below.
+            \TriCab\Core\Finance\Shared\Odoo\OdooClient::class
+                => static function () use ($settings): \TriCab\Core\Finance\Shared\Odoo\OdooClient {
+                    $url = $settings->odooBaseUrlOrNull();
+                    if (!$settings->isOdooConfigured() || $url === null) {
+                        return new \TriCab\Api\Finance\Odoo\UndeployedOdooClient();
+                    }
+
+                    return new \TriCab\Api\Finance\Odoo\HttpOdooClient(
+                        new StreamJsonHttpClient(60.0, 5.0),
+                        $url,
+                        $settings->odooApiKey,
+                        $settings->odooCompanyIdList(),
+                    );
+                },
+            \TriCab\Core\Finance\Shared\Odoo\OdooRecordStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Odoo\InMemoryOdooRecordStore::class),
+            \TriCab\Core\Finance\Shared\Odoo\OdooSyncRuns::class
+                => \DI\autowire(\TriCab\Api\Finance\Odoo\InMemoryOdooSyncRuns::class),
+            \TriCab\Core\Finance\Shared\Odoo\OdooSyncConfig::class
+                => static fn (): \TriCab\Core\Finance\Shared\Odoo\OdooSyncConfig => new \TriCab\Core\Finance\Shared\Odoo\OdooSyncConfig(
+                    $settings->odooCompanyIdList(),
+                    $settings->odooApiKeyExpires,
+                ),
+            \TriCab\Core\Finance\Shared\Odoo\OdooSyncService::class
+                => \DI\autowire(\TriCab\Core\Finance\Shared\Odoo\OdooSyncService::class),
+            // Finance files (F1.9). In memory by default; the azure-sql branch below swaps in
+            // the table and the private `BLOB_CONTAINER_FINANCE` container. There is no route
+            // here: each app serves its own files through the service, in its own phase.
+            \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Attachments\InMemoryFinanceAttachmentStore::class),
+            \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentService::class
+                => \DI\autowire(\TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentService::class),
+            // Finance scopes and the portal user map (F1.10). In memory by default (nobody is
+            // scoped, nobody is mapped); the azure-sql branch below swaps in the tables and
+            // the identity lookup the mapping script uses.
+            \TriCab\Core\Finance\Shared\Access\FinanceAccessScopeReader::class
+                => \DI\autowire(\TriCab\Api\Finance\Access\InMemoryFinanceAccessScopeReader::class),
+            \TriCab\Core\Finance\Shared\Access\FinancePortalUserMap::class
+                => \DI\autowire(\TriCab\Api\Finance\Access\InMemoryFinancePortalUserMap::class),
+            \TriCab\Core\Finance\Shared\Access\FinancePlatformUserLookup::class
+                => \DI\autowire(\TriCab\Api\Finance\Access\InMemoryFinancePlatformUserLookup::class),
+            \TriCab\Core\Finance\Shared\Access\FinancePortalUserMatcher::class
+                => \DI\autowire(\TriCab\Core\Finance\Shared\Access\FinancePortalUserMatcher::class),
+            // Finance jobs and audit (F1.8). In memory by default; the azure-sql branch below
+            // swaps in the tables. No job is registered in Phase 1: each app's phase adds
+            // its own to the list below, in this one place.
+            \TriCab\Core\Finance\Shared\Audit\FinanceAuditLog::class
+                => \DI\autowire(\TriCab\Api\Finance\Audit\InMemoryFinanceAuditLog::class),
+            \TriCab\Core\Finance\Shared\Jobs\FinanceJobClaims::class
+                => \DI\autowire(\TriCab\Api\Finance\Jobs\InMemoryFinanceJobClaims::class),
+            \TriCab\Core\Finance\Shared\Jobs\FinanceJobRegistry::class
+                => static function (Container $container) use ($settings): \TriCab\Core\Finance\Shared\Jobs\FinanceJobRegistry {
+                    $jobs = [];
+                    // Odoo reference lists (F1.12): once a day, and only where Odoo is configured.
+                    // An unconfigured run would fail every night and fill the audit trail.
+                    if ($settings->isOdooConfigured()) {
+                        $jobs[] = new \TriCab\Core\Finance\Shared\Odoo\OdooSyncJob(
+                            self::get($container, \TriCab\Core\Finance\Shared\Odoo\OdooSyncService::class),
+                        );
+                    }
+
+                    // Tri-Task's 08:00 summary (T2.9): the registry's first app job, only while Tri-Task is on.
+                    if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_TASK)) {
+                        $jobs[] = self::get($container, \TriCab\Core\Finance\Task\Service\TaskDailySummaryJob::class);
+                    }
+
+                    // Tri-AR keeps files (T5.5): uploads never put on a record are swept once a day.
+                    if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR)) {
+                        $jobs[] = new \TriCab\Core\Finance\Shared\Attachments\FinanceUnattachedAttachmentsJob(
+                            self::get($container, \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class),
+                        );
+                    }
+
+                    // Tri-AR's 08:00 mailbox scan (T5.7, D44): needs the app and mailbox reading, so a half-configured host never fails nightly.
+                    if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR) && $settings->isFinanceMailboxReadingEnabled()) {
+                        $jobs[] = self::get($container, \TriCab\Core\Finance\Ar\Service\ArMailboxScanJob::class);
+                    }
+
+                    // Tri-AR's overdue reminders (T5.11, D44, D61): they are mail, so the app, its own sending switch and a working
+                    // mail service must all be on; otherwise every morning would leave suppressed rows or fail.
+                    if (
+                        $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR)
+                        && $settings->financeArSendingEnabled
+                        && $settings->isFinanceMailSendingEnabled()
+                    ) {
+                        $jobs[] = self::get($container, \TriCab\Core\Finance\Ar\Service\ArOverdueRemindersJob::class);
+                    }
+
+                    return new \TriCab\Core\Finance\Shared\Jobs\FinanceJobRegistry($jobs);
+                },
+            \TriCab\Core\Finance\Shared\Jobs\FinanceJobRunner::class
+                => \DI\autowire(\TriCab\Core\Finance\Shared\Jobs\FinanceJobRunner::class),
+            // Finance AI (F1.5): the loopback client when FINANCE_AI_ENABLED is true with a
+            // token; otherwise one that refuses every call as `unavailable`.
+            \TriCab\Core\Finance\Shared\Ai\FinanceAiClient::class
+                => static function () use ($settings): \TriCab\Core\Finance\Shared\Ai\FinanceAiClient {
+                    if (!$settings->isFinanceAiEnabled()) {
+                        return new \TriCab\Api\Finance\Ai\UndeployedFinanceAiClient();
+                    }
+
+                    return new \TriCab\Api\Finance\Ai\HttpFinanceAiClient(
+                        new StreamJsonHttpClient(
+                            // The longest deadline any purpose asks for (Tri-Task's statement areas take up to 90 s, Tri-AR's remittance reading 120 s) plus the grace.
+                            (max(\TriCab\Core\Finance\Shared\Ai\FinanceAiContract::DEFAULT_DEADLINE_MS, \TriCab\Core\Finance\Task\Service\TaskAiService::LONG_DEADLINE_MS, \TriCab\Core\Finance\Ar\Service\ArAiService::longestDeadlineMs()) + \TriCab\Core\Finance\Shared\Ai\FinanceAiContract::TRANSPORT_GRACE_MS) / 1000,
+                            2.0,
+                        ),
+                        $settings->financeAiBaseUrl,
+                        $settings->financeAiInternalToken,
+                    );
+                },
+            // Tri-Task (Phase 2). Everything is in memory by default; the azure-sql branch below
+            // swaps in the `finance.task_*` tables and the identity-backed member directory. The
+            // routes are registered only when FINANCE_TASK_ENABLED is on (AppBuilder).
+            \TriCab\Core\Finance\Task\Service\TaskTime::class
+                => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskTime
+                    => new \TriCab\Core\Finance\Task\Service\TaskTime(
+                        self::get($container, Clock::class),
+                        $settings->financeTaskTimezone,
+                    ),
+            \TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class
+                => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryFinanceTaskMemberDirectory::class),
+            \TriCab\Core\Finance\Task\Service\TaskMembersService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskMembersService::class),
+            // One in-memory object serves both task contracts, so the project, area and entity counts see the tasks.
+            \TriCab\Api\Finance\Task\InMemoryTaskStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryTaskStore::class),
+            \TriCab\Core\Finance\Task\Contract\TaskSetupStore::class
+                => static fn (Container $container): \TriCab\Core\Finance\Task\Contract\TaskSetupStore
+                    => self::get($container, \TriCab\Api\Finance\Task\InMemoryTaskStore::class),
+            \TriCab\Core\Finance\Task\Contract\TaskStore::class
+                => static fn (Container $container): \TriCab\Core\Finance\Task\Contract\TaskStore
+                    => self::get($container, \TriCab\Api\Finance\Task\InMemoryTaskStore::class),
+            \TriCab\Core\Finance\Task\Service\TaskService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskService::class),
+            // Task mail (T2.6): the links to the shared ledger and the daily-summary recipients.
+            \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class
+                => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryTaskMailLinks::class),
+            \TriCab\Core\Finance\Task\Contract\TaskReportRecipientStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryTaskReportRecipientStore::class),
+            // Report recipients and the daily summary job (T2.9). The job is registered below, with the others,
+            // when FINANCE_TASK_ENABLED is on.
+            \TriCab\Core\Finance\Task\Service\TaskReportRecipientService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskReportRecipientService::class),
+            \TriCab\Core\Finance\Task\Service\TaskDailySummaryJob::class
+                => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskDailySummaryJob
+                    => new \TriCab\Core\Finance\Task\Service\TaskDailySummaryJob(
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskStore::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskReportRecipientStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Service\TaskTime::class),
+                        $settings->financeTaskMailFrom,
+                        $settings->financeTaskTimezone,
+                    ),
+            // The spreadsheet import (T2.8): CSV and Excel readers (openspout; Excel needs the zip extension).
+            \TriCab\Core\Finance\Task\Contract\SpreadsheetReader::class
+                => static fn (): \TriCab\Core\Finance\Task\Contract\SpreadsheetReader
+                    => new \TriCab\Api\Finance\Task\FormatSpreadsheetReader(
+                        new \TriCab\Api\Finance\Task\CsvSpreadsheetReader(),
+                        new \TriCab\Api\Finance\Task\OpenSpoutXlsxReader(),
+                    ),
+            \TriCab\Core\Finance\Task\Service\TaskImportService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskImportService::class),
+            // The five drafting routes over finance_ai (T2.7). The service client is the shared one below.
+            \TriCab\Core\Finance\Task\Service\TaskAiService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskAiService::class),
+            \TriCab\Core\Finance\Task\Service\TaskMailService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskMailService
+                    => new \TriCab\Core\Finance\Task\Service\TaskMailService(
+                        self::get($container, \TriCab\Core\Finance\Task\Service\TaskService::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskReportRecipientStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailboxRegistry::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Access\FinanceAccessScopeReader::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Service\TaskTime::class),
+                        $settings->financeTaskMailFrom,
+                    ),
+            \TriCab\Core\Finance\Task\Service\TaskSetupService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskSetupService::class),
+            // Tri-AR (Phase 5). Everything is in memory by default; the azure-sql branch below swaps in
+            // the `finance.ar_*` tables and the identity-backed assignee directory. The routes are
+            // registered only when FINANCE_AR_ENABLED is on (AppBuilder).
+            \TriCab\Core\Finance\Ar\Service\ArTime::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Service\ArTime
+                    => new \TriCab\Core\Finance\Ar\Service\ArTime(
+                        self::get($container, Clock::class),
+                        $settings->financeArTimezone,
+                    ),
+            \TriCab\Core\Finance\Ar\Contract\ArAssigneeDirectory::class
+                => \DI\autowire(\TriCab\Api\Finance\Ar\InMemoryArAssigneeDirectory::class),
+            // One in-memory object serves both the option lists and the records, so a usage count sees the records.
+            \TriCab\Api\Finance\Ar\InMemoryArStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ar\InMemoryArStore::class),
+            \TriCab\Core\Finance\Ar\Contract\ArOptionStore::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Contract\ArOptionStore
+                    => self::get($container, \TriCab\Api\Finance\Ar\InMemoryArStore::class),
+            \TriCab\Core\Finance\Ar\Contract\ArRecordStore::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Contract\ArRecordStore
+                    => self::get($container, \TriCab\Api\Finance\Ar\InMemoryArStore::class),
+            \TriCab\Core\Finance\Ar\Service\ArOptionService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ar\Service\ArOptionService::class),
+            \TriCab\Core\Finance\Ar\Service\ArRecordService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ar\Service\ArRecordService::class),
+            // The four model calls (T5.8) and the reply composer's draft, over the shared finance_ai client.
+            \TriCab\Core\Finance\Ar\Service\ArAiService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ar\Service\ArAiService::class),
+            \TriCab\Core\Finance\Ar\Service\ArDraftReplyService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ar\Service\ArDraftReplyService::class),
+            // The original message (T5.6): read through the finance mailbox rules, the record's own mailbox first.
+            \TriCab\Core\Finance\Ar\Service\ArOriginalMessageService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Service\ArOriginalMessageService
+                    => new \TriCab\Core\Finance\Ar\Service\ArOriginalMessageService(
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArRecordStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mailbox\FinanceMailboxReader::class),
+                        $settings->financeArMailbox,
+                    ),
+            // Files on records (T5.5): the guard answers for the file store, the service keeps and serves.
+            \TriCab\Core\Finance\Ar\Service\ArRecordGuard::class
+                => \DI\autowire(\TriCab\Core\Finance\Ar\Service\ArRecordGuard::class),
+            \TriCab\Core\Finance\Ar\Service\ArAttachmentService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ar\Service\ArAttachmentService::class),
+            // The reply composer (T5.9): sent replies are links to the shared mail ledger, kept with their body. The same
+            // in-memory object serves the record and outbound contracts, so a permanent delete removes the rows.
+            \TriCab\Core\Finance\Ar\Contract\ArOutboundStore::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Contract\ArOutboundStore
+                    => self::get($container, \TriCab\Api\Finance\Ar\InMemoryArStore::class),
+            \TriCab\Core\Finance\Ar\Service\ArMailService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Service\ArMailService
+                    => new \TriCab\Core\Finance\Ar\Service\ArMailService(
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArRecordStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArOutboundStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailboxRegistry::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Access\FinanceAccessScopeReader::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Service\ArTime::class),
+                        $settings->financeArMailbox,
+                        $settings->financeArSendingEnabled,
+                    ),
+            // Credit-note requests and the public form (T5.10). The same in-memory object serves the record and request contracts.
+            \TriCab\Core\Finance\Ar\Contract\ArCreditNoteStore::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Contract\ArCreditNoteStore
+                    => self::get($container, \TriCab\Api\Finance\Ar\InMemoryArStore::class),
+            \TriCab\Core\Finance\Ar\Contract\ArRateLimiter::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Contract\ArRateLimiter
+                    => new \TriCab\Api\Finance\Ar\CacheArRateLimiter(self::get($container, ApplicationCache::class)),
+            \TriCab\Core\Finance\Ar\Service\ArCreditNoteService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Service\ArCreditNoteService
+                    => new \TriCab\Core\Finance\Ar\Service\ArCreditNoteService(
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArCreditNoteStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArRecordStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Access\FinanceAccessScopeReader::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Service\ArTime::class),
+                        $settings->financeArMailbox,
+                        $settings->financeArPublicOrigin,
+                        $settings->financeArFormLinkHours,
+                        $settings->financeArSendingEnabled,
+                    ),
+            \TriCab\Core\Finance\Ar\Service\ArPublicFormService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Service\ArPublicFormService
+                    => new \TriCab\Core\Finance\Ar\Service\ArPublicFormService(
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArCreditNoteStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArRecordStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArRateLimiter::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Service\ArTime::class),
+                        $settings->financeArMailbox,
+                        $settings->financeArSendingEnabled,
+                    ),
+            // Scanning the mailbox (T5.7): the runs and their claim, the service, and the daily job (registered below,
+            // only when the app and mailbox reading are both on).
+            \TriCab\Core\Finance\Ar\Contract\ArScanStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ar\InMemoryArScanStore::class),
+            \TriCab\Core\Finance\Ar\Service\ArScanService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Service\ArScanService
+                    => new \TriCab\Core\Finance\Ar\Service\ArScanService(
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArRecordStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArScanStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mailbox\FinanceMailboxReader::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Service\ArAiService::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Service\ArAttachmentService::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Service\ArTime::class),
+                        $settings->financeArMailbox,
+                    ),
+            \TriCab\Core\Finance\Ar\Service\ArMailboxScanJob::class
+                => \DI\autowire(\TriCab\Core\Finance\Ar\Service\ArMailboxScanJob::class),
+            // The overdue reminders (T5.11): sent from the AR mailbox, registered below only when sending is on.
+            \TriCab\Core\Finance\Ar\Service\ArReminderService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Service\ArReminderService
+                    => new \TriCab\Core\Finance\Ar\Service\ArReminderService(
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArRecordStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArAssigneeDirectory::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Service\ArTime::class),
+                        $settings->financeArMailbox,
+                    ),
+            \TriCab\Core\Finance\Ar\Service\ArOverdueRemindersJob::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Service\ArOverdueRemindersJob
+                    => new \TriCab\Core\Finance\Ar\Service\ArOverdueRemindersJob(
+                        self::get($container, \TriCab\Core\Finance\Ar\Service\ArReminderService::class),
+                        $settings->financeArTimezone,
+                    ),
+            \TriCab\Core\Finance\Ar\Service\ArMeService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ar\Service\ArMeService
+                    => new \TriCab\Core\Finance\Ar\Service\ArMeService(
+                        self::get($container, \TriCab\Core\Finance\Ar\Contract\ArAssigneeDirectory::class),
+                        self::get($container, \TriCab\Core\Finance\Ar\Service\ArTime::class),
+                        $settings->financeArMailbox,
+                        $settings->financeArCreditNotesUrl,
+                        $settings->financeArSendingEnabled,
+                    ),
             // Parity plan E5.5: correction memory and the review log (azure-sql below).
             \TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqCorrectionMemory::class),
@@ -2646,6 +3009,68 @@ final class ContainerFactory
             // Parity plan E5.5: correction memory and Save Review's log.
             $definitions[\TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqCorrectionMemory::class);
+            // Finance scopes and the portal user map (F1.10): the two tables in `finance`, and
+            // the read of identity's email addresses the mapping script matches against.
+            $definitions[\TriCab\Core\Finance\Shared\Access\FinanceAccessScopeReader::class]
+                = \DI\autowire(\TriCab\Api\Finance\Access\AzureSqlFinanceAccessScopeReader::class);
+            $definitions[\TriCab\Core\Finance\Shared\Access\FinancePortalUserMap::class]
+                = \DI\autowire(\TriCab\Api\Finance\Access\AzureSqlFinancePortalUserMap::class);
+            $definitions[\TriCab\Core\Finance\Shared\Access\FinancePlatformUserLookup::class]
+                = \DI\autowire(\TriCab\Api\Finance\Access\AzureSqlFinancePlatformUserLookup::class);
+            // Finance files (F1.9): the rows in `finance`, the bytes in a private container.
+            $definitions[\TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class]
+                = static function (Container $container) use ($settings): \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore {
+                    $blobs = self::get($container, ProductBlobStore::class);
+                    if ($settings->financeArSampleFiles) {
+                        // Local development only (Settings refuses it elsewhere): the in-memory store forgets between requests.
+                        \TriCab\Api\Finance\Ar\ArSampleFiles::load($blobs, $settings->blobContainerFinance);
+                    }
+
+                    return new \TriCab\Api\Finance\Attachments\AzureSqlFinanceAttachmentStore(
+                        self::get($container, SqlConnection::class),
+                        $blobs,
+                        $settings->blobContainerFinance,
+                    );
+                };
+            // Finance jobs and audit (F1.8): the claim table and the audit table in `finance`.
+            $definitions[\TriCab\Core\Finance\Shared\Audit\FinanceAuditLog::class]
+                = \DI\autowire(\TriCab\Api\Finance\Audit\AzureSqlFinanceAuditLog::class);
+            $definitions[\TriCab\Core\Finance\Shared\Jobs\FinanceJobClaims::class]
+                = \DI\autowire(\TriCab\Api\Finance\Jobs\AzureSqlFinanceJobClaims::class);
+            // Odoo reference lists (F1.12): the two tables in `finance`.
+            $definitions[\TriCab\Core\Finance\Shared\Odoo\OdooRecordStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Odoo\AzureSqlOdooRecordStore::class);
+            $definitions[\TriCab\Core\Finance\Shared\Odoo\OdooSyncRuns::class]
+                = \DI\autowire(\TriCab\Api\Finance\Odoo\AzureSqlOdooSyncRuns::class);
+            // Finance mail (F1.4): the registry and the ledger in the `finance` schema.
+            $definitions[\TriCab\Core\Finance\Shared\Mail\FinanceMailboxRegistry::class]
+                = \DI\autowire(\TriCab\Api\Finance\Mail\AzureSqlFinanceMailboxRegistry::class);
+            $definitions[\TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class]
+                = \DI\autowire(\TriCab\Api\Finance\Mail\AzureSqlFinanceMailLedger::class);
+            // Tri-Task (Phase 2): the member directory reads `[identity]` and `finance.task_member_profiles`.
+            $definitions[\TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class]
+                = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlFinanceTaskMemberDirectory::class);
+            $definitions[\TriCab\Core\Finance\Task\Contract\TaskSetupStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskSetupStore::class);
+            $definitions[\TriCab\Core\Finance\Task\Contract\TaskStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskStore::class);
+            $definitions[\TriCab\Core\Finance\Task\Contract\TaskMailLinks::class]
+                = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskMailLinks::class);
+            $definitions[\TriCab\Core\Finance\Task\Contract\TaskReportRecipientStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskReportRecipientStore::class);
+            // Tri-AR (Phase 5): the assignee directory reads `[identity]`; the option lists are `finance.ar_option_lists`.
+            $definitions[\TriCab\Core\Finance\Ar\Contract\ArAssigneeDirectory::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ar\AzureSqlArAssigneeDirectory::class);
+            $definitions[\TriCab\Core\Finance\Ar\Contract\ArOptionStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ar\AzureSqlArOptionStore::class);
+            $definitions[\TriCab\Core\Finance\Ar\Contract\ArRecordStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ar\AzureSqlArRecordStore::class);
+            $definitions[\TriCab\Core\Finance\Ar\Contract\ArOutboundStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ar\AzureSqlArOutboundStore::class);
+            $definitions[\TriCab\Core\Finance\Ar\Contract\ArCreditNoteStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ar\AzureSqlArCreditNoteStore::class);
+            $definitions[\TriCab\Core\Finance\Ar\Contract\ArScanStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ar\AzureSqlArScanStore::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingSelfServiceRepository::class);
             // Phase 3.3 — the write side. All four share one locator, whose single

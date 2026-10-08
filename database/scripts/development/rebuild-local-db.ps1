@@ -128,6 +128,14 @@ Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-form-contributions.sql'
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-migration-rows.sql')     # after legacy migration: FKs to LegacyMigrationBatches
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-rfq-schema.sql')               # the live MySQL RFQ store's shape; no FKs outside [rfq]
+Invoke-SqlFile (Join-Path $DevScripts 'create-finance-schema.sql')           # shared finance tables (mailboxes, grants, mail ledger, audit); no FKs outside [finance]
+Invoke-SqlFile (Join-Path $DevScripts 'create-finance-jobs-schema.sql')         # job runner claims; after create-finance-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'create-finance-access-schema.sql')       # finance scopes and the portal user map; after create-finance-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'create-finance-task-schema.sql')         # Tri-Task's ten tables (Phase 2); after create-finance-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'create-finance-attachments-schema.sql')  # finance file store rows; after create-finance-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'create-finance-ar-schema.sql')           # Tri-AR's eight tables (Phase 5); after create-finance-schema.sql and create-finance-attachments-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'create-finance-odoo-schema.sql')         # Odoo reference lists and their sync runs (F1.12); after create-finance-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-mail-status-suppressed.sql') # a mail ledger made before `suppressed` existed; no-op otherwise
 
 # --- seeds -----------------------------------------------------------------
 Write-Host "`n[4/6] Reference data and seeds" -ForegroundColor Cyan
@@ -145,6 +153,15 @@ foreach ($s in @(
     'seed-customer-contact-report-permissions.sql', # report permission catalogue only; no platform-role grants
     'seed-customer-contact-roles.sql',              # three roles, assigned to nobody
     'seed-rfq-roles.sql',                # after rfq permissions: three RFQ roles, assigned to nobody
+    'seed-finance-permissions.sql',      # FINANCE.* catalogue; ADMINISTRATOR gets FINANCE.ADMIN only
+    'seed-finance-roles.sql',            # after finance permissions: FINANCE_ADMIN, assigned to nobody
+    'seed-finance-task-permissions.sql', # Tri-Task's eleven permissions (Phase 2); after seed-finance-permissions.sql
+    'seed-finance-task-roles.sql',       # FINANCE_TASK_USER, _MANAGER, _ADMIN, assigned to nobody; after the Tri-Task permissions
+    'seed-finance-ar-permissions.sql',   # Tri-AR's four permissions (Phase 5); after seed-finance-permissions.sql
+    'seed-finance-ar-roles.sql',         # FINANCE_AR_REVIEWER, _OPERATOR, _ADMIN, assigned to nobody; after the Tri-AR permissions
+    'seed-finance-ap-permissions.sql',   # Tri-AP's eight permissions (Phase 6); after seed-finance-permissions.sql
+    'seed-finance-ap-roles.sql',         # FINANCE_AP_OPERATOR, _PREPARER, _APPROVER, _ADMIN, assigned to nobody; after the Tri-AP permissions
+    'seed-finance-mailboxes-local.sql',  # local development mailbox registry rows; never for a shared database
     'seed-product-catalogue-sample.sql',
     'seed-product-cable-reference.sql',      # after catalogue-sample
     'seed-customer-sample-data.sql'

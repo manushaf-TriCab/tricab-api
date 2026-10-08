@@ -1,0 +1,21 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('ap%40example.test')/messages('AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg0A-IMMUTABLE-ID-0001%3D')/attachments(id,name,contentType,size,isInline)",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.fileAttachment",
+      "id": "AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg0A-ATT-0001=",
+      "name": "INV-1042.pdf",
+      "contentType": "application/pdf",
+      "size": 18432,
+      "isInline": false
+    },
+    {
+      "@odata.type": "#microsoft.graph.fileAttachment",
+      "id": "AAkALgAAAAAAHYQDEapmEc2byACqAC-EWg0A-ATT-0002=",
+      "name": "logo.png",
+      "contentType": "image/png",
+      "size": 2210,
+      "isInline": true
+    }
+  ]
+}

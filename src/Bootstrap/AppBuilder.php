@@ -429,7 +429,249 @@ final class AppBuilder
         if ($settings->customerContactModuleEnabled) {
             self::registerCustomerContactReportRoutes($app, $container);
         }
+        if ($settings->financeModuleEnabled) {
+            self::registerFinanceRoutes($app, $container);
+        }
         self::registerAdminRoutes($app, $container);
+    }
+
+    /**
+     * Finance (the five finance apps). Registered only when
+     * FINANCE_MODULE_ENABLED is true; off, every path under /api/v1/finance is a
+     * 404. Each app registers its own routes behind its own switch, in the
+     * phase that builds it. Every route carries exactly one permission, pinned
+     * by `FinanceRouteTableTest`.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerFinanceRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+
+        $app->get('/api/v1/finance/me', \TriCab\Api\Http\Action\Finance\GetFinanceAccessAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_ACCESS));
+        $app->get('/api/v1/finance/admin/mailboxes', \TriCab\Api\Http\Action\Finance\ListFinanceMailboxesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_ADMIN));
+        // Odoo reference lists (F1.12). `status` is registered before `{list}` so it is never read as a list key.
+        $app->post('/api/v1/finance/reference/sync', \TriCab\Api\Http\Action\Finance\SyncOdooReferenceAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_ADMIN));
+        $app->get('/api/v1/finance/reference/status', \TriCab\Api\Http\Action\Finance\GetOdooReferenceStatusAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_ADMIN));
+        $app->get('/api/v1/finance/reference/{list}', \TriCab\Api\Http\Action\Finance\ListOdooReferenceAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_ACCESS));
+
+        $settings = $container->get(Settings::class);
+        if ($settings instanceof Settings && $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_TASK)) {
+            self::registerFinanceTaskRoutes($app, $container);
+        }
+        if ($settings instanceof Settings && $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR)) {
+            self::registerFinanceArRoutes($app, $container);
+        }
+    }
+
+    /**
+     * Tri-Task (Phase 2), under `/api/v1/finance/task`. Registered only when
+     * FINANCE_MODULE_ENABLED and FINANCE_TASK_ENABLED are both true. Every route carries
+     * exactly one `FINANCE.TASK.*` permission, pinned by `FinanceRouteTableTest`; the rules
+     * that need the record (own versus any task, who may see a task) live in the use cases
+     * (decisions D14, D15).
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerFinanceTaskRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $task = '/api/v1/finance/task';
+
+        // Members, the person's own summary, and job titles (T2.5).
+        $app->get($task . '/me', \TriCab\Api\Http\Action\Finance\Task\GetTaskMeAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_ACCESS));
+        $app->get($task . '/members', \TriCab\Api\Http\Action\Finance\Task\ListTaskMembersAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->patch($task . '/members/{userId}/profile', \TriCab\Api\Http\Action\Finance\Task\PatchTaskMemberProfileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+
+        // Projects, templates, statement areas and entities (T2.3).
+        $app->get($task . '/projects', \TriCab\Api\Http\Action\Finance\Task\ListTaskProjectsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/projects', \TriCab\Api\Http\Action\Finance\Task\CreateTaskProjectAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->patch($task . '/projects/{id}', \TriCab\Api\Http\Action\Finance\Task\UpdateTaskProjectAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->delete($task . '/projects/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskProjectAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->post($task . '/projects/{id}/restore', \TriCab\Api\Http\Action\Finance\Task\RestoreTaskProjectAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->get($task . '/templates', \TriCab\Api\Http\Action\Finance\Task\ListTaskTemplatesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/templates', \TriCab\Api\Http\Action\Finance\Task\CreateTaskTemplateAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->patch($task . '/templates/{id}', \TriCab\Api\Http\Action\Finance\Task\UpdateTaskTemplateAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->delete($task . '/templates/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskTemplateAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->get($task . '/statement-areas', \TriCab\Api\Http\Action\Finance\Task\ListTaskStatementAreasAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/statement-areas', \TriCab\Api\Http\Action\Finance\Task\CreateTaskStatementAreaAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->post($task . '/statement-areas/bulk', \TriCab\Api\Http\Action\Finance\Task\BulkCreateTaskStatementAreasAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->patch($task . '/statement-areas/{id}', \TriCab\Api\Http\Action\Finance\Task\UpdateTaskStatementAreaAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->delete($task . '/statement-areas/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskStatementAreaAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->get($task . '/entities', \TriCab\Api\Http\Action\Finance\Task\ListTaskEntitiesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/entities', \TriCab\Api\Http\Action\Finance\Task\CreateTaskEntityAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->patch($task . '/entities/{id}', \TriCab\Api\Http\Action\Finance\Task\UpdateTaskEntityAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->delete($task . '/entities/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskEntityAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+
+        // Tasks, dependencies, history, the Bin and analytics (T2.4). One permission each; own versus any is the use case's (D14, D15).
+        $app->get($task . '/tasks', \TriCab\Api\Http\Action\Finance\Task\ListTasksAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->get($task . '/tasks/{id}', \TriCab\Api\Http\Action\Finance\Task\GetTaskAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/tasks', \TriCab\Api\Http\Action\Finance\Task\CreateTaskAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
+        $app->patch($task . '/tasks/{id}', \TriCab\Api\Http\Action\Finance\Task\UpdateTaskAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
+        $app->post($task . '/tasks/bulk', \TriCab\Api\Http\Action\Finance\Task\BulkUpdateTasksAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
+        $app->delete($task . '/tasks/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
+        $app->post($task . '/tasks/{id}/restore', \TriCab\Api\Http\Action\Finance\Task\RestoreTaskAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
+        $app->get($task . '/tasks/{id}/history', \TriCab\Api\Http\Action\Finance\Task\GetTaskHistoryAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->get($task . '/history', \TriCab\Api\Http\Action\Finance\Task\ListTaskHistoryAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_ANALYTICS_READ));
+        $app->get($task . '/analytics', \TriCab\Api\Http\Action\Finance\Task\GetTaskAnalyticsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_ANALYTICS_READ));
+
+        // Task mail: the mailboxes the person may send from, the send, and what was sent about a task (T2.6).
+        $app->get($task . '/send-mailboxes', \TriCab\Api\Http\Action\Finance\Task\ListTaskSendMailboxesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
+        $app->post($task . '/mail/send', \TriCab\Api\Http\Action\Finance\Task\SendTaskMailAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
+        $app->get($task . '/tasks/{id}/mail', \TriCab\Api\Http\Action\Finance\Task\ListTaskMailAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+
+        // The daily summary recipients (T2.9).
+        $app->get($task . '/settings/report-recipients', \TriCab\Api\Http\Action\Finance\Task\ListTaskReportRecipientsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETTINGS_MANAGE));
+        $app->post($task . '/settings/report-recipients', \TriCab\Api\Http\Action\Finance\Task\AddTaskReportRecipientAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETTINGS_MANAGE));
+        $app->delete($task . '/settings/report-recipients/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskReportRecipientAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETTINGS_MANAGE));
+
+        // The spreadsheet import: a dry run by default (T2.8). Projects it creates need SETUP.MANAGE inside.
+        $app->post($task . '/import', \TriCab\Api\Http\Action\Finance\Task\ImportTasksAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
+
+        // The five AI drafting routes, through finance_ai (T2.7).
+        $app->post($task . '/ai/task-details', \TriCab\Api\Http\Action\Finance\Task\TaskAiDetailsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
+        $app->post($task . '/ai/statement-areas', \TriCab\Api\Http\Action\Finance\Task\TaskAiStatementAreasAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->post($task . '/ai/task-emails', \TriCab\Api\Http\Action\Finance\Task\TaskAiTaskEmailsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
+        $app->post($task . '/ai/reminders', \TriCab\Api\Http\Action\Finance\Task\TaskAiRemindersAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/ai/email-draft', \TriCab\Api\Http\Action\Finance\Task\TaskAiEmailDraftAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
+    }
+
+    /**
+     * Tri-AR (Phase 5), under `/api/v1/finance/ar`. Registered only when FINANCE_MODULE_ENABLED and
+     * FINANCE_AR_ENABLED are both true. Every route carries exactly one `FINANCE.AR.*` permission,
+     * pinned by `FinanceRouteTableTest`, except the public credit-note form (T5.10): its two routes
+     * are the only ones with none, by design (question Q7), and the same test pins that too.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerFinanceArRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $ar = '/api/v1/finance/ar';
+
+        // The person's own summary, the assignees, and the Category and Method lists (T5.3).
+        $app->get($ar . '/me', \TriCab\Api\Http\Action\Finance\Ar\GetArMeAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_ACCESS));
+        $app->get($ar . '/assignees', \TriCab\Api\Http\Action\Finance\Ar\ListArAssigneesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+        $app->get($ar . '/settings/options', \TriCab\Api\Http\Action\Finance\Ar\ListArOptionsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+        $app->post($ar . '/settings/options/{list}', \TriCab\Api\Http\Action\Finance\Ar\CreateArOptionAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_ADMIN));
+        // `order` is registered before `{value}` so it is never read as an option's value.
+        $app->put($ar . '/settings/options/{list}/order', \TriCab\Api\Http\Action\Finance\Ar\ReorderArOptionsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_ADMIN));
+        $app->patch($ar . '/settings/options/{list}/{value}', \TriCab\Api\Http\Action\Finance\Ar\UpdateArOptionAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_ADMIN));
+        $app->delete($ar . '/settings/options/{list}/{value}', \TriCab\Api\Http\Action\Finance\Ar\DeleteArOptionAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_ADMIN));
+
+        // The register: list, one record, edit, the Bin and the tiles (T5.4). Attachment files, the
+        // original-message body, scanning, mail and credit-note requests come with their own tasks.
+        $app->get($ar . '/records', \TriCab\Api\Http\Action\Finance\Ar\ListArRecordsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+        $app->get($ar . '/records/{id}', \TriCab\Api\Http\Action\Finance\Ar\GetArRecordAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+        $app->patch($ar . '/records/{id}', \TriCab\Api\Http\Action\Finance\Ar\UpdateArRecordAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_WRITE));
+        $app->delete($ar . '/records/{id}', \TriCab\Api\Http\Action\Finance\Ar\DeleteArRecordAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_WRITE));
+        $app->post($ar . '/records/{id}/restore', \TriCab\Api\Http\Action\Finance\Ar\RestoreArRecordAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_WRITE));
+        $app->get($ar . '/dashboard/metrics', \TriCab\Api\Http\Action\Finance\Ar\GetArMetricsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+
+        // The original message in the app's viewer (T5.6): read access, then the mailbox grant behind it.
+        $app->get($ar . '/records/{id}/body', \TriCab\Api\Http\Action\Finance\Ar\GetArRecordBodyAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+
+        // The AI-drafted reply (T5.8).
+        $app->post($ar . '/records/{id}/email-draft', \TriCab\Api\Http\Action\Finance\Ar\DraftArEmailAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_WRITE));
+
+        // The reply composer (T5.9): the mailboxes to send from, what has gone to a customer, and the send itself.
+        $app->get($ar . '/send-mailboxes', \TriCab\Api\Http\Action\Finance\Ar\ListArSendMailboxesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+        $app->get($ar . '/records/{id}/outbound-messages', \TriCab\Api\Http\Action\Finance\Ar\ListArOutboundMessagesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+        $app->post($ar . '/records/{id}/send-response', \TriCab\Api\Http\Action\Finance\Ar\SendArResponseAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_WRITE));
+
+        // Credit-note requests (T5.10): list, one, create (the link is returned once), edit, and send the link again.
+        $app->get($ar . '/credit-notes', \TriCab\Api\Http\Action\Finance\Ar\ListArCreditNotesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+        $app->get($ar . '/credit-notes/{id}', \TriCab\Api\Http\Action\Finance\Ar\GetArCreditNoteAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+        $app->post($ar . '/credit-notes', \TriCab\Api\Http\Action\Finance\Ar\CreateArCreditNoteAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_WRITE));
+        $app->patch($ar . '/credit-notes/{id}', \TriCab\Api\Http\Action\Finance\Ar\UpdateArCreditNoteAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_WRITE));
+        $app->post($ar . '/credit-notes/{id}/resend', \TriCab\Api\Http\Action\Finance\Ar\ResendArCreditNoteAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_WRITE));
+
+        // The sales reps' credit-note form: the plan's one exception to "every finance route has a permission" (question Q7).
+        // No sign-in and no permission: the link's token, its expiry, single use and a rate limit stand in for them, and
+        // FinanceRouteTableTest pins that these two are the only such routes.
+        $app->get($ar . '/public/credit-note-form', \TriCab\Api\Http\Action\Finance\Ar\GetArPublicFormAction::class);
+        $app->post($ar . '/public/credit-note-form', \TriCab\Api\Http\Action\Finance\Ar\SubmitArPublicFormAction::class);
+
+        // Scanning (T5.7): the operator's three modes, and the run history. The daily scan is a job, not a route.
+        $app->post($ar . '/scan', \TriCab\Api\Http\Action\Finance\Ar\PostArScanAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_WRITE));
+        $app->get($ar . '/scan-runs', \TriCab\Api\Http\Action\Finance\Ar\ListArScanRunsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_RECORDS_READ));
+
+        // A kept file (T5.5): its own permission (Q5), then the record guard.
+        $app->get($ar . '/records/{id}/attachments/{aid}/file', \TriCab\Api\Http\Action\Finance\Ar\GetArAttachmentFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AR_ATTACHMENTS_READ));
     }
 
     /**

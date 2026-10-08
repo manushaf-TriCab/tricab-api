@@ -10,7 +10,7 @@ use RuntimeException;
 /**
  * Lightweight HTTPS client using PHP streams (no third-party HTTP SDK).
  */
-final class StreamJsonHttpClient implements JsonHttpClient
+final class StreamJsonHttpClient implements JsonMethodHttpClient
 {
     /**
      * @param ?float $connectTimeoutSeconds PHP's HTTP stream wrapper takes the
@@ -55,6 +55,22 @@ final class StreamJsonHttpClient implements JsonHttpClient
             ),
             $encoded,
         );
+    }
+
+    public function sendJson(string $method, string $url, array $headers, ?array $payload = null): array
+    {
+        $method = strtoupper($method);
+        $headers = array_merge(['Accept' => 'application/json'], $headers);
+        $encoded = null;
+        if ($payload !== null) {
+            $encoded = json_encode($payload, JSON_THROW_ON_ERROR);
+            $headers = array_merge(['Content-Type' => 'application/json'], $headers);
+        } elseif ($method === 'POST' || $method === 'PATCH' || $method === 'PUT') {
+            // A POST with no payload still carries a length, as the stream wrapper would otherwise send none.
+            $encoded = '';
+        }
+
+        return $this->request($method, $url, $headers, $encoded);
     }
 
     public function postForm(string $url, array $headers, array $fields): array

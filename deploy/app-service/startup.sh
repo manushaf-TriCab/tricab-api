@@ -196,4 +196,62 @@ if ! start_rfq_parser; then
     log "RFQ parser not started"
 fi
 
+# ── 4. the finance AI service ────────────────────────────────────────────────
+#
+# The third loopback Python process (`finance_ai`, contract finance-ai.v1), modelled on
+# the RFQ parser above: its own gunicorn, no nginx location, PHP in front of it. Off
+# unless FINANCE_AI_ENABLED=true. It needs FINANCE_AI_INTERNAL_TOKEN (the service refuses
+# every call without one) and reads the finance apps' OpenRouter key from
+# FINANCE_OPENROUTER_API_KEY; both are App Service settings, set by hand, never here.
+# It must never be able to fail the deployment: any problem is logged and skipped.
+
+FINANCE_AI_LOG_DIR=/home/LogFiles/finance-ai
+FINANCE_AI_BIND=127.0.0.1:8003
+FINANCE_AI_WORKERS="${FINANCE_AI_WORKERS:-2}"
+# A model call waits up to its purpose's timeout (at most 200 s,
+# `FinanceAiContract::MAX_DEADLINE_MS`); the worker must outlive it, or gunicorn
+# kills the call mid-answer instead of the service answering `timeout` itself.
+FINANCE_AI_WORKER_TIMEOUT="${FINANCE_AI_WORKER_TIMEOUT_SECONDS:-330}"
+
+start_finance_ai() {
+    if [ "${FINANCE_AI_ENABLED:-false}" != "true" ]; then
+        log "finance AI disabled (FINANCE_AI_ENABLED is not true)"
+        return 0
+    fi
+    PYTHON_BIN="$(command -v python3 || true)"
+    if [ -z "$PYTHON_BIN" ] || [ ! -d "$VENDOR/gunicorn" ] || [ ! -f "$APP_PYTHON/finance_wsgi.py" ]; then
+        log "ERROR: the finance AI service cannot start (python3, vendored gunicorn or finance_wsgi.py missing); the API reports it unavailable"
+        return 1
+    fi
+    if [ -z "${FINANCE_AI_INTERNAL_TOKEN:-}" ]; then
+        log "WARNING: FINANCE_AI_INTERNAL_TOKEN is empty; the finance AI service will refuse every call"
+    fi
+    mkdir -p "$FINANCE_AI_LOG_DIR" || return 1
+    (
+        export PYTHONPATH="$VENDOR:$APP_PYTHON"
+        delay=2
+        while true; do
+            log "starting the finance AI service on $FINANCE_AI_BIND ($FINANCE_AI_WORKERS workers)"
+            "$PYTHON_BIN" -m gunicorn \
+                --chdir "$APP_PYTHON" \
+                --bind "$FINANCE_AI_BIND" \
+                --workers "$FINANCE_AI_WORKERS" \
+                --timeout "$FINANCE_AI_WORKER_TIMEOUT" \
+                --graceful-timeout 30 \
+                --access-logfile "$FINANCE_AI_LOG_DIR/access.log" \
+                --error-logfile "$FINANCE_AI_LOG_DIR/error.log" \
+                finance_wsgi:application >>"$LOG" 2>&1
+            log "finance AI service exited ($?); restarting in ${delay}s"
+            sleep "$delay"
+            delay=$(( delay < 60 ? delay * 2 : 60 ))
+        done
+    ) &
+    disown 2>/dev/null || true
+    return 0
+}
+
+if ! start_finance_ai; then
+    log "finance AI service not started"
+fi
+
 log "startup complete"
