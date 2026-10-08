@@ -138,8 +138,11 @@ final class ArMigrationScriptTest extends TestCase
 
     public function test_apply_against_a_database_that_is_not_this_machine_needs_an_approval(): void
     {
+        // The blob settings are stated, not left to a developer's `.env`: without them the settings themselves refuse
+        // `connection-string` and the script dies before it can answer (as it did on a machine with no `.env`).
+        $blob = ['BLOB_AUTH_MODE' => 'connection-string', 'BLOB_ACCOUNT_NAME' => 'devaccount', 'BLOB_ACCOUNT_KEY' => 'ZGV2a2V5', 'BLOB_ENDPOINT' => 'https://devaccount.blob.example.test'];
         foreach (['tricab-mel.database.windows.net', 'tricab-mel.example.test,1433', '10.0.0.5'] as $host) {
-            [$status, $out, $err] = $this->runScript(['DB_HOST' => $host, 'BLOB_AUTH_MODE' => 'connection-string'], ...$this->source(), ...['--without-message-ids', '--apply']);
+            [$status, $out, $err] = $this->runScript(['DB_HOST' => $host] + $blob, ...$this->source(), ...['--without-message-ids', '--apply']);
 
             self::assertSame(1, $status, $host);
             self::assertSame('', $out);
