@@ -134,6 +134,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'create-finance-access-schema.sql')       
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-task-schema.sql')         # Tri-Task's ten tables (Phase 2); after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-attachments-schema.sql')  # finance file store rows; after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-ar-schema.sql')           # Tri-AR's eight tables (Phase 5); after create-finance-schema.sql and create-finance-attachments-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'create-finance-invoice-schema.sql')      # Tri-AP's fourteen tables (Phase 6); after create-finance-schema.sql and create-finance-attachments-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-odoo-schema.sql')         # Odoo reference lists and their sync runs (F1.12); after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-mail-status-suppressed.sql') # a mail ledger made before `suppressed` existed; no-op otherwise
 

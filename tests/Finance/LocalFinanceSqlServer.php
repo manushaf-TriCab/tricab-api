@@ -59,14 +59,14 @@ final class LocalFinanceSqlServer
     /** Empties every finance table, children first. */
     public static function truncate(PDO $pdo): void
     {
-        foreach (['ar_remittance_lines', 'ar_email_attachments', 'ar_outbound_messages', 'ar_email_records', 'ar_credit_note_requests', 'ar_scan_runs', 'ar_option_lists', 'ar_deleted_messages', 'task_mail_links', 'task_report_recipients', 'task_member_profiles', 'task_history', 'task_dependencies', 'task_tasks', 'task_templates', 'task_statement_areas', 'task_projects', 'task_entities', 'odoo_sync_runs', 'odoo_records', 'audit_events', 'job_runs', 'attachments', 'access_scopes', 'portal_user_map', 'mail_deliveries', 'mailbox_grants', 'mailboxes'] as $table) {
+        foreach (['invoice_audit_events', 'invoice_outbound_messages', 'invoice_approval_decisions', 'invoice_approval_items', 'invoice_approval_batches', 'invoice_scan_skips', 'invoice_email_attachments', 'invoice_invoices', 'invoice_emails', 'invoice_scan_runs', 'invoice_signing_limits', 'invoice_account_categories', 'invoice_cost_centres', 'invoice_companies', 'ar_remittance_lines', 'ar_email_attachments', 'ar_outbound_messages', 'ar_email_records', 'ar_credit_note_requests', 'ar_scan_runs', 'ar_option_lists', 'ar_deleted_messages', 'task_mail_links', 'task_report_recipients', 'task_member_profiles', 'task_history', 'task_dependencies', 'task_tasks', 'task_templates', 'task_statement_areas', 'task_projects', 'task_entities', 'odoo_sync_runs', 'odoo_records', 'audit_events', 'job_runs', 'attachments', 'access_scopes', 'portal_user_map', 'mail_deliveries', 'mailbox_grants', 'mailboxes'] as $table) {
             $pdo->exec("DELETE FROM [finance].[{$table}]");
         }
     }
 
     private static function applySchema(PDO $pdo): void
     {
-        foreach (['create-finance-schema.sql', 'create-finance-jobs-schema.sql', 'create-finance-attachments-schema.sql', 'create-finance-access-schema.sql', 'create-finance-odoo-schema.sql', 'create-finance-task-schema.sql', 'create-finance-ar-schema.sql', 'alter-finance-mail-status-suppressed.sql'] as $file) {
+        foreach (['create-finance-schema.sql', 'create-finance-jobs-schema.sql', 'create-finance-attachments-schema.sql', 'create-finance-access-schema.sql', 'create-finance-odoo-schema.sql', 'create-finance-task-schema.sql', 'create-finance-ar-schema.sql', 'create-finance-invoice-schema.sql', 'alter-finance-mail-status-suppressed.sql'] as $file) {
             $script = file_get_contents(dirname(__DIR__, 2) . '/database/scripts/development/' . $file);
             if ($script === false) {
                 throw new RuntimeException($file . ' is missing.');

@@ -32,6 +32,7 @@ final class LocalArSampleServer
         'create-finance-odoo-schema.sql',
         'create-finance-task-schema.sql',
         'create-finance-ar-schema.sql',
+        'create-finance-invoice-schema.sql',
         'alter-finance-mail-status-suppressed.sql',
     ];
 
