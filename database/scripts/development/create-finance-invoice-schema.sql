@@ -67,8 +67,9 @@
       file name) is wider than a clustered key may be. The pair is still unique.
     - [invoice_email_attachments] is unique on (email, Graph attachment id) only
       where the attachment id is present: SQL Server treats two NULLs as equal.
-    - [invoice_approval_decisions].[decision] has no check: its values were not
-      re-read at 2db2411 when this was written. T6.11 adds one.
+    - [invoice_approval_decisions].[decision] is checked: Approved or Rejected, the
+      two the API writes. A table made before 10 Oct 2026 gets the check, and the
+      wider [invoice_scan_skips].[attachment], from alter-finance-invoice-followups.sql.
     - Foreign keys inside [finance] only, with no cascades: a permanent delete
       removes the children first, in code, in one transaction.
 
@@ -469,7 +470,7 @@ BEGIN TRY
         CREATE TABLE [finance].[invoice_scan_skips] (
             [id]            CHAR(32)       NOT NULL,
             [email_id]      NVARCHAR(200)  NOT NULL,
-            [attachment]    NVARCHAR(255)  NOT NULL,
+            [attachment]    NVARCHAR(400)  NOT NULL,
             [created_date]  DATETIME2(6)   NOT NULL
                 CONSTRAINT [DF_finance_invoice_scan_skips_created_date] DEFAULT (SYSUTCDATETIME()),
             CONSTRAINT [PK_finance_invoice_scan_skips] PRIMARY KEY CLUSTERED ([id])
@@ -547,6 +548,8 @@ BEGIN TRY
             [created_date]      DATETIME2(6)   NOT NULL
                 CONSTRAINT [DF_finance_invoice_approval_decisions_created_date] DEFAULT (SYSUTCDATETIME()),
             CONSTRAINT [PK_finance_invoice_approval_decisions] PRIMARY KEY CLUSTERED ([id]),
+            CONSTRAINT [CK_finance_invoice_approval_decisions_decision]
+                CHECK ([decision] IN (N'Approved', N'Rejected')),
             CONSTRAINT [FK_finance_invoice_approval_decisions_batch]
                 FOREIGN KEY ([batch_id]) REFERENCES [finance].[invoice_approval_batches] ([id])
         );
