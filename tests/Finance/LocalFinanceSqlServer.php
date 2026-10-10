@@ -36,14 +36,26 @@ final class LocalFinanceSqlServer
         $user = getenv('FINANCE_TEST_SQLSERVER_USER') ?: 'sa';
         try {
             $master = self::open($server, 'master', $user, $password);
-            $master->exec("IF DB_ID(N'" . self::DATABASE . "') IS NULL CREATE DATABASE [" . self::DATABASE . '] COLLATE SQL_Latin1_General_CP1_CI_AS');
-            $pdo = self::open($server, self::DATABASE, $user, $password);
+            $database = self::database();
+            $master->exec("IF DB_ID(N'" . $database . "') IS NULL CREATE DATABASE [" . $database . '] COLLATE SQL_Latin1_General_CP1_CI_AS');
+            $pdo = self::open($server, $database, $user, $password);
         } catch (PDOException) {
             return null;
         }
         self::applySchema($pdo);
 
         return $pdo;
+    }
+
+    /**
+     * `finance_store_test`, or the name in FINANCE_TEST_SQLSERVER_DATABASE: two checkouts running these tests at once
+     * need a database each, since every test empties the tables.
+     */
+    public static function database(): string
+    {
+        $name = getenv('FINANCE_TEST_SQLSERVER_DATABASE') ?: '';
+
+        return preg_match('/^finance_[a-z0-9_]{1,40}$/', $name) === 1 ? $name : self::DATABASE;
     }
 
     public static function open(string $server, string $database, string $user, string $password): PDO

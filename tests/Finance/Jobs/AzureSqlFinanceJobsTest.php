@@ -111,7 +111,7 @@ final class AzureSqlFinanceJobsTest extends TestCase
         $other = new AzureSqlFinanceJobClaims(new PdoSqlConnection(
             LocalFinanceSqlServer::open(
                 (string) getenv('FINANCE_TEST_SQLSERVER'),
-                LocalFinanceSqlServer::DATABASE,
+                LocalFinanceSqlServer::database(),
                 getenv('FINANCE_TEST_SQLSERVER_USER') ?: 'sa',
                 (string) getenv('FINANCE_TEST_SQLSERVER_PASSWORD'),
             ),

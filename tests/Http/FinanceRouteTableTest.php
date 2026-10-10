@@ -105,6 +105,61 @@ final class FinanceRouteTableTest extends TestCase
         'POST /api/v1/finance/ar/records/{id}/send-response' => Module::PERMISSION_AR_RECORDS_WRITE,
         'POST /api/v1/finance/ar/scan' => Module::PERMISSION_AR_RECORDS_WRITE,
         'GET /api/v1/finance/ar/scan-runs' => Module::PERMISSION_AR_RECORDS_READ,
+        // Tri-AP (Phase 6), with FINANCE_AP_ENABLED on. One permission each (question Q1).
+        'GET /api/v1/finance/ap/me' => Module::PERMISSION_AP_ACCESS,
+        'GET /api/v1/finance/ap/mailboxes' => Module::PERMISSION_AP_INVOICES_READ,
+        'GET /api/v1/finance/ap/signing-authority' => Module::PERMISSION_AP_INVOICES_READ,
+        // Tri-AP: vendors and extraction (T6.8, T6.9).
+        'GET /api/v1/finance/ap/vendors' => Module::PERMISSION_AP_INVOICES_READ,
+        'GET /api/v1/finance/ap/invoices/{id}/vendor-suggestions' => Module::PERMISSION_AP_INVOICES_READ,
+        'PUT /api/v1/finance/ap/invoices/{id}/vendor-match' => Module::PERMISSION_AP_INVOICES_WRITE,
+        'POST /api/v1/finance/ap/vendor-matching/run' => Module::PERMISSION_AP_INVOICES_WRITE,
+        'POST /api/v1/finance/ap/extract' => Module::PERMISSION_AP_INVOICES_WRITE,
+        'POST /api/v1/finance/ap/scan' => Module::PERMISSION_AP_MAIL_READ,
+        // The register and its files (T6.4, T6.5). A permanent delete also needs INVOICES.DELETE, checked in the use case.
+        'GET /api/v1/finance/ap/invoices' => Module::PERMISSION_AP_INVOICES_READ,
+        'POST /api/v1/finance/ap/invoices' => Module::PERMISSION_AP_INVOICES_WRITE,
+        'POST /api/v1/finance/ap/invoices/download' => Module::PERMISSION_AP_INVOICES_READ,
+        'GET /api/v1/finance/ap/invoices/{id}' => Module::PERMISSION_AP_INVOICES_READ,
+        'PATCH /api/v1/finance/ap/invoices/{id}' => Module::PERMISSION_AP_INVOICES_WRITE,
+        'DELETE /api/v1/finance/ap/invoices/{id}' => Module::PERMISSION_AP_INVOICES_WRITE,
+        'POST /api/v1/finance/ap/invoices/{id}/restore' => Module::PERMISSION_AP_INVOICES_WRITE,
+        'GET /api/v1/finance/ap/invoices/{id}/file' => Module::PERMISSION_AP_INVOICES_READ,
+        'POST /api/v1/finance/ap/uploads' => Module::PERMISSION_AP_INVOICES_WRITE,
+        'GET /api/v1/finance/ap/companies' => Module::PERMISSION_AP_INVOICES_READ,
+        'POST /api/v1/finance/ap/companies' => Module::PERMISSION_AP_SETTINGS_MANAGE,
+        'PATCH /api/v1/finance/ap/companies/{id}' => Module::PERMISSION_AP_SETTINGS_MANAGE,
+        'DELETE /api/v1/finance/ap/companies/{id}' => Module::PERMISSION_AP_SETTINGS_MANAGE,
+        'GET /api/v1/finance/ap/cost-centres' => Module::PERMISSION_AP_INVOICES_READ,
+        'POST /api/v1/finance/ap/cost-centres' => Module::PERMISSION_AP_SETTINGS_MANAGE,
+        'PATCH /api/v1/finance/ap/cost-centres/{id}' => Module::PERMISSION_AP_SETTINGS_MANAGE,
+        'DELETE /api/v1/finance/ap/cost-centres/{id}' => Module::PERMISSION_AP_SETTINGS_MANAGE,
+        'GET /api/v1/finance/ap/account-categories' => Module::PERMISSION_AP_INVOICES_READ,
+        'POST /api/v1/finance/ap/account-categories' => Module::PERMISSION_AP_SETTINGS_MANAGE,
+        'PATCH /api/v1/finance/ap/account-categories/{id}' => Module::PERMISSION_AP_SETTINGS_MANAGE,
+        'DELETE /api/v1/finance/ap/account-categories/{id}' => Module::PERMISSION_AP_SETTINGS_MANAGE,
+        // Tri-AP: AP Mailbox (T6.6)
+        'GET /api/v1/finance/ap/emails' => Module::PERMISSION_AP_MAIL_READ,
+        'GET /api/v1/finance/ap/emails/stats' => Module::PERMISSION_AP_MAIL_READ,
+        'POST /api/v1/finance/ap/emails/bulk' => Module::PERMISSION_AP_INVOICES_WRITE,
+        'GET /api/v1/finance/ap/emails/{id}/body' => Module::PERMISSION_AP_MAIL_READ,
+        'GET /api/v1/finance/ap/emails/{id}/attachments' => Module::PERMISSION_AP_MAIL_READ,
+        'GET /api/v1/finance/ap/emails/{id}/attachments/{aid}/file' => Module::PERMISSION_AP_MAIL_READ,
+        'PATCH /api/v1/finance/ap/emails/{id}' => Module::PERMISSION_AP_INVOICES_WRITE,
+        // Tri-AP: mail (T6.10)
+        'GET /api/v1/finance/ap/send-mailboxes' => Module::PERMISSION_AP_INVOICES_READ,
+        'POST /api/v1/finance/ap/invoices/{id}/email-draft' => Module::PERMISSION_AP_MAIL_SEND,
+        'POST /api/v1/finance/ap/emails/{id}/email-draft' => Module::PERMISSION_AP_MAIL_SEND,
+        'POST /api/v1/finance/ap/invoices/{id}/send-email' => Module::PERMISSION_AP_MAIL_SEND,
+        'POST /api/v1/finance/ap/emails/{id}/send-reply' => Module::PERMISSION_AP_MAIL_SEND,
+        'GET /api/v1/finance/ap/invoices/{id}/outbound-messages' => Module::PERMISSION_AP_INVOICES_READ,
+        'GET /api/v1/finance/ap/emails/{id}/outbound-messages' => Module::PERMISSION_AP_INVOICES_READ,
+        // Tri-AP: approvals (T6.11)
+        'GET /api/v1/finance/ap/approvers' => Module::PERMISSION_AP_INVOICES_READ,
+        'GET /api/v1/finance/ap/approval-batches' => Module::PERMISSION_AP_INVOICES_READ,
+        'POST /api/v1/finance/ap/approval-batches' => Module::PERMISSION_AP_APPROVALS_PREPARE,
+        'GET /api/v1/finance/ap/approval-batches/{id}' => Module::PERMISSION_AP_INVOICES_READ,
+        'POST /api/v1/finance/ap/approval-batches/{id}/decision' => Module::PERMISSION_AP_APPROVALS_DECIDE,
     ];
 
     /** Platform permissions that must never stand in for a finance one. */
@@ -168,9 +223,9 @@ final class FinanceRouteTableTest extends TestCase
             [$method, $pattern] = explode(' ', $route, 2);
             $path = str_replace(['{publicId}', '{list}', '{userId}', '{id}', '{aid}', '{value}'], [self::SAMPLE_ID, 'vendors', '5', self::SAMPLE_ID, self::SAMPLE_ID, 'x'], $pattern);
 
-            // A 403 from the app's own rule (`FINANCE_AR_FORBIDDEN`: no mailbox grant) is behind the gate, not the gate.
+            // A 403 from the app's own rule (`FINANCE_AR_FORBIDDEN` or `FINANCE_AP_FORBIDDEN`: no mailbox grant) is behind the gate, not the gate.
             [$with, $code] = $this->responseFor($method, $path, ['account.login', $permission]);
-            self::assertTrue($with !== 403 || $code === 'FINANCE_AR_FORBIDDEN', $route . ' refused its own permission.');
+            self::assertTrue($with !== 403 || in_array($code, ['FINANCE_AR_FORBIDDEN', 'FINANCE_AP_FORBIDDEN'], true), $route . ' refused its own permission.');
 
             $others = array_values(array_diff(
                 [...self::everyFinancePermission(), ...self::UNRELATED],
@@ -185,7 +240,7 @@ final class FinanceRouteTableTest extends TestCase
      */
     private static function everyFinancePermission(): array
     {
-        $all = [Module::PERMISSION_ACCESS, Module::PERMISSION_ADMIN, ...Module::TASK_PERMISSIONS, ...Module::AR_PERMISSIONS];
+        $all = [Module::PERMISSION_ACCESS, Module::PERMISSION_ADMIN, ...Module::TASK_PERMISSIONS, ...Module::AR_PERMISSIONS, ...Module::AP_PERMISSIONS];
         foreach (array_keys(Module::APPS) as $key) {
             $all[] = Module::appAccessPermission($key);
         }
@@ -198,7 +253,7 @@ final class FinanceRouteTableTest extends TestCase
      */
     private function app(): App
     {
-        return TestAppFactory::create(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_ENABLED' => 'true', 'FINANCE_AR_ENABLED' => 'true']);
+        return TestAppFactory::create(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_ENABLED' => 'true', 'FINANCE_AR_ENABLED' => 'true', 'FINANCE_AP_ENABLED' => 'true']);
     }
 
     /**

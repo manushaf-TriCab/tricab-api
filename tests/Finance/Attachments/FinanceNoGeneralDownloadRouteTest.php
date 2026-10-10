@@ -24,6 +24,15 @@ final class FinanceNoGeneralDownloadRouteTest extends TestCase
      */
     private const APP_FILE_ROUTES = [
         '/api/v1/finance/ar/records/{id}/attachments/{aid}/file',
+        // Tri-AP (T6.4, T6.5): an invoice's own document by invoice id and mailbox scope, the ticked invoices' documents
+        // (every id scope-checked, the whole request a 404 if one is out of scope), and the capture dialog's upload.
+        '/api/v1/finance/ap/invoices/{id}/file',
+        '/api/v1/finance/ap/invoices/download',
+        '/api/v1/finance/ap/uploads',
+        // Tri-AP AP Mailbox (T6.6): a scanned email's attachments, listed and read live from the mailbox (never stored), each
+        // by email id and mailbox scope under MAIL.READ, with the shared reader's read-grant check and an audit row.
+        '/api/v1/finance/ap/emails/{id}/attachments',
+        '/api/v1/finance/ap/emails/{id}/attachments/{aid}/file',
     ];
 
     public function test_no_finance_route_serves_files_by_id(): void

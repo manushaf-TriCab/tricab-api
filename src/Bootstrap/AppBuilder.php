@@ -467,6 +467,137 @@ final class AppBuilder
         if ($settings instanceof Settings && $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR)) {
             self::registerFinanceArRoutes($app, $container);
         }
+        if ($settings instanceof Settings && $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP)) {
+            self::registerFinanceApRoutes($app, $container);
+        }
+    }
+
+    /**
+     * Tri-AP (Phase 6), under `/api/v1/finance/ap`. Registered only when FINANCE_MODULE_ENABLED and
+     * FINANCE_AP_ENABLED are both true. Every route carries exactly one `FINANCE.AP.*` permission
+     * (question Q1), pinned by `FinanceRouteTableTest`. A route that reads or changes an invoice or an
+     * email also applies the person's mailbox scope in its use case; out of scope is a 404 (Q11).
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerFinanceApRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $ap = '/api/v1/finance/ap';
+
+        // The person's own summary, the mailbox registry's view and the signing limits (T6.3).
+        $app->get($ap . '/me', \TriCab\Api\Http\Action\Finance\Ap\GetApMeAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_ACCESS));
+        $app->get($ap . '/mailboxes', \TriCab\Api\Http\Action\Finance\Ap\ListApMailboxesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->get($ap . '/signing-authority', \TriCab\Api\Http\Action\Finance\Ap\ListApSigningAuthorityAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+
+        // Tri-AP: vendors and extraction (T6.8, T6.9). The vendor list is the platform's copy of Odoo's (not mailbox-scoped);
+        // the routes that name an invoice apply the person's mailbox scope, and out of scope is a 404.
+        $app->get($ap . '/vendors', \TriCab\Api\Http\Action\Finance\Ap\ListApVendorsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->get($ap . '/invoices/{id}/vendor-suggestions', \TriCab\Api\Http\Action\Finance\Ap\GetApInvoiceVendorSuggestionsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->put($ap . '/invoices/{id}/vendor-match', \TriCab\Api\Http\Action\Finance\Ap\SetApInvoiceVendorMatchAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+        $app->post($ap . '/vendor-matching/run', \TriCab\Api\Http\Action\Finance\Ap\RunApVendorMatchingAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+        $app->post($ap . '/extract', \TriCab\Api\Http\Action\Finance\Ap\ExtractApInvoiceAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+
+        // Tri-AP: scan (T6.7). One route, three modes (list, process, complete). The use case applies the person's mailbox
+        // scope and the mailbox read grant; a period already scanned is a 409 carrying `priorRuns`.
+        $app->post($ap . '/scan', \TriCab\Api\Http\Action\Finance\Ap\PostApScanAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_READ));
+
+        // The register and its files (T6.4, T6.5). The use cases apply the person's mailbox scope; out of scope is a 404.
+        // A permanent delete needs INVOICES.DELETE as well as the route's INVOICES.WRITE (checked in the use case).
+        $app->get($ap . '/invoices', \TriCab\Api\Http\Action\Finance\Ap\ListApInvoicesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->post($ap . '/invoices', \TriCab\Api\Http\Action\Finance\Ap\CreateApInvoiceAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+        $app->post($ap . '/invoices/download', \TriCab\Api\Http\Action\Finance\Ap\DownloadApInvoicesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->get($ap . '/invoices/{id}', \TriCab\Api\Http\Action\Finance\Ap\GetApInvoiceAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->patch($ap . '/invoices/{id}', \TriCab\Api\Http\Action\Finance\Ap\UpdateApInvoiceAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+        $app->delete($ap . '/invoices/{id}', \TriCab\Api\Http\Action\Finance\Ap\DeleteApInvoiceAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+        $app->post($ap . '/invoices/{id}/restore', \TriCab\Api\Http\Action\Finance\Ap\RestoreApInvoiceAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+        $app->get($ap . '/invoices/{id}/file', \TriCab\Api\Http\Action\Finance\Ap\GetApInvoiceFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->post($ap . '/uploads', \TriCab\Api\Http\Action\Finance\Ap\UploadApFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+
+        // Companies, cost centres and account categories: one set of actions, told the list by the route.
+        foreach (\TriCab\Core\Finance\Ap\Domain\ApReferenceSpec::LISTS as $list) {
+            $app->get($ap . '/' . $list, \TriCab\Api\Http\Action\Finance\Ap\ListApReferenceAction::class)
+                ->setArgument('list', $list)
+                ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+            $app->post($ap . '/' . $list, \TriCab\Api\Http\Action\Finance\Ap\CreateApReferenceAction::class)
+                ->setArgument('list', $list)
+                ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_SETTINGS_MANAGE));
+            $app->patch($ap . '/' . $list . '/{id}', \TriCab\Api\Http\Action\Finance\Ap\UpdateApReferenceAction::class)
+                ->setArgument('list', $list)
+                ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_SETTINGS_MANAGE));
+            $app->delete($ap . '/' . $list . '/{id}', \TriCab\Api\Http\Action\Finance\Ap\DeleteApReferenceAction::class)
+                ->setArgument('list', $list)
+                ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_SETTINGS_MANAGE));
+        }
+
+        // Tri-AP: AP Mailbox (T6.6)
+        // The emails, their counts, the live body and attachments, reclassify and the bulk actions. The use cases apply the
+        // person's mailbox scope; out of scope is a 404. `stats` and `bulk` are static, so `{id}` never reads them.
+        $app->get($ap . '/emails', \TriCab\Api\Http\Action\Finance\Ap\ListApEmailsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_READ));
+        $app->get($ap . '/emails/stats', \TriCab\Api\Http\Action\Finance\Ap\GetApEmailStatsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_READ));
+        $app->post($ap . '/emails/bulk', \TriCab\Api\Http\Action\Finance\Ap\BulkApEmailsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+        $app->get($ap . '/emails/{id}/body', \TriCab\Api\Http\Action\Finance\Ap\GetApEmailBodyAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_READ));
+        $app->get($ap . '/emails/{id}/attachments', \TriCab\Api\Http\Action\Finance\Ap\ListApEmailAttachmentsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_READ));
+        $app->get($ap . '/emails/{id}/attachments/{aid}/file', \TriCab\Api\Http\Action\Finance\Ap\GetApEmailAttachmentFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_READ));
+        $app->patch($ap . '/emails/{id}', \TriCab\Api\Http\Action\Finance\Ap\UpdateApEmailAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_WRITE));
+
+        // Tri-AP: mail (T6.10)
+        // The composer: the mailboxes to send from, the AI drafts (they work while sending is off), the two sends (refused with a
+        // 503 while FINANCE_AP_SENDING_ENABLED is off) and what has been sent about an invoice or an email.
+        $app->get($ap . '/send-mailboxes', \TriCab\Api\Http\Action\Finance\Ap\ListApSendMailboxesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->post($ap . '/invoices/{id}/email-draft', \TriCab\Api\Http\Action\Finance\Ap\DraftApInvoiceEmailAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_SEND));
+        $app->post($ap . '/emails/{id}/email-draft', \TriCab\Api\Http\Action\Finance\Ap\DraftApEmailReplyAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_SEND));
+        $app->post($ap . '/invoices/{id}/send-email', \TriCab\Api\Http\Action\Finance\Ap\SendApVendorEmailAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_SEND));
+        $app->post($ap . '/emails/{id}/send-reply', \TriCab\Api\Http\Action\Finance\Ap\SendApEmailReplyAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_MAIL_SEND));
+        $app->get($ap . '/invoices/{id}/outbound-messages', \TriCab\Api\Http\Action\Finance\Ap\ListApInvoiceOutboundMessagesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->get($ap . '/emails/{id}/outbound-messages', \TriCab\Api\Http\Action\Finance\Ap\ListApEmailOutboundMessagesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+
+        // Tri-AP: approvals (T6.11)
+        // The people who may decide, the batches and their decisions. The list and the read apply the person's mailbox scope (a
+        // batch with an invoice out of scope is not shown); so does the decision, which the source did not do (fault R7). Approval
+        // mail obeys FINANCE_AP_SENDING_ENABLED (decision D80): while it is off the work is still recorded and the answer says so.
+        $app->get($ap . '/approvers', \TriCab\Api\Http\Action\Finance\Ap\ListApApproversAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->get($ap . '/approval-batches', \TriCab\Api\Http\Action\Finance\Ap\ListApApprovalBatchesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->post($ap . '/approval-batches', \TriCab\Api\Http\Action\Finance\Ap\CreateApApprovalBatchAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_APPROVALS_PREPARE));
+        $app->get($ap . '/approval-batches/{id}', \TriCab\Api\Http\Action\Finance\Ap\GetApApprovalBatchAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_INVOICES_READ));
+        $app->post($ap . '/approval-batches/{id}/decision', \TriCab\Api\Http\Action\Finance\Ap\DecideApApprovalBatchAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP_APPROVALS_DECIDE));
     }
 
     /**

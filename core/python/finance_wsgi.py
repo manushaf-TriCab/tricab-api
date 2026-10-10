@@ -15,5 +15,7 @@ from finance_ai.app import app as application
 purposes.register_all()
 # Tri-AR (Phase 5): classification, prose, reply drafts and remittance extraction.
 purposes.register_ar()
+# Tri-AP (Phase 6): scan classification and extraction, manual extraction, the vendor and reply drafts, the suggestion.
+purposes.register_ap()
 
 __all__ = ["application"]

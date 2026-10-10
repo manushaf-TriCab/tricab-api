@@ -929,8 +929,9 @@ final class ContainerFactory
                         $jobs[] = self::get($container, \TriCab\Core\Finance\Task\Service\TaskDailySummaryJob::class);
                     }
 
-                    // Tri-AR keeps files (T5.5): uploads never put on a record are swept once a day.
-                    if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR)) {
+                    // Tri-AR and Tri-AP keep files (T5.5, T6.5): uploads never put on a record are swept once a day. One job
+                    // sweeps every app's uploads, so it is registered once, whichever of the two is on.
+                    if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR) || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP)) {
                         $jobs[] = new \TriCab\Core\Finance\Shared\Attachments\FinanceUnattachedAttachmentsJob(
                             self::get($container, \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class),
                         );
@@ -1179,6 +1180,114 @@ final class ContainerFactory
                         $settings->financeArMailbox,
                         $settings->financeArCreditNotesUrl,
                         $settings->financeArSendingEnabled,
+                    ),
+            // Tri-AP (Phase 6). In memory by default; the azure-sql branch below swaps in the `finance.invoice_*`
+            // tables. The routes are registered only when FINANCE_AP_ENABLED is on (AppBuilder).
+            \TriCab\Core\Finance\Ap\Service\ApTime::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap\Service\ApTime
+                    => new \TriCab\Core\Finance\Ap\Service\ApTime(
+                        self::get($container, Clock::class),
+                        $settings->financeApTimezone,
+                    ),
+            \TriCab\Core\Finance\Ap\Contract\ApReferenceStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApReferenceStore::class),
+            \TriCab\Core\Finance\Ap\Contract\ApSigningLimitStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApSigningLimitStore::class),
+            \TriCab\Core\Finance\Ap\Service\ApReferenceService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApReferenceService::class),
+            // Tri-AP: vendors and extraction (T6.8, T6.9). The model is the shared `FinanceAiClient` (undeployed until the AI service
+            // is on); the vendors are an empty in-memory list until the azure-sql branch reads `finance.odoo_records`.
+            \TriCab\Core\Finance\Ap\ApAiService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap\ApAiService
+                    => new \TriCab\Core\Finance\Ap\ApAiService(
+                        self::get($container, \TriCab\Core\Finance\Shared\Ai\FinanceAiClient::class),
+                        $settings->financeApSuggestReplies,
+                        $settings->financeApConfidenceThreshold,
+                    ),
+            \TriCab\Core\Finance\Ap\Contract\ApVendorStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApVendorStore::class),
+            \TriCab\Core\Finance\Ap\Service\ApVendorService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApVendorService::class),
+            \TriCab\Core\Finance\Ap\Service\ApInvoiceVendorService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApInvoiceVendorService::class),
+            \TriCab\Core\Finance\Ap\Service\ApExtractService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApExtractService::class),
+            // Tri-AP: scan (T6.7). No job: a person runs it (Q6).
+            \TriCab\Core\Finance\Ap\Contract\ApScanStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApScanStore::class),
+            \TriCab\Core\Finance\Ap\Service\ApScanService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApScanService::class)
+                    ->constructorParameter('minAttachmentBytes', $settings->financeApMinAttachmentBytes)
+                    ->constructorParameter('maxScanMessages', $settings->financeApMaxScanMessages)
+                    ->constructorParameter('internalDomains', $settings->financeApInternalEmailDomains),
+            // The register and its files (T6.4, T6.5), and the audit trail every later Tri-AP task writes to.
+            \TriCab\Core\Finance\Ap\Contract\ApInvoiceStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApInvoiceStore::class),
+            \TriCab\Core\Finance\Ap\Contract\ApAuditStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApAuditStore::class),
+            \TriCab\Core\Finance\Ap\Service\ApInvoiceGuard::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApInvoiceGuard::class),
+            \TriCab\Core\Finance\Ap\Service\ApAttachmentService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApAttachmentService::class),
+            \TriCab\Core\Finance\Ap\Service\ApInvoiceService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApInvoiceService::class)
+                    ->constructorParameter('confidenceThreshold', $settings->financeApConfidenceThreshold)
+                    ->constructorParameter('vendors', \DI\get(\TriCab\Core\Finance\Ap\Service\ApVendorService::class)),
+            \TriCab\Core\Finance\Ap\Service\ApInvoiceDownloadService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApInvoiceDownloadService::class),
+            \TriCab\Core\Finance\Ap\Service\ApMailboxService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApMailboxService::class),
+            \TriCab\Core\Finance\Ap\Service\ApSigningAuthorityService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApSigningAuthorityService::class),
+            \TriCab\Core\Finance\Ap\Service\ApMeService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap\Service\ApMeService
+                    => new \TriCab\Core\Finance\Ap\Service\ApMeService($settings->financeApSendingEnabled),
+            // Tri-AP: AP Mailbox (T6.6)
+            \TriCab\Core\Finance\Ap\Contract\ApEmailStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApEmailStore::class),
+            \TriCab\Core\Finance\Ap\Service\ApEmailService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApEmailService::class),
+            \TriCab\Core\Finance\Ap\Service\ApMessageService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApMessageService::class),
+            // Tri-AP: mail (T6.10). The sent-mail links are in memory here and `finance.invoice_outbound_messages` in the azure-sql
+            // branch below. The sending switch is FINANCE_AP_SENDING_ENABLED (decision D79) and the default
+            // send-from address is FINANCE_AP_MAILBOX (the source's `AP_MAILBOX`).
+            \TriCab\Core\Finance\Ap\Contract\ApOutboundStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApOutboundStore::class),
+            \TriCab\Core\Finance\Ap\Service\ApMailService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap\Service\ApMailService
+                    => new \TriCab\Core\Finance\Ap\Service\ApMailService(
+                        self::get($container, \TriCab\Core\Finance\Ap\Contract\ApInvoiceStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApEmailService::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApAttachmentService::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Contract\ApOutboundStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Contract\ApAuditStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailboxRegistry::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
+                        $settings->financeApMailbox,
+                        $settings->financeApSendingEnabled,
+                    ),
+            \TriCab\Core\Finance\Ap\Service\ApDraftMailService::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap\Service\ApDraftMailService::class),
+            // Tri-AP: approvals (T6.11). The batches are in memory here and `finance.invoice_approval_*` in the azure-sql branch below;
+            // the approvers are nobody until the azure-sql branch reads `[identity]`. The link in the mail is built on the public origin
+            // of the web app (`PASSKEY_PUBLIC_APP_BASE_URL`): `Settings` has no Tri-AP origin of its own yet.
+            \TriCab\Core\Finance\Ap\Contract\ApApprovalStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApApprovalStore::class),
+            \TriCab\Core\Finance\Ap\Contract\ApApproverDirectory::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap\InMemoryApApproverDirectory::class),
+            \TriCab\Core\Finance\Ap\Service\ApApprovalService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap\Service\ApApprovalService
+                    => new \TriCab\Core\Finance\Ap\Service\ApApprovalService(
+                        self::get($container, \TriCab\Core\Finance\Ap\Contract\ApApprovalStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Contract\ApInvoiceStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Contract\ApApproverDirectory::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Contract\ApAuditStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApMailService::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
+                        $settings->financeApPublicOrigin !== '' ? $settings->financeApPublicOrigin : $settings->passkeyPublicAppBaseUrl,
                     ),
             // Parity plan E5.5: correction memory and the review log (azure-sql below).
             \TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class
@@ -3025,6 +3134,10 @@ final class ContainerFactory
                         // Local development only (Settings refuses it elsewhere): the in-memory store forgets between requests.
                         \TriCab\Api\Finance\Ar\ArSampleFiles::load($blobs, $settings->blobContainerFinance);
                     }
+                    if ($settings->financeApSampleFiles) {
+                        // The same for Tri-AP's invented invoice documents (Settings refuses it elsewhere).
+                        \TriCab\Api\Finance\Ap\ApSampleFiles::load($blobs, $settings->blobContainerFinance);
+                    }
 
                     return new \TriCab\Api\Finance\Attachments\AzureSqlFinanceAttachmentStore(
                         self::get($container, SqlConnection::class),
@@ -3071,6 +3184,32 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Finance\Ar\AzureSqlArCreditNoteStore::class);
             $definitions[\TriCab\Core\Finance\Ar\Contract\ArScanStore::class]
                 = \DI\autowire(\TriCab\Api\Finance\Ar\AzureSqlArScanStore::class);
+            // Tri-AP (Phase 6): the Settings lists and the signing limits are `finance.invoice_*` tables.
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApReferenceStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApReferenceStore::class);
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApSigningLimitStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApSigningLimitStore::class);
+            // Tri-AP: vendors and extraction (T6.8, T6.9): the vendors are the `vendors` list of `finance.odoo_records`.
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApVendorStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApVendorStore::class);
+            // Tri-AP: scan (T6.7): the runs and the claim are `finance.invoice_scan_runs`.
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApScanStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApScanStore::class);
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApInvoiceStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApInvoiceStore::class);
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApAuditStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApAuditStore::class);
+            // Tri-AP: AP Mailbox (T6.6)
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApEmailStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApEmailStore::class);
+            // Tri-AP: mail (T6.10)
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApOutboundStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApOutboundStore::class);
+            // Tri-AP: approvals (T6.11): the batches are `finance.invoice_approval_*`; the approvers are read from `[identity]`.
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApApprovalStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApApprovalStore::class);
+            $definitions[\TriCab\Core\Finance\Ap\Contract\ApApproverDirectory::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap\AzureSqlApApproverDirectory::class);
             $definitions[\TriCab\Core\Onboarding\Contract\OnboardingSelfServiceRepository::class]
                 = \DI\autowire(\TriCab\Api\Onboarding\Persistence\AzureSqlOnboardingSelfServiceRepository::class);
             // Phase 3.3 — the write side. All four share one locator, whose single

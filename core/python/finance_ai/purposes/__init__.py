@@ -23,3 +23,14 @@ def register_ar() -> list[str]:
     from . import ar
 
     return ar.register_all()
+
+
+def register_ap() -> list[str]:
+    """Registers Tri-AP's five purposes (idempotent). Returns the names added.
+
+    Separate from `register_all()` and `register_ar()` for the same reason: each app's tests assert their own names.
+    `finance_wsgi.py` calls all three when the service starts.
+    """
+    from . import ap
+
+    return ap.register_all()

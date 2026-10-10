@@ -6,6 +6,7 @@ namespace TriCab\Api\Config;
 
 use InvalidArgumentException;
 use TriCab\Api\Infrastructure\Cache\ApcuApplicationCache;
+use TriCab\Core\Finance\Ap\ApAiService;
 
 final readonly class Settings
 {
@@ -58,6 +59,7 @@ final readonly class Settings
     /**
      * @param list<string> $corsAllowedOrigins
      * @param list<string> $passkeyAllowedOrigins
+     * @param list<string> $financeApInternalEmailDomains
      */
     public function __construct(
         public string $appEnv,
@@ -229,6 +231,16 @@ final readonly class Settings
         public string $financeArPublicOrigin = '',
         public int $financeArFormLinkHours = 72,
         public bool $financeArSampleFiles = false,
+        public string $financeApTimezone = 'Australia/Melbourne',
+        public string $financeApMailbox = 'ap@tricab.com',
+        public string $financeApPublicOrigin = '',
+        public bool $financeApSendingEnabled = false,
+        public bool $financeApSuggestReplies = true,
+        public float $financeApConfidenceThreshold = 0.80,
+        public array $financeApInternalEmailDomains = [],
+        public int $financeApMinAttachmentBytes = 25600,
+        public int $financeApMaxScanMessages = 0,
+        public bool $financeApSampleFiles = false,
     ) {
     }
 
@@ -1037,6 +1049,37 @@ final readonly class Settings
         if (!in_array($financeArTimezone, \DateTimeZone::listIdentifiers(), true)) {
             throw new InvalidArgumentException('FINANCE_AR_TIMEZONE must be a time zone name such as Australia/Melbourne.');
         }
+        $financeApTimezone = trim(self::string($env, 'FINANCE_AP_TIMEZONE', 'Australia/Melbourne'));
+        if ($financeApTimezone === '') {
+            $financeApTimezone = 'Australia/Melbourne';
+        }
+        if (!in_array($financeApTimezone, \DateTimeZone::listIdentifiers(), true)) {
+            throw new InvalidArgumentException('FINANCE_AP_TIMEZONE must be a time zone name such as Australia/Melbourne.');
+        }
+        $financeApThresholdText = trim(self::string($env, 'FINANCE_AP_CONFIDENCE_THRESHOLD', '0.80'));
+        if (!is_numeric($financeApThresholdText) || (float) $financeApThresholdText < 0.0 || (float) $financeApThresholdText > 1.0) {
+            throw new InvalidArgumentException('FINANCE_AP_CONFIDENCE_THRESHOLD must be a number from 0 to 1, such as 0.80.');
+        }
+        // Tri-AP's own mailbox: the default the vendor email, replies and approval mail are sent from (the source's AP_MAILBOX).
+        $financeApMailbox = strtolower(trim(self::string($env, 'FINANCE_AP_MAILBOX', 'ap@tricab.com')));
+        if ($financeApMailbox === '') {
+            $financeApMailbox = 'ap@tricab.com';
+        }
+        // The origin the link in Tri-AP's approval mail is built from. Empty falls back to the site's public address
+        // (PASSKEY_PUBLIC_APP_BASE_URL). An origin only, as FINANCE_AR_PUBLIC_ORIGIN.
+        $financeApPublicOrigin = rtrim(trim(self::string($env, 'FINANCE_AP_PUBLIC_ORIGIN', '')), '/');
+        if ($financeApPublicOrigin !== '') {
+            $apOriginParts = parse_url($financeApPublicOrigin);
+            $apOriginScheme = is_array($apOriginParts) ? strtolower((string) ($apOriginParts['scheme'] ?? '')) : '';
+            $apOriginHost = is_array($apOriginParts) ? strtolower((string) ($apOriginParts['host'] ?? '')) : '';
+            $apOriginLocal = in_array($apOriginHost, ['localhost', '127.0.0.1'], true);
+            if (
+                !is_array($apOriginParts) || $apOriginHost === '' || ($apOriginScheme !== 'https' && !($apOriginScheme === 'http' && $apOriginLocal))
+                || isset($apOriginParts['path']) || isset($apOriginParts['query']) || isset($apOriginParts['fragment']) || isset($apOriginParts['user']) || isset($apOriginParts['pass'])
+            ) {
+                throw new InvalidArgumentException('FINANCE_AP_PUBLIC_ORIGIN must be an origin such as https://tricab.ai (https, no path).');
+            }
+        }
         $financeArMailbox = strtolower(trim(self::string($env, 'FINANCE_AR_MAILBOX', 'ar@tricab.com')));
         if ($financeArMailbox === '') {
             $financeArMailbox = 'ar@tricab.com';
@@ -1069,6 +1112,18 @@ final readonly class Settings
                 || !in_array($sampleBlobMode, [self::BLOB_AUTH_MODE_MEMORY, self::BLOB_AUTH_MODE_DISABLED], true)
             ) {
                 throw new InvalidArgumentException('FINANCE_AR_SAMPLE_FILES is for local development with the in-memory blob store only (APP_ENV not production, BLOB_AUTH_MODE memory or disabled).');
+            }
+        }
+
+        // Tri-AP's invented sample documents (T6.12), put into the in-memory blob store the same way and refused in the same places.
+        $financeApSampleFiles = self::bool($env, 'FINANCE_AP_SAMPLE_FILES', false);
+        if ($financeApSampleFiles) {
+            $sampleBlobMode = strtolower(self::string($env, 'BLOB_AUTH_MODE', self::BLOB_AUTH_MODE_DISABLED));
+            if (
+                strtolower(self::string($env, 'APP_ENV', 'development')) === 'production'
+                || !in_array($sampleBlobMode, [self::BLOB_AUTH_MODE_MEMORY, self::BLOB_AUTH_MODE_DISABLED], true)
+            ) {
+                throw new InvalidArgumentException('FINANCE_AP_SAMPLE_FILES is for local development with the in-memory blob store only (APP_ENV not production, BLOB_AUTH_MODE memory or disabled).');
             }
         }
 
@@ -1320,6 +1375,19 @@ final readonly class Settings
             financeArPublicOrigin: $financeArPublicOrigin,
             financeArFormLinkHours: self::boundedInt($env, 'FINANCE_AR_FORM_LINK_HOURS', 72, 1, 720),
             financeArSampleFiles: $financeArSampleFiles,
+            financeApTimezone: $financeApTimezone,
+            financeApMailbox: $financeApMailbox,
+            financeApPublicOrigin: $financeApPublicOrigin,
+            financeApSendingEnabled: self::bool($env, 'FINANCE_AP_SENDING_ENABLED', false),
+            financeApSuggestReplies: ApAiService::suggestRepliesEnabled($env['FINANCE_AP_SUGGEST_REPLIES'] ?? null),
+            financeApConfidenceThreshold: (float) $financeApThresholdText,
+            financeApInternalEmailDomains: array_map(
+                static fn (string $domain): string => ltrim(strtolower($domain), '@'),
+                self::csvList($env, 'FINANCE_AP_INTERNAL_EMAIL_DOMAINS', ''),
+            ),
+            financeApMinAttachmentBytes: self::boundedInt($env, 'FINANCE_AP_MIN_ATTACHMENT_BYTES', 25600, 0, 33554432),
+            financeApMaxScanMessages: self::boundedInt($env, 'FINANCE_AP_MAX_SCAN_MESSAGES', 0, 0, 100000),
+            financeApSampleFiles: $financeApSampleFiles,
         );
     }
 

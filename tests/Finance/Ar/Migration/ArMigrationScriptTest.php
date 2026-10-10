@@ -41,7 +41,7 @@ final class ArMigrationScriptTest extends TestCase
             'DB_DRIVER' => 'sqlsrv',
             'DB_HOST' => 'localhost',
             'DB_PORT' => '1433',
-            'DB_DATABASE' => LocalFinanceSqlServer::DATABASE,
+            'DB_DATABASE' => LocalFinanceSqlServer::database(),
             'DB_USERNAME' => 'sa',
             'DB_PASSWORD' => 'not-set',
             'DB_ENCRYPT' => 'true',
