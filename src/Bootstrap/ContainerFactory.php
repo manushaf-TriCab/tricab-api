@@ -927,6 +927,10 @@ final class ContainerFactory
                     // Tri-Task's 08:00 summary (T2.9): the registry's first app job, only while Tri-Task is on.
                     if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_TASK)) {
                         $jobs[] = self::get($container, \TriCab\Core\Finance\Task\Service\TaskDailySummaryJob::class);
+                        // Each preparer's own 08:00 email (12 Oct 2026), behind its own switch so it starts when the team is told.
+                        if ($settings->financeTaskPreparerDigestEnabled) {
+                            $jobs[] = self::get($container, \TriCab\Core\Finance\Task\Service\TaskPreparerDigestJob::class);
+                        }
                     }
 
                     // Tri-AR and Tri-AP keep files (T5.5, T6.5): uploads never put on a record are swept once a day. One job
@@ -1013,6 +1017,28 @@ final class ContainerFactory
                         self::get($container, \TriCab\Core\Finance\Task\Contract\TaskStore::class),
                         self::get($container, \TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class),
                         self::get($container, \TriCab\Core\Finance\Task\Contract\TaskReportRecipientStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Service\TaskTime::class),
+                        $settings->financeTaskMailFrom,
+                        $settings->financeTaskTimezone,
+                    ),
+            \TriCab\Core\Finance\Task\Service\TaskDueDateRequestNotifier::class
+                => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskDueDateRequestNotifier
+                    => new \TriCab\Core\Finance\Task\Service\TaskDueDateRequestNotifier(
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Service\TaskTime::class),
+                        $settings->financeTaskMailFrom,
+                    ),
+            \TriCab\Core\Finance\Task\Service\TaskPreparerDigestJob::class
+                => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskPreparerDigestJob
+                    => new \TriCab\Core\Finance\Task\Service\TaskPreparerDigestJob(
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskStore::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class),
                         self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
                         self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
                         self::get($container, \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class),

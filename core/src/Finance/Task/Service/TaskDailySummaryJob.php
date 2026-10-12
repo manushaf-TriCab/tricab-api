@@ -185,19 +185,27 @@ final class TaskDailySummaryJob implements FinanceJob
      * @param list<TaskRecord> $overdue
      * @param list<TaskRecord> $dueToday
      * @param array<int, string> $names
+     * @param string $title the heading; the preparer's own email (TaskPreparerDigestJob) passes its own
+     * @param string $subjectLead the subject before " — N overdue, …"
      * @return array{0: string, 1: string} subject and HTML body
      */
-    public static function message(array $overdue, array $dueToday, string $today, array $names): array
-    {
+    public static function message(
+        array $overdue,
+        array $dueToday,
+        string $today,
+        array $names,
+        string $title = 'Tri-Task Daily Task Summary',
+        string $subjectLead = 'Tri-Task Daily Summary',
+    ): array {
         $muted = 'color:#64748b;font-size:13px;';
         $body = '<div style="font-family:Inter,Arial,sans-serif;max-width:680px;margin:0 auto;color:#0f172a;">'
-            . '<h2 style="font-size:20px;margin:0 0 4px;">Tri-Task Daily Task Summary</h2>'
+            . '<h2 style="font-size:20px;margin:0 0 4px;">' . self::esc($title) . '</h2>'
             . '<p style="margin:0 0 16px;' . $muted . '">' . self::esc($today) . ' — tasks needing attention</p>'
             . ($overdue !== [] ? self::section('Overdue', $overdue, $names) : "<p style='" . $muted . "'>No overdue tasks.</p>")
             . ($dueToday !== [] ? self::section('Due Today', $dueToday, $names) : "<p style='" . $muted . "margin-top:16px;'>No tasks due today.</p>")
             . '<p style="margin-top:24px;color:#94a3b8;font-size:12px;">Sent automatically by Tri-Task.</p>'
             . '</div>';
-        $subject = sprintf('Tri-Task Daily Summary — %d overdue, %d due today (%s)', count($overdue), count($dueToday), $today);
+        $subject = sprintf('%s — %d overdue, %d due today (%s)', $subjectLead, count($overdue), count($dueToday), $today);
 
         return [$subject, $body];
     }

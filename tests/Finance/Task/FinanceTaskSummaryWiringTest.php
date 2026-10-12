@@ -36,6 +36,14 @@ final class FinanceTaskSummaryWiringTest extends TestCase
         }
     }
 
+    public function test_the_preparer_email_is_registered_only_with_its_own_switch(): void
+    {
+        $on = ['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_ENABLED' => 'true'];
+        self::assertSame(['task.daily-summary', 'task.preparer-digest'], $this->jobNames($on + ['FINANCE_TASK_PREPARER_DIGEST_ENABLED' => 'true']));
+        self::assertSame(['task.daily-summary'], $this->jobNames($on + ['FINANCE_TASK_PREPARER_DIGEST_ENABLED' => 'false']));
+        self::assertSame([], $this->jobNames(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_PREPARER_DIGEST_ENABLED' => 'true']));
+    }
+
     public function test_the_job_is_the_registrys_first_app_job_and_sits_beside_odoo_when_that_is_configured(): void
     {
         $names = $this->jobNames([
