@@ -91,7 +91,7 @@ final class TaskMailServiceTest extends TestCase
         $this->max = new TaskActor(12, 'Max Manager', 'max@example.test', [...$base, Module::PERMISSION_TASK_TASKS_READ_ALL]);
     }
 
-    private function service(FinanceMailService $sender, InMemoryFinanceMailboxRegistry $registry, string $from): TaskMailService
+    private function service(FinanceMailService $sender, InMemoryFinanceMailboxRegistry $registry, string $from, bool $sendAsUser = false): TaskMailService
     {
         return new TaskMailService(
             $this->tasks,
@@ -104,7 +104,17 @@ final class TaskMailServiceTest extends TestCase
             $this->links,
             new TaskTime(FixedClock::utc('2026-10-07 01:00:00.5'), 'Australia/Melbourne'),
             $from,
+            $sendAsUser,
         );
+    }
+
+    private function sendingAsUser(): TaskMailService
+    {
+        $registry = new InMemoryFinanceMailboxRegistry([
+            new FinanceMailbox('m1', 'finance@example.test', 'Finance Team', '', true, ['TASK' => ['read' => false, 'send' => true]]),
+        ]);
+
+        return $this->service(new FinanceMailService($registry, $this->ledger, $this->transport, null, null), $registry, 'finance@example.test', true);
     }
 
     private function task(string $name = 'Bank rec', int $preparer = 11): string
@@ -156,6 +166,48 @@ final class TaskMailServiceTest extends TestCase
         // Another app's scope does not narrow Tri-Task's.
         $this->scopes->grant(12, 'AP', FinanceAccessScope::TYPE_MAILBOX, 'noteam@example.test');
         self::assertCount(2, $this->mail->sendMailboxes($this->max)['mailboxes']);
+    }
+
+    // ==== the sender's own address (13 Oct 2026) ==============================================
+
+    public function test_with_send_as_user_the_persons_own_address_comes_first_and_is_the_default(): void
+    {
+        $list = $this->sendingAsUser()->sendMailboxes($this->una);
+
+        self::assertSame('una@example.test', $list['default']);
+        self::assertSame(
+            [['email' => 'una@example.test', 'label' => 'Una User'], ['email' => 'finance@example.test', 'label' => 'Finance Team']],
+            $list['mailboxes'],
+        );
+        self::assertSame('finance@example.test', $this->mail->sendMailboxes($this->una)['default'], 'off unless switched on');
+    }
+
+    public function test_a_person_may_send_from_their_own_address_with_no_registry_grant_but_never_from_someone_elses(): void
+    {
+        $mail = $this->sendingAsUser();
+        $id = $this->task();
+
+        $out = $mail->send($this->una, $this->payload([$this->email($id)], ['kind' => 'reminder', 'from' => 'Una@Example.test']));
+
+        self::assertSame(1, $out['sent']);
+        self::assertSame('una@example.test', $this->transport->sent[0]->mailbox);
+        self::assertTrue($this->transport->sent[0]->ownMailbox);
+        $delivery = $this->ledger->findById($this->links->all()[0]->deliveryId);
+        self::assertSame('una@example.test', $delivery?->mailbox);
+
+        try {
+            $mail->send($this->una, $this->payload([$this->email($id)], ['from' => 'max@example.test']));
+            self::fail('Expected a refusal: Max\'s address is not Una\'s.');
+        } catch (TaskForbidden $e) {
+            self::assertStringContainsString('max@example.test', $e->getMessage());
+        }
+        try {
+            $this->mail->send($this->una, $this->payload([$this->email($id)], ['from' => 'una@example.test']));
+            self::fail('Expected a refusal: sending as oneself is off.');
+        } catch (TaskForbidden) {
+            $this->addToAssertionCount(1);
+        }
+        self::assertCount(1, $this->transport->sent);
     }
 
     // ==== a send ===============================================================================

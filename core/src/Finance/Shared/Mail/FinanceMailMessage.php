@@ -16,6 +16,10 @@ namespace TriCab\Core\Finance\Shared\Mail;
  * `replyToMessageId` (optional) is the Graph immutable id of a message in `mailbox` to answer in its own
  * conversation. A transport that can thread ({@see FinanceReplyMailTransport}) does; any other sends a
  * standalone message. It is not part of the ledger row.
+ *
+ * `ownMailbox` marks a message sent from the acting person's own mailbox rather than a shared one in the
+ * registry (Tri-Task's reminders, 13 Oct 2026). The calling app has checked that `mailbox` is that person's
+ * own address; the service then needs no registry grant for it.
  */
 final readonly class FinanceMailMessage
 {
@@ -38,6 +42,7 @@ final readonly class FinanceMailMessage
         public ?string $idempotencyKey = null,
         public ?int $actorUserId = null,
         public ?string $replyToMessageId = null,
+        public bool $ownMailbox = false,
     ) {
     }
 
@@ -64,6 +69,7 @@ final readonly class FinanceMailMessage
             $idempotencyKey,
             $this->actorUserId,
             $this->replyToMessageId,
+            $this->ownMailbox,
         );
     }
 }

@@ -73,7 +73,7 @@ final class FinanceMailServiceTest extends TestCase
      * @param array{
      *     application?: string, mailbox?: string, subject?: string, body?: string,
      *     cc?: list<string>, bcc?: list<string>, contentType?: string,
-     *     attachments?: list<FinanceMailAttachment>, key?: string|null, actor?: int|null
+     *     attachments?: list<FinanceMailAttachment>, key?: string|null, actor?: int|null, own?: bool
      * } $over
      */
     private function message(array $to = ['jane@tricab.com'], array $over = []): FinanceMailMessage
@@ -90,6 +90,7 @@ final class FinanceMailServiceTest extends TestCase
             attachments: $over['attachments'] ?? [],
             idempotencyKey: $over['key'] ?? null,
             actorUserId: $over['actor'] ?? null,
+            ownMailbox: $over['own'] ?? false,
         );
     }
 
@@ -159,6 +160,23 @@ final class FinanceMailServiceTest extends TestCase
 
         self::assertSame([], $this->ledger->all());
         self::assertSame([], $this->transport->sent);
+    }
+
+    public function test_a_send_from_the_actors_own_mailbox_needs_no_grant_but_needs_an_actor_and_an_address(): void
+    {
+        $result = $this->service->send($this->message(over: ['mailbox' => ' Jo@Tricab.com ', 'actor' => 7, 'own' => true]));
+
+        self::assertSame('jo@tricab.com', $result->delivery->mailbox);
+        self::assertSame('jo@tricab.com', $this->transport->sent[0]->mailbox);
+        foreach ([['mailbox' => 'jo@tricab.com', 'own' => true], ['mailbox' => 'not an address', 'actor' => 7, 'own' => true], ['mailbox' => 'jo@tricab.com', 'actor' => 7]] as $over) {
+            try {
+                $this->service->send($this->message(over: $over));
+                self::fail('Sent from ' . $over['mailbox']);
+            } catch (FinanceMailRefused) {
+                self::addToAssertionCount(1);
+            }
+        }
+        self::assertCount(1, $this->transport->sent);
     }
 
     public function test_the_mailbox_address_is_matched_in_any_case(): void

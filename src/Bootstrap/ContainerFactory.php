@@ -1088,6 +1088,7 @@ final class ContainerFactory
                         self::get($container, \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class),
                         self::get($container, \TriCab\Core\Finance\Task\Service\TaskTime::class),
                         $settings->financeTaskMailFrom,
+                        $settings->financeTaskSendAsUser,
                     ),
             \TriCab\Core\Finance\Task\Service\TaskSetupService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskSetupService::class),

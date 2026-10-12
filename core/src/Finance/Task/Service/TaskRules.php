@@ -33,7 +33,8 @@ final class TaskRules
     public const BLOCKED_STATUSES = ['in_progress', 'ready_for_review', 'completed'];
     public const PRIORITIES = ['critical', 'high', 'medium', 'low'];
     public const CATEGORIES = ['routine', 'ad_hoc'];
-    public const PROJECT_STATUSES = ['planning', 'active', 'completed', 'on_hold'];
+    /** "Planning" went on 13 Oct 2026 (Nick Han): a project is Active from the start. */
+    public const PROJECT_STATUSES = ['active', 'completed', 'on_hold'];
     public const STATEMENT_CATEGORIES = ['balance_sheet', 'income_statement', 'cash_flow', 'equity', 'notes', 'other'];
     public const MAX_BULK = 200;
     public const MAX_BULK_AREAS = 100;

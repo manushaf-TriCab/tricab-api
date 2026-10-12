@@ -68,7 +68,7 @@ final class TaskSetupService
             (string) $fields['name'],
             (string) ($fields['description'] ?? ''),
             (string) ($fields['color'] ?? ''),
-            (string) ($fields['status'] ?? 'planning'),
+            (string) ($fields['status'] ?? 'active'),
             (string) ($fields['target_date'] ?? ''),
             null,
             null,
@@ -181,9 +181,10 @@ final class TaskSetupService
             $out['color'] = TaskRules::text($data, 'color', 20) ?? '';
         }
         if (array_key_exists('status', $data)) {
-            $status = $data['status'];
+            // A page loaded before Planning went may still send it; it means Active now.
+            $status = $data['status'] === 'planning' ? 'active' : $data['status'];
             if (!is_string($status) || !in_array($status, TaskRules::PROJECT_STATUSES, true)) {
-                throw new TaskInvalid('Status must be planning, active, completed or on_hold');
+                throw new TaskInvalid('Status must be active, completed or on_hold');
             }
             $out['status'] = $status;
         }

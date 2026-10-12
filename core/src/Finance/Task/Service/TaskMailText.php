@@ -23,6 +23,8 @@ final class TaskMailText
      * Renders a draft as HTML without losing its line breaks. It escapes first: the text is
      * model-written and then editable, so it must not be able to inject markup into an outbound
      * message. Blank-line-separated blocks become paragraphs; a single newline becomes `<br>`.
+     * An http(s) address becomes a link to itself (13 Oct 2026: the reminder's links to the task
+     * and the task list), without a full stop or bracket that ends the sentence.
      */
     public static function toHtml(string $text): string
     {
@@ -35,6 +37,15 @@ final class TaskMailText
             if ($block === '') {
                 continue;
             }
+            $block = (string) preg_replace_callback(
+                '~https?://[^\s<>"]+~',
+                static function (array $m): string {
+                    $url = rtrim($m[0], '.,;:!?)');
+
+                    return '<a href="' . $url . '">' . $url . '</a>' . substr($m[0], strlen($url));
+                },
+                $block,
+            );
             $html .= '<p style="margin:0 0 1em 0">' . str_replace("\n", '<br>', $block) . '</p>';
         }
 

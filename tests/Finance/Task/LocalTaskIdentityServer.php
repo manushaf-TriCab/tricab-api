@@ -24,6 +24,7 @@ final class LocalTaskIdentityServer
         'create-identity-schema.sql',
         'create-finance-task-schema.sql',
         'alter-finance-task-board.sql',
+        'alter-finance-task-project-status.sql',
         'seed-finance-permissions.sql',
         'seed-finance-roles.sql',
         'seed-finance-task-permissions.sql',

@@ -104,12 +104,15 @@ final class FinanceTaskMailRoutesTest extends TestCase
         return $data['id'];
     }
 
-    public function test_the_mailboxes_route_lists_the_granted_mailbox_and_the_default(): void
+    public function test_the_mailboxes_route_lists_the_senders_own_address_as_the_default_then_the_granted_mailbox(): void
     {
         [$status, $json] = $this->call('GET', '/send-mailboxes');
 
         self::assertSame(200, $status);
-        self::assertSame(['mailboxes' => [['email' => 'finance@example.test', 'label' => 'Finance Team']], 'default' => 'finance@example.test'], self::data($json));
+        self::assertSame(['mailboxes' => [
+            ['email' => 'thilanh@tricab.com', 'label' => 'Thilan Lakshitha'],
+            ['email' => 'finance@example.test', 'label' => 'Finance Team'],
+        ], 'default' => 'thilanh@tricab.com'], self::data($json));
     }
 
     public function test_with_mail_off_a_send_leaves_a_suppressed_ledger_row_and_a_link_and_says_so_per_email(): void

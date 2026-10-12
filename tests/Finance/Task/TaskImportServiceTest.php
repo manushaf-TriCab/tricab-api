@@ -274,6 +274,7 @@ final class TaskImportServiceTest extends TestCase
 
         self::assertSame(['created', 'exists'], array_column($this->lines($report['projects']), 'action'));
         self::assertSame(['Month End', 'Year End'], array_column($this->setup->listProjects($this->admin), 'name'));
+        self::assertSame(['active', 'active'], array_column($this->setup->listProjects($this->admin), 'status'), 'Planning is read as Active');
     }
 
     public function test_files_that_are_not_the_template_are_refused_as_a_whole(): void
@@ -498,7 +499,7 @@ final class TaskImportServiceTest extends TestCase
         $projects = $this->lines($report['projects']);
         self::assertSame(['created', 'duplicate', 'error', 'error'], array_column($projects, 'action'));
         self::assertSame(['Repeats row 2'], $projects[1]['warnings']);
-        self::assertSame(['Status "Someday" must be Planning, Active, Completed or On Hold', 'Target Date "tomorrow" is not a date (use dd/mm/yyyy)'], $projects[2]['errors']);
+        self::assertSame(['Status "Someday" must be Active, Completed or On Hold', 'Target Date "tomorrow" is not a date (use dd/mm/yyyy)'], $projects[2]['errors']);
         self::assertSame(['Project name must be at most 200 characters'], $projects[3]['errors']);
         self::assertSame('active', $this->setup->listProjects($this->admin)[0]['status'], 'a project with no status is active');
         self::assertSame(1, ((array) $report['summary'])['tasks']);

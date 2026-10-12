@@ -14,7 +14,8 @@ use Throwable;
  * `mail_send` so an app sends under the rules it sends under today:
  *
  *  - Refused unless the app holds a send grant on the mailbox and the mailbox is
- *    active.
+ *    active. A message from the actor's own mailbox (`ownMailbox`, checked by the
+ *    app) needs no grant, only an actor and a valid address.
  *  - Recipients are lower-cased, de-duplicated and valid addresses with no
  *    display name; at least one `to`; no more than 50 per list or 50 in all.
  *  - A subject (at most 500 characters), a body of at most 1 MiB, content type
@@ -60,10 +61,7 @@ final class FinanceMailService implements FinanceMailSender
 
     public function send(FinanceMailMessage $message): FinanceMailResult
     {
-        $mailbox = $this->mailboxes->find(self::address($message->mailbox));
-        if ($mailbox === null || !$mailbox->canSend($message->application)) {
-            throw FinanceMailRefused::forMailbox($message->application, trim($message->mailbox));
-        }
+        $sender = $this->sender($message);
 
         $to = self::addresses($message->to, 'to');
         $cc = self::addresses($message->cc, 'cc');
@@ -109,7 +107,7 @@ final class FinanceMailService implements FinanceMailSender
             $suppressed->id ?? ($this->newId)(),
             $message->application,
             $message->actorUserId,
-            $mailbox->address,
+            $sender,
             $to,
             $cc,
             $subject,
@@ -135,7 +133,7 @@ final class FinanceMailService implements FinanceMailSender
 
         $threaded = false;
         try {
-            $outgoing = $message->normalised($mailbox->address, $to, $cc, $bcc, $subject, $contentType, $key);
+            $outgoing = $message->normalised($sender, $to, $cc, $bcc, $subject, $contentType, $key);
             if ($outgoing->replyToMessageId !== null && $this->transport instanceof FinanceReplyMailTransport) {
                 $threaded = $this->transport->deliverReply($outgoing, $outgoing->replyToMessageId);
             } else {
@@ -158,6 +156,25 @@ final class FinanceMailService implements FinanceMailSender
         $this->ledger->markSent($delivery->id, $sentAt);
 
         return new FinanceMailResult($delivery->withSent($sentAt), false, $threaded);
+    }
+
+    /** The address to send from, refused unless it may be used. */
+    private function sender(FinanceMailMessage $message): string
+    {
+        if ($message->ownMailbox) {
+            $address = self::address($message->mailbox);
+            if ($message->actorUserId === null || filter_var($address, FILTER_VALIDATE_EMAIL) === false) {
+                throw FinanceMailRefused::forMailbox($message->application, trim($message->mailbox));
+            }
+
+            return $address;
+        }
+        $mailbox = $this->mailboxes->find(self::address($message->mailbox));
+        if ($mailbox === null || !$mailbox->canSend($message->application)) {
+            throw FinanceMailRefused::forMailbox($message->application, trim($message->mailbox));
+        }
+
+        return $mailbox->address;
     }
 
     private static function earlier(FinanceMailDelivery $existing): FinanceMailResult

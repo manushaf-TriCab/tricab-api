@@ -137,7 +137,7 @@ BEGIN TRY
            @Base, @Base
     FROM (VALUES
         ('5a1b0000000000000000000000000001', N'September month-end close',   N'Month-end close for September 2026', N'#6366F1', N'active',    3,    0),
-        ('5a1b0000000000000000000000000002', N'FY26 audit preparation',      N'Audit schedules and support',        N'#10B981', N'planning',  54,   0),
+        ('5a1b0000000000000000000000000002', N'FY26 audit preparation',      N'Audit schedules and support',        N'#10B981', N'active',    54,   0),
         ('5a1b0000000000000000000000000003', N'Bank reconciliation clean-up', N'Clear aged reconciling items',      N'#F59E0B', N'on_hold',   NULL, 0),
         ('5a1b0000000000000000000000000004', N'Tax compliance FY25',         N'Lodged and finished',                N'#64748B', N'completed', -99,  0),
         ('5a1b0000000000000000000000000005', N'Retired pilot project',       N'Moved to the Bin',                   N'#EF4444', N'active',    NULL, 1)

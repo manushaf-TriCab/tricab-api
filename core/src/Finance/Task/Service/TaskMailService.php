@@ -38,6 +38,9 @@ use TriCab\Core\Finance\Task\Domain\TaskUnavailable;
  * stored in the shared ledger (the source made the key but kept nothing to reuse); the body of a
  * sent mail is kept nowhere (Q5), only a link row to the ledger; and **a suppressed send (mail
  * switched off) is not a send**: it is reported per email as "Mail is switched off", never as sent.
+ *
+ * Since 13 Oct 2026 (Nick Han: "can we send from user email"), with `$sendAsUser` a person may also send
+ * from their own address, offered first and as the default; never from anyone else's.
  */
 final class TaskMailService
 {
@@ -56,6 +59,7 @@ final class TaskMailService
         private readonly TaskMailLinks $links,
         private readonly TaskTime $time,
         private readonly string $defaultFrom = '',
+        private readonly bool $sendAsUser = false,
     ) {
     }
 
@@ -67,23 +71,31 @@ final class TaskMailService
 
     /**
      * The mailboxes Tri-Task may send from for this person: active, with a send grant for `TASK`,
-     * and allowed by their mailbox scope (no scope rows means all). The default one first.
+     * and allowed by their mailbox scope (no scope rows means all). The default one first. With
+     * `$sendAsUser`, the person's own address comes before them all and is the default.
      *
      * @return array{mailboxes: list<array{email: string, label: string}>, default: string}
      */
     public function sendMailboxes(TaskActor $actor): array
     {
         $scope = $this->scopes->forUser($actor->userId, Module::APP_TASK);
-        $default = $this->defaultFrom();
+        $own = $this->ownAddress($actor);
+        $default = $own ?? $this->defaultFrom();
         $granted = [];
         foreach ($this->mailboxes->all() as $mailbox) {
             if (!$mailbox->canSend(Module::APP_TASK) || !$scope->allowsMailbox($mailbox->address)) {
                 continue;
             }
             $email = strtolower(trim($mailbox->address));
+            if ($email === $own) {
+                continue;
+            }
             $granted[] = ['email' => $email, 'label' => $mailbox->displayName !== '' ? $mailbox->displayName : $email];
         }
         usort($granted, static fn (array $a, array $b): int => [$a['email'] !== $default, $a['email']] <=> [$b['email'] !== $default, $b['email']]);
+        if ($own !== null) {
+            array_unshift($granted, ['email' => $own, 'label' => trim($actor->name) !== '' ? trim($actor->name) : $own]);
+        }
 
         return ['mailboxes' => $granted, 'default' => $default];
     }
@@ -146,6 +158,7 @@ final class TaskMailService
         if (!in_array($sender, $allowedSenders, true)) {
             throw new TaskForbidden('Tri-Task is not allowed to send from ' . $sender . '. Ask a finance administrator to grant it that mailbox.');
         }
+        $ownMailbox = $sender === $this->ownAddress($actor);
         $attachments = TaskMailText::attachments($data['attachments'] ?? null);
 
         $allowed = [];
@@ -206,6 +219,8 @@ final class TaskMailService
                     $attachments,
                     'task-' . $kind . ':' . $linkId,
                     $actor->userId,
+                    null,
+                    $ownMailbox,
                 ));
             } catch (FinanceMailTransportFailed $failure) {
                 // Per-email results, as the Base44 functions gave: this one failed, the rest still go.
@@ -231,5 +246,13 @@ final class TaskMailService
         }
 
         return ['sent' => $sent, 'results' => $results];
+    }
+
+    /** The person's own address when they may send from it, lower-case; else null. */
+    private function ownAddress(TaskActor $actor): ?string
+    {
+        $email = strtolower(trim($actor->email));
+
+        return $this->sendAsUser && filter_var($email, FILTER_VALIDATE_EMAIL) !== false ? $email : null;
     }
 }

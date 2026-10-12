@@ -37,6 +37,20 @@ final class TaskMailTextTest extends TestCase
         self::assertSame(self::P . 'a &amp;amp; b</p>', TaskMailText::toHtml('a &amp; b'), 'an existing entity is escaped, not trusted');
     }
 
+    public function test_a_web_address_becomes_a_link_without_the_full_stop_that_ends_the_sentence(): void
+    {
+        self::assertSame(
+            self::P . 'The task is here: <a href="https://tricab.ai/finance/task?task=ab12">https://tricab.ai/finance/task?task=ab12</a>.<br>'
+                . 'List (<a href="http://localhost:5173/finance/task">http://localhost:5173/finance/task</a>)</p>',
+            TaskMailText::toHtml("The task is here: https://tricab.ai/finance/task?task=ab12.\nList (http://localhost:5173/finance/task)"),
+        );
+        self::assertSame(
+            self::P . '<a href="https://x.test/?a=1&amp;b=2">https://x.test/?a=1&amp;b=2</a>"</p>',
+            TaskMailText::toHtml('https://x.test/?a=1&b=2"'),
+            'a quote ends the address, so it cannot break out of the href',
+        );
+    }
+
     public function test_quotes_are_left_alone_as_html_escape_with_quote_false_does(): void
     {
         self::assertSame(self::P . 'He said "hi" and it\'s fine</p>', TaskMailText::toHtml('He said "hi" and it\'s fine'));

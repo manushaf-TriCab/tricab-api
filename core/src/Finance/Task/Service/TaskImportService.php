@@ -78,7 +78,7 @@ final class TaskImportService
         'notstarted' => 'not_started', 'stuck' => 'stuck', 'readyforreview' => 'ready_for_review',
     ];
     private const CATEGORY = ['routine' => 'routine', 'adhoc' => 'ad_hoc'];
-    private const PROJECT_STATUS = ['planning' => 'planning', 'active' => 'active', 'completed' => 'completed', 'onhold' => 'on_hold'];
+    private const PROJECT_STATUS = ['planning' => 'active', 'active' => 'active', 'completed' => 'completed', 'onhold' => 'on_hold'];
     private const MONTHS = ['jan' => 1, 'feb' => 2, 'mar' => 3, 'apr' => 4, 'may' => 5, 'jun' => 6, 'jul' => 7, 'aug' => 8, 'sep' => 9, 'oct' => 10, 'nov' => 11, 'dec' => 12];
 
     public function __construct(
@@ -175,7 +175,7 @@ final class TaskImportService
                 $letters = self::letters($row['status'] ?? null);
                 $status = self::PROJECT_STATUS[$letters !== '' ? $letters : 'active'] ?? null;
                 if ($status === null) {
-                    $errors[] = 'Status "' . self::cellText($row['status'] ?? null) . '" must be Planning, Active, Completed or On Hold';
+                    $errors[] = 'Status "' . self::cellText($row['status'] ?? null) . '" must be Active, Completed or On Hold';
                 }
                 $payload = [
                     'name' => $name,

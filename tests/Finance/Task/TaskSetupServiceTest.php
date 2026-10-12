@@ -78,13 +78,20 @@ final class TaskSetupServiceTest extends TestCase
 
     // ==== projects =============================================================================
 
+    public function test_planning_is_gone_and_a_page_still_sending_it_gets_active(): void
+    {
+        $p = $this->service->createProject($this->manager, ['name' => 'Year end', 'status' => 'planning']);
+
+        self::assertSame('active', $p['status']);
+    }
+
     public function test_a_project_is_created_with_the_sources_defaults_and_stripped_text(): void
     {
         $p = $this->service->createProject($this->manager, ['name' => "  Month end \u{00A0}", 'description' => ' notes ']);
 
         self::assertSame('Month end', $p['name']);
         self::assertSame('notes', $p['description']);
-        self::assertSame('planning', $p['status']);
+        self::assertSame('active', $p['status']);
         self::assertSame('', $p['target_date']);
         self::assertSame(0, $p['task_count']);
         self::assertFalse($p['is_deleted']);
@@ -100,7 +107,7 @@ final class TaskSetupServiceTest extends TestCase
         yield 'null name' => [['name' => null], 'Name is required'];
         yield 'long name' => [['name' => str_repeat('é', 201)], 'Name must be at most 200 characters'];
         yield 'long colour' => [['name' => 'x', 'color' => str_repeat('a', 21)], 'Color must be at most 20 characters'];
-        yield 'bad status' => [['name' => 'x', 'status' => 'overdue'], 'Status must be planning, active, completed or on_hold'];
+        yield 'bad status' => [['name' => 'x', 'status' => 'overdue'], 'Status must be active, completed or on_hold'];
         yield 'bad date format' => [['name' => 'x', 'target_date' => '07/10/2026'], 'Dates must be yyyy-MM-dd'];
         yield 'not a real date' => [['name' => 'x', 'target_date' => '2026-02-30'], 'That is not a real date'];
     }
