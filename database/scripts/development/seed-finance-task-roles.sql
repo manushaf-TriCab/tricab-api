@@ -12,8 +12,9 @@
   - Run after seed-finance-permissions.sql and seed-finance-task-permissions.sql
 
     FINANCE_TASK_USER      portal label Team Member: FINANCE.ACCESS, FINANCE.TASK.ACCESS
-                           and the six everyday task permissions.
-    FINANCE_TASK_MANAGER   the above plus READ_ALL, UPDATE and DELETE.
+                           and the five everyday task permissions (not
+                           SETUP.MANAGE: Manusha, 12 Oct 2026).
+    FINANCE_TASK_MANAGER   the above plus SETUP.MANAGE, READ_ALL, UPDATE and DELETE.
     FINANCE_TASK_ADMIN     the above plus ANALYTICS.READ and SETTINGS.MANAGE.
 
   Each role also holds FINANCE.ACCESS and FINANCE.TASK.ACCESS so that a person
@@ -81,7 +82,6 @@ BEGIN TRY
         (N'FINANCE_TASK_USER', N'FINANCE.TASK.TASKS.CREATE'),
         (N'FINANCE_TASK_USER', N'FINANCE.TASK.TASKS.UPDATE_OWN'),
         (N'FINANCE_TASK_USER', N'FINANCE.TASK.TASKS.DELETE_OWN'),
-        (N'FINANCE_TASK_USER', N'FINANCE.TASK.SETUP.MANAGE'),
         (N'FINANCE_TASK_USER', N'FINANCE.TASK.MAIL.SEND'),
         (N'FINANCE_TASK_MANAGER', N'FINANCE.ACCESS'),
         (N'FINANCE_TASK_MANAGER', N'FINANCE.TASK.ACCESS'),

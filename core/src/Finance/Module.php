@@ -168,6 +168,9 @@ final class Module
      * open the launcher and the app (permissions.md section 2). Seeded by
      * `seed-finance-task-roles.sql`, assigned to nobody.
      *
+     * A Team Member does not hold `SETUP.MANAGE` (Manusha, 12 Oct 2026): projects, templates, statement areas and
+     * entities are shared by everyone's tasks, so only Managers and Administrators change them.
+     *
      * @var array<string, list<string>>
      */
     public const TASK_ROLE_PERMISSIONS = [
@@ -178,7 +181,6 @@ final class Module
             self::PERMISSION_TASK_TASKS_CREATE,
             self::PERMISSION_TASK_TASKS_UPDATE_OWN,
             self::PERMISSION_TASK_TASKS_DELETE_OWN,
-            self::PERMISSION_TASK_SETUP_MANAGE,
             self::PERMISSION_TASK_MAIL_SEND,
         ],
         self::ROLE_TASK_MANAGER => [

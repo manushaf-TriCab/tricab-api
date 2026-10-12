@@ -81,7 +81,7 @@ answers (Phase 2, D19).
 | `task.tasks.create` | `FINANCE.TASK.TASKS.CREATE` | yes | yes | yes |
 | `task.tasks.update_own` | `FINANCE.TASK.TASKS.UPDATE_OWN` | yes | yes | yes |
 | `task.tasks.delete_own` | `FINANCE.TASK.TASKS.DELETE_OWN` | yes | yes | yes |
-| `task.setup.manage` | `FINANCE.TASK.SETUP.MANAGE` | yes | yes | yes |
+| `task.setup.manage` | `FINANCE.TASK.SETUP.MANAGE` | | yes | yes |
 | `task.mail.send` | `FINANCE.TASK.MAIL.SEND` | yes | yes | yes |
 | `task.tasks.read_all` | `FINANCE.TASK.TASKS.READ_ALL` | | yes | yes |
 | `task.tasks.update` | `FINANCE.TASK.TASKS.UPDATE` | | yes | yes |
@@ -92,7 +92,9 @@ answers (Phase 2, D19).
 | `task.settings.manage` | `FINANCE.TASK.SETTINGS.MANAGE` | | | yes |
 
 Roles: `FINANCE_TASK_USER` (portal label Team Member), `FINANCE_TASK_MANAGER`,
-`FINANCE_TASK_ADMIN`. Seeded but unused in the portal: `task.mail.read`, held by
+`FINANCE_TASK_ADMIN`. `task.setup.manage` was taken from the Team Member on
+12 Oct 2026 (Manusha): projects, templates, statement areas and entities are
+shared, so only Managers and Administrators change them. Seeded but unused in the portal: `task.mail.read`, held by
 no role and checked by nothing; not carried.
 
 A route the portal opened to "update or update own" (or "delete or delete own")
