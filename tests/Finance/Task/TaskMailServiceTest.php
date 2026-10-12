@@ -170,19 +170,18 @@ final class TaskMailServiceTest extends TestCase
 
     // ==== the sender's own address (13 Oct 2026) ==============================================
 
-    public function test_with_send_as_user_the_persons_own_address_comes_first_and_is_the_default(): void
+    public function test_with_send_as_user_the_signed_in_persons_address_is_the_only_one_offered(): void
     {
-        $list = $this->sendingAsUser()->sendMailboxes($this->una);
-
-        self::assertSame('una@example.test', $list['default']);
         self::assertSame(
-            [['email' => 'una@example.test', 'label' => 'Una User'], ['email' => 'finance@example.test', 'label' => 'Finance Team']],
-            $list['mailboxes'],
+            ['mailboxes' => [['email' => 'una@example.test', 'label' => 'Una User']], 'default' => 'una@example.test'],
+            $this->sendingAsUser()->sendMailboxes($this->una),
         );
+        $noAddress = new TaskActor(15, 'No Mail', '', $this->una->permissions);
+        self::assertSame(['mailboxes' => [], 'default' => ''], $this->sendingAsUser()->sendMailboxes($noAddress));
         self::assertSame('finance@example.test', $this->mail->sendMailboxes($this->una)['default'], 'off unless switched on');
     }
 
-    public function test_a_person_may_send_from_their_own_address_with_no_registry_grant_but_never_from_someone_elses(): void
+    public function test_a_person_sends_from_their_own_address_with_no_registry_grant_and_from_no_other(): void
     {
         $mail = $this->sendingAsUser();
         $id = $this->task();
@@ -195,11 +194,17 @@ final class TaskMailServiceTest extends TestCase
         $delivery = $this->ledger->findById($this->links->all()[0]->deliveryId);
         self::assertSame('una@example.test', $delivery?->mailbox);
 
-        try {
-            $mail->send($this->una, $this->payload([$this->email($id)], ['from' => 'max@example.test']));
-            self::fail('Expected a refusal: Max\'s address is not Una\'s.');
-        } catch (TaskForbidden $e) {
-            self::assertStringContainsString('max@example.test', $e->getMessage());
+        // With no From, it is still Una's own address.
+        $mail->send($this->una, $this->payload([$this->email($id)]));
+        self::assertSame('una@example.test', $this->transport->sent[1]->mailbox);
+
+        foreach (['max@example.test', 'finance@example.test'] as $from) {
+            try {
+                $mail->send($this->una, $this->payload([$this->email($id)], ['from' => $from]));
+                self::fail('Expected a refusal for ' . $from);
+            } catch (TaskForbidden $e) {
+                self::assertSame('Tri-Task sends from your own address only, not from ' . $from . '.', $e->getMessage());
+            }
         }
         try {
             $this->mail->send($this->una, $this->payload([$this->email($id)], ['from' => 'una@example.test']));
@@ -207,7 +212,7 @@ final class TaskMailServiceTest extends TestCase
         } catch (TaskForbidden) {
             $this->addToAssertionCount(1);
         }
-        self::assertCount(1, $this->transport->sent);
+        self::assertCount(2, $this->transport->sent);
     }
 
     // ==== a send ===============================================================================

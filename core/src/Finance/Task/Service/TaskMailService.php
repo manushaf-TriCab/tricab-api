@@ -39,8 +39,10 @@ use TriCab\Core\Finance\Task\Domain\TaskUnavailable;
  * sent mail is kept nowhere (Q5), only a link row to the ledger; and **a suppressed send (mail
  * switched off) is not a send**: it is reported per email as "Mail is switched off", never as sent.
  *
- * Since 13 Oct 2026 (Nick Han: "can we send from user email"), with `$sendAsUser` a person may also send
- * from their own address, offered first and as the default; never from anyone else's.
+ * Since 13 Oct 2026 (Nick Han: "can we send from user email"; Manusha: "the sender needs to be the person
+ * who is currently signed in"), with `$sendAsUser` a person sends from their own address and only from it:
+ * no shared mailbox and nobody else's. The daily summary and the automatic notices have no person behind
+ * them and still go from `FINANCE_TASK_MAIL_FROM`.
  */
 final class TaskMailService
 {
@@ -72,30 +74,30 @@ final class TaskMailService
     /**
      * The mailboxes Tri-Task may send from for this person: active, with a send grant for `TASK`,
      * and allowed by their mailbox scope (no scope rows means all). The default one first. With
-     * `$sendAsUser`, the person's own address comes before them all and is the default.
+     * `$sendAsUser`, the person's own address alone (none when they have no valid address).
      *
      * @return array{mailboxes: list<array{email: string, label: string}>, default: string}
      */
     public function sendMailboxes(TaskActor $actor): array
     {
+        if ($this->sendAsUser) {
+            $own = $this->ownAddress($actor);
+
+            return $own === null
+                ? ['mailboxes' => [], 'default' => '']
+                : ['mailboxes' => [['email' => $own, 'label' => trim($actor->name) !== '' ? trim($actor->name) : $own]], 'default' => $own];
+        }
         $scope = $this->scopes->forUser($actor->userId, Module::APP_TASK);
-        $own = $this->ownAddress($actor);
-        $default = $own ?? $this->defaultFrom();
+        $default = $this->defaultFrom();
         $granted = [];
         foreach ($this->mailboxes->all() as $mailbox) {
             if (!$mailbox->canSend(Module::APP_TASK) || !$scope->allowsMailbox($mailbox->address)) {
                 continue;
             }
             $email = strtolower(trim($mailbox->address));
-            if ($email === $own) {
-                continue;
-            }
             $granted[] = ['email' => $email, 'label' => $mailbox->displayName !== '' ? $mailbox->displayName : $email];
         }
         usort($granted, static fn (array $a, array $b): int => [$a['email'] !== $default, $a['email']] <=> [$b['email'] !== $default, $b['email']]);
-        if ($own !== null) {
-            array_unshift($granted, ['email' => $own, 'label' => trim($actor->name) !== '' ? trim($actor->name) : $own]);
-        }
 
         return ['mailboxes' => $granted, 'default' => $default];
     }
@@ -150,15 +152,18 @@ final class TaskMailService
         }
 
         $from = $data['from'] ?? '';
-        $sender = strtolower(TaskRules::strip(is_scalar($from) && $from !== '' && $from !== false ? (string) $from : $this->defaultFrom()));
+        $fallback = $this->sendAsUser ? ($this->ownAddress($actor) ?? '') : $this->defaultFrom();
+        $sender = strtolower(TaskRules::strip(is_scalar($from) && $from !== '' && $from !== false ? (string) $from : $fallback));
         if ($sender === '') {
-            throw new TaskUnavailable('No sending mailbox is configured');
+            throw new TaskUnavailable($this->sendAsUser ? 'Your account has no email address to send from' : 'No sending mailbox is configured');
         }
         $allowedSenders = array_column($this->sendMailboxes($actor)['mailboxes'], 'email');
         if (!in_array($sender, $allowedSenders, true)) {
-            throw new TaskForbidden('Tri-Task is not allowed to send from ' . $sender . '. Ask a finance administrator to grant it that mailbox.');
+            throw new TaskForbidden($this->sendAsUser
+                ? 'Tri-Task sends from your own address only, not from ' . $sender . '.'
+                : 'Tri-Task is not allowed to send from ' . $sender . '. Ask a finance administrator to grant it that mailbox.');
         }
-        $ownMailbox = $sender === $this->ownAddress($actor);
+        $ownMailbox = $this->sendAsUser;
         $attachments = TaskMailText::attachments($data['attachments'] ?? null);
 
         $allowed = [];
@@ -248,11 +253,11 @@ final class TaskMailService
         return ['sent' => $sent, 'results' => $results];
     }
 
-    /** The person's own address when they may send from it, lower-case; else null. */
+    /** The person's own address, lower-case, or null when it is not a valid one. */
     private function ownAddress(TaskActor $actor): ?string
     {
         $email = strtolower(trim($actor->email));
 
-        return $this->sendAsUser && filter_var($email, FILTER_VALIDATE_EMAIL) !== false ? $email : null;
+        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false ? $email : null;
     }
 }
