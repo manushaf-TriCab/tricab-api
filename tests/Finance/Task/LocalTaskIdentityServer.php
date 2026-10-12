@@ -23,6 +23,7 @@ final class LocalTaskIdentityServer
     private const SCRIPTS = [
         'create-identity-schema.sql',
         'create-finance-task-schema.sql',
+        'alter-finance-task-board.sql',
         'seed-finance-permissions.sql',
         'seed-finance-roles.sql',
         'seed-finance-task-permissions.sql',

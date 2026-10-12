@@ -86,6 +86,8 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
 
     public function deleteProject(string $id): void
     {
+        // Its board groups go with it (alter-finance-task-board.sql); a project is deleted for good only once it has no tasks.
+        $this->connection->execute('DELETE FROM [finance].[task_groups] WHERE [project_id] = :id', ['id' => $id]);
         $this->connection->execute('DELETE FROM [finance].[task_projects] WHERE [id] = :id', ['id' => $id]);
     }
 

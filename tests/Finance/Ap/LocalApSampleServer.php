@@ -33,6 +33,7 @@ final class LocalApSampleServer
         'create-finance-access-schema.sql',
         'create-finance-odoo-schema.sql',
         'create-finance-task-schema.sql',
+        'alter-finance-task-board.sql',
         'create-finance-ar-schema.sql',
         'create-finance-invoice-schema.sql',
         'alter-finance-mail-status-suppressed.sql',

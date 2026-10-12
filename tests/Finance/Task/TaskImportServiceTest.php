@@ -200,7 +200,7 @@ final class TaskImportServiceTest extends TestCase
         self::assertSame(['Entity "Mars Pty Ltd" is not an entity in Tri-Task', 'Preparer "Nobody Known" is not a member of Tri-Task'], $lines[1]['errors']);
         self::assertCount(5, (array) $lines[2]['errors']);
         self::assertSame([
-            'Status "later" must be In Progress or Completed',
+            'Status "later" must be Not started, Working on it, Stuck, Ready for review or Done',
             'Category "weekly" must be Routine or Ad-hoc',
             'Progress % must be a number from 0 to 100, not "150"',
             'Due Date "soon" is not a date (use dd/mm/yyyy)',

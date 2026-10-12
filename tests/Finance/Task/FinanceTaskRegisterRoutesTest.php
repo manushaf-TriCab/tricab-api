@@ -195,13 +195,13 @@ final class FinanceTaskRegisterRoutesTest extends TestCase
         $data = self::data($json);
         self::assertIsArray($data);
         self::assertSame(['tasks', 'timezone', 'today'], array_keys($data));
-        [, $json] = $this->call('GET', '/history', null, ['to_status' => 'in_progress']);
+        [, $json] = $this->call('GET', '/history', null, ['to_status' => 'not_started']);
         self::assertCount(1, (array) self::data($json));
         [, $json] = $this->call('GET', '/history', null, ['to_status' => 'completed']);
         self::assertSame([], self::data($json));
         [$status, $json] = $this->call('GET', '/tasks/' . $id . '/history');
         self::assertSame(200, $status);
-        self::assertSame(['in_progress'], array_column((array) self::data($json), 'to_status'));
+        self::assertSame(['not_started'], array_column((array) self::data($json), 'to_status'));
     }
 
     public function test_creating_without_a_valid_member_or_a_name_is_a_422(): void

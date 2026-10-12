@@ -7,8 +7,9 @@ namespace TriCab\Core\Finance\Task\Domain;
 use DateTimeImmutable;
 
 /**
- * One task (`finance.task_tasks`). The stored status is `in_progress` or `completed`;
- * `overdue` is derived from the due date, never stored (decision D17).
+ * One task (`finance.task_tasks`). The stored status is one of `TaskRules::STATUSES`;
+ * `overdue` is derived from the due date, never stored (decision D17). `priority` and `groupId`
+ * came with the board (13 Oct 2026) and default to none, so older callers need not pass them.
  */
 final class TaskRecord
 {
@@ -35,6 +36,8 @@ final class TaskRecord
         public ?int $deletedBy,
         public DateTimeImmutable $createdDate,
         public DateTimeImmutable $updatedDate,
+        public ?string $priority = null,
+        public ?string $groupId = null,
     ) {
     }
 

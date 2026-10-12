@@ -7,6 +7,7 @@ namespace TriCab\Core\Finance\Task\Service;
 use DateTimeImmutable;
 use TriCab\Core\Finance\Module;
 use TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory;
+use TriCab\Core\Finance\Task\Contract\TaskBoardStore;
 use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Contract\TaskStore;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
@@ -39,6 +40,8 @@ final class TaskService
         private readonly TaskSetupStore $setup,
         private readonly FinanceTaskMemberDirectory $members,
         private readonly TaskTime $time,
+        // Task groups (13 Oct 2026). Without it a task cannot be put in a group, as before the board.
+        private readonly ?TaskBoardStore $board = null,
     ) {
     }
 
@@ -105,7 +108,9 @@ final class TaskService
         }
         [$fields, $dependencies] = $this->clean($data, false);
         $now = $this->time->now();
-        $status = is_string($fields['status'] ?? null) ? $fields['status'] : 'in_progress';
+        $status = is_string($fields['status'] ?? null) ? $fields['status'] : TaskRules::DEFAULT_STATUS;
+        $projectId = self::nullableStr($fields, 'project_id');
+        $this->guardCompletion($actor, '', $status, [self::nullableInt($fields, 'reviewer_user_id')]);
         $task = new TaskRecord(
             TaskRules::newId(),
             (string) $fields['name'],
@@ -129,6 +134,8 @@ final class TaskService
             null,
             $now,
             $now,
+            self::nullableStr($fields, 'priority'),
+            $this->groupIn(self::nullableStr($fields, 'group_id'), $projectId),
         );
 
         $this->tasks->transactional(function () use ($task, $dependencies, $actor, $now): void {
@@ -305,7 +312,12 @@ final class TaskService
         $newStatus = is_string($fields['status'] ?? null) ? $fields['status'] : $oldStatus;
         $now = $this->time->now();
 
-        if ($newStatus !== $oldStatus) {
+        // The reviewer before this save counts as well as after it, so one save cannot drop the reviewer and close the task.
+        $this->guardCompletion($actor, $oldStatus, $newStatus, [
+            $task->reviewerUserId,
+            array_key_exists('reviewer_user_id', $fields) ? self::nullableInt($fields, 'reviewer_user_id') : $task->reviewerUserId,
+        ]);
+        if ($newStatus !== $oldStatus && in_array($newStatus, TaskRules::BLOCKED_STATUSES, true)) {
             // The browser used to warn ("Start anyway"); the server refuses, listing what is in the way,
             // checked against the dependencies this same request is about to set, if it sends any.
             $blockers = $dependencies !== null
@@ -338,8 +350,19 @@ final class TaskService
                 'project_id' => $task->projectId = is_string($value) ? $value : null,
                 'preparer_user_id' => $task->preparerUserId = is_int($value) ? $value : null,
                 'reviewer_user_id' => $task->reviewerUserId = is_int($value) ? $value : null,
+                'priority' => $task->priority = is_string($value) ? $value : null,
                 default => null,
             };
+        }
+        // A group belongs to one project: a group sent must be the task's project's, and moving the task to another
+        // project leaves its old group behind.
+        if (array_key_exists('group_id', $fields)) {
+            $task->groupId = $this->groupIn(self::nullableStr($fields, 'group_id'), $task->projectId);
+        } elseif ($task->groupId !== null && array_key_exists('project_id', $fields)) {
+            $group = $this->board?->findGroup($task->groupId);
+            if ($group === null || $group->projectId !== $task->projectId) {
+                $task->groupId = null;
+            }
         }
         if ($newStatus !== $oldStatus) {
             $task->completedAt = $newStatus === 'completed' ? $now : null;
@@ -347,6 +370,41 @@ final class TaskService
         }
         $task->updatedDate = $now;
         $this->tasks->updateTask($task);
+    }
+
+    /**
+     * The review step (13 Oct 2026, item 5): a task with a reviewer is marked Done by its reviewer, or by a Manager or
+     * Administrator (who hold TASKS.UPDATE). Anyone else sends it to Ready for review instead.
+     *
+     * @param list<?int> $reviewerUserIds every reviewer the task has had in this save
+     */
+    private function guardCompletion(TaskActor $actor, string $oldStatus, string $newStatus, array $reviewerUserIds): void
+    {
+        if ($newStatus !== 'completed' || $oldStatus === 'completed' || $actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)) {
+            return;
+        }
+        foreach ($reviewerUserIds as $reviewerUserId) {
+            if ($reviewerUserId !== null && $reviewerUserId !== $actor->userId) {
+                throw new TaskForbidden('Only the reviewer can mark this task done. Set it to Ready for review instead.');
+            }
+        }
+    }
+
+    /** The group id when it is one of the project's groups; refused otherwise. */
+    private function groupIn(?string $groupId, ?string $projectId): ?string
+    {
+        if ($groupId === null) {
+            return null;
+        }
+        $group = $this->board?->findGroup($groupId);
+        if ($group === null) {
+            throw new TaskInvalid('That group does not exist');
+        }
+        if ($group->projectId !== $projectId) {
+            throw new TaskInvalid('That group belongs to another project');
+        }
+
+        return $groupId;
     }
 
     /**
@@ -453,12 +511,25 @@ final class TaskService
                 throw new TaskInvalid('Overdue is worked out from the due date and cannot be set');
             }
             if (!is_string($status) || !in_array($status, TaskRules::STATUSES, true)) {
-                throw new TaskInvalid('Status must be in_progress or completed');
+                throw new TaskInvalid('Status must be not_started, in_progress, stuck, ready_for_review or completed');
             }
             $out['status'] = $status;
         }
         if (array_key_exists('progress', $data)) {
             $out['progress'] = TaskRules::progress($data['progress']);
+        }
+        if (array_key_exists('priority', $data)) {
+            $priority = $data['priority'];
+            if ($priority === null || $priority === '') {
+                $out['priority'] = null;
+            } elseif (is_string($priority) && in_array($priority, TaskRules::PRIORITIES, true)) {
+                $out['priority'] = $priority;
+            } else {
+                throw new TaskInvalid('Priority must be critical, high, medium or low');
+            }
+        }
+        if (array_key_exists('group_id', $data)) {
+            $out['group_id'] = self::identifier($data['group_id']);
         }
         if (array_key_exists('due_date', $data)) {
             $out['due_date'] = TaskRules::date($data['due_date']);

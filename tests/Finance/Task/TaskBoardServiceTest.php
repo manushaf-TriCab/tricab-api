@@ -1,0 +1,359 @@
+<?php
+
+declare(strict_types=1);
+
+namespace TriCab\Api\Tests\Finance\Task;
+
+use PHPUnit\Framework\TestCase;
+use TriCab\Api\Finance\Task\InMemoryFinanceTaskMemberDirectory;
+use TriCab\Api\Finance\Task\InMemoryTaskBoardStore;
+use TriCab\Api\Finance\Task\InMemoryTaskStore;
+use TriCab\Api\Tests\Doubles\FixedClock;
+use TriCab\Core\Finance\Module;
+use TriCab\Core\Finance\Task\Domain\TaskActor;
+use TriCab\Core\Finance\Task\Domain\TaskConflict;
+use TriCab\Core\Finance\Task\Domain\TaskForbidden;
+use TriCab\Core\Finance\Task\Domain\TaskInvalid;
+use TriCab\Core\Finance\Task\Domain\TaskMember;
+use TriCab\Core\Finance\Task\Domain\TaskNotFound;
+use TriCab\Core\Finance\Task\Service\TaskBoardService;
+use TriCab\Core\Finance\Task\Service\TaskService;
+use TriCab\Core\Finance\Task\Service\TaskSetupService;
+use TriCab\Core\Finance\Task\Service\TaskTime;
+
+/**
+ * The review step, priority, task groups and project templates (13 Oct 2026, items 5 and 9 of TRI-TASK-UX-PLAN.md),
+ * on the in-memory stores.
+ */
+final class TaskBoardServiceTest extends TestCase
+{
+    private InMemoryTaskStore $store;
+
+    private InMemoryTaskBoardStore $boardStore;
+
+    private TaskService $tasks;
+
+    private TaskSetupService $setup;
+
+    private TaskBoardService $board;
+
+    private FixedClock $clock;
+
+    /** A team member: their own tasks only. */
+    private TaskActor $una;
+
+    /** A team member who reviews. */
+    private TaskActor $rae;
+
+    /** A manager: every task. */
+    private TaskActor $max;
+
+    protected function setUp(): void
+    {
+        $directory = new InMemoryFinanceTaskMemberDirectory();
+        $directory->add(11, 'Una User', 'una@example.test');
+        $directory->add(12, 'Max Manager', 'max@example.test', TaskMember::ROLE_MANAGER);
+        $directory->add(13, 'Rae Reviewer', 'rae@example.test');
+        $directory->add(14, 'Ada Admin', 'ada@example.test', TaskMember::ROLE_ADMIN);
+        $directory->add(15, 'Lin Manager', 'lin@example.test', TaskMember::ROLE_MANAGER);
+        $this->store = new InMemoryTaskStore();
+        $this->boardStore = new InMemoryTaskBoardStore();
+        $this->clock = FixedClock::utc('2026-10-13 01:00:00');
+        $time = new TaskTime($this->clock, 'Australia/Melbourne');
+        $this->tasks = new TaskService($this->store, $this->store, $directory, $time, $this->boardStore);
+        $this->setup = new TaskSetupService($this->store, $directory, $time);
+        $this->board = new TaskBoardService($this->boardStore, $this->store, $this->store, $this->tasks, $this->setup, $directory, $time);
+
+        $base = [Module::PERMISSION_TASK_TASKS_READ, Module::PERMISSION_TASK_TASKS_CREATE, Module::PERMISSION_TASK_TASKS_UPDATE_OWN, Module::PERMISSION_TASK_TASKS_DELETE_OWN];
+        $this->una = new TaskActor(11, 'Una User', 'una@example.test', $base);
+        $this->rae = new TaskActor(13, 'Rae Reviewer', 'rae@example.test', $base);
+        $this->max = new TaskActor(12, 'Max Manager', 'max@example.test', [
+            ...$base, Module::PERMISSION_TASK_TASKS_READ_ALL, Module::PERMISSION_TASK_TASKS_UPDATE, Module::PERMISSION_TASK_TASKS_DELETE, Module::PERMISSION_TASK_SETUP_MANAGE,
+        ]);
+    }
+
+    private static function id(mixed $row): string
+    {
+        self::assertIsArray($row);
+        self::assertIsString($row['id']);
+
+        return $row['id'];
+    }
+
+    private function project(string $name = 'Odoo Project'): string
+    {
+        return self::id($this->setup->createProject($this->max, ['name' => $name]));
+    }
+
+    // ==== statuses and the review step (item 5) ================================================
+
+    public function test_a_new_task_starts_not_started_and_any_of_the_five_statuses_can_be_set(): void
+    {
+        $task = $this->tasks->create($this->max, ['name' => 'Sales module']);
+        self::assertSame('not_started', $task['status']);
+        foreach (['in_progress', 'stuck', 'ready_for_review', 'completed', 'not_started'] as $status) {
+            self::assertSame($status, $this->tasks->update($this->max, self::id($task), ['status' => $status])['status']);
+        }
+    }
+
+    public function test_only_the_reviewer_or_a_manager_marks_a_reviewed_task_done(): void
+    {
+        $id = self::id($this->tasks->create($this->max, ['name' => 'Bank rec', 'preparer_id' => '11', 'reviewer_id' => '13']));
+
+        try {
+            $this->tasks->update($this->una, $id, ['status' => 'completed']);
+            self::fail('The preparer should not be able to mark it done.');
+        } catch (TaskForbidden $e) {
+            self::assertSame('Only the reviewer can mark this task done. Set it to Ready for review instead.', $e->getMessage());
+        }
+        self::assertSame('ready_for_review', $this->tasks->update($this->una, $id, ['status' => 'ready_for_review'])['status']);
+        self::assertSame('completed', $this->tasks->update($this->rae, $id, ['status' => 'completed'])['status']);
+
+        // A manager may close any task, and with no reviewer the preparer closes it.
+        $other = self::id($this->tasks->create($this->max, ['name' => 'Accruals', 'preparer_id' => '11', 'reviewer_id' => '13']));
+        self::assertSame('completed', $this->tasks->update($this->max, $other, ['status' => 'completed'])['status']);
+        $solo = self::id($this->tasks->create($this->una, ['name' => 'Filing', 'preparer_id' => '11']));
+        self::assertSame('completed', $this->tasks->update($this->una, $solo, ['status' => 'completed'])['status']);
+    }
+
+    public function test_the_preparer_cannot_change_or_drop_the_reviewer_and_close_the_task_in_one_save(): void
+    {
+        $id = self::id($this->tasks->create($this->max, ['name' => 'Bank rec', 'preparer_id' => '11', 'reviewer_id' => '13']));
+
+        foreach ([['reviewer_id' => '12'], ['reviewer_id' => '11'], ['reviewer_id' => null]] as $change) {
+            try {
+                $this->tasks->update($this->una, $id, ['status' => 'completed'] + $change);
+                self::fail('Expected a refusal for ' . json_encode($change, JSON_THROW_ON_ERROR));
+            } catch (TaskForbidden) {
+            }
+        }
+        self::assertSame('not_started', $this->tasks->get($this->max, $id)['status']);
+    }
+
+    public function test_a_member_cannot_create_a_task_already_done_for_someone_else_to_review(): void
+    {
+        $this->expectException(TaskForbidden::class);
+        $this->tasks->create($this->una, ['name' => 'Bank rec', 'preparer_id' => '11', 'reviewer_id' => '13', 'status' => 'completed']);
+    }
+
+    public function test_an_unfinished_dependency_blocks_starting_but_not_stuck_or_not_started(): void
+    {
+        $gate = self::id($this->tasks->create($this->max, ['name' => 'Gather statements']));
+        $id = self::id($this->tasks->create($this->max, ['name' => 'Reconcile', 'dependencies' => [$gate]]));
+
+        self::assertSame('stuck', $this->tasks->update($this->max, $id, ['status' => 'stuck'])['status']);
+        foreach (['in_progress', 'ready_for_review', 'completed'] as $status) {
+            try {
+                $this->tasks->update($this->max, $id, ['status' => $status]);
+                self::fail($status . ' should be blocked.');
+            } catch (TaskConflict $e) {
+                self::assertStringContainsString('Gather statements', $e->getMessage());
+            }
+        }
+    }
+
+    public function test_overdue_still_wins_over_every_open_status_but_not_done(): void
+    {
+        $late = ['name' => 'Late', 'due_date' => '2026-10-01'];
+        self::assertSame('overdue', $this->tasks->create($this->max, $late + ['status' => 'stuck'])['display_status']);
+        self::assertSame('overdue', $this->tasks->create($this->max, $late + ['status' => 'ready_for_review'])['display_status']);
+        self::assertSame('completed', $this->tasks->create($this->max, $late + ['status' => 'completed'])['display_status']);
+        self::assertSame('stuck', $this->tasks->create($this->max, ['name' => 'Fine', 'status' => 'stuck'])['display_status']);
+    }
+
+    // ==== priority =============================================================================
+
+    public function test_priority_is_set_cleared_and_checked(): void
+    {
+        $task = $this->tasks->create($this->max, ['name' => 'Sales module', 'priority' => 'critical']);
+        self::assertSame('critical', $task['priority']);
+        self::assertNull($this->tasks->update($this->max, self::id($task), ['priority' => ''])['priority']);
+        self::assertNull($this->tasks->create($this->max, ['name' => 'No priority'])['priority']);
+
+        $this->expectException(TaskInvalid::class);
+        $this->expectExceptionMessage('Priority must be critical, high, medium or low');
+        $this->tasks->update($this->max, self::id($task), ['priority' => 'urgent']);
+    }
+
+    // ==== groups (item 9) ======================================================================
+
+    public function test_groups_are_listed_in_order_renamed_reordered_and_hold_only_their_projects_tasks(): void
+    {
+        $project = $this->project();
+        $studying = $this->board->createGroup($project, ['name' => 'Odoo Studying', 'color' => '#a855f7']);
+        $implementation = $this->board->createGroup($project, ['name' => 'Odoo Implementation']);
+        self::assertSame([0, 1], array_column($this->board->groups($project), 'sort_order'));
+
+        $this->board->updateGroup(self::id($implementation), ['sort_order' => -1, 'name' => 'Implementation']);
+        self::assertSame(['Implementation', 'Odoo Studying'], array_column($this->board->groups($project), 'name'));
+
+        $task = $this->tasks->create($this->max, ['name' => 'Sales module', 'project_id' => $project, 'group_id' => self::id($studying)]);
+        self::assertSame(self::id($studying), $task['group_id']);
+
+        $elsewhere = $this->project('Audit');
+        try {
+            $this->tasks->create($this->max, ['name' => 'Wrong board', 'project_id' => $elsewhere, 'group_id' => self::id($studying)]);
+            self::fail('A group of another project should be refused.');
+        } catch (TaskInvalid $e) {
+            self::assertSame('That group belongs to another project', $e->getMessage());
+        }
+
+        // Moving the task to another project leaves its group behind.
+        self::assertNull($this->tasks->update($this->max, self::id($task), ['project_id' => $elsewhere])['group_id']);
+    }
+
+    public function test_deleting_a_group_keeps_its_tasks_in_the_project_ungrouped(): void
+    {
+        $project = $this->project();
+        $group = self::id($this->board->createGroup($project, ['name' => 'Odoo Studying']));
+        $task = self::id($this->tasks->create($this->max, ['name' => 'Sales module', 'project_id' => $project, 'group_id' => $group]));
+
+        self::assertSame(['deleted' => true], $this->board->deleteGroup($group));
+
+        $after = $this->tasks->get($this->max, $task);
+        self::assertNull($after['group_id']);
+        self::assertSame($project, $after['project_id']);
+        self::assertSame([], $this->board->groups($project));
+        $this->expectException(TaskNotFound::class);
+        $this->board->updateGroup($group, ['name' => 'Gone']);
+    }
+
+    // ==== project templates (item 9) ===========================================================
+
+    /** @return array<string, mixed> */
+    private function odooTemplate(): array
+    {
+        return $this->board->createProjectTemplate($this->max, [
+            'name' => 'Odoo rollout',
+            'description' => 'Study, then implement',
+            'groups' => [
+                ['name' => 'Odoo Studying', 'color' => '#a855f7', 'tasks' => [
+                    ['name' => '1. Getting Started Module', 'priority' => 'critical', 'preparer_id' => '11', 'due_offset_days' => 7],
+                    ['name' => '2. Accounting and Finance Module', 'priority' => 'critical', 'preparer_id' => '11', 'reviewer_id' => '13', 'due_offset_days' => '14'],
+                ]],
+                ['name' => 'Odoo Implementation', 'tasks' => [
+                    ['name' => 'Customer List', 'priority' => 'medium', 'preparer_id' => '12'],
+                ]],
+            ],
+        ]);
+    }
+
+    public function test_a_project_template_is_saved_listed_renamed_and_its_name_is_unique(): void
+    {
+        $template = $this->odooTemplate();
+        self::assertSame(3, $template['task_count']);
+        self::assertSame(['Odoo Studying', 'Odoo Implementation'], array_column((array) $template['groups'], 'name'));
+        self::assertSame('12', $template['created_by_id']);
+        self::assertSame(['Odoo rollout'], array_column($this->board->projectTemplates(), 'name'));
+
+        $renamed = $this->board->updateProjectTemplate(self::id($template), ['name' => 'Odoo rollout v2', 'groups' => []]);
+        self::assertSame(0, $renamed['task_count']);
+
+        $this->board->createProjectTemplate($this->max, ['name' => 'Month-end close']);
+        $this->expectException(TaskConflict::class);
+        $this->board->updateProjectTemplate(self::id($template), ['name' => 'month-end CLOSE']);
+    }
+
+    public function test_a_bad_template_is_refused_with_where_the_problem_is(): void
+    {
+        $cases = [
+            'bad priority' => [[['name' => 'G', 'tasks' => [['name' => 'T', 'priority' => 'urgent']]]], 'Priority must be critical, high, medium or low ("T" in "G")'],
+            'not a member' => [[['name' => 'G', 'tasks' => [['name' => 'T', 'preparer_id' => '99']]]], 'The preparer and reviewer must be members of Tri-Task ("T" in "G")'],
+            'bad offset' => [[['name' => 'G', 'tasks' => [['name' => 'T', 'due_offset_days' => 'soon']]]], 'Due days must be a whole number of days after the start ("T" in "G")'],
+            'no group name' => [[['tasks' => []]], 'Name is required'],
+            'not a list' => [['G' => []], 'Groups must be a list'],
+        ];
+        foreach ($cases as $why => [$groups, $message]) {
+            try {
+                $this->board->createProjectTemplate($this->max, ['name' => 'T ' . $why, 'groups' => $groups]);
+                self::fail($why . ' should be refused.');
+            } catch (TaskInvalid $e) {
+                self::assertSame($message, $e->getMessage(), $why);
+            }
+        }
+        self::assertSame([], $this->board->projectTemplates());
+    }
+
+    public function test_using_a_template_makes_the_project_its_groups_and_its_tasks_with_due_dates_from_the_start(): void
+    {
+        $template = $this->odooTemplate();
+
+        $out = $this->board->applyProjectTemplate($this->max, self::id($template), ['name' => 'Odoo Project', 'start_date' => '2026-11-02']);
+
+        self::assertSame(3, $out['tasks_created']);
+        self::assertSame('Odoo Project', $out['project']['name']);
+        self::assertSame('active', $out['project']['status']);
+        self::assertSame(3, $out['project']['task_count']);
+        $projectId = self::id($out['project']);
+        $groups = $this->board->groups($projectId);
+        self::assertSame(['Odoo Studying', 'Odoo Implementation'], array_column($groups, 'name'));
+        self::assertSame('#a855f7', $groups[0]['color']);
+
+        $made = [];
+        foreach ($this->tasks->list($this->max) as $task) {
+            self::assertIsString($task['name']);
+            $made[$task['name']] = $task;
+        }
+        $first = $made['1. Getting Started Module'];
+        self::assertSame($projectId, $first['project_id']);
+        self::assertSame($groups[0]['id'], $first['group_id']);
+        self::assertSame('2026-11-09', $first['due_date']);
+        self::assertSame('critical', $first['priority']);
+        self::assertSame('not_started', $first['status']);
+        self::assertSame('11', $first['preparer_id']);
+        // No reviewer named: the default reviewer, the first Manager by name who is not the preparer.
+        self::assertSame('15', $first['reviewer_id']);
+        self::assertSame('13', $made['2. Accounting and Finance Module']['reviewer_id']);
+        self::assertSame('2026-11-16', $made['2. Accounting and Finance Module']['due_date']);
+        self::assertSame('', $made['Customer List']['due_date']);
+        // Max prepares it, so the other Manager reviews.
+        self::assertSame('15', $made['Customer List']['reviewer_id']);
+        self::assertSame($groups[1]['id'], $made['Customer List']['group_id']);
+    }
+
+    public function test_a_template_cannot_make_a_project_whose_name_is_taken(): void
+    {
+        $template = $this->odooTemplate();
+        $this->project('Odoo Project');
+
+        try {
+            $this->board->applyProjectTemplate($this->max, self::id($template), ['name' => 'Odoo Project']);
+            self::fail('A taken project name should be refused.');
+        } catch (TaskConflict) {
+        }
+        self::assertCount(1, $this->setup->listProjects($this->max));
+        self::assertSame([], $this->tasks->list($this->max));
+    }
+
+    public function test_a_project_is_saved_as_a_template_with_due_dates_as_days_from_its_first(): void
+    {
+        $project = $this->project();
+        $group = self::id($this->board->createGroup($project, ['name' => 'Odoo Studying']));
+        $this->tasks->create($this->max, ['name' => 'Sales module', 'project_id' => $project, 'group_id' => $group, 'due_date' => '2026-11-05', 'priority' => 'high', 'preparer_id' => '11']);
+        $this->clock->advance('+1 second');
+        $this->tasks->create($this->max, ['name' => 'Getting started', 'project_id' => $project, 'group_id' => $group, 'due_date' => '2026-11-02']);
+        $this->clock->advance('+1 second');
+        $this->tasks->create($this->max, ['name' => 'Loose end', 'project_id' => $project]);
+        $this->tasks->create($this->max, ['name' => 'Another project', 'project_id' => $this->project('Audit')]);
+
+        $template = $this->board->saveProjectAsTemplate($this->max, $project, ['name' => 'Odoo rollout']);
+
+        self::assertSame('Odoo rollout', $template['name']);
+        $groups = (array) $template['groups'];
+        self::assertSame(['Odoo Studying', TaskBoardService::UNGROUPED], array_column($groups, 'name'));
+        self::assertIsArray($groups[0]);
+        $tasks = (array) $groups[0]['tasks'];
+        self::assertSame(['Sales module', 'Getting started'], array_column($tasks, 'name'));
+        self::assertSame([3, 0], array_column($tasks, 'due_offset_days'));
+        self::assertSame(['high', null], array_column($tasks, 'priority'));
+        self::assertIsArray($groups[1]);
+        self::assertSame(['Loose end'], array_column((array) $groups[1]['tasks'], 'name'));
+    }
+
+    public function test_the_default_reviewer_prefers_a_manager_then_an_administrator(): void
+    {
+        self::assertSame(15, $this->board->defaultReviewer(11));   // Lin Manager before Max Manager by name
+        self::assertSame(12, $this->board->defaultReviewer(15));
+        self::assertSame(15, $this->board->defaultReviewer(null));
+    }
+}

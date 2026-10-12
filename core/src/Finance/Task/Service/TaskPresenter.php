@@ -7,7 +7,9 @@ namespace TriCab\Core\Finance\Task\Service;
 use DateTimeImmutable;
 use DateTimeZone;
 use TriCab\Core\Finance\Task\Domain\TaskEntity;
+use TriCab\Core\Finance\Task\Domain\TaskGroup;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
+use TriCab\Core\Finance\Task\Domain\TaskProjectTemplate;
 use TriCab\Core\Finance\Task\Domain\TaskProject;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
 use TriCab\Core\Finance\Task\Domain\TaskStatementArea;
@@ -32,7 +34,7 @@ final class TaskPresenter
         return $userId === null ? null : (string) $userId;
     }
 
-    /** `display_status`: completed, overdue (a due date before today), or in progress. */
+    /** `display_status`: completed, overdue (not done and due before today), or the stored status. */
     public static function displayStatus(string $status, ?string $dueDate, string $today): string
     {
         if ($status === 'completed') {
@@ -42,7 +44,7 @@ final class TaskPresenter
             return 'overdue';
         }
 
-        return 'in_progress';
+        return $status;
     }
 
     /**
@@ -142,6 +144,8 @@ final class TaskPresenter
             'reviewer_id' => self::person($t->reviewerUserId),
             'status' => $t->status,
             'display_status' => self::displayStatus($t->status, $t->dueDate, $today),
+            'priority' => $t->priority,
+            'group_id' => $t->groupId,
             'progress' => $t->progress,
             'due_date' => $t->dueDate ?? '',
             'due_date_requested' => $t->dueDateRequested,
@@ -151,6 +155,41 @@ final class TaskPresenter
             'created_by_id' => self::person($t->createdByUserId),
             'is_deleted' => $t->deletedAt !== null,
             'deleted_at' => self::iso($t->deletedAt),
+            'created_date' => self::iso($t->createdDate),
+            'updated_date' => self::iso($t->updatedDate),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function group(TaskGroup $g): array
+    {
+        return [
+            'id' => $g->id,
+            'project_id' => $g->projectId,
+            'name' => $g->name,
+            'color' => $g->color,
+            'sort_order' => $g->sortOrder,
+            'created_date' => self::iso($g->createdDate),
+            'updated_date' => self::iso($g->updatedDate),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function projectTemplate(TaskProjectTemplate $t): array
+    {
+        $taskCount = 0;
+        foreach ($t->groups as $group) {
+            $taskCount += is_array($group['tasks'] ?? null) ? count($group['tasks']) : 0;
+        }
+
+        return [
+            'id' => $t->id,
+            'name' => $t->name,
+            'description' => $t->description,
+            'color' => $t->color,
+            'groups' => $t->groups,
+            'task_count' => $taskCount,
+            'created_by_id' => self::person($t->createdByUserId),
             'created_date' => self::iso($t->createdDate),
             'updated_date' => self::iso($t->updatedDate),
         ];

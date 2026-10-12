@@ -1000,8 +1000,14 @@ final class ContainerFactory
             \TriCab\Core\Finance\Task\Contract\TaskStore::class
                 => static fn (Container $container): \TriCab\Core\Finance\Task\Contract\TaskStore
                     => self::get($container, \TriCab\Api\Finance\Task\InMemoryTaskStore::class),
+            // The project board's groups and project templates (13 Oct 2026); the azure-sql branch swaps in the tables.
+            \TriCab\Core\Finance\Task\Contract\TaskBoardStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryTaskBoardStore::class),
             \TriCab\Core\Finance\Task\Service\TaskService::class
-                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskService::class),
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskService::class)
+                    ->constructorParameter('board', \DI\get(\TriCab\Core\Finance\Task\Contract\TaskBoardStore::class)),
+            \TriCab\Core\Finance\Task\Service\TaskBoardService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskBoardService::class),
             // Task mail (T2.6): the links to the shared ledger and the daily-summary recipients.
             \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class
                 => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryTaskMailLinks::class),
@@ -1027,6 +1033,17 @@ final class ContainerFactory
             \TriCab\Core\Finance\Task\Service\TaskDueDateRequestNotifier::class
                 => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskDueDateRequestNotifier
                     => new \TriCab\Core\Finance\Task\Service\TaskDueDateRequestNotifier(
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class),
+                        self::get($container, \TriCab\Core\Finance\Task\Service\TaskTime::class),
+                        $settings->financeTaskMailFrom,
+                    ),
+            \TriCab\Core\Finance\Task\Service\TaskReviewRequestNotifier::class
+                => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskReviewRequestNotifier
+                    => new \TriCab\Core\Finance\Task\Service\TaskReviewRequestNotifier(
+                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskStore::class),
                         self::get($container, \TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class),
                         self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
                         self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
@@ -3193,6 +3210,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskSetupStore::class);
             $definitions[\TriCab\Core\Finance\Task\Contract\TaskStore::class]
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskStore::class);
+            $definitions[\TriCab\Core\Finance\Task\Contract\TaskBoardStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskBoardStore::class);
             $definitions[\TriCab\Core\Finance\Task\Contract\TaskMailLinks::class]
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskMailLinks::class);
             $definitions[\TriCab\Core\Finance\Task\Contract\TaskReportRecipientStore::class]

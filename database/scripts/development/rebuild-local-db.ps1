@@ -132,6 +132,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'create-finance-schema.sql')           # s
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-jobs-schema.sql')         # job runner claims; after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-access-schema.sql')       # finance scopes and the portal user map; after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-task-schema.sql')         # Tri-Task's ten tables (Phase 2); after create-finance-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-board.sql')           # Tri-Task statuses, priority, groups, project templates; after create-finance-task-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-attachments-schema.sql')  # finance file store rows; after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-ar-schema.sql')           # Tri-AR's eight tables (Phase 5); after create-finance-schema.sql and create-finance-attachments-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-invoice-schema.sql')      # Tri-AP's fourteen tables (Phase 6); after create-finance-schema.sql and create-finance-attachments-schema.sql

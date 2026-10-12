@@ -72,7 +72,11 @@ final class TaskImportService
 
     private const TRUE = ['yes', 'y', 'true', '1', 'x'];
     private const FALSE = ['no', 'n', 'false', '0', ''];
-    private const STATUS = ['inprogress' => 'in_progress', 'completed' => 'completed', 'complete' => 'completed', 'done' => 'completed'];
+    // The board's names (13 Oct 2026) beside the old ones: "Working on it" is in_progress, "Done" is completed.
+    private const STATUS = [
+        'inprogress' => 'in_progress', 'workingonit' => 'in_progress', 'completed' => 'completed', 'complete' => 'completed', 'done' => 'completed',
+        'notstarted' => 'not_started', 'stuck' => 'stuck', 'readyforreview' => 'ready_for_review',
+    ];
     private const CATEGORY = ['routine' => 'routine', 'adhoc' => 'ad_hoc'];
     private const PROJECT_STATUS = ['planning' => 'planning', 'active' => 'active', 'completed' => 'completed', 'onhold' => 'on_hold'];
     private const MONTHS = ['jan' => 1, 'feb' => 2, 'mar' => 3, 'apr' => 4, 'may' => 5, 'jun' => 6, 'jul' => 7, 'aug' => 8, 'sep' => 9, 'oct' => 10, 'nov' => 11, 'dec' => 12];
@@ -222,9 +226,9 @@ final class TaskImportService
                 $status = self::STATUS[$letters !== '' ? $letters : 'inprogress'] ?? null;
                 if ($letters === 'overdue') {
                     $status = 'in_progress';
-                    $line->warnings[] = 'Overdue is worked out from the due date; imported as In Progress';
+                    $line->warnings[] = 'Overdue is worked out from the due date; imported as Working on it';
                 } elseif ($status === null) {
-                    $errors[] = 'Status "' . self::cellText($row['status'] ?? null) . '" must be In Progress or Completed';
+                    $errors[] = 'Status "' . self::cellText($row['status'] ?? null) . '" must be Not started, Working on it, Stuck, Ready for review or Done';
                 }
                 $categoryLetters = self::letters($row['category'] ?? null);
                 $category = self::CATEGORY[$categoryLetters !== '' ? $categoryLetters : 'routine'] ?? null;

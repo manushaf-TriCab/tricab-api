@@ -15,7 +15,23 @@ use TriCab\Core\Finance\Task\Domain\TaskInvalid;
  */
 final class TaskRules
 {
-    public const STATUSES = ['in_progress', 'completed'];
+    /**
+     * The stored statuses (13 Oct 2026, item 5 and 9 of TRI-TASK-UX-PLAN.md). The first two values predate the
+     * change and keep their meaning under new labels: `in_progress` is "Working on it", `completed` is "Done".
+     */
+    public const STATUSES = ['not_started', 'in_progress', 'stuck', 'ready_for_review', 'completed'];
+    public const STATUS_LABELS = [
+        'not_started' => 'Not started',
+        'in_progress' => 'Working on it',
+        'stuck' => 'Stuck',
+        'ready_for_review' => 'Ready for review',
+        'completed' => 'Done',
+    ];
+    /** A new task starts here unless it says otherwise. */
+    public const DEFAULT_STATUS = 'not_started';
+    /** Moving into one of these is refused while a dependency is unfinished; Not started and Stuck stay open. */
+    public const BLOCKED_STATUSES = ['in_progress', 'ready_for_review', 'completed'];
+    public const PRIORITIES = ['critical', 'high', 'medium', 'low'];
     public const CATEGORIES = ['routine', 'ad_hoc'];
     public const PROJECT_STATUSES = ['planning', 'active', 'completed', 'on_hold'];
     public const STATEMENT_CATEGORIES = ['balance_sheet', 'income_statement', 'cash_flow', 'equity', 'notes', 'other'];
