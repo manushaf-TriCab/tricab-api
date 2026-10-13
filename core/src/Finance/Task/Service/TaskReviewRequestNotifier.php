@@ -13,6 +13,7 @@ use TriCab\Core\Finance\Shared\Mail\FinanceMailTransportFailed;
 use TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory;
 use TriCab\Core\Finance\Task\Contract\TaskMailLinks;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
+use TriCab\Core\Finance\Task\Domain\TaskFailure;
 use TriCab\Core\Finance\Task\Domain\TaskForbidden;
 use TriCab\Core\Finance\Task\Domain\TaskInvalid;
 use TriCab\Core\Finance\Task\Domain\TaskMailLink;
@@ -42,6 +43,29 @@ final class TaskReviewRequestNotifier
         private readonly string $from,
         private readonly bool $sendAsUser = false,
     ) {
+    }
+
+    /**
+     * After a save: when the task came back marked `review_due` (its preparer took it to 100%, 14 Oct 2026), asks the
+     * reviewer and reports how that went as `review_request` (sent, suppressed, failed). A refusal or a failure never
+     * fails the save.
+     *
+     * @param array<string, mixed> $task
+     * @return array<string, mixed>
+     */
+    public function requestIfDue(TaskActor $actor, array $task): array
+    {
+        if (($task['review_due'] ?? false) !== true) {
+            return $task;
+        }
+        unset($task['review_due']);
+        try {
+            $task['review_request'] = $this->request($actor, $task)['status'];
+        } catch (TaskFailure) {
+            $task['review_request'] = self::FAILED;
+        }
+
+        return $task;
     }
 
     /**

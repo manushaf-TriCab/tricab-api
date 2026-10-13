@@ -116,6 +116,24 @@ final class TaskReviewRequestNotifierTest extends TestCase
         self::assertSame(['rae@example.test'], $this->transport->sent[2]->to);
     }
 
+    public function test_after_a_save_it_asks_only_when_the_review_is_due_and_never_fails_the_save(): void
+    {
+        $task = $this->task(['progress' => 50]);
+        self::assertIsString($task['id']);
+        $saved = $this->tasks->update($this->una, $task['id'], ['progress' => 100]);
+
+        $out = $this->notifier->requestIfDue($this->una, $saved);
+        self::assertSame(TaskReviewRequestNotifier::SENT, $out['review_request']);
+        self::assertArrayNotHasKey('review_due', $out);
+        self::assertSame(['max@example.test'], $this->transport->sent[0]->to);
+
+        self::assertSame($task, $this->notifier->requestIfDue($this->una, $task), 'nothing due, nothing sent');
+        // A refusal (here: the reviewer has no address) is reported, not thrown.
+        $noMail = $this->task(['reviewer_id' => '15']) + ['review_due' => true];
+        self::assertSame(TaskReviewRequestNotifier::FAILED, $this->notifier->requestIfDue($this->una, $noMail)['review_request']);
+        self::assertCount(1, $this->transport->sent);
+    }
+
     public function test_with_send_as_user_it_goes_from_the_persons_own_address(): void
     {
         $result = $this->notifier('finance@example.test', true)->request($this->una, $this->task());

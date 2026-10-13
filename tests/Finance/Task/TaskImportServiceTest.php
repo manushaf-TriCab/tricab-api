@@ -151,7 +151,8 @@ final class TaskImportServiceTest extends TestCase
         foreach ([
             'name' => 'Bank rec', 'project_name' => 'Month End', 'description' => 'd', 'requirements' => 'r', 'notes' => 'n',
             'finance_statement_area' => 'Cash', 'category' => 'ad_hoc', 'status' => 'completed', 'preparer_id' => '11', 'reviewer_id' => '12',
-            'progress' => 50, 'due_date' => '2026-10-09', 'due_date_requested' => false, 'urgent' => true, 'created_by_id' => '13',
+            // Done means 100%, whatever the sheet says (14 Oct 2026).
+            'progress' => 100, 'due_date' => '2026-10-09', 'due_date_requested' => false, 'urgent' => true, 'created_by_id' => '13',
         ] as $field => $expected) {
             self::assertSame($expected, $task[$field], $field);
         }

@@ -98,6 +98,61 @@ final class TaskServiceTest extends TestCase
         return $names;
     }
 
+    // ==== progress and status move together (14 Oct 2026) =========================================
+
+    public function test_done_sets_100_and_reopening_a_done_task_without_a_progress_drops_it_to_75(): void
+    {
+        $id = self::id($this->tasks->create($this->max, ['name' => 'A', 'preparer_id' => 11, 'progress' => 20]));
+
+        self::assertSame(100, $this->tasks->update($this->max, $id, ['status' => 'completed'])['progress']);
+        $reopened = $this->tasks->update($this->max, $id, ['status' => 'active']);
+        self::assertSame(['active', 75], [$reopened['status'], $reopened['progress']]);
+        $this->tasks->update($this->max, $id, ['status' => 'completed']);
+        $held = $this->tasks->update($this->max, $id, ['status' => 'on_hold', 'progress' => 40]);
+        self::assertSame(['on_hold', 40], [$held['status'], $held['progress']], 'a progress sent with the status is kept');
+    }
+
+    public function test_100_percent_makes_the_task_done_for_someone_who_may_close_it(): void
+    {
+        $noReviewer = self::id($this->tasks->create($this->una, ['name' => 'Mine', 'preparer_id' => 11]));
+        $done = $this->tasks->update($this->una, $noReviewer, ['progress' => 100]);
+        self::assertSame('completed', $done['status']);
+        self::assertNotNull($done['completed_at']);
+        self::assertArrayNotHasKey('review_due', $done);
+
+        $reviewed = self::id($this->tasks->create($this->max, ['name' => 'Reviewed', 'preparer_id' => 11, 'reviewer_id' => 13]));
+        self::assertSame('completed', $this->tasks->update($this->max, $reviewed, ['progress' => 100])['status'], 'a Manager closes any task');
+        self::assertSame('completed', $this->tasks->create($this->max, ['name' => 'Born done', 'progress' => 100])['status']);
+    }
+
+    public function test_a_preparer_at_100_percent_with_a_reviewer_stays_active_and_the_review_is_due_once(): void
+    {
+        $id = self::id($this->tasks->create($this->max, ['name' => 'B', 'preparer_id' => 11, 'reviewer_id' => 12, 'progress' => 50]));
+
+        $first = $this->tasks->update($this->una, $id, ['progress' => 100]);
+        self::assertSame(['active', 100, true], [$first['status'], $first['progress'], $first['review_due']]);
+        self::assertArrayNotHasKey('review_due', $this->tasks->update($this->una, $id, ['progress' => 100]), 'already at 100: not asked again');
+        $bulk = $this->tasks->bulkUpdate($this->una, [['id' => $id, 'progress' => 75], ['id' => $id, 'progress' => 100]]);
+        self::assertTrue($bulk[1]['review_due']);
+    }
+
+    public function test_a_form_sending_the_unchanged_status_with_100_percent_still_closes_the_task(): void
+    {
+        $id = self::id($this->tasks->create($this->una, ['name' => 'E', 'preparer_id' => 11, 'progress' => 25]));
+        self::assertSame('completed', $this->tasks->update($this->una, $id, ['status' => 'active', 'progress' => 100])['status']);
+        self::assertSame('completed', $this->tasks->create($this->una, ['name' => 'F', 'status' => 'active', 'progress' => 100])['status']);
+    }
+
+    public function test_below_100_reopens_a_done_task_but_leaves_on_hold_alone(): void
+    {
+        $id = self::id($this->tasks->create($this->max, ['name' => 'C', 'preparer_id' => 11, 'status' => 'completed']));
+        $reopened = $this->tasks->update($this->max, $id, ['progress' => 50]);
+        self::assertSame(['active', 50, null], [$reopened['status'], $reopened['progress'], $reopened['completed_at']]);
+
+        $held = self::id($this->tasks->create($this->max, ['name' => 'D', 'preparer_id' => 11, 'status' => 'on_hold']));
+        self::assertSame('on_hold', $this->tasks->update($this->max, $held, ['progress' => 25])['status']);
+    }
+
     // ==== create ===============================================================================
 
     public function test_a_task_with_no_project_goes_in_general_made_once_and_a_chosen_project_is_kept(): void

@@ -108,6 +108,7 @@ final class TaskService
             throw new TaskForbidden('Permission denied');
         }
         [$fields, $dependencies] = $this->clean($data, false);
+        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, TaskRules::DEFAULT_STATUS, 0, [self::nullableInt($fields, 'reviewer_user_id')]);
         $now = $this->time->now();
         $status = is_string($fields['status'] ?? null) ? $fields['status'] : TaskRules::DEFAULT_STATUS;
         // A task given no project goes in "General" (item 3, Manusha 13 Oct 2026): anyone can allocate one
@@ -149,7 +150,7 @@ final class TaskService
             $this->recordStatusChange($actor, $task->id, null, $task->status, $now);
         });
 
-        return $this->dict($task);
+        return $this->dict($task) + ($reviewDue ? ['review_due' => true] : []);
     }
 
     /**
@@ -187,17 +188,18 @@ final class TaskService
      */
     public function update(TaskActor $actor, string $id, array $data): array
     {
-        $task = $this->tasks->transactional(function () use ($actor, $id, $data): TaskRecord {
+        $reviewDue = false;
+        $task = $this->tasks->transactional(function () use ($actor, $id, $data, &$reviewDue): TaskRecord {
             $task = $this->visibleTask($actor, $id);
             if ($task->deletedAt !== null) {
                 throw new TaskConflict('Restore this task from the Bin before changing it');
             }
-            $this->applyUpdate($actor, $task, $data);
+            $reviewDue = $this->applyUpdate($actor, $task, $data);
 
             return $task;
         });
 
-        return $this->dict($task);
+        return $this->dict($task) + ($reviewDue ? ['review_due' => true] : []);
     }
 
     /**
@@ -214,7 +216,8 @@ final class TaskService
             throw new TaskInvalid('Up to ' . TaskRules::MAX_BULK . ' tasks at once');
         }
 
-        $touched = $this->tasks->transactional(function () use ($actor, $rows): array {
+        $due = [];
+        $touched = $this->tasks->transactional(function () use ($actor, $rows, &$due): array {
             $touched = [];
             foreach ($rows as $row) {
                 if (!is_array($row) || !isset($row['id']) || $row['id'] === '' || $row['id'] === null || $row['id'] === false || $row['id'] === 0) {
@@ -230,14 +233,19 @@ final class TaskService
                         $changes[(string) $key] = $value;
                     }
                 }
-                $this->applyUpdate($actor, $task, $changes);
+                if ($this->applyUpdate($actor, $task, $changes)) {
+                    $due[$task->id] = true;
+                }
                 $touched[] = $task;
             }
 
             return $touched;
         });
 
-        return $this->dicts($touched);
+        return array_map(
+            static fn (array $t): array => isset($due[$t['id']]) ? $t + ['review_due' => true] : $t,
+            $this->dicts($touched),
+        );
     }
 
     /**
@@ -334,13 +342,17 @@ final class TaskService
      *
      * @param array<string, mixed> $data
      */
-    private function applyUpdate(TaskActor $actor, TaskRecord $task, array $data): void
+    private function applyUpdate(TaskActor $actor, TaskRecord $task, array $data): bool
     {
         if (!$this->canEdit($actor, $task)) {
             throw new TaskForbidden('You do not have permission to change this task');
         }
         [$fields, $dependencies] = $this->clean($data, true);
         $oldStatus = TaskRules::status($task->status);
+        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, $oldStatus, $task->progress, [
+            $task->reviewerUserId,
+            array_key_exists('reviewer_user_id', $fields) ? self::nullableInt($fields, 'reviewer_user_id') : $task->reviewerUserId,
+        ]);
         $newStatus = is_string($fields['status'] ?? null) ? $fields['status'] : $oldStatus;
         $now = $this->time->now();
 
@@ -402,6 +414,8 @@ final class TaskService
         }
         $task->updatedDate = $now;
         $this->tasks->updateTask($task);
+
+        return $reviewDue;
     }
 
     /**
@@ -412,14 +426,70 @@ final class TaskService
      */
     private function guardCompletion(TaskActor $actor, string $oldStatus, string $newStatus, array $reviewerUserIds): void
     {
-        if ($newStatus !== 'completed' || $oldStatus === 'completed' || $actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)) {
-            return;
+        if ($newStatus === 'completed' && $oldStatus !== 'completed' && !$this->mayComplete($actor, $reviewerUserIds)) {
+            throw new TaskForbidden('Only the reviewer can mark this task done. Use Send for review instead.');
+        }
+    }
+
+    /** @param list<?int> $reviewerUserIds */
+    private function mayComplete(TaskActor $actor, array $reviewerUserIds): bool
+    {
+        if ($actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)) {
+            return true;
         }
         foreach ($reviewerUserIds as $reviewerUserId) {
             if ($reviewerUserId !== null && $reviewerUserId !== $actor->userId) {
-                throw new TaskForbidden('Only the reviewer can mark this task done. Use Send for review instead.');
+                return false;
             }
         }
+
+        return true;
+    }
+
+    /**
+     * Progress and status move together (Manusha, 14 Oct 2026):
+     *  - Done sets progress to 100; Active or On Hold at 100 (a task reopened without a new progress) goes to 75;
+     *  - progress reaching 100 makes the task Done, when this person may close it; when only the reviewer may, the
+     *    task stays Active and the reviewer is asked (the caller sends it, on the returned flag);
+     *  - progress below 100 on a Done task makes it Active again; an On Hold task stays On Hold.
+     * A status sent with the progress wins, unless it is the status the task already has (a form sends every field).
+     * A new task counts as Active before it is saved.
+     *
+     * @param array<string, mixed> $fields cleaned
+     * @param list<?int> $reviewerUserIds
+     * @return array{0: array<string, mixed>, 1: bool} the fields, and whether the reviewer should be asked
+     */
+    private function linkProgress(TaskActor $actor, array $fields, string $oldStatus, int $oldProgress, array $reviewerUserIds): array
+    {
+        $hasProgress = array_key_exists('progress', $fields);
+        $progress = $hasProgress && is_int($fields['progress']) ? $fields['progress'] : $oldProgress;
+        $status = is_string($fields['status'] ?? null) ? $fields['status'] : null;
+        if ($status !== null && $status !== $oldStatus) {
+            if ($status === 'completed') {
+                $fields['progress'] = 100;
+            } elseif ($oldStatus === 'completed' && $progress >= 100) {
+                $fields['progress'] = 75;
+            }
+
+            return [$fields, false];
+        }
+        if (!$hasProgress) {
+            return [$fields, false];
+        }
+        if ($progress >= 100 && $oldStatus !== 'completed') {
+            if ($this->mayComplete($actor, $reviewerUserIds)) {
+                $fields['status'] = 'completed';
+
+                return [$fields, false];
+            }
+
+            return [$fields, $oldProgress < 100];
+        }
+        if ($progress < 100 && $oldStatus === 'completed') {
+            $fields['status'] = 'active';
+        }
+
+        return [$fields, false];
     }
 
     /** The group id when it is one of the project's groups; refused otherwise. */
