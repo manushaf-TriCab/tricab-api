@@ -56,11 +56,12 @@ final class TaskMembersService
 
     /**
      * The highest Tri-Task role the permissions amount to: the same test the pages use.
-     * `admin` reads analytics, `manager` reads every task, else `user`.
+     * `admin` manages the settings, `manager` reads every task, else `user`. (Until 13 Oct 2026
+     * `admin` was "reads analytics"; Managers read it now too.)
      */
     public static function accessRoleOf(TaskActor $actor): string
     {
-        if ($actor->can(Module::PERMISSION_TASK_ANALYTICS_READ)) {
+        if ($actor->can(Module::PERMISSION_TASK_SETTINGS_MANAGE)) {
             return TaskMember::ROLE_ADMIN;
         }
         if ($actor->can(Module::PERMISSION_TASK_TASKS_READ_ALL)) {

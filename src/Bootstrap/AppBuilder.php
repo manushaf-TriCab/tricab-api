@@ -697,6 +697,8 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
         $app->post($task . '/tasks/{id}/restore', \TriCab\Api\Http\Action\Finance\Task\RestoreTaskAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
+        $app->post($task . '/tasks/{id}/request-review', \TriCab\Api\Http\Action\Finance\Task\RequestTaskReviewAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
         $app->get($task . '/tasks/{id}/history', \TriCab\Api\Http\Action\Finance\Task\GetTaskHistoryAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
         $app->get($task . '/history', \TriCab\Api\Http\Action\Finance\Task\ListTaskHistoryAction::class)

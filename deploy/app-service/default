@@ -33,6 +33,14 @@ server {
         try_files /__tricab_api_front_controller__ @tricab_api;
     }
 
+    # Tri-Task's Excel import: the file arrives as base64 in JSON, a third larger
+    # than on disk, and the code refuses a file over 5 MB. At 1 MB, sheets over
+    # about 750 KB got a 413 from nginx before the code could say why.
+    location = /api/v1/finance/task/import {
+        client_max_body_size 8m;
+        try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
     location = /health {
         try_files /__tricab_api_front_controller__ @tricab_api;
     }

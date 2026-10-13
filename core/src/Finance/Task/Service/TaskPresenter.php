@@ -34,11 +34,12 @@ final class TaskPresenter
         return $userId === null ? null : (string) $userId;
     }
 
-    /** `display_status`: completed, overdue (not done and due before today), or the stored status. */
+    /** `display_status`: completed, on_hold (even when past due), overdue (Active and due before today), or active. */
     public static function displayStatus(string $status, ?string $dueDate, string $today): string
     {
-        if ($status === 'completed') {
-            return 'completed';
+        $status = TaskRules::status($status);
+        if ($status === 'completed' || $status === 'on_hold') {
+            return $status;
         }
         if ($dueDate !== null && $dueDate !== '' && $dueDate < $today) {
             return 'overdue';
@@ -142,7 +143,7 @@ final class TaskPresenter
             'project' => $project,
             'preparer_id' => self::person($t->preparerUserId),
             'reviewer_id' => self::person($t->reviewerUserId),
-            'status' => $t->status,
+            'status' => TaskRules::status($t->status),
             'display_status' => self::displayStatus($t->status, $t->dueDate, $today),
             'priority' => $t->priority,
             'group_id' => $t->groupId,

@@ -14,8 +14,9 @@
     FINANCE_TASK_USER      portal label Team Member: FINANCE.ACCESS, FINANCE.TASK.ACCESS
                            and the five everyday task permissions (not
                            SETUP.MANAGE: Manusha, 12 Oct 2026).
-    FINANCE_TASK_MANAGER   the above plus SETUP.MANAGE, READ_ALL, UPDATE and DELETE.
-    FINANCE_TASK_ADMIN     the above plus ANALYTICS.READ and SETTINGS.MANAGE.
+    FINANCE_TASK_MANAGER   the above plus SETUP.MANAGE, READ_ALL, UPDATE, DELETE and
+                           ANALYTICS.READ (13 Oct 2026).
+    FINANCE_TASK_ADMIN     the above plus SETTINGS.MANAGE.
 
   Each role also holds FINANCE.ACCESS and FINANCE.TASK.ACCESS so that a person
   given one role can open the launcher and the app (permissions.md section 2).
@@ -45,9 +46,9 @@ BEGIN TRY
         (N'FINANCE_TASK_USER', N'Finance Tri-Task Team Member',
          N'Tri-Task: one''s own tasks, the setup lists, and task mail.'),
         (N'FINANCE_TASK_MANAGER', N'Finance Tri-Task Manager',
-         N'Everything a Team Member can do, plus every task: read, change and delete any.'),
+         N'Everything a Team Member can do, plus every task: read, change and delete any, and analytics.'),
         (N'FINANCE_TASK_ADMIN', N'Finance Tri-Task Administrator',
-         N'Everything a Manager can do, plus analytics and the daily summary settings.');
+         N'Everything a Manager can do, plus the daily summary settings.');
 
     /* The roles. IsSystemRole = 0 so an administrator can edit them in
        Roles & Permissions without fighting the seed. */
@@ -94,6 +95,7 @@ BEGIN TRY
         (N'FINANCE_TASK_MANAGER', N'FINANCE.TASK.TASKS.READ_ALL'),
         (N'FINANCE_TASK_MANAGER', N'FINANCE.TASK.TASKS.UPDATE'),
         (N'FINANCE_TASK_MANAGER', N'FINANCE.TASK.TASKS.DELETE'),
+        (N'FINANCE_TASK_MANAGER', N'FINANCE.TASK.ANALYTICS.READ'),
         (N'FINANCE_TASK_ADMIN', N'FINANCE.ACCESS'),
         (N'FINANCE_TASK_ADMIN', N'FINANCE.TASK.ACCESS'),
         (N'FINANCE_TASK_ADMIN', N'FINANCE.TASK.TASKS.READ'),

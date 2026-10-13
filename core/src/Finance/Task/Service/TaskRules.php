@@ -16,23 +16,28 @@ use TriCab\Core\Finance\Task\Domain\TaskInvalid;
 final class TaskRules
 {
     /**
-     * The stored statuses (13 Oct 2026, item 5 and 9 of TRI-TASK-UX-PLAN.md). The first two values predate the
-     * change and keep their meaning under new labels: `in_progress` is "Working on it", `completed` is "Done".
+     * The stored statuses: Active, On Hold and Done (Nick Han, 13 Oct 2026). Overdue is still worked out from the due
+     * date, for Active tasks only. The review step is a Send for review button, not a status.
      */
-    public const STATUSES = ['not_started', 'in_progress', 'stuck', 'ready_for_review', 'completed'];
+    public const STATUSES = ['active', 'on_hold', 'completed'];
     public const STATUS_LABELS = [
-        'not_started' => 'Not started',
-        'in_progress' => 'Working on it',
-        'stuck' => 'Stuck',
-        'ready_for_review' => 'Ready for review',
+        'active' => 'Active',
+        'on_hold' => 'On Hold',
         'completed' => 'Done',
     ];
+    /**
+     * The board's statuses of the morning of 13 Oct 2026, all now Active: a row not yet moved by
+     * alter-finance-task-simple-status.sql, or a page loaded before the change, reads and sends them.
+     */
+    public const LEGACY_STATUSES = ['not_started', 'in_progress', 'stuck', 'ready_for_review'];
     /** A new task starts here unless it says otherwise. */
-    public const DEFAULT_STATUS = 'not_started';
-    /** Moving into one of these is refused while a dependency is unfinished; Not started and Stuck stay open. */
-    public const BLOCKED_STATUSES = ['in_progress', 'ready_for_review', 'completed'];
+    public const DEFAULT_STATUS = 'active';
+    /** Moving into one of these is refused while a dependency is unfinished. */
+    public const BLOCKED_STATUSES = ['completed'];
     public const PRIORITIES = ['critical', 'high', 'medium', 'low'];
     public const CATEGORIES = ['routine', 'ad_hoc'];
+    /** Where a task given no project goes (item 3, 13 Oct 2026). */
+    public const GENERAL_PROJECT = 'General';
     /** "Planning" went on 13 Oct 2026 (Nick Han): a project is Active from the start. */
     public const PROJECT_STATUSES = ['active', 'completed', 'on_hold'];
     public const STATEMENT_CATEGORIES = ['balance_sheet', 'income_statement', 'cash_flow', 'equity', 'notes', 'other'];
@@ -152,5 +157,11 @@ final class TaskRules
         }
 
         throw new TaskInvalid('The preparer and reviewer must be members of Tri-Task');
+    }
+
+    /** A stored status as it is now: a legacy one is Active. */
+    public static function status(string $stored): string
+    {
+        return in_array($stored, self::LEGACY_STATUSES, true) ? 'active' : $stored;
     }
 }

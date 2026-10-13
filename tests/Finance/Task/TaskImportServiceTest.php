@@ -200,7 +200,7 @@ final class TaskImportServiceTest extends TestCase
         self::assertSame(['Entity "Mars Pty Ltd" is not an entity in Tri-Task', 'Preparer "Nobody Known" is not a member of Tri-Task'], $lines[1]['errors']);
         self::assertCount(5, (array) $lines[2]['errors']);
         self::assertSame([
-            'Status "later" must be Not started, Working on it, Stuck, Ready for review or Done',
+            'Status "later" must be Active, On Hold or Done',
             'Category "weekly" must be Routine or Ad-hoc',
             'Progress % must be a number from 0 to 100, not "150"',
             'Due Date "soon" is not a date (use dd/mm/yyyy)',
@@ -237,14 +237,14 @@ final class TaskImportServiceTest extends TestCase
         self::assertSame(['11', '12'], [$task['preparer_id'], $task['reviewer_id']]);
     }
 
-    public function test_overdue_is_imported_as_in_progress_with_a_note(): void
+    public function test_overdue_is_imported_as_active_with_a_note(): void
     {
         $this->file(tasks: [self::row(cells: ['Status' => 'Overdue'])]);
 
         $report = $this->load($this->admin, false);
 
-        self::assertStringContainsString('Overdue is worked out', Typed::string(Typed::list($this->lines($report['tasks'])[0]['warnings'])[0]));
-        self::assertSame('in_progress', $this->register()[0]['status']);
+        self::assertSame('Overdue is worked out from the due date; imported as Active', Typed::string(Typed::list($this->lines($report['tasks'])[0]['warnings'])[0]));
+        self::assertSame('active', $this->register()[0]['status']);
     }
 
     public function test_an_unknown_column_is_a_warning_and_an_alias_heading_is_read(): void
@@ -450,15 +450,24 @@ final class TaskImportServiceTest extends TestCase
             self::row('B', cells: ['Status' => 'done', 'Category' => 'AD-HOC']),
             self::row('C', cells: ['Status' => '', 'Category' => '']),
             self::row('D', cells: ['Status' => 'Complete']),
+            self::row('E', cells: ['Status' => 'On-Hold']),
+            self::row('F', cells: ['Status' => 'ACTIVE']),
+            // Every earlier name for open work reads as Active (13 Oct 2026).
+            self::row('G', cells: ['Status' => 'Working on it']),
+            self::row('H', cells: ['Status' => 'not started']),
+            self::row('I', cells: ['Status' => 'Stuck']),
+            self::row('J', cells: ['Status' => 'Ready for review']),
         ]);
 
         $this->load($this->admin, false);
 
         $by = array_column($this->register(), null, 'name');
-        self::assertSame(['in_progress', 'ad_hoc'], [$by['A']['status'], $by['A']['category']]);
+        self::assertSame(['active', 'ad_hoc'], [$by['A']['status'], $by['A']['category']]);
         self::assertSame(['completed', 'ad_hoc'], [$by['B']['status'], $by['B']['category']]);
-        self::assertSame(['in_progress', 'routine'], [$by['C']['status'], $by['C']['category']]);
+        self::assertSame(['active', 'routine'], [$by['C']['status'], $by['C']['category']]);
         self::assertSame('completed', $by['D']['status']);
+        self::assertSame('on_hold', $by['E']['status']);
+        self::assertSame(['active', 'active', 'active', 'active', 'active'], [$by['F']['status'], $by['G']['status'], $by['H']['status'], $by['I']['status'], $by['J']['status']]);
     }
 
     public function test_a_statement_area_that_is_not_listed_is_kept_as_typed_with_a_warning(): void

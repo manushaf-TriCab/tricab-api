@@ -72,10 +72,10 @@ final class TaskImportService
 
     private const TRUE = ['yes', 'y', 'true', '1', 'x'];
     private const FALSE = ['no', 'n', 'false', '0', ''];
-    // The board's names (13 Oct 2026) beside the old ones: "Working on it" is in_progress, "Done" is completed.
+    // Active, On Hold and Done (13 Oct 2026); the earlier names of open work all read as Active.
     private const STATUS = [
-        'inprogress' => 'in_progress', 'workingonit' => 'in_progress', 'completed' => 'completed', 'complete' => 'completed', 'done' => 'completed',
-        'notstarted' => 'not_started', 'stuck' => 'stuck', 'readyforreview' => 'ready_for_review',
+        'active' => 'active', 'onhold' => 'on_hold', 'completed' => 'completed', 'complete' => 'completed', 'done' => 'completed',
+        'inprogress' => 'active', 'workingonit' => 'active', 'notstarted' => 'active', 'stuck' => 'active', 'readyforreview' => 'active',
     ];
     private const CATEGORY = ['routine' => 'routine', 'adhoc' => 'ad_hoc'];
     private const PROJECT_STATUS = ['planning' => 'active', 'active' => 'active', 'completed' => 'completed', 'onhold' => 'on_hold'];
@@ -223,12 +223,12 @@ final class TaskImportService
                 }
 
                 $letters = self::letters($row['status'] ?? null);
-                $status = self::STATUS[$letters !== '' ? $letters : 'inprogress'] ?? null;
+                $status = self::STATUS[$letters !== '' ? $letters : 'active'] ?? null;
                 if ($letters === 'overdue') {
-                    $status = 'in_progress';
-                    $line->warnings[] = 'Overdue is worked out from the due date; imported as Working on it';
+                    $status = 'active';
+                    $line->warnings[] = 'Overdue is worked out from the due date; imported as Active';
                 } elseif ($status === null) {
-                    $errors[] = 'Status "' . self::cellText($row['status'] ?? null) . '" must be Not started, Working on it, Stuck, Ready for review or Done';
+                    $errors[] = 'Status "' . self::cellText($row['status'] ?? null) . '" must be Active, On Hold or Done';
                 }
                 $categoryLetters = self::letters($row['category'] ?? null);
                 $category = self::CATEGORY[$categoryLetters !== '' ? $categoryLetters : 'routine'] ?? null;

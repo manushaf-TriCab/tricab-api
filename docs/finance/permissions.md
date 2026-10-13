@@ -87,14 +87,16 @@ answers (Phase 2, D19).
 | `task.tasks.update` | `FINANCE.TASK.TASKS.UPDATE` | | yes | yes |
 | `task.tasks.delete` | `FINANCE.TASK.TASKS.DELETE` | | yes | yes |
 | `task.users.manage` | not carried (section 3) | | | |
-| `task.analytics.read` | `FINANCE.TASK.ANALYTICS.READ` | | | yes |
+| `task.analytics.read` | `FINANCE.TASK.ANALYTICS.READ` | | yes | yes |
 | `task.roles.assign_admin` | not carried (section 3) | | | |
 | `task.settings.manage` | `FINANCE.TASK.SETTINGS.MANAGE` | | | yes |
 
 Roles: `FINANCE_TASK_USER` (portal label Team Member), `FINANCE_TASK_MANAGER`,
 `FINANCE_TASK_ADMIN`. `task.setup.manage` was taken from the Team Member on
 12 Oct 2026 (Manusha): projects, templates, statement areas and entities are
-shared, so only Managers and Administrators change them. Seeded but unused in the portal: `task.mail.read`, held by
+shared, so only Managers and Administrators change them. `task.analytics.read` was given to the
+Manager on 13 Oct 2026 (TRI-TASK-UX-PLAN.md item 10), so the Administrator differs only by
+`task.settings.manage`. Seeded but unused in the portal: `task.mail.read`, held by
 no role and checked by nothing; not carried.
 
 A route the portal opened to "update or update own" (or "delete or delete own")

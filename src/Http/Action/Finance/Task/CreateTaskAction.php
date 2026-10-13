@@ -10,7 +10,6 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Task\Domain\TaskFailure;
 use TriCab\Core\Finance\Task\Service\TaskService;
 use TriCab\Core\Finance\Task\Service\TaskDueDateRequestNotifier;
-use TriCab\Core\Finance\Task\Service\TaskReviewRequestNotifier;
 
 /** POST /api/v1/finance/task/tasks (route 12): 201 with the task and its first history row. Gated on `FINANCE.TASK.TASKS.CREATE`. */
 final class CreateTaskAction
@@ -21,7 +20,6 @@ final class CreateTaskAction
         private readonly TaskService $service,
         private readonly JsonResponder $responder,
         private readonly TaskDueDateRequestNotifier $dueDateRequests,
-        private readonly TaskReviewRequestNotifier $reviewRequests,
     ) {
     }
 
@@ -39,7 +37,6 @@ final class CreateTaskAction
             $task = $this->service->create($actor, $this->bodyOf($request));
             // The preparer hears when a due date is asked of them (12 Oct 2026); a failed notice never fails the save.
             $this->dueDateRequests->notify($actor, $task);
-            $this->reviewRequests->notify($actor, $task);
 
             return $this->ok($this->responder, $task, 201);
         } catch (TaskFailure $failure) {

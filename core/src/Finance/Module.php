@@ -195,6 +195,8 @@ final class Module
             self::PERMISSION_TASK_TASKS_READ_ALL,
             self::PERMISSION_TASK_TASKS_UPDATE,
             self::PERMISSION_TASK_TASKS_DELETE,
+            // Managers see the team's progress too (item 10 of TRI-TASK-UX-PLAN.md, 13 Oct 2026).
+            self::PERMISSION_TASK_ANALYTICS_READ,
         ],
         self::ROLE_TASK_ADMIN => [
             self::PERMISSION_ACCESS,

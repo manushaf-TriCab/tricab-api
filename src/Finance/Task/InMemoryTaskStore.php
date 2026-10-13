@@ -80,7 +80,7 @@ final class InMemoryTaskStore extends InMemoryTaskSetupStore implements TaskStor
     {
         $out = [];
         foreach ($this->taskRecords as $task) {
-            if ($task->deletedAt === null && $task->status !== 'completed' && $task->dueDate !== null && $task->dueDate !== '' && $task->dueDate <= $today) {
+            if ($task->deletedAt === null && $task->status !== 'completed' && $task->status !== 'on_hold' && $task->dueDate !== null && $task->dueDate !== '' && $task->dueDate <= $today) {
                 $out[] = clone $task;
             }
         }

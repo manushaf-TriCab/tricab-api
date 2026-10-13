@@ -86,15 +86,13 @@ final class FinanceTaskSeedScriptTest extends TestCase
         self::assertSame([], array_values(array_diff($manager, $admin)));
         self::assertGreaterThan(count($user), count($manager));
         self::assertGreaterThan(count($manager), count($admin));
-        // Manager adds exactly SETUP.MANAGE, READ_ALL, UPDATE, DELETE; admin adds exactly ANALYTICS.READ, SETTINGS.MANAGE.
+        // Manager adds exactly SETUP.MANAGE, READ_ALL, UPDATE, DELETE and (13 Oct 2026) ANALYTICS.READ; admin adds
+        // exactly SETTINGS.MANAGE.
         self::assertEqualsCanonicalizing(
-            [Module::PERMISSION_TASK_SETUP_MANAGE, Module::PERMISSION_TASK_TASKS_READ_ALL, Module::PERMISSION_TASK_TASKS_UPDATE, Module::PERMISSION_TASK_TASKS_DELETE],
+            [Module::PERMISSION_TASK_SETUP_MANAGE, Module::PERMISSION_TASK_TASKS_READ_ALL, Module::PERMISSION_TASK_TASKS_UPDATE, Module::PERMISSION_TASK_TASKS_DELETE, Module::PERMISSION_TASK_ANALYTICS_READ],
             array_values(array_diff($manager, $user)),
         );
-        self::assertEqualsCanonicalizing(
-            [Module::PERMISSION_TASK_ANALYTICS_READ, Module::PERMISSION_TASK_SETTINGS_MANAGE],
-            array_values(array_diff($admin, $manager)),
-        );
+        self::assertSame([Module::PERMISSION_TASK_SETTINGS_MANAGE], array_values(array_diff($admin, $manager)));
         // The administrator holds every Tri-Task permission.
         self::assertSame([], array_values(array_diff(Module::TASK_PERMISSIONS, $admin)));
     }

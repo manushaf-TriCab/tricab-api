@@ -1043,13 +1043,12 @@ final class ContainerFactory
             \TriCab\Core\Finance\Task\Service\TaskReviewRequestNotifier::class
                 => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskReviewRequestNotifier
                     => new \TriCab\Core\Finance\Task\Service\TaskReviewRequestNotifier(
-                        self::get($container, \TriCab\Core\Finance\Task\Contract\TaskStore::class),
                         self::get($container, \TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory::class),
                         self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
-                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailLedger::class),
                         self::get($container, \TriCab\Core\Finance\Task\Contract\TaskMailLinks::class),
                         self::get($container, \TriCab\Core\Finance\Task\Service\TaskTime::class),
                         $settings->financeTaskMailFrom,
+                        $settings->financeTaskSendAsUser,
                     ),
             \TriCab\Core\Finance\Task\Service\TaskPreparerDigestJob::class
                 => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskPreparerDigestJob

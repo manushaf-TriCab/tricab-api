@@ -74,6 +74,7 @@ final class FinanceRouteTableTest extends TestCase
         'POST /api/v1/finance/task/tasks/bulk' => Module::PERMISSION_TASK_TASKS_UPDATE_OWN,
         'DELETE /api/v1/finance/task/tasks/{id}' => Module::PERMISSION_TASK_TASKS_DELETE_OWN,
         'POST /api/v1/finance/task/tasks/{id}/restore' => Module::PERMISSION_TASK_TASKS_DELETE_OWN,
+        'POST /api/v1/finance/task/tasks/{id}/request-review' => Module::PERMISSION_TASK_TASKS_UPDATE_OWN,
         'GET /api/v1/finance/task/tasks/{id}/history' => Module::PERMISSION_TASK_TASKS_READ,
         'GET /api/v1/finance/task/history' => Module::PERMISSION_TASK_ANALYTICS_READ,
         'GET /api/v1/finance/task/analytics' => Module::PERMISSION_TASK_ANALYTICS_READ,

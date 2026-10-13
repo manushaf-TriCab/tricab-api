@@ -181,27 +181,29 @@ final class FinanceTaskRegisterRoutesTest extends TestCase
         self::assertSame('Send a list of tasks to update', self::error($json)['message']);
     }
 
-    public function test_history_and_analytics_need_the_analytics_permission_and_answer_their_shapes(): void
+    public function test_history_and_analytics_need_the_analytics_permission_a_manager_holds_and_answer_their_shapes(): void
     {
         $id = self::id(self::data($this->call('POST', '/tasks', ['name' => 'A', 'preparer_id' => 1])[1]));
+        // A Team Member lacks it; a Manager has it since 13 Oct 2026.
+        $this->as(Module::TASK_ROLE_PERMISSIONS[Module::ROLE_TASK_USER]);
         [$status] = $this->call('GET', '/history');
         self::assertSame(403, $status);
         [$status] = $this->call('GET', '/analytics');
         self::assertSame(403, $status);
 
-        $this->as([Module::PERMISSION_TASK_ANALYTICS_READ, Module::PERMISSION_TASK_TASKS_READ]);
+        $this->as(Module::TASK_ROLE_PERMISSIONS[Module::ROLE_TASK_MANAGER]);
         [$status, $json] = $this->call('GET', '/analytics');
         self::assertSame(200, $status);
         $data = self::data($json);
         self::assertIsArray($data);
         self::assertSame(['tasks', 'timezone', 'today'], array_keys($data));
-        [, $json] = $this->call('GET', '/history', null, ['to_status' => 'not_started']);
+        [, $json] = $this->call('GET', '/history', null, ['to_status' => 'active']);
         self::assertCount(1, (array) self::data($json));
         [, $json] = $this->call('GET', '/history', null, ['to_status' => 'completed']);
         self::assertSame([], self::data($json));
         [$status, $json] = $this->call('GET', '/tasks/' . $id . '/history');
         self::assertSame(200, $status);
-        self::assertSame(['not_started'], array_column((array) self::data($json), 'to_status'));
+        self::assertSame(['active'], array_column((array) self::data($json), 'to_status'));
     }
 
     public function test_creating_without_a_valid_member_or_a_name_is_a_422(): void

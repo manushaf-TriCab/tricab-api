@@ -87,11 +87,11 @@ final class TaskBoardServiceTest extends TestCase
 
     // ==== statuses and the review step (item 5) ================================================
 
-    public function test_a_new_task_starts_not_started_and_any_of_the_five_statuses_can_be_set(): void
+    public function test_a_new_task_starts_active_and_any_of_the_three_statuses_can_be_set(): void
     {
         $task = $this->tasks->create($this->max, ['name' => 'Sales module']);
-        self::assertSame('not_started', $task['status']);
-        foreach (['in_progress', 'stuck', 'ready_for_review', 'completed', 'not_started'] as $status) {
+        self::assertSame('active', $task['status']);
+        foreach (['on_hold', 'completed', 'active'] as $status) {
             self::assertSame($status, $this->tasks->update($this->max, self::id($task), ['status' => $status])['status']);
         }
     }
@@ -104,9 +104,9 @@ final class TaskBoardServiceTest extends TestCase
             $this->tasks->update($this->una, $id, ['status' => 'completed']);
             self::fail('The preparer should not be able to mark it done.');
         } catch (TaskForbidden $e) {
-            self::assertSame('Only the reviewer can mark this task done. Set it to Ready for review instead.', $e->getMessage());
+            self::assertSame('Only the reviewer can mark this task done. Use Send for review instead.', $e->getMessage());
         }
-        self::assertSame('ready_for_review', $this->tasks->update($this->una, $id, ['status' => 'ready_for_review'])['status']);
+        self::assertSame('on_hold', $this->tasks->update($this->una, $id, ['status' => 'on_hold'])['status']);
         self::assertSame('completed', $this->tasks->update($this->rae, $id, ['status' => 'completed'])['status']);
 
         // A manager may close any task, and with no reviewer the preparer closes it.
@@ -127,7 +127,7 @@ final class TaskBoardServiceTest extends TestCase
             } catch (TaskForbidden) {
             }
         }
-        self::assertSame('not_started', $this->tasks->get($this->max, $id)['status']);
+        self::assertSame('active', $this->tasks->get($this->max, $id)['status']);
     }
 
     public function test_a_member_cannot_create_a_task_already_done_for_someone_else_to_review(): void
@@ -136,29 +136,28 @@ final class TaskBoardServiceTest extends TestCase
         $this->tasks->create($this->una, ['name' => 'Bank rec', 'preparer_id' => '11', 'reviewer_id' => '13', 'status' => 'completed']);
     }
 
-    public function test_an_unfinished_dependency_blocks_starting_but_not_stuck_or_not_started(): void
+    public function test_an_unfinished_dependency_blocks_only_done(): void
     {
         $gate = self::id($this->tasks->create($this->max, ['name' => 'Gather statements']));
         $id = self::id($this->tasks->create($this->max, ['name' => 'Reconcile', 'dependencies' => [$gate]]));
 
-        self::assertSame('stuck', $this->tasks->update($this->max, $id, ['status' => 'stuck'])['status']);
-        foreach (['in_progress', 'ready_for_review', 'completed'] as $status) {
-            try {
-                $this->tasks->update($this->max, $id, ['status' => $status]);
-                self::fail($status . ' should be blocked.');
-            } catch (TaskConflict $e) {
-                self::assertStringContainsString('Gather statements', $e->getMessage());
-            }
+        self::assertSame('on_hold', $this->tasks->update($this->max, $id, ['status' => 'on_hold'])['status']);
+        self::assertSame('active', $this->tasks->update($this->max, $id, ['status' => 'active'])['status']);
+        try {
+            $this->tasks->update($this->max, $id, ['status' => 'completed']);
+            self::fail('Done should be blocked.');
+        } catch (TaskConflict $e) {
+            self::assertStringContainsString('Gather statements', $e->getMessage());
         }
     }
 
-    public function test_overdue_still_wins_over_every_open_status_but_not_done(): void
+    public function test_overdue_is_shown_only_for_an_active_task_not_on_hold_or_done(): void
     {
         $late = ['name' => 'Late', 'due_date' => '2026-10-01'];
-        self::assertSame('overdue', $this->tasks->create($this->max, $late + ['status' => 'stuck'])['display_status']);
-        self::assertSame('overdue', $this->tasks->create($this->max, $late + ['status' => 'ready_for_review'])['display_status']);
+        self::assertSame('overdue', $this->tasks->create($this->max, $late + ['status' => 'active'])['display_status']);
+        self::assertSame('on_hold', $this->tasks->create($this->max, $late + ['status' => 'on_hold'])['display_status']);
         self::assertSame('completed', $this->tasks->create($this->max, $late + ['status' => 'completed'])['display_status']);
-        self::assertSame('stuck', $this->tasks->create($this->max, ['name' => 'Fine', 'status' => 'stuck'])['display_status']);
+        self::assertSame('active', $this->tasks->create($this->max, ['name' => 'Fine'])['display_status']);
     }
 
     // ==== priority =============================================================================
@@ -299,7 +298,7 @@ final class TaskBoardServiceTest extends TestCase
         self::assertSame($groups[0]['id'], $first['group_id']);
         self::assertSame('2026-11-09', $first['due_date']);
         self::assertSame('critical', $first['priority']);
-        self::assertSame('not_started', $first['status']);
+        self::assertSame('active', $first['status']);
         self::assertSame('11', $first['preparer_id']);
         // No reviewer named: the default reviewer, the first Manager by name who is not the preparer.
         self::assertSame('15', $first['reviewer_id']);

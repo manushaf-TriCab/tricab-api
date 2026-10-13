@@ -35,6 +35,7 @@ final class LocalApSampleServer
         'create-finance-task-schema.sql',
         'alter-finance-task-board.sql',
         'alter-finance-task-project-status.sql',
+        'alter-finance-task-simple-status.sql',
         'create-finance-ar-schema.sql',
         'create-finance-invoice-schema.sql',
         'alter-finance-mail-status-suppressed.sql',

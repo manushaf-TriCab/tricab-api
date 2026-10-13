@@ -10,7 +10,6 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Task\Domain\TaskFailure;
 use TriCab\Core\Finance\Task\Service\TaskService;
 use TriCab\Core\Finance\Task\Service\TaskDueDateRequestNotifier;
-use TriCab\Core\Finance\Task\Service\TaskReviewRequestNotifier;
 
 /** POST /api/v1/finance/task/tasks/bulk (route 14): `{updates: [{id, ...fields}]}` or a bare list, at most 200, applied together or not at all. Gated on `FINANCE.TASK.TASKS.UPDATE_OWN` (decision D14), each row checked as an update. */
 final class BulkUpdateTasksAction
@@ -21,7 +20,6 @@ final class BulkUpdateTasksAction
         private readonly TaskService $service,
         private readonly JsonResponder $responder,
         private readonly TaskDueDateRequestNotifier $dueDateRequests,
-        private readonly TaskReviewRequestNotifier $reviewRequests,
     ) {
     }
 
@@ -40,7 +38,6 @@ final class BulkUpdateTasksAction
             // A reassigned task whose due date is still requested tells its new preparer (12 Oct 2026).
             foreach ($tasks as $task) {
                 $this->dueDateRequests->notify($actor, $task);
-                $this->reviewRequests->notify($actor, $task);
             }
 
             return $this->ok($this->responder, $tasks);

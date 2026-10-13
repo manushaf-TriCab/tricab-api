@@ -6,72 +6,73 @@ namespace TriCab\Core\Finance\Task\Service;
 
 use TriCab\Core\Finance\Module;
 use TriCab\Core\Finance\Shared\Mail\FinanceMailException;
-use TriCab\Core\Finance\Shared\Mail\FinanceMailLedger;
 use TriCab\Core\Finance\Shared\Mail\FinanceMailMessage;
 use TriCab\Core\Finance\Shared\Mail\FinanceMailRules;
 use TriCab\Core\Finance\Shared\Mail\FinanceMailSender;
 use TriCab\Core\Finance\Shared\Mail\FinanceMailTransportFailed;
 use TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory;
 use TriCab\Core\Finance\Task\Contract\TaskMailLinks;
-use TriCab\Core\Finance\Task\Contract\TaskStore;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
+use TriCab\Core\Finance\Task\Domain\TaskForbidden;
+use TriCab\Core\Finance\Task\Domain\TaskInvalid;
 use TriCab\Core\Finance\Task\Domain\TaskMailLink;
+use TriCab\Core\Finance\Task\Domain\TaskUnavailable;
 
 /**
- * Tells the reviewer a task is ready for them (13 Oct 2026, item 5 of TRI-TASK-UX-PLAN.md). Called after a task is
- * saved, with the task as the API returns it.
+ * Asks the reviewer to review a task (item 5 of TRI-TASK-UX-PLAN.md). Since 13 Oct 2026 the statuses are Active,
+ * On Hold and Done, so there is no "Ready for review" to move into: the preparer presses Send for review and this
+ * emails the reviewer, who marks the task Done.
  *
- * Sent once for each move into Ready for review: the key is `review-request:<history row id>`, so saving the task
- * again sends nothing, and sending it back and resubmitting it sends again. Only while the task is live, Ready for
- * review, and has a reviewer who is a member other than the person saving it. From `FINANCE_TASK_MAIL_FROM`, linked
- * to the task as a `task_email`. A failure never fails the save.
+ * Only for a live task that is not Done and has a reviewer who is a member other than the person asking, and only
+ * when the person asking is its preparer or may change any task. Every press sends (`review-request:<task>:<new
+ * id>`). Sent from the person's own address when Tri-Task sends as the user (`FINANCE_TASK_SEND_AS_USER`), else
+ * from `FINANCE_TASK_MAIL_FROM`, and linked to the task as a `task_email`.
  */
 final class TaskReviewRequestNotifier
 {
     public const SENT = 'sent';
     public const SUPPRESSED = 'suppressed';
-    public const SKIPPED = 'skipped';
-    public const NOT_NEEDED = 'not_needed';
     public const FAILED = 'failed';
 
     public function __construct(
-        private readonly TaskStore $tasks,
         private readonly FinanceTaskMemberDirectory $members,
         private readonly FinanceMailSender $mail,
-        private readonly FinanceMailLedger $ledger,
         private readonly TaskMailLinks $links,
         private readonly TaskTime $time,
         private readonly string $from,
+        private readonly bool $sendAsUser = false,
     ) {
     }
 
-    /** @param array<string, mixed> $task */
-    public function notify(TaskActor $actor, array $task): string
+    /**
+     * @param array<string, mixed> $task the task as the API returns it, one the person may see
+     * @return array{status: string, error?: string}
+     */
+    public function request(TaskActor $actor, array $task): array
     {
-        $reviewerId = is_string($task['reviewer_id'] ?? null) && ctype_digit($task['reviewer_id']) ? (int) $task['reviewer_id'] : null;
         $id = is_string($task['id'] ?? null) ? $task['id'] : '';
-        if ($id === '' || ($task['status'] ?? '') !== 'ready_for_review' || ($task['is_deleted'] ?? false) === true
-            || $reviewerId === null || $reviewerId === $actor->userId) {
-            return self::NOT_NEEDED;
+        $preparerId = is_string($task['preparer_id'] ?? null) && ctype_digit($task['preparer_id']) ? (int) $task['preparer_id'] : null;
+        $reviewerId = is_string($task['reviewer_id'] ?? null) && ctype_digit($task['reviewer_id']) ? (int) $task['reviewer_id'] : null;
+        if ($preparerId !== $actor->userId && !$actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)) {
+            throw new TaskForbidden('Only the preparer can send this task for review');
+        }
+        if (($task['is_deleted'] ?? false) === true || ($task['status'] ?? '') === 'completed') {
+            throw new TaskInvalid('This task is done or in the Bin');
+        }
+        if ($reviewerId === null) {
+            throw new TaskInvalid('This task has no reviewer. Choose one first.');
+        }
+        if ($reviewerId === $actor->userId) {
+            throw new TaskInvalid('You are this task\'s reviewer: mark it Done when it is ready');
         }
         $reviewer = $this->members->find($reviewerId);
-        $sender = strtolower(trim($this->from));
-        if ($reviewer === null || trim($reviewer->email) === '' || $sender === '') {
-            return self::NOT_NEEDED;
+        if ($reviewer === null || trim($reviewer->email) === '') {
+            throw new TaskInvalid('The reviewer has no email address');
         }
-        $move = null;
-        foreach ($this->tasks->historyFor($id) as $row) {   // newest first
-            if ($row->toStatus === 'ready_for_review') {
-                $move = $row;
-                break;
-            }
-        }
-        if ($move === null) {
-            return self::NOT_NEEDED;
-        }
-        $key = $this->keyFor('review-request:' . $move->id);
-        if ($key === null) {
-            return self::SKIPPED;
+        $own = strtolower(trim($actor->email));
+        $sender = $this->sendAsUser ? $own : strtolower(trim($this->from));
+        if ($sender === '' || ($this->sendAsUser && filter_var($sender, FILTER_VALIDATE_EMAIL) === false)) {
+            throw new TaskUnavailable($this->sendAsUser ? 'Your account has no email address to send from' : 'No sending mailbox is configured');
         }
 
         $esc = TaskDailySummaryJob::esc(...);
@@ -83,8 +84,7 @@ final class TaskReviewRequestNotifier
             . '<h2 style="font-size:20px;margin:0 0 4px;">Ready for your review</h2>'
             . '<p style="margin:0 0 16px;color:#334155;font-size:14px;">' . $esc($by) . ' has sent <strong>' . $esc($name) . '</strong>'
             . ($project !== '' ? ' in ' . $esc($project) : '') . ' to you for review' . ($due !== '' ? ' (due ' . $due . ')' : '') . '.</p>'
-            . '<p style="margin:0 0 16px;color:#334155;font-size:14px;">Open the task in Tri-Task: mark it Done, or set it back to Working on it with a note.</p>'
-            . '<p style="margin-top:24px;color:#94a3b8;font-size:12px;">Sent automatically by Tri-Task.</p>'
+            . '<p style="margin:0 0 16px;color:#334155;font-size:14px;">Open the task in Tri-Task and mark it Done, or reply with what needs changing.</p>'
             . '</div>';
 
         try {
@@ -98,47 +98,27 @@ final class TaskReviewRequestNotifier
                 [],
                 FinanceMailRules::CONTENT_HTML,
                 [],
-                $key,
+                'review-request:' . $id . ':' . TaskRules::newId(),
                 $actor->userId,
+                null,
+                $this->sendAsUser,
             ));
         } catch (FinanceMailTransportFailed $failure) {
             if ($failure->delivery !== null) {
                 $this->link($id, $failure->delivery->id);
             }
 
-            return self::FAILED;
-        } catch (FinanceMailException) {
-            return self::FAILED;
+            return ['status' => self::FAILED, 'error' => $failure->getMessage()];
+        } catch (FinanceMailException $failure) {
+            return ['status' => self::FAILED, 'error' => $failure->getMessage()];
         }
         $this->link($id, $result->delivery->id);
-        if ($result->delivery->isSuppressed()) {
-            return self::SUPPRESSED;
-        }
 
-        return $result->deduplicated ? self::SKIPPED : self::SENT;
+        return ['status' => $result->delivery->isSuppressed() ? self::SUPPRESSED : self::SENT];
     }
 
     private function link(string $taskId, string $deliveryId): void
     {
         $this->links->insert(new TaskMailLink(TaskRules::newId(), TaskMailLink::KIND_TASK_EMAIL, $taskId, $deliveryId, $this->time->now()));
-    }
-
-    /** Null once sent; `…:retryN` after a failed attempt; a suppressed key is reused. */
-    private function keyFor(string $base): ?string
-    {
-        $key = $base;
-        $attempts = 0;
-        while (($row = $this->ledger->findByIdempotencyKey(Module::APP_TASK, $key)) !== null) {
-            if ($row->isSent()) {
-                return null;
-            }
-            if ($row->isSuppressed()) {
-                return $key;
-            }
-            ++$attempts;
-            $key = $base . ':retry' . $attempts;
-        }
-
-        return $key;
     }
 }

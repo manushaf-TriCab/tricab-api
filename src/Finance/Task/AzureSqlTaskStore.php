@@ -86,7 +86,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
     {
         $rows = $this->connection->fetchAll(
             'SELECT ' . self::COLUMNS . ' FROM [finance].[task_tasks]
-             WHERE [deleted_at] IS NULL AND [status] <> N\'completed\' AND [due_date] IS NOT NULL AND [due_date] <= :today
+             WHERE [deleted_at] IS NULL AND [status] NOT IN (N\'completed\', N\'on_hold\') AND [due_date] IS NOT NULL AND [due_date] <= :today
              ORDER BY [due_date], [name], [id]',
             ['today' => $today],
         );

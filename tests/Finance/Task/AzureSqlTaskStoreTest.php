@@ -136,7 +136,7 @@ final class AzureSqlTaskStoreTest extends TestCase
 
         $rows = $this->tasks->history($this->max, $id);
 
-        self::assertSame([['not_started', 'completed'], [null, 'not_started']], array_map(
+        self::assertSame([['active', 'completed'], [null, 'active']], array_map(
             static fn (array $row): array => [$row['from_status'], $row['to_status']],
             $rows,
         ));
@@ -166,7 +166,7 @@ final class AzureSqlTaskStoreTest extends TestCase
 
         self::assertSame($before, $this->rows('task_history'), 'no history row survived');
         self::assertSame('B', $this->tasks->get($this->max, self::id($b))['name']);
-        self::assertSame('not_started', $this->tasks->get($this->max, self::id($a))['status']);
+        self::assertSame('active', $this->tasks->get($this->max, self::id($a))['status']);
         self::assertFalse((new PdoSqlConnection($this->pdo, new RequestPerformanceMetrics()))->inTransaction());
     }
 
@@ -177,7 +177,7 @@ final class AzureSqlTaskStoreTest extends TestCase
 
         $out = $this->tasks->bulkUpdate($this->max, [['id' => self::id($a), 'status' => 'completed'], ['id' => self::id($b), 'progress' => 70]]);
 
-        self::assertSame(['completed', 'not_started'], array_column($out, 'status'));
+        self::assertSame(['completed', 'active'], array_column($out, 'status'));
         self::assertSame(70, $out[1]['progress']);
         self::assertCount(1, $this->tasks->historyByStatus('completed'));
     }

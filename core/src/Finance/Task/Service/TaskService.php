@@ -16,6 +16,7 @@ use TriCab\Core\Finance\Task\Domain\TaskForbidden;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
 use TriCab\Core\Finance\Task\Domain\TaskInvalid;
 use TriCab\Core\Finance\Task\Domain\TaskNotFound;
+use TriCab\Core\Finance\Task\Domain\TaskProject;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
 
 /**
@@ -109,7 +110,9 @@ final class TaskService
         [$fields, $dependencies] = $this->clean($data, false);
         $now = $this->time->now();
         $status = is_string($fields['status'] ?? null) ? $fields['status'] : TaskRules::DEFAULT_STATUS;
-        $projectId = self::nullableStr($fields, 'project_id');
+        // A task given no project goes in "General" (item 3, Manusha 13 Oct 2026): anyone can allocate one
+        // without a project existing first.
+        $projectId = self::nullableStr($fields, 'project_id') ?? $this->generalProjectId($now);
         $this->guardCompletion($actor, '', $status, [self::nullableInt($fields, 'reviewer_user_id')]);
         $task = new TaskRecord(
             TaskRules::newId(),
@@ -120,7 +123,7 @@ final class TaskService
             self::str($fields, 'category', 'routine'),
             self::str($fields, 'finance_statement_area'),
             self::nullableStr($fields, 'entity_id'),
-            self::nullableStr($fields, 'project_id'),
+            $projectId,
             self::nullableInt($fields, 'preparer_user_id'),
             self::nullableInt($fields, 'reviewer_user_id'),
             $status,
@@ -147,6 +150,35 @@ final class TaskService
         });
 
         return $this->dict($task);
+    }
+
+    /**
+     * The live project named "General", made on first use. Two first uses at once meet the unique name
+     * index; the loser reads the winner's.
+     */
+    private function generalProjectId(DateTimeImmutable $now): string
+    {
+        $find = function (): ?string {
+            foreach ($this->setup->projects(false) as $project) {
+                if (mb_strtolower($project->name) === mb_strtolower(TaskRules::GENERAL_PROJECT)) {
+                    return $project->id;
+                }
+            }
+
+            return null;
+        };
+        $id = $find();
+        if ($id !== null) {
+            return $id;
+        }
+        $project = new TaskProject(TaskRules::newId(), TaskRules::GENERAL_PROJECT, 'Tasks that belong to no other project.', '#64748B', 'active', '', null, null, $now, $now);
+        try {
+            $this->setup->insertProject($project);
+        } catch (\Throwable $failure) {
+            return $find() ?? throw $failure;
+        }
+
+        return $project->id;
     }
 
     /**
@@ -308,7 +340,7 @@ final class TaskService
             throw new TaskForbidden('You do not have permission to change this task');
         }
         [$fields, $dependencies] = $this->clean($data, true);
-        $oldStatus = $task->status;
+        $oldStatus = TaskRules::status($task->status);
         $newStatus = is_string($fields['status'] ?? null) ? $fields['status'] : $oldStatus;
         $now = $this->time->now();
 
@@ -374,7 +406,7 @@ final class TaskService
 
     /**
      * The review step (13 Oct 2026, item 5): a task with a reviewer is marked Done by its reviewer, or by a Manager or
-     * Administrator (who hold TASKS.UPDATE). Anyone else sends it to Ready for review instead.
+     * Administrator (who hold TASKS.UPDATE). Anyone else presses Send for review instead.
      *
      * @param list<?int> $reviewerUserIds every reviewer the task has had in this save
      */
@@ -385,7 +417,7 @@ final class TaskService
         }
         foreach ($reviewerUserIds as $reviewerUserId) {
             if ($reviewerUserId !== null && $reviewerUserId !== $actor->userId) {
-                throw new TaskForbidden('Only the reviewer can mark this task done. Set it to Ready for review instead.');
+                throw new TaskForbidden('Only the reviewer can mark this task done. Use Send for review instead.');
             }
         }
     }
@@ -506,12 +538,12 @@ final class TaskService
             $out['category'] = $category;
         }
         if (array_key_exists('status', $data)) {
-            $status = $data['status'];
+            $status = is_string($data['status']) ? TaskRules::status($data['status']) : $data['status'];
             if ($status === 'overdue') {
                 throw new TaskInvalid('Overdue is worked out from the due date and cannot be set');
             }
             if (!is_string($status) || !in_array($status, TaskRules::STATUSES, true)) {
-                throw new TaskInvalid('Status must be not_started, in_progress, stuck, ready_for_review or completed');
+                throw new TaskInvalid('Status must be active, on_hold or completed');
             }
             $out['status'] = $status;
         }

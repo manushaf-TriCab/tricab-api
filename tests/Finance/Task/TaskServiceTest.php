@@ -100,22 +100,37 @@ final class TaskServiceTest extends TestCase
 
     // ==== create ===============================================================================
 
+    public function test_a_task_with_no_project_goes_in_general_made_once_and_a_chosen_project_is_kept(): void
+    {
+        $first = $this->tasks->create($this->una, ['name' => 'A']);
+        $second = $this->tasks->create($this->una, ['name' => 'B', 'project_id' => null]);
+
+        self::assertIsString($first['project_id']);
+        self::assertSame($first['project_id'], $second['project_id']);
+        $general = array_values(array_filter($this->store->projects(false), static fn ($p): bool => $p->name === 'General'));
+        self::assertCount(1, $general);
+        self::assertSame('active', $general[0]->status);
+
+        $close = $this->setup->createProject($this->max, ['name' => 'Close']);
+        self::assertSame($close['id'], $this->tasks->create($this->una, ['name' => 'C', 'project_id' => $close['id']])['project_id']);
+    }
+
     public function test_a_task_is_created_with_defaults_a_derived_status_and_its_first_history_row(): void
     {
         $t = $this->tasks->create($this->una, ['name' => ' Bank reconciliation ', 'due_date' => '2026-10-31', 'preparer_id' => '11']);
 
         self::assertSame('Bank reconciliation', $t['name']);
         self::assertSame('routine', $t['category']);
-        // A new task starts Not started (the board's statuses, 13 Oct 2026).
-        self::assertSame('not_started', $t['status']);
-        self::assertSame('not_started', $t['display_status']);
+        // A new task starts Active (Active, On Hold, Done: 13 Oct 2026).
+        self::assertSame('active', $t['status']);
+        self::assertSame('active', $t['display_status']);
         self::assertSame(0, $t['progress']);
         self::assertSame('11', $t['preparer_id']);
         self::assertNull($t['reviewer_id']);
         self::assertSame('11', $t['created_by_id']);
         self::assertSame([], $t['dependencies']);
-        self::assertSame('', $t['project_name']);
-        self::assertSame('', $t['project']);
+        // No project given: it goes in General (item 3, 13 Oct 2026).
+        self::assertSame('General', $t['project_name']);
         self::assertFalse($t['is_deleted']);
         self::assertNull($t['completed_at']);
         self::assertSame('2026-10-07T01:00:00.123456+00:00', $t['created_date']);
@@ -123,7 +138,7 @@ final class TaskServiceTest extends TestCase
         $history = $this->tasks->history($this->una, self::id($t));
         self::assertCount(1, $history);
         self::assertNull($history[0]['from_status']);
-        self::assertSame('not_started', $history[0]['to_status']);
+        self::assertSame('active', $history[0]['to_status']);
         self::assertSame('Una User', $history[0]['changed_by']);
         self::assertSame('11', $history[0]['changed_by_user_id']);
     }
@@ -144,7 +159,7 @@ final class TaskServiceTest extends TestCase
         yield 'long area' => [['name' => 'x', 'finance_statement_area' => str_repeat('a', 301)], 'Finance statement area must be at most 300 characters'];
         yield 'bad category' => [['name' => 'x', 'category' => 'weekly'], 'Category must be routine or ad_hoc'];
         yield 'overdue status' => [['name' => 'x', 'status' => 'overdue'], 'Overdue is worked out from the due date and cannot be set'];
-        yield 'unknown status' => [['name' => 'x', 'status' => 'done'], 'Status must be not_started, in_progress, stuck, ready_for_review or completed'];
+        yield 'unknown status' => [['name' => 'x', 'status' => 'done'], 'Status must be active, on_hold or completed'];
         yield 'progress 101' => [['name' => 'x', 'progress' => 101], 'Progress must be a number from 0 to 100'];
         yield 'bad date' => [['name' => 'x', 'due_date' => '31/10/2026'], 'Dates must be yyyy-MM-dd'];
         yield 'not a date' => [['name' => 'x', 'due_date' => '2026-13-01'], 'That is not a real date'];
@@ -272,10 +287,39 @@ final class TaskServiceTest extends TestCase
         $done = $this->make($this->max, 'Done', ['due_date' => '2026-01-01', 'status' => 'completed']);
 
         self::assertSame('overdue', $yesterday['display_status']);
-        self::assertSame('not_started', $yesterday['status'], 'stored status stays not_started');
-        self::assertSame('not_started', $today['display_status']);
-        self::assertSame('not_started', $none['display_status']);
+        self::assertSame('active', $yesterday['status'], 'stored status stays active');
+        self::assertSame('active', $today['display_status']);
+        self::assertSame('active', $none['display_status']);
         self::assertSame('completed', $done['display_status']);
+    }
+
+    public function test_an_on_hold_task_past_its_due_date_shows_on_hold_not_overdue(): void
+    {
+        // Overdue is for Active tasks only (13 Oct 2026).
+        $held = $this->make($this->max, 'Held', ['due_date' => '2026-10-01', 'status' => 'on_hold']);
+
+        self::assertSame('on_hold', $held['status']);
+        self::assertSame('on_hold', $held['display_status']);
+        self::assertSame('overdue', $this->tasks->update($this->max, self::id($held), ['status' => 'active'])['display_status']);
+    }
+
+    public function test_a_legacy_status_reads_and_is_sent_as_active(): void
+    {
+        // A row not yet moved by alter-finance-task-simple-status.sql, or a page loaded before 13 Oct 2026.
+        $t = $this->make($this->max, 'Old', ['due_date' => '2026-10-31']);
+        $record = $this->store->findTask(self::id($t));
+        self::assertNotNull($record);
+        $record->status = 'ready_for_review';
+        $this->store->updateTask($record);
+
+        $read = $this->tasks->get($this->max, self::id($t));
+        self::assertSame('active', $read['status']);
+        self::assertSame('active', $read['display_status']);
+
+        $this->tick();
+        self::assertSame('active', $this->tasks->update($this->max, self::id($t), ['status' => 'stuck'])['status']);
+        self::assertSame('active', $this->tasks->create($this->max, ['name' => 'New', 'status' => 'in_progress'])['status']);
+        self::assertCount(1, $this->tasks->history($this->max, self::id($t)), 'legacy to active is no change');
     }
 
     public function test_today_is_decided_in_melbourne_across_the_utc_date_line(): void
@@ -333,14 +377,14 @@ final class TaskServiceTest extends TestCase
         $this->tick();
         $same = $this->tasks->update($this->max, $id, ['status' => 'completed']);
         $this->tick();
-        $reopened = $this->tasks->update($this->max, $id, ['status' => 'in_progress']);
+        $reopened = $this->tasks->update($this->max, $id, ['status' => 'active']);
 
         self::assertNotNull($done['completed_at']);
         self::assertNotNull($same['completed_at']);
         self::assertNull($reopened['completed_at']);
         $rows = $this->tasks->history($this->max, $id);
         self::assertCount(3, $rows, 'created, completed, reopened: five edits, three rows');
-        self::assertSame([['completed', 'in_progress'], ['not_started', 'completed'], [null, 'not_started']], array_map(
+        self::assertSame([['completed', 'active'], ['active', 'completed'], [null, 'active']], array_map(
             static fn (array $row): array => [$row['from_status'], $row['to_status']],
             $rows,
         ));
@@ -353,18 +397,18 @@ final class TaskServiceTest extends TestCase
         $id = self::id($t);
         $this->tasks->update($this->max, $id, ['status' => 'completed']);
         $this->tick();
-        $this->tasks->update(new TaskActor(12, 'Max Renamed', 'max@example.test', $this->max->permissions), $id, ['status' => 'in_progress']);
+        $this->tasks->update(new TaskActor(12, 'Max Renamed', 'max@example.test', $this->max->permissions), $id, ['status' => 'on_hold']);
 
         $rows = $this->tasks->history($this->max, $id);
 
-        self::assertSame(['in_progress', 'completed', 'not_started'], array_column($rows, 'to_status'));
+        self::assertSame(['on_hold', 'completed', 'active'], array_column($rows, 'to_status'));
         self::assertSame(['Max Renamed', 'Max Manager', 'Max Manager'], array_column($rows, 'changed_by'));
         self::assertCount(3, $this->tasks->historyByStatus(null));
-        self::assertCount(1, $this->tasks->historyByStatus('in_progress'));
+        self::assertCount(1, $this->tasks->historyByStatus('on_hold'));
         self::assertCount(1, $this->tasks->historyByStatus('completed'));
     }
 
-    public function test_an_unfinished_dependency_blocks_completing_and_reopening_with_the_blockers_listed(): void
+    public function test_an_unfinished_dependency_blocks_completing_with_the_blockers_listed_but_not_holding_or_reopening(): void
     {
         $a = $this->make($this->max, 'Gather statements');
         $b = $this->make($this->max, 'Reconcile', ['dependencies' => [self::id($a)]]);   // creating runs no dependency check
@@ -380,14 +424,10 @@ final class TaskServiceTest extends TestCase
             self::assertSame(409, $e->httpStatus());
             self::assertSame(['blockers' => [['id' => self::id($a), 'name' => 'Gather statements']]], $e->extra);
         }
-        // Reopening is a status change too.
-        try {
-            $this->tasks->update($this->max, self::id($c), ['status' => 'in_progress']);
-            self::fail('Expected a conflict.');
-        } catch (TaskConflict $e) {
-            self::assertStringContainsString('Reconcile', $e->getMessage());
-        }
-        self::assertSame('not_started', $this->tasks->get($this->max, self::id($b))['status'], 'nothing changed');
+        self::assertSame('active', $this->tasks->get($this->max, self::id($b))['status'], 'nothing changed');
+        // Only moving into Done is blocked (13 Oct 2026): holding, and reopening a done task, go through.
+        self::assertSame('on_hold', $this->tasks->update($this->max, self::id($b), ['status' => 'on_hold'])['status']);
+        self::assertSame('active', $this->tasks->update($this->max, self::id($c), ['status' => 'active'])['status']);
 
         $this->tasks->update($this->max, self::id($a), ['status' => 'completed']);
         self::assertSame('completed', $this->tasks->update($this->max, self::id($b), ['status' => 'completed'])['status']);
@@ -422,9 +462,9 @@ final class TaskServiceTest extends TestCase
         self::assertSame([self::id($done)], $u['dependencies']);
 
         // And naming an open one in the same request blocks it even though none was stored.
-        $this->tasks->update($this->max, self::id($t), ['dependencies' => []]);
+        $this->tasks->update($this->max, self::id($t), ['status' => 'active', 'dependencies' => []]);
         try {
-            $this->tasks->update($this->max, self::id($t), ['status' => 'in_progress', 'dependencies' => [self::id($a)]]);
+            $this->tasks->update($this->max, self::id($t), ['status' => 'completed', 'dependencies' => [self::id($a)]]);
             self::fail('Expected a conflict.');
         } catch (TaskConflict $e) {
             self::assertStringContainsString('Open', $e->getMessage());
@@ -567,7 +607,7 @@ final class TaskServiceTest extends TestCase
             self::assertStringContainsString('Gate', $e->getMessage());
         }
 
-        self::assertSame('not_started', $this->tasks->get($this->max, self::id($a))['status']);
+        self::assertSame('active', $this->tasks->get($this->max, self::id($a))['status']);
         self::assertSame(0, $this->tasks->get($this->max, self::id($a))['progress']);
         self::assertSame('B', $this->tasks->get($this->max, self::id($b))['name']);
         self::assertSame([], $this->tasks->historyByStatus('completed'));

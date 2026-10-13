@@ -113,9 +113,9 @@ final class AzureSqlTaskBoardStoreTest extends TestCase
         self::assertSame($out['groups'][0]['id'], $byName['Sales Module']['group_id']);
         self::assertSame($out['groups'][1]['id'], $byName['Customer List']['group_id']);
 
-        // Statuses beyond the first two are stored.
+        // On Hold is stored (13 Oct 2026).
         self::assertIsString($byName['Customer List']['id']);
-        self::assertSame('stuck', $this->tasks->update($this->manager, $byName['Customer List']['id'], ['status' => 'stuck'])['status']);
+        self::assertSame('on_hold', $this->tasks->update($this->manager, $byName['Customer List']['id'], ['status' => 'on_hold'])['status']);
     }
 
     public function test_deleting_a_group_ungroups_its_tasks_and_an_empty_project_with_groups_can_be_deleted(): void

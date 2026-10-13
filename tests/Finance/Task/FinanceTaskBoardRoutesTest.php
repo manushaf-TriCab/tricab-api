@@ -107,9 +107,13 @@ final class FinanceTaskBoardRoutesTest extends TestCase
         self::assertIsString($tasks[0]['id']);
         [$status] = $this->call('PATCH', '/tasks/' . $tasks[0]['id'], ['status' => 'completed']);
         self::assertSame(403, $status);
-        [$status, $json] = $this->call('PATCH', '/tasks/' . $tasks[0]['id'], ['status' => 'ready_for_review']);
+        // Send for review is a button, not a status (13 Oct 2026); mail is off in tests.
+        [$status, $json] = $this->call('POST', '/tasks/' . $tasks[0]['id'] . '/request-review');
         self::assertSame(200, $status);
-        self::assertSame('ready_for_review', self::data($json)['status']);
+        self::assertSame(['status' => 'suppressed'], self::data($json));
+        [$status, $json] = $this->call('PATCH', '/tasks/' . $tasks[0]['id'], ['status' => 'on_hold']);
+        self::assertSame(200, $status);
+        self::assertSame('on_hold', self::data($json)['status']);
     }
 
     public function test_a_member_reads_the_board_but_cannot_change_its_shape(): void
