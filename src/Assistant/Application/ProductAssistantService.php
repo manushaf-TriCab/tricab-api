@@ -16,6 +16,7 @@ final class ProductAssistantService
         private readonly AssistantQueryInterpreter $queryInterpreter,
         private readonly AssistantResponseProvider $provider,
         private readonly AssistantConversationRepository $conversations,
+        private readonly AssistantTurnTrace $trace,
     ) {
     }
 
@@ -29,28 +30,58 @@ final class ProductAssistantService
         ?string $conversationId = null,
         AssistantCatalogueVisibility $catalogueVisibility = AssistantCatalogueVisibility::PUBLIC,
     ): array {
-        $conversation = $this->conversations->getOrCreate(
+        $this->trace->begin();
+        $this->trace->note('catalogueVisibility', $catalogueVisibility->value);
+        try {
+            $reply = $this->replyTraced($message, $searchQuery, $regionCode, $conversationId, $catalogueVisibility);
+            $this->trace->note('outcome', 'ok');
+
+            return $reply;
+        } catch (\Throwable $exception) {
+            $this->trace->note('outcome', 'error:' . $exception::class);
+            throw $exception;
+        } finally {
+            $this->trace->emit();
+        }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function replyTraced(
+        string $message,
+        ?string $searchQuery,
+        ?string $regionCode,
+        ?string $conversationId,
+        AssistantCatalogueVisibility $catalogueVisibility,
+    ): array {
+        $conversation = $this->trace->measure('conversation_load', fn (): AssistantConversation => $this->conversations->getOrCreate(
             $conversationId,
             $regionCode,
             $catalogueVisibility,
+        ));
+        $this->trace->note('historyTurns', count($conversation->turns()));
+        $searchPlan = $this->trace->measure(
+            'interpret',
+            fn (): AssistantSearchPlan => $this->queryInterpreter->interpret($message, $searchQuery, $regionCode),
         );
-        $searchPlan = $this->queryInterpreter->interpret($message, $searchQuery, $regionCode);
-        [$items, $matchedSearchTerm] = $this->findVisibleProducts(
+        [$items, $matchedSearchTerm] = $this->trace->measure('catalogue_search', fn (): array => $this->findVisibleProducts(
             $searchPlan,
             $regionCode,
             $catalogueVisibility,
-        );
+        ));
 
-        $products = array_map(
+        $products = $this->trace->measure('product_grounding', fn (): array => array_map(
             fn (ProductSearchResult $item): GroundedProduct => $this->productGrounder->fromSearchResult(
                 $item,
                 $regionCode,
                 $catalogueVisibility,
             ),
             $items,
-        );
+        ));
+        $this->trace->note('groundedProducts', count($products));
 
-        $providerResult = $this->provider->generate(new AssistantGrounding(
+        $grounding = new AssistantGrounding(
             userMessage: trim($message),
             searchQuery: $searchPlan->originalQuery,
             regionCode: $regionCode,
@@ -62,14 +93,19 @@ final class ProductAssistantService
             queryInstructionVersion: $searchPlan->instructionVersion,
             catalogueVisibility: $catalogueVisibility->value,
             conversationTurns: $conversation->turns(),
-        ));
+        );
+        $providerResult = $this->trace->measure(
+            'generate',
+            fn (): AssistantProviderResult => $this->provider->generate($grounding),
+        );
+        $this->trace->note('provider', $providerResult->provider);
         // The turn keeps the provider's original text, including any choice
         // list lifted out below, so later turns still show the agent what it
         // offered when the customer answers with just "copper".
-        $this->conversations->appendTurn($conversation, new AssistantConversationTurn(
+        $this->trace->measure('conversation_save', fn () => $this->conversations->appendTurn($conversation, new AssistantConversationTurn(
             userMessage: trim($message),
             assistantMessage: $providerResult->text,
-        ));
+        )));
 
         $clarification = AssistantClarificationOptions::extract($providerResult->text);
 

@@ -7,12 +7,14 @@ namespace TriCab\Api\Assistant\Infrastructure;
 use TriCab\Api\Assistant\Application\AssistantGrounding;
 use TriCab\Api\Assistant\Application\AssistantProviderResult;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
+use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 
 final readonly class FallbackAssistantResponseProvider implements AssistantResponseProvider
 {
     public function __construct(
         private AssistantResponseProvider $primary,
         private AssistantResponseProvider $fallback,
+        private AssistantTurnTrace $trace = new AssistantTurnTrace(),
     ) {
     }
 
@@ -22,8 +24,9 @@ final readonly class FallbackAssistantResponseProvider implements AssistantRespo
             return $this->primary->generate($grounding);
         } catch (\Throwable $exception) {
             $this->logPrimaryFailure($exception);
+            $this->trace->recordFallback($exception);
 
-            return $this->fallback->generate($grounding);
+            return $this->trace->measure('fallback_generate', fn (): AssistantProviderResult => $this->fallback->generate($grounding));
         }
     }
 

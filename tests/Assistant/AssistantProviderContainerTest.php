@@ -8,6 +8,8 @@ use PHPUnit\Framework\TestCase;
 use TriCab\Api\Assistant\Application\AssistantConversationRepository;
 use TriCab\Api\Assistant\Application\AssistantQueryInterpreter;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
+use TriCab\Api\Assistant\Application\AssistantTurnTrace;
+use TriCab\Api\Assistant\Application\ProductAssistantService;
 use TriCab\Api\Assistant\Infrastructure\AgentAssistantQueryInterpreter;
 use TriCab\Api\Assistant\Infrastructure\AzureSqlAssistantConversationRepository;
 use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantResponseProvider;
@@ -50,6 +52,30 @@ final class AssistantProviderContainerTest extends TestCase
         );
     }
 
+    public function test_the_service_and_live_providers_share_one_turn_trace(): void
+    {
+        $container = ContainerFactory::create(Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'FOUNDRY_ENABLED' => 'true',
+            'FOUNDRY_ENDPOINT' => 'https://tricab-ai2.services.ai.azure.com',
+            'FOUNDRY_MODEL_DEPLOYMENT' => 'claude-sonnet-5',
+            'FOUNDRY_AUTH_MODE' => 'api-key',
+            'FOUNDRY_API_KEY' => 'test-key',
+        ]));
+
+        $trace = $container->get(AssistantTurnTrace::class);
+        $service = $container->get(ProductAssistantService::class);
+        $fallback = $container->get(AssistantResponseProvider::class);
+        self::assertInstanceOf(ProductAssistantService::class, $service);
+        self::assertInstanceOf(FallbackAssistantResponseProvider::class, $fallback);
+        $primary = self::property($fallback, 'primary');
+        self::assertIsObject($primary);
+
+        self::assertSame($trace, self::property($service, 'trace'));
+        self::assertSame($trace, self::property($fallback, 'trace'));
+        self::assertSame($trace, self::property($primary, 'trace'));
+    }
+
     public function test_binds_durable_conversations_for_the_azure_sql_runtime(): void
     {
         $container = ContainerFactory::create(Settings::fromEnvironment([
@@ -69,5 +95,10 @@ final class AssistantProviderContainerTest extends TestCase
             AzureSqlAssistantConversationRepository::class,
             $container->get(AssistantConversationRepository::class),
         );
+    }
+
+    private static function property(object $object, string $name): mixed
+    {
+        return (new \ReflectionProperty($object, $name))->getValue($object);
     }
 }

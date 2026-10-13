@@ -9,6 +9,7 @@ use RuntimeException;
 use TriCab\Api\Assistant\Application\AssistantGrounding;
 use TriCab\Api\Assistant\Application\AssistantProviderResult;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
+use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 use TriCab\Api\Assistant\Application\GroundedProduct;
 use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantResponseProvider;
 use TriCab\Api\Assistant\Infrastructure\FallbackAssistantResponseProvider;
@@ -37,6 +38,31 @@ final class FallbackAssistantResponseProviderTest extends TestCase
 
         self::assertSame('deterministic-search', $result->provider);
         self::assertStringContainsString('Published Cable', $result->text);
+    }
+
+    public function test_traces_the_fallback_and_its_reason(): void
+    {
+        $primary = new class implements AssistantResponseProvider {
+            public function generate(AssistantGrounding $grounding): AssistantProviderResult
+            {
+                throw new RuntimeException('Foundry Messages request failed.');
+            }
+        };
+        $trace = new AssistantTurnTrace();
+        $trace->begin();
+        $provider = new FallbackAssistantResponseProvider(
+            $primary,
+            new DeterministicAssistantResponseProvider(),
+            $trace,
+        );
+
+        $provider->generate(new AssistantGrounding('Find KL', 'KL', 'AU', [$this->publishedProduct()]));
+
+        $summary = $trace->summary();
+        self::assertTrue($summary['fellBack']);
+        self::assertNotNull($summary['fallback']);
+        self::assertSame('Foundry Messages request failed.', $summary['fallback']['message']);
+        self::assertArrayHasKey('fallback_generate', $summary['phasesMs']);
     }
 
     public function test_returns_the_primary_result_when_it_succeeds(): void

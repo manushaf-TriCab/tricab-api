@@ -10,8 +10,10 @@ use TriCab\Api\Assistant\Application\AssistantConversationTurn;
 use TriCab\Api\Assistant\Application\AssistantGrounding;
 use TriCab\Api\Assistant\Application\AssistantToolExecutor;
 use TriCab\Api\Assistant\Application\AssistantToolResult;
+use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 use TriCab\Api\Assistant\Infrastructure\Foundry\ClaudeFoundryAgentProvider;
 use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryAccessTokenProvider;
+use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryProviderUnavailable;
 use TriCab\Api\Assistant\Infrastructure\Prompt\VersionedPrompt;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Tests\Doubles\FakeJsonHttpClient;
@@ -139,10 +141,74 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertTrue($result->curatesCards);
     }
 
+    public function test_traces_each_round_trip_and_tool_call(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            ['status' => 200, 'body' => json_encode([
+                'content' => [[
+                    'type' => 'tool_use',
+                    'id' => 'tool-1',
+                    'name' => 'search_product_codes',
+                    'input' => ['styleCodes' => ['KL']],
+                ]],
+                'stop_reason' => 'tool_use',
+                'usage' => ['input_tokens' => 2_400, 'output_tokens' => 60],
+            ], JSON_THROW_ON_ERROR)],
+            ['status' => 200, 'body' => json_encode([
+                'content' => [['type' => 'text', 'text' => 'KL-PAXN/4C16OR exists.']],
+                'stop_reason' => 'end_turn',
+                'usage' => ['input_tokens' => 2_700, 'output_tokens' => 30],
+            ], JSON_THROW_ON_ERROR)],
+        ];
+        $trace = new AssistantTurnTrace();
+        $trace->begin();
+
+        $this->provider($http, $this->toolExecutor(), 5, $trace)->generate(new AssistantGrounding(
+            userMessage: 'KL 4 core 16',
+            searchQuery: 'KL 4 core 16',
+            regionCode: 'AU',
+            products: [],
+        ));
+
+        $summary = $trace->summary();
+        self::assertSame('claude-sonnet-5', $summary['context']['model']);
+        self::assertSame(2, $summary['modelCallCount']);
+        self::assertSame(['tool_use', 'end_turn'], array_column($summary['modelCalls'], 'stopReason'));
+        self::assertSame(['ok', 'ok'], array_column($summary['modelCalls'], 'outcome'));
+        self::assertSame(['input_tokens' => 2_700, 'output_tokens' => 30], $summary['modelCalls'][1]['usage']);
+        self::assertSame([['name' => 'search_product_codes', 'ms' => $summary['toolCalls'][0]['ms'], 'ok' => true]], $summary['toolCalls']);
+        self::assertArrayHasKey('foundry_token', $summary['phasesMs']);
+    }
+
+    public function test_traces_a_rejected_round_trip_before_failing(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            ['status' => 429, 'body' => '{"error":{"message":"Rate limit"}}'],
+        ];
+        $trace = new AssistantTurnTrace();
+        $trace->begin();
+
+        try {
+            $this->provider($http, $this->toolExecutor(), 5, $trace)->generate(new AssistantGrounding(
+                userMessage: 'KL',
+                searchQuery: 'KL',
+                regionCode: 'AU',
+                products: [],
+            ));
+            self::fail('A rejected request must make the provider unavailable.');
+        } catch (FoundryProviderUnavailable) {
+        }
+
+        self::assertSame('http_429', $trace->summary()['modelCalls'][0]['outcome']);
+    }
+
     private function provider(
         FakeJsonHttpClient $http,
         AssistantToolExecutor $tools,
         int $maxToolCalls,
+        ?AssistantTurnTrace $trace = null,
     ): ClaudeFoundryAgentProvider {
         return new ClaudeFoundryAgentProvider(
             http: $http,
@@ -163,6 +229,7 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
             ),
             maxToolCalls: $maxToolCalls,
             apiKey: 'test-key',
+            trace: $trace ?? new AssistantTurnTrace(),
         );
     }
 

@@ -10,6 +10,7 @@ use InvalidArgumentException;
 use PDO;
 use TriCab\Api\Assistant\Application\AssistantQueryInterpreter;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
+use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 use TriCab\Api\Assistant\Application\AssistantConversationRepository;
 use TriCab\Api\Assistant\Application\AssistantProductGrounder;
 use TriCab\Api\Assistant\Application\AssistantStyleOptionsProvider;
@@ -1849,13 +1850,17 @@ final class ContainerFactory
                     prompt: $prompts->get('product-assistant-response', 'v7'),
                     maxToolCalls: $settings->foundryMaxToolCalls,
                     apiKey: $settings->foundryApiKey,
+                    trace: self::get($container, AssistantTurnTrace::class),
                 );
 
                 return new FallbackAssistantResponseProvider(
                     $primary,
                     self::get($container, SearchGroundedDeterministicAssistantResponseProvider::class),
+                    self::get($container, AssistantTurnTrace::class),
                 );
             },
+            // One per request: the service and both providers write into the same turn.
+            AssistantTurnTrace::class => \DI\create(AssistantTurnTrace::class),
             InMemoryAssistantConversationRepository::class => \DI\create(InMemoryAssistantConversationRepository::class),
             AssistantConversationRepository::class => \DI\get(InMemoryAssistantConversationRepository::class),
             AssistantProductGrounder::class => \DI\autowire(AssistantProductGrounder::class),

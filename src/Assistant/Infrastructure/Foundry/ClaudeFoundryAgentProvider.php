@@ -13,6 +13,7 @@ use TriCab\Api\Assistant\Application\AssistantGrounding;
 use TriCab\Api\Assistant\Application\AssistantProviderResult;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
 use TriCab\Api\Assistant\Application\AssistantToolExecutor;
+use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 use TriCab\Api\Assistant\Infrastructure\Prompt\VersionedPrompt;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
@@ -34,6 +35,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         private VersionedPrompt $prompt,
         private int $maxToolCalls,
         private string $apiKey = '',
+        private AssistantTurnTrace $trace = new AssistantTurnTrace(),
     ) {
     }
 
@@ -44,6 +46,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         $usedToolNames = [];
         $cards = [];
         $maxIterations = max(3, $this->maxToolCalls + 3);
+        $this->trace->note('model', $this->deployment);
 
         for ($iteration = 0; $iteration < $maxIterations; $iteration++) {
             $toolsEnabled = $toolCallCount < $this->maxToolCalls;
@@ -82,6 +85,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
 
                 $toolCallCount++;
                 $usedToolNames[] = $toolUse['name'];
+                $toolStartedAt = hrtime(true);
                 try {
                     $result = $this->tools->execute(
                         $toolUse['name'],
@@ -90,6 +94,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
                         AssistantCatalogueVisibility::tryFrom($grounding->catalogueVisibility)
                             ?? AssistantCatalogueVisibility::PUBLIC,
                     );
+                    $this->trace->recordToolCall($toolUse['name'], AssistantTurnTrace::msSince($toolStartedAt), true);
                     array_push($cards, ...$result->cards);
                     $toolResults[] = $this->toolResultBlock(
                         $toolUse['id'],
@@ -98,6 +103,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
                         false,
                     );
                 } catch (Throwable) {
+                    $this->trace->recordToolCall($toolUse['name'], AssistantTurnTrace::msSince($toolStartedAt), false);
                     // Tool failures are data for the model, not reasons to lose the
                     // whole conversation. Do not expose SQL, transport or config detail.
                     $toolResults[] = $this->toolResultBlock(
@@ -137,19 +143,27 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
             $payload['tools'] = $this->tools->definitions();
         }
 
+        // The token is fetched outside the call's timing so a slow managed
+        // identity endpoint shows as its own phase, not as a slow model.
+        $headers = $this->trace->measure('foundry_token', fn (): array => $this->headers());
+        $startedAt = hrtime(true);
         try {
             $response = $this->http->postJson(
                 rtrim($this->endpoint, '/') . '/anthropic/v1/messages',
-                $this->headers(),
+                $headers,
                 $payload,
             );
         } catch (FoundryProviderUnavailable $exception) {
+            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'transport_error');
             throw $exception;
         } catch (Throwable $exception) {
+            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'transport_error');
             throw new FoundryProviderUnavailable('Foundry Messages request failed.', previous: $exception);
         }
+        $elapsedMs = AssistantTurnTrace::msSince($startedAt);
 
         if ($response['status'] < 200 || $response['status'] >= 300) {
+            $this->trace->recordModelCall($elapsedMs, $toolsEnabled, 'http_' . $response['status']);
             // Carry the status and a bounded slice of the body. "Rejected" on its own
             // cannot distinguish a bad deployment name from an expired key from a
             // malformed tool schema, and the fallback makes the failure invisible
@@ -165,11 +179,20 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         try {
             $decoded = json_decode($response['body'], true, flags: JSON_THROW_ON_ERROR);
         } catch (JsonException $exception) {
+            $this->trace->recordModelCall($elapsedMs, $toolsEnabled, 'invalid_response');
             throw new FoundryProviderUnavailable('Foundry Messages response was invalid.', previous: $exception);
         }
         if (!is_array($decoded) || !isset($decoded['content']) || !is_array($decoded['content'])) {
+            $this->trace->recordModelCall($elapsedMs, $toolsEnabled, 'invalid_response');
             throw new FoundryProviderUnavailable('Foundry Messages response did not contain content.');
         }
+        $this->trace->recordModelCall(
+            $elapsedMs,
+            $toolsEnabled,
+            'ok',
+            is_string($decoded['stop_reason'] ?? null) ? $decoded['stop_reason'] : null,
+            is_array($decoded['usage'] ?? null) ? $decoded['usage'] : [],
+        );
 
         /** @var list<array<string, mixed>> $content */
         $content = array_values(array_filter($decoded['content'], 'is_array'));
