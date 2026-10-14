@@ -127,6 +127,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'alter-onboarding-policy-declarations.sql'
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-form-contributions.sql') # after onboarding: FKs to Assignments
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-migration-rows.sql')     # after legacy migration: FKs to LegacyMigrationBatches
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
+Invoke-SqlFile (Join-Path $DevScripts 'create-commerce-cart-schema.sql')      # signed-in carts; after identity, customer and product: FKs to all three
 Invoke-SqlFile (Join-Path $DevScripts 'create-rfq-schema.sql')               # the live MySQL RFQ store's shape; no FKs outside [rfq]
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-schema.sql')           # shared finance tables (mailboxes, grants, mail ledger, audit); no FKs outside [finance]
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-jobs-schema.sql')         # job runner claims; after create-finance-schema.sql
