@@ -243,6 +243,8 @@ final readonly class Settings
         public int $financeApMinAttachmentBytes = 25600,
         public int $financeApMaxScanMessages = 0,
         public bool $financeApSampleFiles = false,
+        // Foundry `output_config.effort`; '' sends none, so the model's own default applies.
+        public string $foundryEffort = '',
     ) {
     }
 
@@ -888,6 +890,10 @@ final readonly class Settings
         if ($foundryMaxToolCalls < 1 || $foundryMaxToolCalls > 10) {
             throw new InvalidArgumentException('FOUNDRY_MAX_TOOL_CALLS must be between 1 and 10.');
         }
+        $foundryEffort = strtolower(trim(self::string($env, 'FOUNDRY_EFFORT', '')));
+        if (!in_array($foundryEffort, ['', 'low', 'medium', 'high', 'xhigh', 'max'], true)) {
+            throw new InvalidArgumentException('FOUNDRY_EFFORT must be empty or one of low, medium, high, xhigh, max.');
+        }
 
         if ($foundryEnabled && ($foundryEndpoint === '' || $foundryModelDeployment === '')) {
             throw new InvalidArgumentException(
@@ -1392,6 +1398,7 @@ final readonly class Settings
             financeApMinAttachmentBytes: self::boundedInt($env, 'FINANCE_AP_MIN_ATTACHMENT_BYTES', 25600, 0, 33554432),
             financeApMaxScanMessages: self::boundedInt($env, 'FINANCE_AP_MAX_SCAN_MESSAGES', 0, 0, 100000),
             financeApSampleFiles: $financeApSampleFiles,
+            foundryEffort: $foundryEffort,
         );
     }
 

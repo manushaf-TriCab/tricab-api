@@ -32,19 +32,25 @@ PROMPT;
         private readonly string $deployment,
         private readonly string $authMode,
         private readonly string $apiKey = '',
+        private readonly string $effort = '',
     ) {
     }
 
     public function summarise(string $rawText): string
     {
+        // max_tokens leaves room for thinking, which counts toward it on models that
+        // think by default (Claude Sonnet 5.5); the summary itself stays short.
         $payload = [
             'model' => $this->deployment,
-            'max_tokens' => 1_200,
+            'max_tokens' => 4_000,
             'system' => self::SYSTEM_PROMPT,
             'messages' => [
                 ['role' => 'user', 'content' => mb_substr($rawText, 0, LogNoteBody::MAX_LENGTH)],
             ],
         ];
+        if ($this->effort !== '') {
+            $payload['output_config'] = ['effort' => $this->effort];
+        }
 
         try {
             $response = $this->http->postJson(

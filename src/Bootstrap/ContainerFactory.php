@@ -1817,6 +1817,7 @@ final class ContainerFactory
                     deployment: $settings->foundryModelDeployment,
                     authMode: $settings->foundryAuthMode,
                     apiKey: $settings->foundryApiKey,
+                    effort: $settings->foundryEffort,
                 );
 
                 return new \TriCab\Api\LogNote\Infrastructure\FallbackLogNoteSummariser($primary, $fallback);
@@ -1851,6 +1852,7 @@ final class ContainerFactory
                     maxToolCalls: $settings->foundryMaxToolCalls,
                     apiKey: $settings->foundryApiKey,
                     trace: self::get($container, AssistantTurnTrace::class),
+                    effort: $settings->foundryEffort,
                 );
 
                 return new FallbackAssistantResponseProvider(

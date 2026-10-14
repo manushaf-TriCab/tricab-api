@@ -62,6 +62,8 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
 
         $firstPayload = $this->payload($http, 0);
         self::assertArrayHasKey('tools', $firstPayload);
+        self::assertArrayNotHasKey('tool_choice', $firstPayload);
+        self::assertArrayNotHasKey('output_config', $firstPayload, 'no effort is sent unless configured');
         $firstJson = json_encode($firstPayload, JSON_THROW_ON_ERROR);
         self::assertStringContainsString('Find a 4 core 10 mm2 KL cable.', $firstJson);
         self::assertStringContainsString('Do you need an earth?', $firstJson);
@@ -97,7 +99,9 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertCount(1, $tools->calls);
         self::assertSame(['search_product_codes'], $result->toolNames);
         $secondPayload = $this->payload($http, 1);
-        self::assertArrayNotHasKey('tools', $secondPayload);
+        // The tool list stays (removing it would discard the cache); tool_choice stops further calls.
+        self::assertSame($this->payload($http, 0)['tools'], $secondPayload['tools']);
+        self::assertSame(['type' => 'none'], $secondPayload['tool_choice']);
         $secondJson = json_encode($secondPayload, JSON_THROW_ON_ERROR);
         self::assertStringContainsString('tool_call_limit_reached', $secondJson);
         self::assertStringContainsString('"is_error":true', $secondJson);
@@ -139,6 +143,59 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertCount(1, $tools->calls, 'the lookup still happens');
         self::assertSame([], $result->cards, 'but it is not offered to the customer');
         self::assertTrue($result->curatesCards);
+    }
+
+    public function test_marks_the_shared_prefix_and_the_conversation_for_caching(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            ['status' => 200, 'body' => '{"content":[{"type":"text","text":"Answer."}]}'],
+        ];
+
+        $this->provider($http, $this->toolExecutor(), 5, effort: 'low')->generate(new AssistantGrounding(
+            userMessage: 'KL',
+            searchQuery: 'KL',
+            regionCode: 'AU',
+            products: [],
+        ));
+
+        $payload = $this->payload($http, 0);
+        self::assertSame(['type' => 'ephemeral'], $payload['cache_control']);
+        self::assertSame([[
+            'type' => 'text',
+            'text' => 'Use bounded server tools.',
+            'cache_control' => ['type' => 'ephemeral'],
+        ]], $payload['system']);
+        self::assertSame(['effort' => 'low'], $payload['output_config']);
+        self::assertSame(8_000, $payload['max_tokens']);
+    }
+
+    public function test_a_refusal_makes_the_provider_unavailable_instead_of_answering(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            ['status' => 200, 'body' => json_encode([
+                'content' => [['type' => 'text', 'text' => 'Partial text before the decline']],
+                'stop_reason' => 'refusal',
+                'stop_details' => ['type' => 'refusal', 'category' => 'general_harms', 'explanation' => null],
+            ], JSON_THROW_ON_ERROR)],
+        ];
+        $trace = new AssistantTurnTrace();
+        $trace->begin();
+
+        try {
+            $this->provider($http, $this->toolExecutor(), 5, $trace)->generate(new AssistantGrounding(
+                userMessage: 'KL',
+                searchQuery: 'KL',
+                regionCode: 'AU',
+                products: [],
+            ));
+            self::fail('A refusal must not be returned as an answer.');
+        } catch (FoundryProviderUnavailable $exception) {
+            self::assertStringContainsString('refusal: general_harms', $exception->getMessage());
+        }
+
+        self::assertSame('refusal', $trace->summary()['modelCalls'][0]['stopReason']);
     }
 
     public function test_traces_each_round_trip_and_tool_call(): void
@@ -209,6 +266,7 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         AssistantToolExecutor $tools,
         int $maxToolCalls,
         ?AssistantTurnTrace $trace = null,
+        string $effort = '',
     ): ClaudeFoundryAgentProvider {
         return new ClaudeFoundryAgentProvider(
             http: $http,
@@ -230,6 +288,7 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
             maxToolCalls: $maxToolCalls,
             apiKey: 'test-key',
             trace: $trace ?? new AssistantTurnTrace(),
+            effort: $effort,
         );
     }
 

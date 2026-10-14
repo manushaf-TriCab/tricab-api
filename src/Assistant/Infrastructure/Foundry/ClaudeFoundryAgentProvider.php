@@ -24,6 +24,10 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
     private const ANTHROPIC_VERSION = '2023-06-01';
     private const MAX_HISTORY_TURNS = 12;
     private const MAX_MESSAGE_LENGTH = 4_000;
+    // Thinking counts toward max_tokens on models that think by default (Claude
+    // Sonnet 5.5 among them), so this leaves room for it as well as the reply. It
+    // is a ceiling, not a cost: only generated tokens are billed.
+    private const MAX_OUTPUT_TOKENS = 8_000;
 
     public function __construct(
         private JsonHttpClient $http,
@@ -36,6 +40,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         private int $maxToolCalls,
         private string $apiKey = '',
         private AssistantTurnTrace $trace = new AssistantTurnTrace(),
+        private string $effort = '',
     ) {
     }
 
@@ -133,14 +138,33 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         // served by the deterministic fallback instead. Determinism now comes from
         // the prompt and the tool contract, which is where it has to come from on
         // these models.
+        //
+        // Caching: tools render first, then system, so the marker on the system
+        // block caches both — about 6k tokens that are identical on every request.
+        // The top-level marker caches the growing conversation, so each round trip
+        // of the tool loop reads the previous one's prefix instead of reprocessing it.
+        //
+        // The tool list is sent on every round trip, even once the tool budget is
+        // spent: removing it would throw away the cache and, on models that keep
+        // thinking blocks, invalidate the blocks already in the loop. `tool_choice:
+        // none` stops further calls instead and only costs the messages cache.
         $payload = [
             'model' => $this->deployment,
-            'max_tokens' => 1_600,
-            'system' => $this->prompt->content,
+            'max_tokens' => self::MAX_OUTPUT_TOKENS,
+            'cache_control' => ['type' => 'ephemeral'],
+            'system' => [[
+                'type' => 'text',
+                'text' => $this->prompt->content,
+                'cache_control' => ['type' => 'ephemeral'],
+            ]],
+            'tools' => $this->tools->definitions(),
             'messages' => $messages,
         ];
-        if ($toolsEnabled) {
-            $payload['tools'] = $this->tools->definitions();
+        if (!$toolsEnabled) {
+            $payload['tool_choice'] = ['type' => 'none'];
+        }
+        if ($this->effort !== '') {
+            $payload['output_config'] = ['effort' => $this->effort];
         }
 
         // The token is fetched outside the call's timing so a slow managed
@@ -186,13 +210,24 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
             $this->trace->recordModelCall($elapsedMs, $toolsEnabled, 'invalid_response');
             throw new FoundryProviderUnavailable('Foundry Messages response did not contain content.');
         }
+        $stopReason = is_string($decoded['stop_reason'] ?? null) ? $decoded['stop_reason'] : null;
         $this->trace->recordModelCall(
             $elapsedMs,
             $toolsEnabled,
             'ok',
-            is_string($decoded['stop_reason'] ?? null) ? $decoded['stop_reason'] : null,
+            $stopReason,
             is_array($decoded['usage'] ?? null) ? $decoded['usage'] : [],
         );
+        if ($stopReason === 'refusal') {
+            // A safety decline is an HTTP 200. Whatever content came with it is not
+            // an answer, so the turn falls back rather than showing a partial reply.
+            $details = $decoded['stop_details'] ?? null;
+            $category = is_array($details) ? ($details['category'] ?? null) : null;
+            throw new FoundryProviderUnavailable(sprintf(
+                'Foundry declined the request (refusal: %s).',
+                is_string($category) ? $category : 'unspecified',
+            ));
+        }
 
         /** @var list<array<string, mixed>> $content */
         $content = array_values(array_filter($decoded['content'], 'is_array'));

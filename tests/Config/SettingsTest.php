@@ -617,4 +617,13 @@ final class SettingsTest extends TestCase
         }
         self::assertTrue(Settings::fromEnvironment($base + ['RFQ_SYNC_ENABLED' => 'true'])->rfqSyncEnabled);
     }
+
+    public function test_foundry_effort_defaults_to_none_and_rejects_unknown_levels(): void
+    {
+        self::assertSame('', Settings::fromEnvironment(['APP_ENV' => 'development'])->foundryEffort);
+        self::assertSame('low', Settings::fromEnvironment(['APP_ENV' => 'development', 'FOUNDRY_EFFORT' => ' LOW '])->foundryEffort);
+
+        $this->expectException(InvalidArgumentException::class);
+        Settings::fromEnvironment(['APP_ENV' => 'development', 'FOUNDRY_EFFORT' => 'fast']);
+    }
 }
