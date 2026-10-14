@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 
@@ -22,6 +23,7 @@ final class GetPublicCatalogueTabTreeAction
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
         private readonly RegionPreferenceResolver $regions,
+        private readonly CatalogueNavigationImageSigner $images,
     ) {
     }
 
@@ -34,11 +36,15 @@ final class GetPublicCatalogueTabTreeAction
             $regionCode = $this->regions->resolveCode($request, QueryParams::stringOrNull($query, 'regionCode'));
             $includeProducts = QueryParams::boolOrNull($query, 'includeProducts') ?? false;
 
-            return $this->responder->success([
-                'items' => CatalogueDtoSerializer::publicTreeList(
-                    $this->catalogue->getTabTree($tabSlug, $regionCode, $includeProducts),
-                ),
-            ]);
+            return $this->responder->success(
+                $this->images->signPublicDocument([
+                    'items' => CatalogueDtoSerializer::publicTreeList(
+                        $this->catalogue->getTabTree($tabSlug, $regionCode, $includeProducts),
+                    ),
+                ]),
+                200,
+                ['Cache-Control' => $this->images->cacheControl(true)],
+            );
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

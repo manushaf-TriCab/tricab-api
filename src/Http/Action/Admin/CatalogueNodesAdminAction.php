@@ -17,6 +17,7 @@ use TriCab\Api\Http\Request\Admin\Product\UpsertCatalogueNodeRequest;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
 use TriCab\Core\Product\Application\Command\AssignCatalogueNodeProductStyleCommand;
 use TriCab\Core\Product\Application\Command\AssignCatalogueNodeProductsCommand;
 use TriCab\Core\Product\Application\Command\RemoveCatalogueNodeProductStyleCommand;
@@ -33,6 +34,7 @@ final class CatalogueNodesAdminAction
         private readonly AdminMutationTransaction $transaction,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
+        private readonly CatalogueNavigationImageSigner $images,
     ) {
     }
 
@@ -53,10 +55,17 @@ final class CatalogueNodesAdminAction
                 $tabPublicId = self::requireQueryString($request, 'tabPublicId');
                 $includeDeleted = (($request->getQueryParams()['includeDeleted'] ?? '') === 'true');
 
+                $tree = CatalogueDtoSerializer::nodeTreeList(
+                    $this->service->getTabTree($tabPublicId, $includeDeleted),
+                );
+
                 return $this->responder->success([
-                    'items' => CatalogueDtoSerializer::nodeTreeList(
-                        $this->service->getTabTree($tabPublicId, $includeDeleted),
+                    'items' => array_map(
+                        fn (array $node): array => $this->images->signAdminNode($node),
+                        $tree,
                     ),
+                ], 200, [
+                    'Cache-Control' => $this->images->cacheControl(false),
                 ]);
             }
             if ($op === 'get') {
@@ -138,7 +147,7 @@ final class CatalogueNodesAdminAction
                     parentPublicId: $input->parentPublicId,
                     description: $input->description,
                     nodeTypeCode: $input->nodeTypeCode,
-                    imageUrl: $input->imageUrl,
+                    imageUrl: $this->images->canonicalStoredUrl($input->imageUrl),
                     imageAltText: $input->imageAltText,
                     imageMediaPublicId: $input->imageMediaPublicId,
                     displayOrder: $input->displayOrder,
@@ -163,7 +172,7 @@ final class CatalogueNodesAdminAction
                     parentPublicId: $input->parentPublicId,
                     description: $input->description,
                     nodeTypeCode: $input->nodeTypeCode,
-                    imageUrl: $input->imageUrl,
+                    imageUrl: $this->images->canonicalStoredUrl($input->imageUrl),
                     imageAltText: $input->imageAltText,
                     imageMediaPublicId: $input->imageMediaPublicId,
                     displayOrder: $input->displayOrder,
