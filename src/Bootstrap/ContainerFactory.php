@@ -1854,7 +1854,7 @@ final class ContainerFactory
                     endpoint: $settings->foundryEndpoint,
                     deployment: $settings->foundryModelDeployment,
                     authMode: $settings->foundryAuthMode,
-                    prompt: $prompts->get('product-assistant-response', 'v7'),
+                    prompt: $prompts->get('product-assistant-response', 'v8'),
                     maxToolCalls: $settings->foundryMaxToolCalls,
                     apiKey: $settings->foundryApiKey,
                     trace: self::get($container, AssistantTurnTrace::class),
