@@ -38,6 +38,7 @@ final class AzureSqlProductCustomerViewRepository implements ProductCustomerView
         private readonly Product3DModelRepository $threeDModels,
         private readonly bool $product3dEnabled = true,
         private readonly ?ProductPageMediaLayoutRepository $pageMedia = null,
+        private readonly ?\TriCab\Core\Product\Contract\ProductPageContentRepository $pageContent = null,
     ) {
     }
 
@@ -110,6 +111,7 @@ SQL,
 
         $internalCode = AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null);
         $pageMedia = $this->pageMedia?->find($pid);
+        $pageContent = $this->pageContent?->find($pid);
 
         return new ProductCustomerViewDetail(
             publicId: $publicId,
@@ -144,6 +146,7 @@ SQL,
             )?->toString(),
             descriptionImageWidth: $pageMedia?->width(),
             descriptionImageAlignment: $pageMedia?->alignment(),
+            pageContent: $pageContent,
         );
     }
 

@@ -135,6 +135,7 @@ use TriCab\Api\Http\Action\Admin\UpdateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\UpdatePermissionAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductSeoAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductPageContentAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductPageMediaLayoutAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductThumbnailPresentationAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
@@ -237,6 +238,7 @@ use TriCab\Api\Product\Persistence\AzureSqlProductRelationshipRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductSearchRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductSeoRepository;
+use TriCab\Api\Product\Persistence\AzureSqlProductPageContentRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductPageMediaLayoutRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductThumbnailPresentationRepository;
 use TriCab\Api\Product\Persistence\AzureSqlProductSpecificationRepository;
@@ -267,6 +269,7 @@ use TriCab\Api\Product\Persistence\InMemory\InMemoryProductRelationshipRepositor
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSearchRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSeoRepository;
+use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPageContentRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductPageMediaLayoutRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductThumbnailPresentationRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductSpecificationRepository;
@@ -657,6 +660,7 @@ use TriCab\Core\Product\Application\Service\SoftDeleteProductService;
 use TriCab\Core\Product\Application\Service\SoftDeleteProductVariantService;
 use TriCab\Core\Product\Application\Service\UnpublishProductService;
 use TriCab\Core\Product\Application\Service\UpdateProductSeoService;
+use TriCab\Core\Product\Application\Service\UpdateProductPageContentService;
 use TriCab\Core\Product\Application\Service\UpdateProductPageMediaLayoutService;
 use TriCab\Core\Product\Application\Service\UpdateProductThumbnailPresentationService;
 use TriCab\Core\Product\Application\Service\UpdateProductService;
@@ -739,6 +743,7 @@ use TriCab\Core\Product\Contract\ProductRelationshipRepository;
 use TriCab\Core\Product\Contract\ProductRepository;
 use TriCab\Core\Product\Contract\ProductSearchRepository;
 use TriCab\Core\Product\Contract\ProductSeoRepository;
+use TriCab\Core\Product\Contract\ProductPageContentRepository;
 use TriCab\Core\Product\Contract\ProductPageMediaLayoutRepository;
 use TriCab\Core\Product\Contract\ProductThumbnailPresentationRepository;
 use TriCab\Core\Product\Contract\ProductSpecificationRepository;
@@ -2101,6 +2106,7 @@ final class ContainerFactory
             UpdateProductSeoAction::class => \DI\autowire(UpdateProductSeoAction::class),
             UpdateProductThumbnailPresentationAction::class => \DI\autowire(UpdateProductThumbnailPresentationAction::class),
             UpdateProductPageMediaLayoutAction::class => \DI\autowire(UpdateProductPageMediaLayoutAction::class),
+            UpdateProductPageContentAction::class => \DI\autowire(UpdateProductPageContentAction::class),
             ChangeProductSlugAction::class => \DI\autowire(ChangeProductSlugAction::class),
             GetProductPricingAction::class => \DI\autowire(GetProductPricingAction::class),
             CompareLegacyBaseCostAction::class => \DI\autowire(CompareLegacyBaseCostAction::class),
@@ -2235,6 +2241,7 @@ final class ContainerFactory
             UpdateProductSeoService::class => \DI\autowire(UpdateProductSeoService::class),
             UpdateProductThumbnailPresentationService::class => \DI\autowire(UpdateProductThumbnailPresentationService::class),
             UpdateProductPageMediaLayoutService::class => \DI\autowire(UpdateProductPageMediaLayoutService::class),
+            UpdateProductPageContentService::class => \DI\autowire(UpdateProductPageContentService::class),
             ChangeProductSlugService::class => \DI\autowire(ChangeProductSlugService::class),
             UpsertProductPricingService::class => \DI\autowire(UpsertProductPricingService::class),
             GetProductPricingOverviewService::class => \DI\autowire(GetProductPricingOverviewService::class),
@@ -3336,6 +3343,7 @@ final class ContainerFactory
                     self::get($container, Product3DModelRepository::class),
                     $settings->product3dEnabled,
                     self::get($container, ProductPageMediaLayoutRepository::class),
+                    self::get($container, ProductPageContentRepository::class),
                 );
             };
             $definitions[ProductCustomerViewQueryRepository::class] = static function (Container $container) use ($settings): ProductCustomerViewQueryRepository {
@@ -3344,6 +3352,7 @@ final class ContainerFactory
                     self::get($container, Product3DModelRepository::class),
                     $settings->product3dEnabled,
                     self::get($container, ProductPageMediaLayoutRepository::class),
+                    self::get($container, ProductPageContentRepository::class),
                 );
             };
             $definitions[ProductMarketRepository::class] = \DI\autowire(AzureSqlProductMarketRepository::class);
@@ -3351,6 +3360,7 @@ final class ContainerFactory
             $definitions[ProductSeoRepository::class] = \DI\autowire(AzureSqlProductSeoRepository::class);
             $definitions[ProductThumbnailPresentationRepository::class] = \DI\autowire(AzureSqlProductThumbnailPresentationRepository::class);
             $definitions[ProductPageMediaLayoutRepository::class] = \DI\autowire(AzureSqlProductPageMediaLayoutRepository::class);
+            $definitions[ProductPageContentRepository::class] = \DI\autowire(AzureSqlProductPageContentRepository::class);
             $definitions[SiteConfigurationRepository::class] = \DI\autowire(AzureSqlSiteConfigurationRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(AzureSqlProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(AzureSqlProductPricingRepository::class);
@@ -3481,6 +3491,7 @@ SQL,
             $definitions[ProductSeoRepository::class] = \DI\autowire(InMemoryProductSeoRepository::class);
             $definitions[ProductThumbnailPresentationRepository::class] = \DI\autowire(InMemoryProductThumbnailPresentationRepository::class);
             $definitions[ProductPageMediaLayoutRepository::class] = \DI\autowire(InMemoryProductPageMediaLayoutRepository::class);
+            $definitions[ProductPageContentRepository::class] = \DI\autowire(InMemoryProductPageContentRepository::class);
             $definitions[SiteConfigurationRepository::class] = \DI\autowire(InMemorySiteConfigurationRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(InMemoryProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(InMemoryProductPricingRepository::class);

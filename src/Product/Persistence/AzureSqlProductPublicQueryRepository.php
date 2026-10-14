@@ -47,6 +47,7 @@ SQL;
         private readonly Product3DModelRepository $threeDModels,
         private readonly bool $product3dEnabled = true,
         private readonly ?ProductPageMediaLayoutRepository $pageMedia = null,
+        private readonly ?\TriCab\Core\Product\Contract\ProductPageContentRepository $pageContent = null,
     ) {
     }
 
@@ -205,6 +206,7 @@ SQL,
             }
         }
         $pageMedia = $this->pageMedia?->find($pid);
+        $pageContent = $this->pageContent?->find($pid);
 
         return new ProductPublicDetail(
             publicId: $publicId,
@@ -235,6 +237,7 @@ SQL,
                 : ProductPublic3DPayload::empty(),
             descriptionImageWidth: $pageMedia?->width(),
             descriptionImageAlignment: $pageMedia?->alignment(),
+            pageContent: $pageContent,
         );
     }
 

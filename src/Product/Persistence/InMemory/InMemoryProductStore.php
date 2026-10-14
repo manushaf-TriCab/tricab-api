@@ -108,6 +108,9 @@ final class InMemoryProductStore
     /** @var array<string, array{width: string, alignment: string}> */
     private array $pageMediaLayouts = [];
 
+    /** @var array<string, \TriCab\Core\Product\Domain\ValueObject\ProductPageContent> */
+    private array $pageContents = [];
+
     /** @var list<array<string, mixed>> */
     private array $redirects = [];
 
@@ -1245,6 +1248,16 @@ final class InMemoryProductStore
     public function pageMediaLayoutForProduct(ProductPublicId $publicId): ?array
     {
         return $this->pageMediaLayouts[$publicId->toString()] ?? null;
+    }
+
+    public function pageContentForProduct(ProductPublicId $publicId): ?\TriCab\Core\Product\Domain\ValueObject\ProductPageContent
+    {
+        return $this->pageContents[$publicId->toString()] ?? null;
+    }
+
+    public function setPageContent(ProductPublicId $publicId, \TriCab\Core\Product\Domain\ValueObject\ProductPageContent $content): void
+    {
+        $this->pageContents[$publicId->toString()] = $content;
     }
 
     public function setPageMediaLayout(ProductPublicId $publicId, string $width, string $alignment): void

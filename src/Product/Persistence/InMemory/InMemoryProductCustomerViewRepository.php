@@ -103,6 +103,7 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
             thumbnailBackgroundColor: $this->store->thumbnailBackgroundColorForProduct($product->publicId()),
             descriptionImageWidth: $pageMedia === null ? null : $pageMedia['width'],
             descriptionImageAlignment: $pageMedia === null ? null : $pageMedia['alignment'],
+            pageContent: $this->store->pageContentForProduct($product->publicId()),
         );
     }
 

@@ -48,6 +48,7 @@ final readonly class ProductPublicDetail
         public array $approvalCertificates = [],
         public ?string $descriptionImageWidth = null,
         public ?string $descriptionImageAlignment = null,
+        public ?\TriCab\Core\Product\Domain\ValueObject\ProductPageContent $pageContent = null,
     ) {
     }
 }
