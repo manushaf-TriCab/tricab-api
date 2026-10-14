@@ -13,13 +13,12 @@ use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
+use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 
 final class GetPublicCataloguePanelAction
 {
-    private const CACHE_CONTROL = 'public, max-age=60, stale-while-revalidate=120';
-
     public function __construct(
         private readonly GetPublicCatalogueService $catalogue,
         private readonly JsonResponder $responder,
@@ -27,6 +26,7 @@ final class GetPublicCataloguePanelAction
         private readonly ReferenceDataCache $cache,
         private readonly RequestPerformanceMetrics $metrics,
         private readonly RegionPreferenceResolver $regions,
+        private readonly CatalogueNavigationImageSigner $images,
     ) {
     }
 
@@ -44,18 +44,19 @@ final class GetPublicCataloguePanelAction
                 'includeProducts' => $includeProducts ? '1' : '0',
             ]);
 
+            $cacheControl = $this->images->cacheControl(true);
             $cached = $this->cache->getCatalogue($cacheKey);
             if (is_array($cached) && isset($cached['etag'], $cached['data']) && is_string($cached['etag']) && is_array($cached['data'])) {
                 $this->metrics->recordCatalogueCacheHit(true);
                 if ($this->etagMatches($request, $cached['etag'])) {
-                    return $this->responder->notModified($cached['etag']);
+                    return $this->responder->notModified($cached['etag'], $cacheControl);
                 }
                 /** @var array<string, mixed> $cachedData */
                 $cachedData = $cached['data'];
 
-                return $this->responder->success($cachedData, 200, [
+                return $this->responder->success($this->images->signPublicDocument($cachedData), 200, [
                     'ETag' => $cached['etag'],
-                    'Cache-Control' => self::CACHE_CONTROL,
+                    'Cache-Control' => $cacheControl,
                 ]);
             }
 
@@ -67,12 +68,12 @@ final class GetPublicCataloguePanelAction
             $this->cache->setCatalogue($cacheKey, ['etag' => $etag, 'data' => $payload]);
 
             if ($this->etagMatches($request, $etag)) {
-                return $this->responder->notModified($etag);
+                return $this->responder->notModified($etag, $cacheControl);
             }
 
-            return $this->responder->success($payload, 200, [
+            return $this->responder->success($this->images->signPublicDocument($payload), 200, [
                 'ETag' => $etag,
-                'Cache-Control' => self::CACHE_CONTROL,
+                'Cache-Control' => $cacheControl,
             ]);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);

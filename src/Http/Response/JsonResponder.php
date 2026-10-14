@@ -21,11 +21,13 @@ final class JsonResponder
         ], $status, $headers);
     }
 
-    public function notModified(string $etag): ResponseInterface
-    {
+    public function notModified(
+        string $etag,
+        string $cacheControl = 'public, max-age=60, stale-while-revalidate=120',
+    ): ResponseInterface {
         $response = new Response(304);
 
-        return $response->withHeader('ETag', $etag)->withHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
+        return $response->withHeader('ETag', $etag)->withHeader('Cache-Control', $cacheControl);
     }
 
     /**
