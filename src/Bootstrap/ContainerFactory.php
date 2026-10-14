@@ -10,6 +10,7 @@ use InvalidArgumentException;
 use PDO;
 use TriCab\Api\Assistant\Application\AssistantQueryInterpreter;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
+use TriCab\Api\Assistant\Application\AssistantTurnEvents;
 use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 use TriCab\Api\Assistant\Application\AssistantConversationRepository;
 use TriCab\Api\Assistant\Application\AssistantProductGrounder;
@@ -1858,6 +1859,8 @@ final class ContainerFactory
                     apiKey: $settings->foundryApiKey,
                     trace: self::get($container, AssistantTurnTrace::class),
                     effort: $settings->foundryEffort,
+                    stream: new \TriCab\Api\Assistant\Infrastructure\Foundry\CurlFoundryStreamClient((float) $settings->foundryTimeoutSeconds),
+                    events: self::get($container, AssistantTurnEvents::class),
                 );
 
                 return new FallbackAssistantResponseProvider(
@@ -1868,6 +1871,8 @@ final class ContainerFactory
             },
             // One per request: the service and both providers write into the same turn.
             AssistantTurnTrace::class => \DI\create(AssistantTurnTrace::class),
+            // One per request, like the trace: the streaming action listens, the provider emits.
+            AssistantTurnEvents::class => \DI\create(AssistantTurnEvents::class),
             InMemoryAssistantConversationRepository::class => \DI\create(InMemoryAssistantConversationRepository::class),
             AssistantConversationRepository::class => \DI\get(InMemoryAssistantConversationRepository::class),
             AssistantProductGrounder::class => \DI\autowire(AssistantProductGrounder::class),

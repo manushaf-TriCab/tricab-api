@@ -13,6 +13,7 @@ use TriCab\Api\Assistant\Application\AssistantGrounding;
 use TriCab\Api\Assistant\Application\AssistantProviderResult;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
 use TriCab\Api\Assistant\Application\AssistantToolExecutor;
+use TriCab\Api\Assistant\Application\AssistantTurnEvents;
 use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 use TriCab\Api\Assistant\Infrastructure\Prompt\VersionedPrompt;
 use TriCab\Api\Config\Settings;
@@ -41,6 +42,8 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         private string $apiKey = '',
         private AssistantTurnTrace $trace = new AssistantTurnTrace(),
         private string $effort = '',
+        private ?FoundryStreamClient $stream = null,
+        private AssistantTurnEvents $events = new AssistantTurnEvents(),
     ) {
     }
 
@@ -75,7 +78,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
                 );
             }
 
-            $messages[] = ['role' => 'assistant', 'content' => $content];
+            $messages[] = ['role' => 'assistant', 'content' => $this->forResend($content)];
             $toolResults = [];
             foreach ($toolUses as $toolUse) {
                 if ($toolCallCount >= $this->maxToolCalls) {
@@ -90,6 +93,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
 
                 $toolCallCount++;
                 $usedToolNames[] = $toolUse['name'];
+                $this->events->emit('tool', ['name' => $toolUse['name']]);
                 $toolStartedAt = hrtime(true);
                 try {
                     $result = $this->tools->execute(
@@ -170,46 +174,15 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         // The token is fetched outside the call's timing so a slow managed
         // identity endpoint shows as its own phase, not as a slow model.
         $headers = $this->trace->measure('foundry_token', fn (): array => $this->headers());
+        $url = rtrim($this->endpoint, '/') . '/anthropic/v1/messages';
+        $streaming = $this->stream !== null && $this->events->isListening();
         $startedAt = hrtime(true);
-        try {
-            $response = $this->http->postJson(
-                rtrim($this->endpoint, '/') . '/anthropic/v1/messages',
-                $headers,
-                $payload,
-            );
-        } catch (FoundryProviderUnavailable $exception) {
-            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'transport_error');
-            throw $exception;
-        } catch (Throwable $exception) {
-            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'transport_error');
-            throw new FoundryProviderUnavailable('Foundry Messages request failed.', previous: $exception);
-        }
+        $decoded = $streaming
+            ? $this->streamed($url, $headers, $payload, $toolsEnabled, $startedAt)
+            : $this->buffered($url, $headers, $payload, $toolsEnabled, $startedAt);
         $elapsedMs = AssistantTurnTrace::msSince($startedAt);
+        $this->trace->note('streamed', $streaming);
 
-        if ($response['status'] < 200 || $response['status'] >= 300) {
-            $this->trace->recordModelCall($elapsedMs, $toolsEnabled, 'http_' . $response['status']);
-            // Carry the status and a bounded slice of the body. "Rejected" on its own
-            // cannot distinguish a bad deployment name from an expired key from a
-            // malformed tool schema, and the fallback makes the failure invisible
-            // otherwise. The body is Foundry's own error payload; it does not echo
-            // the request, so no credential or customer text rides along.
-            throw new FoundryProviderUnavailable(sprintf(
-                'Foundry Messages request was rejected (HTTP %d): %s',
-                $response['status'],
-                mb_substr(trim($response['body']), 0, 500),
-            ));
-        }
-
-        try {
-            $decoded = json_decode($response['body'], true, flags: JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            $this->trace->recordModelCall($elapsedMs, $toolsEnabled, 'invalid_response');
-            throw new FoundryProviderUnavailable('Foundry Messages response was invalid.', previous: $exception);
-        }
-        if (!is_array($decoded) || !isset($decoded['content']) || !is_array($decoded['content'])) {
-            $this->trace->recordModelCall($elapsedMs, $toolsEnabled, 'invalid_response');
-            throw new FoundryProviderUnavailable('Foundry Messages response did not contain content.');
-        }
         $stopReason = is_string($decoded['stop_reason'] ?? null) ? $decoded['stop_reason'] : null;
         $this->trace->recordModelCall(
             $elapsedMs,
@@ -229,10 +202,138 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
             ));
         }
 
+        $rawContent = $decoded['content'] ?? null;
+        if (!is_array($rawContent)) {
+            throw new FoundryProviderUnavailable('Foundry Messages response did not contain content.');
+        }
         /** @var list<array<string, mixed>> $content */
-        $content = array_values(array_filter($decoded['content'], 'is_array'));
+        $content = array_values(array_filter($rawContent, 'is_array'));
 
         return ['content' => $content];
+    }
+
+    /**
+     * The ordinary call: wait for the whole response.
+     *
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $payload
+     * @return array<mixed>
+     */
+    private function buffered(string $url, array $headers, array $payload, bool $toolsEnabled, int $startedAt): array
+    {
+        try {
+            $response = $this->http->postJson($url, $headers, $payload);
+        } catch (FoundryProviderUnavailable $exception) {
+            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'transport_error');
+            throw $exception;
+        } catch (Throwable $exception) {
+            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'transport_error');
+            throw new FoundryProviderUnavailable('Foundry Messages request failed.', previous: $exception);
+        }
+
+        $this->rejectUnlessSuccessful($response['status'], $response['body'], $toolsEnabled, $startedAt);
+
+        try {
+            $decoded = json_decode($response['body'], true, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'invalid_response');
+            throw new FoundryProviderUnavailable('Foundry Messages response was invalid.', previous: $exception);
+        }
+        if (!is_array($decoded) || !isset($decoded['content']) || !is_array($decoded['content'])) {
+            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'invalid_response');
+            throw new FoundryProviderUnavailable('Foundry Messages response did not contain content.');
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * The streaming call: the same request with `stream: true`, rebuilt into the
+     * same response shape, with each piece of text passed to whoever is listening
+     * as it arrives. Text from a round that ends in a tool call is passed on too;
+     * the `tool` event that follows tells the listener it was a preamble.
+     *
+     * @param array<string, string> $headers
+     * @param array<string, mixed> $payload
+     * @return array<mixed>
+     */
+    private function streamed(string $url, array $headers, array $payload, bool $toolsEnabled, int $startedAt): array
+    {
+        $stream = $this->stream;
+        if ($stream === null) {
+            throw new FoundryProviderUnavailable('Foundry streaming is not configured.');
+        }
+        $payload['stream'] = true;
+        $assembler = new FoundryStreamAssembler();
+        $events = $this->events;
+
+        try {
+            $response = $stream->stream(
+                $url,
+                $headers,
+                $payload,
+                static function (string $event, array $data) use ($assembler, $events): void {
+                    $assembler->apply($event, $data);
+                    if ($event !== 'content_block_delta') {
+                        return;
+                    }
+                    $delta = $data['delta'] ?? null;
+                    if (is_array($delta) && ($delta['type'] ?? null) === 'text_delta' && is_string($delta['text'] ?? null)) {
+                        $events->emit('text', ['text' => $delta['text']]);
+                    }
+                },
+            );
+        } catch (Throwable $exception) {
+            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'transport_error');
+            throw new FoundryProviderUnavailable('Foundry Messages stream failed.', previous: $exception);
+        }
+
+        $this->rejectUnlessSuccessful($response['status'], $response['body'], $toolsEnabled, $startedAt);
+
+        $error = $assembler->error();
+        if ($error !== null) {
+            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'stream_error');
+            throw new FoundryProviderUnavailable('Foundry Messages stream reported an error: ' . mb_substr($error, 0, 300));
+        }
+
+        return $assembler->message();
+    }
+
+    private function rejectUnlessSuccessful(int $status, string $body, bool $toolsEnabled, int $startedAt): void
+    {
+        if ($status >= 200 && $status < 300) {
+            return;
+        }
+        $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'http_' . $status);
+        // Carry the status and a bounded slice of the body. "Rejected" on its own
+        // cannot distinguish a bad deployment name from an expired key from a
+        // malformed tool schema, and the fallback makes the failure invisible
+        // otherwise. The body is Foundry's own error payload; it does not echo
+        // the request, so no credential or customer text rides along.
+        throw new FoundryProviderUnavailable(sprintf(
+            'Foundry Messages request was rejected (HTTP %d): %s',
+            $status,
+            mb_substr(trim($body), 0, 500),
+        ));
+    }
+
+    /**
+     * The assistant turn as it goes back to the model. Blocks are unchanged
+     * except a tool call with no arguments: PHP decodes `{}` to `[]`, which would
+     * go back as a JSON array, and the API requires an object there.
+     *
+     * @param list<array<string, mixed>> $content
+     * @return list<array<string, mixed>>
+     */
+    private function forResend(array $content): array
+    {
+        return array_map(static function (array $block): array {
+            if (($block['type'] ?? null) === 'tool_use' && ($block['input'] ?? null) === []) {
+                $block['input'] = new \stdClass();
+            }
+
+            return $block;
+        }, $content);
     }
 
     /** @return array<string, string> */

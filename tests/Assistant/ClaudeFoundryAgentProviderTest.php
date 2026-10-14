@@ -10,10 +10,12 @@ use TriCab\Api\Assistant\Application\AssistantConversationTurn;
 use TriCab\Api\Assistant\Application\AssistantGrounding;
 use TriCab\Api\Assistant\Application\AssistantToolExecutor;
 use TriCab\Api\Assistant\Application\AssistantToolResult;
+use TriCab\Api\Assistant\Application\AssistantTurnEvents;
 use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 use TriCab\Api\Assistant\Infrastructure\Foundry\ClaudeFoundryAgentProvider;
 use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryAccessTokenProvider;
 use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryProviderUnavailable;
+use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryStreamClient;
 use TriCab\Api\Assistant\Infrastructure\Prompt\VersionedPrompt;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Tests\Doubles\FakeJsonHttpClient;
@@ -198,6 +200,69 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertSame('refusal', $trace->summary()['modelCalls'][0]['stopReason']);
     }
 
+    public function test_streams_text_and_tool_progress_to_a_listener_and_answers_the_same_way(): void
+    {
+        $answer = [
+            ['message_start', ['type' => 'message_start', 'message' => ['usage' => ['input_tokens' => 2, 'cache_read_input_tokens' => 6_100]]]],
+            ['content_block_start', ['type' => 'content_block_start', 'index' => 0, 'content_block' => ['type' => 'text', 'text' => '']]],
+            ['content_block_delta', ['type' => 'content_block_delta', 'index' => 0, 'delta' => ['type' => 'text_delta', 'text' => 'KL-PAXN/4C16OR ']]],
+            ['content_block_delta', ['type' => 'content_block_delta', 'index' => 0, 'delta' => ['type' => 'text_delta', 'text' => 'exists.']]],
+            ['content_block_stop', ['type' => 'content_block_stop', 'index' => 0]],
+            ['message_delta', ['type' => 'message_delta', 'delta' => ['stop_reason' => 'end_turn'], 'usage' => ['output_tokens' => 9]]],
+            ['message_stop', ['type' => 'message_stop']],
+        ];
+        $stream = new ScriptedFoundryStreamClient([FoundryStreamAssemblerTest::toolRound(), $answer]);
+        $http = new FakeJsonHttpClient();
+        $events = new AssistantTurnEvents();
+        $heard = [];
+        $events->listen(static function (string $event, array $data) use (&$heard): void {
+            $heard[] = [$event, $data];
+        });
+        $trace = new AssistantTurnTrace();
+        $trace->begin();
+
+        $result = $this->provider($http, $this->toolExecutor(), 5, $trace, stream: $stream, events: $events)
+            ->generate(new AssistantGrounding(userMessage: 'KL 4 core', searchQuery: 'KL 4 core', regionCode: 'AU', products: []));
+
+        self::assertSame('KL-PAXN/4C16OR exists.', $result->text);
+        self::assertSame(['product-code'], array_column($result->cards, 'type'));
+        self::assertSame([
+            ['text', ['text' => 'Let me ']],
+            ['text', ['text' => 'check.']],
+            ['tool', ['name' => 'find_product']],
+            ['tool', ['name' => 'list_style_options']],
+            ['text', ['text' => 'KL-PAXN/4C16OR ']],
+            ['text', ['text' => 'exists.']],
+        ], $heard);
+        self::assertSame([], $http->calls, 'nothing goes the buffered way while someone listens');
+        self::assertCount(2, $stream->payloads);
+        self::assertTrue($stream->payloads[0]['stream']);
+
+        // The tool round goes back exactly as it came, thinking signature included,
+        // and the argument-less call as an object, not a JSON array.
+        $resent = json_encode($stream->payloads[1]['messages'], JSON_THROW_ON_ERROR);
+        self::assertStringContainsString('"signature":"sig-AB"', $resent);
+        self::assertStringContainsString('"name":"list_style_options","input":{}', $resent);
+
+        $summary = $trace->summary();
+        self::assertTrue($summary['context']['streamed']);
+        self::assertSame(['tool_use', 'end_turn'], array_column($summary['modelCalls'], 'stopReason'));
+        self::assertSame(6_100, $summary['modelCalls'][1]['usage']['cache_read_input_tokens']);
+    }
+
+    public function test_a_stream_rejected_by_foundry_makes_the_provider_unavailable(): void
+    {
+        $stream = new ScriptedFoundryStreamClient([], status: 529, body: '{"type":"error","error":{"type":"overloaded_error"}}');
+        $events = new AssistantTurnEvents();
+        $events->listen(static function (): void {
+        });
+
+        $this->expectException(FoundryProviderUnavailable::class);
+        $this->expectExceptionMessage('HTTP 529');
+        $this->provider(new FakeJsonHttpClient(), $this->toolExecutor(), 5, stream: $stream, events: $events)
+            ->generate(new AssistantGrounding(userMessage: 'KL', searchQuery: 'KL', regionCode: 'AU', products: []));
+    }
+
     public function test_traces_each_round_trip_and_tool_call(): void
     {
         $http = new FakeJsonHttpClient();
@@ -267,6 +332,8 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         int $maxToolCalls,
         ?AssistantTurnTrace $trace = null,
         string $effort = '',
+        ?FoundryStreamClient $stream = null,
+        ?AssistantTurnEvents $events = null,
     ): ClaudeFoundryAgentProvider {
         return new ClaudeFoundryAgentProvider(
             http: $http,
@@ -289,6 +356,8 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
             apiKey: 'test-key',
             trace: $trace ?? new AssistantTurnTrace(),
             effort: $effort,
+            stream: $stream,
+            events: $events ?? new AssistantTurnEvents(),
         );
     }
 
@@ -345,5 +414,32 @@ final class RecordingAssistantToolExecutor implements AssistantToolExecutor
                 'stockStatus' => null,
             ]],
         );
+    }
+}
+
+final class ScriptedFoundryStreamClient implements FoundryStreamClient
+{
+    /** @var list<array<string, mixed>> */
+    public array $payloads = [];
+
+    /** @param list<list<array{0: string, 1: array<string, mixed>}>> $rounds one event list per call */
+    public function __construct(
+        private array $rounds,
+        private readonly int $status = 200,
+        private readonly string $body = '',
+    ) {
+    }
+
+    public function stream(string $url, array $headers, array $payload, callable $onEvent): array
+    {
+        $this->payloads[] = $payload;
+        if ($this->status !== 200) {
+            return ['status' => $this->status, 'body' => $this->body];
+        }
+        foreach (array_shift($this->rounds) ?? [] as [$event, $data]) {
+            $onEvent($event, $data);
+        }
+
+        return ['status' => 200, 'body' => ''];
     }
 }

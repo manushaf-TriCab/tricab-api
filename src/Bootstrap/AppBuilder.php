@@ -1447,6 +1447,7 @@ final class AppBuilder
     private static function registerPublicProductRoutes(App $app): void
     {
         $app->post('/api/v1/assistant/messages', AssistantMessageAction::class);
+        $app->post('/api/v1/assistant/messages/stream', \TriCab\Api\Http\Action\AssistantMessageStreamAction::class);
         $app->get('/api/v1/products/{slug}', GetPublicProductBySlugAction::class);
         $app->get('/api/v1/products/{slug}/customer-view', GetPublicProductCustomerViewAction::class);
         $app->get('/api/v1/customer-view-theme', GetCustomerViewThemeAction::class);
