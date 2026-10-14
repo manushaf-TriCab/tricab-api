@@ -373,46 +373,43 @@ SELECT TOP (%d)
           AND pc.[DeletedAtUtc] IS NULL
         ORDER BY pc.[ProductCodeId]
     ), p.[InternalCode]) AS [ProductCode],
-    (
-        SELECT TOP 1 img.[PublicUrl]
-        FROM [product].[ProductImages] img
-        WHERE img.[ProductId] = p.[ProductId]
-          AND img.[DeletedAtUtc] IS NULL
-          AND img.[UploadStatusCode] = N'active'
-          AND img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
-        ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder] ASC, img.[ProductImagesId] ASC
-    ) AS [ThumbnailUrl],
-    (
-        SELECT TOP 1 CONVERT(NVARCHAR(36), img.[PublicId])
-        FROM [product].[ProductImages] img
-        WHERE img.[ProductId] = p.[ProductId]
-          AND img.[DeletedAtUtc] IS NULL
-          AND img.[UploadStatusCode] = N'active'
-          AND img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
-        ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder] ASC, img.[ProductImagesId] ASC
-    ) AS [ThumbnailImagePublicId],
-    (
-        SELECT TOP 1 img.[StorageContainer]
-        FROM [product].[ProductImages] img
-        WHERE img.[ProductId] = p.[ProductId]
-          AND img.[DeletedAtUtc] IS NULL
-          AND img.[UploadStatusCode] = N'active'
-          AND img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
-        ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder] ASC, img.[ProductImagesId] ASC
-    ) AS [ThumbnailStorageContainer],
-    (
-        SELECT TOP 1 img.[StoragePath]
-        FROM [product].[ProductImages] img
-        WHERE img.[ProductId] = p.[ProductId]
-          AND img.[DeletedAtUtc] IS NULL
-          AND img.[UploadStatusCode] = N'active'
-          AND img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
-        ORDER BY img.[IsPrimary] DESC, img.[DisplayOrder] ASC, img.[ProductImagesId] ASC
-    ) AS [ThumbnailStoragePath],
+    thumb.[ThumbnailUrl],
+    thumb.[ThumbnailImagePublicId],
+    thumb.[ThumbnailStorageContainer],
+    thumb.[ThumbnailStoragePath],
     ps.[StatusCode],
     CONVERT(VARCHAR(33), p.[UpdatedAtUtc], 127) AS [UpdatedAtUtc]
 FROM [product].[Products] p
 INNER JOIN [product].[ProductStatuses] ps ON ps.[ProductStatusId] = p.[ProductStatusId]
+OUTER APPLY (
+    SELECT TOP 1
+        COALESCE(img.[PublicUrl], img.[ThumbnailPublicUrl]) AS [ThumbnailUrl],
+        CONVERT(NVARCHAR(36), img.[PublicId]) AS [ThumbnailImagePublicId],
+        img.[StorageContainer] AS [ThumbnailStorageContainer],
+        img.[StoragePath] AS [ThumbnailStoragePath]
+    FROM [product].[ProductImages] img
+    WHERE img.[ProductId] = p.[ProductId]
+      AND img.[DeletedAtUtc] IS NULL
+      AND img.[IsActive] = 1
+      AND img.[UploadStatusCode] = N'active'
+      AND img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+      AND COALESCE(img.[PublicUrl], img.[ThumbnailPublicUrl]) IS NOT NULL
+    ORDER BY
+        CASE WHEN EXISTS (
+            SELECT 1
+            FROM [product].[ProductImageRoleAssignments] a
+            WHERE a.[ProductImagesId] = img.[ProductImagesId]
+              AND a.[RoleCode] = N'product-thumbnail'
+        ) THEN 0 ELSE 1 END,
+        CASE LOWER(ISNULL(img.[ImageRoleCode], N''))
+            WHEN N'product-thumbnail' THEN 0
+            WHEN N'primary' THEN 1
+            ELSE 2
+        END,
+        CASE WHEN img.[IsPrimary] = 1 THEN 0 ELSE 1 END,
+        img.[DisplayOrder],
+        img.[ProductImagesId]
+) thumb
 WHERE p.[DeletedAtUtc] IS NULL
 ORDER BY p.[UpdatedAtUtc] DESC, p.[ProductId] DESC
 SQL,

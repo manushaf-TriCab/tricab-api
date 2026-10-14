@@ -26,6 +26,7 @@ final readonly class PublicCatalogueTreeNode
         public array $children = [],
         public array $products = [],
         public ?string $parentPublicId = null,
+        public ?string $productThumbnailUrl = null,
     ) {
     }
 }

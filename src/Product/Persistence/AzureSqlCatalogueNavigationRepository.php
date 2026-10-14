@@ -1633,10 +1633,46 @@ SELECT
     n.[ImageAltText],
     n.[DisplayOrder],
     CONVERT(NVARCHAR(36), parent.[PublicId]) AS [ParentPublicId],
+    leafThumb.[DedicatedUrl] AS [ProductThumbnailUrl],
     {$productCountSelect}
 FROM [product].[CatalogueNodes] n
 INNER JOIN [product].[CatalogueTabs] t ON t.[CatalogueTabId] = n.[CatalogueTabId]
 LEFT JOIN [product].[CatalogueNodes] parent ON parent.[CatalogueNodeId] = n.[ParentNodeId]
+OUTER APPLY (
+    SELECT TOP (1) COALESCE(img.[PublicUrl], img.[ThumbnailPublicUrl]) AS [DedicatedUrl]
+    FROM [product].[CatalogueNodeProducts] cnp
+    INNER JOIN [product].[Products] p ON p.[ProductId] = cnp.[ProductId]
+    INNER JOIN [product].[ProductImages] img ON img.[ProductId] = p.[ProductId]
+    WHERE cnp.[CatalogueNodeId] = n.[CatalogueNodeId]
+      AND cnp.[IsActive] = 1
+      AND p.[DeletedAtUtc] IS NULL
+      AND img.[DeletedAtUtc] IS NULL
+      AND img.[IsActive] = 1
+      AND COALESCE(img.[PublicUrl], img.[ThumbnailPublicUrl]) IS NOT NULL
+      AND (img.[UploadStatusCode] IS NULL OR img.[UploadStatusCode] = N'active')
+      AND (
+            img.[ScanStatusCode] IS NULL
+            OR img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+      )
+      AND (
+            EXISTS (
+                SELECT 1
+                FROM [product].[ProductImageRoleAssignments] a
+                WHERE a.[ProductImagesId] = img.[ProductImagesId]
+                  AND a.[RoleCode] = N'product-thumbnail'
+            )
+            OR LOWER(ISNULL(img.[ImageRoleCode], N'')) = N'product-thumbnail'
+      )
+      AND NOT EXISTS (
+            SELECT 1
+            FROM [product].[CatalogueNodes] child
+            WHERE child.[ParentNodeId] = n.[CatalogueNodeId]
+              AND child.[DeletedAtUtc] IS NULL
+              AND child.[IsActive] = 1
+              AND child.[IsPublic] = 1
+      )
+    ORDER BY cnp.[DisplayOrder], p.[ProductId], img.[DisplayOrder], img.[ProductImagesId]
+) leafThumb
 WHERE t.[PublicId] = :tabPublicId
   AND n.[DeletedAtUtc] IS NULL
   AND n.[IsActive] = 1
@@ -1667,6 +1703,7 @@ SQL,
                 'description' => AzureSqlValueMapper::nullableString($row['Description'] ?? null),
                 'nodeTypeCode' => AzureSqlValueMapper::stringValue($row['NodeTypeCode'] ?? 'category'),
                 'imageUrl' => AzureSqlValueMapper::nullableString($row['ImageUrl'] ?? null),
+                'productThumbnailUrl' => AzureSqlValueMapper::nullableString($row['ProductThumbnailUrl'] ?? null),
                 'imageAltText' => AzureSqlValueMapper::nullableString($row['ImageAltText'] ?? null),
                 'displayOrder' => AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
                 'parentPublicId' => AzureSqlValueMapper::nullableString($row['ParentPublicId'] ?? null),
@@ -1714,6 +1751,7 @@ SQL,
             children: $tree->children,
             products: $products,
             parentPublicId: $tree->parentPublicId,
+            productThumbnailUrl: $tree->productThumbnailUrl,
         );
     }
 
@@ -1787,6 +1825,9 @@ SQL,
             children: $children,
             products: $includeProducts ? $this->listPublicNodeProducts($publicId, $regionCode) : [],
             parentPublicId: $node['parentPublicId'] ?? null,
+            productThumbnailUrl: isset($node['productThumbnailUrl']) && is_string($node['productThumbnailUrl'])
+                ? $node['productThumbnailUrl']
+                : null,
         );
     }
 
@@ -1859,6 +1900,7 @@ SQL,
                 'description' => AzureSqlValueMapper::nullableString($row['Description'] ?? null),
                 'nodeTypeCode' => AzureSqlValueMapper::stringValue($row['NodeTypeCode'] ?? 'category'),
                 'imageUrl' => AzureSqlValueMapper::nullableString($row['ImageUrl'] ?? null),
+                'productThumbnailUrl' => AzureSqlValueMapper::nullableString($row['ProductThumbnailUrl'] ?? null),
                 'imageAltText' => AzureSqlValueMapper::nullableString($row['ImageAltText'] ?? null),
                 'displayOrder' => AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
                 'parentPublicId' => AzureSqlValueMapper::nullableString($row['ParentPublicId'] ?? null),

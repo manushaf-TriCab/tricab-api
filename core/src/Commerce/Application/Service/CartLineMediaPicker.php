@@ -11,12 +11,13 @@ use TriCab\Core\Product\Domain\ValueObject\ImageRoleCode;
  * Picks one canonical Product Media URL per variant from a batched candidate set.
  *
  * Fallback order:
- * 1. Variant-specific primary/thumbnail
+ * 1. Variant-specific primary or product-thumbnail
  * 2. Other variant-specific media
- * 3. Product primary image
- * 4. Product thumbnail/primary/hero role
- * 5. Any remaining product-level public URL (customer-view gallery fallback)
- * 6. null
+ * 3. Product product-thumbnail role (assignment or legacy category)
+ * 4. Product primary image
+ * 5. Other product thumbnail/hero roles
+ * 6. Any remaining product-level public URL
+ * 7. null
  */
 final class CartLineMediaPicker
 {
@@ -112,24 +113,26 @@ final class CartLineMediaPicker
         $variantSpecific = self::bool($row['isVariantSpecific'] ?? false);
         $isPrimary = self::bool($row['isPrimary'] ?? false);
         $role = strtolower(self::string($row['imageRoleCode'] ?? ''));
+        $hasThumbnailRole = self::bool($row['hasProductThumbnailRole'] ?? false)
+            || $role === ImageRoleCode::PRODUCT_THUMBNAIL;
 
-        if ($variantSpecific && ($isPrimary || in_array($role, ['thumbnail', 'primary', ImageRoleCode::PRODUCT_THUMBNAIL], true))) {
+        if ($variantSpecific && ($hasThumbnailRole || $isPrimary || in_array($role, ['thumbnail', 'primary'], true))) {
             return 1;
         }
         if ($variantSpecific) {
             return 2;
         }
-        if ($isPrimary) {
+        if ($hasThumbnailRole) {
             return 3;
         }
-        if ($role === ImageRoleCode::PRODUCT_THUMBNAIL) {
-            return 3;
-        }
-        if (in_array($role, ['thumbnail', 'primary', 'hero'], true)) {
+        if ($isPrimary || $role === ImageRoleCode::PRIMARY) {
             return 4;
         }
+        if (in_array($role, ['thumbnail', 'hero'], true)) {
+            return 5;
+        }
 
-        return 5;
+        return 6;
     }
 
     private static function string(mixed $value): string

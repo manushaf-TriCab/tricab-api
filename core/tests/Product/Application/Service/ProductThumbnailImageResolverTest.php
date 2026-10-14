@@ -21,6 +21,29 @@ final class ProductThumbnailImageResolverTest extends TestCase
         self::assertSame('https://cdn.example/thumb.jpg', $url);
     }
 
+    public function test_presentation_role_beats_primary_and_is_ordered_by_display_order(): void
+    {
+        $later = $this->media('cross-section', 'https://cdn.example/later.png', displayOrder: 2)
+            ->withPresentationRoles(['product-thumbnail']);
+        $earlier = $this->media('cross-section', 'https://cdn.example/earlier.png', displayOrder: 1)
+            ->withPresentationRoles(['product-thumbnail']);
+        $primary = $this->media('primary', 'https://cdn.example/primary.jpg', isPrimary: true);
+
+        $url = ProductThumbnailImageResolver::fromMediaSummaries([$primary, $later, $earlier]);
+
+        self::assertSame('https://cdn.example/earlier.png', $url);
+    }
+
+    public function test_ignores_a_thumbnail_role_with_no_url(): void
+    {
+        $empty = $this->media('cross-section', '')->withPresentationRoles(['product-thumbnail']);
+        $primary = $this->media('primary', 'https://cdn.example/primary.jpg', isPrimary: true);
+
+        $url = ProductThumbnailImageResolver::fromMediaSummaries([$empty, $primary]);
+
+        self::assertSame('https://cdn.example/primary.jpg', $url);
+    }
+
     public function test_falls_back_to_primary_when_no_product_thumbnail(): void
     {
         $url = ProductThumbnailImageResolver::fromMediaSummaries([

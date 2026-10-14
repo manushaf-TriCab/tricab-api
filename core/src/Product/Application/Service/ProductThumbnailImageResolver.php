@@ -25,71 +25,66 @@ final class ProductThumbnailImageResolver
      */
     public static function fromMediaSummaries(array $media): ?string
     {
-        $assigned = PresentationMediaResolver::select($media, PresentationMediaRole::PRODUCT_THUMBNAIL);
-        if ($assigned !== null) {
-            $url = self::canonicalUrl($assigned);
-            if ($url !== null) {
-                return $url;
-            }
+        $dedicated = self::firstMatch(
+            $media,
+            static fn (ProductMediaSummary $item): bool => in_array(
+                PresentationMediaRole::PRODUCT_THUMBNAIL,
+                $item->presentationRoles,
+                true,
+            ),
+        );
+        if ($dedicated !== null) {
+            return $dedicated;
         }
 
-        $candidates = [];
+        $legacy = self::firstMatch(
+            $media,
+            static fn (ProductMediaSummary $item): bool => strtolower($item->mediaCategoryCode) === ImageRoleCode::PRODUCT_THUMBNAIL,
+        );
+        if ($legacy !== null) {
+            return $legacy;
+        }
+
+        $primary = self::firstMatch(
+            $media,
+            static fn (ProductMediaSummary $item): bool => $item->isPrimary
+                || strtolower($item->mediaCategoryCode) === ImageRoleCode::PRIMARY
+                || in_array(PresentationMediaRole::PRIMARY, $item->presentationRoles, true),
+        );
+        if ($primary !== null) {
+            return $primary;
+        }
+
+        return self::firstMatch($media, static fn (ProductMediaSummary $item): bool => true);
+    }
+
+    /**
+     * @param list<ProductMediaSummary> $media
+     * @param callable(ProductMediaSummary): bool $matches
+     */
+    private static function firstMatch(array $media, callable $matches): ?string
+    {
+        $hits = [];
         foreach ($media as $item) {
-            $url = self::canonicalUrl($item);
-            if ($url === null) {
+            if (!$matches($item) || self::canonicalUrl($item) === null) {
                 continue;
             }
-            $candidates[] = [
-                'url' => $url,
-                'role' => strtolower($item->mediaCategoryCode),
-                'isPrimary' => $item->isPrimary,
-                'displayOrder' => $item->displayOrder,
-                'presentationRoles' => $item->presentationRoles,
-            ];
+            $hits[] = $item;
         }
-
-        if ($candidates === []) {
+        if ($hits === []) {
             return null;
         }
 
-        usort($candidates, static function (array $a, array $b): int {
-            $rank = self::rank($a) <=> self::rank($b);
-            if ($rank !== 0) {
-                return $rank;
-            }
-
-            $order = $a['displayOrder'] <=> $b['displayOrder'];
+        usort($hits, static function (ProductMediaSummary $a, ProductMediaSummary $b): int {
+            $order = $a->displayOrder <=> $b->displayOrder;
             if ($order !== 0) {
                 return $order;
             }
 
-            return strcmp($a['url'], $b['url']);
+            return strcmp($a->publicId, $b->publicId);
         });
 
-        return $candidates[0]['url'];
-    }
-
-    /**
-     * @param array{role: string, isPrimary: bool, presentationRoles?: list<string>} $candidate
-     */
-    private static function rank(array $candidate): int
-    {
-        $roles = $candidate['presentationRoles'] ?? [];
-        if (in_array(PresentationMediaRole::PRODUCT_THUMBNAIL, $roles, true)) {
-            return 0;
-        }
-        if ($candidate['role'] === ImageRoleCode::PRODUCT_THUMBNAIL) {
-            return 1;
-        }
-        if (
-            in_array(PresentationMediaRole::PRIMARY, $roles, true)
-            || $candidate['isPrimary']
-            || $candidate['role'] === ImageRoleCode::PRIMARY
-        ) {
-            return 2;
-        }
-
-        return 3;
+        return self::canonicalUrl($hits[0]);
     }
 
     private static function canonicalUrl(ProductMediaSummary $item): ?string

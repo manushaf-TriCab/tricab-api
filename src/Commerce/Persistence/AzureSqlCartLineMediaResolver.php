@@ -60,6 +60,12 @@ SELECT
     img.[IsPrimary],
     img.[ImageRoleCode],
     img.[DisplayOrder],
+    CASE WHEN EXISTS (
+        SELECT 1
+        FROM [product].[ProductImageRoleAssignments] roleAssign
+        WHERE roleAssign.[ProductImagesId] = img.[ProductImagesId]
+          AND roleAssign.[RoleCode] = N'product-thumbnail'
+    ) THEN 1 ELSE 0 END AS [HasProductThumbnailRole],
     CASE WHEN img.[ProductVariantId] = pv.[ProductVariantId] THEN 1 ELSE 0 END AS [IsVariantSpecific]
 FROM [product].[ProductVariants] pv
 INNER JOIN [product].[Products] p ON p.[ProductId] = pv.[ProductId]
@@ -91,6 +97,7 @@ SQL,
                 'isPrimary' => AzureSqlValueMapper::boolValue($row['IsPrimary'] ?? false),
                 'imageRoleCode' => AzureSqlValueMapper::stringValue($row['ImageRoleCode'] ?? ''),
                 'displayOrder' => AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+                'hasProductThumbnailRole' => AzureSqlValueMapper::boolValue($row['HasProductThumbnailRole'] ?? false),
                 'isVariantSpecific' => AzureSqlValueMapper::boolValue($row['IsVariantSpecific'] ?? false),
             ];
         }
