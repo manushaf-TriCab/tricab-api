@@ -122,6 +122,7 @@ use TriCab\Api\Http\Action\Admin\UpdateCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\UpdatePermissionAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductSeoAction;
+use TriCab\Api\Http\Action\Admin\UpdateProductPageContentAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductPageMediaLayoutAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductThumbnailPresentationAction;
 use TriCab\Api\Http\Action\Admin\UpdateProductVariantAction;
@@ -1555,6 +1556,8 @@ final class AppBuilder
             ->add(($require)('PRODUCT.UPDATE'));
         $app->put('/api/v1/admin/products/{productPublicId}/page-media-layout', UpdateProductPageMediaLayoutAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));
+        $app->put('/api/v1/admin/products/{productPublicId}/page-content', UpdateProductPageContentAction::class)
+            ->add(($require)('PRODUCT.UPDATE'));
         $app->put('/api/v1/admin/products/{productPublicId}/pricing/default-unit', SetProductDefaultPricingUnitAction::class)
             ->add(($require)('PRODUCT.PRICING.MANAGE'));
         $app->put('/api/v1/admin/products/{productPublicId}/pricing', UpsertProductPricingAction::class)

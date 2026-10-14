@@ -53,6 +53,7 @@ final readonly class ProductCustomerViewDetail
         public ?string $thumbnailBackgroundColor = null,
         public ?string $descriptionImageWidth = null,
         public ?string $descriptionImageAlignment = null,
+        public ?\TriCab\Core\Product\Domain\ValueObject\ProductPageContent $pageContent = null,
     ) {
     }
 }

@@ -166,6 +166,7 @@ final class InMemoryProductPublicQueryRepository implements ProductPublicQueryRe
                 : ProductPublic3DPayload::empty(),
             descriptionImageWidth: $pageMedia === null ? null : $pageMedia['width'],
             descriptionImageAlignment: $pageMedia === null ? null : $pageMedia['alignment'],
+            pageContent: $this->store->pageContentForProduct($product->publicId()),
         );
     }
 

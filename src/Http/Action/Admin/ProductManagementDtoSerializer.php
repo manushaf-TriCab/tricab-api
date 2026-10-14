@@ -211,6 +211,7 @@ final class ProductManagementDtoSerializer
             ),
             'thumbnailBackgroundColor' => $detail->thumbnailBackgroundColor ?? null,
             'pageMedia' => self::pageMedia($detail->descriptionImageWidth, $detail->descriptionImageAlignment),
+            'pageContent' => self::pageContent($detail->pageContent),
             'variants' => array_map(self::variantSummary(...), $detail->variants),
             'media' => $media,
             'documents' => array_map(
@@ -303,6 +304,7 @@ final class ProductManagementDtoSerializer
                     : self::publicMediaSummary($primarySecondary, $devUrls),
             ],
             'pageMedia' => self::pageMedia($detail->descriptionImageWidth, $detail->descriptionImageAlignment),
+            'pageContent' => self::pageContent($detail->pageContent),
             'variants' => array_map(self::variantSummary(...), $detail->variants),
             'media' => $media,
             'documents' => array_map(
@@ -1188,6 +1190,21 @@ final class ProductManagementDtoSerializer
             'parentPublicId' => $item->parentPublicId,
             'displayOrder' => $item->displayOrder,
             'isActive' => $item->isActive,
+        ];
+    }
+
+    /**
+     * @return array{showProductMarking: bool, coreColoursNote: ?string, showCoreColoursNote: bool, version: ?string}
+     */
+    private static function pageContent(?\TriCab\Core\Product\Domain\ValueObject\ProductPageContent $content): array
+    {
+        $content ??= \TriCab\Core\Product\Domain\ValueObject\ProductPageContent::defaults();
+
+        return [
+            'showProductMarking' => $content->showProductMarking(),
+            'coreColoursNote' => $content->coreColoursNote(),
+            'showCoreColoursNote' => $content->showCoreColoursNote(),
+            'version' => $content->version(),
         ];
     }
 
