@@ -7,7 +7,18 @@ namespace TriCab\Api\Tests\Http;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Psr7\Response;
+use TriCab\Api\Assistant\Application\AssistantGrounding;
+use TriCab\Api\Assistant\Application\AssistantProviderResult;
+use TriCab\Api\Assistant\Application\AssistantResponseProvider;
+use TriCab\Api\Assistant\Application\AssistantTurnEvents;
+use TriCab\Api\Bootstrap\ContainerFactory;
+use TriCab\Api\Config\Settings;
+use TriCab\Api\Http\Action\AssistantMessageStreamAction;
+use TriCab\Api\Http\Auth\AssistantCatalogueVisibilityResolver;
+use TriCab\Api\Http\Auth\AssistantErrorMapper;
 use TriCab\Api\Http\Response\CallbackStream;
+use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Tests\TestAppFactory;
 
 final class AssistantStreamEndpointTest extends TestCase
@@ -52,6 +63,42 @@ final class AssistantStreamEndpointTest extends TestCase
         self::assertStringContainsString('application/json', $response->getHeaderLine('Content-Type'));
         $payload = TestAppFactory::json($response);
         self::assertFalse($payload['success']);
+    }
+
+    public function test_an_unexpected_throwable_ends_the_stream_with_a_generic_error_event(): void
+    {
+        $container = ContainerFactory::create(Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'APP_PERFORMANCE_LOGGING' => 'false',
+            'USER_REPOSITORY' => 'memory',
+            'APP_CACHE_DRIVER' => 'array',
+        ]));
+        $container->set(AssistantResponseProvider::class, new class implements AssistantResponseProvider {
+            public function generate(AssistantGrounding $grounding): AssistantProviderResult
+            {
+                throw new \Error('SECRET internal detail');
+            }
+        });
+        $visibility = $container->get(AssistantCatalogueVisibilityResolver::class);
+        self::assertInstanceOf(AssistantCatalogueVisibilityResolver::class, $visibility);
+        $action = new AssistantMessageStreamAction(
+            $container,
+            new AssistantErrorMapper(new JsonResponder()),
+            $visibility,
+            new AssistantTurnEvents(),
+        );
+
+        $request = $this->jsonRequest('/api/v1/assistant/messages/stream', ['message' => 'Find KL cable', 'searchQuery' => 'KL']);
+        $response = $action($request, new Response());
+
+        $events = $this->events($response);
+        $last = $events[count($events) - 1];
+        self::assertSame('error', $last['event']);
+        self::assertNotContains('done', array_column($events, 'event'));
+        $error = $last['data'];
+        self::assertSame('ASSISTANT_UNAVAILABLE', $error['code']);
+        self::assertSame('The product assistant is temporarily unavailable.', $error['message']);
+        self::assertStringNotContainsString('SECRET', json_encode($events, JSON_THROW_ON_ERROR));
     }
 
     /** @return list<array{event: string, data: array<string, mixed>}> */

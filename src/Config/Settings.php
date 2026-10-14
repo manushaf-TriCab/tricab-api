@@ -142,6 +142,7 @@ final readonly class Settings
         public string $foundryApiKey,
         public int $foundryTimeoutSeconds,
         public int $foundryMaxToolCalls,
+        public int $foundryTurnDeadlineSeconds,
         public bool $passkeyEnabled,
         public string $passkeyRpId,
         public string $passkeyRpName,
@@ -890,6 +891,10 @@ final readonly class Settings
         if ($foundryMaxToolCalls < 1 || $foundryMaxToolCalls > 10) {
             throw new InvalidArgumentException('FOUNDRY_MAX_TOOL_CALLS must be between 1 and 10.');
         }
+        $foundryTurnDeadlineSeconds = self::int($env, 'FOUNDRY_TURN_DEADLINE_SECONDS', 45);
+        if ($foundryTurnDeadlineSeconds < 5 || $foundryTurnDeadlineSeconds > 300) {
+            throw new InvalidArgumentException('FOUNDRY_TURN_DEADLINE_SECONDS must be between 5 and 300.');
+        }
         $foundryEffort = strtolower(trim(self::string($env, 'FOUNDRY_EFFORT', '')));
         if (!in_array($foundryEffort, ['', 'low', 'medium', 'high', 'xhigh', 'max'], true)) {
             throw new InvalidArgumentException('FOUNDRY_EFFORT must be empty or one of low, medium, high, xhigh, max.');
@@ -1287,6 +1292,7 @@ final readonly class Settings
             foundryApiKey: $foundryApiKey,
             foundryTimeoutSeconds: $foundryTimeoutSeconds,
             foundryMaxToolCalls: $foundryMaxToolCalls,
+            foundryTurnDeadlineSeconds: $foundryTurnDeadlineSeconds,
             passkeyEnabled: $passkeyEnabled,
             passkeyRpId: $passkeyRpId,
             passkeyRpName: $passkeyRpName,

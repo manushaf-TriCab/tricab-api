@@ -300,6 +300,7 @@ final class SettingsTest extends TestCase
         self::assertSame(Settings::FOUNDRY_AUTH_MODE_MANAGED_IDENTITY, $settings->foundryAuthMode);
         self::assertSame(30, $settings->foundryTimeoutSeconds);
         self::assertSame(5, $settings->foundryMaxToolCalls);
+        self::assertSame(45, $settings->foundryTurnDeadlineSeconds);
     }
 
     public function test_enabled_foundry_requires_endpoint_and_deployment(): void

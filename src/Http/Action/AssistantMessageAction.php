@@ -38,6 +38,10 @@ final class AssistantMessageAction
             $input = AssistantMessageRequest::fromArray(JsonRequestBody::requireObject($request));
             $visibility = $this->catalogueVisibility->resolve($request);
 
+            // PHP's max_execution_time (30 s by default) would otherwise kill a long turn
+            // with a bare fatal. The turn is bounded by FOUNDRY_TURN_DEADLINE_SECONDS.
+            @set_time_limit(0);
+
             return $this->responder->success($assistant->reply(
                 message: $input->message,
                 searchQuery: $input->searchQuery,

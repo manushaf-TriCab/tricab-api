@@ -44,6 +44,12 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         private string $effort = '',
         private ?FoundryStreamClient $stream = null,
         private AssistantTurnEvents $events = new AssistantTurnEvents(),
+        // Wall-clock budget for the whole turn. Each Foundry call has its own cURL
+        // timeout but nothing else bounds a turn of several calls plus tool work.
+        private int $turnDeadlineSeconds = 45,
+        // Seconds as a float; injectable so tests need not sleep.
+        /** @var (\Closure(): float)|null */
+        private ?\Closure $clock = null,
     ) {
     }
 
@@ -55,9 +61,16 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         $cards = [];
         $maxIterations = max(3, $this->maxToolCalls + 3);
         $this->trace->note('model', $this->deployment);
+        $startedAt = $this->now();
 
         for ($iteration = 0; $iteration < $maxIterations; $iteration++) {
-            $toolsEnabled = $toolCallCount < $this->maxToolCalls;
+            // Past the budget, no more tool rounds: the next call is the last, sent
+            // with tool_choice none so the model answers with what it already has.
+            $deadlineReached = $this->now() - $startedAt >= $this->turnDeadlineSeconds;
+            if ($deadlineReached) {
+                $this->trace->note('turnDeadlineReached', true);
+            }
+            $toolsEnabled = $toolCallCount < $this->maxToolCalls && !$deadlineReached;
             $decoded = $this->request($messages, $toolsEnabled);
             $content = $decoded['content'];
             $toolUses = $this->toolUses($content);
@@ -78,14 +91,21 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
                 );
             }
 
+            if ($deadlineReached) {
+                // Asked not to use tools and did anyway: end the turn rather than
+                // run past the budget.
+                throw new FoundryProviderUnavailable('Foundry agent did not answer within the turn deadline.');
+            }
+
             $messages[] = ['role' => 'assistant', 'content' => $this->forResend($content)];
             $toolResults = [];
             foreach ($toolUses as $toolUse) {
-                if ($toolCallCount >= $this->maxToolCalls) {
+                $outOfTime = $this->now() - $startedAt >= $this->turnDeadlineSeconds;
+                if ($toolCallCount >= $this->maxToolCalls || $outOfTime) {
                     $toolResults[] = $this->toolResultBlock(
                         $toolUse['id'],
                         $toolUse['name'],
-                        ['ok' => false, 'error' => 'tool_call_limit_reached'],
+                        ['ok' => false, 'error' => $outOfTime ? 'turn_deadline_reached' : 'tool_call_limit_reached'],
                         true,
                     );
                     continue;
@@ -127,6 +147,11 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         }
 
         throw new FoundryProviderUnavailable('Foundry agent did not produce a final response within its tool bound.');
+    }
+
+    private function now(): float
+    {
+        return $this->clock !== null ? ($this->clock)() : hrtime(true) / 1e9;
     }
 
     /**

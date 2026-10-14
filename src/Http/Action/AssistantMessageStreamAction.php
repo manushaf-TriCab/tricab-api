@@ -59,6 +59,9 @@ final class AssistantMessageStreamAction
         $events = $this->events;
         $errors = $this->errors;
         $body = new CallbackStream(static function (callable $write) use ($assistant, $input, $visibility, $events, $errors): void {
+            // PHP's max_execution_time (30 s by default) would kill a long turn mid-stream
+            // with no done/error event. The turn is bounded by FOUNDRY_TURN_DEADLINE_SECONDS.
+            @set_time_limit(0);
             $write(ServerSentEvent::opening());
             $events->listen(static function (string $event, array $data) use ($write): void {
                 $write(ServerSentEvent::frame($event, $data));

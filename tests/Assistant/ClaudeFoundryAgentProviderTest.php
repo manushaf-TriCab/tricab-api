@@ -109,6 +109,48 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertStringContainsString('"is_error":true', $secondJson);
     }
 
+    public function test_past_the_turn_deadline_it_stops_using_tools_and_answers_with_what_it_has(): void
+    {
+        $clock = new TestClock();
+        $http = new FakeJsonHttpClient();
+        $http->queue = [$this->toolUseResponse(), [
+            'status' => 200,
+            'body' => '{"content":[{"type":"text","text":"Here is what I found so far."}]}',
+        ]];
+        $provider = $this->provider($http, new SlowAssistantToolExecutor($clock), 5, clock: static fn (): float => $clock->now);
+
+        $result = $provider->generate(new AssistantGrounding(userMessage: 'Find KL', searchQuery: 'KL', regionCode: null, products: []));
+
+        self::assertSame('Here is what I found so far.', $result->text);
+        self::assertCount(2, $http->calls);
+        self::assertArrayNotHasKey('tool_choice', $this->payload($http, 0));
+        self::assertSame(['type' => 'none'], $this->payload($http, 1)['tool_choice']);
+    }
+
+    public function test_past_the_turn_deadline_a_model_that_still_asks_for_tools_ends_the_turn_unavailable(): void
+    {
+        $clock = new TestClock();
+        $http = new FakeJsonHttpClient();
+        $http->queue = [$this->toolUseResponse(), $this->toolUseResponse(), $this->toolUseResponse()];
+        $provider = $this->provider($http, new SlowAssistantToolExecutor($clock), 5, clock: static fn (): float => $clock->now);
+
+        try {
+            $provider->generate(new AssistantGrounding(userMessage: 'Find KL', searchQuery: 'KL', regionCode: null, products: []));
+            self::fail('Expected the turn to end unavailable.');
+        } catch (FoundryProviderUnavailable $exception) {
+            self::assertStringContainsString('turn deadline', $exception->getMessage());
+        }
+        self::assertCount(2, $http->calls, 'one tool round, one final call, then no more');
+    }
+
+    /** @return array{status: int, body: string} */
+    private function toolUseResponse(): array
+    {
+        return ['status' => 200, 'body' => json_encode([
+            'content' => [['type' => 'tool_use', 'id' => 'one', 'name' => 'search_product_codes', 'input' => ['text' => 'KL']]],
+        ], JSON_THROW_ON_ERROR)];
+    }
+
     public function test_a_researched_code_is_not_offered_when_the_answer_is_about_something_else(): void
     {
         // The agent looks a style up to describe it, then recommends a
@@ -334,6 +376,7 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         string $effort = '',
         ?FoundryStreamClient $stream = null,
         ?AssistantTurnEvents $events = null,
+        ?\Closure $clock = null,
     ): ClaudeFoundryAgentProvider {
         return new ClaudeFoundryAgentProvider(
             http: $http,
@@ -358,6 +401,8 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
             effort: $effort,
             stream: $stream,
             events: $events ?? new AssistantTurnEvents(),
+            turnDeadlineSeconds: 45,
+            clock: $clock,
         );
     }
 
@@ -442,4 +487,33 @@ final class ScriptedFoundryStreamClient implements FoundryStreamClient
 
         return ['status' => 200, 'body' => ''];
     }
+}
+
+/** A tool that uses up the turn's whole budget, as a slow catalogue query would. */
+final class SlowAssistantToolExecutor implements AssistantToolExecutor
+{
+    public function __construct(private readonly TestClock $clock)
+    {
+    }
+
+    public function definitions(): array
+    {
+        return (new RecordingAssistantToolExecutor())->definitions();
+    }
+
+    public function execute(
+        string $name,
+        array $input,
+        ?string $regionCode,
+        AssistantCatalogueVisibility $catalogueVisibility,
+    ): AssistantToolResult {
+        $this->clock->now += 50.0;
+
+        return new AssistantToolResult(data: ['items' => []], cards: []);
+    }
+}
+
+final class TestClock
+{
+    public float $now = 0.0;
 }

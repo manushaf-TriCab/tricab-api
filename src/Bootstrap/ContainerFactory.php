@@ -1864,6 +1864,7 @@ final class ContainerFactory
                     effort: $settings->foundryEffort,
                     stream: new \TriCab\Api\Assistant\Infrastructure\Foundry\CurlFoundryStreamClient((float) $settings->foundryTimeoutSeconds),
                     events: self::get($container, AssistantTurnEvents::class),
+                    turnDeadlineSeconds: $settings->foundryTurnDeadlineSeconds,
                 );
 
                 return new FallbackAssistantResponseProvider(
