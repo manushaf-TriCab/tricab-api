@@ -263,6 +263,7 @@ final class CatalogueDtoSerializer
             'description' => $node->description,
             'nodeTypeCode' => $node->nodeTypeCode,
             'imageUrl' => CatalogueStaticMediaResolver::instance()->toPublicUrl($node->imageUrl),
+            'productThumbnailUrl' => CatalogueStaticMediaResolver::instance()->toPublicUrl($node->productThumbnailUrl),
             'imageAltText' => $node->imageAltText,
             'displayOrder' => $node->displayOrder,
             'depth' => $node->depth,

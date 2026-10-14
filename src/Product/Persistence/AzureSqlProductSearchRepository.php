@@ -74,7 +74,13 @@ SELECT
         FROM [product].[ProductImages] img
         WHERE img.[ProductId] = p.[ProductId]
           AND img.[DeletedAtUtc] IS NULL
+          AND img.[IsActive] = 1
           AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
+          AND (img.[UploadStatusCode] IS NULL OR img.[UploadStatusCode] = N'active')
+          AND (
+                img.[ScanStatusCode] IS NULL
+                OR img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+          )
         ORDER BY
           CASE WHEN EXISTS (
               SELECT 1

@@ -58,7 +58,7 @@ final readonly class AssistantProductGrounder
             summary: null,
             applications: [],
             specifications: [],
-            thumbnailUrl: $item->thumbnailUrl,
+            thumbnailUrl: $item->thumbnailImageUrl ?? $item->thumbnailUrl,
             statusCode: $item->statusCode,
         );
     }
@@ -88,7 +88,7 @@ final readonly class AssistantProductGrounder
             summary: $detail->shortDescription ?? $detail->fullDescription,
             applications: $detail->applicationNames,
             specifications: $this->specifications($detail->specifications),
-            thumbnailUrl: $detail->thumbnailUrl,
+            thumbnailUrl: $detail->thumbnailImageUrl ?? $detail->thumbnailUrl,
             statusCode: 'published',
         );
     }

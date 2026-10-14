@@ -170,6 +170,7 @@ final class GetPublicCatalogueService
                 children: $children,
                 products: $products,
                 parentPublicId: $node->parentPublicId,
+                productThumbnailUrl: $node->productThumbnailUrl,
             );
         }
 

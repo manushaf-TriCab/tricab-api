@@ -43,8 +43,20 @@ SELECT
         WHERE img.[ProductId] = p.[ProductId]
           AND img.[DeletedAtUtc] IS NULL
           AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
+          AND img.[IsActive] = 1
+          AND (img.[UploadStatusCode] IS NULL OR img.[UploadStatusCode] = N'active')
+          AND (
+                img.[ScanStatusCode] IS NULL
+                OR img.[ScanStatusCode] IN (N'clean', N'not_required', N'skipped')
+          )
         ORDER BY
-          CASE LOWER(img.[ImageRoleCode])
+          CASE WHEN EXISTS (
+              SELECT 1
+              FROM [product].[ProductImageRoleAssignments] a
+              WHERE a.[ProductImagesId] = img.[ProductImagesId]
+                AND a.[RoleCode] = N'product-thumbnail'
+          ) THEN 0 ELSE 1 END,
+          CASE LOWER(ISNULL(img.[ImageRoleCode], N''))
               WHEN N'product-thumbnail' THEN 0
               WHEN N'primary' THEN 1
               ELSE 2

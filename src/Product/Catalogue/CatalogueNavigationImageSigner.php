@@ -179,6 +179,11 @@ final class CatalogueNavigationImageSigner
         if (array_key_exists('imageUrl', $node)) {
             $node['imageUrl'] = $this->present(is_string($node['imageUrl']) ? $node['imageUrl'] : null);
         }
+        if (array_key_exists('productThumbnailUrl', $node)) {
+            $node['productThumbnailUrl'] = $this->present(
+                is_string($node['productThumbnailUrl']) ? $node['productThumbnailUrl'] : null,
+            );
+        }
         if (isset($node['children']) && is_array($node['children'])) {
             $node['children'] = $this->signNodeList($node['children'], $includeProducts);
         }

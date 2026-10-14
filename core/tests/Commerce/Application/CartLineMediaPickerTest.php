@@ -31,6 +31,17 @@ final class CartLineMediaPickerTest extends TestCase
         self::assertSame('p-bva', $picked['v1']->productPublicId);
     }
 
+    public function test_product_thumbnail_role_beats_primary_for_cart_cards(): void
+    {
+        $picked = CartLineMediaPicker::pick([
+            $this->row('v1', 'p-m3p', 'https://cdn.example/cable.jpg', isPrimary: true, isVariantSpecific: false, role: 'primary', mediaPublicId: 'm-cable'),
+            $this->row('v1', 'p-m3p', 'https://cdn.example/section.png', isPrimary: false, isVariantSpecific: false, role: 'cross-section', displayOrder: 2, mediaPublicId: 'm-section')
+                + ['hasProductThumbnailRole' => true],
+        ]);
+
+        self::assertSame('https://cdn.example/section.png', $picked['v1']->imageUrl);
+    }
+
     public function test_falls_back_to_gallery_when_no_primary(): void
     {
         $picked = CartLineMediaPicker::pick([
