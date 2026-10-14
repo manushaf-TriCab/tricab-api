@@ -59,6 +59,10 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         $toolCallCount = 0;
         $usedToolNames = [];
         $cards = [];
+        // Last finder requirement wins; a code search's facets only stand in when
+        // no finder call ran this turn.
+        $finderSpec = null;
+        $codeSpec = null;
         $maxIterations = max(3, $this->maxToolCalls + 3);
         $this->trace->note('model', $this->deployment);
         $startedAt = $this->now();
@@ -88,6 +92,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
                     cards: AssistantAnswerCards::mentionedIn($text, $this->uniqueCards($cards)),
                     toolNames: array_values(array_unique($usedToolNames)),
                     curatesCards: true,
+                    spec: $finderSpec ?? $codeSpec,
                 );
             }
 
@@ -125,6 +130,13 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
                     );
                     $this->trace->recordToolCall($toolUse['name'], AssistantTurnTrace::msSince($toolStartedAt), true);
                     array_push($cards, ...$result->cards);
+                    if ($result->spec !== null) {
+                        if ($toolUse['name'] === 'find_product') {
+                            $finderSpec = $result->spec;
+                        } elseif ($toolUse['name'] === 'search_product_codes') {
+                            $codeSpec = $result->spec;
+                        }
+                    }
                     $toolResults[] = $this->toolResultBlock(
                         $toolUse['id'],
                         $toolUse['name'],

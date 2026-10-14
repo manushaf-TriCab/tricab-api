@@ -8,6 +8,7 @@ use PHPUnit\Framework\TestCase;
 use TriCab\Api\Assistant\Application\AssistantCatalogueVisibility;
 use TriCab\Api\Assistant\Application\AssistantConversationTurn;
 use TriCab\Api\Assistant\Application\AssistantGrounding;
+use TriCab\Api\Assistant\Application\AssistantReplySpec;
 use TriCab\Api\Assistant\Application\AssistantToolExecutor;
 use TriCab\Api\Assistant\Application\AssistantToolResult;
 use TriCab\Api\Assistant\Application\AssistantTurnEvents;
@@ -368,6 +369,65 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertSame('http_429', $trace->summary()['modelCalls'][0]['outcome']);
     }
 
+    public function test_the_reply_spec_is_the_last_finder_call_of_the_turn(): void
+    {
+        $call = static fn (string $id, string $name, array $input): array => ['status' => 200, 'body' => json_encode([
+            'content' => [['type' => 'tool_use', 'id' => $id, 'name' => $name, 'input' => $input]],
+        ], JSON_THROW_ON_ERROR)];
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            $call('t1', 'find_product', ['style' => 'XL', 'coreCount' => 3]),
+            $call('t2', 'search_product_codes', ['coreCount' => 9]),
+            $call('t3', 'find_product', ['style' => 'XL', 'coreCount' => 4, 'crossSectionMm2' => 16]),
+            ['status' => 200, 'body' => '{"content":[{"type":"text","text":"Done."}]}'],
+        ];
+        $provider = $this->provider($http, new SpecEchoingToolExecutor(), 5);
+
+        $result = $provider->generate($this->grounding());
+
+        self::assertIsArray($result->spec);
+        self::assertSame(4, $result->spec['coreCount']);
+        self::assertEquals(16, $result->spec['crossSectionMm2']);
+    }
+
+    public function test_a_turn_without_a_finder_call_has_no_spec(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->queue = [['status' => 200, 'body' => '{"content":[{"type":"text","text":"Hello."}]}']];
+
+        $result = $this->provider($http, new SpecEchoingToolExecutor(), 5)->generate($this->grounding());
+
+        self::assertNull($result->spec);
+    }
+
+    public function test_a_code_search_spec_stands_in_when_no_finder_call_ran(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            ['status' => 200, 'body' => json_encode(['content' => [[
+                'type' => 'tool_use', 'id' => 't1', 'name' => 'search_product_codes', 'input' => ['coreCount' => 9],
+            ]]], JSON_THROW_ON_ERROR)],
+            ['status' => 200, 'body' => '{"content":[{"type":"text","text":"Done."}]}'],
+        ];
+
+        $result = $this->provider($http, new SpecEchoingToolExecutor(), 5)->generate($this->grounding());
+
+        self::assertIsArray($result->spec);
+        self::assertSame(9, $result->spec['coreCount']);
+    }
+
+    private function grounding(): AssistantGrounding
+    {
+        return new AssistantGrounding(
+            userMessage: 'Need a cable',
+            searchQuery: 'cable',
+            regionCode: 'AU',
+            products: [],
+            catalogueVisibility: 'public',
+            conversationTurns: [],
+        );
+    }
+
     private function provider(
         FakeJsonHttpClient $http,
         AssistantToolExecutor $tools,
@@ -516,4 +576,27 @@ final class SlowAssistantToolExecutor implements AssistantToolExecutor
 final class TestClock
 {
     public float $now = 0.0;
+}
+
+/** Answers every call with a spec built from its own input, as the real executor does. */
+final class SpecEchoingToolExecutor implements AssistantToolExecutor
+{
+    public function definitions(): array
+    {
+        return [['name' => 'find_product', 'description' => 'x', 'input_schema' => ['type' => 'object', 'properties' => []]]];
+    }
+
+    public function execute(
+        string $name,
+        array $input,
+        ?string $regionCode,
+        AssistantCatalogueVisibility $catalogueVisibility,
+    ): AssistantToolResult {
+        $spec = AssistantReplySpec::build(
+            coreCount: is_int($input['coreCount'] ?? null) ? $input['coreCount'] : null,
+            crossSectionMm2: is_int($input['crossSectionMm2'] ?? null) || is_float($input['crossSectionMm2'] ?? null) ? (float) $input['crossSectionMm2'] : null,
+        );
+
+        return new AssistantToolResult(data: ['ok' => true], spec: $spec);
+    }
 }

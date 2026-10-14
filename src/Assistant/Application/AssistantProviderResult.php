@@ -14,6 +14,8 @@ final readonly class AssistantProviderResult
      *        give". `ProductAssistantService` substitutes its pre-search
      *        products for the latter, which would undo the agent's filtering
      *        and put back the very cards the answer does not mention.
+     * @param array<string, mixed>|null $spec The last product-finder requirement
+     *        this turn put (see `AssistantReplySpec`); null when it made none.
      */
     public function __construct(
         public string $text,
@@ -22,6 +24,7 @@ final readonly class AssistantProviderResult
         public array $cards = [],
         public array $toolNames = [],
         public bool $curatesCards = false,
+        public ?array $spec = null,
     ) {
     }
 }

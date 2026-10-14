@@ -10,10 +10,12 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Response;
 use TriCab\Api\Assistant\Application\AssistantGrounding;
 use TriCab\Api\Assistant\Application\AssistantProviderResult;
+use TriCab\Api\Assistant\Application\AssistantReplySpec;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
 use TriCab\Api\Assistant\Application\AssistantTurnEvents;
 use TriCab\Api\Bootstrap\ContainerFactory;
 use TriCab\Api\Config\Settings;
+use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\AssistantMessageStreamAction;
 use TriCab\Api\Http\Auth\AssistantCatalogueVisibilityResolver;
 use TriCab\Api\Http\Auth\AssistantErrorMapper;
@@ -46,6 +48,8 @@ final class AssistantStreamEndpointTest extends TestCase
         self::assertSame('deterministic-search', $done['provider']['mode']);
         self::assertSame('assistant', $done['message']['role']);
         self::assertSame(['visibility' => 'public', 'includesUnpublished' => false], $done['catalogue']);
+        self::assertArrayHasKey('spec', $done);
+        self::assertNull($done['spec'], 'a turn with no finder call carries a null spec');
 
         $plain = TestAppFactory::json($app->handle($this->jsonRequest('/api/v1/assistant/messages', $body)));
         self::assertIsArray($plain['data']);
@@ -99,6 +103,42 @@ final class AssistantStreamEndpointTest extends TestCase
         self::assertSame('ASSISTANT_UNAVAILABLE', $error['code']);
         self::assertSame('The product assistant is temporarily unavailable.', $error['message']);
         self::assertStringNotContainsString('SECRET', json_encode($events, JSON_THROW_ON_ERROR));
+    }
+
+    public function test_the_spec_rides_in_both_the_plain_reply_and_the_stream_done_event(): void
+    {
+        $spec = AssistantReplySpec::build(coreCount: 4, crossSectionMm2: 16.0, colour: 'OR', style: 'XL', install: 5);
+        $container = ContainerFactory::create(Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'APP_PERFORMANCE_LOGGING' => 'false',
+            'USER_REPOSITORY' => 'memory',
+            'APP_CACHE_DRIVER' => 'array',
+        ]));
+        $container->set(AssistantResponseProvider::class, new class ($spec) implements AssistantResponseProvider {
+            /** @param array<string, mixed> $spec */
+            public function __construct(private array $spec)
+            {
+            }
+
+            public function generate(AssistantGrounding $grounding): AssistantProviderResult
+            {
+                return new AssistantProviderResult('Here you go.', 'test', 'v0', spec: $this->spec);
+            }
+        });
+        $visibility = $container->get(AssistantCatalogueVisibilityResolver::class);
+        self::assertInstanceOf(AssistantCatalogueVisibilityResolver::class, $visibility);
+        $body = ['message' => 'Find KL cable', 'searchQuery' => 'KL'];
+
+        $stream = new AssistantMessageStreamAction($container, new AssistantErrorMapper(new JsonResponder()), $visibility, new AssistantTurnEvents());
+        $events = $this->events($stream($this->jsonRequest('/api/v1/assistant/messages/stream', $body), new Response()));
+        $done = $events[count($events) - 1];
+        self::assertSame('done', $done['event']);
+        self::assertEquals($spec, $done['data']['spec']);
+
+        $plain = new AssistantMessageAction($container, new JsonResponder(), new AssistantErrorMapper(new JsonResponder()), $visibility);
+        $payload = TestAppFactory::json($plain($this->jsonRequest('/api/v1/assistant/messages', $body), new Response()));
+        self::assertIsArray($payload['data']);
+        self::assertEquals($spec, $payload['data']['spec']);
     }
 
     /** @return list<array{event: string, data: array<string, mixed>}> */

@@ -73,6 +73,28 @@ final class ProductAssistantToolExecutorTest extends TestCase
         );
     }
 
+    public function test_find_product_returns_the_query_as_the_reply_spec(): void
+    {
+        $executor = $this->executor($this->finderReturning([
+            'status' => 'resolved',
+            'productCode' => null,
+            'sizing' => null,
+        ]));
+
+        $result = $executor->execute(
+            'find_product',
+            ['style' => 'XL', 'coreCount' => 4, 'colour' => 'orange', 'install' => 5, 'voltage' => 400],
+            null,
+            AssistantCatalogueVisibility::PUBLIC,
+        );
+
+        self::assertIsArray($result->spec);
+        self::assertSame(4, $result->spec['coreCount']);
+        self::assertSame('Orange', $result->spec['colourLabel']);
+        self::assertSame(['code' => 5, 'label' => 'Conduit in air'], $result->spec['installMethod']);
+        self::assertSame('400 / 415 V', $result->spec['voltageLabel']);
+    }
+
     public function test_the_card_carries_the_request_beside_the_code(): void
     {
         // "4 core 16mm2 flexible" came back as XL-PAXN/4C16OR, which is 3C + E.

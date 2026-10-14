@@ -152,6 +152,9 @@ final class ProductAssistantService
                 'includesUnpublished' => $catalogueVisibility === AssistantCatalogueVisibility::STAFF,
             ],
             'capabilities' => array_values(array_unique($capabilities)),
+            // The requirement the agent last put to the finder this turn, or
+            // null when it made no finder call (the client keeps its last one).
+            'spec' => $providerResult->spec,
         ];
     }
 

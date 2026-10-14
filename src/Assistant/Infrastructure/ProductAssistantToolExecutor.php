@@ -7,6 +7,7 @@ namespace TriCab\Api\Assistant\Infrastructure;
 use InvalidArgumentException;
 use TriCab\Api\Assistant\Application\AssistantCatalogueVisibility;
 use TriCab\Api\Assistant\Application\AssistantProductGrounder;
+use TriCab\Api\Assistant\Application\AssistantReplySpec;
 use TriCab\Api\Assistant\Application\AssistantCodeProductLookup;
 use TriCab\Api\Assistant\Application\AssistantStyleOptionsProvider;
 use TriCab\Api\Assistant\Application\AssistantToolExecutor;
@@ -82,8 +83,11 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
                 'page' => ['type' => 'integer', 'minimum' => 1],
                 'pageSize' => ['type' => 'integer', 'minimum' => 1, 'maximum' => self::MAX_RESULTS],
             ]),
-            $this->tool('find_product', 'Turn a cable requirement into a TriCab product-code recommendation using the corrected product finder. Use it for a stated construction (style, cores, size, colour) as well as for a sizing question — it resolves the construction whether or not an electrical duty is given, and it is the only tool that understands colour words and style synonyms. It may ask for clarification. Any sizing and stock fields it returns are advisory because their source datasets are still under Technical review.', [
-                'text' => ['type' => 'string'],
+            $this->tool('find_product', 'Turn a cable requirement into a TriCab product-code recommendation using the corrected product finder. Use it for a stated construction (style, cores, size, colour) as well as for a sizing question — it resolves the construction whether or not an electrical duty is given, and it is the only tool that understands colour words and style synonyms. It may ask for clarification. Any sizing and stock fields it returns are advisory because their source datasets are still under Technical review. Every call needs `text`, `cableType` or `style`; one with only numbers (load, length, phase) is rejected, so always pass the requirement in `text` as well.', [
+                'text' => [
+                    'type' => 'string',
+                    'description' => 'The requirement in the customer\'s words, e.g. "3 phase 100 A submain, 80 m, armoured". Pass it on every call.',
+                ],
                 'cableType' => ['type' => 'integer'],
                 'style' => ['type' => 'string'],
                 'coreCount' => ['type' => 'integer', 'minimum' => 1],
@@ -95,8 +99,8 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
                 'loadAmps' => ['type' => 'number', 'exclusiveMinimum' => 0],
                 'lengthM' => ['type' => 'number', 'exclusiveMinimum' => 0],
                 'voltage' => ['type' => 'integer', 'minimum' => 1],
-                'phase' => ['type' => 'integer'],
-                'install' => ['type' => 'integer'],
+                'phase' => ['type' => 'integer', 'enum' => [3, 4, 5], 'description' => 'Phase code, not a count: 3 three phase, 4 single phase, 5 DC.'],
+                'install' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 9, 'description' => 'Installation method code: 1 unenclosed spaced (cable tray, ladder), 2 unenclosed touching, 3 buried in spaced conduit, 4 buried spaced, 5 conduit in air ("in conduit" above ground), 6 exposed to sun, 7 buried in touching conduit, 8 IEC, 9 buried touching. Omit it when the customer has not said.'],
                 'ambient' => ['type' => 'integer'],
                 'strategy' => ['type' => 'string'],
             ]),
@@ -107,13 +111,13 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
                 'powerFactor' => ['type' => 'number', 'minimum' => 0, 'maximum' => 1],
                 'maximumVoltageDropPercent' => ['type' => 'number', 'exclusiveMinimum' => 0],
                 'voltage' => ['type' => 'integer', 'minimum' => 1],
-                'phaseClass' => ['type' => 'integer'],
+                'phaseClass' => ['type' => 'integer', 'enum' => [3, 4, 5], 'description' => 'Phase code, not a count: 3 three phase, 4 single phase, 5 DC.'],
                 'ambientTemperatureC' => ['type' => 'integer'],
                 'maxOperatingTemperatureC' => ['type' => 'integer'],
                 'activeConductorMaterial' => ['type' => 'string'],
                 'earthConductorMaterial' => ['type' => 'string'],
                 'cableType' => ['type' => 'integer'],
-                'installationMethod' => ['type' => 'integer'],
+                'installationMethod' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 9, 'description' => 'Installation method code: 1 unenclosed spaced (cable tray, ladder), 2 unenclosed touching, 3 buried in spaced conduit, 4 buried spaced, 5 conduit in air ("in conduit" above ground), 6 exposed to sun, 7 buried in touching conduit, 8 IEC, 9 buried touching. Omit it when the customer has not said.'],
                 'cableRunsMode' => ['type' => 'integer'],
                 'fixedCableSize' => ['type' => 'string'],
                 'earthResistanceMode' => ['type' => 'string'],
@@ -185,6 +189,8 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             publishedOnly: $visibility->publishedOnly(),
         ));
 
+        $styleCodes = $this->stringList($input, 'styleCodes');
+
         return new AssistantToolResult(data: [
             'items' => array_map(ProductManagementDtoSerializer::codeSearchResult(...), $result->items),
             'pagination' => [
@@ -197,6 +203,12 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         ], cards: array_map(
             $this->codeSearchCard(...),
             array_slice($result->items, 0, 4),
+        ), spec: AssistantReplySpec::fromCodeSearch(
+            $this->int($input, 'coreCount'),
+            $this->float($input, 'crossSectionMm2Min'),
+            $this->float($input, 'crossSectionMm2Max'),
+            $this->string($input, 'jacketColour'),
+            count($styleCodes) === 1 ? $styleCodes[0] : null,
         ));
     }
 
@@ -246,6 +258,7 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             cards: is_string($productCode) && trim($productCode) !== ''
                 ? [$this->finderCodeCard($data, $query)]
                 : [],
+            spec: AssistantReplySpec::fromFinderQuery($query),
         );
     }
 
