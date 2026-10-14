@@ -7,8 +7,11 @@ namespace TriCab\Api\Tests\Assistant;
 use PHPUnit\Framework\TestCase;
 use TriCab\Api\Assistant\Application\AssistantCatalogueVisibility;
 use TriCab\Api\Assistant\Application\AssistantProductGrounder;
+use TriCab\Api\Assistant\Application\AssistantCodeProduct;
+use TriCab\Api\Assistant\Application\AssistantCodeProductLookup;
 use TriCab\Api\Assistant\Application\AssistantStyleOptionsProvider;
 use TriCab\Api\Assistant\Application\AssistantToolResult;
+use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantCodeProductLookup;
 use TriCab\Api\Assistant\Infrastructure\ProductAssistantToolExecutor;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct3DModelRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCodeSearchRepository;
@@ -68,6 +71,112 @@ final class ProductAssistantToolExecutorTest extends TestCase
             'Construction class not stated; defaulted to PA (KL standard). Confirm.',
             $warnings,
         );
+    }
+
+    public function test_the_card_carries_the_request_beside_the_code(): void
+    {
+        // "4 core 16mm2 flexible" came back as XL-PAXN/4C16OR, which is 3C + E.
+        // The card needs the request to show the customer what differs; the
+        // agent's parameters win over what the finder read from the text.
+        $executor = $this->executor($this->finderReturning([
+            'status' => 'resolved',
+            'productCode' => 'XL-PAXN/4C16OR',
+            'stocked' => true,
+            'confidence' => 0.67,
+            'sizing' => null,
+            'codeSegments' => ['style' => 'XL', 'conductorCount' => 4, 'crossSection' => '16'],
+            'understood' => ['mode' => 'text', 'fields' => ['count' => 3, 'cross_section' => '16', 'colour' => 'OR']],
+            'warnings' => [
+                'Core count was not found.',
+                'Conductor cross-section was not found.',
+                'Colour not stated; defaulted to OR (style standard). Confirm.',
+            ],
+        ]));
+
+        $result = $executor->execute(
+            'find_product',
+            ['text' => '4 core 16mm2 flexible cable', 'coreCount' => 4],
+            null,
+            AssistantCatalogueVisibility::PUBLIC,
+        );
+
+        self::assertSame(
+            ['coreCount' => 4, 'crossSectionMm2' => 16.0, 'colour' => 'OR', 'style' => null],
+            $result->cards[0]['requested'] ?? null,
+        );
+
+        // The code answers both "not found" notes, so they no longer reach the card.
+        $warnings = self::cardWarnings($result);
+        self::assertNotContains('Core count was not found.', $warnings);
+        self::assertNotContains('Conductor cross-section was not found.', $warnings);
+        self::assertContains('Colour not stated; defaulted to OR (style standard). Confirm.', $warnings);
+    }
+
+    public function test_the_card_carries_the_catalogue_product_picture_and_links(): void
+    {
+        $lookup = new InMemoryAssistantCodeProductLookup();
+        $lookup->add('M4P-PAXN/3C16BK', new AssistantCodeProduct(
+            imageUrl: 'https://tricabv2.blob.core.windows.net/products/m4p.png?sig=read',
+            imageBackgroundColor: '#E5DBCF',
+            productSlug: 'rfob-m4p-3c',
+            variantPublicId: null,
+        ));
+        $executor = $this->executor($this->finderReturning([
+            'status' => 'resolved',
+            'productCode' => 'M4P-PAXN/3C16BK',
+            'stocked' => null,
+            'confidence' => 0.92,
+            'sizing' => null,
+            'codeSegments' => ['style' => 'M4P', 'conductorCount' => 3],
+            'warnings' => [],
+        ]), null, $lookup);
+
+        $card = $executor->execute('find_product', ['text' => 'M4P 3 core 16'], null, AssistantCatalogueVisibility::PUBLIC)->cards[0];
+
+        self::assertSame(
+            ['url' => 'https://tricabv2.blob.core.windows.net/products/m4p.png?sig=read', 'backgroundColor' => '#E5DBCF'],
+            $card['image'] ?? null,
+        );
+        self::assertSame('rfob-m4p-3c', $card['productSlug']);
+        // A style's stand-in product never supplies a variant: adding it would quote another code.
+        self::assertNull($card['variantPublicId']);
+    }
+
+    public function test_a_code_with_no_catalogue_product_has_no_picture(): void
+    {
+        $executor = $this->executor($this->finderReturning([
+            'status' => 'resolved',
+            'productCode' => 'XL-PAXN/4C16OR',
+            'stocked' => true,
+            'confidence' => 0.67,
+            'sizing' => null,
+            'codeSegments' => ['style' => 'XL'],
+            'warnings' => [],
+        ]));
+
+        $card = $executor->execute('find_product', ['text' => '4 core 16'], null, AssistantCatalogueVisibility::PUBLIC)->cards[0];
+
+        self::assertArrayHasKey('image', $card);
+        self::assertNull($card['image']);
+        self::assertNull($card['productSlug']);
+    }
+
+    public function test_a_card_with_nothing_requested_says_so(): void
+    {
+        $executor = $this->executor($this->finderReturning([
+            'status' => 'resolved',
+            'productCode' => 'KL-PAXN/1C95OR',
+            'stocked' => true,
+            'confidence' => 0.9,
+            'sizing' => null,
+            'codeSegments' => ['style' => 'KL'],
+            'warnings' => [],
+        ]));
+
+        $result = $executor->execute('find_product', ['text' => 'earth cable'], null, AssistantCatalogueVisibility::PUBLIC);
+
+        self::assertArrayHasKey('requested', $result->cards[0]);
+        self::assertNull($result->cards[0]['requested']);
     }
 
     public function test_a_sized_answer_still_carries_the_sizing_caveat(): void
@@ -329,6 +438,7 @@ final class ProductAssistantToolExecutorTest extends TestCase
     private function executor(
         ProductFinderClient $finder,
         ?AssistantStyleOptionsProvider $styles = null,
+        ?AssistantCodeProductLookup $codeProducts = null,
     ): ProductAssistantToolExecutor {
         // Only the finder seam matters here; the other tools have their own
         // tests and `find_product` never reaches them. The services are final,
@@ -349,6 +459,7 @@ final class ProductAssistantToolExecutorTest extends TestCase
                 ),
             ),
             $styles ?? $this->createStub(AssistantStyleOptionsProvider::class),
+            $codeProducts ?? new InMemoryAssistantCodeProductLookup(),
         );
     }
 }

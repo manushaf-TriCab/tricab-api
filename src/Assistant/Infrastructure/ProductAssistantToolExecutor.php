@@ -7,6 +7,7 @@ namespace TriCab\Api\Assistant\Infrastructure;
 use InvalidArgumentException;
 use TriCab\Api\Assistant\Application\AssistantCatalogueVisibility;
 use TriCab\Api\Assistant\Application\AssistantProductGrounder;
+use TriCab\Api\Assistant\Application\AssistantCodeProductLookup;
 use TriCab\Api\Assistant\Application\AssistantStyleOptionsProvider;
 use TriCab\Api\Assistant\Application\AssistantToolExecutor;
 use TriCab\Api\Assistant\Application\AssistantToolResult;
@@ -44,6 +45,7 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         private SearchProductsService $searchProducts,
         private AssistantProductGrounder $productGrounder,
         private AssistantStyleOptionsProvider $styleOptions,
+        private AssistantCodeProductLookup $codeProducts,
     ) {
     }
 
@@ -242,7 +244,7 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         return new AssistantToolResult(
             data: $data,
             cards: is_string($productCode) && trim($productCode) !== ''
-                ? [$this->finderCodeCard($data)]
+                ? [$this->finderCodeCard($data, $query)]
                 : [],
         );
     }
@@ -381,6 +383,7 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
     private function codeSearchCard(\TriCab\Core\Product\Application\DTO\ProductCodeSearchResult $result): array
     {
         $serialized = ProductManagementDtoSerializer::codeSearchResult($result);
+        $product = $this->codeProducts->forCode($result->codeValue, $result->styleCode, $result->coreCount);
 
         return [
             'type' => 'product-code',
@@ -392,8 +395,9 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             'isCurrent' => $result->isCurrent,
             'matchTier' => $result->matchTier,
             'confidence' => null,
-            'productSlug' => $result->productSlug,
-            'variantPublicId' => $result->variantPublicId,
+            'productSlug' => $result->productSlug ?? $product?->productSlug,
+            'variantPublicId' => $result->variantPublicId ?? $product?->variantPublicId,
+            'image' => $product?->image(),
             'working' => null,
             'warnings' => [
                 'Stock status comes from a partial snapshot; an empty status means unknown.',
@@ -426,7 +430,7 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
      * @param array<string, mixed> $data
      * @return array<string, mixed>
      */
-    private function finderCodeCard(array $data): array
+    private function finderCodeCard(array $data, ProductFinderQuery $query): array
     {
         $segments = is_array($data['codeSegments'] ?? null) ? $data['codeSegments'] : [];
         $sizing = is_array($data['sizing'] ?? null) ? $data['sizing'] : [];
@@ -436,10 +440,27 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         $warnings = is_array($data['warnings'] ?? null)
             ? array_values(array_filter($data['warnings'], 'is_string'))
             : [];
+        // The extractor reports "not found" for the text it parsed, and the note
+        // survives even when the agent passed the field as a parameter and the
+        // code carries it. On the card that reads as the card contradicting itself.
+        $warnings = array_values(array_filter(
+            $warnings,
+            static fn (string $warning): bool => match ($warning) {
+                'Core count was not found.' => ($segments['conductorCount'] ?? null) === null,
+                'Conductor cross-section was not found.' => ($segments['crossSection'] ?? null) === null,
+                default => true,
+            },
+        ));
         if (self::wasSized($data)) {
             $warnings[] = 'Sizing is advisory until Technical approves the finder sizing snapshot.';
         }
         $warnings[] = 'Stock status is incomplete and is not a confirmed live availability promise.';
+        $codeCount = $segments['conductorCount'] ?? null;
+        $product = $this->codeProducts->forCode(
+            is_string($data['productCode'] ?? null) ? $data['productCode'] : '',
+            is_string($segments['style'] ?? null) ? $segments['style'] : null,
+            is_int($codeCount) || (is_string($codeCount) && ctype_digit($codeCount)) ? (int) $codeCount : null,
+        );
 
         return [
             'type' => 'product-code',
@@ -468,8 +489,9 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             'confidence' => is_int($data['confidence'] ?? null) || is_float($data['confidence'] ?? null)
                 ? $data['confidence']
                 : null,
-            'productSlug' => null,
-            'variantPublicId' => null,
+            'productSlug' => $product?->productSlug,
+            'variantPublicId' => $product?->variantPublicId,
+            'image' => $product?->image(),
             'working' => $candidate !== [] ? [
                 'crossSectionMm2' => $spec['crossSection'] ?? null,
                 'activeCores' => $spec['activeCores'] ?? null,
@@ -485,7 +507,39 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
                 'faultRatingKa' => $candidate['faultRatingKa'] ?? null,
             ] : null,
             'warnings' => array_values(array_unique($warnings)),
+            'requested' => self::requested($data, $query),
         ];
+    }
+
+    /**
+     * What the customer asked for, as the finder was given it, so the card can
+     * put the request beside a code that only comes close. Parameters the agent
+     * passed win over what the finder read out of the free text, as they do in
+     * the finder itself.
+     *
+     * @param array<string, mixed> $data
+     * @return array{coreCount: ?int, crossSectionMm2: ?float, colour: ?string, style: ?string}|null
+     */
+    private static function requested(array $data, ProductFinderQuery $query): ?array
+    {
+        $understood = is_array($data['understood'] ?? null) ? $data['understood'] : [];
+        $fields = is_array($understood['fields'] ?? null) ? $understood['fields'] : [];
+
+        $count = $fields['count'] ?? null;
+        $crossSection = $fields['cross_section'] ?? null;
+        $colour = $fields['colour'] ?? null;
+
+        $requested = [
+            'coreCount' => $query->coreCount ?? (is_numeric($count) ? (int) $count : null),
+            'crossSectionMm2' => $query->crossSectionMm2
+                ?? (is_numeric($crossSection) ? (float) $crossSection : null),
+            'colour' => $query->colour ?? (is_string($colour) && $colour !== '' ? $colour : null),
+            'style' => $query->style,
+        ];
+
+        return array_filter($requested, static fn (mixed $value): bool => $value !== null) === []
+            ? null
+            : $requested;
     }
 
     /** @param array<string, mixed> $input */
