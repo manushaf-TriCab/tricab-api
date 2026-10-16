@@ -50,6 +50,7 @@ final class ProductionCableCalculator
         );
 
         [$cableStyles, $earthStyle] = CableStyleResolver::suggestCableStyle($type, $operating1, $phase);
+        $earthStyle = CableStyleResolver::buriedAluminiumEarthStyle($earthStyle, $type, $earthAl, $request->installationMethod);
 
         $cable = $this->findCableCalculator->findCable(
             $cableStyles,
@@ -80,6 +81,7 @@ final class ProductionCableCalculator
         $cable110 = null;
         if ($type === 1 || $type === 4 || $type === 9 || $type === 0) {
             [$cableStyles110, $earthStyle110] = CableStyleResolver::suggestCableStyle($type, $operating2, $phase);
+            $earthStyle110 = CableStyleResolver::buriedAluminiumEarthStyle($earthStyle110, $type, $earthAl, $request->installationMethod);
             $cable110 = $this->findCableCalculator->findCable(
                 $cableStyles110,
                 26.5,

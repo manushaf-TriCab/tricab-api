@@ -26,6 +26,9 @@ final class CableStyleResolver
         'offshore' => "('PJ')",
     ];
 
+    /** Installation methods that are buried: spaced/touching conduit (3, 7) and spaced/touching direct (4, 9). */
+    private const BURIED_INSTALLATIONS = [3, 4, 7, 9];
+
     /**
      * @return array{0: string|list<string>, 1: string, 2: int}
      */
@@ -100,6 +103,21 @@ final class CableStyleResolver
         }
 
         return [$cableStyles, $earthStyle, $operating];
+    }
+
+    /**
+     * TSD rule: an aluminium earth on a buried SDI run is KL-PAXA rather than LP-XXXA.
+     * Earth sizing is unchanged; only the earth style (and so its code and fault constant) moves.
+     * Mirrors buried_alum_earth_style() in legacy tc-web include-cable-calc.php.
+     */
+    public static function buriedAluminiumEarthStyle(string $earthStyle, int $type, bool $earthAluminium, int $installation): string
+    {
+        if ($earthStyle === 'LP' && $earthAluminium && $type >= 1 && $type <= 3
+            && in_array($installation, self::BURIED_INSTALLATIONS, true)) {
+            return 'KL';
+        }
+
+        return $earthStyle;
     }
 
     /**

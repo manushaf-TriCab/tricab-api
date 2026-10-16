@@ -29,7 +29,8 @@ final class CableProductCodeGenerator
 
         $size = preg_replace('/0\./', '.', (string) $size);
 
-        if ($style === 'LP' || $style === 'LS' || $style === 'UP') {
+        // Earths are single core; KL is also a multicore active style, so only an earth call ('EA') forces 1C.
+        if ($style === 'LP' || $style === 'LS' || $style === 'UP' || ($style === 'KL' && $colour === 'EA')) {
             $core = '1' . $config;
         } else {
             $core = ((int) $core + (($earth > 0 && $style !== 'OD') ? 1 : 0)) . $config;
