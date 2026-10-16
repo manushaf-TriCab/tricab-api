@@ -1022,6 +1022,10 @@ final class InMemoryUserManagementStore
             newValues: $entry->newValues,
             createdAtUtc: $createdAt,
             correlationId: $entry->correlationId,
+            actorDisplayName: $this->users[$entry->actorUserId]['displayName'] ?? null,
+            actorEmailAddress: $this->users[$entry->actorUserId]['emailAddress'] ?? null,
+            targetUserDisplayName: $entry->targetUserId !== null ? ($this->users[$entry->targetUserId]['displayName'] ?? null) : null,
+            targetUserEmailAddress: $entry->targetUserId !== null ? ($this->users[$entry->targetUserId]['emailAddress'] ?? null) : null,
         );
 
         $this->auditEntries[] = $record;

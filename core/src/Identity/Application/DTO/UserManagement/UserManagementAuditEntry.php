@@ -22,6 +22,10 @@ final readonly class UserManagementAuditEntry
         public ?array $newValues,
         public string $createdAtUtc,
         public ?string $correlationId = null,
+        public ?string $actorDisplayName = null,
+        public ?string $actorEmailAddress = null,
+        public ?string $targetUserDisplayName = null,
+        public ?string $targetUserEmailAddress = null,
     ) {
     }
 }

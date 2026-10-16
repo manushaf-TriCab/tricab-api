@@ -445,6 +445,10 @@ final class UserManagementPersistenceTest extends TestCase
 
         self::assertCount(1, $result->items);
         self::assertSame(1, $result->pagination->totalItems);
+        self::assertSame('Admin User', $result->items[0]->actorDisplayName);
+        self::assertSame('admin@tricab.com', $result->items[0]->actorEmailAddress);
+        self::assertSame('Jane Doe', $result->items[0]->targetUserDisplayName);
+        self::assertSame('jane@tricab.com', $result->items[0]->targetUserEmailAddress);
 
         $listCall = $connection->calls[1];
         self::assertStringContainsString('OFFSET :offset ROWS FETCH NEXT :pageSize ROWS ONLY', $listCall['sql']);
@@ -586,6 +590,10 @@ final class UserManagementPersistenceTest extends TestCase
             'EventType' => 'ROLE_ASSIGNED',
             'EventSummary' => 'Assigned EMPLOYEE role',
             'ActorPublicId' => self::SAMPLE_PUBLIC_ID,
+            'ActorDisplayName' => 'Admin User',
+            'ActorEmailAddress' => 'admin@tricab.com',
+            'TargetUserDisplayName' => 'Jane Doe',
+            'TargetUserEmailAddress' => 'jane@tricab.com',
             'TargetUserPublicId' => self::SAMPLE_PUBLIC_ID,
             'TargetRoleCode' => 'EMPLOYEE',
             'TargetPermissionCode' => null,

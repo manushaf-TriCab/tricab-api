@@ -31,7 +31,11 @@ final class AzureSqlUserManagementAuditRepository implements UserManagementAudit
             <<<'SQL'
 SELECT
     CONVERT(NVARCHAR(36), au.[PublicId]) AS [ActorPublicId],
+    au.[DisplayName] AS [ActorDisplayName],
+    au.[EmailAddress] AS [ActorEmailAddress],
     CONVERT(NVARCHAR(36), tu.[PublicId]) AS [TargetUserPublicId],
+    tu.[DisplayName] AS [TargetUserDisplayName],
+    tu.[EmailAddress] AS [TargetUserEmailAddress],
     tr.[RoleCode] AS [TargetRoleCode],
     tp.[PermissionCode] AS [TargetPermissionCode]
 FROM [identity].[Users] au
@@ -121,6 +125,10 @@ SQL,
                 AzureSqlValueMapper::requireDateTime($inserted['CreatedAtUtc'] ?? null, 'CreatedAtUtc'),
             ),
             correlationId: $entry->correlationId,
+            actorDisplayName: AzureSqlValueMapper::nullableString($lookup['ActorDisplayName'] ?? null),
+            actorEmailAddress: AzureSqlValueMapper::nullableString($lookup['ActorEmailAddress'] ?? null),
+            targetUserDisplayName: AzureSqlValueMapper::nullableString($lookup['TargetUserDisplayName'] ?? null),
+            targetUserEmailAddress: AzureSqlValueMapper::nullableString($lookup['TargetUserEmailAddress'] ?? null),
         );
     }
 
@@ -207,7 +215,11 @@ SELECT
     e.[EventType],
     e.[EventSummary],
     CONVERT(NVARCHAR(36), au.[PublicId]) AS [ActorPublicId],
+    au.[DisplayName] AS [ActorDisplayName],
+    au.[EmailAddress] AS [ActorEmailAddress],
     CONVERT(NVARCHAR(36), tu.[PublicId]) AS [TargetUserPublicId],
+    tu.[DisplayName] AS [TargetUserDisplayName],
+    tu.[EmailAddress] AS [TargetUserEmailAddress],
     tr.[RoleCode] AS [TargetRoleCode],
     tp.[PermissionCode] AS [TargetPermissionCode],
     e.[PreviousValuesJson],
@@ -241,6 +253,10 @@ SQL;
                 AzureSqlValueMapper::requireDateTime($row['CreatedAtUtc'] ?? null, 'CreatedAtUtc'),
             ),
             correlationId: AzureSqlValueMapper::nullableString($row['RequestCorrelationId'] ?? null),
+            actorDisplayName: AzureSqlValueMapper::nullableString($row['ActorDisplayName'] ?? null),
+            actorEmailAddress: AzureSqlValueMapper::nullableString($row['ActorEmailAddress'] ?? null),
+            targetUserDisplayName: AzureSqlValueMapper::nullableString($row['TargetUserDisplayName'] ?? null),
+            targetUserEmailAddress: AzureSqlValueMapper::nullableString($row['TargetUserEmailAddress'] ?? null),
         );
     }
 
