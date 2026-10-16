@@ -1,0 +1,27 @@
+{
+    "database": {
+        "name": "tc",
+        "server": "tricab-mel"
+    },
+    "counts": {
+        "activeNodes": 321,
+        "placements": 164,
+        "activeProducts": 182,
+        "productRegions": 156
+    },
+    "expected": {
+        "activeNodes": 321,
+        "placements": 164,
+        "activeProducts": 182,
+        "productRegions": 156,
+        "newNodes": 77,
+        "newPlacements": 71,
+        "orderUpdates": 16
+    },
+    "foundNewNodes": 77,
+    "foundNewPlacements": 71,
+    "missingNodes": [],
+    "missingPlacements": [],
+    "orderProblems": [],
+    "ok": true
+}

@@ -1,0 +1,1374 @@
+{
+  "plan": "revised-au-catalogue-population",
+  "products": {
+    "XU": {
+      "productId": 414,
+      "publicId": "385BF69B-6BC0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "KU": {
+      "productId": 413,
+      "publicId": "B8E3A071-6BC0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "XN": {
+      "productId": 411,
+      "publicId": "8990E582-62C0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "KN": {
+      "productId": 410,
+      "publicId": "3CB76F2E-62C0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "EA": {
+      "productId": 412,
+      "publicId": "3819694D-6BC0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "FH": {
+      "productId": 405,
+      "publicId": "3590F420-5CC0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "KC": {
+      "productId": 404,
+      "publicId": "D7AEF20A-3EC0-F111-A6A9-000D3AE15145",
+      "status": "published",
+      "auVisible": true
+    },
+    "RE": {
+      "productId": 403,
+      "publicId": "404B1E41-31C0-F111-A6A9-6045BD3FB090",
+      "status": "published",
+      "auVisible": true
+    },
+    "KE": {
+      "productId": 407,
+      "publicId": "9955725D-5CC0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "KH": {
+      "productId": 408,
+      "publicId": "1A12EB75-5CC0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "RA": {
+      "productId": 409,
+      "publicId": "0DEB6288-5CC0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "IA": {
+      "productId": 406,
+      "publicId": "810CFC38-5CC0-F111-A6A9-002248E3FA4A",
+      "status": "published",
+      "auVisible": true
+    },
+    "SJ": {
+      "productId": 419,
+      "publicId": "A2C8196A-26C1-F111-A6AA-000D3AE0DBF0",
+      "status": "published",
+      "auVisible": true
+    },
+    "LN": {
+      "productId": 416,
+      "publicId": "FD157B30-23C1-F111-A6AA-000D3AE0DBF0",
+      "status": "published",
+      "auVisible": true
+    },
+    "CN": {
+      "productId": 415,
+      "publicId": "726E01E2-22C1-F111-A6AA-000D3AE0DBF0",
+      "status": "published",
+      "auVisible": true
+    },
+    "XDT": {
+      "productId": 420,
+      "publicId": "95EA9A8E-26C1-F111-A6AA-000D3AE0DBF0",
+      "status": "published",
+      "auVisible": true
+    },
+    "CDT": {
+      "productId": 417,
+      "publicId": "C3E9DA33-26C1-F111-A6AA-000D3AE0DBF0",
+      "status": "published",
+      "auVisible": true
+    },
+    "OD": {
+      "productId": 418,
+      "publicId": "14F7E63F-26C1-F111-A6AA-000D3AE0DBF0",
+      "status": "published",
+      "auVisible": true
+    },
+    "NJC": {
+      "productId": 123,
+      "publicId": "A670E6F0-F091-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "NJM": {
+      "productId": 320,
+      "publicId": "E4FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "NTC": {
+      "productId": 125,
+      "publicId": "A870E6F0-F091-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "NTM": {
+      "productId": 322,
+      "publicId": "E8FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "NVC": {
+      "productId": 127,
+      "publicId": "AA70E6F0-F091-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "NRC": {
+      "productId": 124,
+      "publicId": "A770E6F0-F091-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "RBC": {
+      "productId": 340,
+      "publicId": "FEFCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "RBM": {
+      "productId": 341,
+      "publicId": "FFFCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "FKC": {
+      "productId": 312,
+      "publicId": "D8FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "FKM": {
+      "productId": 313,
+      "publicId": "D9FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "FZC": {
+      "productId": 315,
+      "publicId": "DDFCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "FZM": {
+      "productId": 316,
+      "publicId": "DEFCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "FEC": {
+      "productId": 308,
+      "publicId": "D2FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "FEM": {
+      "productId": 309,
+      "publicId": "D3FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "NUC": {
+      "productId": 126,
+      "publicId": "A970E6F0-F091-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "F07": {
+      "productId": 378,
+      "publicId": "C86D02CE-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "F22": {
+      "productId": 385,
+      "publicId": "E05C20DA-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "F25": {
+      "productId": 386,
+      "publicId": "F05C20DA-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "F21": {
+      "productId": 384,
+      "publicId": "C45C20DA-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "F20": {
+      "productId": 383,
+      "publicId": "EB9F08D4-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "F14": {
+      "productId": 382,
+      "publicId": "DB9F08D4-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "X04": {
+      "productId": 391,
+      "publicId": "6F1D18E0-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "F09": {
+      "productId": 380,
+      "publicId": "046E02CE-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "F08": {
+      "productId": 379,
+      "publicId": "DE6D02CE-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "F12": {
+      "productId": 362,
+      "publicId": "1FE90A80-AEA1-F111-9B32-002248E1BB32",
+      "status": "published",
+      "auVisible": true
+    },
+    "F10": {
+      "productId": 381,
+      "publicId": "146E02CE-71A2-F111-9B33-002248E27005",
+      "status": "published",
+      "auVisible": true
+    },
+    "SH": {
+      "productId": 438,
+      "publicId": "CE08083F-46C1-F111-A6AA-000D3AE0DBF0",
+      "status": "published",
+      "auVisible": true
+    },
+    "UP": {
+      "productId": 353,
+      "publicId": "0EFDDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "R2": {
+      "productId": 331,
+      "publicId": "F4FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "R4": {
+      "productId": 334,
+      "publicId": "F7FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "published",
+      "auVisible": true
+    },
+    "C1": {
+      "productId": 289,
+      "publicId": "B8FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "C2": {
+      "productId": 290,
+      "publicId": "B9FCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "C3": {
+      "productId": 291,
+      "publicId": "BAFCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "C4": {
+      "productId": 292,
+      "publicId": "BBFCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "C5": {
+      "productId": 293,
+      "publicId": "BCFCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "C6": {
+      "productId": 294,
+      "publicId": "BDFCDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "RH": {
+      "productId": 443,
+      "publicId": "8304AD18-23C8-F111-BF5B-6045BD4078B8",
+      "status": "draft",
+      "auVisible": true
+    },
+    "RD": {
+      "productId": 346,
+      "publicId": "05FDDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "RF": {
+      "productId": 347,
+      "publicId": "06FDDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "RG": {
+      "productId": 348,
+      "publicId": "07FDDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "V2": {
+      "productId": 356,
+      "publicId": "12FDDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "V3": {
+      "productId": 357,
+      "publicId": "13FDDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    },
+    "V4": {
+      "productId": 358,
+      "publicId": "14FDDED9-F691-F111-B337-000D3AE094E4",
+      "status": "draft",
+      "auVisible": false
+    }
+  },
+  "existingParents": {
+    "PROD-CONTROL": {
+      "publicId": "B9558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "control"
+    },
+    "PROD-MARINE-NEK-606": {
+      "publicId": "C3558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "marine-nek-606"
+    },
+    "INS-450/750V": {
+      "publicId": "B684426C-D7A4-F111-9B33-6045BD3D15C6",
+      "slug": "450-750v"
+    },
+    "INS-0.6/1KV": {
+      "publicId": "4204C994-D7A4-F111-9B33-6045BD3D15C6",
+      "slug": "0-6-1kv"
+    },
+    "PROD-SOLAR": {
+      "publicId": "B6558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "solar"
+    },
+    "PROD-TERMITE-RES-NYLON": {
+      "publicId": "C0558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "termite-res-nylon"
+    },
+    "PROD-FIRE-RESISTANT": {
+      "publicId": "BD558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "fire-resistant"
+    },
+    "PROD-SUBMERSIBLE-PORTABLE": {
+      "publicId": "BA558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "submersible-portable"
+    },
+    "ACC-CABLE-MANAGEMENT": {
+      "publicId": "D1558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "cable-management"
+    },
+    "PROD-VFD-VSD": {
+      "publicId": "C2558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "vfd-vsd"
+    },
+    "ACC-SWITCHBOARD": {
+      "publicId": "D3558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "switchboard"
+    },
+    "ACC-SOLAR": {
+      "publicId": "D5558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "solar"
+    },
+    "SPEC-SHORE-POWER": {
+      "publicId": "C7558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "shore-power"
+    },
+    "SPEC-INDUSTRIAL-MARINE-SWITCHBOARD-WIRE": {
+      "publicId": "C8558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "industrial-marine-switchboard-wire"
+    },
+    "PROD-STEEL-ALUM-ARMOUR": {
+      "publicId": "B8558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "steel-alum-armour"
+    },
+    "PROD-MEDIUM-VOLTAGE": {
+      "publicId": "C5558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "medium-voltage"
+    },
+    "ALI-ITEM-XU-SDI-MULTI-COLL-SCR-BRAID-90C": {
+      "publicId": "F0558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "xu-sdi-multi-coll-scr-braid-90c"
+    },
+    "ALI-ITEM-KU-SDI-MULTI-COLL-SCR-BRAID-110C": {
+      "publicId": "F1558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "ku-sdi-multi-coll-scr-braid-110c"
+    },
+    "ALI-ITEM-XN-TERMITE-RESISTANT-90C": {
+      "publicId": "F4558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "xn-termite-resistant-90c"
+    },
+    "ALI-ITEM-KN-TERMITE-RESISTANT-110C": {
+      "publicId": "F5558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "kn-termite-resistant-110c"
+    },
+    "ALI-ITEM-EA-BRAID-VFD-VSD-110C": {
+      "publicId": "F6558A7B-2595-F111-9B33-000D3AE1438B",
+      "slug": "ea-braid-vfd-vsd-110c"
+    }
+  },
+  "nodes": [
+    {
+      "batch": "A",
+      "nodeCode": "CTRL-450-750",
+      "nodeName": "450/750V",
+      "slug": "control-450-750v",
+      "parentCode": "PROD-CONTROL",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-POWER",
+      "nodeName": "Power and Control",
+      "slug": "nek-power-control",
+      "parentCode": "PROD-MARINE-NEK-606",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-INST-COLL",
+      "nodeName": "Instrumentation Collective",
+      "slug": "nek-inst-collective",
+      "parentCode": "PROD-MARINE-NEK-606",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-INST-IND",
+      "nodeName": "Instrumentation Individual",
+      "slug": "nek-inst-individual",
+      "parentCode": "PROD-MARINE-NEK-606",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-VFD",
+      "nodeName": "VFD/VSD",
+      "slug": "nek-vfd",
+      "parentCode": "PROD-MARINE-NEK-606",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "A",
+      "nodeCode": "CTRL-KC",
+      "nodeName": "KC",
+      "slug": "ctrl-kc",
+      "parentCode": "CTRL-450-750",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "KC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "INS-RE",
+      "nodeName": "RE",
+      "slug": "ins-re",
+      "parentCode": "INS-450/750V",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "RE"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "INS-KE",
+      "nodeName": "KE",
+      "slug": "ins-ke",
+      "parentCode": "INS-450/750V",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "KE"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "INS-KH",
+      "nodeName": "KH",
+      "slug": "ins-kh",
+      "parentCode": "INS-450/750V",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "KH"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "INS-RA",
+      "nodeName": "RA",
+      "slug": "ins-ra",
+      "parentCode": "INS-450/750V",
+      "displayOrder": 50,
+      "nodeTypeCode": "category",
+      "internalCode": "RA"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "INS-IA",
+      "nodeName": "IA",
+      "slug": "ins-ia",
+      "parentCode": "INS-450/750V",
+      "displayOrder": 60,
+      "nodeTypeCode": "category",
+      "internalCode": "IA"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-NJC",
+      "nodeName": "NJC",
+      "slug": "nek-njc",
+      "parentCode": "NEK-POWER",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "NJC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-NJM",
+      "nodeName": "NJM",
+      "slug": "nek-njm",
+      "parentCode": "NEK-POWER",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "NJM"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-NTC",
+      "nodeName": "NTC",
+      "slug": "nek-ntc",
+      "parentCode": "NEK-POWER",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "NTC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-NTM",
+      "nodeName": "NTM",
+      "slug": "nek-ntm",
+      "parentCode": "NEK-POWER",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "NTM"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-NVC",
+      "nodeName": "NVC",
+      "slug": "nek-nvc",
+      "parentCode": "NEK-POWER",
+      "displayOrder": 50,
+      "nodeTypeCode": "category",
+      "internalCode": "NVC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-NRC",
+      "nodeName": "NRC",
+      "slug": "nek-nrc",
+      "parentCode": "NEK-POWER",
+      "displayOrder": 60,
+      "nodeTypeCode": "category",
+      "internalCode": "NRC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-RBC",
+      "nodeName": "RBC",
+      "slug": "nek-rbc",
+      "parentCode": "NEK-INST-COLL",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "RBC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-RBM",
+      "nodeName": "RBM",
+      "slug": "nek-rbm",
+      "parentCode": "NEK-INST-COLL",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "RBM"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-FKC",
+      "nodeName": "FKC",
+      "slug": "nek-fkc",
+      "parentCode": "NEK-INST-COLL",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "FKC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-FKM",
+      "nodeName": "FKM",
+      "slug": "nek-fkm",
+      "parentCode": "NEK-INST-COLL",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "FKM"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-FZC",
+      "nodeName": "FZC",
+      "slug": "nek-fzc",
+      "parentCode": "NEK-INST-IND",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "FZC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-FZM",
+      "nodeName": "FZM",
+      "slug": "nek-fzm",
+      "parentCode": "NEK-INST-IND",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "FZM"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-FEC",
+      "nodeName": "FEC",
+      "slug": "nek-fec",
+      "parentCode": "NEK-INST-IND",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "FEC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-FEM",
+      "nodeName": "FEM",
+      "slug": "nek-fem",
+      "parentCode": "NEK-INST-IND",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "FEM"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "NEK-NUC",
+      "nodeName": "NUC",
+      "slug": "nek-nuc",
+      "parentCode": "NEK-VFD",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "NUC"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "SOLAR-SJ",
+      "nodeName": "SJ",
+      "slug": "solar-sj",
+      "parentCode": "PROD-SOLAR",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "SJ"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "TERM-LN",
+      "nodeName": "LN",
+      "slug": "term-ln",
+      "parentCode": "PROD-TERMITE-RES-NYLON",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "LN"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "TERM-CN",
+      "nodeName": "CN",
+      "slug": "term-cn",
+      "parentCode": "PROD-TERMITE-RES-NYLON",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "CN"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "TERM-XDT",
+      "nodeName": "XDT",
+      "slug": "term-xdt",
+      "parentCode": "PROD-TERMITE-RES-NYLON",
+      "displayOrder": 50,
+      "nodeTypeCode": "category",
+      "internalCode": "XDT"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "TERM-CDT",
+      "nodeName": "CDT",
+      "slug": "term-cdt",
+      "parentCode": "PROD-TERMITE-RES-NYLON",
+      "displayOrder": 70,
+      "nodeTypeCode": "category",
+      "internalCode": "CDT"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "FIRE-FH",
+      "nodeName": "FH",
+      "slug": "fire-fh",
+      "parentCode": "PROD-FIRE-RESISTANT",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "FH"
+    },
+    {
+      "batch": "A",
+      "nodeCode": "SUB-OD",
+      "nodeName": "OD",
+      "slug": "sub-od",
+      "parentCode": "PROD-SUBMERSIBLE-PORTABLE",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "OD"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "ACC-CM-CONDUITS",
+      "nodeName": "Conduits & Fittings",
+      "slug": "conduits-fittings",
+      "parentCode": "ACC-CABLE-MANAGEMENT",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F07",
+      "nodeName": "Medium Duty",
+      "slug": "cm-f07",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "F07"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F22",
+      "nodeName": "Heavy Duty",
+      "slug": "cm-f22",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "F22"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F25",
+      "nodeName": "Solar Conduit",
+      "slug": "cm-f25",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "F25"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F21",
+      "nodeName": "Nylon Split Loom",
+      "slug": "cm-f21",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "F21"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F20",
+      "nodeName": "PP Split Loom",
+      "slug": "cm-f20",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 50,
+      "nodeTypeCode": "category",
+      "internalCode": "F20"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F14",
+      "nodeName": "Conduit Gland",
+      "slug": "cm-f14",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 60,
+      "nodeTypeCode": "category",
+      "internalCode": "F14"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-X04",
+      "nodeName": "Bushings",
+      "slug": "cm-x04",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 70,
+      "nodeTypeCode": "category",
+      "internalCode": "X04"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F09",
+      "nodeName": "Coupling",
+      "slug": "cm-f09",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 80,
+      "nodeTypeCode": "category",
+      "internalCode": "F09"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F08",
+      "nodeName": "Junction Box",
+      "slug": "cm-f08",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 90,
+      "nodeTypeCode": "category",
+      "internalCode": "F08"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F12",
+      "nodeName": "Inspection Tee",
+      "slug": "cm-f12",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 100,
+      "nodeTypeCode": "category",
+      "internalCode": "F12"
+    },
+    {
+      "batch": "B",
+      "nodeCode": "CM-F10",
+      "nodeName": "Half Saddle",
+      "slug": "cm-f10",
+      "parentCode": "ACC-CM-CONDUITS",
+      "displayOrder": 110,
+      "nodeTypeCode": "category",
+      "internalCode": "F10"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "VFD-SPLIT",
+      "nodeName": "Split Earth 0.6/1kV",
+      "slug": "vfd-split-earth",
+      "parentCode": "PROD-VFD-VSD",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "C",
+      "nodeCode": "VFD-XU",
+      "nodeName": "XU",
+      "slug": "vfd-xu",
+      "parentCode": "VFD-SPLIT",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "XU"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "VFD-KU",
+      "nodeName": "KU",
+      "slug": "vfd-ku",
+      "parentCode": "VFD-SPLIT",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "KU"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "VFD-FH",
+      "nodeName": "FH",
+      "slug": "vfd-fh",
+      "parentCode": "VFD-SPLIT",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "FH"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "VFD-EA",
+      "nodeName": "EA",
+      "slug": "vfd-ea",
+      "parentCode": "VFD-SPLIT",
+      "displayOrder": 50,
+      "nodeTypeCode": "category",
+      "internalCode": "EA"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "TERM-XN",
+      "nodeName": "XN",
+      "slug": "term-xn",
+      "parentCode": "PROD-TERMITE-RES-NYLON",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "XN"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "TERM-KN",
+      "nodeName": "KN",
+      "slug": "term-kn",
+      "parentCode": "PROD-TERMITE-RES-NYLON",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "KN"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "ACC-SW-HARDWARE",
+      "nodeName": "Hardware & Fittings",
+      "slug": "switchboard-hardware",
+      "parentCode": "ACC-SWITCHBOARD",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "C",
+      "nodeCode": "SW-X04",
+      "nodeName": "Bushings",
+      "slug": "sw-x04",
+      "parentCode": "ACC-SW-HARDWARE",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "X04"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "ACC-SW-WIRE",
+      "nodeName": "Wire Management",
+      "slug": "switchboard-wire-management",
+      "parentCode": "ACC-SWITCHBOARD",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "C",
+      "nodeCode": "SW-F21",
+      "nodeName": "Nylon Split Loom",
+      "slug": "sw-f21",
+      "parentCode": "ACC-SW-WIRE",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "F21"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "SW-F20",
+      "nodeName": "PP Split Loom",
+      "slug": "sw-f20",
+      "parentCode": "ACC-SW-WIRE",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "F20"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "ACC-SOLAR-F25",
+      "nodeName": "Solar Conduit",
+      "slug": "accessory-solar-f25",
+      "parentCode": "ACC-SOLAR",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "F25"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "SHORE-SH",
+      "nodeName": "SH",
+      "slug": "shore-sh",
+      "parentCode": "SPEC-SHORE-POWER",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "SH"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "SWIRE-UP",
+      "nodeName": "UP",
+      "slug": "switchboard-wire-up",
+      "parentCode": "SPEC-INDUSTRIAL-MARINE-SWITCHBOARD-WIRE",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "UP"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "STEEL-110V",
+      "nodeName": "110V",
+      "slug": "steel-110v",
+      "parentCode": "PROD-STEEL-ALUM-ARMOUR",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "C",
+      "nodeCode": "STEEL-R2",
+      "nodeName": "R2",
+      "slug": "steel-r2",
+      "parentCode": "STEEL-110V",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "R2"
+    },
+    {
+      "batch": "C",
+      "nodeCode": "STEEL-R4",
+      "nodeName": "R4",
+      "slug": "steel-r4",
+      "parentCode": "STEEL-110V",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "R4"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "CTRL-110V",
+      "nodeName": "110V",
+      "slug": "control-110v",
+      "parentCode": "PROD-CONTROL",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": null
+    },
+    {
+      "batch": "D",
+      "nodeCode": "CTRL-C1",
+      "nodeName": "C1",
+      "slug": "ctrl-c1",
+      "parentCode": "CTRL-110V",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "C1"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "CTRL-C2",
+      "nodeName": "C2",
+      "slug": "ctrl-c2",
+      "parentCode": "CTRL-110V",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "C2"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "CTRL-C3",
+      "nodeName": "C3",
+      "slug": "ctrl-c3",
+      "parentCode": "CTRL-110V",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "C3"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "CTRL-C4",
+      "nodeName": "C4",
+      "slug": "ctrl-c4",
+      "parentCode": "CTRL-110V",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "C4"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "CTRL-C5",
+      "nodeName": "C5",
+      "slug": "ctrl-c5",
+      "parentCode": "CTRL-110V",
+      "displayOrder": 50,
+      "nodeTypeCode": "category",
+      "internalCode": "C5"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "CTRL-C6",
+      "nodeName": "C6",
+      "slug": "ctrl-c6",
+      "parentCode": "CTRL-110V",
+      "displayOrder": 60,
+      "nodeTypeCode": "category",
+      "internalCode": "C6"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "INS-RH",
+      "nodeName": "RH",
+      "slug": "ins-rh",
+      "parentCode": "INS-450/750V",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "RH"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "INS-RD",
+      "nodeName": "RD",
+      "slug": "ins-rd",
+      "parentCode": "INS-450/750V",
+      "displayOrder": 80,
+      "nodeTypeCode": "category",
+      "internalCode": "RD"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "INS-RF",
+      "nodeName": "RF",
+      "slug": "ins-rf",
+      "parentCode": "INS-0.6/1KV",
+      "displayOrder": 10,
+      "nodeTypeCode": "category",
+      "internalCode": "RF"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "INS-RG",
+      "nodeName": "RG",
+      "slug": "ins-rg",
+      "parentCode": "INS-0.6/1KV",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "RG"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "MV-V2",
+      "nodeName": "V2",
+      "slug": "mv-v2",
+      "parentCode": "PROD-MEDIUM-VOLTAGE",
+      "displayOrder": 20,
+      "nodeTypeCode": "category",
+      "internalCode": "V2"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "MV-V3",
+      "nodeName": "V3",
+      "slug": "mv-v3",
+      "parentCode": "PROD-MEDIUM-VOLTAGE",
+      "displayOrder": 30,
+      "nodeTypeCode": "category",
+      "internalCode": "V3"
+    },
+    {
+      "batch": "D",
+      "nodeCode": "MV-V4",
+      "nodeName": "V4",
+      "slug": "mv-v4",
+      "parentCode": "PROD-MEDIUM-VOLTAGE",
+      "displayOrder": 40,
+      "nodeTypeCode": "category",
+      "internalCode": "V4"
+    }
+  ],
+  "existingPlacements": [
+    {
+      "batch": "A",
+      "nodeCode": "ALI-ITEM-XU-SDI-MULTI-COLL-SCR-BRAID-90C",
+      "internalCode": "XU",
+      "displayOrder": 10
+    },
+    {
+      "batch": "A",
+      "nodeCode": "ALI-ITEM-KU-SDI-MULTI-COLL-SCR-BRAID-110C",
+      "internalCode": "KU",
+      "displayOrder": 10
+    },
+    {
+      "batch": "A",
+      "nodeCode": "ALI-ITEM-XN-TERMITE-RESISTANT-90C",
+      "internalCode": "XN",
+      "displayOrder": 10
+    },
+    {
+      "batch": "A",
+      "nodeCode": "ALI-ITEM-KN-TERMITE-RESISTANT-110C",
+      "internalCode": "KN",
+      "displayOrder": 10
+    },
+    {
+      "batch": "A",
+      "nodeCode": "ALI-ITEM-EA-BRAID-VFD-VSD-110C",
+      "internalCode": "EA",
+      "displayOrder": 10
+    }
+  ],
+  "orderUpdates": [
+    {
+      "nodeCode": "110V-R1",
+      "publicId": "765AE0D5-D7A4-F111-9B33-6045BD3D15C6",
+      "expectedOrder": 0,
+      "newOrder": 10
+    },
+    {
+      "nodeCode": "110-R3",
+      "publicId": "B9690805-E1A4-F111-9B33-6045BD3D15C6",
+      "expectedOrder": 0,
+      "newOrder": 20
+    },
+    {
+      "nodeCode": "110-R2",
+      "publicId": "A297B4CD-E0A4-F111-9B33-6045BD3D15C6",
+      "expectedOrder": 0,
+      "newOrder": 30
+    },
+    {
+      "nodeCode": "110-R4",
+      "publicId": "98EAA92E-E1A4-F111-9B33-6045BD3D15C6",
+      "expectedOrder": 0,
+      "newOrder": 40
+    },
+    {
+      "nodeCode": "110-R5",
+      "publicId": "D83F8155-E1A4-F111-9B33-6045BD3D15C6",
+      "expectedOrder": 0,
+      "newOrder": 50
+    },
+    {
+      "nodeCode": "110-R7",
+      "publicId": "60CAA49E-E1A4-F111-9B33-6045BD3D15C6",
+      "expectedOrder": 0,
+      "newOrder": 60
+    },
+    {
+      "nodeCode": "110-R6",
+      "publicId": "2140C67F-E1A4-F111-9B33-6045BD3D15C6",
+      "expectedOrder": 0,
+      "newOrder": 70
+    },
+    {
+      "nodeCode": "110-R8",
+      "publicId": "09F8CACC-E1A4-F111-9B33-6045BD3D15C6",
+      "expectedOrder": 0,
+      "newOrder": 80
+    },
+    {
+      "nodeCode": "TC-PLUG",
+      "publicId": "073604E8-86A2-F111-9B33-002248E27005",
+      "expectedOrder": 0,
+      "newOrder": 10
+    },
+    {
+      "nodeCode": "TC-J93",
+      "publicId": "C2E17917-89A2-F111-9B33-002248E27005",
+      "expectedOrder": 0,
+      "newOrder": 20
+    },
+    {
+      "nodeCode": "TC-J95",
+      "publicId": "C6D636A3-8AA2-F111-9B33-002248E27005",
+      "expectedOrder": 0,
+      "newOrder": 30
+    },
+    {
+      "nodeCode": "TC-J92",
+      "publicId": "6458B11A-88A2-F111-9B33-002248E27005",
+      "expectedOrder": 0,
+      "newOrder": 40
+    },
+    {
+      "nodeCode": "TC-J94",
+      "publicId": "8948D510-8AA2-F111-9B33-002248E27005",
+      "expectedOrder": 0,
+      "newOrder": 50
+    },
+    {
+      "nodeCode": "TC-J96",
+      "publicId": "43684132-8BA2-F111-9B33-002248E27005",
+      "expectedOrder": 0,
+      "newOrder": 60
+    },
+    {
+      "nodeCode": "TC-J97",
+      "publicId": "393F3DB9-8BA2-F111-9B33-002248E27005",
+      "expectedOrder": 0,
+      "newOrder": 70
+    },
+    {
+      "nodeCode": "TC-J-BOX-ASS",
+      "publicId": "B6738367-84A2-F111-9B33-002248E27005",
+      "expectedOrder": 1,
+      "newOrder": 80
+    }
+  ],
+  "preservedPlacementNodes": {
+    "UP": [
+      "AF-M-UP",
+      "PUR-IEC-UP"
+    ],
+    "SH": [
+      "PUR-IEC-SH"
+    ],
+    "R2": [
+      "110-R2"
+    ],
+    "R4": [
+      "110-R4"
+    ]
+  }
+}
