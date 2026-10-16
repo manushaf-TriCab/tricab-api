@@ -9,7 +9,6 @@ use TriCab\Core\Product\Application\DTO\ProductPublishReadinessIssue;
 use TriCab\Core\Product\Application\DTO\ProductPublishReadinessReport;
 use TriCab\Core\Product\Application\Exception\ProductNotReadyForPublication;
 use TriCab\Core\Product\Contract\ProductAdminQueryRepository;
-use TriCab\Core\Product\Contract\ProductDocumentRepository;
 use TriCab\Core\Product\Contract\ProductMediaRepository;
 use TriCab\Core\Product\Contract\ProductPublishReadinessEvaluator;
 use TriCab\Core\Product\Contract\ProductRelationshipRepository;
@@ -20,14 +19,14 @@ use TriCab\Core\Product\Domain\ValueObject\ProductRelationshipType;
 /**
  * Cross-aggregate publication readiness (Phase 4). Only requires evidence-based
  * checks: classification and at least one active region are hard requirements;
- * variants / media / documents / short description are advisory warnings.
+ * variants / media / short description are advisory warnings.
+ * Documents are optional and never affect readiness.
  */
 final class CrossAggregateProductPublishReadinessEvaluator implements ProductPublishReadinessEvaluator
 {
     public function __construct(
         private readonly ProductAdminQueryRepository $adminQuery,
         private readonly ProductMediaRepository $media,
-        private readonly ProductDocumentRepository $documents,
         private readonly ProductRelationshipRepository $relationships,
     ) {
     }
@@ -108,18 +107,6 @@ final class CrossAggregateProductPublishReadinessEvaluator implements ProductPub
                 code: 'media.none',
                 area: 'media',
                 message: 'Product has no media.',
-                severity: ProductPublishReadinessIssue::SEVERITY_WARNING,
-                entityPublicId: $product->publicId()->toString(),
-            );
-        }
-
-        $documentItems = $this->documents->listByProduct($product->publicId());
-        $checks[] = new ProductPublishReadinessCheck('document.present', $documentItems !== []);
-        if ($documentItems === []) {
-            $issues[] = new ProductPublishReadinessIssue(
-                code: 'document.none',
-                area: 'document',
-                message: 'Product has no documents.',
                 severity: ProductPublishReadinessIssue::SEVERITY_WARNING,
                 entityPublicId: $product->publicId()->toString(),
             );

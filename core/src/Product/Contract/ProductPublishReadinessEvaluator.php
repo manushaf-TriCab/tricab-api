@@ -9,7 +9,7 @@ use TriCab\Core\Product\Domain\Entity\Product;
 
 /**
  * Cross-aggregate publication readiness checks (specifications, media, markets,
- * documents, variants, required fields).
+ * variants, required fields). Documents are optional and are not checked.
  *
  * Implemented in Phase 4 application services. Must not be injected into Product
  * entities. ProductPublishPolicy covers product-entity status checks only.

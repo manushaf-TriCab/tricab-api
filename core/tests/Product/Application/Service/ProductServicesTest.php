@@ -73,7 +73,6 @@ final class ProductServicesTest extends TestCase
         return new CrossAggregateProductPublishReadinessEvaluator(
             $this->store->adminQuery(),
             $this->store->media(),
-            $this->store->documents(),
             $this->store->relationships(),
         );
     }
@@ -212,8 +211,8 @@ final class ProductServicesTest extends TestCase
         ));
         $this->store->assignRegion($created->publicId, '22222222-2222-2222-2222-222222222222');
 
-        // No variants, no media, no documents, no short description, no slug —
-        // all of these are advisory warnings only and must not block publish.
+        // No variants, no media, no documents, no short description, no slug.
+        // Documents are not a readiness concern. The other gaps are warnings.
         $evaluator = $this->readinessEvaluator();
         $product = $this->store->products()->findByPublicId(\TriCab\Core\Product\Domain\ValueObject\ProductPublicId::fromString($created->publicId));
         self::assertNotNull($product);
@@ -222,6 +221,18 @@ final class ProductServicesTest extends TestCase
 
         self::assertTrue($report->isReady);
         self::assertNotEmpty($report->issues);
+        foreach ($report->issues as $issue) {
+            self::assertNotSame('document.none', $issue->code);
+        }
+
+        $published = (new PublishProductService(
+            $this->store->products(),
+            $this->transaction,
+            $this->audit,
+            $evaluator,
+        ))->execute($this->actor, new PublishProductCommand($created->publicId, $created->rowVersion));
+
+        self::assertSame('published', $published->statusCode);
     }
 
     public function test_create_variant_for_product(): void
