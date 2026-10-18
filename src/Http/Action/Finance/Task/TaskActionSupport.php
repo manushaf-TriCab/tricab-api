@@ -78,6 +78,14 @@ trait TaskActionSupport
         return $request->getParsedBody();
     }
 
+    /** The ids of a bulk delete or restore: `{ids: [...]}` or a bare list. */
+    private function bulkIds(ServerRequestInterface $request): mixed
+    {
+        $body = $this->rawBodyOf($request);
+
+        return is_array($body) && !array_is_list($body) ? ($body['ids'] ?? null) : $body;
+    }
+
     /** `?name=1` or `?name=true`, as the source read `deleted` and `permanent`. */
     private function flag(ServerRequestInterface $request, string $name): bool
     {

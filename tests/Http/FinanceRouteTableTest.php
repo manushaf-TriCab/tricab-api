@@ -72,6 +72,9 @@ final class FinanceRouteTableTest extends TestCase
         'POST /api/v1/finance/task/tasks' => Module::PERMISSION_TASK_TASKS_CREATE,
         'PATCH /api/v1/finance/task/tasks/{id}' => Module::PERMISSION_TASK_TASKS_UPDATE_OWN,
         'POST /api/v1/finance/task/tasks/bulk' => Module::PERMISSION_TASK_TASKS_UPDATE_OWN,
+        // Several tasks into the Bin at once, and the undo (16 Oct 2026).
+        'POST /api/v1/finance/task/tasks/bulk-delete' => Module::PERMISSION_TASK_TASKS_DELETE_OWN,
+        'POST /api/v1/finance/task/tasks/bulk-restore' => Module::PERMISSION_TASK_TASKS_DELETE_OWN,
         'DELETE /api/v1/finance/task/tasks/{id}' => Module::PERMISSION_TASK_TASKS_DELETE_OWN,
         'POST /api/v1/finance/task/tasks/{id}/restore' => Module::PERMISSION_TASK_TASKS_DELETE_OWN,
         'POST /api/v1/finance/task/tasks/{id}/request-review' => Module::PERMISSION_TASK_TASKS_UPDATE_OWN,

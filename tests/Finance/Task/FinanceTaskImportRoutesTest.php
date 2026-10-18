@@ -103,7 +103,7 @@ final class FinanceTaskImportRoutesTest extends TestCase
         self::assertSame(200, $status);
         $report = self::data($json);
         self::assertTrue($report['dry_run']);
-        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 1, 'tasks_duplicate' => 0, 'errors' => 1], $report['summary']);
+        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 1, 'tasks_duplicate' => 0, 'errors' => 1, 'tasks_updated' => 0, 'tasks_unchanged' => 0], $report['summary']);
         [, $tasks] = $this->call('GET', '/tasks');
         self::assertSame([], $tasks['data']);
         self::assertSame([], $this->auditLog()->events);
@@ -121,7 +121,7 @@ final class FinanceTaskImportRoutesTest extends TestCase
         self::assertSame(200, $status);
         $report = self::data($json);
         self::assertFalse($report['dry_run']);
-        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 1, 'tasks_duplicate' => 0, 'errors' => 1], $report['summary']);
+        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 1, 'tasks_duplicate' => 0, 'errors' => 1, 'tasks_updated' => 0, 'tasks_unchanged' => 0], $report['summary']);
         [, $tasks] = $this->call('GET', '/tasks');
         self::assertSame(['Bank rec'], array_column((array) $tasks['data'], 'name'));
         [, $projects] = $this->call('GET', '/projects');

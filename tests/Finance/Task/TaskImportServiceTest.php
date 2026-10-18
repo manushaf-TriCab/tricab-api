@@ -11,11 +11,13 @@ use PHPUnit\Framework\TestCase;
 use TriCab\Api\Finance\Audit\InMemoryFinanceAuditLog;
 use TriCab\Api\Finance\Task\InMemoryFinanceTaskMemberDirectory;
 use TriCab\Api\Finance\Task\InMemorySpreadsheetReader;
+use TriCab\Api\Finance\Task\InMemoryTaskBoardStore;
 use TriCab\Api\Finance\Task\InMemoryTaskStore;
 use TriCab\Api\Tests\Doubles\FixedClock;
 use TriCab\Core\Finance\Module;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
 use TriCab\Core\Finance\Task\Domain\TaskImportFailed;
+use TriCab\Core\Finance\Task\Service\TaskBoardService;
 use TriCab\Core\Finance\Task\Service\TaskImportService;
 use TriCab\Core\Finance\Task\Service\TaskService;
 use TriCab\Core\Finance\Task\Service\TaskSetupService;
@@ -39,6 +41,8 @@ final class TaskImportServiceTest extends TestCase
 
     private TaskSetupService $setup;
 
+    private TaskBoardService $groups;
+
     private TaskActor $admin;
 
     private TaskActor $member;
@@ -52,11 +56,13 @@ final class TaskImportServiceTest extends TestCase
         $directory->add(14, 'Ada Admin', 'ada.two@example.test');   // two people with one name
         $this->store = new InMemoryTaskStore();
         $time = new TaskTime(FixedClock::utc('2026-10-07 01:00:00'), 'Australia/Melbourne');
-        $this->tasks = new TaskService($this->store, $this->store, $directory, $time);
+        $board = new InMemoryTaskBoardStore();
+        $this->tasks = new TaskService($this->store, $this->store, $directory, $time, $board);
         $this->setup = new TaskSetupService($this->store, $directory, $time);
+        $this->groups = new TaskBoardService($board, $this->store, $this->store, $this->tasks, $this->setup, $directory, $time);
         $this->reader = new InMemorySpreadsheetReader();
         $this->audit = new InMemoryFinanceAuditLog();
-        $this->import = new TaskImportService($this->reader, $this->setup, $this->tasks, $this->store, $this->store, $directory, $this->audit, $time);
+        $this->import = new TaskImportService($this->reader, $this->setup, $this->tasks, $this->store, $this->store, $directory, $this->audit, $time, $this->groups);
 
         $this->admin = new TaskActor(13, 'Ada Admin', 'ada@example.test', [
             Module::PERMISSION_TASK_TASKS_READ, Module::PERMISSION_TASK_TASKS_CREATE, Module::PERMISSION_TASK_SETUP_MANAGE,
@@ -75,6 +81,27 @@ final class TaskImportServiceTest extends TestCase
         $this->reader->sheets = [];
         [$p, $t] = ImportFixtures::sheets($projects, $tasks);
         $this->reader->withSheet('Project import template', $p)->withSheet('Task import template', $t);
+    }
+
+    /**
+     * The register as exported, with its Task IDs: the round trip of 16 Oct 2026.
+     *
+     * @param list<list<mixed>> $tasks
+     */
+    private function exported(array $tasks): void
+    {
+        $this->reader->sheets = [];
+        [, $t] = ImportFixtures::sheets(tasks: $tasks, taskHead: ImportFixtures::EXPORT_HEAD);
+        $this->reader->withSheet('tasks.csv', $t);
+    }
+
+    /**
+     * @param array<string, mixed> $cells
+     * @return list<mixed>
+     */
+    private static function exportRow(string $name = 'Bank rec', string $project = 'Month End', array $cells = []): array
+    {
+        return ImportFixtures::task($name, $project, $cells, ImportFixtures::EXPORT_HEAD);
     }
 
     /**
@@ -124,7 +151,7 @@ final class TaskImportServiceTest extends TestCase
         $report = $this->load($this->admin);
 
         self::assertTrue($report['dry_run']);
-        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 1, 'tasks_duplicate' => 0, 'errors' => 0], $report['summary']);
+        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 1, 'tasks_duplicate' => 0, 'errors' => 0, 'tasks_updated' => 0, 'tasks_unchanged' => 0], $report['summary']);
         self::assertSame([['Month End', 'create', 'Task sheet']], array_map(static fn (array $p): array => [$p['name'], $p['action'], $p['source']], $this->lines($report['projects'])));
         self::assertSame([], $this->register());
         self::assertSame([], $this->setup->listProjects($this->admin));
@@ -202,12 +229,13 @@ final class TaskImportServiceTest extends TestCase
         self::assertCount(5, (array) $lines[2]['errors']);
         self::assertSame([
             'Status "later" must be Active, On Hold or Done',
-            'Category "weekly" must be Routine or Ad-hoc',
+            'Type "weekly" must be Routine or Ad-hoc',
             'Progress % must be a number from 0 to 100, not "150"',
             'Due Date "soon" is not a date (use dd/mm/yyyy)',
             'Mark as Urgent must be Yes or No, not "maybe"',
         ], $lines[2]['errors']);
-        self::assertSame(['Task Name is required', 'Project is required'], $lines[3]['errors']);
+        // A blank Project is not an error since 16 Oct 2026: the task goes in General.
+        self::assertSame(['Task Name is required'], $lines[3]['errors']);
         self::assertSame([3, 3], [$lines[1]['row'], ((array) $report['summary'])['errors']]);
         self::assertSame(['Good'], array_column($this->register(), 'name'));
     }
@@ -563,7 +591,7 @@ final class TaskImportServiceTest extends TestCase
         self::assertSame('finance.task.import', $events[0]->action);
         self::assertSame('TASK', $events[0]->application);
         self::assertSame(13, $events[0]->actorUserId);
-        self::assertSame(['filename' => 'sept-close.xlsx', 'projects' => 1, 'projects_existing' => 0, 'tasks' => 1, 'tasks_duplicate' => 0, 'errors' => 1], $events[0]->details);
+        self::assertSame(['filename' => 'sept-close.xlsx', 'projects' => 1, 'projects_existing' => 0, 'tasks' => 1, 'tasks_duplicate' => 0, 'errors' => 1, 'tasks_updated' => 0, 'tasks_unchanged' => 0], $events[0]->details);
         self::assertStringNotContainsString('Secret task name', json_encode($events[0], JSON_THROW_ON_ERROR));
     }
 
@@ -577,5 +605,135 @@ final class TaskImportServiceTest extends TestCase
         $patched = $this->tasks->update($this->admin, Typed::string($task['id']), ['notes' => '']);
 
         self::assertSame('', $patched['notes']);
+    }
+
+    // ---- the export loaded back (Ming and Nick Han, 16 Oct 2026) ------------------------
+
+    public function test_a_renamed_project_in_an_exported_file_moves_the_tasks_instead_of_copying_them(): void
+    {
+        $this->file(tasks: [self::row(), self::row('Accruals')]);
+        $this->load($this->admin, false);
+        [$first, $second] = array_map(static fn (array $t): string => Typed::string($t['id']), $this->register());
+
+        $this->exported([
+            self::exportRow('Bank rec', 'FY2027 Month End', ['Task ID' => $first]),
+            self::exportRow('Accruals', 'FY2027 Month End', ['Task ID' => $second]),
+        ]);
+        $preview = $this->load($this->admin);
+        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 0, 'tasks_duplicate' => 0, 'errors' => 0, 'tasks_updated' => 2, 'tasks_unchanged' => 0], $preview['summary']);
+        self::assertSame(['update', 'update'], array_column($this->lines($preview['tasks']), 'action'));
+        self::assertContains('Moves to project "FY2027 Month End"', Typed::list($this->lines($preview['tasks'])[0]['warnings']));
+
+        $real = $this->load($this->admin, false);
+
+        self::assertSame(2, ((array) $real['summary'])['tasks_updated']);
+        $register = $this->register();
+        self::assertCount(2, $register, 'no copies');
+        self::assertEqualsCanonicalizing([$first, $second], array_column($register, 'id'), 'the same tasks, changed in place');
+        self::assertSame(['FY2027 Month End', 'FY2027 Month End'], array_column($register, 'project_name'));
+    }
+
+    public function test_an_exported_row_that_was_not_edited_changes_nothing(): void
+    {
+        $this->file(tasks: [self::row(cells: ['Status' => 'Active'])]);
+        $this->load($this->admin, false);
+        $task = $this->register()[0];
+
+        $this->exported([self::exportRow(cells: ['Task ID' => $task['id'], 'Status' => 'Active'])]);
+        $report = $this->load($this->admin, false);
+
+        self::assertSame(['unchanged'], array_column($this->lines($report['tasks']), 'action'), json_encode($report, JSON_THROW_ON_ERROR));
+        self::assertSame($task['updated_date'], $this->register()[0]['updated_date']);
+    }
+
+    public function test_an_exported_file_loads_every_field_of_the_form_type_priority_and_group_included(): void
+    {
+        $this->exported([self::exportRow(cells: [
+            'Type' => 'Ad-hoc', 'Priority' => 'High', 'Group' => 'Reconciliations', 'Notes' => 'n', 'Description' => 'd', 'Requirements' => 'r',
+            'Finance Statement Area' => 'Cash', 'Status' => 'On Hold', 'Progress %' => '25', 'Due Date' => '09/10/2026', 'Mark as Urgent' => 'Yes',
+        ])]);
+
+        $preview = $this->load($this->admin);
+        self::assertContains('Group "Reconciliations" is new in "Month End"; it will be made', Typed::list($this->lines($preview['tasks'])[0]['warnings']));
+        $this->load($this->admin, false);
+
+        $task = $this->register()[0];
+        $project = Typed::string($this->setup->listProjects($this->admin)[0]['id']);
+        $groups = $this->groups->groups($project);
+        self::assertSame(['Reconciliations'], array_column($groups, 'name'));
+        foreach ([
+            'category' => 'ad_hoc', 'priority' => 'high', 'group_id' => $groups[0]['id'], 'notes' => 'n', 'description' => 'd', 'requirements' => 'r',
+            'finance_statement_area' => 'Cash', 'status' => 'on_hold', 'progress' => 25, 'due_date' => '2026-10-09', 'urgent' => true,
+        ] as $field => $expected) {
+            self::assertSame($expected, $task[$field], $field);
+        }
+
+        // Blank cells are blank: no priority, no group.
+        $this->exported([self::exportRow(cells: ['Task ID' => $task['id'], 'Priority' => '', 'Group' => ''])]);
+        $this->load($this->admin, false);
+        self::assertSame([null, null], [$this->register()[0]['priority'], $this->register()[0]['group_id']]);
+    }
+
+    public function test_a_task_id_that_is_unknown_or_binned_is_refused_and_a_bad_priority_too(): void
+    {
+        $this->file(tasks: [self::row()]);
+        $this->load($this->admin, false);
+        $binned = Typed::string($this->register()[0]['id']);
+        $this->tasks->delete(new TaskActor(13, 'Ada Admin', 'ada@example.test', [Module::PERMISSION_TASK_TASKS_READ_ALL, Module::PERMISSION_TASK_TASKS_DELETE]), $binned);
+
+        $this->exported([
+            self::exportRow('Bank rec', cells: ['Task ID' => $binned]),
+            self::exportRow('Accruals', cells: ['Task ID' => 'nope']),
+            self::exportRow('Payroll', cells: ['Priority' => 'Urgent']),
+        ]);
+        $report = $this->load($this->admin);
+
+        self::assertSame([
+            ['Task ID ' . $binned . ' is in the Bin; restore it first'],
+            ['Task ID nope is not a task in Tri-Task (clear the Task ID to add it as a new task)'],
+            ['Priority "Urgent" must be Critical, High, Medium or Low'],
+        ], array_column($this->lines($report['tasks']), 'errors'));
+    }
+
+    public function test_a_task_the_caller_may_not_change_is_refused_in_the_preview(): void
+    {
+        $this->file(tasks: [self::row(cells: ['Preparer' => 'Mo Manager', 'Reviewer' => 'Una User'])]);
+        $this->load($this->admin, false);
+        $id = $this->register()[0]['id'];
+
+        $this->exported([self::exportRow('Bank rec 2', 'Month End', ['Task ID' => $id, 'Preparer' => 'Mo Manager', 'Reviewer' => 'Una User'])]);
+        $report = $this->load($this->member);
+
+        self::assertSame([['You do not have permission to change this task']], array_column($this->lines($report['tasks']), 'errors'));
+    }
+
+    public function test_a_blank_project_keeps_the_tasks_project_or_files_a_new_task_under_general(): void
+    {
+        $this->file(tasks: [self::row()]);
+        $this->load($this->admin, false);
+        $task = $this->register()[0];
+
+        $this->exported([
+            self::exportRow('Bank rec', '', ['Task ID' => $task['id'], 'Notes' => 'kept in its project']),
+            self::exportRow('Petty cash', ''),
+        ]);
+        $preview = $this->load($this->admin);
+        self::assertSame(['update', 'create'], array_column($this->lines($preview['tasks']), 'action'), json_encode($preview, JSON_THROW_ON_ERROR));
+        self::assertSame([], $preview['projects']);
+        $this->load($this->admin, false);
+
+        $byName = array_column($this->register(), null, 'name');
+        self::assertSame(['Month End', 'kept in its project'], [$byName['Bank rec']['project_name'], $byName['Bank rec']['notes']]);
+        self::assertSame('General', $byName['Petty cash']['project_name']);
+    }
+
+    public function test_a_member_cannot_make_a_new_group_by_import(): void
+    {
+        $this->setup->createProject($this->admin, ['name' => 'Month End']);
+        $this->exported([self::exportRow(cells: ['Group' => 'Reconciliations'])]);
+
+        $report = $this->load($this->member);
+
+        self::assertSame([['Group "Reconciliations" is not a group of "Month End"']], array_column($this->lines($report['tasks']), 'errors'));
     }
 }

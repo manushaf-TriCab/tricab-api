@@ -37,6 +37,8 @@ final class AzureSqlTaskImportTest extends TestCase
 
     private TaskImportService $import;
 
+    private TaskService $tasks;
+
     private TaskActor $admin;
 
     protected function setUp(): void
@@ -55,6 +57,7 @@ final class AzureSqlTaskImportTest extends TestCase
         $directory->add(12, 'Mo Manager', 'mo@example.test');
         $time = new TaskTime(FixedClock::utc('2026-10-07 01:00:00.123456'), 'Australia/Melbourne');
         $tasks = new TaskService($store, $setupStore, $directory, $time);
+        $this->tasks = $tasks;
         $setup = new TaskSetupService($setupStore, $directory, $time);
         $this->import = new TaskImportService(
             new FormatSpreadsheetReader(new CsvSpreadsheetReader(), new OpenSpoutXlsxReader()),
@@ -62,6 +65,7 @@ final class AzureSqlTaskImportTest extends TestCase
         );
         $this->admin = new TaskActor(12, 'Mo Manager', 'mo@example.test', [
             Module::PERMISSION_TASK_TASKS_READ, Module::PERMISSION_TASK_TASKS_CREATE, Module::PERMISSION_TASK_SETUP_MANAGE, Module::PERMISSION_TASK_TASKS_READ_ALL,
+            Module::PERMISSION_TASK_TASKS_UPDATE,
         ]);
         $setup->createEntity(['name' => 'Société Générale', 'code' => 'SG']);
     }
@@ -96,11 +100,11 @@ final class AzureSqlTaskImportTest extends TestCase
 
         $preview = $this->import->run($this->admin, 'close.csv', $this->file(), true);
         self::assertSame($before, $this->counts(), 'a dry run writes nothing');
-        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 2, 'tasks_duplicate' => 0, 'errors' => 1], $preview['summary']);
+        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 2, 'tasks_duplicate' => 0, 'errors' => 1, 'tasks_updated' => 0, 'tasks_unchanged' => 0], $preview['summary']);
 
         $real = $this->import->run($this->admin, 'close.csv', $this->file(), false);
 
-        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 2, 'tasks_duplicate' => 0, 'errors' => 1], $real['summary']);
+        self::assertSame(['projects' => 1, 'projects_existing' => 0, 'tasks' => 2, 'tasks_duplicate' => 0, 'errors' => 1, 'tasks_updated' => 0, 'tasks_unchanged' => 0], $real['summary']);
         $after = $this->counts();
         self::assertSame(['task_projects' => 1, 'task_tasks' => 2, 'task_history' => 2, 'audit' => 1], $after);
 
@@ -134,5 +138,46 @@ final class AzureSqlTaskImportTest extends TestCase
         self::assertSame(12, Typed::int($row['actor_user_id']));
         self::assertStringContainsString('close.csv', Typed::string($row['details_json']));
         self::assertStringNotContainsString('Rapprochement', Typed::string($row['details_json']));
+    }
+
+    /** The register as the web's Export CSV writes it (16 Oct 2026): every field of the form, then the Task ID. */
+    private function exported(string $project = ''): string
+    {
+        $names = ['11' => 'Una User', '12' => 'Mo Manager'];
+        $person = static fn (mixed $id): string => is_string($id) ? ($names[$id] ?? '') : '';
+        $field = static function (mixed $v): string {
+            $text = is_scalar($v) ? (string) $v : '';
+
+            return preg_match('/[",\n]/', $text) === 1 ? '"' . str_replace('"', '""', $text) . '"' : $text;
+        };
+        $lines = ["\xEF\xBB\xBFEntity,Task Name,Project,Group,Description,Requirements,Notes,Finance Statement Area,Type,Status,Priority,Preparer,Reviewer,Progress %,Due Date,Due Date Requested,Mark as Urgent,Task ID"];
+        foreach ($this->tasks->list($this->admin) as $t) {
+            $lines[] = implode(',', array_map($field, [
+                'Société Générale', $t['name'], $project !== '' ? $project : $t['project_name'], '', $t['description'], $t['requirements'], $t['notes'],
+                $t['finance_statement_area'], $t['category'], $t['display_status'], $t['priority'] ?? '',
+                $person($t['preparer_id']), $person($t['reviewer_id']), $t['progress'], $t['due_date'],
+                $t['due_date_requested'] ? 'Yes' : 'No', $t['urgent'] ? 'Yes' : 'No', $t['id'],
+            ]));
+        }
+
+        return implode("\r\n", $lines) . "\r\n";
+    }
+
+    public function test_an_exported_file_loaded_back_changes_nothing_and_a_renamed_project_moves_the_tasks_in_place(): void
+    {
+        $this->import->run($this->admin, 'close.csv', $this->file(), false);
+        $before = $this->counts();
+
+        $same = $this->import->run($this->admin, 'tasks.csv', $this->exported(), false);
+        self::assertSame(2, ((array) $same['summary'])['tasks_unchanged'], json_encode($same, JSON_THROW_ON_ERROR));
+        self::assertSame(0, ((array) $same['summary'])['tasks_updated']);
+
+        $renamed = $this->import->run($this->admin, 'tasks.csv', $this->exported('Clôture octobre FY27'), false);
+        self::assertSame(2, ((array) $renamed['summary'])['tasks_updated'], json_encode($renamed, JSON_THROW_ON_ERROR));
+        self::assertSame(0, ((array) $renamed['summary'])['tasks'], 'no task is added');
+        $after = $this->counts();
+        self::assertSame($before['task_tasks'], $after['task_tasks']);
+        self::assertSame($before['task_projects'] + 1, $after['task_projects']);
+        self::assertSame(['Clôture octobre FY27', 'Clôture octobre FY27'], array_column($this->tasks->list($this->admin), 'project_name'));
     }
 }

@@ -90,6 +90,43 @@ final class FinanceTaskRegisterRoutesTest extends TestCase
         return $row['id'];
     }
 
+    public function test_several_tasks_go_to_the_bin_together_and_come_back_together(): void
+    {
+        $a = self::id(self::data($this->call('POST', '/tasks', ['name' => 'Bank rec', 'preparer_id' => '1'])[1]));
+        $b = self::id(self::data($this->call('POST', '/tasks', ['name' => 'Payroll', 'preparer_id' => '1'])[1]));
+
+        [$status, $json] = $this->call('POST', '/tasks/bulk-delete', ['ids' => [$a, $b, $a]]);
+        self::assertSame(200, $status);
+        self::assertSame(['deleted' => 2, 'ids' => [$a, $b]], self::data($json));
+        self::assertSame([], self::data($this->call('GET', '/tasks')[1]));
+        self::assertEqualsCanonicalizing(['Bank rec', 'Payroll'], array_column((array) self::data($this->call('GET', '/tasks', query: ['deleted' => '1'])[1]), 'name'));
+
+        // Undo: both come back.
+        [$status, $json] = $this->call('POST', '/tasks/bulk-restore', ['ids' => [$a, $b]]);
+        self::assertSame(200, $status);
+        self::assertSame([false, false], array_column((array) self::data($json), 'is_deleted'));
+        self::assertEqualsCanonicalizing(['Bank rec', 'Payroll'], array_column((array) self::data($this->call('GET', '/tasks')[1]), 'name'));
+    }
+
+    public function test_a_bulk_delete_is_all_or_nothing_and_needs_ids(): void
+    {
+        $mine = self::id(self::data($this->call('POST', '/tasks', ['name' => 'Bank rec', 'preparer_id' => '1'])[1]));
+
+        [$status, $json] = $this->call('POST', '/tasks/bulk-delete', ['ids' => [$mine, 'no-such-task']]);
+        self::assertSame(404, $status);
+        self::assertSame('Task not found', self::error($json)['message']);
+        self::assertSame(['Bank rec'], array_column((array) self::data($this->call('GET', '/tasks')[1]), 'name'), 'the batch rolled back');
+
+        [$status] = $this->call('POST', '/tasks/bulk-delete', ['ids' => []]);
+        self::assertSame(422, $status);
+        [$status] = $this->call('POST', '/tasks/bulk-restore', ['ids' => ['']]);
+        self::assertSame(422, $status);
+
+        $this->as([Module::PERMISSION_TASK_TASKS_READ]);
+        [$status] = $this->call('POST', '/tasks/bulk-delete', ['ids' => [$mine]]);
+        self::assertSame(403, $status);
+    }
+
     public function test_a_member_creates_edits_and_bins_their_own_task_and_the_answer_is_the_envelope(): void
     {
         [$status, $json] = $this->call('POST', '/tasks', ['name' => 'Bank rec', 'preparer_id' => '1', 'due_date' => '2020-01-01']);

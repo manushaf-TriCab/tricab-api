@@ -18,6 +18,8 @@ use TriCab\Core\Finance\Task\Domain\SpreadsheetSheet;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
 use TriCab\Core\Finance\Task\Domain\TaskFailure;
 use TriCab\Core\Finance\Task\Domain\TaskImportFailed;
+use TriCab\Core\Finance\Task\Domain\TaskNotFound;
+use TriCab\Core\Finance\Task\Domain\TaskRecord;
 
 /**
  * The spreadsheet import (route 47), `server/importer.py` ported rule for rule: Nick Han's template (a
@@ -30,6 +32,11 @@ use TriCab\Core\Finance\Task\Domain\TaskImportFailed;
  * A task already in the register (same name, project and entity, whoever holds it) or repeated earlier
  * in the file is skipped, so the same file can be loaded twice. A project named only on task rows is
  * created once, and only if one of its tasks will load.
+ *
+ * **A row with a Task ID updates that task** (Ming and Nick Han, 16 Oct 2026): the export carries the id, so
+ * a file exported, edited and loaded back changes the tasks in place instead of adding copies of them under
+ * a renamed project. A row whose cells already match the task is left alone. A group named on a row is
+ * found among the project's groups, and made when it is new, as a project is.
  *
  * It applies row by row through `TaskSetupService` and `TaskService` **as the caller**, not in one
  * transaction (it reports per row, by design); a real run writes one audit event with the counts, the file
@@ -53,7 +60,10 @@ final class TaskImportService
         'finance statement area' => 'finance_statement_area',
         'financial statement area' => 'finance_statement_area',
         'financial statements' => 'finance_statement_area',
-        'category' => 'category',
+        'category' => 'category', 'type' => 'category', 'task type' => 'category',
+        'priority' => 'priority',
+        'group' => 'group',
+        'task id' => 'id', 'id' => 'id',
         'status' => 'status',
         'preparer' => 'preparer', 'preparer (assignee)' => 'preparer',
         'reviewer' => 'reviewer',
@@ -78,6 +88,7 @@ final class TaskImportService
         'inprogress' => 'active', 'workingonit' => 'active', 'notstarted' => 'active', 'stuck' => 'active', 'readyforreview' => 'active',
     ];
     private const CATEGORY = ['routine' => 'routine', 'adhoc' => 'ad_hoc'];
+    private const PRIORITY = ['critical' => 'critical', 'high' => 'high', 'medium' => 'medium', 'low' => 'low', 'none' => null, 'nopriority' => null];
     private const PROJECT_STATUS = ['planning' => 'active', 'active' => 'active', 'completed' => 'completed', 'onhold' => 'on_hold'];
     private const MONTHS = ['jan' => 1, 'feb' => 2, 'mar' => 3, 'apr' => 4, 'may' => 5, 'jun' => 6, 'jul' => 7, 'aug' => 8, 'sep' => 9, 'oct' => 10, 'nov' => 11, 'dec' => 12];
 
@@ -90,6 +101,8 @@ final class TaskImportService
         private readonly FinanceTaskMemberDirectory $members,
         private readonly FinanceAuditLog $audit,
         private readonly TaskTime $time,
+        // The project board's groups (13 Oct 2026). Without it a Group column cannot be loaded.
+        private readonly ?TaskBoardService $groups = null,
     ) {
     }
 
@@ -129,6 +142,15 @@ final class TaskImportService
             $existingTasks[self::identity(self::key($row['name']), $row['project_id'], $row['entity_id'])] = true;
         }
         $mayCreateProjects = $actor->can(Module::PERMISSION_TASK_SETUP_MANAGE);
+        /** @var array<string, array<string, string>> $groupIds project id to lower-cased group name to id */
+        $groupIds = [];
+        /**
+         * The groups to make on the real run, keyed by where they go and their lower-cased name. A group goes in
+         * a project named on the row (`key`), or in the project a task with a Task ID keeps (`id`).
+         *
+         * @var array<string, array{key: string, id: ?string, name: string, groupKey: string}> $plannedGroups
+         */
+        $plannedGroups = [];
 
         // ---- projects: the Project sheet first, then any project a task names ----
         /** @var list<ImportLine> $projects */
@@ -191,6 +213,7 @@ final class TaskImportService
         /** @var list<ImportLine> $taskLines */
         $taskLines = [];
         $seenInFile = [];
+        $seenIds = [];
         /** @var array<string, ImportLine> $refusedProjects */
         $refusedProjects = [];
         foreach ($sheets as $sheet) {
@@ -209,10 +232,31 @@ final class TaskImportService
                     $errors[] = 'Task Name must be at most 300 characters';
                 }
 
+                $existingTask = null;
+                $taskId = self::cellText($row['id'] ?? null);
+                if ($taskId !== '') {
+                    try {
+                        $existingTask = $this->tasks->requireVisible($actor, $taskId);
+                        if ($existingTask->deletedAt !== null) {
+                            $errors[] = 'Task ID ' . $taskId . ' is in the Bin; restore it first';
+                        } elseif (!$this->tasks->mayEdit($actor, $existingTask)) {
+                            $errors[] = 'You do not have permission to change this task';
+                        }
+                    } catch (TaskNotFound) {
+                        $errors[] = 'Task ID ' . $taskId . ' is not a task in Tri-Task (clear the Task ID to add it as a new task)';
+                    }
+                }
+
+                // A blank Project is left as it is (16 Oct 2026): a task with a Task ID keeps its project, and a new
+                // one goes in General, as from the task form.
+                if ($projectName === '' && $existingTask === null && isset($projectIds[self::key(TaskRules::GENERAL_PROJECT)])) {
+                    $projectName = TaskRules::GENERAL_PROJECT;
+                }
                 $projectKey = self::key($projectName);
-                if ($projectName === '') {
-                    $errors[] = 'Project is required';
-                } elseif (!isset($projectIds[$projectKey]) && !isset($planned[$projectKey])) {
+                $keepsProject = $projectName === '' && $existingTask !== null;
+                if ($keepsProject) {
+                    $line->keepProjectId = $existingTask->projectId;
+                } elseif ($projectName !== '' && !isset($projectIds[$projectKey]) && !isset($planned[$projectKey])) {
                     // Named on a task but neither in the register nor on the Project sheet. Reported once,
                     // however many tasks name it.
                     $refused = $refusedProjects[$projectKey] ?? $planProject($rowNumber, $projectName, ['name' => $projectName, 'status' => 'active'], 'Task sheet', []);
@@ -233,7 +277,7 @@ final class TaskImportService
                 $categoryLetters = self::letters($row['category'] ?? null);
                 $category = self::CATEGORY[$categoryLetters !== '' ? $categoryLetters : 'routine'] ?? null;
                 if ($category === null) {
-                    $errors[] = 'Category "' . self::cellText($row['category'] ?? null) . '" must be Routine or Ad-hoc';
+                    $errors[] = 'Type "' . self::cellText($row['category'] ?? null) . '" must be Routine or Ad-hoc';
                 }
                 $area = self::cellText($row['finance_statement_area'] ?? null);
                 if (mb_strlen($area) > 300) {
@@ -241,6 +285,34 @@ final class TaskImportService
                 } elseif ($area !== '' && !isset($areaNames[self::key($area)])) {
                     $line->warnings[] = '"' . $area . '" is not in the Statements list; kept as typed';
                 }
+
+                $priorityLetters = self::letters($row['priority'] ?? null);
+                $priority = null;
+                if ($priorityLetters !== '') {
+                    if (!array_key_exists($priorityLetters, self::PRIORITY)) {
+                        $errors[] = 'Priority "' . self::cellText($row['priority'] ?? null) . '" must be Critical, High, Medium or Low';
+                    } else {
+                        $priority = self::PRIORITY[$priorityLetters];
+                    }
+                }
+                $groupName = self::cellText($row['group'] ?? null);
+                $groupKey = self::key($groupName);
+                if (mb_strlen($groupName) > 200) {
+                    $errors[] = 'Group must be at most 200 characters';
+                } elseif ($groupName !== '' && $this->groups === null) {
+                    $errors[] = 'Groups cannot be imported here';
+                } elseif ($groupName !== '' && !isset($this->groupIdsOf($groupIds, $keepsProject ? $line->keepProjectId : ($projectIds[$projectKey] ?? null))[$groupKey])) {
+                    if ($projectName === '' && !$keepsProject) {
+                        $errors[] = 'Name the project of group "' . $groupName . '"';
+                    } elseif ($mayCreateProjects) {
+                        $at = ($keepsProject ? 'id:' . $line->keepProjectId : 'key:' . $projectKey) . "\0" . $groupKey;
+                        $plannedGroups[$at] ??= ['key' => $projectKey, 'id' => $keepsProject ? $line->keepProjectId : null, 'name' => $groupName, 'groupKey' => $groupKey];
+                        $line->warnings[] = 'Group "' . $groupName . '" is new in ' . ($keepsProject ? 'the task\'s project' : '"' . $projectName . '"') . '; it will be made';
+                    } else {
+                        $errors[] = 'Group "' . $groupName . '" is not a group of ' . ($keepsProject ? 'the task\'s project' : '"' . $projectName . '"');
+                    }
+                }
+
 
                 $entityId = self::resolve($row['entity'] ?? null, $entityLookup, 'Entity', $errors, 'is not an entity in Tri-Task');
                 $payload = [
@@ -258,13 +330,31 @@ final class TaskImportService
                     'due_date' => self::date($row['due_date'] ?? null, 'Due Date', $errors),
                     'due_date_requested' => self::yesNo($row['due_date_requested'] ?? null, 'Due Date Requested', $errors),
                     'urgent' => self::yesNo($row['urgent'] ?? null, 'Mark as Urgent', $errors),
+                    'priority' => $priority,
                 ];
                 $line->errors = $errors;
+                $line->groupKey = $groupKey;
 
                 $identity = self::identity(self::key($name), $projectKey, $entityId);
                 $existing = self::identity(self::key($name), $projectIds[$projectKey] ?? null, $entityId);
                 if ($errors !== []) {
                     $line->action = 'error';
+                } elseif ($existingTask !== null) {
+                    if (isset($seenIds[$existingTask->id])) {
+                        $line->action = 'duplicate';
+                        $line->warnings[] = 'Repeats row ' . $seenIds[$existingTask->id];
+                    } else {
+                        $seenIds[$existingTask->id] = $rowNumber;
+                        $targetProject = $keepsProject ? $line->keepProjectId : ($projectIds[$projectKey] ?? null);
+                        $targetGroup = $groupKey === '' ? null : ($this->groupIdsOf($groupIds, $targetProject)[$groupKey] ?? '');
+                        $line->taskId = $existingTask->id;
+                        $line->projectKey = $projectKey;
+                        $line->payload = $payload;
+                        $line->action = self::unchanged($existingTask, $payload, $targetProject, $targetGroup) ? 'unchanged' : 'update';
+                        if ($line->action === 'update' && !$keepsProject && $targetProject !== $existingTask->projectId) {
+                            $line->warnings[] = 'Moves to project "' . $projectName . '"';
+                        }
+                    }
                 } elseif (isset($existingTasks[$existing]) && isset($projectIds[$projectKey])) {
                     $line->action = 'duplicate';
                     $line->warnings[] = 'Already in the register (same name, project and entity)';
@@ -285,7 +375,7 @@ final class TaskImportService
         // would be left behind empty.
         $wanted = [];
         foreach ($taskLines as $line) {
-            if ($line->action === 'create') {
+            if ($line->action === 'create' || $line->action === 'update') {
                 $wanted[$line->projectKey] = true;
             }
         }
@@ -309,19 +399,50 @@ final class TaskImportService
                     $line->errors[] = $failure->getMessage();
                 }
             }
-            foreach ($taskLines as $line) {
-                if ($line->action !== 'create') {
+            $groupFailures = [];
+            foreach ($plannedGroups as $planned) {
+                $projectId = $planned['id'] ?? ($projectIds[$planned['key']] ?? null);
+                if ($projectId === null || $projectId === '' || $this->groups === null) {
                     continue;
                 }
-                $projectId = $projectIds[$line->projectKey] ?? null;
-                if ($projectId === null || $projectId === '') {
+                try {
+                    $created = $this->groups->createGroup($projectId, ['name' => $planned['name']]);
+                    $this->groupIdsOf($groupIds, $projectId);
+                    $groupIds[$projectId][$planned['groupKey']] = self::idText($created['id'] ?? null);
+                } catch (TaskFailure $failure) {
+                    $groupFailures[$projectId . "\0" . $planned['groupKey']] = $failure->getMessage();
+                }
+            }
+            foreach ($taskLines as $line) {
+                if ($line->action !== 'create' && $line->action !== 'update') {
+                    continue;
+                }
+                // A blank Project: the task's own (Task ID), or none, which the task service files under General.
+                $blank = $line->projectKey === '';
+                $projectId = $blank ? $line->keepProjectId : ($projectIds[$line->projectKey] ?? null);
+                if (!$blank && ($projectId === null || $projectId === '')) {
                     $line->action = 'error';
                     $line->errors[] = 'Project "' . $line->project . '" could not be created';
                     continue;
                 }
+                $groupId = null;
+                if ($line->groupKey !== '') {
+                    $groupId = $this->groupIdsOf($groupIds, $projectId)[$line->groupKey] ?? null;
+                    if ($groupId === null) {
+                        $line->action = 'error';
+                        $line->errors[] = 'The group could not be made: ' . ($groupFailures[$projectId . "\0" . $line->groupKey] ?? 'unknown project');
+                        continue;
+                    }
+                }
                 try {
-                    $this->tasks->create($actor, [...$line->payload, 'project_id' => $projectId]);
-                    $line->action = 'created';
+                    $fields = [...$line->payload, 'group_id' => $groupId] + ($blank && $line->action === 'update' ? [] : ['project_id' => $projectId]);
+                    if ($line->action === 'update') {
+                        $this->tasks->update($actor, (string) $line->taskId, $fields);
+                        $line->action = 'updated';
+                    } else {
+                        $this->tasks->create($actor, $fields);
+                        $line->action = 'created';
+                    }
                 } catch (TaskFailure $failure) {
                     $line->action = 'error';
                     $line->errors[] = $failure->getMessage();
@@ -337,6 +458,8 @@ final class TaskImportService
             'tasks' => $count($taskLines, $done),
             'tasks_duplicate' => $count($taskLines, 'duplicate'),
             'errors' => $count($projects, 'error') + $count($taskLines, 'error'),
+            'tasks_updated' => $count($taskLines, $dryRun ? 'update' : 'updated'),
+            'tasks_unchanged' => $count($taskLines, 'unchanged'),
         ];
 
         if (!$dryRun) {
@@ -359,6 +482,60 @@ final class TaskImportService
             'warnings' => $warnings,
             'summary' => $summary,
         ];
+    }
+
+    /**
+     * Whether a row with a Task ID would change nothing. `$groupId` is null for no group and '' for one
+     * that is still to be made.
+     *
+     * @param array<string, mixed> $payload
+     */
+    private static function unchanged(TaskRecord $task, array $payload, ?string $projectId, ?string $groupId): bool
+    {
+        return $projectId === $task->projectId
+            && $groupId === $task->groupId
+            && $payload['name'] === $task->name
+            && $payload['description'] === $task->description
+            && $payload['requirements'] === $task->requirements
+            && $payload['notes'] === $task->notes
+            && $payload['finance_statement_area'] === $task->financeStatementArea
+            && $payload['category'] === $task->category
+            && $payload['status'] === TaskRules::status($task->status)
+            && self::idText($payload['entity_id'] ?? null) === ($task->entityId ?? '')
+            && $payload['preparer_id'] === $task->preparerUserId
+            && $payload['reviewer_id'] === $task->reviewerUserId
+            && $payload['progress'] === $task->progress
+            && $payload['due_date'] === $task->dueDate
+            && $payload['due_date_requested'] === $task->dueDateRequested
+            && $payload['urgent'] === $task->urgent
+            && $payload['priority'] === $task->priority;
+    }
+
+    /**
+     * A project's groups as lower-cased name to id, read once per run into `$cache`.
+     *
+     * @param array<string, array<string, string>> $cache
+     * @return array<string, string>
+     */
+    private function groupIdsOf(array &$cache, ?string $projectId): array
+    {
+        if ($projectId === null || $this->groups === null) {
+            return [];
+        }
+        if (!isset($cache[$projectId])) {
+            $cache[$projectId] = [];
+            foreach ($this->groups->groups($projectId) as $group) {
+                $cache[$projectId][self::key($group['name'] ?? null)] = self::idText($group['id'] ?? null);
+            }
+        }
+
+        return $cache[$projectId];
+    }
+
+    /** An id as text: a string or a whole number as it is, anything else empty. */
+    private static function idText(mixed $value): string
+    {
+        return is_string($value) || is_int($value) ? (string) $value : '';
     }
 
     // ==================================================================================

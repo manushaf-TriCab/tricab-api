@@ -29,6 +29,14 @@ final class ImportLine
 
     public string $projectKey = '';
 
+    public string $groupKey = '';
+
+    /** The task a row with a Task ID updates. */
+    public ?string $taskId = null;
+
+    /** The project a row with a Task ID and a blank Project keeps. */
+    public ?string $keepProjectId = null;
+
     public function __construct(public readonly int $row, public readonly string $name)
     {
     }

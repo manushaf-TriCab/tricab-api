@@ -694,6 +694,10 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
         $app->post($task . '/tasks/bulk', \TriCab\Api\Http\Action\Finance\Task\BulkUpdateTasksAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
+        $app->post($task . '/tasks/bulk-delete', \TriCab\Api\Http\Action\Finance\Task\BulkDeleteTasksAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
+        $app->post($task . '/tasks/bulk-restore', \TriCab\Api\Http\Action\Finance\Task\BulkRestoreTasksAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
         $app->delete($task . '/tasks/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
         $app->post($task . '/tasks/{id}/restore', \TriCab\Api\Http\Action\Finance\Task\RestoreTaskAction::class)

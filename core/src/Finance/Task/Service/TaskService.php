@@ -280,6 +280,91 @@ final class TaskService
         });
     }
 
+    /**
+     * Several tasks into the Bin at once (Nick Han, 16 Oct 2026), all or nothing: one the caller may not
+     * delete rolls the batch back. A task already in the Bin stays as it is.
+     *
+     * @return array{deleted: int, ids: list<string>}
+     */
+    public function bulkDelete(TaskActor $actor, mixed $ids): array
+    {
+        $ids = self::bulkIds($ids);
+
+        return $this->tasks->transactional(function () use ($actor, $ids): array {
+            $now = $this->time->now();
+            $deleted = [];
+            foreach ($ids as $id) {
+                $task = $this->visibleTask($actor, $id);
+                if (!$this->canDelete($actor, $task)) {
+                    throw new TaskForbidden('You do not have permission to delete ' . $task->name);
+                }
+                if ($task->deletedAt === null) {
+                    $task->deletedAt = $now;
+                    $task->deletedBy = $actor->userId;
+                    $task->updatedDate = $now;
+                    $this->tasks->updateTask($task);
+                    $deleted[] = $task->id;
+                }
+            }
+
+            return ['deleted' => count($deleted), 'ids' => $deleted];
+        });
+    }
+
+    /**
+     * The undo of {@see bulkDelete}: the tasks back out of the Bin, all or nothing.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function bulkRestore(TaskActor $actor, mixed $ids): array
+    {
+        $ids = self::bulkIds($ids);
+        $restored = $this->tasks->transactional(function () use ($actor, $ids): array {
+            $now = $this->time->now();
+            $out = [];
+            foreach ($ids as $id) {
+                $task = $this->visibleTask($actor, $id);
+                if (!$this->canDelete($actor, $task)) {
+                    throw new TaskForbidden('You do not have permission to restore ' . $task->name);
+                }
+                if ($task->deletedAt !== null) {
+                    $task->deletedAt = null;
+                    $task->deletedBy = null;
+                    $task->updatedDate = $now;
+                    $this->tasks->updateTask($task);
+                }
+                $out[] = $task;
+            }
+
+            return $out;
+        });
+
+        return $this->dicts($restored);
+    }
+
+    /** @return list<string> the distinct ids of a bulk request */
+    private static function bulkIds(mixed $ids): array
+    {
+        if (!is_array($ids) || $ids === [] || !array_is_list($ids)) {
+            throw new TaskInvalid('Send a list of task ids');
+        }
+        $out = [];
+        foreach ($ids as $id) {
+            $id = is_string($id) || is_int($id) ? (string) $id : '';
+            if ($id === '') {
+                throw new TaskInvalid('Every task id must be filled in');
+            }
+            if (!in_array($id, $out, true)) {
+                $out[] = $id;
+            }
+        }
+        if (count($out) > TaskRules::MAX_BULK) {
+            throw new TaskInvalid('Up to ' . TaskRules::MAX_BULK . ' tasks at once');
+        }
+
+        return $out;
+    }
+
     /** @return array<string, mixed> */
     public function restore(TaskActor $actor, string $id): array
     {
@@ -319,6 +404,12 @@ final class TaskService
         }
 
         return $task;
+    }
+
+    /** Whether the caller may change the task: the import checks it before it plans an update. */
+    public function mayEdit(TaskActor $actor, TaskRecord $task): bool
+    {
+        return $this->canEdit($actor, $task);
     }
 
     /** `can_edit_task`. */

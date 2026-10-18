@@ -1080,7 +1080,8 @@ final class ContainerFactory
                         new \TriCab\Api\Finance\Task\OpenSpoutXlsxReader(),
                     ),
             \TriCab\Core\Finance\Task\Service\TaskImportService::class
-                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskImportService::class),
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskImportService::class)
+                    ->constructorParameter('groups', \DI\get(\TriCab\Core\Finance\Task\Service\TaskBoardService::class)),
             // The five drafting routes over finance_ai (T2.7). The service client is the shared one below.
             \TriCab\Core\Finance\Task\Service\TaskAiService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskAiService::class),
