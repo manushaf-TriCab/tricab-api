@@ -429,6 +429,7 @@ final class AppBuilder
         self::registerOnboardingRoutes($app, $container);
         self::registerRfqRoutes($app, $container);
         self::registerNprRoutes($app, $container);
+        self::registerCableFitRoutes($app, $container);
         if ($settings->mailModuleEnabled) {
             self::registerMailRoutes($app, $container);
         }
@@ -439,6 +440,26 @@ final class AppBuilder
             self::registerFinanceRoutes($app, $container);
         }
         self::registerAdminRoutes($app, $container);
+    }
+
+    /**
+     * CableFit candidate designs for TSD. Every route holds `TSD.CABLEFIT.USE`.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerCableFitRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $use = \TriCab\Core\CableFit\Module::PERMISSION_USE;
+
+        $app->get('/api/v1/tsd/cablefit/candidates', \TriCab\Api\Http\Action\CableFit\ListCableFitCandidatesAction::class)
+            ->add(($require)($use));
+        $app->post('/api/v1/tsd/cablefit/candidates', \TriCab\Api\Http\Action\CableFit\CreateCableFitCandidateAction::class)
+            ->add(($require)($use));
+        $app->get('/api/v1/tsd/cablefit/candidates/{publicId}', \TriCab\Api\Http\Action\CableFit\GetCableFitCandidateAction::class)
+            ->add(($require)($use));
+        $app->put('/api/v1/tsd/cablefit/candidates/{publicId}', \TriCab\Api\Http\Action\CableFit\SaveCableFitCandidateAction::class)
+            ->add(($require)($use));
     }
 
     /**

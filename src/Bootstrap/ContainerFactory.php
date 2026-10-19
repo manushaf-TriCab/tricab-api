@@ -831,6 +831,12 @@ final class ContainerFactory
                 => static fn (): \TriCab\Core\Npr\Application\Service\NprSigningPolicy
                     => new \TriCab\Core\Npr\Application\Service\NprSigningPolicy($settings->nprScreeningSignatoryEmails),
 
+            // CableFit. In-memory by default; the azure-sql branch below stores in [cablefit].
+            // NPR data comes only through the NprRequestReader bound above.
+            \TriCab\Core\CableFit\Contract\CableFitCandidateRepository::class
+                => \DI\autowire(\TriCab\Core\CableFit\Infrastructure\InMemoryCableFitCandidateRepository::class),
+            \TriCab\Core\CableFit\Application\CableFitCandidateService::class => \DI\autowire(),
+
             // RFQ. In-memory by default; the azure-sql branch below reads the
             // store's tables (plan 2.4). Empty rather than invented either way.
             // Branch membership has no source (owner question Q7), so it answers
@@ -3213,6 +3219,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqRepository::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqRepository::class);
+            $definitions[\TriCab\Core\CableFit\Contract\CableFitCandidateRepository::class]
+                = \DI\autowire(\TriCab\Api\CableFit\Persistence\AzureSqlCableFitCandidateRepository::class);
             // Parity plan E6: workflow writes share the draft store (one lock, one
             // transaction with the activity row); people are active identity users.
             $definitions[\TriCab\Core\Rfq\Contract\RfqWorkflowStore::class]
