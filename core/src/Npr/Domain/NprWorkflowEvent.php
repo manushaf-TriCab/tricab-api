@@ -7,7 +7,8 @@ namespace TriCab\Core\Npr\Domain;
 use DateTimeImmutable;
 
 /**
- * What happened, once per committed transition: the seam N2.4 (email) hangs on.
+ * What happened, once per transition: the seam N2.4 (email) hangs on, handed to
+ * the {@see \TriCab\Core\Npr\Contract\NprEventSink} inside the transition's transaction.
  * Names are the events of npr-portal `config/notifications.json`.
  * `firstTsdHandoff` is true for the endorsement that first reaches TSD (the
  * only one Robby is copied on).
@@ -38,5 +39,26 @@ final readonly class NprWorkflowEvent
         public bool $firstTsdHandoff,
         public DateTimeImmutable $occurredAt,
     ) {
+    }
+
+    /** The event a committed transition raises, or null when it names none. */
+    public static function committed(NprTransition $transition, RequestStatus $from, NprRequest $saved): ?self
+    {
+        if ($transition->event === null) {
+            return null;
+        }
+
+        return new self(
+            $transition->event,
+            $saved->publicId,
+            $saved->requestNumber,
+            $saved->revision,
+            $transition->actor,
+            $from,
+            $saved->status,
+            $transition->summary,
+            $transition->firstTsdHandoff,
+            $saved->updatedAt,
+        );
     }
 }

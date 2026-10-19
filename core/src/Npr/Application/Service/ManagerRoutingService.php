@@ -23,10 +23,15 @@ use TriCab\Core\Shared\Time\Clock;
  * The key is the requester's branch plus an effective-dated delegate override,
  * which wins while it is active. A manager who is no longer an active user does
  * not count: with no usable route a submission is blocked, never sent to TSD.
- * Overlapping routes of one kind are refused on write. Dates are whole UTC days.
+ * Overlapping routes of one kind are refused on write. Dates are whole calendar days in Australia/Melbourne
+ * (docs/ACCESS_AND_ROUTING.md), the company's own day: "today" is Melbourne's date, so a route that starts on
+ * the 20th applies from Melbourne midnight, not from 10:00 or 11:00 that morning when UTC reaches the 20th.
+ * Days are carried as UTC midnights of that calendar date.
  */
 final class ManagerRoutingService
 {
+    public const TIMEZONE = 'Australia/Melbourne';
+
     public function __construct(
         private readonly ManagerRouteRepository $routes,
         private readonly NprPeople $people,
@@ -41,7 +46,7 @@ final class ManagerRoutingService
         if ($branch === '' || strcasecmp($branch, NprBranchDirectory::UNASSIGNED) === 0) {
             return null;
         }
-        foreach ($this->routes->activeFor($branch, $at ?? $this->clock->now()) as $route) {
+        foreach ($this->routes->activeFor($branch, $at ?? $this->today()) as $route) {
             if ($this->people->isActive($route->manager->userId)) {
                 return $route;
             }
@@ -164,9 +169,12 @@ final class ManagerRoutingService
         return NprPeople::person($user);
     }
 
-    private function today(): DateTimeImmutable
+    /** Today's calendar date in Melbourne, as that date's midnight in UTC (the form route dates are stored in). */
+    public function today(): DateTimeImmutable
     {
-        return $this->clock->now()->setTimezone(new DateTimeZone('UTC'))->setTime(0, 0);
+        $date = $this->clock->now()->setTimezone(new DateTimeZone(self::TIMEZONE))->format('Y-m-d');
+
+        return new DateTimeImmutable($date, new DateTimeZone('UTC'));
     }
 
     private static function text(mixed $value): string

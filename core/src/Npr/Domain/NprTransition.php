@@ -8,7 +8,9 @@ namespace TriCab\Core\Npr\Domain;
  * One committed change to a request's workflow, as the repository applies it:
  * under a lock, with the version and the allowed starting statuses re-checked,
  * the header, any answer patch, any endorsement record and exactly one Activity
- * row written together.
+ * row written together. `event` names the {@see NprWorkflowEvent} the
+ * repository hands to its sink inside the same transaction (null: none);
+ * `firstTsdHandoff` marks the endorsement that first reaches TSD.
  */
 final readonly class NprTransition
 {
@@ -36,6 +38,8 @@ final readonly class NprTransition
         public ?array $endorsement = null,
         public ?NprScreeningDecision $decision = null,
         public array $answerPatch = [],
+        public ?string $event = null,
+        public bool $firstTsdHandoff = false,
     ) {
     }
 }

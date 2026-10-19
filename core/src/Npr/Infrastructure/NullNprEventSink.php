@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace TriCab\Core\Npr\Infrastructure;
 
 use TriCab\Core\Npr\Contract\NprEventSink;
+use TriCab\Core\Npr\Domain\NprRequest;
 use TriCab\Core\Npr\Domain\NprWorkflowEvent;
 
-/** The default binding until email exists (plan N2.4): drops every event. */
+/** Drops every event (repositories built without email). */
 final class NullNprEventSink implements NprEventSink
 {
-    public function record(NprWorkflowEvent $event): void
+    public function record(NprWorkflowEvent $event, NprRequest $saved, int $activityId, int $requestId): void
     {
     }
 }

@@ -7,6 +7,7 @@ namespace TriCab\Api\Http\Action\Npr;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Core\Npr\Application\Service\NprAttachmentService;
 use TriCab\Core\Npr\Application\Service\NprWorkflowService;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
@@ -29,6 +30,7 @@ final class SubmitNprRequestAction
     public function __construct(
         private readonly NprWorkflowService $workflow,
         private readonly JsonResponder $responder,
+        private readonly NprAttachmentService $attachments,
     ) {
     }
 
@@ -51,6 +53,6 @@ final class SubmitNprRequestAction
             return $this->failure($this->responder, $failure);
         }
 
-        return $view === null ? $this->notFound($this->responder) : $this->responder->success(NprRequestPresenter::detail($view));
+        return $view === null ? $this->notFound($this->responder) : $this->responder->success(NprRequestPresenter::detail($view, $this->attachments->forRequest($view->request->publicId)));
     }
 }

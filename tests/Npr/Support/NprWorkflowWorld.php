@@ -16,8 +16,14 @@ use TriCab\Core\Npr\Application\Service\NprSigningPolicy;
 use TriCab\Core\Npr\Application\Service\NprWorkflowService;
 use TriCab\Core\Npr\Domain\NewManagerRoute;
 use TriCab\Core\Npr\Infrastructure\InMemoryManagerRouteRepository;
+use TriCab\Core\Npr\Infrastructure\InMemoryNprMailOutbox;
 use TriCab\Core\Npr\Infrastructure\InMemoryNprRequestRepository;
 use TriCab\Core\Npr\Infrastructure\RosterNprBranchDirectory;
+use TriCab\Core\Npr\Mail\NprEmailTemplates;
+use TriCab\Core\Npr\Mail\NprMailDispatcher;
+use TriCab\Core\Npr\Mail\NprMailMode;
+use TriCab\Core\Npr\Mail\NprNotificationPlanner;
+use TriCab\Core\Npr\Mail\OutboxNprEventSink;
 use TriCab\Core\Npr\Module;
 
 /**
@@ -41,14 +47,37 @@ final class NprWorkflowWorld
     public NprRequestService $drafts;
     public NprWorkflowService $workflow;
     public ManagerRoutingService $routing;
+    public InMemoryNprMailOutbox $outbox;
+    public RecordingNprMailTransport $transport;
+    public NprMailDispatcher $mail;
+
+    public const TSD_QUEUE = 'tsdqueue@example.test';
+    public const DEPUTY = 'deputy@example.test';
 
     /** @param list<string> $nominated signatory emails; empty leaves the signing policy unconfigured */
-    public function __construct(bool $brisbaneRouted = true, array $nominated = ['signatory@tricab.com'])
-    {
+    public function __construct(
+        bool $brisbaneRouted = true,
+        array $nominated = ['signatory@tricab.com'],
+        NprMailMode $mode = NprMailMode::Live,
+        string $testRecipient = '',
+        string $tsdQueue = self::TSD_QUEUE,
+        string $deputy = self::DEPUTY,
+    ) {
         $this->clock = FixedClock::utc('2026-10-19 03:00:00');
-        $this->requests = new InMemoryNprRequestRepository($this->clock);
+        $this->outbox = new InMemoryNprMailOutbox($this->clock);
+        $this->transport = new RecordingNprMailTransport();
+        $this->events = new RecordingNprEventSink(new OutboxNprEventSink(new NprNotificationPlanner($tsdQueue, $deputy), $this->outbox, $mode));
+        $this->mail = new NprMailDispatcher(
+            $this->outbox,
+            $this->transport,
+            new NprEmailTemplates('https://tricab.ai'),
+            $mode,
+            $testRecipient,
+            $this->clock,
+            $this->transport,
+        );
+        $this->requests = new InMemoryNprRequestRepository($this->clock, $this->events);
         $this->routes = new InMemoryManagerRouteRepository();
-        $this->events = new RecordingNprEventSink();
         $this->directory = (new NprUserDirectory())
             ->add(self::SALES, 'amandaw@tricab.com', 'Amanda Williams', Module::ROLE_PERMISSIONS[Module::ROLE_REQUESTER])
             ->add(self::SHANE, 'shanep@tricab.com', 'Shane Plumridge', Module::ROLE_PERMISSIONS[Module::ROLE_MANAGER])
@@ -70,7 +99,7 @@ final class NprWorkflowWorld
             $this->routing,
             $people,
             new NprSigningPolicy($nominated),
-            $this->events,
+            $this->mail,
             $this->clock,
         );
 
@@ -90,6 +119,12 @@ final class NprWorkflowWorld
             $to === null ? null : new \DateTimeImmutable($to, new \DateTimeZone('UTC')),
             null,
         ));
+    }
+
+    /** The version token of a step's result. */
+    public static function version(?\TriCab\Core\Npr\Application\Service\NprRequestView $view): string
+    {
+        return ($view ?? throw new \LogicException('The step found no request.'))->request->version;
     }
 
     public function user(int $id): AuthenticatedUser

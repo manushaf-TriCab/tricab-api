@@ -10,7 +10,6 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Npr\Application\Service\ManagerRoutingService;
 use TriCab\Core\Npr\Domain\Exception\InvalidNprInput;
 use TriCab\Core\Npr\Domain\Exception\NprWorkflowRefused;
-use TriCab\Core\Shared\Time\Clock;
 
 /**
  * NPR manager routing, for administrators (`NPR.ADMIN`). The route names the step.
@@ -31,7 +30,6 @@ final class NprManagerRouteAction
     public function __construct(
         private readonly ManagerRoutingService $routing,
         private readonly JsonResponder $responder,
-        private readonly Clock $clock,
     ) {
     }
 
@@ -43,7 +41,7 @@ final class NprManagerRouteAction
         if ($user === null) {
             return $this->unauthenticated($this->responder);
         }
-        $today = $this->clock->now();
+        $today = $this->routing->today();
 
         try {
             switch ($args['step'] ?? '') {

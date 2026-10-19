@@ -6,7 +6,6 @@ namespace TriCab\Core\Npr\Application\Service;
 
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Npr\Contract\NprBranchDirectory;
-use TriCab\Core\Npr\Contract\NprEventSink;
 use TriCab\Core\Npr\Contract\NprRequestRepository;
 use TriCab\Core\Npr\Domain\Exception\InvalidNprInput;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
@@ -19,6 +18,7 @@ use TriCab\Core\Npr\Domain\NprScreeningDecision;
 use TriCab\Core\Npr\Domain\NprTransition;
 use TriCab\Core\Npr\Domain\NprWorkflowEvent;
 use TriCab\Core\Npr\Domain\RequestStatus;
+use TriCab\Core\Npr\Mail\NprMailDispatcher;
 use TriCab\Core\Npr\Module;
 use TriCab\Core\Shared\Time\Clock;
 
@@ -35,7 +35,9 @@ use TriCab\Core\Shared\Time\Clock;
  * is "not found": null), the version token must be current (else
  * {@see NprRequestConflict}), the status must allow the step (else
  * {@see NprWorkflowRefused}), and the repository then commits the change with
- * one Activity row. One {@see NprWorkflowEvent} per commit goes to the sink.
+ * one Activity row and, in the same transaction, the email outbox rows for its
+ * {@see NprWorkflowEvent} (the repository's event sink). Only after that commit
+ * does the mail dispatcher try to send; a failure there never undoes the step.
  *
  * Blocked, not defaulted: submission with no manager route, a self-endorsement
  * (interim policy), and request-screening / decide while no signatories are
@@ -53,7 +55,7 @@ final class NprWorkflowService
         private readonly ManagerRoutingService $routing,
         private readonly NprPeople $people,
         private readonly NprSigningPolicy $signing,
-        private readonly NprEventSink $events,
+        private readonly ?NprMailDispatcher $mail,
         private readonly Clock $clock,
     ) {
     }
@@ -503,22 +505,15 @@ final class NprWorkflowService
 
     private function commit(AuthenticatedUser $user, NprRequest $current, string $version, NprTransition $transition, string $eventName, bool $firstTsdHandoff = false): ?NprRequestView
     {
-        $saved = $this->requests->transition($current->publicId, $version, $transition);
+        $saved = $this->requests->transition($current->publicId, $version, new NprTransition(...array_merge(
+            get_object_vars($transition),
+            ['event' => $eventName, 'firstTsdHandoff' => $firstTsdHandoff],
+        )));
         if ($saved === null) {
             return null;
         }
-        $this->events->record(new NprWorkflowEvent(
-            $eventName,
-            $saved->publicId,
-            $saved->requestNumber,
-            $saved->revision,
-            $transition->actor,
-            $current->status,
-            $saved->status,
-            $transition->summary,
-            $firstTsdHandoff,
-            $saved->updatedAt,
-        ));
+        // Committed, outbox rows and all. Delivery is a separate, best-effort step.
+        $this->mail?->dispatchForRequest($saved->publicId);
 
         return $this->view($user, $saved);
     }

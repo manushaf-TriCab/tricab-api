@@ -6,6 +6,7 @@ namespace TriCab\Api\Http\Action\Npr;
 
 use TriCab\Core\Npr\Application\Service\NprRequestView;
 use TriCab\Core\Npr\Domain\ManagerRoute;
+use TriCab\Core\Npr\Domain\NprAttachment;
 use TriCab\Core\Npr\Domain\NprJson;
 use TriCab\Core\Npr\Domain\NprPerson;
 
@@ -18,17 +19,19 @@ final class NprRequestPresenter
     private const TIME = 'Y-m-d\TH:i:s\Z';
 
     /**
-     * The whole request, with its answers and variants.
+     * The whole request, with its answers, variants and attachments.
      *
+     * @param list<NprAttachment> $attachments
      * @return array<string, mixed>
      */
-    public static function detail(NprRequestView $view): array
+    public static function detail(NprRequestView $view, array $attachments = []): array
     {
         $request = $view->request;
 
         return self::summary($view) + [
             'answers' => NprJson::answers($request->answers),
             'variants' => NprJson::variants($request->variants),
+            'attachments' => array_map(self::attachment(...), $attachments),
             'screening' => [
                 'outcome' => $request->screeningOutcome,
                 'rationale' => $request->screeningRationale,
@@ -72,6 +75,21 @@ final class NprRequestPresenter
             'tsdOwner' => self::person($request->tsdOwner),
             'screeningSignatory' => self::person($request->signatory),
             'allowedActions' => $view->allowedActions,
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function attachment(NprAttachment $file): array
+    {
+        return [
+            'id' => $file->publicId,
+            'filename' => $file->filename,
+            'title' => $file->title,
+            'documentType' => $file->documentType,
+            'mimeType' => $file->mimeType,
+            'sizeBytes' => $file->sizeBytes,
+            'uploadedBy' => ['userId' => $file->uploadedBy->userId, 'name' => $file->uploadedBy->name, 'email' => $file->uploadedBy->email],
+            'uploadedAt' => $file->uploadedAt->format(self::TIME),
         ];
     }
 

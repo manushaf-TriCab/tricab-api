@@ -186,4 +186,55 @@ final class ManagerRoutingTest extends TestCase
         $this->expectException(InvalidNprInput::class);
         $w->routing->create($admin, ['branch' => 'Perth', 'managerUserId' => W::TSD_TWO]);
     }
+
+    /**
+     * Melbourne (UTC+11 in October) is a calendar day ahead of UTC for the last 11 hours of each UTC day.
+     * At 13:30 UTC on the 19th it is 00:30 on the 20th in Melbourne: a route that starts on the 20th applies,
+     * and one that ended on the 19th no longer does.
+     */
+    public function test_route_validity_uses_the_melbourne_calendar_date_not_the_utc_one(): void
+    {
+        $w = new W(brisbaneRouted: false);
+        $w->route('Perth', W::SHANE, from: '2026-10-20');
+        $w->route('Sydney', W::SHANE, to: '2026-10-19');
+
+        $w->clock->advance('+10 hours 30 minutes'); // 03:00 -> 13:30 UTC, 19 Oct; 00:30 on 20 Oct in Melbourne
+        self::assertSame('2026-10-20', $w->routing->today()->format('Y-m-d'));
+        self::assertNotNull($w->routing->resolve('Perth'), 'starts the 20th: active from Melbourne midnight');
+        self::assertNull($w->routing->resolve('Sydney'), 'ended the 19th: over from Melbourne midnight');
+
+        // Just before the boundary (12:59 UTC = 23:59 Melbourne on the 19th) it is still the 19th there.
+        $before = new W(brisbaneRouted: false);
+        $before->route('Perth', W::SHANE, from: '2026-10-20');
+        $before->route('Sydney', W::SHANE, to: '2026-10-19');
+        $before->clock->advance('+9 hours 59 minutes');
+        self::assertSame('2026-10-19', $before->routing->today()->format('Y-m-d'));
+        self::assertNull($before->routing->resolve('Perth'));
+        self::assertNotNull($before->routing->resolve('Sydney'));
+    }
+
+    public function test_a_route_created_without_dates_starts_on_the_melbourne_date(): void
+    {
+        $w = new W(brisbaneRouted: false);
+        $w->clock->advance('+12 hours'); // 15:00 UTC on the 19th = 02:00 on the 20th in Melbourne
+        $route = $w->routing->create($w->user(W::SALES), ['branch' => 'Perth', 'managerUserId' => W::SHANE]);
+
+        self::assertSame('2026-10-20', $route->validFrom->format('Y-m-d'));
+        self::assertTrue($route->isActiveOn($w->routing->today()));
+    }
+
+    public function test_the_melbourne_date_follows_daylight_saving(): void
+    {
+        $w = new W(brisbaneRouted: false);
+        $people = new \TriCab\Core\Npr\Application\Service\NprPeople($w->directory);
+        // Daylight saving ends at 3:00 on 4 April 2027: UTC+11 before it, UTC+10 after.
+        $clock = \TriCab\Api\Tests\Doubles\FixedClock::utc('2027-04-03 13:30:00');
+        $routing = new \TriCab\Core\Npr\Application\Service\ManagerRoutingService($w->routes, $people, $clock);
+
+        self::assertSame('2027-04-04', $routing->today()->format('Y-m-d'), '00:30 on the 4th at UTC+11');
+        $clock->advance('+1 day'); // 13:30 UTC on the 4th is 23:30 on the 4th at UTC+10 (it would be the 5th at UTC+11)
+        self::assertSame('2027-04-04', $routing->today()->format('Y-m-d'));
+        $clock->advance('+1 hour');
+        self::assertSame('2027-04-05', $routing->today()->format('Y-m-d'));
+    }
 }

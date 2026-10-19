@@ -271,6 +271,17 @@ final readonly class Settings
         // requesting screening and deciding stay blocked.
         /** @var list<string> */
         public array $nprScreeningSignatoryEmails = [],
+        // NPR attachments: a private container on the existing storage connection (N2.3).
+        public string $nprAttachmentsContainer = 'npr-attachments',
+        // NPR workflow email (N2.4). Mode: off (written as suppressed, never sent), test (every message goes to
+        // nprMailTestRecipient) or live. Addresses are settings, never code.
+        public string $nprMailMode = 'off',
+        public string $nprMailTestRecipient = '',
+        public string $nprMailSender = '',
+        public string $nprDeputyCeoEmail = '',
+        public string $nprTsdQueueEmail = '',
+        public string $nprAppBaseUrl = 'https://tricab.ai',
+        public string $nprMailWakePath = 'var/npr-mail',
     ) {
     }
 
@@ -1520,7 +1531,26 @@ final readonly class Settings
                 static fn (string $a): string => strtolower(trim($a)),
                 self::csvList($env, 'NPR_SCREENING_SIGNATORY_EMAILS', ''),
             ), static fn (string $a): bool => $a !== '')),
+            nprAttachmentsContainer: self::string($env, 'NPR_ATTACHMENTS_CONTAINER', 'npr-attachments'),
+            nprMailMode: self::nprMailMode($env),
+            nprMailTestRecipient: strtolower(trim(self::string($env, 'NPR_MAIL_TEST_RECIPIENT', ''))),
+            nprMailSender: strtolower(trim(self::string($env, 'NPR_MAIL_SENDER', ''))),
+            nprDeputyCeoEmail: strtolower(trim(self::string($env, 'NPR_DEPUTY_CEO_EMAIL', ''))),
+            nprTsdQueueEmail: strtolower(trim(self::string($env, 'NPR_TSD_QUEUE_EMAIL', ''))),
+            nprAppBaseUrl: rtrim(self::string($env, 'NPR_APP_BASE_URL', 'https://tricab.ai'), '/'),
+            nprMailWakePath: self::string($env, 'NPR_MAIL_WAKE_PATH', 'var/npr-mail'),
         );
+    }
+
+    /** @param array<string, string|null> $env */
+    private static function nprMailMode(array $env): string
+    {
+        $mode = strtolower(self::string($env, 'NPR_MAIL_MODE', 'off'));
+        if (!in_array($mode, ['off', 'test', 'live'], true)) {
+            throw new \InvalidArgumentException('Unsupported NPR_MAIL_MODE. Supported values: off, test, live.');
+        }
+
+        return $mode;
     }
 
     public function legacyQuoteWriteConfig(): \TriCab\Core\QuoteOrder\Live\LegacyQuoteWriteConfig

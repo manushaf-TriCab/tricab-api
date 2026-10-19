@@ -48,6 +48,19 @@ final class NprRouteTableTest extends TestCase
         'GET /api/v1/npr/admin/manager-routes' => Module::PERMISSION_ADMIN,
         'POST /api/v1/npr/admin/manager-routes' => Module::PERMISSION_ADMIN,
         'PUT /api/v1/npr/admin/manager-routes/{id}' => Module::PERMISSION_ADMIN,
+        'GET /api/v1/npr/field-dictionary' => Module::PERMISSION_SELF_READ,
+        'GET /api/v1/npr/tsd/field-dictionary' => Module::PERMISSION_TSD_READ,
+        'GET /api/v1/npr/me/requests/{publicId}/attachments' => Module::PERMISSION_SELF_READ,
+        'POST /api/v1/npr/me/requests/{publicId}/attachments' => Module::PERMISSION_SELF_CREATE,
+        'DELETE /api/v1/npr/me/requests/{publicId}/attachments/{attachmentPublicId}' => Module::PERMISSION_SELF_CREATE,
+        'GET /api/v1/npr/me/requests/{publicId}/attachments/{attachmentPublicId}/download' => Module::PERMISSION_SELF_READ,
+        'GET /api/v1/npr/team/requests/{publicId}/attachments' => Module::PERMISSION_TEAM_ENDORSE,
+        'GET /api/v1/npr/team/requests/{publicId}/attachments/{attachmentPublicId}/download' => Module::PERMISSION_TEAM_ENDORSE,
+        'GET /api/v1/npr/tsd/requests/{publicId}/attachments' => Module::PERMISSION_TSD_READ,
+        'POST /api/v1/npr/tsd/requests/{publicId}/attachments' => Module::PERMISSION_TSD_WORK,
+        'GET /api/v1/npr/tsd/requests/{publicId}/attachments/{attachmentPublicId}/download' => Module::PERMISSION_TSD_READ,
+        'GET /api/v1/npr/admin/notifications' => Module::PERMISSION_ADMIN,
+        'POST /api/v1/npr/admin/notifications/{id}/retry' => Module::PERMISSION_ADMIN,
     ];
 
     private const UNRELATED = ['ACCOUNT.LOGIN', 'QUOTE.READ', 'CUSTOMER.READ', 'RFQ.DRAFT.READ', 'TSD.ACCESS'];
@@ -74,7 +87,7 @@ final class NprRouteTableTest extends TestCase
     {
         foreach (self::ROUTES as $route => $permission) {
             [$method, $pattern] = explode(' ', $route, 2);
-            $path = str_replace(['{publicId}', '{id}'], [self::SAMPLE_ID, '1'], $pattern);
+            $path = str_replace(['{publicId}', '{attachmentPublicId}', '{id}'], [self::SAMPLE_ID, self::SAMPLE_ID, '1'], $pattern);
 
             self::assertNotSame(403, $this->statusFor($method, $path, ['account.login', $permission]), $route . ' refused its own permission.');
 

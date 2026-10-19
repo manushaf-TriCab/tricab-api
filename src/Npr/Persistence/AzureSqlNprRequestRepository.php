@@ -7,6 +7,7 @@ namespace TriCab\Api\Npr\Persistence;
 use TriCab\Api\Identity\Persistence\AzureSqlTransaction;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Core\Npr\Contract\NprEventSink;
 use TriCab\Core\Npr\Contract\NprRequestRepository;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
@@ -17,6 +18,7 @@ use TriCab\Core\Npr\Domain\NprJson;
 use TriCab\Core\Npr\Domain\NprPerson;
 use TriCab\Core\Npr\Domain\NprRequest;
 use TriCab\Core\Npr\Domain\NprTransition;
+use TriCab\Core\Npr\Domain\NprWorkflowEvent;
 use TriCab\Core\Npr\Domain\RequestStatus;
 use TriCab\Core\Shared\Time\Clock;
 use RuntimeException;
@@ -63,10 +65,15 @@ final class AzureSqlNprRequestRepository implements NprRequestRepository
         INNER JOIN [npr].[RequestRevisions] v
             ON v.[RequestId] = r.[RequestId] AND v.[RevisionNumber] = r.[CurrentRevision]';
 
+    private NprEventSink $events;
+
+    /** @param NprEventSink|null $events called inside the transition's transaction (the email outbox) */
     public function __construct(
         private readonly SqlConnection $connection,
         private readonly Clock $clock,
+        ?NprEventSink $events = null,
     ) {
+        $this->events = $events ?? new \TriCab\Core\Npr\Infrastructure\NullNprEventSink();
     }
 
     public function create(NewNprRequest $draft): NprRequest
@@ -405,7 +412,7 @@ final class AzureSqlNprRequestRepository implements NprRequestRepository
                 );
             }
 
-            $this->activity(
+            $activityId = $this->activity(
                 $requestId,
                 $revision,
                 $actor->userId,
@@ -418,7 +425,20 @@ final class AzureSqlNprRequestRepository implements NprRequestRepository
                 $now,
                 $transition->actorRole,
                 $transition->payload === [] ? null : self::encode($transition->payload),
+                $transition->event !== null,
             );
+
+            // The email outbox rows are written here, in the same transaction as the change: if this
+            // throws, the header, answers, endorsement and Activity row roll back with it.
+            if ($transition->event !== null) {
+                $row = $this->connection->fetchAll(self::SELECT . ' WHERE r.[RequestId] = :requestId', ['requestId' => $requestId])[0]
+                    ?? throw new RuntimeException('NPR request vanished inside its transition.');
+                $saved = self::request($row);
+                $event = NprWorkflowEvent::committed($transition, $status, $saved);
+                if ($event !== null) {
+                    $this->events->record($event, $saved, $activityId, $requestId);
+                }
+            }
 
             return true;
         });
@@ -453,28 +473,35 @@ final class AzureSqlNprRequestRepository implements NprRequestRepository
         string $now,
         string $role = 'requester',
         ?string $payloadJson = null,
-    ): void {
-        $this->connection->execute(
-            'INSERT INTO [npr].[Activity]
+        bool $returnId = false,
+    ): int {
+        $sql = 'INSERT INTO [npr].[Activity]
                 ([RequestId], [RevisionNumber], [ActorUserId], [ActorEmail], [ActorName], [ActorRole], [Action],
                  [BeforeStatus], [AfterStatus], [ChangeSummary], [PayloadJson], [CreatedAt])
-             VALUES (:requestId, :revision, :userId, :email, :name, :role, :action,
-                 :before, :after, :summary, :payload, :createdAt)',
-            [
-                'role' => $role,
-                'payload' => $payloadJson,
-                'requestId' => $requestId,
-                'revision' => $revision,
-                'userId' => $userId,
-                'email' => $email,
-                'name' => $name,
-                'action' => $action,
-                'before' => $before,
-                'after' => $after,
-                'summary' => $summary,
-                'createdAt' => $now,
-            ],
-        );
+             ' . ($returnId ? 'OUTPUT INSERTED.[ActivityId] ' : '') . 'VALUES (:requestId, :revision, :userId, :email, :name, :role, :action,
+                 :before, :after, :summary, :payload, :createdAt)';
+        $params = [
+            'role' => $role,
+            'payload' => $payloadJson,
+            'requestId' => $requestId,
+            'revision' => $revision,
+            'userId' => $userId,
+            'email' => $email,
+            'name' => $name,
+            'action' => $action,
+            'before' => $before,
+            'after' => $after,
+            'summary' => $summary,
+            'createdAt' => $now,
+        ];
+        if (!$returnId) {
+            $this->connection->execute($sql, $params);
+
+            return 0;
+        }
+        $row = $this->connection->fetchAll($sql, $params)[0] ?? throw new RuntimeException('NPR activity insert returned no row.');
+
+        return AzureSqlValueMapper::intValue($row['ActivityId'] ?? null);
     }
 
     /** @param array<string, mixed> $row */

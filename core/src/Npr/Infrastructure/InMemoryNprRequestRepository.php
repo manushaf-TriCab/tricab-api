@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Npr\Infrastructure;
 
+use TriCab\Core\Npr\Contract\NprEventSink;
 use TriCab\Core\Npr\Contract\NprRequestRepository;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
@@ -12,6 +13,7 @@ use TriCab\Core\Npr\Domain\NewNprRequest;
 use TriCab\Core\Npr\Domain\NprDraftChange;
 use TriCab\Core\Npr\Domain\NprRequest;
 use TriCab\Core\Npr\Domain\NprTransition;
+use TriCab\Core\Npr\Domain\NprWorkflowEvent;
 use TriCab\Core\Npr\Domain\RequestStatus;
 use TriCab\Core\Shared\Time\Clock;
 use TriCab\Core\Shared\Time\SystemClock;
@@ -37,8 +39,17 @@ final class InMemoryNprRequestRepository implements NprRequestRepository
     private int $sequence = 0;
     private int $versionCounter = 0;
 
-    public function __construct(private readonly Clock $clock = new SystemClock())
+    private ?NprEventSink $events;
+
+    public function __construct(private readonly Clock $clock = new SystemClock(), ?NprEventSink $events = null)
     {
+        $this->events = $events;
+    }
+
+    /** Test seam: the activity row a collaborator (attachments) adds to a request. */
+    public function appendActivity(string $publicId, RecordedActivity $activity): void
+    {
+        $this->activity[strtolower($publicId)][] = $activity;
     }
 
     /** Test seam: put a record in as it stands, in any status. */
@@ -188,6 +199,14 @@ final class InMemoryNprRequestRepository implements NprRequestRepository
             $changes['answers'] = array_merge($current->answers, $transition->answerPatch);
         }
 
+        $saved = $current->with($changes);
+
+        // The sink runs before anything is kept, as it does inside the SQL transaction: if it throws,
+        // the transition did not happen (no header change, no endorsement, no activity).
+        $event = NprWorkflowEvent::committed($transition, $current->status, $saved);
+        if ($event !== null && $this->events !== null) {
+            $this->events->record($event, $saved, count($this->activity[$current->publicId] ?? []) + 1, 0);
+        }
         if ($transition->endorsement !== null) {
             $this->endorsements[$current->publicId][] = new RecordedEndorsement(
                 $current->revision,
@@ -210,7 +229,7 @@ final class InMemoryNprRequestRepository implements NprRequestRepository
             $now,
         );
 
-        return $this->store($current->with($changes));
+        return $this->store($saved);
     }
 
     /**

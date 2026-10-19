@@ -1082,6 +1082,43 @@ final class AppBuilder
         $app->put('/api/v1/npr/admin/manager-routes/{id}', \TriCab\Api\Http\Action\Npr\NprManagerRouteAction::class)
             ->setArgument('step', 'update')
             ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_ADMIN));
+
+        // N2 follow-up: the form structure the editors render, served rather than bundled.
+        $app->get('/api/v1/npr/field-dictionary', \TriCab\Api\Http\Action\Npr\GetNprFieldDictionaryAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_READ));
+        $app->get('/api/v1/npr/tsd/field-dictionary', \TriCab\Api\Http\Action\Npr\GetNprFieldDictionaryAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_TSD_READ));
+
+        // N2.3 attachments: the requester's own door, read-only doors for the manager and TSD, and TSD uploads.
+        $files = \TriCab\Api\Http\Action\Npr\NprAttachmentAction::class;
+        $selfRead = \TriCab\Core\Npr\Module::PERMISSION_SELF_READ;
+        $selfWrite = \TriCab\Core\Npr\Module::PERMISSION_SELF_CREATE;
+        $tsdRead = \TriCab\Core\Npr\Module::PERMISSION_TSD_READ;
+        foreach ([
+            ['get', 'me', 'list', '', $selfRead],
+            ['post', 'me', 'upload', '', $selfWrite],
+            ['delete', 'me', 'delete', '/{attachmentPublicId}', $selfWrite],
+            ['get', 'me', 'download', '/{attachmentPublicId}/download', $selfRead],
+            ['get', 'team', 'list', '', $teamPermission],
+            ['get', 'team', 'download', '/{attachmentPublicId}/download', $teamPermission],
+            ['get', 'tsd', 'list', '', $tsdRead],
+            ['post', 'tsd', 'upload', '', $tsdWork],
+            ['get', 'tsd', 'download', '/{attachmentPublicId}/download', $tsdRead],
+        ] as [$method, $area, $step, $suffix, $permission]) {
+            $scope = ['me' => 'own', 'team' => 'team', 'tsd' => 'tsd'][$area];
+            $app->map([strtoupper($method)], '/api/v1/npr/' . $area . '/requests/{publicId}/attachments' . $suffix, $files)
+                ->setArgument('scope', $scope)
+                ->setArgument('step', $step)
+                ->add(($require)($permission));
+        }
+
+        // N2.4 delivery status of the workflow email.
+        $app->get('/api/v1/npr/admin/notifications', \TriCab\Api\Http\Action\Npr\NprNotificationAction::class)
+            ->setArgument('step', 'list')
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_ADMIN));
+        $app->post('/api/v1/npr/admin/notifications/{id}/retry', \TriCab\Api\Http\Action\Npr\NprNotificationAction::class)
+            ->setArgument('step', 'retry')
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_ADMIN));
     }
 
     /**

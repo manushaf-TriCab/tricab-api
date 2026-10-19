@@ -808,7 +808,11 @@ final class ContainerFactory
             // branch below stores in `[npr]`. The field dictionary and the sales roster
             // (branch by email; identity holds no branch) are files in resources/npr.
             \TriCab\Core\Npr\Contract\NprRequestRepository::class
-                => \DI\autowire(\TriCab\Core\Npr\Infrastructure\InMemoryNprRequestRepository::class),
+                => static fn (Container $container): \TriCab\Core\Npr\Contract\NprRequestRepository
+                    => new \TriCab\Core\Npr\Infrastructure\InMemoryNprRequestRepository(
+                        self::get($container, Clock::class),
+                        self::get($container, \TriCab\Core\Npr\Contract\NprEventSink::class),
+                    ),
             \TriCab\Core\Npr\Contract\NprBranchDirectory::class
                 => static fn (): \TriCab\Core\Npr\Contract\NprBranchDirectory
                     => new \TriCab\Core\Npr\Infrastructure\RosterNprBranchDirectory(
@@ -825,8 +829,80 @@ final class ContainerFactory
             // until the email work, N2.4) and the signing policy (nobody nominated until TSD says).
             \TriCab\Core\Npr\Contract\ManagerRouteRepository::class
                 => \DI\autowire(\TriCab\Core\Npr\Infrastructure\InMemoryManagerRouteRepository::class),
+            // N2.4 email: the sink writes outbox rows inside the repository's transaction; the
+            // dispatcher sends after commit (mode off sends nothing); the sweep retries.
+            \TriCab\Core\Npr\Mail\NprMailOutbox::class
+                => static fn (Container $container): \TriCab\Core\Npr\Mail\NprMailOutbox
+                    => new \TriCab\Core\Npr\Infrastructure\InMemoryNprMailOutbox(self::get($container, Clock::class)),
+            \TriCab\Core\Npr\Mail\NprNotificationPlanner::class
+                => static fn (): \TriCab\Core\Npr\Mail\NprNotificationPlanner
+                    => new \TriCab\Core\Npr\Mail\NprNotificationPlanner($settings->nprTsdQueueEmail, $settings->nprDeputyCeoEmail),
             \TriCab\Core\Npr\Contract\NprEventSink::class
-                => \DI\autowire(\TriCab\Core\Npr\Infrastructure\NullNprEventSink::class),
+                => static fn (Container $container): \TriCab\Core\Npr\Contract\NprEventSink
+                    => new \TriCab\Core\Npr\Mail\OutboxNprEventSink(
+                        self::get($container, \TriCab\Core\Npr\Mail\NprNotificationPlanner::class),
+                        self::get($container, \TriCab\Core\Npr\Mail\NprMailOutbox::class),
+                        \TriCab\Core\Npr\Mail\NprMailMode::from($settings->nprMailMode),
+                    ),
+            \TriCab\Core\Npr\Mail\NprMailTransport::class
+                => static fn (Container $container): \TriCab\Core\Npr\Mail\NprMailTransport
+                    => $settings->nprMailMode !== 'off'
+                        && $settings->graphTenantId !== '' && $settings->graphClientId !== ''
+                        && $settings->graphClientSecret !== '' && $settings->nprMailSender !== ''
+                        ? new \TriCab\Api\Npr\Mail\GraphNprMailTransport(
+                            self::get($container, JsonHttpClient::class),
+                            $settings->graphTenantId,
+                            $settings->graphClientId,
+                            $settings->graphClientSecret,
+                            $settings->nprMailSender,
+                        )
+                        : new \TriCab\Api\Npr\Mail\UnconfiguredNprMailTransport(),
+            \TriCab\Core\Npr\Mail\NprMailWake::class
+                => static fn (): \TriCab\Core\Npr\Mail\NprMailWake
+                    => \TriCab\Api\Npr\Mail\FileNprMailWake::fromSettings($settings),
+            \TriCab\Core\Npr\Mail\NprMailDispatcher::class
+                => static fn (Container $container): \TriCab\Core\Npr\Mail\NprMailDispatcher
+                    => new \TriCab\Core\Npr\Mail\NprMailDispatcher(
+                        self::get($container, \TriCab\Core\Npr\Mail\NprMailOutbox::class),
+                        self::get($container, \TriCab\Core\Npr\Mail\NprMailTransport::class),
+                        new \TriCab\Core\Npr\Mail\NprEmailTemplates($settings->nprAppBaseUrl),
+                        \TriCab\Core\Npr\Mail\NprMailMode::from($settings->nprMailMode),
+                        $settings->nprMailTestRecipient,
+                        self::get($container, Clock::class),
+                        self::get($container, \TriCab\Core\Npr\Mail\NprMailWake::class),
+                    ),
+            \TriCab\Core\Npr\Application\Service\NprWorkflowService::class
+                => static fn (Container $container): \TriCab\Core\Npr\Application\Service\NprWorkflowService
+                    => new \TriCab\Core\Npr\Application\Service\NprWorkflowService(
+                        self::get($container, \TriCab\Core\Npr\Contract\NprRequestRepository::class),
+                        self::get($container, \TriCab\Core\Npr\Contract\NprBranchDirectory::class),
+                        self::get($container, \TriCab\Core\Npr\Application\Service\NprAccessPolicy::class),
+                        self::get($container, \TriCab\Core\Npr\Application\Service\NprValidationService::class),
+                        self::get($container, \TriCab\Core\Npr\Application\Service\ManagerRoutingService::class),
+                        self::get($container, \TriCab\Core\Npr\Application\Service\NprPeople::class),
+                        self::get($container, \TriCab\Core\Npr\Application\Service\NprSigningPolicy::class),
+                        self::get($container, \TriCab\Core\Npr\Mail\NprMailDispatcher::class),
+                        self::get($container, Clock::class),
+                    ),
+            // N2.3 attachments: bytes in a private container on the existing storage connection.
+            \TriCab\Core\Npr\Contract\NprAttachmentStore::class
+                => static fn (Container $container): \TriCab\Core\Npr\Contract\NprAttachmentStore
+                    => new \TriCab\Api\Npr\Storage\BlobNprAttachmentStore(
+                        self::get($container, ProductBlobStore::class),
+                        $settings->nprAttachmentsContainer,
+                    ),
+            \TriCab\Core\Npr\Contract\NprAttachmentRepository::class
+                => static fn (Container $container): \TriCab\Core\Npr\Contract\NprAttachmentRepository
+                    => new \TriCab\Core\Npr\Infrastructure\InMemoryNprAttachmentRepository(
+                        self::get($container, \TriCab\Core\Npr\Contract\NprRequestRepository::class),
+                        self::get($container, Clock::class),
+                    ),
+            \TriCab\Api\Http\Action\Npr\GetNprFieldDictionaryAction::class
+                => static fn (Container $container): \TriCab\Api\Http\Action\Npr\GetNprFieldDictionaryAction
+                    => new \TriCab\Api\Http\Action\Npr\GetNprFieldDictionaryAction(
+                        self::get($container, \TriCab\Api\Http\Response\JsonResponder::class),
+                        dirname(__DIR__, 2) . '/resources/npr/field-dictionary.json',
+                    ),
             \TriCab\Core\Npr\Application\Service\NprSigningPolicy::class
                 => static fn (): \TriCab\Core\Npr\Application\Service\NprSigningPolicy
                     => new \TriCab\Core\Npr\Application\Service\NprSigningPolicy($settings->nprScreeningSignatoryEmails),
@@ -3246,7 +3322,25 @@ final class ContainerFactory
                         self::get($container, Clock::class),
                     );
             $definitions[\TriCab\Core\Npr\Contract\NprRequestRepository::class]
-                = \DI\autowire(\TriCab\Api\Npr\Persistence\AzureSqlNprRequestRepository::class);
+                = static fn (Container $container): \TriCab\Core\Npr\Contract\NprRequestRepository
+                    => new \TriCab\Api\Npr\Persistence\AzureSqlNprRequestRepository(
+                        self::get($container, SqlConnection::class),
+                        self::get($container, Clock::class),
+                        self::get($container, \TriCab\Core\Npr\Contract\NprEventSink::class),
+                    );
+            // The outbox shares the request repository's connection, so its rows join the transition's transaction.
+            $definitions[\TriCab\Core\Npr\Mail\NprMailOutbox::class]
+                = static fn (Container $container): \TriCab\Core\Npr\Mail\NprMailOutbox
+                    => new \TriCab\Api\Npr\Mail\AzureSqlNprMailOutbox(
+                        self::get($container, SqlConnection::class),
+                        self::get($container, Clock::class),
+                    );
+            $definitions[\TriCab\Core\Npr\Contract\NprAttachmentRepository::class]
+                = static fn (Container $container): \TriCab\Core\Npr\Contract\NprAttachmentRepository
+                    => new \TriCab\Api\Npr\Persistence\AzureSqlNprAttachmentRepository(
+                        self::get($container, SqlConnection::class),
+                        self::get($container, Clock::class),
+                    );
             $definitions[\TriCab\Core\Npr\Contract\ManagerRouteRepository::class]
                 = \DI\autowire(\TriCab\Api\Npr\Persistence\AzureSqlManagerRouteRepository::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class]
