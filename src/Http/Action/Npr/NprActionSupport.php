@@ -13,6 +13,8 @@ use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Npr\Domain\Exception\InvalidNprInput;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
+use TriCab\Core\Npr\Domain\Exception\NprValidationFailed;
+use TriCab\Core\Npr\Domain\Exception\NprWorkflowRefused;
 
 /**
  * Shared by the NPR actions: the signed-in user, and how the domain's typed
@@ -23,6 +25,8 @@ use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
  * | `InvalidNprInput`      | 422    | `NPR_INPUT_INVALID`    |
  * | `NprRequestConflict`   | 409    | `NPR_VERSION_CONFLICT`, with `currentVersion` |
  * | `NprRequestNotEditable`| 409    | `NPR_NOT_EDITABLE`     |
+ * | `NprWorkflowRefused`   | 409    | its reason: `NPR_NO_MANAGER_ROUTE`, `NPR_SELF_ENDORSEMENT_NOT_ALLOWED`, `NPR_ACTION_NOT_ALLOWED`, `NPR_SIGNING_POLICY_NOT_CONFIGURED`, `NPR_ROUTE_OVERLAP` |
+ * | `NprValidationFailed`  | 422    | `NPR_VALIDATION_FAILED`, with `errors` by field |
  *
  * Anything untyped is rethrown for the platform's own 500 handling.
  */
@@ -57,6 +61,15 @@ trait NprActionSupport
                     'currentVersion' => $failure->currentVersion,
                 ],
             ], 409),
+            $failure instanceof NprWorkflowRefused => $responder->error($failure->reason, $failure->getMessage(), 409),
+            $failure instanceof NprValidationFailed => $responder->payload([
+                'success' => false,
+                'error' => [
+                    'code' => 'NPR_VALIDATION_FAILED',
+                    'message' => $failure->getMessage(),
+                    'errors' => $failure->errors,
+                ],
+            ], 422),
             $failure instanceof NprRequestNotEditable => $responder->error('NPR_NOT_EDITABLE', $failure->getMessage(), 409),
             default => throw $failure,
         };
@@ -68,5 +81,22 @@ trait NprActionSupport
         $body = $request->getParsedBody();
 
         return is_array($body) ? $body : [];
+    }
+
+    /**
+     * The `version` last read, or null when the body has none.
+     *
+     * @param array<mixed> $body
+     */
+    private function version(array $body): ?string
+    {
+        $version = $body['version'] ?? null;
+
+        return is_string($version) && trim($version) !== '' ? $version : null;
+    }
+
+    private function versionRequired(JsonResponder $responder): ResponseInterface
+    {
+        return $responder->error('NPR_INPUT_INVALID', 'version is required: the version last read.', 422);
     }
 }

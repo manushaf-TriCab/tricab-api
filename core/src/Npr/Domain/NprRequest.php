@@ -41,7 +41,39 @@ final readonly class NprRequest
         public ?DateTimeImmutable $submittedAt = null,
         public ?string $screeningOutcome = null,
         public ?DateTimeImmutable $tsdReceivedAt = null,
+        public ?NprPerson $manager = null,
+        public ?NprPerson $tsdOwner = null,
+        public ?NprPerson $signatory = null,
+        public ?DateTimeImmutable $endorsedAt = null,
+        public ?DateTimeImmutable $tsdAcknowledgedAt = null,
+        public ?string $tsdAcknowledgedByName = null,
+        public ?DateTimeImmutable $screeningDecidedAt = null,
+        public ?string $screeningRationale = null,
+        public ?string $screeningConditions = null,
     ) {
+    }
+
+    /**
+     * A copy with some properties replaced (keys are constructor parameter names).
+     *
+     * @param array<string, mixed> $changes
+     */
+    public function with(array $changes): self
+    {
+        /** @var array<string, mixed> $values */
+        $values = array_merge(get_object_vars($this), $changes);
+
+        return new self(...$values);
+    }
+
+    public function isManagedBy(int $userId): bool
+    {
+        return $this->manager !== null && $this->manager->is($userId);
+    }
+
+    public function isScreenedBy(int $userId): bool
+    {
+        return $this->signatory !== null && $this->signatory->is($userId);
     }
 
     /**

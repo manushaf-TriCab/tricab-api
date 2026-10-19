@@ -267,6 +267,10 @@ final readonly class Settings
         // HMAC key for stable product image addresses; '' derives one from the blob account key.
         public string $mediaUrlSigningSecret = '',
         public string $publicApiOrigin = '',
+        // NPR screening signatories (lower-case emails). Empty until TSD confirms the signing policy:
+        // requesting screening and deciding stay blocked.
+        /** @var list<string> */
+        public array $nprScreeningSignatoryEmails = [],
     ) {
     }
 
@@ -1512,6 +1516,10 @@ final readonly class Settings
             ), static fn (string $a): bool => $a !== '')),
             mediaUrlSigningSecret: trim(self::string($env, 'MEDIA_URL_SIGNING_SECRET', '')),
             publicApiOrigin: $publicApiOrigin,
+            nprScreeningSignatoryEmails: array_values(array_filter(array_map(
+                static fn (string $a): string => strtolower(trim($a)),
+                self::csvList($env, 'NPR_SCREENING_SIGNATORY_EMAILS', ''),
+            ), static fn (string $a): bool => $a !== '')),
         );
     }
 

@@ -10,10 +10,13 @@ use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Npr\Contract\NprRequestRepository;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
+use TriCab\Core\Npr\Domain\Exception\NprWorkflowRefused;
 use TriCab\Core\Npr\Domain\NewNprRequest;
 use TriCab\Core\Npr\Domain\NprDraftChange;
 use TriCab\Core\Npr\Domain\NprJson;
+use TriCab\Core\Npr\Domain\NprPerson;
 use TriCab\Core\Npr\Domain\NprRequest;
+use TriCab\Core\Npr\Domain\NprTransition;
 use TriCab\Core\Npr\Domain\RequestStatus;
 use TriCab\Core\Shared\Time\Clock;
 use RuntimeException;
@@ -49,6 +52,11 @@ final class AzureSqlNprRequestRepository implements NprRequestRepository
         SELECT r.[PublicId], r.[RequestNumber], r.[CurrentRevision], r.[Status], r.[ScreeningOutcome], r.[Title],
                r.[CustomerName], r.[UrgencyLevel], r.[RequesterUserId], r.[RequesterEmail], r.[RequesterName],
                r.[RequesterBranch], r.[CreatedAt], r.[UpdatedAt], r.[SubmittedAt], r.[TsdReceivedAt],
+               r.[AssignedManagerUserId], r.[AssignedManagerEmail], r.[AssignedManagerName],
+               r.[TsdOwnerUserId], r.[TsdOwnerEmail], r.[TsdOwnerName],
+               r.[ScreeningSignatoryUserId], r.[ScreeningSignatoryEmail], r.[ScreeningSignatoryName],
+               r.[EndorsedAt], r.[TsdAcknowledgedAt], r.[TsdAcknowledgedByName],
+               r.[ScreeningDecidedAt], r.[ScreeningRationale], r.[ScreeningConditions],
                CONVERT(VARCHAR(18), CAST(r.[RowVersion] AS BINARY(8)), 1) AS [Version],
                v.[AnswersJson], v.[VariantsJson]
         FROM [npr].[Requests] r
@@ -268,6 +276,156 @@ final class AzureSqlNprRequestRepository implements NprRequestRepository
         return $found ? $this->find($publicId) : null;
     }
 
+    public function listForManager(int $userId): array
+    {
+        return $this->many(
+            " WHERE r.[AssignedManagerUserId] = :userId AND r.[Status] <> N'draft'",
+            ['userId' => $userId],
+        );
+    }
+
+    public function transition(string $publicId, string $expectedVersion, NprTransition $transition): ?NprRequest
+    {
+        $publicId = strtolower(trim($publicId));
+        if (preg_match(self::GUID, $publicId) !== 1) {
+            return null;
+        }
+        $now = AzureSqlValueMapper::formatDateTime($this->clock->now());
+
+        $found = $this->runInTransaction($this->connection, function () use ($publicId, $expectedVersion, $transition, $now): bool {
+            $locked = $this->connection->fetchAll(
+                'SELECT [RequestId], [Status], [CurrentRevision], CONVERT(VARCHAR(18), CAST([RowVersion] AS BINARY(8)), 1) AS [Version]
+                 FROM [npr].[Requests] WITH (UPDLOCK, HOLDLOCK, ROWLOCK)
+                 WHERE [PublicId] = :id',
+                ['id' => $publicId],
+            )[0] ?? null;
+            if ($locked === null) {
+                return false;
+            }
+
+            $currentVersion = AzureSqlValueMapper::stringValue($locked['Version'] ?? null);
+            if (strcasecmp($currentVersion, trim($expectedVersion)) !== 0) {
+                throw new NprRequestConflict($currentVersion);
+            }
+            $status = RequestStatus::tryFrom(AzureSqlValueMapper::stringValue($locked['Status'] ?? null));
+            if ($status === null) {
+                throw new RuntimeException('NPR request has an unknown status.');
+            }
+            if (!in_array($status, $transition->from, true)) {
+                throw NprWorkflowRefused::notAllowedIn($status->value);
+            }
+
+            $requestId = AzureSqlValueMapper::intValue($locked['RequestId'] ?? null);
+            $revision = AzureSqlValueMapper::intValue($locked['CurrentRevision'] ?? null);
+            $actor = $transition->actor;
+
+            $sets = ['[UpdatedAt] = :updatedAt'];
+            $params = ['updatedAt' => $now, 'requestId' => $requestId];
+            if ($transition->to !== null) {
+                $sets[] = '[Status] = :status';
+                $params['status'] = $transition->to->value;
+            }
+            foreach ([
+                ['AssignedManager', $transition->assignManager, 'manager'],
+                ['TsdOwner', $transition->assignTsdOwner, 'owner'],
+                ['ScreeningSignatory', $transition->assignSignatory, 'signatory'],
+            ] as [$column, $person, $key]) {
+                if ($person instanceof NprPerson) {
+                    $sets[] = "[{$column}UserId] = :{$key}Id, [{$column}Email] = :{$key}Email, [{$column}Name] = :{$key}Name";
+                    $params[$key . 'Id'] = $person->userId;
+                    $params[$key . 'Email'] = $person->email;
+                    $params[$key . 'Name'] = $person->name;
+                }
+            }
+            if ($transition->markSubmitted) {
+                $sets[] = '[SubmittedAt] = :submittedAt';
+                $params['submittedAt'] = $now;
+            }
+            if ($transition->markEndorsed) {
+                // Receipt is the first endorsement only; a repeat keeps the original (the TSD clocks run from it).
+                $sets[] = '[EndorsedAt] = :endorsedAt, [TsdReceivedAt] = COALESCE([TsdReceivedAt], :receivedAt)';
+                $params['endorsedAt'] = $now;
+                $params['receivedAt'] = $now;
+            }
+            if ($transition->markAcknowledged) {
+                $sets[] = '[TsdAcknowledgedAt] = :ackAt, [TsdAcknowledgedByName] = :ackName, [TsdAcknowledgedByUserId] = :ackId';
+                $params['ackAt'] = $now;
+                $params['ackName'] = $actor->name;
+                $params['ackId'] = $actor->userId;
+            }
+            if ($transition->decision !== null) {
+                $sets[] = '[ScreeningOutcome] = :outcome, [ScreeningDecidedAt] = :decidedAt, [ScreeningRationale] = :rationale, [ScreeningConditions] = :conditions';
+                $params['outcome'] = $transition->decision->outcome;
+                $params['decidedAt'] = $now;
+                $params['rationale'] = $transition->decision->rationale;
+                $params['conditions'] = $transition->decision->conditions;
+            }
+            $this->connection->execute('UPDATE [npr].[Requests] SET ' . implode(', ', $sets) . ' WHERE [RequestId] = :requestId', $params);
+
+            if ($transition->answerPatch !== [] || $transition->signRevision || $transition->decision !== null) {
+                $row = $this->connection->fetchAll(
+                    'SELECT [AnswersJson] FROM [npr].[RequestRevisions] WITH (UPDLOCK, ROWLOCK)
+                     WHERE [RequestId] = :requestId AND [RevisionNumber] = :revision',
+                    ['requestId' => $requestId, 'revision' => $revision],
+                )[0] ?? throw new RuntimeException('NPR request has no current revision row.');
+                $answers = array_merge(
+                    NprJson::decodeObject(AzureSqlValueMapper::stringValue($row['AnswersJson'] ?? null)),
+                    $transition->answerPatch,
+                );
+                $flags = ($transition->signRevision ? ', [IsSigned] = 1' : '')
+                    . ($transition->decision !== null ? ', [IsScreened] = 1' : '');
+                $this->connection->execute(
+                    'UPDATE [npr].[RequestRevisions] SET [AnswersJson] = :answers' . $flags . '
+                     WHERE [RequestId] = :requestId AND [RevisionNumber] = :revision',
+                    [
+                        'answers' => self::encode(NprJson::answers($answers)),
+                        'requestId' => $requestId,
+                        'revision' => $revision,
+                    ],
+                );
+            }
+
+            if ($transition->endorsement !== null) {
+                $this->connection->execute(
+                    'INSERT INTO [npr].[Endorsements]
+                        ([RequestId], [RevisionNumber], [Action], [ManagerUserId], [ManagerEmail], [ManagerName],
+                         [DeclarationAgreed], [Comment], [CreatedAt])
+                     VALUES (:requestId, :revision, :action, :userId, :email, :name, :declaration, :comment, :createdAt)',
+                    [
+                        'requestId' => $requestId,
+                        'revision' => $revision,
+                        'action' => $transition->endorsement['action'],
+                        'userId' => $actor->userId,
+                        'email' => $actor->email,
+                        'name' => $actor->name,
+                        'declaration' => $transition->endorsement['declaration'] ? 1 : 0,
+                        'comment' => $transition->endorsement['comment'],
+                        'createdAt' => $now,
+                    ],
+                );
+            }
+
+            $this->activity(
+                $requestId,
+                $revision,
+                $actor->userId,
+                $actor->email,
+                $actor->name,
+                $transition->action,
+                $status->value,
+                ($transition->to ?? $status)->value,
+                $transition->summary,
+                $now,
+                $transition->actorRole,
+                $transition->payload === [] ? null : self::encode($transition->payload),
+            );
+
+            return true;
+        });
+
+        return $found ? $this->find($publicId) : null;
+    }
+
     /**
      * @param array<string, scalar|null> $params
      * @return list<NprRequest>
@@ -293,14 +451,18 @@ final class AzureSqlNprRequestRepository implements NprRequestRepository
         ?string $after,
         string $summary,
         string $now,
+        string $role = 'requester',
+        ?string $payloadJson = null,
     ): void {
         $this->connection->execute(
             'INSERT INTO [npr].[Activity]
                 ([RequestId], [RevisionNumber], [ActorUserId], [ActorEmail], [ActorName], [ActorRole], [Action],
-                 [BeforeStatus], [AfterStatus], [ChangeSummary], [CreatedAt])
-             VALUES (:requestId, :revision, :userId, :email, :name, N\'requester\', :action,
-                 :before, :after, :summary, :createdAt)',
+                 [BeforeStatus], [AfterStatus], [ChangeSummary], [PayloadJson], [CreatedAt])
+             VALUES (:requestId, :revision, :userId, :email, :name, :role, :action,
+                 :before, :after, :summary, :payload, :createdAt)',
             [
+                'role' => $role,
+                'payload' => $payloadJson,
                 'requestId' => $requestId,
                 'revision' => $revision,
                 'userId' => $userId,
@@ -338,6 +500,30 @@ final class AzureSqlNprRequestRepository implements NprRequestRepository
             AzureSqlValueMapper::nullableDateTime($row['SubmittedAt'] ?? null),
             AzureSqlValueMapper::nullableString($row['ScreeningOutcome'] ?? null),
             AzureSqlValueMapper::nullableDateTime($row['TsdReceivedAt'] ?? null),
+            self::person($row, 'AssignedManager'),
+            self::person($row, 'TsdOwner'),
+            self::person($row, 'ScreeningSignatory'),
+            AzureSqlValueMapper::nullableDateTime($row['EndorsedAt'] ?? null),
+            AzureSqlValueMapper::nullableDateTime($row['TsdAcknowledgedAt'] ?? null),
+            AzureSqlValueMapper::nullableString($row['TsdAcknowledgedByName'] ?? null),
+            AzureSqlValueMapper::nullableDateTime($row['ScreeningDecidedAt'] ?? null),
+            AzureSqlValueMapper::nullableString($row['ScreeningRationale'] ?? null),
+            AzureSqlValueMapper::nullableString($row['ScreeningConditions'] ?? null),
+        );
+    }
+
+    /** @param array<string, mixed> $row */
+    private static function person(array $row, string $prefix): ?NprPerson
+    {
+        $userId = $row[$prefix . 'UserId'] ?? null;
+        if ($userId === null) {
+            return null;
+        }
+
+        return new NprPerson(
+            AzureSqlValueMapper::intValue($userId),
+            AzureSqlValueMapper::stringValue($row[$prefix . 'Email'] ?? null),
+            AzureSqlValueMapper::stringValue($row[$prefix . 'Name'] ?? null),
         );
     }
 

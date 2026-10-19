@@ -1001,8 +1001,8 @@ final class AppBuilder
      * New Product Requests (plan NPR-TSD-MIGRATION-PLAN, N1). Sales work their own
      * requests under `/npr/me`; TSD reads what has reached it under `/npr/tsd`.
      * Each route has exactly one permission; the service then checks the record
-     * (someone else's request answers 404). Manager routes (`/npr/team`) and the
-     * workflow writes arrive with N2.
+     * (someone else's request answers 404). N2 adds submit, the manager's
+     * `/npr/team` steps, TSD and signatory steps and manager-route admin.
      *
      * @param App<ContainerInterface> $app
      */
@@ -1023,6 +1023,44 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_TSD_READ));
         $app->get('/api/v1/npr/tsd/requests/{publicId}', \TriCab\Api\Http\Action\Npr\GetTsdNprRequestAction::class)
             ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_TSD_READ));
+
+        // N2: workflow steps. One permission each; the service then checks the record and status.
+        $app->post('/api/v1/npr/me/requests/{publicId}/submit', \TriCab\Api\Http\Action\Npr\SubmitNprRequestAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_SUBMIT));
+
+        $teamPermission = \TriCab\Core\Npr\Module::PERMISSION_TEAM_ENDORSE;
+        $app->get('/api/v1/npr/team/requests', \TriCab\Api\Http\Action\Npr\ListTeamNprRequestsAction::class)
+            ->add(($require)($teamPermission));
+        $app->get('/api/v1/npr/team/requests/{publicId}', \TriCab\Api\Http\Action\Npr\GetTeamNprRequestAction::class)
+            ->add(($require)($teamPermission));
+        foreach (['endorse', 'return', 'reject'] as $step) {
+            $app->post('/api/v1/npr/team/requests/{publicId}/' . $step, \TriCab\Api\Http\Action\Npr\NprWorkflowAction::class)
+                ->setArgument('step', 'team.' . $step)
+                ->add(($require)($teamPermission));
+        }
+
+        $tsdWork = \TriCab\Core\Npr\Module::PERMISSION_TSD_WORK;
+        foreach (['acknowledge', 'assign', 'return', 'request-screening'] as $step) {
+            $app->post('/api/v1/npr/tsd/requests/{publicId}/' . $step, \TriCab\Api\Http\Action\Npr\NprWorkflowAction::class)
+                ->setArgument('step', 'tsd.' . $step)
+                ->add(($require)($tsdWork));
+        }
+        $app->put('/api/v1/npr/tsd/requests/{publicId}/assessment', \TriCab\Api\Http\Action\Npr\NprWorkflowAction::class)
+            ->setArgument('step', 'tsd.assessment')
+            ->add(($require)($tsdWork));
+        $app->post('/api/v1/npr/tsd/requests/{publicId}/screening-decision', \TriCab\Api\Http\Action\Npr\NprWorkflowAction::class)
+            ->setArgument('step', 'signatory.decide')
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SCREENING_DECIDE));
+
+        $app->get('/api/v1/npr/admin/manager-routes', \TriCab\Api\Http\Action\Npr\NprManagerRouteAction::class)
+            ->setArgument('step', 'list')
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_ADMIN));
+        $app->post('/api/v1/npr/admin/manager-routes', \TriCab\Api\Http\Action\Npr\NprManagerRouteAction::class)
+            ->setArgument('step', 'create')
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_ADMIN));
+        $app->put('/api/v1/npr/admin/manager-routes/{id}', \TriCab\Api\Http\Action\Npr\NprManagerRouteAction::class)
+            ->setArgument('step', 'update')
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_ADMIN));
     }
 
     /**

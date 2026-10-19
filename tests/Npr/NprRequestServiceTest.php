@@ -198,13 +198,17 @@ final class NprRequestServiceTest extends TestCase
         self::assertSame([], $policy->allowedActions(NprFixtures::tsd(), NprFixtures::record(self::OTHER, 10, RequestStatus::AwaitingManager)));
     }
 
-    public function test_tsd_may_read_a_request_that_has_reached_it_and_nothing_more_yet(): void
+    public function test_tsd_reads_what_has_reached_it_and_works_it_only_while_a_step_is_open(): void
     {
         $policy = new NprAccessPolicy();
+        $tsd = NprFixtures::tsd();
 
-        foreach ([RequestStatus::WithTsd, RequestStatus::AwaitingScreening, RequestStatus::ScreeningCompleted] as $status) {
-            self::assertSame(['read'], $policy->allowedActions(NprFixtures::tsd(), NprFixtures::record(self::OTHER, 10, $status)), $status->value);
-        }
+        self::assertSame(
+            ['read', 'acknowledge', 'assign', 'assess', 'tsd_return', 'request_screening'],
+            $policy->allowedActions($tsd, NprFixtures::record(self::OTHER, 10, RequestStatus::WithTsd)),
+        );
+        self::assertSame(['read', 'assign', 'assess'], $policy->allowedActions($tsd, NprFixtures::record(self::OTHER, 10, RequestStatus::AwaitingScreening)));
+        self::assertSame(['read'], $policy->allowedActions($tsd, NprFixtures::record(self::OTHER, 10, RequestStatus::ScreeningCompleted)));
         self::assertSame([], $policy->allowedActions(NprFixtures::tsd(), NprFixtures::record(self::OTHER, 10, RequestStatus::ReturnedToSales)));
     }
 

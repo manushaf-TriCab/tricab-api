@@ -148,7 +148,7 @@ final class NprEndpointsTest extends TestCase
 
         self::assertSame([self::WITH_TSD], array_column(self::items($list, 'items'), 'publicId'));
         self::assertSame(200, $detail->getStatusCode());
-        self::assertSame(['read'], $this->data($detail)['allowedActions']);
+        self::assertSame(['read', 'acknowledge', 'assign', 'assess', 'tsd_return', 'request_screening'], $this->data($detail)['allowedActions']);
         self::assertSame('var_1', self::get($this->data($detail), 'variants', 0, 'id'));
         self::assertSame(404, $draft->getStatusCode());
     }

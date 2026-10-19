@@ -33,6 +33,21 @@ final class NprRouteTableTest extends TestCase
         'PUT /api/v1/npr/me/requests/{publicId}' => Module::PERMISSION_SELF_CREATE,
         'GET /api/v1/npr/tsd/requests' => Module::PERMISSION_TSD_READ,
         'GET /api/v1/npr/tsd/requests/{publicId}' => Module::PERMISSION_TSD_READ,
+        'POST /api/v1/npr/me/requests/{publicId}/submit' => Module::PERMISSION_SELF_SUBMIT,
+        'GET /api/v1/npr/team/requests' => Module::PERMISSION_TEAM_ENDORSE,
+        'GET /api/v1/npr/team/requests/{publicId}' => Module::PERMISSION_TEAM_ENDORSE,
+        'POST /api/v1/npr/team/requests/{publicId}/endorse' => Module::PERMISSION_TEAM_ENDORSE,
+        'POST /api/v1/npr/team/requests/{publicId}/return' => Module::PERMISSION_TEAM_ENDORSE,
+        'POST /api/v1/npr/team/requests/{publicId}/reject' => Module::PERMISSION_TEAM_ENDORSE,
+        'POST /api/v1/npr/tsd/requests/{publicId}/acknowledge' => Module::PERMISSION_TSD_WORK,
+        'POST /api/v1/npr/tsd/requests/{publicId}/assign' => Module::PERMISSION_TSD_WORK,
+        'POST /api/v1/npr/tsd/requests/{publicId}/return' => Module::PERMISSION_TSD_WORK,
+        'POST /api/v1/npr/tsd/requests/{publicId}/request-screening' => Module::PERMISSION_TSD_WORK,
+        'PUT /api/v1/npr/tsd/requests/{publicId}/assessment' => Module::PERMISSION_TSD_WORK,
+        'POST /api/v1/npr/tsd/requests/{publicId}/screening-decision' => Module::PERMISSION_SCREENING_DECIDE,
+        'GET /api/v1/npr/admin/manager-routes' => Module::PERMISSION_ADMIN,
+        'POST /api/v1/npr/admin/manager-routes' => Module::PERMISSION_ADMIN,
+        'PUT /api/v1/npr/admin/manager-routes/{id}' => Module::PERMISSION_ADMIN,
     ];
 
     private const UNRELATED = ['ACCOUNT.LOGIN', 'QUOTE.READ', 'CUSTOMER.READ', 'RFQ.DRAFT.READ', 'TSD.ACCESS'];
@@ -59,7 +74,7 @@ final class NprRouteTableTest extends TestCase
     {
         foreach (self::ROUTES as $route => $permission) {
             [$method, $pattern] = explode(' ', $route, 2);
-            $path = str_replace('{publicId}', self::SAMPLE_ID, $pattern);
+            $path = str_replace(['{publicId}', '{id}'], [self::SAMPLE_ID, '1'], $pattern);
 
             self::assertNotSame(403, $this->statusFor($method, $path, ['account.login', $permission]), $route . ' refused its own permission.');
 

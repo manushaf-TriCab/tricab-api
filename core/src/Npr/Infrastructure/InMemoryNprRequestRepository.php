@@ -7,9 +7,11 @@ namespace TriCab\Core\Npr\Infrastructure;
 use TriCab\Core\Npr\Contract\NprRequestRepository;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
+use TriCab\Core\Npr\Domain\Exception\NprWorkflowRefused;
 use TriCab\Core\Npr\Domain\NewNprRequest;
 use TriCab\Core\Npr\Domain\NprDraftChange;
 use TriCab\Core\Npr\Domain\NprRequest;
+use TriCab\Core\Npr\Domain\NprTransition;
 use TriCab\Core\Npr\Domain\RequestStatus;
 use TriCab\Core\Shared\Time\Clock;
 use TriCab\Core\Shared\Time\SystemClock;
@@ -25,6 +27,12 @@ final class InMemoryNprRequestRepository implements NprRequestRepository
 
     /** @var array<string, array<int, array{answers: array<string, mixed>, variants: list<array<string, mixed>>}>> */
     private array $revisions = [];
+
+    /** @var array<string, list<RecordedActivity>> */
+    private array $activity = [];
+
+    /** @var array<string, list<RecordedEndorsement>> */
+    private array $endorsements = [];
 
     private int $sequence = 0;
     private int $versionCounter = 0;
@@ -110,29 +118,131 @@ final class InMemoryNprRequestRepository implements NprRequestRepository
         }
 
         $revision = $current->status === RequestStatus::ReturnedToSales ? $current->revision + 1 : $current->revision;
-        $saved = new NprRequest(
-            $current->publicId,
-            $current->requestNumber,
-            $revision,
-            $current->status,
-            $change->title,
-            $change->customerName,
-            $change->urgencyLevel,
-            $current->requesterUserId,
-            $current->requesterEmail,
-            $current->requesterName,
-            $current->requesterBranch,
-            $change->answers,
-            $change->variants,
-            $this->nextVersion(),
-            $current->createdAt,
-            $this->clock->now(),
-            $current->submittedAt,
-            $current->screeningOutcome,
-            $current->tsdReceivedAt,
-        );
+        $saved = $current->with([
+            'revision' => $revision,
+            'title' => $change->title,
+            'customerName' => $change->customerName,
+            'urgencyLevel' => $change->urgencyLevel,
+            'answers' => $change->answers,
+            'variants' => $change->variants,
+            'version' => $this->nextVersion(),
+            'updatedAt' => $this->clock->now(),
+        ]);
 
         return $this->store($saved);
+    }
+
+    public function listForManager(int $userId): array
+    {
+        return $this->newestFirst(array_filter(
+            $this->requests,
+            static fn (NprRequest $request): bool => $request->isManagedBy($userId) && $request->status !== RequestStatus::Draft,
+        ));
+    }
+
+    public function transition(string $publicId, string $expectedVersion, NprTransition $transition): ?NprRequest
+    {
+        $current = $this->find($publicId);
+        if ($current === null) {
+            return null;
+        }
+        if ($current->version !== $expectedVersion) {
+            throw new NprRequestConflict($current->version);
+        }
+        if (!in_array($current->status, $transition->from, true)) {
+            throw NprWorkflowRefused::notAllowedIn($current->status->value);
+        }
+
+        $now = $this->clock->now();
+        $changes = ['version' => $this->nextVersion(), 'updatedAt' => $now];
+        if ($transition->to !== null) {
+            $changes['status'] = $transition->to;
+        }
+        if ($transition->assignManager !== null) {
+            $changes['manager'] = $transition->assignManager;
+        }
+        if ($transition->assignTsdOwner !== null) {
+            $changes['tsdOwner'] = $transition->assignTsdOwner;
+        }
+        if ($transition->assignSignatory !== null) {
+            $changes['signatory'] = $transition->assignSignatory;
+        }
+        if ($transition->markSubmitted) {
+            $changes['submittedAt'] = $now;
+        }
+        if ($transition->markEndorsed) {
+            $changes['endorsedAt'] = $now;
+            $changes['tsdReceivedAt'] = $current->tsdReceivedAt ?? $now;
+        }
+        if ($transition->markAcknowledged) {
+            $changes['tsdAcknowledgedAt'] = $now;
+            $changes['tsdAcknowledgedByName'] = $transition->actor->name;
+        }
+        if ($transition->decision !== null) {
+            $changes['screeningOutcome'] = $transition->decision->outcome;
+            $changes['screeningDecidedAt'] = $now;
+            $changes['screeningRationale'] = $transition->decision->rationale;
+            $changes['screeningConditions'] = $transition->decision->conditions;
+        }
+        if ($transition->answerPatch !== []) {
+            $changes['answers'] = array_merge($current->answers, $transition->answerPatch);
+        }
+
+        if ($transition->endorsement !== null) {
+            $this->endorsements[$current->publicId][] = new RecordedEndorsement(
+                $current->revision,
+                $transition->endorsement['action'],
+                $transition->actor,
+                $transition->endorsement['declaration'],
+                $transition->endorsement['comment'],
+                $now,
+            );
+        }
+        $this->activity[$current->publicId][] = new RecordedActivity(
+            $current->revision,
+            $transition->actor,
+            $transition->actorRole,
+            $transition->action,
+            $current->status,
+            $transition->to ?? $current->status,
+            $transition->summary,
+            $transition->payload,
+            $now,
+        );
+
+        return $this->store($current->with($changes));
+    }
+
+    /**
+     * Test seam: the Activity rows of a request, oldest first.
+     *
+     * @return list<RecordedActivity>
+     */
+    public function activityLog(string $publicId): array
+    {
+        return $this->activity[strtolower($publicId)] ?? [];
+    }
+
+    /**
+     * Test seam: the Endorsements rows of a request, oldest first.
+     *
+     * @return list<RecordedEndorsement>
+     */
+    public function endorsementLog(string $publicId): array
+    {
+        return $this->endorsements[strtolower($publicId)] ?? [];
+    }
+
+    /** Test seam: the newest Activity row of a request. */
+    public function lastActivity(string $publicId): RecordedActivity
+    {
+        return ($this->activityLog($publicId)[count($this->activityLog($publicId)) - 1] ?? throw new \LogicException('No activity recorded.'));
+    }
+
+    /** Test seam: the newest Endorsements row of a request. */
+    public function lastEndorsement(string $publicId): RecordedEndorsement
+    {
+        return ($this->endorsementLog($publicId)[count($this->endorsementLog($publicId)) - 1] ?? throw new \LogicException('No endorsement recorded.'));
     }
 
     private function store(NprRequest $request): NprRequest

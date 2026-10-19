@@ -821,6 +821,15 @@ final class ContainerFactory
                     ),
             \TriCab\Core\Npr\NprRequestReader::class
                 => \DI\autowire(\TriCab\Core\Npr\Application\Service\TsdNprRequestReader::class),
+            // N2: manager routes (in memory until the azure-sql branch), the event seam (a no-op
+            // until the email work, N2.4) and the signing policy (nobody nominated until TSD says).
+            \TriCab\Core\Npr\Contract\ManagerRouteRepository::class
+                => \DI\autowire(\TriCab\Core\Npr\Infrastructure\InMemoryManagerRouteRepository::class),
+            \TriCab\Core\Npr\Contract\NprEventSink::class
+                => \DI\autowire(\TriCab\Core\Npr\Infrastructure\NullNprEventSink::class),
+            \TriCab\Core\Npr\Application\Service\NprSigningPolicy::class
+                => static fn (): \TriCab\Core\Npr\Application\Service\NprSigningPolicy
+                    => new \TriCab\Core\Npr\Application\Service\NprSigningPolicy($settings->nprScreeningSignatoryEmails),
 
             // RFQ. In-memory by default; the azure-sql branch below reads the
             // store's tables (plan 2.4). Empty rather than invented either way.
@@ -3230,6 +3239,8 @@ final class ContainerFactory
                     );
             $definitions[\TriCab\Core\Npr\Contract\NprRequestRepository::class]
                 = \DI\autowire(\TriCab\Api\Npr\Persistence\AzureSqlNprRequestRepository::class);
+            $definitions[\TriCab\Core\Npr\Contract\ManagerRouteRepository::class]
+                = \DI\autowire(\TriCab\Api\Npr\Persistence\AzureSqlManagerRouteRepository::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqCustomerDirectory::class);
             // Parity plan E5.5: correction memory and Save Review's log.

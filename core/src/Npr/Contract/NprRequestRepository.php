@@ -6,9 +6,11 @@ namespace TriCab\Core\Npr\Contract;
 
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
+use TriCab\Core\Npr\Domain\Exception\NprWorkflowRefused;
 use TriCab\Core\Npr\Domain\NewNprRequest;
 use TriCab\Core\Npr\Domain\NprDraftChange;
 use TriCab\Core\Npr\Domain\NprRequest;
+use TriCab\Core\Npr\Domain\NprTransition;
 
 /**
  * Storage for NPR requests and their revisions. Callers decide who may see or
@@ -45,4 +47,22 @@ interface NprRequestRepository
      * @throws NprRequestNotEditable when the status no longer allows Sales to edit
      */
     public function saveDraft(string $publicId, string $expectedVersion, NprDraftChange $change): ?NprRequest;
+
+    /**
+     * Requests assigned to this manager for endorsement or since (never a draft), newest first.
+     *
+     * @return list<NprRequest>
+     */
+    public function listForManager(int $userId): array;
+
+    /**
+     * Applies one workflow step: re-reads the request under a lock, refuses a
+     * stale `$expectedVersion` and a status outside `$transition->from`, then
+     * writes the header, the answer patch, any endorsement row and exactly one
+     * Activity row together. Returns null when the request does not exist.
+     *
+     * @throws NprRequestConflict when `$expectedVersion` is not the stored version
+     * @throws NprWorkflowRefused when the status is not one the step may start from
+     */
+    public function transition(string $publicId, string $expectedVersion, NprTransition $transition): ?NprRequest;
 }
