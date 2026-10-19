@@ -12,6 +12,7 @@ use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\CableFit\Application\ResearchRunner;
 use TriCab\Core\CableFit\Contract\ResearchModel;
+use TriCab\Core\CableFit\Contract\ResearchRunRepository;
 use TriCab\Core\CableFit\Module;
 use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Npr\NprRequestReader;
@@ -41,12 +42,12 @@ final class CableFitResearchEndpointsTest extends TestCase
     /**
      * @return App<ContainerInterface>
      */
-    private function app(bool $researchOn = true): App
+    private function app(bool $researchOn = true, ?int $dailyRuns = null): App
     {
         $app = TestAppFactory::create([
             'CABLEFIT_RESEARCH_ENABLED' => $researchOn ? 'true' : 'false',
             'CABLEFIT_RESEARCH_WAKE_PATH' => $this->wakeDir,
-        ]);
+        ] + ($dailyRuns === null ? [] : ['CABLEFIT_RESEARCH_DAILY_RUNS_PER_USER' => (string) $dailyRuns]));
         $container = $app->getContainer();
         self::assertInstanceOf(\DI\Container::class, $container);
         $container->set(NprRequestReader::class, new FakeNprRequestReader());
@@ -198,7 +199,8 @@ final class CableFitResearchEndpointsTest extends TestCase
         foreach ($reads as [$method, $path]) {
             self::assertSame(403, $this->call($app, $method, $path)->getStatusCode(), "$method $path");
         }
-        self::assertSame(202, $this->call($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", ['application' => 'again'])->getStatusCode());
+        // Allowed to write (not a 403); the candidate's earlier run is still queued, so it is a 409.
+        self::assertSame(409, $this->call($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", ['application' => 'again'])->getStatusCode());
 
         // Neither: nothing.
         $this->grant($app, []);
@@ -287,6 +289,11 @@ final class CableFitResearchEndpointsTest extends TestCase
         $this->source($app);
 
         $a = $this->queueRun($app, $candidate, ['application' => 'a']);
+        $container = $app->getContainer();
+        self::assertInstanceOf(ContainerInterface::class, $container);
+        $runs = $container->get(ResearchRunRepository::class);
+        self::assertInstanceOf(ResearchRunRepository::class, $runs);
+        $runs->markFailed($a, 'finished', null, new \DateTimeImmutable());
         $b = $this->queueRun($app, $candidate, ['application' => 'b', 'parameters' => ['conductor' => ['material' => 'aluminium']]]);
 
         $first = $this->data($app, 'GET', "/api/v1/tsd/cablefit/candidates/$candidate/research/$a");
@@ -427,5 +434,72 @@ final class CableFitResearchEndpointsTest extends TestCase
         self::assertSame('failed', $detail['status']);
         self::assertSame('The research model is not configured.', $detail['error']);
         self::assertNotNull($detail['finishedAt']);
+    }
+
+    public function test_a_second_run_while_one_is_active_is_a_409_with_the_active_run_id(): void
+    {
+        $app = $this->app();
+        $candidate = $this->candidate($app);
+        $this->source($app);
+        $first = $this->queueRun($app, $candidate, ['application' => 'a']);
+
+        $response = $this->call($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", ['application' => 'b']);
+
+        self::assertSame(409, $response->getStatusCode());
+        self::assertSame(
+            ['success' => false, 'error' => [
+                'code' => 'CABLEFIT_RUN_ACTIVE',
+                'message' => 'A research run is already queued or running for this candidate.',
+                'activeRunPublicId' => $first,
+            ]],
+            TestAppFactory::json($response),
+        );
+        self::assertCount(1, self::rows($this->data($app, 'GET', "/api/v1/tsd/cablefit/candidates/$candidate/research"), 'runs'));
+    }
+
+    public function test_the_daily_cap_is_a_429_with_limit_retry_at_and_retry_after(): void
+    {
+        $app = $this->app(true, 2);
+        $this->source($app);
+        $runs = $app->getContainer()->get(ResearchRunRepository::class);
+        self::assertInstanceOf(ResearchRunRepository::class, $runs);
+        $one = $this->candidate($app);
+        $first = $this->queueRun($app, $one, ['application' => 'a']);
+        $runs->markFailed($first, 'failed runs still count', null, new \DateTimeImmutable());
+        $second = $this->queueRun($app, $one, ['application' => 'b']);
+        $runs->markSucceeded($second, [], [], new \TriCab\Core\CableFit\Domain\ResearchCost('m', 1, 1, 0), 0, new \DateTimeImmutable());
+
+        $before = time();
+        $response = $this->call($app, 'POST', "/api/v1/tsd/cablefit/candidates/$one/research", ['application' => 'c']);
+
+        self::assertSame(429, $response->getStatusCode());
+        /** @var array{success: bool, error: array<string, mixed>} $body */
+        $body = TestAppFactory::json($response);
+        self::assertFalse($body['success']);
+        self::assertSame(['code', 'message', 'limit', 'retryAt'], array_keys($body['error']));
+        self::assertSame('CABLEFIT_RESEARCH_DAILY_LIMIT', $body['error']['code']);
+        self::assertSame('You have started 2 research runs in the last 24 hours, the daily limit.', $body['error']['message']);
+        self::assertSame(2, $body['error']['limit']);
+        $retryAt = $body['error']['retryAt'];
+        self::assertIsString($retryAt);
+        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/', $retryAt);
+        $seconds = strtotime($retryAt) - $before;
+        self::assertEqualsWithDelta(86400, $seconds, 5);
+        $header = $response->getHeaderLine('Retry-After');
+        self::assertMatchesRegularExpression('/^\d+$/', $header);
+        self::assertEqualsWithDelta(86400, (int) $header, 5);
+        self::assertCount(2, self::rows($this->data($app, 'GET', "/api/v1/tsd/cablefit/candidates/$one/research"), 'runs'));
+    }
+
+    public function test_the_active_check_comes_before_the_daily_cap(): void
+    {
+        $app = $this->app(true, 1);
+        $candidate = $this->candidate($app);
+        $this->source($app);
+        $this->queueRun($app, $candidate, ['application' => 'a']);
+
+        self::assertSame('CABLEFIT_RUN_ACTIVE', $this->errorCode($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", ['application' => 'b'], 409));
+        $other = $this->candidate($app);
+        self::assertSame('CABLEFIT_RESEARCH_DAILY_LIMIT', $this->errorCode($app, 'POST', "/api/v1/tsd/cablefit/candidates/$other/research", ['application' => 'b'], 429));
     }
 }

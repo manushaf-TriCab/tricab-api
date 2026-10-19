@@ -11,11 +11,13 @@ use TriCab\Core\CableFit\Contract\CableFitResearchWake;
 use TriCab\Core\CableFit\Contract\ResearchRunRepository;
 use TriCab\Core\CableFit\Contract\ResearchSourceRepository;
 use TriCab\Core\CableFit\Domain\CandidateNotFound;
+use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
 use TriCab\Core\CableFit\Domain\ResearchFinding;
 use TriCab\Core\CableFit\Domain\ResearchInputInvalid;
 use TriCab\Core\CableFit\Domain\ResearchNoSources;
 use TriCab\Core\CableFit\Domain\ResearchOff;
 use TriCab\Core\CableFit\Domain\ResearchRun;
+use TriCab\Core\CableFit\Domain\ResearchRunActive;
 use TriCab\Core\CableFit\Domain\ResearchRunNotFound;
 use TriCab\Core\CableFit\Domain\ResearchSource;
 use TriCab\Core\CableFit\Domain\ResearchSourceExists;
@@ -43,6 +45,7 @@ final readonly class ResearchService
      * @param bool                                $enabled CABLEFIT_RESEARCH_ENABLED
      * @param (Closure(): DateTimeImmutable)|null $clock
      * @param (Closure(): string)|null            $idGenerator
+     * @param int                                 $dailyRunsPerUser CABLEFIT_RESEARCH_DAILY_RUNS_PER_USER: runs one user may start in a rolling 24 hours
      */
     public function __construct(
         private CableFitCandidateService $candidates,
@@ -52,6 +55,7 @@ final readonly class ResearchService
         private bool $enabled = false,
         ?Closure $clock = null,
         ?Closure $idGenerator = null,
+        private int $dailyRunsPerUser = 10,
     ) {
         $this->clock = $clock ?? static fn (): DateTimeImmutable => new DateTimeImmutable();
         $this->idGenerator = $idGenerator ?? static fn (): string => self::newGuid();
@@ -117,6 +121,8 @@ final readonly class ResearchService
      * @throws CandidateNotFound
      * @throws ResearchInputInvalid
      * @throws ResearchNoSources
+     * @throws ResearchRunActive
+     * @throws ResearchDailyLimitReached
      */
     public function requestRun(AuthenticatedUser $user, string $candidatePublicId, mixed $application, ?array $parameters = null): string
     {
@@ -138,8 +144,14 @@ final readonly class ResearchService
             throw new ResearchNoSources('No research source is enabled.');
         }
 
+        $active = $this->runs->findActive($detail->candidate->publicId);
+        if ($active !== null) {
+            throw new ResearchRunActive($active->publicId);
+        }
+
+        $now = ($this->clock)();
         $publicId = ($this->idGenerator)();
-        $this->runs->add(ResearchRun::queued(
+        $this->runs->queueWithinLimits(ResearchRun::queued(
             $publicId,
             $detail->candidate->publicId,
             $application,
@@ -147,8 +159,8 @@ final readonly class ResearchService
             $domains,
             $user->userId,
             $user->displayName,
-            ($this->clock)(),
-        ));
+            $now,
+        ), $this->dailyRunsPerUser, $now);
 
         try {
             $this->wake->signal();

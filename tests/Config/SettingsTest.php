@@ -289,6 +289,15 @@ final class SettingsTest extends TestCase
         self::assertSame(4000, $low->dbConnectRetryDelayMs);
     }
 
+    public function test_cablefit_research_daily_cap_defaults_and_is_bounded(): void
+    {
+        self::assertSame(10, Settings::fromEnvironment(['APP_ENV' => 'development'])->cablefitResearchDailyRunsPerUser);
+        foreach (['25' => 25, '0' => 1, '-4' => 1, '500' => 100, 'abc' => 10, '' => 10] as $value => $expected) {
+            $settings = Settings::fromEnvironment(['APP_ENV' => 'development', 'CABLEFIT_RESEARCH_DAILY_RUNS_PER_USER' => (string) $value]);
+            self::assertSame($expected, $settings->cablefitResearchDailyRunsPerUser, 'value ' . $value);
+        }
+    }
+
     public function test_foundry_is_disabled_by_default(): void
     {
         $settings = Settings::fromEnvironment([

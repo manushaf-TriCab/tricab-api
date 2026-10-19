@@ -8,11 +8,14 @@ use DateTimeImmutable;
 use RuntimeException;
 use TriCab\Api\Identity\Persistence\AzureSqlTransaction;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
+use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\CableFit\Contract\ResearchRunRepository;
 use TriCab\Core\CableFit\Domain\ResearchCost;
+use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
 use TriCab\Core\CableFit\Domain\ResearchFinding;
 use TriCab\Core\CableFit\Domain\ResearchRun;
+use TriCab\Core\CableFit\Domain\ResearchRunActive;
 
 /**
  * `[cablefit].[research_runs]` and `[cablefit].[research_findings]` on SQL Server (`create-cablefit-schema.sql`).
@@ -41,6 +44,10 @@ final class AzureSqlResearchRunRepository implements ResearchRunRepository
         LEFT JOIN [identity].[Users] u ON u.[UserId] = r.[requested_by_user_id]
 SQL;
 
+    private const DUPLICATE_KEY_CODES = [2601, 2627];
+
+    private const ONE_ACTIVE_INDEX = 'UX_cablefit_research_runs_one_active';
+
     private const GUID = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i';
 
     public function __construct(
@@ -48,7 +55,60 @@ SQL;
     ) {
     }
 
-    public function add(ResearchRun $run): void
+    public function queueWithinLimits(ResearchRun $run, int $dailyCap, DateTimeImmutable $now): void
+    {
+        $this->runInTransaction($this->connection, function () use ($run, $dailyCap, $now): void {
+            $active = $this->findActive($run->candidatePublicId);
+            if ($active !== null) {
+                throw new ResearchRunActive($active->publicId);
+            }
+
+            // UPDLOCK + HOLDLOCK keeps the counted range locked until commit, so a second request from the
+            // same user waits here rather than counting the same rows and slipping under the cap.
+            $window = $this->connection->fetchAll(
+                'SELECT COUNT(*) AS [used], MIN([requested_at]) AS [oldest]
+                 FROM [cablefit].[research_runs] WITH (UPDLOCK, HOLDLOCK)
+                 WHERE [requested_by_user_id] = :userId AND [requested_at] > :since',
+                [
+                    'userId' => $run->requestedByUserId,
+                    'since' => AzureSqlValueMapper::formatDateTime($now->modify('-24 hours')),
+                ],
+            )[0] ?? [];
+            $oldest = AzureSqlValueMapper::nullableDateTime($window['oldest'] ?? null);
+            if (AzureSqlValueMapper::intValue($window['used'] ?? 0) >= $dailyCap && $oldest !== null) {
+                throw new ResearchDailyLimitReached($dailyCap, $oldest->modify('+24 hours'));
+            }
+
+            try {
+                $this->insert($run);
+            } catch (DatabaseUnavailable $failure) {
+                if (in_array($failure->sqlDriverCode(), self::DUPLICATE_KEY_CODES, true)
+                    && str_contains($failure->getPrevious()?->getMessage() ?? $failure->getMessage(), self::ONE_ACTIVE_INDEX)) {
+                    $winner = $this->findActive($run->candidatePublicId);
+                    if ($winner !== null) {
+                        throw new ResearchRunActive($winner->publicId);
+                    }
+                }
+                throw $failure;
+            }
+        });
+    }
+
+    public function findActive(string $candidatePublicId): ?ResearchRun
+    {
+        if (preg_match(self::GUID, $candidatePublicId) !== 1) {
+            return null;
+        }
+        $row = $this->connection->fetchAll(
+            self::SELECT . " WHERE c.[public_id] = :candidate AND r.[status] IN (N'queued', N'running')
+             ORDER BY r.[requested_at], r.[run_id]",
+            ['candidate' => $candidatePublicId],
+        )[0] ?? null;
+
+        return $row === null ? null : $this->run($row);
+    }
+
+    private function insert(ResearchRun $run): void
     {
         $inserted = $this->connection->fetchAll(
             'INSERT INTO [cablefit].[research_runs] (

@@ -8,8 +8,10 @@ use DateTimeImmutable;
 use RuntimeException;
 use TriCab\Core\CableFit\Contract\ResearchRunRepository;
 use TriCab\Core\CableFit\Domain\ResearchCost;
+use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
 use TriCab\Core\CableFit\Domain\ResearchFinding;
 use TriCab\Core\CableFit\Domain\ResearchRun;
+use TriCab\Core\CableFit\Domain\ResearchRunActive;
 
 final class InMemoryResearchRunRepository implements ResearchRunRepository
 {
@@ -19,9 +21,47 @@ final class InMemoryResearchRunRepository implements ResearchRunRepository
     /** @var array<string, list<ResearchFinding>> */
     private array $findings = [];
 
+    /** Insert a run without the limit checks (test seeding; the service goes through queueWithinLimits). */
     public function add(ResearchRun $run): void
     {
         $this->runs[$run->publicId] = $run;
+    }
+
+    public function queueWithinLimits(ResearchRun $run, int $dailyCap, DateTimeImmutable $now): void
+    {
+        $active = $this->findActive($run->candidatePublicId);
+        if ($active !== null) {
+            throw new ResearchRunActive($active->publicId);
+        }
+
+        $since = $now->modify("-24 hours");
+        $oldest = null;
+        $count = 0;
+        foreach ($this->runs as $existing) {
+            if ($existing->requestedByUserId === $run->requestedByUserId && $existing->requestedAt > $since) {
+                $count++;
+                if ($oldest === null || $existing->requestedAt < $oldest) {
+                    $oldest = $existing->requestedAt;
+                }
+            }
+        }
+        if ($count >= $dailyCap && $oldest !== null) {
+            throw new ResearchDailyLimitReached($dailyCap, $oldest->modify("+24 hours"));
+        }
+
+        $this->add($run);
+    }
+
+    public function findActive(string $candidatePublicId): ?ResearchRun
+    {
+        foreach ($this->runs as $run) {
+            if ($run->candidatePublicId === $candidatePublicId
+                && ($run->status === ResearchRun::QUEUED || $run->status === ResearchRun::RUNNING)) {
+                return $this->withCount($run);
+            }
+        }
+
+        return null;
     }
 
     public function listByCandidate(string $candidatePublicId): array

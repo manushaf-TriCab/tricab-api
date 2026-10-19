@@ -938,7 +938,8 @@ final class ContainerFactory
                 );
             },
             \TriCab\Core\CableFit\Application\ResearchService::class => \DI\autowire()
-                ->constructorParameter('enabled', $settings->cablefitResearchEnabled),
+                ->constructorParameter('enabled', $settings->cablefitResearchEnabled)
+                ->constructorParameter('dailyRunsPerUser', $settings->cablefitResearchDailyRunsPerUser),
             \TriCab\Core\CableFit\Application\ResearchRunner::class => static fn (Container $container): \TriCab\Core\CableFit\Application\ResearchRunner
                 => new \TriCab\Core\CableFit\Application\ResearchRunner(
                     self::get($container, \TriCab\Core\CableFit\Contract\ResearchRunRepository::class),

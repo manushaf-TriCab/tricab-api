@@ -15,6 +15,8 @@ use TriCab\Core\CableFit\Domain\CandidateNotFound;
 use TriCab\Core\CableFit\Domain\ResearchInputInvalid;
 use TriCab\Core\CableFit\Domain\ResearchNoSources;
 use TriCab\Core\CableFit\Domain\ResearchOff;
+use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
+use TriCab\Core\CableFit\Domain\ResearchRunActive;
 use TriCab\Core\CableFit\Domain\ResearchRunNotFound;
 use TriCab\Core\CableFit\Domain\ResearchSourceExists;
 use TriCab\Core\CableFit\Domain\ResearchSourceNotFound;
@@ -50,7 +52,7 @@ final class ResearchServiceTest extends TestCase
         );
     }
 
-    private function service(bool $enabled = true, ?CableFitResearchWake $wake = null): ResearchService
+    private function service(bool $enabled = true, ?CableFitResearchWake $wake = null, int $dailyRuns = 10): ResearchService
     {
         return new ResearchService(
             $this->candidates,
@@ -62,6 +64,7 @@ final class ResearchServiceTest extends TestCase
             function (): string {
                 return 'id-' . ++$this->seq;
             },
+            dailyRunsPerUser: $dailyRuns,
         );
     }
 
@@ -268,6 +271,7 @@ final class ResearchServiceTest extends TestCase
         $other = $this->candidate();
         $service = $this->service();
         $first = $service->requestRun($this->user(), $one, 'first');
+        $this->runs->markFailed($first, 'done', null, $this->now);
         $this->now = $this->now->modify('+1 hour');
         $second = $service->requestRun($this->user(), $one, 'second');
         $service->requestRun($this->user(), $other, 'elsewhere');
@@ -303,5 +307,168 @@ final class ResearchServiceTest extends TestCase
             array_map(static fn ($f) => $f->claim, $detail->findings),
         );
         self::assertSame([true, true, true, true, false, false], array_map(fn ($f) => $detail->isRecent($f), $detail->findings));
+    }
+
+    private function otherUser(): AuthenticatedUser
+    {
+        return new AuthenticatedUser(8, 'user-8', 'other@example.test', 'Other User', 'active', ['TSD'], ['TSD.CABLEFIT.RESEARCH']);
+    }
+
+    public function test_a_queued_or_running_run_blocks_another_for_the_same_candidate(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+        $service = $this->service();
+        $first = $service->requestRun($this->user(), $candidate, 'first');
+
+        foreach (['queued', 'running'] as $state) {
+            if ($state === 'running') {
+                self::assertNotNull($this->runs->claimNext($this->now, $this->now->modify('-1 hour')));
+            }
+            try {
+                $service->requestRun($this->otherUser(), $candidate, 'again');
+                self::fail('Expected ResearchRunActive while ' . $state);
+            } catch (ResearchRunActive $active) {
+                self::assertSame($first, $active->activeRunPublicId, $state);
+            }
+        }
+        self::assertCount(1, $this->runs->listByCandidate($candidate));
+        self::assertSame(1, $this->wake->signals);
+    }
+
+    public function test_another_candidate_is_not_blocked_by_an_active_run(): void
+    {
+        $this->enableSource();
+        $service = $this->service();
+        $service->requestRun($this->user(), $this->candidate(), 'a');
+
+        self::assertNotSame('', $service->requestRun($this->user(), $this->candidate(), 'b'));
+    }
+
+    public function test_a_succeeded_or_failed_run_no_longer_blocks(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+        $service = $this->service();
+
+        $first = $service->requestRun($this->user(), $candidate, 'one');
+        $this->runs->markSucceeded($first, [], [], new \TriCab\Core\CableFit\Domain\ResearchCost('m', 1, 1, 0), 0, $this->now);
+        $second = $service->requestRun($this->user(), $candidate, 'two');
+        $this->runs->markFailed($second, 'boom', null, $this->now);
+
+        self::assertNotSame('', $service->requestRun($this->user(), $candidate, 'three'));
+    }
+
+    public function test_the_daily_cap_allows_n_runs_and_refuses_the_next_with_retry_at(): void
+    {
+        $this->enableSource();
+        $service = $this->service(dailyRuns: 3);
+        $start = $this->now;
+        foreach ([0, 2, 5] as $hours) {
+            $this->now = $start->modify("+$hours hours");
+            $id = $service->requestRun($this->user(), $this->candidate(), 'run');
+            self::assertNotSame('', $id);
+        }
+
+        $this->now = $start->modify('+6 hours');
+        $signals = $this->wake->signals;
+        try {
+            $service->requestRun($this->user(), $this->candidate(), 'one too many');
+            self::fail('Expected ResearchDailyLimitReached');
+        } catch (ResearchDailyLimitReached $limit) {
+            self::assertSame(3, $limit->limit);
+            self::assertEquals($start->modify('+24 hours'), $limit->retryAt);
+        }
+        self::assertSame($signals, $this->wake->signals);
+        self::assertSame(3, $this->runs->outstanding());
+
+        // The oldest run turns 24h old: one slot opens, and the next retryAt is the following run's.
+        $this->now = $start->modify('+24 hours +1 second');
+        self::assertNotSame('', $service->requestRun($this->user(), $this->candidate(), 'now allowed'));
+        $this->now = $start->modify('+25 hours');
+        try {
+            $service->requestRun($this->user(), $this->candidate(), 'blocked again');
+            self::fail('Expected ResearchDailyLimitReached');
+        } catch (ResearchDailyLimitReached $limit) {
+            self::assertEquals($start->modify('+26 hours'), $limit->retryAt);
+        }
+    }
+
+    public function test_runs_older_than_24_hours_do_not_count(): void
+    {
+        $this->enableSource();
+        $service = $this->service(dailyRuns: 1);
+        $service->requestRun($this->user(), $this->candidate(), 'old');
+
+        $this->now = $this->now->modify('+24 hours +1 second');
+
+        self::assertNotSame('', $service->requestRun($this->user(), $this->candidate(), 'fresh'));
+    }
+
+    public function test_failed_runs_count_towards_the_cap(): void
+    {
+        $this->enableSource();
+        $service = $this->service(dailyRuns: 1);
+        $candidate = $this->candidate();
+        $run = $service->requestRun($this->user(), $candidate, 'will fail');
+        $this->runs->markFailed($run, 'boom', null, $this->now);
+
+        $this->expectException(ResearchDailyLimitReached::class);
+
+        $service->requestRun($this->user(), $candidate, 'again');
+    }
+
+    public function test_the_cap_is_per_user(): void
+    {
+        $this->enableSource();
+        $service = $this->service(dailyRuns: 1);
+        $service->requestRun($this->user(), $this->candidate(), 'mine');
+
+        self::assertNotSame('', $service->requestRun($this->otherUser(), $this->candidate(), 'theirs'));
+    }
+
+    public function test_checks_run_in_the_documented_order(): void
+    {
+        // Off beats everything (and does not even look the candidate up).
+        try {
+            $this->service(false, null, 1)->requestRun($this->user(), 'missing', 'app');
+            self::fail('Expected ResearchOff');
+        } catch (ResearchOff) {
+            $this->addToAssertionCount(1);
+        }
+
+        // With an active run AND the cap used up: bad input is a 422 first, then no sources, then active, then the cap.
+        $sourceId = $this->enableSource();
+        $candidate = $this->candidate();
+        $service = $this->service(true, null, 1);
+        $service->requestRun($this->user(), $candidate, 'uses the only slot and stays active');
+
+        try {
+            $service->requestRun($this->user(), $candidate, '');
+            self::fail('Expected ResearchInputInvalid');
+        } catch (ResearchInputInvalid) {
+            $this->addToAssertionCount(1);
+        }
+        $service->updateSource($this->user(), $sourceId, 'IEC', 'standards_body', false);
+        try {
+            $service->requestRun($this->user(), $candidate, 'app');
+            self::fail('Expected ResearchNoSources');
+        } catch (ResearchNoSources) {
+            $this->addToAssertionCount(1);
+        }
+        $service->updateSource($this->user(), $sourceId, 'IEC', 'standards_body', true);
+        try {
+            $service->requestRun($this->user(), $candidate, 'app');
+            self::fail('Expected ResearchRunActive');
+        } catch (ResearchRunActive) {
+            $this->addToAssertionCount(1);
+        }
+
+        // Once the run is over, the cap is what refuses.
+        $active = $this->runs->findActive($candidate);
+        self::assertNotNull($active);
+        $this->runs->markSucceeded($active->publicId, [], [], new \TriCab\Core\CableFit\Domain\ResearchCost('m', 1, 1, 0), 0, $this->now);
+        $this->expectException(ResearchDailyLimitReached::class);
+        $service->requestRun($this->user(), $candidate, 'app');
     }
 }

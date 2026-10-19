@@ -50,6 +50,20 @@ final class JsonResponder
     }
 
     /**
+     * An error envelope with extra fields inside `error` (and optional response headers).
+     *
+     * @param array<string, mixed> $extra
+     * @param array<string, string> $headers
+     */
+    public function errorWith(string $code, string $message, int $status, array $extra, array $headers = []): ResponseInterface
+    {
+        return $this->write([
+            'success' => false,
+            'error' => ['code' => $code, 'message' => $message] + $extra,
+        ], $status, $headers);
+    }
+
+    /**
      * @param array<string, mixed> $payload
      * @param array<string, string> $headers
      */

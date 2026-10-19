@@ -48,12 +48,31 @@ model, file wake), `src/CableFit/Persistence/AzureSqlResearch*Repository.php`. A
 | `CABLEFIT_RESEARCH_ENABLED` | `false` | Off, a request is a 503 `CABLEFIT_RESEARCH_OFF` and the worker exits 3. |
 | `CABLEFIT_RESEARCH_MODEL` | `claude-sonnet-5` | Foundry deployment name. |
 | `CABLEFIT_RESEARCH_MAX_SEARCHES` | `8` | `max_uses` of the search tool per run (1-20). |
+| `CABLEFIT_RESEARCH_DAILY_RUNS_PER_USER` | `10` | Runs one user may start in a rolling 24 hours, failed ones included (1-100). |
 | `CABLEFIT_RESEARCH_TIMEOUT_SECONDS` | `300` | Budget for a whole run's model exchange, and per HTTP call (30-900). |
 | `CABLEFIT_RESEARCH_IDLE_CHECK_MINUTES` | `1440` | Longest gap between database looks while idle (1-10080). |
 | `CABLEFIT_RESEARCH_WAKE_PATH` | `var/cablefit-research` | Wake files and lock; web app and WebJob must share it. |
 | `FOUNDRY_ENABLED`, `FOUNDRY_ENDPOINT`, `FOUNDRY_AUTH_MODE`, `FOUNDRY_API_KEY` | platform's | The Foundry connection (managed identity in production). |
 
 The web search tool must stay `web_search_20250305`: the `_20260209` variant is a 400 on this deployment (C3.1, 19 Oct).
+
+## Limits
+
+Both apply to `POST /api/v1/tsd/cablefit/candidates/{id}/research` and save nothing when they refuse.
+
+- **One active run per candidate.** While a run is `queued` or `running`, another request is a 409
+  `CABLEFIT_RUN_ACTIVE` carrying `error.activeRunPublicId`. The service checks first; the filtered unique index
+  `UX_cablefit_research_runs_one_active` on `[cablefit].[research_runs] ([candidate_id]) WHERE [status] IN
+  ('queued','running')` guarantees it, and a duplicate-key error on that index becomes the same 409.
+- **Daily cap per user.** A user who has requested `CABLEFIT_RESEARCH_DAILY_RUNS_PER_USER` runs in the last 24 hours
+  (rolling, any status, failed runs too because they still cost tokens) gets a 429 `CABLEFIT_RESEARCH_DAILY_LIMIT`
+  with `error.limit`, `error.retryAt` (ISO 8601 UTC, when the oldest run in the window turns 24 hours old) and a
+  `Retry-After` header in whole seconds (at least 1). The count and the insert share one transaction with the counted
+  rows locked (`UPDLOCK, HOLDLOCK`), so two simultaneous requests cannot both slip under the cap.
+- Order of checks: research off (503), invalid input (422), no sources (422), active run (409), daily cap (429), queue (202).
+- Schema: apply `database/scripts/development/alter-cablefit-research-run-limits.sql` (idempotent) to a database whose
+  `[cablefit]` schema predates it. If a candidate already has two active runs the unique index cannot be created; the
+  script stops with a message naming the candidates, and the extra runs need failing or deleting first.
 
 ## Sources
 
