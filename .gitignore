@@ -8,6 +8,7 @@
 /var/log/
 /var/cache/
 /var/rfq-reader/
+/var/rfq-mail/
 /var/catalogue-pdf-migration/
 /tmp/
 /output/

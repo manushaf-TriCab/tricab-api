@@ -82,6 +82,8 @@ for required in \
     "$api_root/deploy/app-service/startup.sh" \
     "$api_root/deploy/app-service/webjobs/rfq-reader/run.sh" \
     "$api_root/bin/run-rfq-reader-jobs.php" \
+    "$api_root/deploy/app-service/webjobs/rfq-mail/run.sh" \
+    "$api_root/bin/run-rfq-mail-reader.php" \
     "$api_root/deploy/app-service/webjobs/finance-jobs/run.sh" \
     "$api_root/bin/run-finance-jobs.php" \
     "$api_root/deploy/app-service/api/index.php" \
@@ -320,6 +322,13 @@ mkdir -p "$app_root/bin" "$release_root/App_Data/jobs/continuous/rfq-reader"
 cp "$api_root/bin/run-rfq-reader-jobs.php" "$app_root/bin/run-rfq-reader-jobs.php"
 cp "$api_root/deploy/app-service/webjobs/rfq-reader/run.sh" "$release_root/App_Data/jobs/continuous/rfq-reader/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/rfq-reader/run.sh"
+
+# The RFQ mail reader (M3/M4) and its continuous WebJob, the same way. Inert while RFQ_MAIL_READ_ENABLED
+# is not true or RFQ_MAIL_MODE is off: each pass exits 3 at once.
+mkdir -p "$release_root/App_Data/jobs/continuous/rfq-mail"
+cp "$api_root/bin/run-rfq-mail-reader.php" "$app_root/bin/run-rfq-mail-reader.php"
+cp "$api_root/deploy/app-service/webjobs/rfq-mail/run.sh" "$release_root/App_Data/jobs/continuous/rfq-mail/run.sh"
+chmod +x "$release_root/App_Data/jobs/continuous/rfq-mail/run.sh"
 
 # The finance job runner and its continuous WebJob (F1.8), the same way. The job is inert
 # while FINANCE_MODULE_ENABLED is not true: the runner prints one line and exits.

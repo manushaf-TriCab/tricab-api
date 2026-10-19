@@ -19,6 +19,7 @@ use TriCab\Core\Shared\Mailbox\MailboxMessageSummary;
 use TriCab\Core\Shared\Mailbox\MailboxFolders;
 use TriCab\Core\Shared\Mailbox\MailboxReadFailed;
 use TriCab\Core\Shared\Mailbox\MailboxReadUnavailable;
+use TriCab\Core\Shared\Mailbox\MailboxSyncExpired;
 use TriCab\Core\Shared\Mailbox\MailboxRecipient;
 
 /**
@@ -119,6 +120,67 @@ final class GraphMailboxReader implements FolderMailboxReader
         return $messages;
     }
 
+    /**
+     * The first URL of an Inbox delta query (RFQ mail reader): the messages received since `$since`, then
+     * only what changes. `$select` names the fields wanted. Pass the result, then each `nextLink` and the
+     * final `deltaLink`, to {@see deltaPage()}.
+     */
+    public function deltaStartUrl(string $mailbox, string $folder, DateTimeImmutable $since, string $select): string
+    {
+        return $this->mailboxUrl($mailbox, '/mailFolders/' . MailboxFolders::normalise($folder) . '/messages/delta', [
+            '$select' => $select,
+            '$filter' => 'receivedDateTime ge ' . $since->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z'),
+        ]);
+    }
+
+    /**
+     * One page of a delta query. Only a Graph URL is followed. A 410 (token expired) is a
+     * {@see MailboxSyncExpired}.
+     *
+     * @return array{rows: list<array<string, mixed>>, nextLink: ?string, deltaLink: ?string}
+     */
+    public function deltaPage(string $url, int $pageSize = 25): array
+    {
+        if (!str_starts_with($url, self::GRAPH_BASE . '/')) {
+            throw new MailboxReadFailed('That is not a Microsoft Graph URL.');
+        }
+        $page = $this->get($url, $pageSize);
+
+        return [
+            'rows' => self::rows($page['value'] ?? null),
+            'nextLink' => self::continuation($page['@odata.nextLink'] ?? null),
+            'deltaLink' => self::continuation($page['@odata.deltaLink'] ?? null),
+        ];
+    }
+
+    /**
+     * A message's Internet headers, names lower-cased (the first of a repeated header wins).
+     *
+     * @return array<string, string>
+     */
+    public function internetHeaders(string $mailbox, string $messageId): array
+    {
+        $row = $this->get($this->mailboxUrl($mailbox, '/messages/' . rawurlencode($messageId), ['$select' => 'id,internetMessageHeaders']));
+
+        return self::headerMap($row['internetMessageHeaders'] ?? null);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function headerMap(mixed $value): array
+    {
+        $headers = [];
+        foreach (self::rows($value) as $row) {
+            $name = strtolower(trim(self::text($row['name'] ?? null, '')));
+            if ($name !== '' && !isset($headers[$name])) {
+                $headers[$name] = trim(self::text($row['value'] ?? null, ''));
+            }
+        }
+
+        return $headers;
+    }
+
     public function getMessage(string $mailbox, string $messageId): MailboxMessage
     {
         $row = $this->get($this->mailboxUrl($mailbox, '/messages/' . rawurlencode($messageId), ['$select' => self::MESSAGE_FIELDS]));
@@ -193,8 +255,9 @@ final class GraphMailboxReader implements FolderMailboxReader
      *
      * @return array<string, mixed>
      */
-    private function get(string $url): array
+    private function get(string $url, ?int $pageSize = null): array
     {
+        $prefer = $pageSize === null ? self::IMMUTABLE_IDS : self::IMMUTABLE_IDS . ', odata.maxpagesize=' . max(1, $pageSize);
         $status = 0;
         $body = '';
         for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
@@ -203,7 +266,7 @@ final class GraphMailboxReader implements FolderMailboxReader
                 $response = $this->http->getJson($url, [
                     'Authorization' => 'Bearer ' . $token,
                     'Accept' => 'application/json',
-                    'Prefer' => self::IMMUTABLE_IDS,
+                    'Prefer' => $prefer,
                 ]);
             } catch (Throwable) {
                 if ($attempt === self::MAX_ATTEMPTS) {
@@ -222,6 +285,9 @@ final class GraphMailboxReader implements FolderMailboxReader
                 $this->token = null;
                 $this->tokenExpiresAt = 0;
                 throw new MailboxAccessDenied(self::describe($status, $body) . ' The finance Graph registration may lack admin-consented Mail.Read, or an Application Access Policy leaves this mailbox out.');
+            }
+            if ($status === 410) {
+                throw new MailboxSyncExpired('Microsoft Graph says this sync token has expired.');
             }
             if ($status === 404) {
                 throw new MailboxItemNotFound('The mailbox, message or attachment was not found.');

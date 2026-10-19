@@ -258,6 +258,12 @@ New-Item -ItemType Directory -Path $readerJobRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\run-rfq-reader-jobs.php') -Destination (Join-Path $appRoot 'bin\run-rfq-reader-jobs.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\rfq-reader\run.sh') -Destination (Join-Path $readerJobRoot 'run.sh') -Force
 
+# The RFQ mail reader (M3/M4) and its continuous WebJob, the same way.
+$mailJobRoot = Join-Path $releaseRoot 'App_Data\jobs\continuous\rfq-mail'
+New-Item -ItemType Directory -Path $mailJobRoot -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\run-rfq-mail-reader.php') -Destination (Join-Path $appRoot 'bin\run-rfq-mail-reader.php') -Force
+Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\rfq-mail\run.sh') -Destination (Join-Path $mailJobRoot 'run.sh') -Force
+
 if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
 }

@@ -43,6 +43,9 @@ final readonly class Settings
 
     public const FOUNDRY_AUTH_MODE_MANAGED_IDENTITY = 'managed-identity';
     public const FOUNDRY_AUTH_MODE_API_KEY = 'api-key';
+    public const RFQ_MAIL_MODE_OFF = 'off';
+    public const RFQ_MAIL_MODE_SHADOW = 'shadow';
+    public const RFQ_MAIL_MODE_LIVE = 'live';
 
     public const PRICING_COST_SOURCE_LEGACY_COST_API = 'legacy-cost-api';
     public const PRICING_COST_SOURCE_LEGACY_FALLBACK = 'legacy-fallback';
@@ -250,6 +253,17 @@ final readonly class Settings
         public string $rfqMailGraphTenantId = '',
         public string $rfqMailGraphClientId = '',
         public string $rfqMailGraphClientSecret = '',
+        public bool $rfqMailReadEnabled = false,
+        public string $rfqMailMode = self::RFQ_MAIL_MODE_OFF,
+        public string $rfqMailMailbox = 'melbourne@tricab.com',
+        public int $rfqMailFirstRunDays = 2,
+        public string $rfqMailStatePath = 'var/rfq-mail',
+        public int $rfqMailPassSeconds = 100,
+        public int $rfqMailHeartbeatMinutes = 360,
+        public string $rfqMailClassifierModel = 'claude-haiku-5-5',
+        public int $rfqMailClassifierTimeoutSeconds = 30,
+        /** @var list<string> */
+        public array $rfqMailOwnAddresses = [],
     ) {
     }
 
@@ -349,15 +363,32 @@ final readonly class Settings
     }
 
     /**
-     * The inbox opens a message's body and attachments from Exchange through the RFQ mail Graph
-     * registration (RFQ M0), which has its own settings, apart from the platform's `GRAPH_*` and
-     * Finance's. With any of the three empty, opening a body answers 503 and nothing touches a network.
+     * The inbox opens a message's body and attachments from Exchange through the RFQ Graph registration:
+     * `RFQ_MAIL_GRAPH_*` when all three are set, else the platform's `GRAPH_*` (`ai-rfq-parser-mail`, 19 Oct
+     * 2026). Never Finance's. With any of the three empty, opening a body answers 503 and nothing touches a network.
      */
     public function isMailBodyReadingConfigured(): bool
     {
         return $this->rfqMailGraphTenantId !== ''
             && $this->rfqMailGraphClientId !== ''
             && $this->rfqMailGraphClientSecret !== '';
+    }
+
+    /**
+     * The RFQ mail reader (M3) and classifier (M4). Two switches: `RFQ_MAIL_READ_ENABLED` is the pause
+     * switch, `RFQ_MAIL_MODE` says what a running reader does (`off` nothing at all, `shadow` classify and
+     * record, `live` the same until drafts exist, M6). Both must say go. Nothing is read from Exchange
+     * otherwise.
+     */
+    public function isRfqMailReaderRunning(): bool
+    {
+        return $this->rfqMailReadEnabled && $this->rfqMailMode !== self::RFQ_MAIL_MODE_OFF;
+    }
+
+    /** The classifier calls Foundry; it needs the platform's Foundry connection and a deployment name. */
+    public function isRfqMailClassifierConfigured(): bool
+    {
+        return $this->foundryEnabled && $this->foundryEndpoint !== '' && $this->rfqMailClassifierModel !== '';
     }
 
     /**
@@ -1009,6 +1040,30 @@ final readonly class Settings
 
         $customerContactModuleEnabled = self::bool($env, 'CUSTOMER_CONTACT_MODULE_ENABLED', false);
         $customerContactCoordinatorLogin = strtolower(trim(self::string($env, 'CUSTOMER_CONTACT_COORDINATOR_LOGIN', '')));
+        $rfqMailMode = strtolower(trim(self::string($env, 'RFQ_MAIL_MODE', self::RFQ_MAIL_MODE_OFF)));
+        if (!in_array($rfqMailMode, [self::RFQ_MAIL_MODE_OFF, self::RFQ_MAIL_MODE_SHADOW, self::RFQ_MAIL_MODE_LIVE], true)) {
+            throw new InvalidArgumentException('RFQ_MAIL_MODE must be one of: off, shadow, live.');
+        }
+        $rfqMailMailbox = strtolower(trim(self::string($env, 'RFQ_MAIL_MAILBOX', 'melbourne@tricab.com')));
+        // The RFQ mail reader uses the RFQ Graph registration (Manusha, 19 Oct 2026): the platform's GRAPH_* app,
+        // `ai-rfq-parser-mail`, which already holds Mail.Read. Setting all three RFQ_MAIL_GRAPH_* overrides it, so a
+        // registration of its own can replace it later; a partial set is used as it is (and so stays unconfigured).
+        $rfqMailGraph = [
+            trim(self::string($env, 'RFQ_MAIL_GRAPH_TENANT_ID', '')),
+            trim(self::string($env, 'RFQ_MAIL_GRAPH_CLIENT_ID', '')),
+            trim(self::string($env, 'RFQ_MAIL_GRAPH_CLIENT_SECRET', '')),
+        ];
+        if ($rfqMailGraph === ['', '', '']) {
+            $rfqMailGraph = [trim($graphTenantId), trim($graphClientId), trim($graphClientSecret)];
+        }
+        if (!str_contains($rfqMailMailbox, '@')) {
+            throw new InvalidArgumentException('RFQ_MAIL_MAILBOX must be a mailbox address.');
+        }
+        $rfqMailStatePath = trim(self::string($env, 'RFQ_MAIL_STATE_PATH', 'var/rfq-mail'));
+        if ($rfqMailStatePath === '') {
+            $rfqMailStatePath = 'var/rfq-mail';
+        }
+        $rfqMailClassifierModel = trim(self::string($env, 'RFQ_MAIL_CLASSIFIER_MODEL', 'claude-haiku-5-5'));
         $customerContactAccountsMailbox = strtolower(trim(self::string($env, 'CUSTOMER_CONTACT_ACCOUNTS_MAILBOX', '')));
         if ($customerContactAccountsMailbox !== '' && !str_contains($customerContactAccountsMailbox, '@')) {
             throw new InvalidArgumentException('CUSTOMER_CONTACT_ACCOUNTS_MAILBOX must be a mailbox address when set.');
@@ -1422,9 +1477,22 @@ final readonly class Settings
             financeApSampleFiles: $financeApSampleFiles,
             foundryEffort: $foundryEffort,
             mailModuleEnabled: self::bool($env, 'MAIL_MODULE_ENABLED', false),
-            rfqMailGraphTenantId: trim(self::string($env, 'RFQ_MAIL_GRAPH_TENANT_ID', '')),
-            rfqMailGraphClientId: trim(self::string($env, 'RFQ_MAIL_GRAPH_CLIENT_ID', '')),
-            rfqMailGraphClientSecret: trim(self::string($env, 'RFQ_MAIL_GRAPH_CLIENT_SECRET', '')),
+            rfqMailGraphTenantId: $rfqMailGraph[0],
+            rfqMailGraphClientId: $rfqMailGraph[1],
+            rfqMailGraphClientSecret: $rfqMailGraph[2],
+            rfqMailReadEnabled: self::bool($env, 'RFQ_MAIL_READ_ENABLED', false),
+            rfqMailMode: $rfqMailMode,
+            rfqMailMailbox: $rfqMailMailbox,
+            rfqMailFirstRunDays: self::boundedInt($env, 'RFQ_MAIL_FIRST_RUN_DAYS', 2, 1, 30),
+            rfqMailStatePath: $rfqMailStatePath,
+            rfqMailPassSeconds: self::boundedInt($env, 'RFQ_MAIL_PASS_SECONDS', 100, 10, 600),
+            rfqMailHeartbeatMinutes: self::boundedInt($env, 'RFQ_MAIL_HEARTBEAT_MINUTES', 360, 5, 1440),
+            rfqMailClassifierModel: $rfqMailClassifierModel,
+            rfqMailClassifierTimeoutSeconds: self::boundedInt($env, 'RFQ_MAIL_CLASSIFIER_TIMEOUT_SECONDS', 30, 5, 120),
+            rfqMailOwnAddresses: array_values(array_filter(array_map(
+                static fn (string $a): string => strtolower(trim($a)),
+                self::csvList($env, 'RFQ_MAIL_OWN_ADDRESSES', ''),
+            ), static fn (string $a): bool => $a !== '')),
         );
     }
 
