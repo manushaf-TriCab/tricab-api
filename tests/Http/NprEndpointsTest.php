@@ -46,7 +46,7 @@ final class NprEndpointsTest extends TestCase
         self::assertSame('draft', $draft['status']);
         self::assertSame(1, $draft['revision']);
         self::assertSame('Mining Trailing Cable 33kV', $draft['title']);
-        self::assertSame(['read', 'edit', 'submit'], $draft['allowedActions']);
+        self::assertSame(['read', 'edit', 'submit', 'delete'], $draft['allowedActions']);
         self::assertSame('thilanh@tricab.com', self::get($draft, 'requester', 'email'), 'the body cannot name the requester');
         self::assertIsArray($draft['variants']);
 

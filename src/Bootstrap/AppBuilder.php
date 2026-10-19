@@ -1056,6 +1056,9 @@ final class AppBuilder
         $app->put('/api/v1/npr/me/requests/{publicId}', \TriCab\Api\Http\Action\Npr\SaveNprRequestAction::class)
             ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_CREATE));
 
+        $app->delete('/api/v1/npr/me/requests/{publicId}', \TriCab\Api\Http\Action\Npr\DeleteNprRequestAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_CREATE));
+
         $app->get('/api/v1/npr/tsd/requests', \TriCab\Api\Http\Action\Npr\ListTsdNprRequestsAction::class)
             ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_TSD_READ));
         $app->get('/api/v1/npr/tsd/requests/{publicId}', \TriCab\Api\Http\Action\Npr\GetTsdNprRequestAction::class)

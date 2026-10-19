@@ -31,6 +31,7 @@ final class NprRouteTableTest extends TestCase
         'POST /api/v1/npr/me/requests' => Module::PERMISSION_SELF_CREATE,
         'GET /api/v1/npr/me/requests/{publicId}' => Module::PERMISSION_SELF_READ,
         'PUT /api/v1/npr/me/requests/{publicId}' => Module::PERMISSION_SELF_CREATE,
+        'DELETE /api/v1/npr/me/requests/{publicId}' => Module::PERMISSION_SELF_CREATE,
         'GET /api/v1/npr/tsd/requests' => Module::PERMISSION_TSD_READ,
         'GET /api/v1/npr/tsd/requests/{publicId}' => Module::PERMISSION_TSD_READ,
         'POST /api/v1/npr/me/requests/{publicId}/submit' => Module::PERMISSION_SELF_SUBMIT,

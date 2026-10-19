@@ -179,7 +179,7 @@ final class NprRequestServiceTest extends TestCase
     public static function ownerActions(): array
     {
         return [
-            'draft' => [RequestStatus::Draft, ['read', 'edit', 'submit']],
+            'draft' => [RequestStatus::Draft, ['read', 'edit', 'submit', 'delete']],
             'returned' => [RequestStatus::ReturnedToSales, ['read', 'edit', 'submit']],
             'awaiting manager' => [RequestStatus::AwaitingManager, ['read']],
             'with tsd' => [RequestStatus::WithTsd, ['read']],
@@ -201,7 +201,7 @@ final class NprRequestServiceTest extends TestCase
     {
         $user = NprFixtures::user(10, [Module::PERMISSION_SELF_READ, Module::PERMISSION_SELF_CREATE]);
 
-        self::assertSame(['read', 'edit'], (new NprAccessPolicy())->allowedActions($user, NprFixtures::record(self::OTHER, 10, RequestStatus::Draft)));
+        self::assertSame(['read', 'edit', 'delete'], (new NprAccessPolicy())->allowedActions($user, NprFixtures::record(self::OTHER, 10, RequestStatus::Draft)));
     }
 
     public function test_a_reader_without_the_create_grant_cannot_edit(): void

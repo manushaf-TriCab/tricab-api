@@ -28,4 +28,12 @@ interface NprAttachmentRepository
      * Null when there is no such live file on the request.
      */
     public function softDelete(string $requestPublicId, string $attachmentPublicId, NprPerson $by, string $actorRole): ?NprAttachment;
+
+    /**
+     * Every blob key the request ever stored, soft-deleted files included
+     * (their blobs are kept), for removal when the request itself is deleted.
+     *
+     * @return list<string>
+     */
+    public function allBlobKeys(string $requestPublicId): array;
 }

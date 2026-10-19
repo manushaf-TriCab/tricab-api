@@ -62,6 +62,18 @@ final class InMemoryNprAttachmentRepository implements NprAttachmentRepository
         ));
     }
 
+    public function allBlobKeys(string $requestPublicId): array
+    {
+        $keys = [];
+        foreach ($this->files as $file) {
+            if ($file->requestPublicId === strtolower($requestPublicId)) {
+                $keys[] = $file->blobKey;
+            }
+        }
+
+        return $keys;
+    }
+
     public function find(string $requestPublicId, string $attachmentPublicId): ?NprAttachment
     {
         $file = $this->files[strtolower($attachmentPublicId)] ?? null;

@@ -7,6 +7,7 @@ namespace TriCab\Core\Npr\Infrastructure;
 use TriCab\Core\Npr\Contract\NprEventSink;
 use TriCab\Core\Npr\Contract\NprRequestRepository;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
+use TriCab\Core\Npr\Domain\Exception\NprRequestNotDeletable;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
 use TriCab\Core\Npr\Domain\Exception\NprWorkflowRefused;
 use TriCab\Core\Npr\Domain\NewNprRequest;
@@ -97,6 +98,21 @@ final class InMemoryNprRequestRepository implements NprRequestRepository
     public function find(string $publicId): ?NprRequest
     {
         return $this->requests[strtolower($publicId)] ?? null;
+    }
+
+    public function deleteNeverSubmitted(string $publicId): bool
+    {
+        $key = strtolower($publicId);
+        $request = $this->requests[$key] ?? null;
+        if ($request === null) {
+            return false;
+        }
+        if ($request->status !== RequestStatus::Draft || $request->submittedAt !== null) {
+            throw new NprRequestNotDeletable($request->status->value);
+        }
+        unset($this->requests[$key], $this->revisions[$key], $this->activity[$key], $this->endorsements[$key]);
+
+        return true;
     }
 
     public function listForRequester(int $userId): array

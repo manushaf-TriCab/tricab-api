@@ -96,6 +96,22 @@ final class AzureSqlNprAttachmentRepository implements NprAttachmentRepository
         );
     }
 
+    public function allBlobKeys(string $requestPublicId): array
+    {
+        $request = self::guid($requestPublicId);
+        if ($request === null) {
+            return [];
+        }
+        $rows = $this->connection->fetchAll(
+            'SELECT a.[BlobKey] FROM [npr].[Attachments] a
+             INNER JOIN [npr].[Requests] r ON r.[RequestId] = a.[RequestId]
+             WHERE r.[PublicId] = :request',
+            ['request' => $request],
+        );
+
+        return array_map(static fn (array $row): string => AzureSqlValueMapper::stringValue($row["BlobKey"] ?? null), $rows);
+    }
+
     public function find(string $requestPublicId, string $attachmentPublicId): ?NprAttachment
     {
         $request = self::guid($requestPublicId);

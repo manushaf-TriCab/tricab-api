@@ -20,6 +20,7 @@ use TriCab\Core\Npr\Module;
  *  - read             own request (NPR.SELF.READ); the assigned manager (NPR.TEAM.ENDORSE);
  *                     anything in the TSD queue (NPR.TSD.READ);
  *  - edit, submit     the owner, draft or returned to Sales (NPR.SELF.CREATE / NPR.SELF.SUBMIT);
+ *  - delete           the owner, a draft never submitted (NPR.SELF.CREATE); returned_to_sales does not qualify;
  *  - endorse          the assigned manager while awaiting_manager, never the requester
  *                     (interim policy: no self-endorsement);
  *  - return, reject   the assigned manager while awaiting_manager (NPR.TEAM.ENDORSE);
@@ -33,6 +34,7 @@ final class NprAccessPolicy
     public const ACTION_READ = 'read';
     public const ACTION_EDIT = 'edit';
     public const ACTION_SUBMIT = 'submit';
+    public const ACTION_DELETE = 'delete';
     public const ACTION_ENDORSE = 'endorse';
     public const ACTION_RETURN = 'return';
     public const ACTION_REJECT = 'reject';
@@ -71,6 +73,15 @@ final class NprAccessPolicy
         return $this->canEdit($user, $request) && self::holds($user, Module::PERMISSION_SELF_SUBMIT);
     }
 
+    /** A draft that was never sent anywhere; once submitted, even a returned request stays on record. */
+    public function canDelete(AuthenticatedUser $user, NprRequest $request): bool
+    {
+        return $request->status === RequestStatus::Draft
+            && $request->submittedAt === null
+            && $request->isOwnedBy($user->userId)
+            && self::holds($user, Module::PERMISSION_SELF_CREATE);
+    }
+
     /** Who the request is with: the assigned manager, status aside. */
     public function isAssignedManager(AuthenticatedUser $user, NprRequest $request): bool
     {
@@ -102,6 +113,9 @@ final class NprAccessPolicy
         }
         if ($this->canSubmit($user, $request)) {
             $actions[] = self::ACTION_SUBMIT;
+        }
+        if ($this->canDelete($user, $request)) {
+            $actions[] = self::ACTION_DELETE;
         }
         if ($asManager && $status === RequestStatus::AwaitingManager) {
             if (!$request->isOwnedBy($user->userId)) {

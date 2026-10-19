@@ -10,6 +10,7 @@ use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Npr\Contract\NprEventSink;
 use TriCab\Core\Npr\Contract\NprRequestRepository;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
+use TriCab\Core\Npr\Domain\Exception\NprRequestNotDeletable;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
 use TriCab\Core\Npr\Domain\Exception\NprWorkflowRefused;
 use TriCab\Core\Npr\Domain\NewNprRequest;
@@ -155,6 +156,43 @@ final class AzureSqlNprRequestRepository implements NprRequestRepository
         $row = $this->connection->fetchAll(self::SELECT . ' WHERE r.[PublicId] = :id', ['id' => $publicId])[0] ?? null;
 
         return $row === null ? null : self::request($row);
+    }
+
+    public function deleteNeverSubmitted(string $publicId): bool
+    {
+        $publicId = strtolower(trim($publicId));
+        if (preg_match(self::GUID, $publicId) !== 1) {
+            return false;
+        }
+
+        return $this->runInTransaction($this->connection, function () use ($publicId): bool {
+            $locked = $this->connection->fetchAll(
+                'SELECT [RequestId], [Status], [SubmittedAt] FROM [npr].[Requests] WITH (UPDLOCK, HOLDLOCK, ROWLOCK) WHERE [PublicId] = :id',
+                ['id' => $publicId],
+            )[0] ?? null;
+            if ($locked === null) {
+                return false;
+            }
+            $status = AzureSqlValueMapper::stringValue($locked['Status'] ?? null);
+            if ($status !== RequestStatus::Draft->value || ($locked['SubmittedAt'] ?? null) !== null) {
+                throw new NprRequestNotDeletable($status);
+            }
+            $params = ['id' => AzureSqlValueMapper::intValue($locked['RequestId'] ?? null)];
+            // Children first: deliveries, then the outbox (it points at Activity), then the rest.
+            foreach ([
+                'DELETE d FROM [npr].[NotificationDeliveries] d INNER JOIN [npr].[NotificationOutbox] o ON o.[OutboxId] = d.[OutboxId] WHERE o.[RequestId] = :id',
+                'DELETE FROM [npr].[NotificationOutbox] WHERE [RequestId] = :id',
+                'DELETE FROM [npr].[Endorsements] WHERE [RequestId] = :id',
+                'DELETE FROM [npr].[Attachments] WHERE [RequestId] = :id',
+                'DELETE FROM [npr].[Activity] WHERE [RequestId] = :id',
+                'DELETE FROM [npr].[RequestRevisions] WHERE [RequestId] = :id',
+                'DELETE FROM [npr].[Requests] WHERE [RequestId] = :id',
+            ] as $sql) {
+                $this->connection->execute($sql, $params);
+            }
+
+            return true;
+        });
     }
 
     public function listForRequester(int $userId): array

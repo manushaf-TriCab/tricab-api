@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Npr\Contract;
 
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
+use TriCab\Core\Npr\Domain\Exception\NprRequestNotDeletable;
 use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
 use TriCab\Core\Npr\Domain\Exception\NprWorkflowRefused;
 use TriCab\Core\Npr\Domain\NewNprRequest;
@@ -22,6 +23,15 @@ interface NprRequestRepository
     public function create(NewNprRequest $draft): NprRequest;
 
     public function find(string $publicId): ?NprRequest;
+
+    /**
+     * Hard-deletes a draft that was never submitted, with every row that hangs
+     * off it (notification deliveries and outbox, endorsements, attachment rows,
+     * activity, revisions), in one transaction. Returns false when it does not exist.
+     *
+     * @throws NprRequestNotDeletable when it is not a draft, or was ever submitted
+     */
+    public function deleteNeverSubmitted(string $publicId): bool;
 
     /**
      * Newest first.

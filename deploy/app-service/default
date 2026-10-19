@@ -33,6 +33,20 @@ server {
         try_files /__tricab_api_front_controller__ @tricab_api;
     }
 
+    # NPR attachments: the app accepts files up to 10 MiB (NprAttachmentRules),
+    # which nginx's 1 MB default refused with a 413 (a 4.3 MB file in production).
+    # Only the upload route gets 11m (a file plus multipart overhead); the rest of
+    # /api/v1/npr/ keeps 1 MB. The nested regex is needed because a ^~ prefix
+    # location skips regex matching, so the upload route cannot sit beside it.
+    location ^~ /api/v1/npr/ {
+        try_files /__tricab_api_front_controller__ @tricab_api;
+
+        location ~ ^/api/v1/npr/(me|tsd)/requests/[^/]+/attachments$ {
+            client_max_body_size 11m;
+            try_files /__tricab_api_front_controller__ @tricab_api;
+        }
+    }
+
     # Tri-Task's Excel import: the file arrives as base64 in JSON, a third larger
     # than on disk, and the code refuses a file over 5 MB. At 1 MB, sheets over
     # about 750 KB got a 413 from nginx before the code could say why.
