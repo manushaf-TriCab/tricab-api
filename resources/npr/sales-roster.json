@@ -413,6 +413,18 @@
       "sourceRow": 35,
       "staffId": null,
       "status": "roster_imported_pending_website_identity_resolution"
+    },
+    {
+      "email": "thilanh@tricab.com",
+      "displayName": "Thilan H (IT pilot)",
+      "branch": "IT Pilot",
+      "jobTitle": "IT pilot tester (temporary, not Sales)",
+      "department": "IT",
+      "officeLocationRaw": null,
+      "sourceCategory": "temporary_it_pilot",
+      "sourceRow": null,
+      "staffId": null,
+      "status": "temporary_it_pilot_remove_after_pilot"
     }
   ],
   "branchRoutingReview": [
