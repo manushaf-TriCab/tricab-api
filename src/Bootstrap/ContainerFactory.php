@@ -804,6 +804,24 @@ final class ContainerFactory
             \TriCab\Core\Mail\Contract\RfqDraftCreator::class
                 => \DI\autowire(\TriCab\Core\Mail\Infrastructure\UnavailableRfqDraftCreator::class),
 
+            // NPR (plan NPR-TSD-MIGRATION-PLAN N1). In-memory by default; the azure-sql
+            // branch below stores in `[npr]`. The field dictionary and the sales roster
+            // (branch by email; identity holds no branch) are files in resources/npr.
+            \TriCab\Core\Npr\Contract\NprRequestRepository::class
+                => \DI\autowire(\TriCab\Core\Npr\Infrastructure\InMemoryNprRequestRepository::class),
+            \TriCab\Core\Npr\Contract\NprBranchDirectory::class
+                => static fn (): \TriCab\Core\Npr\Contract\NprBranchDirectory
+                    => new \TriCab\Core\Npr\Infrastructure\RosterNprBranchDirectory(
+                        dirname(__DIR__, 2) . '/resources/npr/sales-roster.json',
+                    ),
+            \TriCab\Core\Npr\Application\Service\NprValidationService::class
+                => static fn (): \TriCab\Core\Npr\Application\Service\NprValidationService
+                    => \TriCab\Core\Npr\Application\Service\NprValidationService::fromFile(
+                        dirname(__DIR__, 2) . '/resources/npr/field-dictionary.json',
+                    ),
+            \TriCab\Core\Npr\NprRequestReader::class
+                => \DI\autowire(\TriCab\Core\Npr\Application\Service\TsdNprRequestReader::class),
+
             // RFQ. In-memory by default; the azure-sql branch below reads the
             // store's tables (plan 2.4). Empty rather than invented either way.
             // Branch membership has no source (owner question Q7), so it answers
@@ -3210,6 +3228,8 @@ final class ContainerFactory
                         $settings->blobContainerRfq,
                         self::get($container, Clock::class),
                     );
+            $definitions[\TriCab\Core\Npr\Contract\NprRequestRepository::class]
+                = \DI\autowire(\TriCab\Api\Npr\Persistence\AzureSqlNprRequestRepository::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqCustomerDirectory::class);
             // Parity plan E5.5: correction memory and Save Review's log.

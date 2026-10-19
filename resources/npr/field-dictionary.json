@@ -1,0 +1,2381 @@
+{
+  "schemaVersion": "0.1.0",
+  "status": "implementation_definition_pending_tsd_review",
+  "sourceDocument": "TRI-NPD-2026-001 rev 00",
+  "sections": [
+    {
+      "number": 1,
+      "title": "Request identification"
+    },
+    {
+      "number": 2,
+      "title": "Type of request"
+    },
+    {
+      "number": 3,
+      "title": "Why is this needed?"
+    },
+    {
+      "number": 4,
+      "title": "Commercial case"
+    },
+    {
+      "number": 5,
+      "title": "Product requirements"
+    },
+    {
+      "number": 6,
+      "title": "Documents attached"
+    },
+    {
+      "number": 7,
+      "title": "Timeline"
+    },
+    {
+      "number": 8,
+      "title": "Sales declaration and endorsement"
+    },
+    {
+      "number": 9,
+      "title": "Receipt and acknowledgement"
+    },
+    {
+      "number": 10,
+      "title": "Initial technical assessment"
+    },
+    {
+      "number": 11,
+      "title": "Screening decision"
+    }
+  ],
+  "answerEnvelope": {
+    "state": [
+      "provided",
+      "not_stated",
+      "not_applicable",
+      "see_specification"
+    ],
+    "value": "typed value, present only for provided",
+    "reason": "nonempty for not_stated or not_applicable; not_applicable cannot bypass a positively triggered dependent requirement",
+    "documentIds": "nonempty authorised attachment IDs for see_specification",
+    "remarks": "optional contextual notes on every non-system field",
+    "basis": "required nonempty for provided commercial answers",
+    "confidence": "required for provided commercial answers: confirmed | estimate | indicative",
+    "selectionMode": "required for multi_select and text_list; one of field selectionModes",
+    "otherDetail": "stored in named conditional other field"
+  },
+  "recordShape": {
+    "answers": "request-scoped answers keyed by field ID",
+    "variants": "nonempty list of {id, label, answers}; variant-scoped section 5 answers keyed by field ID",
+    "system": "system-owned fields, server generated",
+    "drafts": "missing fields allowed; supplied values must remain valid"
+  },
+  "crossFieldRules": [
+    {
+      "id": "armour_none_exclusive",
+      "field": "armour",
+      "rule": "none cannot coexist with any other selection within one variant"
+    },
+    {
+      "id": "verbal_only_exclusive",
+      "field": "document_types",
+      "rule": "verbal_only cannot coexist with any other evidence choice"
+    },
+    {
+      "id": "commercial_timing",
+      "field": "first_delivery_date",
+      "rule": "at least one milestone date provided OR timing_estimate provided with a nonempty estimate and basis"
+    },
+    {
+      "id": "sales_declaration_true",
+      "field": "sales_declaration",
+      "rule": "provided true at submit"
+    },
+    {
+      "id": "references_resolve",
+      "field": "attachments",
+      "rule": "every referenced file belongs to this request and exists; one attachment may support many requirements"
+    },
+    {
+      "id": "numeric_alternatives",
+      "field": "conductor_size",
+      "rule": "one numeric value per variant; alternatives use distinct variant IDs, never comma-delimited numbers"
+    }
+  ],
+  "fields": [
+    {
+      "id": "request_number",
+      "section": 1,
+      "label": "Request number",
+      "type": "text",
+      "owner": "system",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "raised_at",
+      "section": 1,
+      "label": "Date raised",
+      "type": "datetime",
+      "owner": "system",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "requester_id",
+      "section": 1,
+      "label": "Raised by staff identity",
+      "type": "staff_id",
+      "owner": "system",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "job_title",
+      "section": 1,
+      "label": "Job title",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "branch",
+      "section": 1,
+      "label": "Region / branch",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "contact_number",
+      "section": 1,
+      "label": "Contact number",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "customer_name",
+      "section": 1,
+      "label": "Customer name",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "customer_contact",
+      "section": 1,
+      "label": "Customer contact",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "customer_contact_role",
+      "section": 1,
+      "label": "Customer contact role",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "end_user",
+      "section": 1,
+      "label": "End user if different",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "customer_types",
+      "section": 1,
+      "label": "Customer type",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "utility",
+        "contractor",
+        "oem",
+        "marine",
+        "oil_gas",
+        "mining",
+        "renewables",
+        "data_centres",
+        "other"
+      ],
+      "selectionModes": [
+        "all_required"
+      ]
+    },
+    {
+      "id": "customer_type_other",
+      "section": 1,
+      "label": "Other customer type",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "customer_types",
+        "operator": "includes_any",
+        "value": [
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "existing_account",
+      "section": 1,
+      "label": "Existing customer account?",
+      "type": "single_select",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "account_number",
+      "section": 1,
+      "label": "Account number",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 1",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "existing_account",
+        "operator": "equals",
+        "value": "yes"
+      }
+    },
+    {
+      "id": "request_types",
+      "section": 2,
+      "label": "Request categories",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 2",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "selectionModes": [
+        "all_required"
+      ],
+      "notes": "Multiple categories override the PDF single-choice instruction, per user decision.",
+      "optionLabels": {
+        "A": "New product or solution",
+        "B": "New size or variant of existing product",
+        "C": "Permanent change to an existing product",
+        "D": "One-off non-standard variant for this customer",
+        "E": "Substitute for a competitor product",
+        "F": "Tender/customer specification not met by current range"
+      }
+    },
+    {
+      "id": "affected_product",
+      "section": 2,
+      "label": "Existing or competitor product code / description",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 2",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "request_types",
+        "operator": "includes_any",
+        "value": [
+          "B",
+          "C",
+          "D",
+          "E"
+        ]
+      }
+    },
+    {
+      "id": "customer_need",
+      "section": 3,
+      "label": "Customer need and problem to solve",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 3",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "volume_12_months",
+      "section": 4,
+      "label": "Estimated volume first 12 months",
+      "type": "number",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "unit": "km",
+      "minimum": 0
+    },
+    {
+      "id": "volume_three_years",
+      "section": 4,
+      "label": "Estimated volume over three years",
+      "type": "number",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "unit": "km",
+      "minimum": 0
+    },
+    {
+      "id": "target_price",
+      "section": 4,
+      "label": "Target or indicative price",
+      "type": "money_rate",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "minimum": 0,
+      "notes": "Structured amount, currency and per-m/per-km/per-drum basis; explicit estimate and basis required."
+    },
+    {
+      "id": "current_supplier",
+      "section": 4,
+      "label": "Current supplier / competitor",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "notes": "Use explicit no-current-supplier answer through not_applicable with reason."
+    },
+    {
+      "id": "competitor_price",
+      "section": 4,
+      "label": "Competitor price if known",
+      "type": "money_rate",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "minimum": 0
+    },
+    {
+      "id": "supply_frequency",
+      "section": 4,
+      "label": "Repeating or one-off",
+      "type": "single_select",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "options": [
+        "repeating",
+        "one_off"
+      ]
+    },
+    {
+      "id": "other_customer_interest",
+      "section": 4,
+      "label": "Would other customers want this?",
+      "type": "single_select",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "options": [
+        "yes",
+        "no",
+        "not_sure"
+      ]
+    },
+    {
+      "id": "other_customers",
+      "section": 4,
+      "label": "Other interested customers",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "appliesWhen": {
+        "field": "other_customer_interest",
+        "operator": "equals",
+        "value": "yes"
+      }
+    },
+    {
+      "id": "win_probability",
+      "section": 4,
+      "label": "Probability of winning",
+      "type": "single_select",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "options": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    {
+      "id": "revenue_at_risk",
+      "section": 4,
+      "label": "Revenue at risk",
+      "type": "money",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "minimum": 0
+    },
+    {
+      "id": "relationship_at_risk",
+      "section": 4,
+      "label": "Existing customer relationship at risk?",
+      "type": "single_select",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "relationship_risk_detail",
+      "section": 4,
+      "label": "Relationship risk explanation",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 4",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": true,
+      "appliesWhen": {
+        "field": "relationship_at_risk",
+        "operator": "equals",
+        "value": "yes"
+      }
+    },
+    {
+      "id": "voltage_rating",
+      "section": 5,
+      "label": "Rated voltage",
+      "type": "voltage_rating",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "notes": "Preserve original notation; numeric kV and AC/DC context; optional U0/U/Um components. Never round to supported class."
+    },
+    {
+      "id": "main_core_count",
+      "section": 5,
+      "label": "Number of main cores",
+      "type": "integer",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "minimum": 1
+    },
+    {
+      "id": "additional_core_requirements",
+      "section": 5,
+      "label": "Earth / pilot / fibre core details",
+      "type": "core_groups",
+      "owner": "sales",
+      "source": "Pilot clarification supporting PDF section 5 core count",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "notes": "Preserve original notation and counts separately from main cores."
+    },
+    {
+      "id": "conductor_size",
+      "section": 5,
+      "label": "Conductor cross-section",
+      "type": "number",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "unit": "mm2",
+      "minimum": 1e-06,
+      "notes": "Use separate variants for multiple numeric sizes; do not concatenate numbers."
+    },
+    {
+      "id": "conductor_material",
+      "section": 5,
+      "label": "Conductor material",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "copper",
+        "aluminium",
+        "alloy",
+        "other"
+      ],
+      "selectionModes": [
+        "acceptable_alternatives",
+        "separate_variants"
+      ]
+    },
+    {
+      "id": "conductor_material_other",
+      "section": 5,
+      "label": "Conductor material — other detail",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "conductor_material",
+        "operator": "includes_any",
+        "value": [
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "conductor_class",
+      "section": 5,
+      "label": "Conductor type/class",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "solid",
+        "stranded",
+        "class_5",
+        "class_6"
+      ],
+      "selectionModes": [
+        "acceptable_alternatives",
+        "separate_variants"
+      ]
+    },
+    {
+      "id": "insulation_material",
+      "section": 5,
+      "label": "Insulation material",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "XLPE",
+        "EPR",
+        "HEPR",
+        "PVC",
+        "other"
+      ],
+      "selectionModes": [
+        "acceptable_alternatives",
+        "separate_variants"
+      ]
+    },
+    {
+      "id": "insulation_material_other",
+      "section": 5,
+      "label": "Insulation material — other detail",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "insulation_material",
+        "operator": "includes_any",
+        "value": [
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "armour",
+      "section": 5,
+      "label": "Armour",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "SWA",
+        "AWA",
+        "braid",
+        "composite_braid",
+        "metallic_tape",
+        "corrugated",
+        "none",
+        "other"
+      ],
+      "selectionModes": [
+        "acceptable_alternatives",
+        "separate_variants"
+      ]
+    },
+    {
+      "id": "armour_other",
+      "section": 5,
+      "label": "Armour — other detail",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "armour",
+        "operator": "includes_any",
+        "value": [
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "sheath_material",
+      "section": 5,
+      "label": "Jacket / sheath material",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "PVC",
+        "PE",
+        "LSZH",
+        "PCP",
+        "CPE",
+        "CSP",
+        "TPU",
+        "PUR",
+        "other"
+      ],
+      "selectionModes": [
+        "acceptable_alternatives",
+        "separate_variants"
+      ]
+    },
+    {
+      "id": "sheath_material_other",
+      "section": 5,
+      "label": "Jacket / sheath material — other detail",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "sheath_material",
+        "operator": "includes_any",
+        "value": [
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "screening_required",
+      "section": 5,
+      "label": "Screening required?",
+      "type": "single_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "water_blocking_required",
+      "section": 5,
+      "label": "Water blocking required?",
+      "type": "single_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "sheath_colours",
+      "section": 5,
+      "label": "Sheath colours",
+      "type": "text_list",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "selectionModes": [
+        "acceptable_alternatives",
+        "separate_variants"
+      ]
+    },
+    {
+      "id": "fire_performance",
+      "section": 5,
+      "label": "Fire / flame performance",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "HFFR",
+        "LSZH",
+        "fire_resistant",
+        "other"
+      ],
+      "selectionModes": [
+        "all_required",
+        "acceptable_alternatives",
+        "separate_variants"
+      ]
+    },
+    {
+      "id": "fire_performance_other",
+      "section": 5,
+      "label": "Other fire/flame performance",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "fire_performance",
+        "operator": "includes_any",
+        "value": [
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "operating_temperature",
+      "section": 5,
+      "label": "Operating temperature",
+      "type": "temperature_range",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "unit": "degC"
+    },
+    {
+      "id": "installation_methods",
+      "section": 5,
+      "label": "Installation methods",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "tray",
+        "duct",
+        "direct_buried",
+        "sun_exposed",
+        "aerial",
+        "hanging",
+        "under_water",
+        "other"
+      ],
+      "selectionModes": [
+        "all_required",
+        "acceptable_alternatives",
+        "separate_variants"
+      ]
+    },
+    {
+      "id": "installation_other",
+      "section": 5,
+      "label": "Other installation",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "installation_methods",
+        "operator": "includes_any",
+        "value": [
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "special_requirements",
+      "section": 5,
+      "label": "Special requirements",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "UV",
+        "oil",
+        "mud",
+        "chemical",
+        "rodent",
+        "termite",
+        "cold_temperature",
+        "other"
+      ],
+      "selectionModes": [
+        "all_required",
+        "acceptable_alternatives",
+        "separate_variants"
+      ]
+    },
+    {
+      "id": "special_other",
+      "section": 5,
+      "label": "Other special requirement",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "special_requirements",
+        "operator": "includes_any",
+        "value": [
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "standards",
+      "section": 5,
+      "label": "Applicable standards",
+      "type": "standard_references",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "notes": "Repeat number, edition if stated, clauses if stated; do not assume current edition."
+    },
+    {
+      "id": "customer_specification",
+      "section": 5,
+      "label": "Customer specification number and revision",
+      "type": "document_reference",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "approval_required",
+      "section": 5,
+      "label": "Third-party / utility approval required?",
+      "type": "single_select",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "yes",
+        "no",
+        "not_sure"
+      ]
+    },
+    {
+      "id": "approval_body",
+      "section": 5,
+      "label": "Required approval body",
+      "type": "text_list",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "approval_required",
+        "operator": "equals",
+        "value": "yes"
+      }
+    },
+    {
+      "id": "drum_length",
+      "section": 5,
+      "label": "Standard drum length",
+      "type": "number",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "unit": "m",
+      "minimum": 0
+    },
+    {
+      "id": "prototype_length",
+      "section": 5,
+      "label": "Sample or prototype length",
+      "type": "number",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "unit": "m",
+      "minimum": 0
+    },
+    {
+      "id": "marking",
+      "section": 5,
+      "label": "Marking / printing / embossing",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "packaging",
+      "section": 5,
+      "label": "Packaging / drum requirements",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "other_information",
+      "section": 5,
+      "label": "Other pertinent information",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "intended_application",
+      "section": 5,
+      "label": "Intended application / duty",
+      "type": "text",
+      "owner": "sales",
+      "source": "Pilot addition to PDF section 5",
+      "scope": "variant",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable",
+        "see_specification"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "document_types",
+      "section": 6,
+      "label": "Documents/evidence supplied",
+      "type": "multi_select",
+      "owner": "sales",
+      "source": "PDF section 6",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "customer_specification",
+        "drawing",
+        "tender",
+        "competitor_datasheet",
+        "photograph",
+        "physical_sample",
+        "previous_supply",
+        "verbal_only"
+      ],
+      "selectionModes": [
+        "all_required"
+      ]
+    },
+    {
+      "id": "attachments",
+      "section": 6,
+      "label": "File attachments and references",
+      "type": "attachments",
+      "owner": "sales",
+      "source": "PDF section 6",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "document_types",
+        "operator": "includes_any",
+        "value": [
+          "customer_specification",
+          "drawing",
+          "tender",
+          "competitor_datasheet",
+          "photograph"
+        ]
+      },
+      "notes": "Each file: private ID, type, title, reference/revision or explicit unknown, owner/time; drawing number for drawings."
+    },
+    {
+      "id": "sample_holder",
+      "section": 6,
+      "label": "Physical sample held by",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 6",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "document_types",
+        "operator": "includes_any",
+        "value": [
+          "physical_sample"
+        ]
+      }
+    },
+    {
+      "id": "previous_supply_reference",
+      "section": 6,
+      "label": "Previous order / job number",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 6",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "document_types",
+        "operator": "includes_any",
+        "value": [
+          "previous_supply"
+        ]
+      }
+    },
+    {
+      "id": "budget_quote_date",
+      "section": 7,
+      "label": "Budgetary quotation required by",
+      "type": "date",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "budget_quote_consequence",
+      "section": 7,
+      "label": "Budgetary quotation — consequence if missed",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "budget_quote_date",
+        "operator": "state_equals",
+        "value": "provided"
+      }
+    },
+    {
+      "id": "firm_quote_date",
+      "section": 7,
+      "label": "Firm quotation required by",
+      "type": "date",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "firm_quote_consequence",
+      "section": 7,
+      "label": "Firm quotation — consequence if missed",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "firm_quote_date",
+        "operator": "state_equals",
+        "value": "provided"
+      }
+    },
+    {
+      "id": "sample_date",
+      "section": 7,
+      "label": "Sample / prototype required by",
+      "type": "date",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "sample_consequence",
+      "section": 7,
+      "label": "Sample / prototype — consequence if missed",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "sample_date",
+        "operator": "state_equals",
+        "value": "provided"
+      }
+    },
+    {
+      "id": "tender_date",
+      "section": 7,
+      "label": "Tender submission / decision required by",
+      "type": "date",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "tender_consequence",
+      "section": 7,
+      "label": "Tender submission / decision — consequence if missed",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "tender_date",
+        "operator": "state_equals",
+        "value": "provided"
+      }
+    },
+    {
+      "id": "first_delivery_date",
+      "section": 7,
+      "label": "First commercial delivery required by",
+      "type": "date",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "first_delivery_consequence",
+      "section": 7,
+      "label": "First commercial delivery — consequence if missed",
+      "type": "text",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "first_delivery_date",
+        "operator": "state_equals",
+        "value": "provided"
+      }
+    },
+    {
+      "id": "urgency",
+      "section": 7,
+      "label": "Overall urgency",
+      "type": "single_select",
+      "owner": "sales",
+      "source": "PDF section 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "routine",
+        "important",
+        "urgent"
+      ]
+    },
+    {
+      "id": "sales_declaration",
+      "section": 8,
+      "label": "Sales declaration",
+      "type": "boolean",
+      "owner": "sales",
+      "source": "PDF section 8",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "notes": "Must be true; no commitment to specifications, price or delivery; estimates identified."
+    },
+    {
+      "id": "sales_declared_by",
+      "section": 8,
+      "label": "Requester signature identity",
+      "type": "staff_id",
+      "owner": "system",
+      "source": "PDF section 8",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "sales_declared_at",
+      "section": 8,
+      "label": "Requester signature date",
+      "type": "datetime",
+      "owner": "system",
+      "source": "PDF section 8",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "manager_id",
+      "section": 8,
+      "label": "Assigned Sales / Branch Manager",
+      "type": "staff_id",
+      "owner": "system",
+      "source": "PDF section 8",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false,
+      "notes": "Trusted eligible manager routing; never client-selected arbitrary email."
+    },
+    {
+      "id": "manager_priority_comment",
+      "section": 8,
+      "label": "Manager priority comment",
+      "type": "text",
+      "owner": "manager",
+      "source": "PDF section 8",
+      "scope": "request",
+      "requiredAt": "endorse",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "endorsed_by",
+      "section": 8,
+      "label": "Manager signature identity",
+      "type": "staff_id",
+      "owner": "system",
+      "source": "PDF section 8",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "endorsed_at",
+      "section": 8,
+      "label": "Manager signature date",
+      "type": "datetime",
+      "owner": "system",
+      "source": "PDF section 8",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "endorsed_revision",
+      "section": 8,
+      "label": "Signed request revision",
+      "type": "integer",
+      "owner": "system",
+      "source": "Pilot revision control for PDF section 8",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false,
+      "minimum": 1
+    },
+    {
+      "id": "received_at",
+      "section": 9,
+      "label": "Date received",
+      "type": "datetime",
+      "owner": "system",
+      "source": "PDF section 9",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false,
+      "notes": "Recorded only when the corresponding transition happens; not required on drafts."
+    },
+    {
+      "id": "received_by",
+      "section": 9,
+      "label": "Received by",
+      "type": "staff_id",
+      "owner": "system",
+      "source": "PDF section 9",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false,
+      "notes": "Recorded only when the corresponding transition happens; not required on drafts."
+    },
+    {
+      "id": "acknowledged_at",
+      "section": 9,
+      "label": "Date acknowledged to Sales",
+      "type": "datetime",
+      "owner": "system",
+      "source": "PDF section 9",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false,
+      "notes": "Recorded only when the corresponding transition happens; not required on drafts."
+    },
+    {
+      "id": "returned_at",
+      "section": 9,
+      "label": "Date returned",
+      "type": "datetime",
+      "owner": "system",
+      "source": "PDF section 9",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false,
+      "notes": "Recorded only when the corresponding transition happens; not required on drafts."
+    },
+    {
+      "id": "form_complete",
+      "section": 9,
+      "label": "Form complete on receipt?",
+      "type": "single_select",
+      "owner": "tsd",
+      "source": "PDF section 9",
+      "scope": "request",
+      "requiredAt": "acknowledge",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "receipt_notes",
+      "section": 9,
+      "label": "Receipt / return notes",
+      "type": "text",
+      "owner": "tsd",
+      "source": "PDF section 9",
+      "scope": "request",
+      "requiredAt": "acknowledge",
+      "answerStates": [
+        "provided",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "notes": "A reason is mandatory on a return."
+    },
+    {
+      "id": "existing_product_fit",
+      "section": 10,
+      "label": "Existing product meets requirement?",
+      "type": "single_select",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "existing_product_code",
+      "section": 10,
+      "label": "Existing product code",
+      "type": "text",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "existing_product_fit",
+        "operator": "equals",
+        "value": "yes"
+      }
+    },
+    {
+      "id": "gap_nature",
+      "section": 10,
+      "label": "Nature of gap",
+      "type": "multi_select",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "size_rating_colour",
+        "material_change",
+        "new_construction",
+        "new_capability",
+        "other"
+      ],
+      "appliesWhen": {
+        "field": "existing_product_fit",
+        "operator": "equals",
+        "value": "no"
+      },
+      "selectionModes": [
+        "all_required"
+      ]
+    },
+    {
+      "id": "gap_other",
+      "section": 10,
+      "label": "Other technical gap",
+      "type": "text",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "gap_nature",
+        "operator": "includes_any",
+        "value": [
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "technical_feasibility",
+      "section": 10,
+      "label": "Technically feasible?",
+      "type": "single_select",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "yes",
+        "with_development",
+        "no"
+      ]
+    },
+    {
+      "id": "plant_capability",
+      "section": 10,
+      "label": "Can existing plant manufacture it?",
+      "type": "single_select",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "existing_plant",
+        "new_tooling",
+        "capital_investment"
+      ]
+    },
+    {
+      "id": "new_materials_required",
+      "section": 10,
+      "label": "New materials/vendors required?",
+      "type": "single_select",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "new_materials_detail",
+      "section": 10,
+      "label": "New materials/vendor list",
+      "type": "text",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "new_materials_required",
+        "operator": "equals",
+        "value": "yes"
+      }
+    },
+    {
+      "id": "testing_required",
+      "section": 10,
+      "label": "Type testing / third-party approval required?",
+      "type": "single_select",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "testing_cost",
+      "section": 10,
+      "label": "Estimated type testing / approval cost",
+      "type": "money",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "field": "testing_required",
+        "operator": "equals",
+        "value": "yes"
+      },
+      "unit": "AUD",
+      "minimum": 0
+    },
+    {
+      "id": "development_cost",
+      "section": 10,
+      "label": "Estimated development cost",
+      "type": "money",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "minimum": 0
+    },
+    {
+      "id": "development_duration",
+      "section": 10,
+      "label": "Estimated development duration",
+      "type": "duration",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "minimum": 0
+    },
+    {
+      "id": "conversion_cost",
+      "section": 10,
+      "label": "Estimated conversion cost per km",
+      "type": "money_rate",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided",
+        "not_stated",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "unit": "per_km",
+      "minimum": 0
+    },
+    {
+      "id": "technical_risks",
+      "section": 10,
+      "label": "Principal technical risks",
+      "type": "text",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "assessment_notes",
+      "section": 10,
+      "label": "Assessment notes",
+      "type": "text",
+      "owner": "tsd",
+      "source": "PDF section 10",
+      "scope": "request",
+      "requiredAt": "request_screening",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "notes": "Explain no-feasibility conclusions and conditions."
+    },
+    {
+      "id": "screening_outcome",
+      "section": 11,
+      "label": "Screening decision",
+      "type": "single_select",
+      "owner": "screening_signatory",
+      "source": "PDF section 11",
+      "scope": "request",
+      "requiredAt": "decide",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "options": [
+        "approved",
+        "deferred",
+        "rejected"
+      ]
+    },
+    {
+      "id": "screening_rationale",
+      "section": 11,
+      "label": "Decision rationale",
+      "type": "text",
+      "owner": "screening_signatory",
+      "source": "PDF section 11",
+      "scope": "request",
+      "requiredAt": "decide",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "screening_conditions",
+      "section": 11,
+      "label": "Decision conditions",
+      "type": "text",
+      "owner": "screening_signatory",
+      "source": "PDF section 11",
+      "scope": "request",
+      "requiredAt": "decide",
+      "answerStates": [
+        "provided",
+        "not_applicable"
+      ],
+      "remarks": true,
+      "basisConfidence": false
+    },
+    {
+      "id": "decided_by",
+      "section": 11,
+      "label": "Screening signatory",
+      "type": "staff_id",
+      "owner": "system",
+      "source": "PDF section 11",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "decided_at",
+      "section": 11,
+      "label": "Decision date",
+      "type": "datetime",
+      "owner": "system",
+      "source": "PDF section 11",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "decided_revision",
+      "section": 11,
+      "label": "Reviewed request revision",
+      "type": "integer",
+      "owner": "system",
+      "source": "PDF section 11",
+      "scope": "request",
+      "requiredAt": "generated",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": false,
+      "basisConfidence": false
+    },
+    {
+      "id": "timing_estimate",
+      "section": 7,
+      "label": "Timing estimate and basis when no milestone date is known",
+      "type": "text",
+      "owner": "sales",
+      "source": "Pilot clarification for PDF sections 4 and 7",
+      "scope": "request",
+      "requiredAt": "submit",
+      "answerStates": [
+        "provided"
+      ],
+      "remarks": true,
+      "basisConfidence": false,
+      "appliesWhen": {
+        "operator": "no_milestone_date_provided"
+      },
+      "notes": "Require a timing estimate and nonempty basis; no-milestone-date condition applies across request dates."
+    }
+  ],
+  "valueTypes": {
+    "text": "nonempty trimmed string; maximum length defined per UI/API in Phase 2",
+    "number": "finite JSON number, never a numeric string; enforce field minimum",
+    "integer": "finite JSON integer, never boolean; enforce field minimum",
+    "boolean": "JSON true/false; sales declaration must be true on submit",
+    "date": "valid ISO YYYY-MM-DD calendar date",
+    "datetime": "server-created ISO UTC timestamp",
+    "staff_id": "server-resolved website staff identifier; never accept actor IDs as permission grants",
+    "single_select": "one exact option string",
+    "multi_select": "nonempty unique array of exact option strings plus selectionMode",
+    "text_list": "nonempty unique array of nonempty strings plus selectionMode when defined",
+    "money": "{amount: finite nonnegative number, currency: three-letter currency code}",
+    "money_rate": "{amount: finite nonnegative number, currency: three-letter currency code, per: m|km|drum}; conversion_cost requires per=km; drum basis must identify drum length or explicit uncertainty",
+    "voltage_rating": "{originalNotation: string, voltage_kV: positive number|null, currentType: AC|DC|not_stated, u0_kV?: number, u_kV?: number, um_kV?: number}; originalNotation required; do not parse ambiguous notation into a forced value",
+    "temperature_range": "{minimum_C: finite number|null, maximum_C: finite number|null, originalText: string}; at least one bound or originalText; min<=max if both bounds provided",
+    "duration": "{amount: finite nonnegative number, unit: days|weeks|months}",
+    "document_reference": "{reference: nonempty string, revision: string|null, revisionState: provided|not_stated, attachmentIds: array}; revision required only for provided",
+    "standard_references": "nonempty array of {number: string, edition: string|null, editionState: provided|not_stated, clauses: string[]}; edition required only for provided",
+    "attachments": "nonempty array of {fileId: string, documentType: supported file evidence type, title: string, reference: string|null, referenceState: provided|not_stated, revision: string|null, revisionState: provided|not_stated}; file IDs belong to same request; drawing reference is its drawing number",
+    "core_groups": "array of {kind: earth|pilot_earth|fibre_optic, count: positive integer, originalNotation: string, size_mm2?: positive number}; explicit not_applicable when absent"
+  },
+  "conditionSemantics": {
+    "equals": "compare provided answer.value exactly",
+    "includes_any": "provided array intersects listed options",
+    "state_equals": "compare answer.state",
+    "no_milestone_date_provided": "none of budget_quote_date, firm_quote_date, sample_date, tender_date, first_delivery_date has state provided",
+    "scopeResolution": "variant conditions resolve in the same variant; request conditions resolve in request answers",
+    "missingTrigger": "draft condition unresolved; submission requires trigger answer first; never silently erase dependent stored answers"
+  }
+}

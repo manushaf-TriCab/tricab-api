@@ -428,6 +428,7 @@ final class AppBuilder
         $app->get('/api/v1/public/contact', GetPublicContactAction::class);
         self::registerOnboardingRoutes($app, $container);
         self::registerRfqRoutes($app, $container);
+        self::registerNprRoutes($app, $container);
         if ($settings->mailModuleEnabled) {
             self::registerMailRoutes($app, $container);
         }
@@ -994,6 +995,34 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_RESTORE));
         $app->post('/api/v1/rfqs/{publicId}/comments', \TriCab\Api\Http\Action\Rfq\CommentOnRfqAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_COMMENT));
+    }
+
+    /**
+     * New Product Requests (plan NPR-TSD-MIGRATION-PLAN, N1). Sales work their own
+     * requests under `/npr/me`; TSD reads what has reached it under `/npr/tsd`.
+     * Each route has exactly one permission; the service then checks the record
+     * (someone else's request answers 404). Manager routes (`/npr/team`) and the
+     * workflow writes arrive with N2.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerNprRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+
+        $app->get('/api/v1/npr/me/requests', \TriCab\Api\Http\Action\Npr\ListMyNprRequestsAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_READ));
+        $app->post('/api/v1/npr/me/requests', \TriCab\Api\Http\Action\Npr\CreateNprRequestAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_CREATE));
+        $app->get('/api/v1/npr/me/requests/{publicId}', \TriCab\Api\Http\Action\Npr\GetMyNprRequestAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_READ));
+        $app->put('/api/v1/npr/me/requests/{publicId}', \TriCab\Api\Http\Action\Npr\SaveNprRequestAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_CREATE));
+
+        $app->get('/api/v1/npr/tsd/requests', \TriCab\Api\Http\Action\Npr\ListTsdNprRequestsAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_TSD_READ));
+        $app->get('/api/v1/npr/tsd/requests/{publicId}', \TriCab\Api\Http\Action\Npr\GetTsdNprRequestAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_TSD_READ));
     }
 
     /**
