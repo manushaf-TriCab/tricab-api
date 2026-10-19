@@ -61,7 +61,10 @@ final class StableMediaUrlSigner
     }
 
     /**
-     * Origin stable addresses are built from: PUBLIC_API_ORIGIN, else the request's own scheme and host.
+     * Origin stable addresses are built from: PUBLIC_API_ORIGIN, else the request's public scheme and host.
+     *
+     * Nginx terminates HTTPS and proxies to this process on port 8080. That listen port is not part of
+     * the public origin; publishing it makes the browser request https://host:8080, which is closed.
      */
     public function originFor(ServerRequestInterface $request): string
     {
@@ -69,23 +72,42 @@ final class StableMediaUrlSigner
             return $this->settings->publicApiOrigin;
         }
         $uri = $request->getUri();
-        $scheme = strtolower(trim(explode(',', $request->getHeaderLine('X-Forwarded-Proto'))[0]));
-        if (!in_array($scheme, ['http', 'https'], true)) {
-            $scheme = strtolower($uri->getScheme());
-        }
+        $forwardedProto = strtolower(trim(explode(',', $request->getHeaderLine('X-Forwarded-Proto'))[0]));
+        $scheme = in_array($forwardedProto, ['http', 'https'], true)
+            ? $forwardedProto
+            : strtolower($uri->getScheme());
         $host = strtolower(trim(explode(',', $request->getHeaderLine('X-Forwarded-Host'))[0]));
         if ($host === '') {
             $host = strtolower($uri->getHost());
-            $port = $uri->getPort();
-            if ($port !== null) {
+            $port = $forwardedProto !== '' ? $this->forwardedPort($request) : $uri->getPort();
+            if (is_int($port) && !$this->isDefaultPort($scheme, $port)) {
                 $host .= ':' . $port;
             }
+        }
+        if ($scheme === 'https' && str_ends_with($host, ':8080')) {
+            $host = substr($host, 0, -5);
         }
         if (!in_array($scheme, ['http', 'https'], true) || preg_match('/^[a-z0-9.-]+(:\d{1,5})?$/', $host) !== 1) {
             return '';
         }
 
         return $scheme . '://' . $host;
+    }
+
+    private function forwardedPort(ServerRequestInterface $request): ?int
+    {
+        $raw = trim(explode(',', $request->getHeaderLine('X-Forwarded-Port'))[0]);
+        if (preg_match('/^\d{1,5}$/', $raw) !== 1) {
+            return null;
+        }
+        $port = (int) $raw;
+
+        return $port >= 1 && $port <= 65535 ? $port : null;
+    }
+
+    private function isDefaultPort(string $scheme, int $port): bool
+    {
+        return ($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80);
     }
 
     /**

@@ -130,6 +130,27 @@ final class StableMediaUrlSignerTest extends TestCase
         ));
     }
 
+    public function test_https_origin_omits_the_internal_listen_port(): void
+    {
+        $factory = new ServerRequestFactory();
+        $signer = $this->signer();
+
+        $proxied = $factory->createServerRequest('GET', 'http://tricab.ai:8080/api/v1/catalogue/panel')
+            ->withHeader('X-Forwarded-Proto', 'https');
+        self::assertSame('https://tricab.ai', $signer->originFor($proxied));
+
+        $hostIncludesPort = $factory->createServerRequest('GET', 'http://tricab.ai:8080/api/v1/catalogue/panel')
+            ->withHeader('X-Forwarded-Proto', 'https')
+            ->withHeader('X-Forwarded-Host', 'tricab.ai:8080');
+        self::assertSame('https://tricab.ai', $signer->originFor($hostIncludesPort));
+
+        $alreadyHttps = $factory->createServerRequest('GET', 'https://tricab.ai:8080/api/v1/media/images/token/cable.png');
+        self::assertSame('https://tricab.ai', $signer->originFor($alreadyHttps));
+
+        $local = $factory->createServerRequest('GET', 'http://127.0.0.1:8080/api/v1/catalogue/panel');
+        self::assertSame('http://127.0.0.1:8080', $signer->originFor($local));
+    }
+
     public function test_redirect_issues_a_fresh_read_signature_each_time(): void
     {
         $blobs = new RecordingBlobStore();
