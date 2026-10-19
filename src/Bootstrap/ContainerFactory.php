@@ -913,6 +913,40 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Core\CableFit\Infrastructure\InMemoryCableFitCandidateRepository::class),
             \TriCab\Core\CableFit\Application\CableFitCandidateService::class => \DI\autowire(),
 
+            // CableFit research agent (C3). In-memory by default; the azure-sql branch below stores in [cablefit].
+            // The run only queues here; bin/run-cablefit-research.php (the cablefit-research WebJob) calls the model.
+            \TriCab\Core\CableFit\Contract\ResearchSourceRepository::class
+                => \DI\autowire(\TriCab\Core\CableFit\Infrastructure\InMemoryResearchSourceRepository::class),
+            \TriCab\Core\CableFit\Contract\ResearchRunRepository::class
+                => \DI\autowire(\TriCab\Core\CableFit\Infrastructure\InMemoryResearchRunRepository::class),
+            \TriCab\Core\CableFit\Contract\CableFitResearchWake::class
+                => static fn (): \TriCab\Api\CableFit\Research\FileCableFitResearchWake => \TriCab\Api\CableFit\Research\FileCableFitResearchWake::fromSettings($settings),
+            \TriCab\Core\CableFit\Contract\ResearchModel::class => static function () use ($settings): \TriCab\Core\CableFit\Contract\ResearchModel {
+                if (!$settings->isCableFitResearchConfigured()) {
+                    return new \TriCab\Core\CableFit\Infrastructure\UnavailableResearchModel();
+                }
+                $http = new StreamJsonHttpClient((float) $settings->cablefitResearchTimeoutSeconds, 10.0);
+
+                return new \TriCab\Api\CableFit\Research\FoundryResearchModel(
+                    $http,
+                    new ManagedIdentityFoundryAccessTokenProvider($http),
+                    $settings->foundryEndpoint,
+                    $settings->cablefitResearchModel,
+                    $settings->foundryAuthMode,
+                    $settings->foundryApiKey,
+                    $settings->cablefitResearchTimeoutSeconds,
+                );
+            },
+            \TriCab\Core\CableFit\Application\ResearchService::class => \DI\autowire()
+                ->constructorParameter('enabled', $settings->cablefitResearchEnabled),
+            \TriCab\Core\CableFit\Application\ResearchRunner::class => static fn (Container $container): \TriCab\Core\CableFit\Application\ResearchRunner
+                => new \TriCab\Core\CableFit\Application\ResearchRunner(
+                    self::get($container, \TriCab\Core\CableFit\Contract\ResearchRunRepository::class),
+                    self::get($container, \TriCab\Core\CableFit\Contract\ResearchSourceRepository::class),
+                    self::get($container, \TriCab\Core\CableFit\Contract\ResearchModel::class),
+                    $settings->cablefitResearchMaxSearches,
+                ),
+
             // RFQ. In-memory by default; the azure-sql branch below reads the
             // store's tables (plan 2.4). Empty rather than invented either way.
             // Branch membership has no source (owner question Q7), so it answers
@@ -3297,6 +3331,10 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqRepository::class);
             $definitions[\TriCab\Core\CableFit\Contract\CableFitCandidateRepository::class]
                 = \DI\autowire(\TriCab\Api\CableFit\Persistence\AzureSqlCableFitCandidateRepository::class);
+            $definitions[\TriCab\Core\CableFit\Contract\ResearchSourceRepository::class]
+                = \DI\autowire(\TriCab\Api\CableFit\Persistence\AzureSqlResearchSourceRepository::class);
+            $definitions[\TriCab\Core\CableFit\Contract\ResearchRunRepository::class]
+                = \DI\autowire(\TriCab\Api\CableFit\Persistence\AzureSqlResearchRunRepository::class);
             // Parity plan E6: workflow writes share the draft store (one lock, one
             // transaction with the activity row); people are active identity users.
             $definitions[\TriCab\Core\Rfq\Contract\RfqWorkflowStore::class]

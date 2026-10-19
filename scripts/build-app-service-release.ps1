@@ -270,6 +270,12 @@ New-Item -ItemType Directory -Path $nprMailJobRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\run-npr-mail-sweep.php') -Destination (Join-Path $appRoot 'bin\run-npr-mail-sweep.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\npr-mail\run.sh') -Destination (Join-Path $nprMailJobRoot 'run.sh') -Force
 
+# The CableFit research worker (C3) and its continuous WebJob, the same way.
+$researchJobRoot = Join-Path $releaseRoot 'App_Data\jobs\continuous\cablefit-research'
+New-Item -ItemType Directory -Path $researchJobRoot -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\run-cablefit-research.php') -Destination (Join-Path $appRoot 'bin\run-cablefit-research.php') -Force
+Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\cablefit-research\run.sh') -Destination (Join-Path $researchJobRoot 'run.sh') -Force
+
 if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
 }

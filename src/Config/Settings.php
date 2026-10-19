@@ -282,6 +282,13 @@ final readonly class Settings
         public string $nprTsdQueueEmail = '',
         public string $nprAppBaseUrl = 'https://tricab.ai',
         public string $nprMailWakePath = 'var/npr-mail',
+        // CableFit research agent (C3): advisory web research, run by the cablefit-research WebJob.
+        public bool $cablefitResearchEnabled = false,
+        public string $cablefitResearchModel = 'claude-sonnet-5',
+        public int $cablefitResearchMaxSearches = 8,
+        public int $cablefitResearchTimeoutSeconds = 300,
+        public int $cablefitResearchIdleCheckMinutes = 1440,
+        public string $cablefitResearchWakePath = 'var/cablefit-research',
     ) {
     }
 
@@ -401,6 +408,20 @@ final readonly class Settings
     public function isRfqMailReaderRunning(): bool
     {
         return $this->rfqMailReadEnabled && $this->rfqMailMode !== self::RFQ_MAIL_MODE_OFF;
+    }
+
+    /**
+     * The CableFit research agent calls Foundry with the web search tool. Switched on by
+     * `CABLEFIT_RESEARCH_ENABLED`; it needs the platform's Foundry connection, a deployment name, and (in
+     * api-key mode) the key.
+     */
+    public function isCableFitResearchConfigured(): bool
+    {
+        return $this->cablefitResearchEnabled
+            && $this->foundryEnabled
+            && $this->foundryEndpoint !== ''
+            && $this->cablefitResearchModel !== ''
+            && ($this->foundryAuthMode !== self::FOUNDRY_AUTH_MODE_API_KEY || $this->foundryApiKey !== '');
     }
 
     /** The classifier calls Foundry; it needs the platform's Foundry connection and a deployment name. */
@@ -1539,6 +1560,12 @@ final readonly class Settings
             nprTsdQueueEmail: strtolower(trim(self::string($env, 'NPR_TSD_QUEUE_EMAIL', ''))),
             nprAppBaseUrl: rtrim(self::string($env, 'NPR_APP_BASE_URL', 'https://tricab.ai'), '/'),
             nprMailWakePath: self::string($env, 'NPR_MAIL_WAKE_PATH', 'var/npr-mail'),
+            cablefitResearchEnabled: self::bool($env, 'CABLEFIT_RESEARCH_ENABLED', false),
+            cablefitResearchModel: trim(self::string($env, 'CABLEFIT_RESEARCH_MODEL', 'claude-sonnet-5')) ?: 'claude-sonnet-5',
+            cablefitResearchMaxSearches: self::boundedInt($env, 'CABLEFIT_RESEARCH_MAX_SEARCHES', 8, 1, 20),
+            cablefitResearchTimeoutSeconds: self::boundedInt($env, 'CABLEFIT_RESEARCH_TIMEOUT_SECONDS', 300, 30, 900),
+            cablefitResearchIdleCheckMinutes: self::boundedInt($env, 'CABLEFIT_RESEARCH_IDLE_CHECK_MINUTES', 1440, 1, 10080),
+            cablefitResearchWakePath: trim(self::string($env, 'CABLEFIT_RESEARCH_WAKE_PATH', 'var/cablefit-research')) ?: 'var/cablefit-research',
         );
     }
 

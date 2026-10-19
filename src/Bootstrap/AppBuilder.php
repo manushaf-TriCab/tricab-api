@@ -443,7 +443,8 @@ final class AppBuilder
     }
 
     /**
-     * CableFit candidate designs for TSD. Every route holds `TSD.CABLEFIT.USE`.
+     * CableFit candidate designs for TSD. Every candidate route holds `TSD.CABLEFIT.USE`.
+     * The research routes (C3) hold USE to read and `TSD.CABLEFIT.RESEARCH` to write.
      *
      * @param App<ContainerInterface> $app
      */
@@ -459,6 +460,21 @@ final class AppBuilder
         $app->get('/api/v1/tsd/cablefit/candidates/{publicId}', \TriCab\Api\Http\Action\CableFit\GetCableFitCandidateAction::class)
             ->add(($require)($use));
         $app->put('/api/v1/tsd/cablefit/candidates/{publicId}', \TriCab\Api\Http\Action\CableFit\SaveCableFitCandidateAction::class)
+            ->add(($require)($use));
+
+        // Research agent (C3): advisory only. Reads need USE; queueing a run and editing sources need RESEARCH.
+        $research = \TriCab\Core\CableFit\Module::PERMISSION_RESEARCH;
+        $app->get('/api/v1/tsd/cablefit/research-sources', \TriCab\Api\Http\Action\CableFit\ListResearchSourcesAction::class)
+            ->add(($require)($use));
+        $app->post('/api/v1/tsd/cablefit/research-sources', \TriCab\Api\Http\Action\CableFit\CreateResearchSourceAction::class)
+            ->add(($require)($research));
+        $app->put('/api/v1/tsd/cablefit/research-sources/{publicId}', \TriCab\Api\Http\Action\CableFit\UpdateResearchSourceAction::class)
+            ->add(($require)($research));
+        $app->post('/api/v1/tsd/cablefit/candidates/{candidatePublicId}/research', \TriCab\Api\Http\Action\CableFit\RequestResearchRunAction::class)
+            ->add(($require)($research));
+        $app->get('/api/v1/tsd/cablefit/candidates/{candidatePublicId}/research', \TriCab\Api\Http\Action\CableFit\ListResearchRunsAction::class)
+            ->add(($require)($use));
+        $app->get('/api/v1/tsd/cablefit/candidates/{candidatePublicId}/research/{runPublicId}', \TriCab\Api\Http\Action\CableFit\GetResearchRunAction::class)
             ->add(($require)($use));
     }
 

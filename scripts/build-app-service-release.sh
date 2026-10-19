@@ -88,6 +88,8 @@ for required in \
     "$api_root/bin/run-npr-mail-sweep.php" \
     "$api_root/deploy/app-service/webjobs/finance-jobs/run.sh" \
     "$api_root/bin/run-finance-jobs.php" \
+    "$api_root/deploy/app-service/webjobs/cablefit-research/run.sh" \
+    "$api_root/bin/run-cablefit-research.php" \
     "$api_root/deploy/app-service/api/index.php" \
     "$api_root/core/python/requirements.txt" \
     "$api_root/core/python/wsgi.py"
@@ -344,6 +346,13 @@ mkdir -p "$release_root/App_Data/jobs/continuous/finance-jobs"
 cp "$api_root/bin/run-finance-jobs.php" "$app_root/bin/run-finance-jobs.php"
 cp "$api_root/deploy/app-service/webjobs/finance-jobs/run.sh" "$release_root/App_Data/jobs/continuous/finance-jobs/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/finance-jobs/run.sh"
+
+# The CableFit research worker (C3) and its continuous WebJob, the same way. Inert while
+# CABLEFIT_RESEARCH_ENABLED is not true: each pass exits 3 at once.
+mkdir -p "$release_root/App_Data/jobs/continuous/cablefit-research"
+cp "$api_root/bin/run-cablefit-research.php" "$app_root/bin/run-cablefit-research.php"
+cp "$api_root/deploy/app-service/webjobs/cablefit-research/run.sh" "$release_root/App_Data/jobs/continuous/cablefit-research/run.sh"
+chmod +x "$release_root/App_Data/jobs/continuous/cablefit-research/run.sh"
 
 # Nothing in the archive may be a symlink -- App Service unpacks it verbatim.
 assert_no_symlinks "$release_root"
