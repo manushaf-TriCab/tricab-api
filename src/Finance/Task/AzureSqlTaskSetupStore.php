@@ -8,18 +8,21 @@ use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Domain\TaskEntity;
 use TriCab\Core\Finance\Task\Domain\TaskProject;
+use TriCab\Core\Finance\Task\Domain\TaskProjectGroup;
 use TriCab\Core\Finance\Task\Domain\TaskStatementArea;
 use TriCab\Core\Finance\Task\Domain\TaskTemplate;
 
 /**
  * The four reference lists in `finance.task_projects`, `task_templates`, `task_statement_areas`
- * and `task_entities` (`create-finance-task-schema.sql`). The filtered unique indexes are the
+ * and `task_entities` (`create-finance-task-schema.sql`), and the project groups in
+ * `task_project_groups` (`alter-finance-task-project-groups.sql`, 19 Oct 2026). The filtered unique indexes are the
  * last word on a name (decision Q4); a clash is a `TaskConflict`. Every list sorts on a bounded
  * column; no `ORDER BY` touches an `NVARCHAR(MAX)`.
  */
 final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSetupStore
 {
-    private const PROJECT_COLUMNS = '[id], [name], [description], [color], [status], [target_date], [deleted_at], [deleted_by], [created_date], [updated_date]';
+    private const PROJECT_COLUMNS = '[id], [name], [description], [color], [status], [target_date], [deleted_at], [deleted_by], [created_date], [updated_date], [group_id]';
+    private const PROJECT_GROUP_COLUMNS = '[id], [name], [color], [sort_order], [created_date], [updated_date]';
     private const TEMPLATE_COLUMNS = '[id], [name], [description], [requirements], [category], [finance_statement_area], [preparer_user_id], [reviewer_user_id], [default_progress], [due_date], [due_date_requested], [created_date], [updated_date]';
     private const AREA_COLUMNS = '[id], [name], [category], [description], [sort_order], [created_date], [updated_date]';
     private const ENTITY_COLUMNS = '[id], [name], [code], [description], [color], [is_active], [created_date], [updated_date]';
@@ -67,7 +70,7 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
     {
         $this->write(
             'INSERT INTO [finance].[task_projects] (' . self::PROJECT_COLUMNS . ')
-             VALUES (:id, :name, :description, :color, :status, :target, :deletedAt, :deletedBy, :created, :updated)',
+             VALUES (:id, :name, :description, :color, :status, :target, :deletedAt, :deletedBy, :created, :updated, :groupId)',
             self::projectParams($project),
             'A project with that name already exists',
         );
@@ -77,7 +80,8 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
     {
         $this->write(
             'UPDATE [finance].[task_projects] SET [name] = :name, [description] = :description, [color] = :color, [status] = :status,
-                    [target_date] = :target, [deleted_at] = :deletedAt, [deleted_by] = :deletedBy, [created_date] = :created, [updated_date] = :updated
+                    [target_date] = :target, [deleted_at] = :deletedAt, [deleted_by] = :deletedBy, [created_date] = :created, [updated_date] = :updated,
+                    [group_id] = :groupId
              WHERE [id] = :id',
             self::projectParams($project),
             'A project with that name already exists',
@@ -123,6 +127,45 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
         }
 
         return $counts;
+    }
+
+    // ---- project groups (Nick Han, 19 Oct 2026) ----------------------------------------
+
+    public function projectGroups(): array
+    {
+        $rows = $this->connection->fetchAll('SELECT ' . self::PROJECT_GROUP_COLUMNS . ' FROM [finance].[task_project_groups] ORDER BY [sort_order], [id]');
+
+        return array_map(self::projectGroup(...), $rows);
+    }
+
+    public function findProjectGroup(string $id): ?TaskProjectGroup
+    {
+        $rows = $this->connection->fetchAll('SELECT ' . self::PROJECT_GROUP_COLUMNS . ' FROM [finance].[task_project_groups] WHERE [id] = :id', ['id' => $id]);
+
+        return $rows === [] ? null : self::projectGroup($rows[0]);
+    }
+
+    public function insertProjectGroup(TaskProjectGroup $group): void
+    {
+        $this->connection->execute(
+            'INSERT INTO [finance].[task_project_groups] (' . self::PROJECT_GROUP_COLUMNS . ') VALUES (:id, :name, :color, :sort, :created, :updated)',
+            self::projectGroupParams($group),
+        );
+    }
+
+    public function updateProjectGroup(TaskProjectGroup $group): void
+    {
+        $this->connection->execute(
+            'UPDATE [finance].[task_project_groups] SET [name] = :name, [color] = :color, [sort_order] = :sort,
+                    [created_date] = :created, [updated_date] = :updated
+             WHERE [id] = :id',
+            self::projectGroupParams($group),
+        );
+    }
+
+    public function deleteProjectGroup(string $id): void
+    {
+        $this->connection->execute('DELETE FROM [finance].[task_project_groups] WHERE [id] = :id', ['id' => $id]);
     }
 
     // ---- templates ---------------------------------------------------------------------
@@ -301,6 +344,7 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
             AzureSqlValueMapper::nullableInt($row['deleted_by']),
             self::when($row['created_date'], 'created_date'),
             self::when($row['updated_date'], 'updated_date'),
+            AzureSqlValueMapper::nullableString($row['group_id']),
         );
     }
 
@@ -318,6 +362,33 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
             'deletedBy' => $p->deletedBy,
             'created' => self::at($p->createdDate),
             'updated' => self::at($p->updatedDate),
+            'groupId' => $p->groupId,
+        ];
+    }
+
+    /** @param array<string, mixed> $row */
+    private static function projectGroup(array $row): TaskProjectGroup
+    {
+        return new TaskProjectGroup(
+            self::id($row['id']),
+            self::text($row['name']),
+            self::textOrNull($row['color']),
+            AzureSqlValueMapper::intValue($row['sort_order']),
+            self::when($row['created_date'], 'created_date'),
+            self::when($row['updated_date'], 'updated_date'),
+        );
+    }
+
+    /** @return array<string, scalar|null> */
+    private static function projectGroupParams(TaskProjectGroup $g): array
+    {
+        return [
+            'id' => $g->id,
+            'name' => $g->name,
+            'color' => $g->color,
+            'sort' => $g->sortOrder,
+            'created' => self::at($g->createdDate),
+            'updated' => self::at($g->updatedDate),
         ];
     }
 

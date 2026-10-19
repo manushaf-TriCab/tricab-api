@@ -9,6 +9,7 @@ use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Domain\TaskConflict;
 use TriCab\Core\Finance\Task\Domain\TaskEntity;
 use TriCab\Core\Finance\Task\Domain\TaskProject;
+use TriCab\Core\Finance\Task\Domain\TaskProjectGroup;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
 use TriCab\Core\Finance\Task\Domain\TaskStatementArea;
 use TriCab\Core\Finance\Task\Domain\TaskTemplate;
@@ -26,6 +27,9 @@ class InMemoryTaskSetupStore implements TaskSetupStore
 {
     /** @var array<string, TaskProject> */
     protected array $projects = [];
+
+    /** @var array<string, TaskProjectGroup> */
+    protected array $projectGroups = [];
 
     /** @var array<string, TaskTemplate> */
     protected array $templates = [];
@@ -157,6 +161,36 @@ class InMemoryTaskSetupStore implements TaskSetupStore
         }
 
         return $counts;
+    }
+
+    // ---- project groups (Nick Han, 19 Oct 2026) ----------------------------------------
+
+    public function projectGroups(): array
+    {
+        $out = array_values($this->projectGroups);
+        usort($out, static fn (TaskProjectGroup $a, TaskProjectGroup $b): int => [$a->sortOrder, $a->id] <=> [$b->sortOrder, $b->id]);
+
+        return array_map(static fn (TaskProjectGroup $g): TaskProjectGroup => clone $g, $out);
+    }
+
+    public function findProjectGroup(string $id): ?TaskProjectGroup
+    {
+        return isset($this->projectGroups[$id]) ? clone $this->projectGroups[$id] : null;
+    }
+
+    public function insertProjectGroup(TaskProjectGroup $group): void
+    {
+        $this->projectGroups[$group->id] = clone $group;
+    }
+
+    public function updateProjectGroup(TaskProjectGroup $group): void
+    {
+        $this->projectGroups[$group->id] = clone $group;
+    }
+
+    public function deleteProjectGroup(string $id): void
+    {
+        unset($this->projectGroups[$id]);
     }
 
     // ---- templates ---------------------------------------------------------------------

@@ -142,4 +142,50 @@ final class FinanceTaskBoardRoutesTest extends TestCase
         self::assertSame(422, $status);
         self::assertFalse($json['success']);
     }
+
+    public function test_project_groups_hold_projects_and_deleting_one_ungroups_them(): void
+    {
+        [$status, $json] = $this->call('POST', '/project-groups', ['name' => 'Odoo', 'color' => '#6366F1']);
+        self::assertSame(201, $status);
+        $group = self::data($json);
+        self::assertIsString($group['id']);
+        self::assertSame(0, $group['sort_order']);
+        self::assertSame(1, self::data($this->call('POST', '/project-groups', ['name' => 'Audit'])[1])['sort_order']);
+
+        [$status, $json] = $this->call('POST', '/projects', ['name' => 'Odoo Project', 'group_id' => $group['id']]);
+        self::assertSame(201, $status);
+        $project = self::data($json);
+        self::assertSame($group['id'], $project['group_id']);
+        self::assertIsString($project['id']);
+        [$status, $json] = $this->call('PATCH', '/projects/' . $project['id'], ['group_id' => 'nope']);
+        self::assertSame(422, $status);
+        self::assertSame('That group does not exist', ((array) $json['error'])['message']);
+
+        [$status, $json] = $this->call('PATCH', '/project-groups/' . $group['id'], ['name' => 'Odoo rollout', 'sort_order' => 3]);
+        self::assertSame(200, $status);
+        self::assertSame('Odoo rollout', self::data($json)['name']);
+        self::assertSame(['Audit', 'Odoo rollout'], array_column(self::data($this->call('GET', '/project-groups')[1]), 'name'));
+
+        [$status, $json] = $this->call('DELETE', '/project-groups/' . $group['id']);
+        self::assertSame(200, $status);
+        self::assertSame(['deleted' => true], self::data($json));
+        $projects = self::data($this->call('GET', '/projects')[1]);
+        self::assertCount(1, $projects);
+        self::assertIsArray($projects[0]);
+        self::assertNull($projects[0]['group_id']);
+        self::assertSame(404, $this->call('PATCH', '/project-groups/' . $group['id'], ['name' => 'x'])[0]);
+        self::assertSame(404, $this->call('DELETE', '/project-groups/' . $group['id'])[0]);
+    }
+
+    public function test_a_member_reads_project_groups_but_cannot_change_them(): void
+    {
+        $group = self::data($this->call('POST', '/project-groups', ['name' => 'Odoo'])[1]);
+        self::assertIsString($group['id']);
+
+        $this->as(self::MEMBER);
+        self::assertSame(200, $this->call('GET', '/project-groups')[0]);
+        self::assertSame(403, $this->call('POST', '/project-groups', ['name' => 'Mine'])[0]);
+        self::assertSame(403, $this->call('PATCH', '/project-groups/' . $group['id'], ['name' => 'Mine'])[0]);
+        self::assertSame(403, $this->call('DELETE', '/project-groups/' . $group['id'])[0]);
+    }
 }

@@ -279,4 +279,52 @@ final class AzureSqlTaskSetupStoreTest extends TestCase
         $this->service->deleteTemplate($id);
         self::assertSame(0, $this->scalar('SELECT COUNT(*) FROM [finance].[task_templates]'));
     }
+
+    public function test_project_groups_round_trip_in_order_and_a_project_keeps_its_group(): void
+    {
+        $odoo = $this->service->createProjectGroup(['name' => 'Odoo — mise en œuvre', 'color' => '#6366F1']);
+        $audit = $this->service->createProjectGroup(['name' => 'Audit']);
+        $odooId = $odoo['id'];
+        self::assertIsString($odooId);
+        self::assertSame(1, $audit['sort_order']);
+        $this->service->updateProjectGroup($odooId, ['sort_order' => 2, 'color' => '']);
+
+        $groups = $this->store->projectGroups();
+        self::assertSame(['Audit', 'Odoo — mise en œuvre'], array_map(static fn ($g): string => $g->name, $groups));
+        $found = $this->store->findProjectGroup($odooId);
+        self::assertNotNull($found);
+        self::assertNull($found->color);
+        self::assertSame(2, $found->sortOrder);
+        self::assertSame('2026-10-07 01:02:03.456789', $found->createdDate->format('Y-m-d H:i:s.u'));
+        self::assertNull($this->store->findProjectGroup('ffffffffffffffffffffffffffffffff'));
+
+        $project = $this->service->createProject($this->manager, ['name' => 'Close', 'group_id' => $odooId]);
+        $projectId = $project['id'];
+        self::assertIsString($projectId);
+        self::assertSame($odooId, $this->store->findProject($projectId)?->groupId);
+        self::assertSame($odooId, $this->service->listProjects($this->manager)[0]['group_id']);
+        $this->service->updateProject($this->manager, $projectId, ['group_id' => null]);
+        self::assertNull($this->store->findProject($projectId)?->groupId);
+    }
+
+    public function test_deleting_a_project_group_ungroups_live_and_binned_projects_in_one_transaction(): void
+    {
+        $group = $this->service->createProjectGroup(['name' => 'Odoo']);
+        $groupId = $group['id'];
+        self::assertIsString($groupId);
+        $live = $this->project('a0000000000000000000000000000001', 'Live');
+        $live->groupId = $groupId;
+        $this->store->insertProject($live);
+        $binned = $this->project('a0000000000000000000000000000002', 'Binned', self::at());
+        $binned->groupId = $groupId;
+        $this->store->insertProject($binned);
+        $this->store->insertProject($this->project('a0000000000000000000000000000003', 'Loose'));
+
+        self::assertSame(['deleted' => true], $this->service->deleteProjectGroup($groupId));
+
+        self::assertSame(0, $this->scalar('SELECT COUNT(*) FROM [finance].[task_project_groups]'));
+        self::assertSame(3, $this->scalar('SELECT COUNT(*) FROM [finance].[task_projects]'), 'no project is deleted');
+        self::assertSame(0, $this->scalar('SELECT COUNT(*) FROM [finance].[task_projects] WHERE [group_id] IS NOT NULL'));
+        self::assertFalse((new PdoSqlConnection($this->pdo, new RequestPerformanceMetrics()))->inTransaction());
+    }
 }

@@ -720,6 +720,16 @@ final class AppBuilder
         $app->post($task . '/project-templates/{id}/apply', \TriCab\Api\Http\Action\Finance\Task\ApplyTaskProjectTemplateAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
 
+        // Project groups on the Projects page (Nick Han, 19 Oct 2026; read: TASKS.READ; write: SETUP.MANAGE).
+        $app->get($task . '/project-groups', \TriCab\Api\Http\Action\Finance\Task\ListTaskProjectGroupsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/project-groups', \TriCab\Api\Http\Action\Finance\Task\CreateTaskProjectGroupAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->patch($task . '/project-groups/{id}', \TriCab\Api\Http\Action\Finance\Task\UpdateTaskProjectGroupAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->delete($task . '/project-groups/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskProjectGroupAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+
         // Tasks, dependencies, history, the Bin and analytics (T2.4). One permission each; own versus any is the use case's (D14, D15).
         $app->get($task . '/tasks', \TriCab\Api\Http\Action\Finance\Task\ListTasksAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));

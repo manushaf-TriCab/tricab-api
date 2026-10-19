@@ -13,6 +13,7 @@ use TriCab\Core\Finance\Task\Domain\TaskEntity;
 use TriCab\Core\Finance\Task\Domain\TaskInvalid;
 use TriCab\Core\Finance\Task\Domain\TaskNotFound;
 use TriCab\Core\Finance\Task\Domain\TaskProject;
+use TriCab\Core\Finance\Task\Domain\TaskProjectGroup;
 use TriCab\Core\Finance\Task\Domain\TaskStatementArea;
 use TriCab\Core\Finance\Task\Domain\TaskTemplate;
 
@@ -27,9 +28,15 @@ use TriCab\Core\Finance\Task\Domain\TaskTemplate;
  *
  * Gates (the route's one permission) are the actions'; this class holds the rules that need
  * the record. Template-create-task (route 29) is not ported.
+ *
+ * Project groups (Nick Han, 19 Oct 2026): named, coloured, ordered groups the Projects page
+ * arranges projects in, as a project's board arranges its tasks (TaskBoardService). Reading
+ * needs TASKS.READ, every write SETUP.MANAGE.
  */
 final class TaskSetupService
 {
+    public const MAX_PROJECT_GROUPS = 50;
+
     public function __construct(
         private readonly TaskSetupStore $store,
         private readonly FinanceTaskMemberDirectory $members,
@@ -74,6 +81,7 @@ final class TaskSetupService
             null,
             $now,
             $now,
+            $fields['group_id'] ?? null,
         );
         $this->store->insertProject($project);
 
@@ -98,6 +106,7 @@ final class TaskSetupService
                 'color' => $project->color = (string) $value,
                 'status' => $project->status = (string) $value,
                 'target_date' => $project->targetDate = (string) $value,
+                'group_id' => $project->groupId = $value,
                 default => null,
             };
         }
@@ -160,9 +169,10 @@ final class TaskSetupService
 
     /**
      * `_clean_project`: the validated fields that were sent (all of the required ones when not partial).
+     * `group_id` (19 Oct 2026) is null when cleared with null or "".
      *
      * @param array<string, mixed> $data
-     * @return array<string, string>
+     * @return array<string, ?string>
      */
     private function cleanProject(array $data, bool $partial, ?string $currentId): array
     {
@@ -191,6 +201,16 @@ final class TaskSetupService
         if (array_key_exists('target_date', $data)) {
             $out['target_date'] = TaskRules::date($data['target_date']) ?? '';
         }
+        if (array_key_exists('group_id', $data)) {
+            $groupId = $data['group_id'];
+            if ($groupId === null || $groupId === '') {
+                $out['group_id'] = null;
+            } elseif (is_string($groupId) && $this->store->findProjectGroup($groupId) !== null) {
+                $out['group_id'] = $groupId;
+            } else {
+                throw new TaskInvalid('That group does not exist');
+            }
+        }
 
         return $out;
     }
@@ -206,6 +226,108 @@ final class TaskSetupService
     private function visibleTo(TaskActor $actor): ?int
     {
         return $actor->seesAll() ? null : $actor->userId;
+    }
+
+    // ==================================================================================
+    // Project groups (Nick Han, 19 Oct 2026)
+    // ==================================================================================
+
+    /** @return list<array<string, mixed>> by sort order, then id */
+    public function listProjectGroups(): array
+    {
+        return array_map(TaskPresenter::projectGroup(...), $this->store->projectGroups());
+    }
+
+    /**
+     * A new group, placed last.
+     *
+     * @param array<string, mixed> $data `name`, optional `color`
+     * @return array<string, mixed>
+     */
+    public function createProjectGroup(array $data): array
+    {
+        $existing = $this->store->projectGroups();
+        if (count($existing) >= self::MAX_PROJECT_GROUPS) {
+            throw new TaskInvalid('There can be at most ' . self::MAX_PROJECT_GROUPS . ' project groups');
+        }
+        $now = $this->time->now();
+        $last = $existing === [] ? -1 : max(array_map(static fn (TaskProjectGroup $g): int => $g->sortOrder, $existing));
+        $group = new TaskProjectGroup(
+            TaskRules::newId(),
+            (string) TaskRules::text($data, 'name', 200, true),
+            self::groupColor($data),
+            $last + 1,
+            $now,
+            $now,
+        );
+        $this->store->insertProjectGroup($group);
+
+        return TaskPresenter::projectGroup($group);
+    }
+
+    /**
+     * @param array<string, mixed> $data any of `name`, `color`, `sort_order`
+     * @return array<string, mixed>
+     */
+    public function updateProjectGroup(string $id, array $data): array
+    {
+        $group = $this->store->findProjectGroup($id) ?? throw new TaskNotFound('Group not found');
+        if (array_key_exists('name', $data)) {
+            $group->name = (string) TaskRules::text($data, 'name', 200, true);
+        }
+        if (array_key_exists('color', $data)) {
+            $group->color = self::groupColor($data);
+        }
+        if (array_key_exists('sort_order', $data)) {
+            $order = $data['sort_order'];
+            if (!is_int($order) && !(is_string($order) && preg_match('/^-?\d{1,6}$/', $order) === 1)) {
+                throw new TaskInvalid('Sort order must be a whole number');
+            }
+            $group->sortOrder = (int) $order;
+        }
+        $group->updatedDate = $this->time->now();
+        $this->store->updateProjectGroup($group);
+
+        return TaskPresenter::projectGroup($group);
+    }
+
+    /**
+     * The group goes; its projects stay, ungrouped (binned ones too, so the row can be removed). Never deletes a
+     * project.
+     *
+     * @return array<string, bool>
+     */
+    public function deleteProjectGroup(string $id): array
+    {
+        $group = $this->store->findProjectGroup($id) ?? throw new TaskNotFound('Group not found');
+
+        return $this->store->transactional(function () use ($group): array {
+            $now = $this->time->now();
+            foreach ([false, true] as $binned) {
+                foreach ($this->store->projects($binned) as $project) {
+                    if ($project->groupId === $group->id) {
+                        $project->groupId = null;
+                        $project->updatedDate = $now;
+                        $this->store->updateProject($project);
+                    }
+                }
+            }
+            $this->store->deleteProjectGroup($group->id);
+
+            return ['deleted' => true];
+        });
+    }
+
+    /**
+     * A group's colour, as a task group's (TaskBoardService): up to 20 characters, empty for none.
+     *
+     * @param array<string, mixed> $data
+     */
+    private static function groupColor(array $data): ?string
+    {
+        $color = TaskRules::text($data, 'color', 20);
+
+        return $color === null || $color === '' ? null : $color;
     }
 
     // ==================================================================================

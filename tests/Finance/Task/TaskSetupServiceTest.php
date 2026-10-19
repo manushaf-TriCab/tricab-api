@@ -93,6 +93,7 @@ final class TaskSetupServiceTest extends TestCase
         self::assertSame('notes', $p['description']);
         self::assertSame('active', $p['status']);
         self::assertSame('', $p['target_date']);
+        self::assertNull($p['group_id']);
         self::assertSame(0, $p['task_count']);
         self::assertFalse($p['is_deleted']);
         self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', self::id($p));
@@ -262,6 +263,125 @@ final class TaskSetupServiceTest extends TestCase
         $mine = $this->service->listProjects(new TaskActor(11, 'Una', 'una@example.test', [Module::PERMISSION_TASK_TASKS_READ]))[0];
         self::assertSame(2, $mine['task_count'], 'a caller without READ_ALL counts the tasks they prepare or review');
         self::assertSame(1, $mine['completed_count']);
+    }
+
+    // ==== project groups (Nick Han, 19 Oct 2026) ===============================================
+
+    public function test_a_project_group_is_created_last_and_listed_by_sort_order_then_id(): void
+    {
+        $a = $this->service->createProjectGroup(['name' => '  Odoo  ', 'color' => '#6366F1']);
+        $b = $this->service->createProjectGroup(['name' => 'Audit', 'color' => '']);
+
+        self::assertSame(['id', 'name', 'color', 'sort_order', 'created_date', 'updated_date'], array_keys($a));
+        self::assertSame('Odoo', $a['name']);
+        self::assertSame('#6366F1', $a['color']);
+        self::assertSame(0, $a['sort_order']);
+        self::assertNull($b['color'], 'an empty colour is none');
+        self::assertSame(1, $b['sort_order']);
+        self::assertSame('2026-10-07T01:00:00.000000+00:00', $a['created_date']);
+
+        $this->service->updateProjectGroup(self::id($a), ['sort_order' => '5']);
+        self::assertSame(['Audit', 'Odoo'], array_column($this->service->listProjectGroups(), 'name'));
+        self::assertSame(6, $this->service->createProjectGroup(['name' => 'Tax'])['sort_order'], 'placed after the highest');
+    }
+
+    /** @return iterable<string, array{array<string, mixed>, string}> */
+    public static function badProjectGroups(): iterable
+    {
+        yield 'no name' => [[], 'Name is required'];
+        yield 'blank name' => [['name' => '  '], 'Name is required'];
+        yield 'long name' => [['name' => str_repeat('a', 201)], 'Name must be at most 200 characters'];
+        yield 'long colour' => [['name' => 'x', 'color' => str_repeat('a', 21)], 'Color must be at most 20 characters'];
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('badProjectGroups')]
+    public function test_a_bad_project_group_is_refused(array $data, string $message): void
+    {
+        $this->expectException(TaskInvalid::class);
+        $this->expectExceptionMessage($message);
+        $this->service->createProjectGroup($data);
+    }
+
+    public function test_there_are_at_most_fifty_project_groups(): void
+    {
+        for ($i = 1; $i <= TaskSetupService::MAX_PROJECT_GROUPS; ++$i) {
+            $this->service->createProjectGroup(['name' => 'G' . $i]);
+        }
+
+        $this->expectException(TaskInvalid::class);
+        $this->expectExceptionMessage('There can be at most 50 project groups');
+        $this->service->createProjectGroup(['name' => 'One more']);
+    }
+
+    public function test_a_project_group_updates_partially_and_is_404_when_missing(): void
+    {
+        $id = self::id($this->service->createProjectGroup(['name' => 'Odoo', 'color' => '#111']));
+
+        $renamed = $this->service->updateProjectGroup($id, ['name' => 'Odoo rollout']);
+        self::assertSame('Odoo rollout', $renamed['name']);
+        self::assertSame('#111', $renamed['color']);
+        self::assertNull($this->service->updateProjectGroup($id, ['color' => null])['color']);
+
+        try {
+            $this->service->updateProjectGroup($id, ['sort_order' => '1.5']);
+            self::fail('Expected a refusal.');
+        } catch (TaskInvalid $e) {
+            self::assertSame('Sort order must be a whole number', $e->getMessage());
+        }
+        try {
+            $this->service->updateProjectGroup('nope', ['name' => 'x']);
+            self::fail('Expected a 404.');
+        } catch (TaskNotFound $e) {
+            self::assertSame('Group not found', $e->getMessage());
+        }
+        $this->expectException(TaskNotFound::class);
+        $this->service->deleteProjectGroup('nope');
+    }
+
+    public function test_a_project_is_put_in_a_group_moved_out_and_refused_an_unknown_one(): void
+    {
+        $group = self::id($this->service->createProjectGroup(['name' => 'Odoo']));
+
+        $p = $this->service->createProject($this->manager, ['name' => 'Close', 'group_id' => $group]);
+        self::assertSame($group, $p['group_id']);
+        $id = self::id($p);
+
+        self::assertSame($group, $this->service->updateProject($this->manager, $id, ['name' => 'Close 2'])['group_id'], 'omitted is unchanged');
+        self::assertNull($this->service->updateProject($this->manager, $id, ['group_id' => ''])['group_id']);
+        self::assertSame($group, $this->service->updateProject($this->manager, $id, ['group_id' => $group])['group_id']);
+        self::assertNull($this->service->updateProject($this->manager, $id, ['group_id' => null])['group_id']);
+
+        foreach (['nope', 12, ['x']] as $bad) {
+            try {
+                $this->service->updateProject($this->manager, $id, ['group_id' => $bad]);
+                self::fail('Expected a refusal.');
+            } catch (TaskInvalid $e) {
+                self::assertSame('That group does not exist', $e->getMessage());
+            }
+        }
+        $this->expectException(TaskInvalid::class);
+        $this->expectExceptionMessage('That group does not exist');
+        $this->service->createProject($this->manager, ['name' => 'Audit', 'group_id' => 'nope']);
+    }
+
+    public function test_deleting_a_project_group_ungroups_its_live_and_binned_projects_and_deletes_none(): void
+    {
+        $group = self::id($this->service->createProjectGroup(['name' => 'Odoo']));
+        $other = self::id($this->service->createProjectGroup(['name' => 'Audit']));
+        $live = self::id($this->service->createProject($this->manager, ['name' => 'Live', 'group_id' => $group]));
+        $binned = self::id($this->service->createProject($this->manager, ['name' => 'Binned', 'group_id' => $group]));
+        $this->service->deleteProject($this->manager, $binned);
+        $elsewhere = self::id($this->service->createProject($this->manager, ['name' => 'Elsewhere', 'group_id' => $other]));
+
+        self::assertSame(['deleted' => true], $this->service->deleteProjectGroup($group));
+
+        self::assertSame(['Audit'], array_column($this->service->listProjectGroups(), 'name'));
+        $groups = array_column($this->service->listProjects($this->manager), 'group_id', 'id');
+        self::assertSame([$elsewhere => $other, $live => null], $groups);
+        self::assertSame([$binned => null], array_column($this->service->listProjects($this->manager, true), 'group_id', 'id'));
     }
 
     // ==== templates ============================================================================

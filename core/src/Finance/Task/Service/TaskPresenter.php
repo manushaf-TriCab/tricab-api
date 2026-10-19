@@ -11,6 +11,7 @@ use TriCab\Core\Finance\Task\Domain\TaskGroup;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
 use TriCab\Core\Finance\Task\Domain\TaskProjectTemplate;
 use TriCab\Core\Finance\Task\Domain\TaskProject;
+use TriCab\Core\Finance\Task\Domain\TaskProjectGroup;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
 use TriCab\Core\Finance\Task\Domain\TaskStatementArea;
 use TriCab\Core\Finance\Task\Domain\TaskTemplate;
@@ -61,6 +62,7 @@ final class TaskPresenter
             'color' => $p->color,
             'status' => $p->status,
             'target_date' => $p->targetDate,
+            'group_id' => $p->groupId,
             'task_count' => $counts[0] ?? 0,
             'completed_count' => $counts[1] ?? 0,
             'is_deleted' => $p->deletedAt !== null,
@@ -167,6 +169,19 @@ final class TaskPresenter
         return [
             'id' => $g->id,
             'project_id' => $g->projectId,
+            'name' => $g->name,
+            'color' => $g->color,
+            'sort_order' => $g->sortOrder,
+            'created_date' => self::iso($g->createdDate),
+            'updated_date' => self::iso($g->updatedDate),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public static function projectGroup(TaskProjectGroup $g): array
+    {
+        return [
+            'id' => $g->id,
             'name' => $g->name,
             'color' => $g->color,
             'sort_order' => $g->sortOrder,

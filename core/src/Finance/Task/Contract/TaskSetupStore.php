@@ -7,6 +7,7 @@ namespace TriCab\Core\Finance\Task\Contract;
 use TriCab\Core\Finance\Task\Domain\TaskConflict;
 use TriCab\Core\Finance\Task\Domain\TaskEntity;
 use TriCab\Core\Finance\Task\Domain\TaskProject;
+use TriCab\Core\Finance\Task\Domain\TaskProjectGroup;
 use TriCab\Core\Finance\Task\Domain\TaskStatementArea;
 use TriCab\Core\Finance\Task\Domain\TaskTemplate;
 
@@ -60,6 +61,20 @@ interface TaskSetupStore extends TaskTransactions
      * @return array<string, array{0: int, 1: int}>
      */
     public function projectTaskCounts(?int $visibleToUserId): array;
+
+    // ---- project groups (Nick Han, 19 Oct 2026) ----------------------------------------
+
+    /** @return list<TaskProjectGroup> by sort order, then id */
+    public function projectGroups(): array;
+
+    public function findProjectGroup(string $id): ?TaskProjectGroup;
+
+    public function insertProjectGroup(TaskProjectGroup $group): void;
+
+    public function updateProjectGroup(TaskProjectGroup $group): void;
+
+    /** Removes the group row only; the caller clears its projects' `group_id` first. */
+    public function deleteProjectGroup(string $id): void;
 
     // ---- templates ---------------------------------------------------------------------
 
