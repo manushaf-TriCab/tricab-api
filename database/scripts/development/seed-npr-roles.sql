@@ -3,7 +3,7 @@
   DEVELOPMENT seed: NPR and TSD roles (plan NPR-TSD-MIGRATION-PLAN N1.2).
 
   - Idempotent / safe to re-run
-  - Creates five roles and ASSIGNS THEM TO NOBODY (rollout is N5)
+  - Creates six roles and ASSIGNS THEM TO NOBODY (rollout is N5)
   - Does not modify EMPLOYEE, GUEST or ADMINISTRATOR
   - WRITTEN, NOT EXECUTED against any shared database
   - Run after seed-tsd-permissions.sql and seed-npr-permissions.sql. Fails
@@ -14,12 +14,11 @@
     TSD_ENGINEER    NPR.TSD.READ, NPR.TSD.WORK, TSD.ACCESS.
     TSD_SIGNATORY   NPR.TSD.READ, NPR.SCREENING.DECIDE, TSD.ACCESS.
     NPR_VIEWER      NPR.TSD.READ, TSD.ACCESS (read-only).
-
-  NPR.ADMIN is held by no role here.
+    NPR_ADMIN       NPR.ADMIN, NPR.TSD.READ, TSD.ACCESS (manager routes, notifications).
 
   Must match TriCab\Core\Npr\Module::ROLE_PERMISSIONS; tests/Npr/NprSeedScriptTest.php
   fails if they drift. This script OWNS the NPR.* and TSD.ACCESS mappings of
-  these five roles: anything else of those families on them is deactivated,
+  these six roles: anything else of those families on them is deactivated,
   never deleted.
 ================================================================================
 */
@@ -52,7 +51,9 @@ BEGIN TRY
         (N'TSD_SIGNATORY',  N'TSD Signatory',
          N'Open the TSD module, read NPRs that reached TSD and record the final screening outcome.'),
         (N'NPR_VIEWER',     N'NPR Viewer',
-         N'Open the TSD module and read NPRs that reached TSD. Read-only.');
+         N'Open the TSD module and read NPRs that reached TSD. Read-only.'),
+        (N'NPR_ADMIN',      N'NPR Admin',
+         N'Administer NPR manager routes and notifications, and read the TSD queue.');
 
     INSERT INTO [identity].[Roles] ([RoleCode], [RoleName], [Description], [IsSystemRole], [IsActive])
     SELECT r.[RoleCode], r.[RoleName], r.[Description], 0, 1
@@ -90,7 +91,10 @@ BEGIN TRY
         (N'TSD_SIGNATORY', N'NPR.SCREENING.DECIDE'),
         (N'TSD_SIGNATORY', N'TSD.ACCESS'),
         (N'NPR_VIEWER', N'NPR.TSD.READ'),
-        (N'NPR_VIEWER', N'TSD.ACCESS');
+        (N'NPR_VIEWER', N'TSD.ACCESS'),
+        (N'NPR_ADMIN', N'NPR.ADMIN'),
+        (N'NPR_ADMIN', N'NPR.TSD.READ'),
+        (N'NPR_ADMIN', N'TSD.ACCESS');
 
     INSERT INTO [identity].[RolePermissions] ([RoleId], [PermissionId], [IsActive])
     SELECT r.[RoleId], p.[PermissionId], 1
@@ -113,7 +117,7 @@ BEGIN TRY
      AND UPPER(g.[PermissionCode]) = UPPER(p.[PermissionCode])
     WHERE rp.[IsActive] = 0;
 
-    /* Withdraw any other NPR.* or TSD.ACCESS mapping on these five roles. */
+    /* Withdraw any other NPR.* or TSD.ACCESS mapping on these six roles. */
     UPDATE rp
     SET rp.[IsActive] = 0
     FROM [identity].[RolePermissions] rp

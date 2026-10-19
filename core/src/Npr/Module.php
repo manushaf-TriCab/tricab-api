@@ -48,6 +48,7 @@ final class Module
     public const ROLE_TSD_ENGINEER = 'TSD_ENGINEER';
     public const ROLE_TSD_SIGNATORY = 'TSD_SIGNATORY';
     public const ROLE_VIEWER = 'NPR_VIEWER';
+    public const ROLE_ADMIN = 'NPR_ADMIN';
 
     /** Role code => permissions it holds (NPR.* plus TSD.ACCESS). */
     public const ROLE_PERMISSIONS = [
@@ -71,6 +72,11 @@ final class Module
             TsdModule::PERMISSION_ACCESS,
         ],
         self::ROLE_VIEWER => [
+            self::PERMISSION_TSD_READ,
+            TsdModule::PERMISSION_ACCESS,
+        ],
+        self::ROLE_ADMIN => [
+            self::PERMISSION_ADMIN,
             self::PERMISSION_TSD_READ,
             TsdModule::PERMISSION_ACCESS,
         ],

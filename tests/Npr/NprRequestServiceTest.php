@@ -28,7 +28,7 @@ final class NprRequestServiceTest extends TestCase
     public function test_a_draft_is_opened_for_the_signed_in_person(): void
     {
         $view = NprFixtures::service($this->repository)->createDraft(NprFixtures::requester(), [
-            'request_title' => ['state' => 'provided', 'value' => 'Mining Trailing Cable 33kV'],
+            'job_title' => ['state' => 'provided', 'value' => 'Mining Trailing Cable 33kV'],
             'customer_name' => ['state' => 'provided', 'value' => 'BHP'],
         ], null);
 
@@ -42,6 +42,28 @@ final class NprRequestServiceTest extends TestCase
         self::assertSame(10, $request->requesterUserId);
         self::assertSame('amandaw@tricab.com', $request->requesterEmail);
         self::assertSame('var_1', $request->variants[0]['id'], 'the source starts a draft with one default variant');
+    }
+
+    public function test_the_title_is_the_trimmed_job_title_and_empty_keeps_the_existing_one(): void
+    {
+        $service = NprFixtures::service($this->repository);
+        $user = NprFixtures::requester();
+        $created = $service->createDraft($user, ['job_title' => ['state' => 'provided', 'value' => '  Pit Cable  ']], null)->request;
+        self::assertSame('Pit Cable', $created->title);
+
+        $saved = ($service->saveDraft($user, $created->publicId, $created->version, ['job_title' => ['state' => 'provided', 'value' => 'Shaft Cable']], [], null))?->request;
+        self::assertNotNull($saved);
+        self::assertSame('Shaft Cable', $saved->title);
+
+        $empty = $service->saveDraft($user, $saved->publicId, $saved->version, ['job_title' => ['state' => 'not_stated', 'value' => '   ']], [], null);
+        self::assertSame('Shaft Cable', $empty?->request->title);
+    }
+
+    public function test_a_long_job_title_is_cut_to_255(): void
+    {
+        $view = NprFixtures::service($this->repository)->createDraft(NprFixtures::requester(), ['job_title' => ['state' => 'provided', 'value' => str_repeat('x', 400)]], null);
+
+        self::assertSame(str_repeat('x', 255), $view->request->title);
     }
 
     public function test_a_draft_with_no_title_is_untitled(): void

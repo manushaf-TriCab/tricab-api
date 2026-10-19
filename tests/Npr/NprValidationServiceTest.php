@@ -20,7 +20,7 @@ final class NprValidationServiceTest extends TestCase
     public function test_an_incomplete_draft_fails_submission_validation(): void
     {
         $result = NprFixtures::validator()->validateSubmission([
-            'request_title' => ['state' => 'provided', 'value' => 'Mining Trailing Cable 33kV'],
+            'job_title' => ['state' => 'provided', 'value' => 'Mining Trailing Cable 33kV'],
             'customer_name' => ['state' => 'provided', 'value' => 'BHP'],
         ], []);
 

@@ -65,6 +65,17 @@ final class NprSeedScriptTest extends TestCase
         );
     }
 
+    public function test_the_admin_role_holds_npr_admin_and_can_see_the_queue(): void
+    {
+        self::assertContains(Module::PERMISSION_ADMIN, Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]);
+        self::assertContains(Module::PERMISSION_TSD_READ, Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]);
+        self::assertContains('TSD.ACCESS', Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]);
+        self::assertStringContainsString("N'NPR_ADMIN',      N'NPR Admin'", self::script('seed-npr-roles.sql'));
+        foreach ([Module::ROLE_REQUESTER, Module::ROLE_MANAGER, Module::ROLE_TSD_ENGINEER, Module::ROLE_TSD_SIGNATORY, Module::ROLE_VIEWER] as $other) {
+            self::assertNotContains(Module::PERMISSION_ADMIN, Module::ROLE_PERMISSIONS[$other]);
+        }
+    }
+
     public function test_the_role_seed_fails_clearly_without_tsd_access(): void
     {
         self::assertStringContainsString('TSD.ACCESS is missing', self::script('seed-npr-roles.sql'));

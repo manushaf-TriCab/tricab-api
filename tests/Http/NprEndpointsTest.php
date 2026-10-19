@@ -35,7 +35,7 @@ final class NprEndpointsTest extends TestCase
         $app = $this->app(Module::ROLE_PERMISSIONS[Module::ROLE_REQUESTER]);
 
         $created = $app->handle(TestAppFactory::request('POST', self::ME)->withParsedBody([
-            'answers' => ['request_title' => ['state' => 'provided', 'value' => 'Mining Trailing Cable 33kV']],
+            'answers' => ['job_title' => ['state' => 'provided', 'value' => 'Mining Trailing Cable 33kV']],
             'requester' => ['email' => 'someoneelse@tricab.com'],
         ]));
         $draft = $this->data($created);
