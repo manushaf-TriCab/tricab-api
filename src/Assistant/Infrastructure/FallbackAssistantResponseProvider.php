@@ -8,6 +8,7 @@ use TriCab\Api\Assistant\Application\AssistantGrounding;
 use TriCab\Api\Assistant\Application\AssistantProviderResult;
 use TriCab\Api\Assistant\Application\AssistantResponseProvider;
 use TriCab\Api\Assistant\Application\AssistantTurnTrace;
+use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryProviderUnavailable;
 
 final readonly class FallbackAssistantResponseProvider implements AssistantResponseProvider
 {
@@ -26,7 +27,23 @@ final readonly class FallbackAssistantResponseProvider implements AssistantRespo
             $this->logPrimaryFailure($exception);
             $this->trace->recordFallback($exception);
 
-            return $this->trace->measure('fallback_generate', fn (): AssistantProviderResult => $this->fallback->generate($grounding));
+            $result = $this->trace->measure('fallback_generate', fn (): AssistantProviderResult => $this->fallback->generate($grounding));
+            $spec = $exception instanceof FoundryProviderUnavailable ? $exception->partialSpec() : null;
+            if ($spec === null || $result->spec !== null) {
+                return $result;
+            }
+
+            // The agent had already worked out what the customer needs; the
+            // fallback's own reply does not lose it.
+            return new AssistantProviderResult(
+                text: $result->text,
+                provider: $result->provider,
+                instructionVersion: $result->instructionVersion,
+                cards: $result->cards,
+                toolNames: $result->toolNames,
+                curatesCards: $result->curatesCards,
+                spec: $spec,
+            );
         }
     }
 

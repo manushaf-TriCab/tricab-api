@@ -29,6 +29,9 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
     // Sonnet 5.5 among them), so this leaves room for it as well as the reply. It
     // is a ceiling, not a cost: only generated tokens are billed.
     private const MAX_OUTPUT_TOKENS = 8_000;
+    private const MAX_FINISHING_ROUNDS = 2;
+    private const NO_MORE_LOOKUPS = 'No more lookups this turn. Answer the customer now with what you already have.';
+    private const EMPTY_FINAL_CONTINUATION = 'Answer the customer now in plain text, using the tool results above.';
 
     public function __construct(
         private JsonHttpClient $http,
@@ -55,32 +58,91 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
 
     public function generate(AssistantGrounding $grounding): AssistantProviderResult
     {
-        $messages = $this->initialMessages($grounding);
-        $toolCallCount = 0;
-        $usedToolNames = [];
-        $cards = [];
         // Last finder requirement wins; a code search's facets only stand in when
         // no finder call ran this turn.
         $finderSpec = null;
         $codeSpec = null;
-        $maxIterations = max(3, $this->maxToolCalls + 3);
+        try {
+            return $this->run($grounding, $finderSpec, $codeSpec);
+        } catch (FoundryProviderUnavailable $exception) {
+            // The requirement the agent had already worked out is not lost with
+            // the agent: the fallback wrapper puts it on whatever reply it serves.
+            $spec = $finderSpec ?? $codeSpec;
+            if ($spec !== null) {
+                $exception->attachPartialSpec($spec);
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @param array<string, mixed>|null $finderSpec set as finder calls run, so the caller can read it after a failure
+     * @param array<string, mixed>|null $codeSpec
+     */
+    private function run(AssistantGrounding $grounding, ?array &$finderSpec, ?array &$codeSpec): AssistantProviderResult
+    {
+        $messages = $this->initialMessages($grounding);
+        $toolCallCount = 0;
+        $usedToolNames = [];
+        $cards = [];
+        // Tool rounds, the finishing rounds, one empty-final retry and the tool-free
+        // last resort all count here, so a turn cannot loop.
+        $maxIterations = max(3, $this->maxToolCalls + 2 + self::MAX_FINISHING_ROUNDS + 2);
         $this->trace->note('model', $this->deployment);
         $startedAt = $this->now();
+        // Set once the model has returned an empty final: from then on tools stay
+        // offered but are not run, like after the budget.
+        $forceFinish = false;
+        $emptyRetried = false;
+        $finishingRounds = 0;
 
         for ($iteration = 0; $iteration < $maxIterations; $iteration++) {
-            // Past the budget, no more tool rounds: the next call is the last, sent
-            // with tool_choice none so the model answers with what it already has.
+            // `tool_choice: none` is deliberately not the way to end a turn: on
+            // Claude Sonnet 5.5 it makes the model end with a thinking-only reply
+            // (measured live: 3 of 6 forced finals empty, and the retry too). Tools
+            // stay offered, with the same request shape as every other call, so the
+            // cache prefix holds; past the budget or deadline a tool call is only
+            // answered with an error that tells the model to answer. Tool-free is the
+            // last resort, after the finishing rounds are used up.
             $deadlineReached = $this->now() - $startedAt >= $this->turnDeadlineSeconds;
             if ($deadlineReached) {
                 $this->trace->note('turnDeadlineReached', true);
             }
-            $toolsEnabled = $toolCallCount < $this->maxToolCalls && !$deadlineReached;
-            $decoded = $this->request($messages, $toolsEnabled);
+            $mustFinish = $forceFinish || $toolCallCount >= $this->maxToolCalls || $deadlineReached;
+            $lastResort = false;
+            if ($mustFinish) {
+                if ($finishingRounds >= self::MAX_FINISHING_ROUNDS) {
+                    $lastResort = true;
+                } else {
+                    $finishingRounds++;
+                    $this->trace->note('finishingRounds', $finishingRounds);
+                }
+            }
+            $decoded = $this->request($messages, !$lastResort);
             $content = $decoded['content'];
             $toolUses = $this->toolUses($content);
 
             if ($toolUses === []) {
                 $text = $this->responseText($content);
+                if ($text === null) {
+                    $this->recordEmptyFinal($decoded['stop_reason'], $content);
+                    if ($lastResort || $emptyRetried) {
+                        if ($emptyRetried) {
+                            $this->trace->note('emptyFinalRecovered', false);
+                        }
+                        throw new FoundryProviderUnavailable('Foundry Messages response did not contain text.');
+                    }
+                    // The empty turn is not resent. Ask once, in a new user message,
+                    // with tools still offered.
+                    $emptyRetried = true;
+                    $forceFinish = true;
+                    $messages[] = ['role' => 'user', 'content' => self::EMPTY_FINAL_CONTINUATION];
+                    continue;
+                }
+                if ($emptyRetried) {
+                    $this->trace->note('emptyFinalRecovered', true);
+                }
 
                 return new AssistantProviderResult(
                     text: $text,
@@ -96,7 +158,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
                 );
             }
 
-            if ($deadlineReached) {
+            if ($lastResort) {
                 // Asked not to use tools and did anyway: end the turn rather than
                 // run past the budget.
                 throw new FoundryProviderUnavailable('Foundry agent did not answer within the turn deadline.');
@@ -106,11 +168,15 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
             $toolResults = [];
             foreach ($toolUses as $toolUse) {
                 $outOfTime = $this->now() - $startedAt >= $this->turnDeadlineSeconds;
-                if ($toolCallCount >= $this->maxToolCalls || $outOfTime) {
+                if ($forceFinish || $toolCallCount >= $this->maxToolCalls || $outOfTime) {
                     $toolResults[] = $this->toolResultBlock(
                         $toolUse['id'],
                         $toolUse['name'],
-                        ['ok' => false, 'error' => $outOfTime ? 'turn_deadline_reached' : 'tool_call_limit_reached'],
+                        [
+                            'ok' => false,
+                            'error' => $outOfTime ? 'turn_deadline_reached' : 'tool_call_limit_reached',
+                            'instruction' => self::NO_MORE_LOOKUPS,
+                        ],
                         true,
                     );
                     continue;
@@ -168,7 +234,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
 
     /**
      * @param list<array<string, mixed>> $messages
-     * @return array{content: list<array<string, mixed>>}
+     * @return array{content: list<array<string, mixed>>, stop_reason: string|null}
      */
     private function request(array $messages, bool $toolsEnabled): array
     {
@@ -246,7 +312,23 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         /** @var list<array<string, mixed>> $content */
         $content = array_values(array_filter($rawContent, 'is_array'));
 
-        return ['content' => $content];
+        return ['content' => $content, 'stop_reason' => $stopReason];
+    }
+
+    /**
+     * Block types and stop reason only: enough to tell a thinking-only reply
+     * from a whitespace one in the log, with none of the content.
+     *
+     * @param list<array<string, mixed>> $content
+     */
+    private function recordEmptyFinal(?string $stopReason, array $content): void
+    {
+        $types = array_map(
+            static fn (array $block): string => is_string($block['type'] ?? null) ? $block['type'] : 'unknown',
+            $content,
+        );
+        $this->trace->note('emptyFinalStopReason', $stopReason);
+        $this->trace->note('emptyFinalBlockTypes', $types === [] ? 'none' : implode(',', $types));
     }
 
     /**
@@ -467,7 +549,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
     }
 
     /** @param list<array<string, mixed>> $content */
-    private function responseText(array $content): string
+    private function responseText(array $content): ?string
     {
         $parts = [];
         foreach ($content as $block) {
@@ -480,11 +562,8 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
             }
         }
         $text = trim(implode("\n\n", $parts));
-        if ($text === '') {
-            throw new FoundryProviderUnavailable('Foundry Messages response did not contain text.');
-        }
 
-        return $text;
+        return $text === '' ? null : $text;
     }
 
     /**

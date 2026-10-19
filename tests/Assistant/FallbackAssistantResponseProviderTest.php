@@ -13,6 +13,7 @@ use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 use TriCab\Api\Assistant\Application\GroundedProduct;
 use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantResponseProvider;
 use TriCab\Api\Assistant\Infrastructure\FallbackAssistantResponseProvider;
+use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryProviderUnavailable;
 
 final class FallbackAssistantResponseProviderTest extends TestCase
 {
@@ -63,6 +64,25 @@ final class FallbackAssistantResponseProviderTest extends TestCase
         self::assertNotNull($summary['fallback']);
         self::assertSame('Foundry Messages request failed.', $summary['fallback']['message']);
         self::assertArrayHasKey('fallback_generate', $summary['phasesMs']);
+    }
+
+    public function test_the_fallback_reply_keeps_the_spec_the_agent_had_gathered(): void
+    {
+        $primary = new class implements AssistantResponseProvider {
+            public function generate(AssistantGrounding $grounding): AssistantProviderResult
+            {
+                $exception = new FoundryProviderUnavailable('Foundry Messages response did not contain text.');
+                $exception->attachPartialSpec(['coreCount' => 4]);
+
+                throw $exception;
+            }
+        };
+        $provider = new FallbackAssistantResponseProvider($primary, new DeterministicAssistantResponseProvider());
+
+        $result = $provider->generate(new AssistantGrounding('Find KL', 'KL', 'AU', [$this->publishedProduct()]));
+
+        self::assertSame('deterministic-search', $result->provider);
+        self::assertSame(['coreCount' => 4], $result->spec);
     }
 
     public function test_returns_the_primary_result_when_it_succeeds(): void

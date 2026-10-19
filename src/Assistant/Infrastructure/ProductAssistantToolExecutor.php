@@ -55,7 +55,7 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         return [
             $this->tool('search_product_codes', 'Search real TriCab product codes by text and structured cable facets. Use this to verify that a code exists and inspect its nine segments; it does not size a cable.', [
                 'text' => ['type' => 'string'],
-                'styleCodes' => ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 12],
+                'styleCodes' => ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 12, 'description' => 'Style codes to look up together, so one call compares them all.'],
                 'cableType' => ['type' => 'string'],
                 'voltageClass' => ['type' => 'string'],
                 'coreCount' => ['type' => 'integer', 'minimum' => 1],
@@ -131,12 +131,12 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             $this->tool('get_product_detail', 'Get the server-authorized catalogue detail for one product returned by search_products. Pass its publicId where possible.', [
                 'identifier' => ['type' => 'string', 'minLength' => 1],
             ], ['identifier']),
-            $this->tool('list_style_options', 'Search real style names and their reviewed structured facets. Use it to answer a style-level question ("which styles suit earthing?", "what is the LSZH equivalent of KL?"), to compare candidate styles, and to formulate one targeted clarification question. This is the right tool when the customer asks about styles rather than a specific product code.', [
+            $this->tool('list_style_options', 'Search real style names and their reviewed structured facets. Use it to answer a style-level question ("which styles suit earthing?", "what is the LSZH equivalent of KL?"), to compare candidate styles, and to formulate one targeted clarification question. This is the right tool when the customer asks about styles rather than a specific product code. Compare several styles in ONE call by passing all their codes in styleCodes (up to 12), and fetch everything you need for a style question in one call rather than one call per style; results are paged, so ask for the next page instead of repeating the search.', [
                 'text' => [
                     'type' => 'string',
                     'description' => 'Keywords matched against the style code, display name and the style register line — which carries the application prose, the standards list, voltage class and temperature range. Every word must match, so "lszh earthing" narrows. Search by what the cable is FOR ("earthing", "switchboard", "trailing"), by standard ("AS/NZS 5000.1"), or by construction ("armoured", "screened").',
                 ],
-                'styleCodes' => ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 12],
+                'styleCodes' => ['type' => 'array', 'items' => ['type' => 'string'], 'maxItems' => 12, 'description' => 'Style codes to look up together, so one call compares them all.'],
                 'cableType' => ['type' => 'string'],
                 'page' => ['type' => 'integer', 'minimum' => 1],
                 'pageSize' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50],

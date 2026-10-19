@@ -102,11 +102,13 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertCount(1, $tools->calls);
         self::assertSame(['search_product_codes'], $result->toolNames);
         $secondPayload = $this->payload($http, 1);
-        // The tool list stays (removing it would discard the cache); tool_choice stops further calls.
+        // Tools stay offered with no tool_choice (tool_choice none ends in an empty
+        // thinking-only reply on this model); the error result says to answer.
         self::assertSame($this->payload($http, 0)['tools'], $secondPayload['tools']);
-        self::assertSame(['type' => 'none'], $secondPayload['tool_choice']);
+        self::assertArrayNotHasKey('tool_choice', $secondPayload);
         $secondJson = json_encode($secondPayload, JSON_THROW_ON_ERROR);
         self::assertStringContainsString('tool_call_limit_reached', $secondJson);
+        self::assertStringContainsString('No more lookups this turn. Answer the customer now', $secondJson);
         self::assertStringContainsString('"is_error":true', $secondJson);
     }
 
@@ -125,15 +127,18 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertSame('Here is what I found so far.', $result->text);
         self::assertCount(2, $http->calls);
         self::assertArrayNotHasKey('tool_choice', $this->payload($http, 0));
-        self::assertSame(['type' => 'none'], $this->payload($http, 1)['tool_choice']);
+        self::assertArrayNotHasKey('tool_choice', $this->payload($http, 1));
     }
 
-    public function test_past_the_turn_deadline_a_model_that_still_asks_for_tools_ends_the_turn_unavailable(): void
+    public function test_past_the_turn_deadline_a_model_that_keeps_asking_for_tools_gets_two_finishing_rounds_then_a_tool_free_last_call(): void
     {
         $clock = new TestClock();
         $http = new FakeJsonHttpClient();
-        $http->queue = [$this->toolUseResponse(), $this->toolUseResponse(), $this->toolUseResponse()];
-        $provider = $this->provider($http, new SlowAssistantToolExecutor($clock), 5, clock: static fn (): float => $clock->now);
+        $http->queue = [$this->toolUseResponse(), $this->toolUseResponse(), $this->toolUseResponse(), $this->toolUseResponse(), $this->toolUseResponse()];
+        $tools = new SlowAssistantToolExecutor($clock);
+        $trace = new AssistantTurnTrace();
+        $trace->begin();
+        $provider = $this->provider($http, $tools, 5, $trace, clock: static fn (): float => $clock->now);
 
         try {
             $provider->generate(new AssistantGrounding(userMessage: 'Find KL', searchQuery: 'KL', regionCode: null, products: []));
@@ -141,7 +146,28 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         } catch (FoundryProviderUnavailable $exception) {
             self::assertStringContainsString('turn deadline', $exception->getMessage());
         }
-        self::assertCount(2, $http->calls, 'one tool round, one final call, then no more');
+        self::assertCount(4, $http->calls, 'one tool round, two finishing rounds, one tool-free last call, then no more');
+        self::assertSame(1, $tools->executed, 'the deadline stops new tool executions');
+        self::assertArrayNotHasKey('tool_choice', $this->payload($http, 1));
+        self::assertArrayNotHasKey('tool_choice', $this->payload($http, 2));
+        self::assertSame(['type' => 'none'], $this->payload($http, 3)['tool_choice']);
+        self::assertStringContainsString('turn_deadline_reached', json_encode($this->payload($http, 2), JSON_THROW_ON_ERROR));
+        self::assertSame(2, $trace->summary()['context']['finishingRounds']);
+    }
+
+    public function test_a_tool_free_last_call_with_no_text_is_unavailable(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->queue = [$this->toolUseResponse(), $this->toolUseResponse(), $this->toolUseResponse(), ['status' => 200, 'body' => '{"content":[{"type":"thinking","thinking":"x"}]}']];
+
+        try {
+            $this->provider($http, $this->toolExecutor(), 1)->generate($this->grounding());
+            self::fail('Expected unavailable.');
+        } catch (FoundryProviderUnavailable $exception) {
+            self::assertSame('Foundry Messages response did not contain text.', $exception->getMessage());
+        }
+        self::assertCount(4, $http->calls);
+        self::assertSame(['type' => 'none'], $this->payload($http, 3)['tool_choice']);
     }
 
     /** @return array{status: int, body: string} */
@@ -416,6 +442,136 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertSame(9, $result->spec['coreCount']);
     }
 
+    public function test_an_empty_final_is_recovered_with_one_retry_that_still_offers_tools(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            $this->toolUseResponse(),
+            ['status' => 200, 'body' => json_encode([
+                'content' => [['type' => 'thinking', 'thinking' => 'secret reasoning', 'signature' => 'sig']],
+                'stop_reason' => 'end_turn',
+                'usage' => ['output_tokens' => 29],
+            ], JSON_THROW_ON_ERROR)],
+            ['status' => 200, 'body' => '{"content":[{"type":"text","text":"KL suits that."}],"stop_reason":"end_turn"}'],
+        ];
+        $trace = new AssistantTurnTrace();
+        $trace->begin();
+
+        $result = $this->provider($http, $this->toolExecutor(), 1, $trace)->generate($this->grounding());
+
+        self::assertSame('KL suits that.', $result->text);
+        self::assertCount(3, $http->calls);
+        $recovery = $this->payload($http, 2);
+        self::assertArrayNotHasKey('tool_choice', $recovery);
+        self::assertSame($this->payload($http, 0)['tools'], $recovery['tools']);
+        $messages = $recovery['messages'];
+        self::assertIsArray($messages);
+        /** @var list<array{role: string, content: mixed}> $messages */
+        $last = $messages[count($messages) - 1];
+        self::assertSame('user', $last['role']);
+        self::assertIsString($last['content']);
+        self::assertStringContainsString('plain text', $last['content']);
+        self::assertStringNotContainsString('secret reasoning', json_encode($recovery, JSON_THROW_ON_ERROR), 'the empty turn is not resent');
+        self::assertSame('user', $messages[count($messages) - 2]['role']);
+        $summary = $trace->summary();
+        self::assertTrue($summary['context']['emptyFinalRecovered']);
+        self::assertSame('thinking', $summary['context']['emptyFinalBlockTypes']);
+        self::assertSame('end_turn', $summary['context']['emptyFinalStopReason']);
+        self::assertStringNotContainsString('secret reasoning', json_encode($summary, JSON_THROW_ON_ERROR));
+    }
+
+    public function test_an_empty_final_twice_is_unavailable_as_before(): void
+    {
+        $empty = ['status' => 200, 'body' => '{"content":[{"type":"text","text":"  "}],"stop_reason":"end_turn"}'];
+        $http = new FakeJsonHttpClient();
+        $http->queue = [$this->toolUseResponse(), $empty, $empty, $empty];
+        $trace = new AssistantTurnTrace();
+        $trace->begin();
+
+        try {
+            $this->provider($http, $this->toolExecutor(), 5, $trace)->generate($this->grounding());
+            self::fail('Expected the turn to end unavailable.');
+        } catch (FoundryProviderUnavailable $exception) {
+            self::assertSame('Foundry Messages response did not contain text.', $exception->getMessage());
+        }
+        self::assertCount(3, $http->calls, 'one retry, no more');
+        $summary = $trace->summary();
+        self::assertFalse($summary['context']['emptyFinalRecovered']);
+        self::assertSame('text', $summary['context']['emptyFinalBlockTypes']);
+    }
+
+    public function test_an_empty_final_past_the_deadline_still_gets_its_one_recovery_call(): void
+    {
+        $clock = new TestClock();
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            $this->toolUseResponse(),
+            ['status' => 200, 'body' => '{"content":[],"stop_reason":"end_turn"}'],
+            ['status' => 200, 'body' => '{"content":[{"type":"text","text":"Answer."}]}'],
+        ];
+        $provider = $this->provider($http, new SlowAssistantToolExecutor($clock), 5, clock: static fn (): float => $clock->now);
+
+        self::assertSame('Answer.', $provider->generate($this->grounding())->text);
+    }
+
+    public function test_a_tool_call_in_the_recovery_retry_is_answered_with_the_instruction_and_not_run(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->queue = [
+            ['status' => 200, 'body' => '{"content":[{"type":"thinking","thinking":"x"}],"stop_reason":"end_turn"}'],
+            $this->toolUseResponse(),
+            ['status' => 200, 'body' => '{"content":[{"type":"text","text":"Done."}]}'],
+        ];
+        $tools = $this->toolExecutor();
+
+        $result = $this->provider($http, $tools, 5)->generate($this->grounding());
+
+        self::assertSame('Done.', $result->text);
+        self::assertSame([], $tools->calls);
+        self::assertStringContainsString('No more lookups this turn', json_encode($this->payload($http, 2), JSON_THROW_ON_ERROR));
+    }
+
+    public function test_a_failure_after_a_finder_call_carries_the_spec_on_the_exception(): void
+    {
+        $call = ['status' => 200, 'body' => json_encode([
+            'content' => [['type' => 'tool_use', 'id' => 't1', 'name' => 'find_product', 'input' => ['coreCount' => 4]]],
+        ], JSON_THROW_ON_ERROR)];
+        $empty = ['status' => 200, 'body' => '{"content":[]}'];
+        $http = new FakeJsonHttpClient();
+        $http->queue = [$call, $empty, $empty];
+
+        try {
+            $this->provider($http, new SpecEchoingToolExecutor(), 5)->generate($this->grounding());
+            self::fail('Expected unavailable.');
+        } catch (FoundryProviderUnavailable $exception) {
+            self::assertSame(4, $exception->partialSpec()['coreCount'] ?? null);
+        }
+    }
+
+    public function test_a_stream_with_thinking_only_then_text_recovers_through_the_stream(): void
+    {
+        $stream = new ScriptedFoundryStreamClient([
+            [
+                ['content_block_start', ['index' => 0, 'content_block' => ['type' => 'thinking', 'thinking' => '']]],
+                ['content_block_delta', ['index' => 0, 'delta' => ['type' => 'thinking_delta', 'thinking' => 'hmm']]],
+                ['message_delta', ['delta' => ['stop_reason' => 'end_turn'], 'usage' => ['output_tokens' => 29]]],
+            ],
+            [
+                ['content_block_start', ['index' => 0, 'content_block' => ['type' => 'text', 'text' => 'Hel']]],
+                ['content_block_delta', ['index' => 0, 'delta' => ['type' => 'text_delta', 'text' => 'lo.']]],
+                ['message_delta', ['delta' => ['stop_reason' => 'end_turn']]],
+            ],
+        ]);
+        $events = new AssistantTurnEvents();
+        $events->listen(static function (): void {
+        });
+
+        $result = $this->provider(new FakeJsonHttpClient(), $this->toolExecutor(), 5, stream: $stream, events: $events)->generate($this->grounding());
+
+        self::assertSame('Hello.', $result->text);
+        self::assertArrayNotHasKey('tool_choice', $stream->payloads[1]);
+    }
+
     private function grounding(): AssistantGrounding
     {
         return new AssistantGrounding(
@@ -552,6 +708,8 @@ final class ScriptedFoundryStreamClient implements FoundryStreamClient
 /** A tool that uses up the turn's whole budget, as a slow catalogue query would. */
 final class SlowAssistantToolExecutor implements AssistantToolExecutor
 {
+    public int $executed = 0;
+
     public function __construct(private readonly TestClock $clock)
     {
     }
@@ -567,6 +725,7 @@ final class SlowAssistantToolExecutor implements AssistantToolExecutor
         ?string $regionCode,
         AssistantCatalogueVisibility $catalogueVisibility,
     ): AssistantToolResult {
+        $this->executed++;
         $this->clock->now += 50.0;
 
         return new AssistantToolResult(data: ['items' => []], cards: []);

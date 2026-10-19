@@ -33,6 +33,24 @@ final class FoundryStreamAssemblerTest extends TestCase
         self::assertNull($assembler->error());
     }
 
+    public function test_text_given_in_the_block_start_and_text_after_thinking_are_both_kept(): void
+    {
+        $assembler = new FoundryStreamAssembler();
+        $assembler->apply('content_block_start', ['index' => 0, 'content_block' => ['type' => 'thinking', 'thinking' => '', 'signature' => '']]);
+        $assembler->apply('content_block_delta', ['index' => 0, 'delta' => ['type' => 'thinking_delta', 'thinking' => 'hm']]);
+        $assembler->apply('content_block_delta', ['index' => 0, 'delta' => ['type' => 'signature_delta', 'signature' => 'sig']]);
+        $assembler->apply('content_block_stop', ['index' => 0]);
+        $assembler->apply('content_block_start', ['index' => 1, 'content_block' => ['type' => 'text', 'text' => 'Start, ']]);
+        $assembler->apply('content_block_delta', ['index' => 1, 'delta' => ['type' => 'text_delta', 'text' => 'then more.']]);
+        $assembler->apply('content_block_stop', ['index' => 1]);
+
+        $content = $assembler->message()['content'];
+
+        self::assertSame(['thinking', 'text'], array_column($content, 'type'));
+        self::assertSame('Start, then more.', $content[1]['text']);
+        self::assertSame('sig', $content[0]['signature']);
+    }
+
     public function test_a_refusal_keeps_its_stop_details(): void
     {
         $assembler = new FoundryStreamAssembler();
