@@ -32,7 +32,7 @@ final class RfqModuleSwitchTest extends TestCase
         }
         self::assertSame(200, $app->handle(TestAppFactory::request('GET', '/api/v1/rfqs/me'))->getStatusCode());
         self::assertSame(200, $app->handle(TestAppFactory::request('GET', '/api/v1/rfqs'))->getStatusCode());
-        self::assertSame(['customerContacts' => false, 'finance' => false], $this->modules($app));
+        self::assertSame(['customerContacts' => false, 'finance' => false, 'inbox' => false], $this->modules($app));
     }
 
     /**

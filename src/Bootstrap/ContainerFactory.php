@@ -782,6 +782,28 @@ final class ContainerFactory
             \TriCab\Core\Expense\Contract\ExpensePeriodRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpensePeriodRepository::class),
             \TriCab\Core\Expense\Contract\ExpenseReminderLogRepository::class => \DI\autowire(\TriCab\Api\Expense\Persistence\InMemoryExpenseReminderLogRepository::class),
 
+            // Mail review (inbox plan I2). In-memory by default; the azure-sql branch below reads `[mail]`.
+            // Bodies and attachments come from Exchange through the RFQ mail Graph registration (RFQ M0) and
+            // refuse, naming the missing settings, until it is configured. "Create draft" refuses until RFQ M2
+            // can parse an email: nothing in core/src/Rfq makes a draft from one.
+            \TriCab\Core\Mail\Contract\MailStore::class
+                => \DI\autowire(\TriCab\Api\Mail\Persistence\InMemoryMailStore::class),
+            \TriCab\Core\Mail\Contract\MailBodyFetcher::class
+                => static function () use ($settings): \TriCab\Core\Mail\Contract\MailBodyFetcher {
+                    return new \TriCab\Core\Mail\Infrastructure\MailboxBodyFetcher(
+                        $settings->isMailBodyReadingConfigured()
+                            ? new \TriCab\Api\Shared\Mailbox\GraphMailboxReader(
+                                new StreamJsonHttpClient(20.0, 5.0),
+                                $settings->rfqMailGraphTenantId,
+                                $settings->rfqMailGraphClientId,
+                                $settings->rfqMailGraphClientSecret,
+                            )
+                            : new \TriCab\Core\Mail\Infrastructure\UnconfiguredMailboxReader(),
+                    );
+                },
+            \TriCab\Core\Mail\Contract\RfqDraftCreator::class
+                => \DI\autowire(\TriCab\Core\Mail\Infrastructure\UnavailableRfqDraftCreator::class),
+
             // RFQ. In-memory by default; the azure-sql branch below reads the
             // store's tables (plan 2.4). Empty rather than invented either way.
             // Branch membership has no source (owner question Q7), so it answers
@@ -3142,6 +3164,7 @@ final class ContainerFactory
                     self::get($container, ProductDevMediaUrlResolver::class),
                 );
             };
+            $definitions[\TriCab\Core\Mail\Contract\MailStore::class] = \DI\autowire(\TriCab\Api\Mail\Persistence\AzureSqlMailStore::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReceiptRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReceiptRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseProfileRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseProfileRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseProfileAdminQuery::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseProfileAdminQuery::class);

@@ -246,6 +246,10 @@ final readonly class Settings
         public bool $financeApSampleFiles = false,
         // Foundry `output_config.effort`; '' sends none, so the model's own default applies.
         public string $foundryEffort = '',
+        public bool $mailModuleEnabled = false,
+        public string $rfqMailGraphTenantId = '',
+        public string $rfqMailGraphClientId = '',
+        public string $rfqMailGraphClientSecret = '',
     ) {
     }
 
@@ -342,6 +346,18 @@ final readonly class Settings
         $recipient = strtolower(trim($this->financeMailTestRecipient));
 
         return $recipient !== '' ? $recipient : null;
+    }
+
+    /**
+     * The inbox opens a message's body and attachments from Exchange through the RFQ mail Graph
+     * registration (RFQ M0), which has its own settings, apart from the platform's `GRAPH_*` and
+     * Finance's. With any of the three empty, opening a body answers 503 and nothing touches a network.
+     */
+    public function isMailBodyReadingConfigured(): bool
+    {
+        return $this->rfqMailGraphTenantId !== ''
+            && $this->rfqMailGraphClientId !== ''
+            && $this->rfqMailGraphClientSecret !== '';
     }
 
     /**
@@ -1405,6 +1421,10 @@ final readonly class Settings
             financeApMaxScanMessages: self::boundedInt($env, 'FINANCE_AP_MAX_SCAN_MESSAGES', 0, 0, 100000),
             financeApSampleFiles: $financeApSampleFiles,
             foundryEffort: $foundryEffort,
+            mailModuleEnabled: self::bool($env, 'MAIL_MODULE_ENABLED', false),
+            rfqMailGraphTenantId: trim(self::string($env, 'RFQ_MAIL_GRAPH_TENANT_ID', '')),
+            rfqMailGraphClientId: trim(self::string($env, 'RFQ_MAIL_GRAPH_CLIENT_ID', '')),
+            rfqMailGraphClientSecret: trim(self::string($env, 'RFQ_MAIL_GRAPH_CLIENT_SECRET', '')),
         );
     }
 

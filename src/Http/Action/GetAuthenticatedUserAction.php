@@ -98,6 +98,8 @@ final class GetAuthenticatedUserAction
                     && in_array(\TriCab\Core\CustomerContactReport\Module::PERMISSION_ACCESS, $user->permissions, true),
                 'finance' => $this->settings->financeModuleEnabled
                     && in_array(\TriCab\Core\Finance\Module::PERMISSION_ACCESS, $user->permissions, true),
+                'inbox' => $this->settings->mailModuleEnabled
+                    && in_array(\TriCab\Core\Mail\Module::PERMISSION_ACCESS, $user->permissions, true),
             ],
             'customerContext' => $customerContext === null ? null : [
                 'userPublicId' => $customerContext->userPublicId,

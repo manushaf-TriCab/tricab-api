@@ -141,6 +141,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'create-finance-ar-schema.sql')           
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-invoice-schema.sql')      # Tri-AP's fourteen tables (Phase 6); after create-finance-schema.sql and create-finance-attachments-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-odoo-schema.sql')         # Odoo reference lists and their sync runs (F1.12); after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-mail-status-suppressed.sql') # a mail ledger made before `suppressed` existed; no-op otherwise
+Invoke-SqlFile (Join-Path $DevScripts 'create-mail-schema.sql')                # mail review: mailboxes, threads, messages, assessments, decisions (inbox plan I2); no FKs outside [mail]
 
 # --- seeds -----------------------------------------------------------------
 Write-Host "`n[4/6] Reference data and seeds" -ForegroundColor Cyan
@@ -158,6 +159,8 @@ foreach ($s in @(
     'seed-customer-contact-report-permissions.sql', # report permission catalogue only; no platform-role grants
     'seed-customer-contact-roles.sql',              # three roles, assigned to nobody
     'seed-rfq-roles.sql',                # after rfq permissions: three RFQ roles, assigned to nobody
+    'seed-mail-permissions.sql',         # MAIL.ACCESS and MAIL.REVIEW; ADMINISTRATOR holds both
+    'seed-mail-roles.sql',               # after the RFQ roles and mail permissions: grants both to RFQ_SALES, RFQ_ADMIN, RFQ_DEVELOPER
     'seed-finance-permissions.sql',      # FINANCE.* catalogue; ADMINISTRATOR gets FINANCE.ADMIN only
     'seed-finance-roles.sql',            # after finance permissions: FINANCE_ADMIN, assigned to nobody
     'seed-finance-task-permissions.sql', # Tri-Task's eleven permissions (Phase 2); after seed-finance-permissions.sql

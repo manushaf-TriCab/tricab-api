@@ -427,6 +427,9 @@ final class AppBuilder
         $app->get('/api/v1/public/contact', GetPublicContactAction::class);
         self::registerOnboardingRoutes($app, $container);
         self::registerRfqRoutes($app, $container);
+        if ($settings->mailModuleEnabled) {
+            self::registerMailRoutes($app, $container);
+        }
         if ($settings->customerContactModuleEnabled) {
             self::registerCustomerContactReportRoutes($app, $container);
         }
@@ -434,6 +437,37 @@ final class AppBuilder
             self::registerFinanceRoutes($app, $container);
         }
         self::registerAdminRoutes($app, $container);
+    }
+
+    /**
+     * Mail review inbox (inbox plan I2). Registered only when MAIL_MODULE_ENABLED is true; off, every path
+     * under /api/v1/mail is a 404. Every route carries exactly one permission, pinned by `MailRouteTableTest`.
+     * The review route holds `MAIL.ACCESS` because marking read or unread needs no more; its service demands
+     * `MAIL.REVIEW` for the other actions. Literal paths are registered before any `{id}` path.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerMailRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $access = \TriCab\Core\Mail\Module::PERMISSION_ACCESS;
+
+        $app->get('/api/v1/mail/me', \TriCab\Api\Http\Action\Mail\GetMailMeAction::class)
+            ->add(($require)($access));
+        $app->get('/api/v1/mail/export', \TriCab\Api\Http\Action\Mail\ExportMailLabelsAction::class)
+            ->add(($require)(\TriCab\Core\Mail\Module::PERMISSION_REVIEW));
+        $app->get('/api/v1/mail/queues', \TriCab\Api\Http\Action\Mail\ListMailQueuesAction::class)
+            ->add(($require)($access));
+        $app->get('/api/v1/mail/threads', \TriCab\Api\Http\Action\Mail\ListMailThreadsAction::class)
+            ->add(($require)($access));
+        $app->get('/api/v1/mail/threads/{id}', \TriCab\Api\Http\Action\Mail\GetMailThreadAction::class)
+            ->add(($require)($access));
+        $app->post('/api/v1/mail/threads/{id}/review', \TriCab\Api\Http\Action\Mail\ReviewMailThreadAction::class)
+            ->add(($require)($access));
+        $app->get('/api/v1/mail/messages/{id}/body', \TriCab\Api\Http\Action\Mail\GetMailMessageBodyAction::class)
+            ->add(($require)($access));
+        $app->get('/api/v1/mail/attachments/{id}', \TriCab\Api\Http\Action\Mail\DownloadMailAttachmentAction::class)
+            ->add(($require)($access));
     }
 
     /**
