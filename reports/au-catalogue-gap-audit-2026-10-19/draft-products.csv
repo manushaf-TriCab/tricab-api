@@ -1,0 +1,5 @@
+ProductId,InternalCode,Name,Publication status,AU region visible,AU public,Legacy categories,Legacy URLs,Current placements,Recommended action
+289,C1,Flexible Control,draft,False,False,Control > 110V,https://www2.tricab.com/cable/flexible-control-c1-110v/,Control / 110V / C1,Review the existing draft. Publishing is a separate decision from creating a product.
+356,V2,Flexible Rubber MV Power,draft,False,False,Medium Voltage,https://www2.tricab.com/cable/flexible-rubber-19-33kv/,Medium Voltage / V2,Review the existing draft. Publishing is a separate decision from creating a product.
+357,V3,"Flexible Rubber Single-core, Multi-core",draft,False,False,Medium Voltage,https://www2.tricab.com/cable/flexible-rubber-3-386-6kv/,Medium Voltage / V3,Review the existing draft. Publishing is a separate decision from creating a product.
+358,V4,Flexible Rubber MV Power,draft,False,False,Medium Voltage,https://www2.tricab.com/cable/flexible-rubber-6-3511kv/,Medium Voltage / V4,Review the existing draft. Publishing is a separate decision from creating a product.

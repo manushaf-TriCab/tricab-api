@@ -1,0 +1,79 @@
+Main category,Subcategory,Legacy unique products,New matching products,Missing products,Draft products,Missing placements,Visibility issues,Needs review
+Accessories,lugs-and-links > Links,4,4,0,0,0,0,0
+Accessories,lugs-and-links > Lugs,10,1,9,0,0,0,0
+Accessories,terminals > Bootlace / Ferrule,5,0,5,0,0,0,0
+Accessories,terminals > Pin & Blade,4,2,2,0,0,0,0
+Accessories,terminals > Quick Connect,7,0,7,0,0,0,0
+Accessories,terminals > Ring & Fork,6,1,5,0,0,0,0
+Accessories,heat-shrink-and-cold-shrink > Cold Shrink,1,0,1,0,0,0,0
+Accessories,heat-shrink-and-cold-shrink > Heat Shrink,7,0,7,0,0,0,0
+Accessories,glands > Brass,8,3,5,0,0,0,0
+Accessories,glands > Nylon,3,0,3,0,0,0,0
+Accessories,glands > Stainless Steel,2,1,1,0,0,0,0
+Accessories,plug-socket > Connectors,2,0,2,0,0,0,0
+Accessories,plug-socket > Industrial,12,0,12,0,0,0,0
+Accessories,plug-socket > CeeForm,5,0,5,0,0,0,0
+Accessories,plug-socket > PowerSure,16,0,16,0,0,0,0
+Accessories,plug-socket > Techno Connectors,8,8,0,0,0,0,0
+Accessories,cable-management > Ducts,3,0,3,0,0,0,0
+Accessories,cable-management > Cable Protection / Installation Kits,6,0,6,0,0,0,0
+Accessories,cable-management > Conduits & Fittings,11,11,0,0,0,0,0
+Accessories,cable-management > Tapes,3,0,3,0,0,0,0
+Accessories,insulators > Circuit Protection,2,0,2,0,0,0,0
+Accessories,insulators > Hardware & Fittings,6,1,5,0,0,0,0
+Accessories,insulators > Wire Management,4,2,2,0,0,0,0
+Accessories,switches > Push Button,1,0,1,0,0,0,0
+Accessories,switches > Rotary,1,0,1,0,0,0,0
+Accessories,switches > Weatherproof,2,0,2,0,0,0,0
+Accessories,solar-components > Accessories & Wiring,6,1,5,0,0,0,0
+Accessories,tools-dies > Other Tools,5,0,5,0,0,0,0
+Accessories,tools-dies > Cable Preparation,5,0,5,0,0,0,0
+Accessories,tools-dies > Crimpers & Dies,11,0,11,0,0,0,0
+Accessories,safety-security-accessories > Lockout & Tagout,4,0,4,0,0,0,0
+Accessories,safety-security-accessories > Site Safety,1,0,1,0,0,0,0
+Accessories,pre-assembled_lead > Lug Leads,3,0,3,0,0,0,0
+Accessories,pre-assembled_lead > Plug-Socket Leads,4,4,0,0,0,0,0
+Accessories,pre-assembled_lead > Ceeform Leads,2,0,2,0,0,0,0
+Accessories,pre-assembled_lead > Earthing & Bonding Leads,1,0,1,0,0,0,0
+Accessories,Cable Ties,9,0,9,0,0,0,0
+ALI-FLEX System,Flexible Cables,11,9,2,0,0,0,0
+ALI-FLEX System,Solar,2,0,2,0,0,0,0
+Control,110V,6,6,0,1,0,0,0
+Control,450/750V,3,1,2,0,0,0,0
+Control,0.6/1kV,8,4,4,0,0,0,0
+Electrical Contracting,Copper,8,8,0,0,0,0,0
+Electrical Contracting,Aluminium,4,4,0,0,0,0,0
+Instrumentation,110V,8,8,0,0,0,0,0
+Instrumentation,450/750V,9,7,1,0,0,0,1
+Instrumentation,0.6/1kV,2,2,0,0,0,0,0
+Marine IEC LSZH,Shipboard / Power and Control,4,2,0,0,2,0,2
+Marine IEC LSZH,Shipboard / Instrumentation - Collective,4,0,0,0,0,0,4
+Marine IEC LSZH,Shipboard / Instrumentation - Individual and Collective,4,0,0,0,0,0,4
+Marine IEC LSZH,Offshore / Power and Control,2,1,0,0,1,0,1
+Marine IEC LSZH,Offshore / Instrumentation - Collective,2,0,0,0,0,0,2
+Marine IEC LSZH,Offshore / Instrumentation - Individual and Collective,2,0,0,0,0,0,2
+Marine NEK 606,0.6/1kV / Power and Control,6,6,0,0,0,0,0
+Marine NEK 606,0.6/1kV / Instrumentation - Collective,4,4,0,0,0,0,0
+Marine NEK 606,0.6/1kV / Instrumentation - Individual,4,4,0,0,0,0,0
+Marine NEK 606,0.6/1kV / VFD/VSD,4,1,3,0,0,0,0
+Medium Voltage,(category root),5,3,2,3,0,0,0
+Solar,Copper,2,1,1,0,0,0,0
+Solar,Aluminium,2,0,2,0,0,0,0
+Steel/Alum Armour,Voltage Rating / 0.6/1kV,3,0,3,0,0,0,0
+Steel/Alum Armour,Voltage Rating / 110V,2,2,0,0,0,0,0
+Submersible/Potable,Copper,3,0,3,0,0,0,0
+Switchboard & Panel,Copper,4,4,0,0,0,0,0
+Termite Res/Nylon,Low Voltage,7,6,1,0,0,0,0
+Termite Res/Nylon,Aluminium,2,2,0,0,0,0,0
+VFD/VSD,Split Earth | 0.6/1kV,5,4,1,0,0,0,0
+VFD/VSD,Aluminium,3,3,0,0,0,0,0
+VFD/VSD,Single Earth | 0.6/1kV,2,0,2,0,0,0,0
+Welding/Battery,Copper,8,0,8,0,0,0,0
+Food & Beverage,(category root),3,0,3,0,0,0,0
+Industrial & Marine Switchboard Wire,(category root),2,2,0,0,0,0,0
+Ship Loaders & Cranes,(category root),5,0,5,0,0,0,0
+Shore Power,(category root),1,1,0,0,0,0,0
+Temporary Power,(category root),3,0,3,0,0,0,0
+Water Treatment,(category root),2,0,2,0,0,0,0
+Fire Resistant,(category root),4,2,2,0,0,0,0
+Telecoms,(category root),4,0,4,0,0,0,0
