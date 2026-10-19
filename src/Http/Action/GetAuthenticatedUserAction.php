@@ -30,6 +30,7 @@ final class GetAuthenticatedUserAction
         private readonly EntraJwtValidationDebugLogger $debugLogger,
         private readonly IdentityResolutionErrorMapper $identityErrors,
         private readonly Settings $settings,
+        private readonly \TriCab\Api\Identity\Authentication\SuccessfulLoginRecorder $loginRecorder,
     ) {
     }
 
@@ -39,7 +40,7 @@ final class GetAuthenticatedUserAction
 
         $attachedUser = $request->getAttribute(AuthenticatedUserAttribute::KEY);
         if ($attachedUser instanceof AuthenticatedUser) {
-            return $this->responder->success($this->serialize($attachedUser));
+            return $this->successfulResponse($attachedUser);
         }
 
         $verifiedIdentity = $request->getAttribute(VerifiedIdentityAttribute::KEY);
@@ -68,7 +69,15 @@ final class GetAuthenticatedUserAction
             return $this->identityErrors->map($exception);
         }
 
-        return $this->responder->success($this->serialize($user));
+        return $this->successfulResponse($user);
+    }
+
+    private function successfulResponse(AuthenticatedUser $user): ResponseInterface
+    {
+        $response = $this->responder->success($this->serialize($user));
+        $this->loginRecorder->record($user);
+
+        return $response;
     }
 
     /**

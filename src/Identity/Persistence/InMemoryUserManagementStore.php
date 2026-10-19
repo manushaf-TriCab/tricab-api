@@ -161,6 +161,15 @@ final class InMemoryUserManagementStore
         $this->seedDevelopmentUserManagement();
     }
 
+    public function recordSuccessfulLogin(string $publicId, string $at): void
+    {
+        foreach ($this->users as &$user) {
+            if ($user['publicId'] === $publicId && ($user['lastLoginAtUtc'] === null || $user['lastLoginAtUtc'] < $at)) {
+                $user['lastLoginAtUtc'] = $at;
+            }
+        }
+    }
+
     public function users(): UserManagementRepository
     {
         return $this->userRepository;

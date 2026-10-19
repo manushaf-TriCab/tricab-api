@@ -1913,6 +1913,13 @@ final class ContainerFactory
             EntraJwksClient::class => \DI\autowire(EntraJwksClient::class),
             EntraJwtValidationDebugLogger::class => \DI\autowire(EntraJwtValidationDebugLogger::class),
             EntraTokenValidator::class => \DI\autowire(MicrosoftEntraJwtValidator::class),
+            \TriCab\Api\Identity\Authentication\SuccessfulLoginRecorder::class => static function (Container $container) use ($settings): \TriCab\Api\Identity\Authentication\SuccessfulLoginRecorder {
+                return new \TriCab\Api\Identity\Authentication\SuccessfulLoginRecorder(
+                    $settings->usesAzureSqlUserRepository()
+                        ? self::get($container, SqlConnection::class)
+                        : self::get($container, InMemoryUserManagementStore::class),
+                );
+            },
             ResolveAuthenticatedUserHandler::class => \DI\autowire(ResolveAuthenticatedUserHandler::class),
             IdentityResolutionService::class => \DI\autowire(IdentityResolutionService::class),
             LegacyStreamParser::class => \DI\autowire(LegacyStreamParser::class),

@@ -135,3 +135,16 @@ Do **not** create the files above until:
 
 1. Azure SQL Identity tables (users, external identities, roles, permissions) are available
 2. Entra app registration (tenant, audience, JWKS) is known for the API environment
+
+## Last login timestamp
+
+User Management reads `identity.Users.LastSuccessfulLoginAt`. A successful
+`GET /api/v1/me` now records the time the app verifies the signed-in account,
+including restored sessions, for Microsoft and guest authentication. Ordinary
+API calls and failed verification do not update it. Concurrent older writes
+cannot move the timestamp backwards, and a recording failure does not deny login.
+
+Before this fix, authentication did not populate this field. A null value means
+**Not recorded**, not proof that the person has never signed in. Historical login
+times are not backfilled. No schema migration is needed; values begin appearing
+after deployment when people next open or refresh the signed-in app.
