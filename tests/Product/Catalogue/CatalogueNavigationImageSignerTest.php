@@ -7,6 +7,7 @@ namespace TriCab\Api\Tests\Product\Catalogue;
 use PHPUnit\Framework\TestCase;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
+use TriCab\Api\Product\Media\StableMediaUrlSigner;
 use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Api\Tests\Product\Storage\RecordingBlobStore;
 use TriCab\Core\Product\Contract\ProductMediaRepository;
@@ -126,6 +127,58 @@ final class CatalogueNavigationImageSignerTest extends TestCase
         self::assertSame('IEC 60092-350', $signed['nodeName']);
     }
 
+    public function test_public_document_with_origin_uses_stable_addresses_that_never_expire(): void
+    {
+        $blobs = new RecordingBlobStore();
+        $signer = $this->signer(300, $blobs);
+        $document = [
+            'tree' => [[
+                'nodeName' => 'Cables',
+                'imageUrl' => self::BLOB . '?sp=r&se=2020-01-01T00%3A00%3A00Z&sig=expired',
+                'children' => [['nodeName' => 'UP', 'imageUrl' => '/assets/UP.png', 'children' => []]],
+                'products' => [['name' => 'BVP', 'thumbnailUrl' => self::BLOB]],
+            ]],
+        ];
+
+        $first = $signer->signPublicDocument($document, 'https://api.tricab.test');
+        $second = $signer->signPublicDocument($document, 'https://api.tricab.test');
+
+        self::assertSame($first, $second);
+        $tree = $first['tree'];
+        self::assertIsArray($tree);
+        $node = $tree[0];
+        self::assertIsArray($node);
+        self::assertIsString($node['imageUrl']);
+        self::assertStringStartsWith('https://api.tricab.test/api/v1/media/images/', $node['imageUrl']);
+        self::assertStringNotContainsString('sig=', $node['imageUrl']);
+        self::assertIsArray($node['children']);
+        self::assertIsArray($node['children'][0]);
+        self::assertSame('/assets/UP.png', $node['children'][0]['imageUrl']);
+        self::assertIsArray($node['products']);
+        self::assertIsArray($node['products'][0]);
+        self::assertSame($node['imageUrl'], $node['products'][0]['thumbnailUrl']);
+        self::assertNull($blobs->lastPath, 'Stable addresses are signed on load, not while building the payload.');
+    }
+
+    public function test_public_document_without_origin_keeps_signing_for_existing_callers(): void
+    {
+        $signed = $this->signer(300)->signPublicDocument(['items' => [['imageUrl' => self::BLOB]]]);
+        $items = $signed['items'];
+        self::assertIsArray($items);
+        self::assertIsArray($items[0]);
+        self::assertIsString($items[0]['imageUrl']);
+        self::assertStringContainsString('sp=r', $items[0]['imageUrl']);
+    }
+
+    public function test_canonical_stored_url_turns_a_stable_address_back_into_the_blob_url(): void
+    {
+        $signer = $this->signer(300);
+        $stable = $signer->present(self::BLOB, 'https://api.tricab.test');
+
+        self::assertIsString($stable);
+        self::assertSame(self::BLOB, $signer->canonicalStoredUrl($stable));
+    }
+
     private function signer(int $ttl, ?RecordingBlobStore $blob = null): CatalogueNavigationImageSigner
     {
         $settings = Settings::fromEnvironment([
@@ -153,6 +206,7 @@ final class CatalogueNavigationImageSignerTest extends TestCase
                 $blob ?? new RecordingBlobStore(),
             ),
             $settings,
+            new StableMediaUrlSigner($settings),
         );
     }
 

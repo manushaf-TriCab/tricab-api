@@ -264,6 +264,9 @@ final readonly class Settings
         public int $rfqMailClassifierTimeoutSeconds = 30,
         /** @var list<string> */
         public array $rfqMailOwnAddresses = [],
+        // HMAC key for stable product image addresses; '' derives one from the blob account key.
+        public string $mediaUrlSigningSecret = '',
+        public string $publicApiOrigin = '',
     ) {
     }
 
@@ -1185,6 +1188,20 @@ final readonly class Settings
             }
         }
 
+        // Stable product image addresses are absolute so they still work when the client is on another origin. Without
+        // an override they are built from the request's own host.
+        $publicApiOrigin = rtrim(trim(self::string($env, 'PUBLIC_API_ORIGIN', '')), '/');
+        if ($publicApiOrigin !== '') {
+            $apiOriginParts = parse_url($publicApiOrigin);
+            $apiOriginScheme = is_array($apiOriginParts) ? strtolower((string) ($apiOriginParts['scheme'] ?? '')) : '';
+            if (
+                !is_array($apiOriginParts) || ($apiOriginParts['host'] ?? '') === '' || !in_array($apiOriginScheme, ['http', 'https'], true)
+                || isset($apiOriginParts['path']) || isset($apiOriginParts['query']) || isset($apiOriginParts['fragment']) || isset($apiOriginParts['user']) || isset($apiOriginParts['pass'])
+            ) {
+                throw new InvalidArgumentException('PUBLIC_API_ORIGIN must be an origin such as https://api.tricab.ai (no path).');
+            }
+        }
+
         // Tri-AR's invented sample PDFs, put into the in-memory blob store as the container is built (decision D52). They
         // are for a developer's own machine: refused in production and with any blob store but the memory one, so they can
         // never be written to a shared store.
@@ -1493,6 +1510,8 @@ final readonly class Settings
                 static fn (string $a): string => strtolower(trim($a)),
                 self::csvList($env, 'RFQ_MAIL_OWN_ADDRESSES', ''),
             ), static fn (string $a): bool => $a !== '')),
+            mediaUrlSigningSecret: trim(self::string($env, 'MEDIA_URL_SIGNING_SECRET', '')),
+            publicApiOrigin: $publicApiOrigin,
         );
     }
 

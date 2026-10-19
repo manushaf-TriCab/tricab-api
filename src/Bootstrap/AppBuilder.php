@@ -135,6 +135,7 @@ use TriCab\Api\Http\Action\PublicProduct\GetPublicCataloguePanelAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabTreeAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueNodeAction;
+use TriCab\Api\Http\Action\PublicProduct\GetStableMediaImageAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductDocumentsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductMediaAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductRelationshipsAction;
@@ -1513,6 +1514,7 @@ final class AppBuilder
         $app->get('/api/v1/catalogue/tabs', GetPublicCatalogueTabsAction::class);
         $app->get('/api/v1/catalogue/tabs/{tabSlug}/tree', GetPublicCatalogueTabTreeAction::class);
         $app->get('/api/v1/catalogue/nodes/{nodeSlugOrPublicId}', GetPublicCatalogueNodeAction::class);
+        $app->get('/api/v1/media/images/{token}[/{name}]', GetStableMediaImageAction::class);
         $app->post('/api/v1/cable-calculator/calculate', PostCableCalculatorCalculateAction::class);
         $app->post('/api/v1/product-finder', FindProductAction::class);
     }

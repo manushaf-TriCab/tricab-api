@@ -6,6 +6,7 @@ namespace TriCab\Api\Product\Catalogue;
 
 use Throwable;
 use TriCab\Api\Config\Settings;
+use TriCab\Api\Product\Media\StableMediaUrlSigner;
 use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 
 /**
@@ -13,7 +14,9 @@ use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
  *
  * Stored CatalogueNodes.ImageUrl values stay unsigned. Public /assets and
  * /media paths are returned unchanged. Only this account's blob endpoint is
- * signed, including a URL that already carries a read signature.
+ * signed, including a URL that already carries a read signature. Public
+ * responses given a request origin carry stable image addresses instead, which
+ * redirect to a fresh signature on every load.
  */
 final class CatalogueNavigationImageSigner
 {
@@ -22,10 +25,11 @@ final class CatalogueNavigationImageSigner
     public function __construct(
         private readonly ProductDevMediaUrlResolver $mediaUrls,
         private readonly Settings $settings,
+        private readonly StableMediaUrlSigner $stableUrls,
     ) {
     }
 
-    public function present(?string $storedUrl): ?string
+    public function present(?string $storedUrl, ?string $origin = null): ?string
     {
         if ($storedUrl === null) {
             return null;
@@ -42,6 +46,12 @@ final class CatalogueNavigationImageSigner
         }
         if (!$this->isOwnBlobUrl($trimmed)) {
             return $trimmed;
+        }
+        if ($origin !== null) {
+            $stable = $this->stableUrls->stableUrlForBlobUrl($trimmed, $origin);
+            if ($stable !== null) {
+                return $stable;
+            }
         }
 
         try {
@@ -69,6 +79,7 @@ final class CatalogueNavigationImageSigner
         if ($trimmed === '') {
             return null;
         }
+        $trimmed = $this->stableUrls->blobUrlForStableUrl($trimmed) ?? $trimmed;
         if (!$this->isOwnBlobUrl($trimmed)) {
             return $trimmed;
         }
@@ -105,9 +116,9 @@ final class CatalogueNavigationImageSigner
      * @param array<string, mixed> $node
      * @return array<string, mixed>
      */
-    public function signPublicNode(array $node): array
+    public function signPublicNode(array $node, ?string $origin = null): array
     {
-        return $this->signNode($node, true);
+        return $this->signNode($node, true, $origin);
     }
 
     /**
@@ -123,16 +134,16 @@ final class CatalogueNavigationImageSigner
      * @param array<string, mixed> $document
      * @return array<string, mixed>
      */
-    public function signPublicDocument(array $document): array
+    public function signPublicDocument(array $document, ?string $origin = null): array
     {
         if (isset($document['tree']) && is_array($document['tree'])) {
-            $document['tree'] = $this->signNodeList($document['tree'], true);
+            $document['tree'] = $this->signNodeList($document['tree'], true, $origin);
         }
         if (isset($document['items']) && is_array($document['items'])) {
-            $document['items'] = $this->signNodeList($document['items'], true);
+            $document['items'] = $this->signNodeList($document['items'], true, $origin);
         }
         if (array_key_exists('imageUrl', $document) || array_key_exists('children', $document)) {
-            $document = $this->signPublicNode($document);
+            $document = $this->signPublicNode($document, $origin);
         }
 
         return $document;
@@ -142,12 +153,12 @@ final class CatalogueNavigationImageSigner
      * @param array<mixed> $nodes
      * @return list<mixed>
      */
-    private function signNodeList(array $nodes, bool $includeProducts): array
+    private function signNodeList(array $nodes, bool $includeProducts, ?string $origin = null): array
     {
         $signed = [];
         foreach ($nodes as $node) {
             $signed[] = is_array($node)
-                ? $this->signNode($this->stringKeyed($node), $includeProducts)
+                ? $this->signNode($this->stringKeyed($node), $includeProducts, $origin)
                 : $node;
         }
 
@@ -174,18 +185,19 @@ final class CatalogueNavigationImageSigner
      * @param array<string, mixed> $node
      * @return array<string, mixed>
      */
-    private function signNode(array $node, bool $includeProducts): array
+    private function signNode(array $node, bool $includeProducts, ?string $origin = null): array
     {
         if (array_key_exists('imageUrl', $node)) {
-            $node['imageUrl'] = $this->present(is_string($node['imageUrl']) ? $node['imageUrl'] : null);
+            $node['imageUrl'] = $this->present(is_string($node['imageUrl']) ? $node['imageUrl'] : null, $origin);
         }
         if (array_key_exists('productThumbnailUrl', $node)) {
             $node['productThumbnailUrl'] = $this->present(
                 is_string($node['productThumbnailUrl']) ? $node['productThumbnailUrl'] : null,
+                $origin,
             );
         }
         if (isset($node['children']) && is_array($node['children'])) {
-            $node['children'] = $this->signNodeList($node['children'], $includeProducts);
+            $node['children'] = $this->signNodeList($node['children'], $includeProducts, $origin);
         }
         if ($includeProducts && isset($node['products']) && is_array($node['products'])) {
             $products = [];
@@ -193,6 +205,7 @@ final class CatalogueNavigationImageSigner
                 if (is_array($product) && array_key_exists('thumbnailUrl', $product)) {
                     $product['thumbnailUrl'] = $this->present(
                         is_string($product['thumbnailUrl']) ? $product['thumbnailUrl'] : null,
+                        $origin,
                     );
                 }
                 $products[] = $product;

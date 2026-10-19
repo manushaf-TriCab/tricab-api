@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Media\StableMediaUrlSigner;
 use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\GetPublicProductService;
@@ -24,6 +25,7 @@ final class GetPublicProductBySlugAction
         private readonly RegionPreferenceResolver $regions,
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
+        private readonly StableMediaUrlSigner $stableUrls,
     ) {
     }
 
@@ -37,7 +39,10 @@ final class GetPublicProductBySlugAction
             $regionCode = $this->regions->resolveCode($request, QueryParams::stringOrNull($query, 'regionCode'));
             $detail = $this->getPublicProduct->bySlug($slug, $regionCode);
 
-            return $this->responder->success(ProductManagementDtoSerializer::publicDetail($detail, $this->devUrls));
+            return $this->responder->success($this->stableUrls->stabilizePayload(
+                ProductManagementDtoSerializer::publicDetail($detail, $this->devUrls),
+                $this->stableUrls->originFor($request),
+            ));
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

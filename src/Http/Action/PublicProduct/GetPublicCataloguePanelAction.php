@@ -14,6 +14,7 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
+use TriCab\Api\Product\Media\StableMediaUrlSigner;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 
@@ -27,6 +28,7 @@ final class GetPublicCataloguePanelAction
         private readonly RequestPerformanceMetrics $metrics,
         private readonly RegionPreferenceResolver $regions,
         private readonly CatalogueNavigationImageSigner $images,
+        private readonly StableMediaUrlSigner $stableUrls,
     ) {
     }
 
@@ -45,39 +47,45 @@ final class GetPublicCataloguePanelAction
             ]);
 
             $cacheControl = $this->images->cacheControl(true);
+            $origin = $this->stableUrls->originFor($request);
             $cached = $this->cache->getCatalogue($cacheKey);
-            if (is_array($cached) && isset($cached['etag'], $cached['data']) && is_string($cached['etag']) && is_array($cached['data'])) {
+            if (is_array($cached) && isset($cached['data']) && is_array($cached['data'])) {
                 $this->metrics->recordCatalogueCacheHit(true);
-                if ($this->etagMatches($request, $cached['etag'])) {
-                    return $this->responder->notModified($cached['etag'], $cacheControl);
-                }
-                /** @var array<string, mixed> $cachedData */
-                $cachedData = $cached['data'];
-
-                return $this->responder->success($this->images->signPublicDocument($cachedData), 200, [
-                    'ETag' => $cached['etag'],
-                    'Cache-Control' => $cacheControl,
+                /** @var array<string, mixed> $payload */
+                $payload = $cached['data'];
+            } else {
+                $this->metrics->recordCatalogueCacheHit(false);
+                $payload = CatalogueDtoSerializer::publicPanel(
+                    $this->catalogue->getPanel($tabSlug, $regionCode, $includeProducts),
+                );
+                $this->cache->setCatalogue($cacheKey, [
+                    'etag' => self::etagFor($payload),
+                    'data' => $payload,
                 ]);
             }
 
-            $this->metrics->recordCatalogueCacheHit(false);
-            $payload = CatalogueDtoSerializer::publicPanel(
-                $this->catalogue->getPanel($tabSlug, $regionCode, $includeProducts),
-            );
-            $etag = '"' . hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)) . '"';
-            $this->cache->setCatalogue($cacheKey, ['etag' => $etag, 'data' => $payload]);
-
+            // The ETag covers the payload as sent, so a 304 can never keep an expired read signature alive.
+            $presented = $this->images->signPublicDocument($payload, $origin !== '' ? $origin : null);
+            $etag = self::etagFor($presented);
             if ($this->etagMatches($request, $etag)) {
                 return $this->responder->notModified($etag, $cacheControl);
             }
 
-            return $this->responder->success($this->images->signPublicDocument($payload), 200, [
+            return $this->responder->success($presented, 200, [
                 'ETag' => $etag,
                 'Cache-Control' => $cacheControl,
             ]);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private static function etagFor(array $payload): string
+    {
+        return '"' . hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)) . '"';
     }
 
     private function etagMatches(ServerRequestInterface $request, string $etag): bool

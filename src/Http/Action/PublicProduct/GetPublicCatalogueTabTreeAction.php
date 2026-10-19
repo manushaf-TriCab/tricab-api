@@ -13,6 +13,7 @@ use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
+use TriCab\Api\Product\Media\StableMediaUrlSigner;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Product\Application\Service\GetPublicCatalogueService;
 
@@ -24,6 +25,7 @@ final class GetPublicCatalogueTabTreeAction
         private readonly ProductManagementErrorMapper $errors,
         private readonly RegionPreferenceResolver $regions,
         private readonly CatalogueNavigationImageSigner $images,
+        private readonly StableMediaUrlSigner $stableUrls,
     ) {
     }
 
@@ -41,12 +43,19 @@ final class GetPublicCatalogueTabTreeAction
                     'items' => CatalogueDtoSerializer::publicTreeList(
                         $this->catalogue->getTabTree($tabSlug, $regionCode, $includeProducts),
                     ),
-                ]),
+                ], $this->originFor($request)),
                 200,
                 ['Cache-Control' => $this->images->cacheControl(true)],
             );
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }
+    }
+
+    private function originFor(ServerRequestInterface $request): ?string
+    {
+        $origin = $this->stableUrls->originFor($request);
+
+        return $origin !== '' ? $origin : null;
     }
 }

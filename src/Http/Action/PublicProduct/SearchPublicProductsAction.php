@@ -12,6 +12,7 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Public\Product\ProductSearchQuery;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Product\Media\StableMediaUrlSigner;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
 use TriCab\Core\Product\Application\Service\SearchProductsService;
@@ -24,6 +25,7 @@ final class SearchPublicProductsAction
         private readonly ProductManagementErrorMapper $errors,
         private readonly RegionPreferenceResolver $regions,
         private readonly ProductDevMediaUrlResolver $devUrls,
+        private readonly StableMediaUrlSigner $stableUrls,
     ) {
     }
 
@@ -39,9 +41,10 @@ final class SearchPublicProductsAction
             ));
             $result = $this->searchProducts->execute($criteria);
 
-            return $this->responder->success(
+            return $this->responder->success($this->stableUrls->stabilizePayload(
                 ProductManagementDtoSerializer::searchListResult($result, $this->devUrls),
-            );
+                $this->stableUrls->originFor($request),
+            ));
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }
