@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Mail;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Core\Mail\Application\DTO\ExportQuery;
 use TriCab\Core\Mail\Application\DTO\MailParty;
 use TriCab\Core\Mail\Application\DTO\NewAssessment;
 use TriCab\Core\Mail\Application\DTO\NewAttachment;
@@ -300,6 +301,59 @@ abstract class MailStoreBehaviour extends TestCase
 
         $this->expectException(MailActionBlocked::class);
         $this->store->recordIgnore($a->threadId, $actor, 7, null, MailFixtures::at('2026-10-18 13:00:00'));
+    }
+
+    public function test_a_deleted_thread_is_in_no_list_count_export_or_read(): void
+    {
+        $this->seed();
+        $gone = MailFixtures::classified($this->recorder, 'del1', 'rfq', 0.9, at: '2026-10-18 10:00:00', attachments: [new NewAttachment('graph-att-d', 'list.pdf', 'application/pdf', 100)]);
+        $file = $this->store->thread($gone->threadId)?->messages[0]->attachments[0];
+        self::assertNotNull($file);
+        self::assertSame(7, $this->store->listThreads(new ThreadQuery())->total);
+
+        $this->store->deleteThread($gone->threadId, new MailParty('Sam Sales', 'sam@tricab.com'), 7, MailFixtures::at('2026-10-18 12:00:00'));
+
+        self::assertNull($this->store->thread($gone->threadId));
+        self::assertNull($this->store->messageRef($gone->messageId));
+        self::assertNull($this->store->attachmentRef($file->id));
+        self::assertSame(6, $this->store->listThreads(new ThreadQuery())->total);
+        self::assertSame(2, $this->store->listThreads(new ThreadQuery(queue: 'rfq'))->total, 'r1 and d1 are left in RFQ');
+        self::assertSame(['total' => 6, 'unread' => 4], $this->store->queueCounts()['all']);
+        self::assertSame(['total' => 2, 'unread' => 1], $this->store->queueCounts()['rfq']);
+        self::assertNotContains($gone->threadId, array_map(static fn ($r): string => $r->threadId, $this->store->exportRows(new ExportQuery())));
+        self::assertSame(0, $this->store->listThreads(new ThreadQuery(search: 'Quote for 100m'))->total);
+
+        // Deleting again changes nothing.
+        $this->store->deleteThread($gone->threadId, new MailParty('Sam Sales', 'sam@tricab.com'), 7, MailFixtures::at('2026-10-18 13:00:00'));
+        self::assertSame(6, $this->store->listThreads(new ThreadQuery())->total);
+    }
+
+    public function test_graph_delivering_a_deleted_threads_mail_again_does_not_bring_it_back(): void
+    {
+        $gone = MailFixtures::classified($this->recorder, 'del2', 'rfq', 0.9);
+        $this->store->deleteThread($gone->threadId, new MailParty('Sam Sales', 'sam@tricab.com'), 7, MailFixtures::at('2026-10-18 12:00:00'));
+
+        // As after a deploy empties the reader's cursor: the same message, recorded and assessed again.
+        $again = $this->recorder->recordMessage(MailFixtures::message('del2'));
+        $this->recorder->recordAssessment(MailFixtures::MAILBOX, '<del2@customer.example>', NewAssessment::classified('rfq', 0.9, 'x', 'm', 'v', MailFixtures::at('2026-10-18 12:30:00')));
+
+        self::assertFalse($again->created);
+        self::assertNull($this->store->thread($gone->threadId));
+        self::assertSame(0, $this->store->listThreads(new ThreadQuery())->total);
+    }
+
+    public function test_a_new_message_in_a_deleted_conversation_brings_it_back(): void
+    {
+        $gone = MailFixtures::classified($this->recorder, 'del3', 'rfq', 0.9, conversation: 'conv-del', at: '2026-10-18 09:00:00');
+        $this->store->deleteThread($gone->threadId, new MailParty('Sam Sales', 'sam@tricab.com'), 7, MailFixtures::at('2026-10-18 12:00:00'));
+
+        $reply = MailFixtures::classified($this->recorder, 'del4', 'rfq_followup', 0.8, conversation: 'conv-del', at: '2026-10-18 14:00:00');
+
+        self::assertSame($gone->threadId, $reply->threadId);
+        $record = $this->store->thread($gone->threadId);
+        self::assertNotNull($record);
+        self::assertSame(2, $record->summary->messageCount);
+        self::assertSame(1, $this->store->listThreads(new ThreadQuery())->total);
     }
 
     public function test_attachments_list_only_real_files_and_resolve_to_graph_ids(): void

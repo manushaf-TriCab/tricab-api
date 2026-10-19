@@ -14,7 +14,8 @@ namespace TriCab\Core\Mail;
  * One permission per route. Everyone who holds `MAIL.ACCESS` sees every thread, as
  * everyone sees every RFQ (owner decision, 18 Oct 2026): there is no scoping by
  * branch or by person. `MAIL.REVIEW` adds the actions that change what the platform
- * believes: marking a label, creating a draft, ignoring.
+ * believes: marking a label, creating a draft, ignoring, and deleting a conversation
+ * from the inbox (`DELETE /threads/{id}`; never from Exchange).
  *
  * Marking a thread read or unread needs only `MAIL.ACCESS`. It is the one action that
  * shares the review route (`POST /threads/{id}/review`), so that route carries

@@ -44,7 +44,7 @@ final class InMemoryMailStore implements MailStore
     /** @var array<string, array{id: string, address: string, displayName: string, connection: string, lastSyncAt: ?DateTimeImmutable}> */
     private array $mailboxes = [];
 
-    /** @var array<string, array{id: string, mailboxId: string, conversationId: string, subject: string, reviewState: string}> */
+    /** @var array<string, array{id: string, mailboxId: string, conversationId: string, subject: string, reviewState: string, deletedAt: ?DateTimeImmutable}> */
     private array $threads = [];
 
     /** @var array<string, array{view: MessageView, mailboxId: string, threadId: string, graphId: string}> */
@@ -114,7 +114,7 @@ final class InMemoryMailStore implements MailStore
         $rows = [];
         foreach ($this->projections as $threadId => $projection) {
             $assessment = $projection->assessmentId === null ? null : $this->assessmentById($projection->assessmentId);
-            if (!$projection->classified || $assessment === null) {
+            if (!$projection->classified || $assessment === null || $this->deleted($threadId)) {
                 continue;
             }
             $message = $this->messages[$assessment->messageId]['view'];
@@ -154,7 +154,7 @@ final class InMemoryMailStore implements MailStore
     public function thread(string $threadId): ?ThreadRecord
     {
         $projection = $this->projections[$threadId] ?? null;
-        if ($projection === null || !$projection->classified) {
+        if ($projection === null || !$projection->classified || $this->deleted($threadId)) {
             return null;
         }
         $summary = $projection->summary;
@@ -185,7 +185,7 @@ final class InMemoryMailStore implements MailStore
     {
         $m = $this->messages[$messageId] ?? null;
 
-        return $m === null ? null : new MessageRef($messageId, $this->mailboxes[$m['mailboxId']]['address'], $m['graphId']);
+        return $m === null || $this->deleted($m['threadId']) ? null : new MessageRef($messageId, $this->mailboxes[$m['mailboxId']]['address'], $m['graphId']);
     }
 
     public function attachmentRef(string $attachmentId): ?AttachmentRef
@@ -195,6 +195,9 @@ final class InMemoryMailStore implements MailStore
             return null;
         }
         $m = $this->messages[$a['messageId']];
+        if ($this->deleted($m['threadId'])) {
+            return null;
+        }
 
         return new AttachmentRef($attachmentId, $this->mailboxes[$m['mailboxId']]['address'], $m['graphId'], $a['graphId'], $a['view']->fileName, $a['view']->mimeType, $a['view']->sizeBytes);
     }
@@ -243,6 +246,13 @@ final class InMemoryMailStore implements MailStore
         $this->refresh($threadId);
     }
 
+    public function deleteThread(string $threadId, MailParty $actor, int $userId, DateTimeImmutable $at): void
+    {
+        if (isset($this->threads[$threadId]) && !$this->deleted($threadId)) {
+            $this->threads[$threadId]['deletedAt'] = $at;
+        }
+    }
+
     public function ensureMailbox(string $address, string $displayName): string
     {
         foreach ($this->mailboxes as $m) {
@@ -288,7 +298,10 @@ final class InMemoryMailStore implements MailStore
         }
         if ($threadId === null) {
             $threadId = MailIds::new();
-            $this->threads[$threadId] = ['id' => $threadId, 'mailboxId' => $mailboxId, 'conversationId' => $conversation, 'subject' => $message->subject, 'reviewState' => V::STATE_OPEN];
+            $this->threads[$threadId] = ['id' => $threadId, 'mailboxId' => $mailboxId, 'conversationId' => $conversation, 'subject' => $message->subject, 'reviewState' => V::STATE_OPEN, 'deletedAt' => null];
+        } else {
+            // A new message in a deleted conversation brings it back (a redelivered one returned above).
+            $this->threads[$threadId]['deletedAt'] = null;
         }
 
         $messageId = MailIds::new();
@@ -343,8 +356,8 @@ final class InMemoryMailStore implements MailStore
     private function summaries(): array
     {
         $out = [];
-        foreach ($this->projections as $projection) {
-            if ($projection->classified) {
+        foreach ($this->projections as $threadId => $projection) {
+            if ($projection->classified && !$this->deleted($threadId)) {
                 $out[] = $projection->summary;
             }
         }
@@ -375,6 +388,11 @@ final class InMemoryMailStore implements MailStore
         }
 
         return null;
+    }
+
+    private function deleted(string $threadId): bool
+    {
+        return ($this->threads[$threadId]['deletedAt'] ?? null) !== null;
     }
 
     private function requireOpen(string $threadId): void

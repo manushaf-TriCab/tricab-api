@@ -465,6 +465,8 @@ final class AppBuilder
             ->add(($require)($access));
         $app->post('/api/v1/mail/threads/{id}/review', \TriCab\Api\Http\Action\Mail\ReviewMailThreadAction::class)
             ->add(($require)($access));
+        $app->delete('/api/v1/mail/threads/{id}', \TriCab\Api\Http\Action\Mail\DeleteMailThreadAction::class)
+            ->add(($require)(\TriCab\Core\Mail\Module::PERMISSION_REVIEW));
         $app->get('/api/v1/mail/messages/{id}/body', \TriCab\Api\Http\Action\Mail\GetMailMessageBodyAction::class)
             ->add(($require)($access));
         $app->get('/api/v1/mail/attachments/{id}', \TriCab\Api\Http\Action\Mail\DownloadMailAttachmentAction::class)

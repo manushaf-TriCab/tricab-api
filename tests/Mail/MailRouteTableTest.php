@@ -30,6 +30,8 @@ final class MailRouteTableTest extends MailAppTestCase
         'GET /api/v1/mail/threads/{id}' => Module::PERMISSION_ACCESS,
         // Marking read needs no more than access; the service demands MAIL.REVIEW for every other action.
         'POST /api/v1/mail/threads/{id}/review' => Module::PERMISSION_ACCESS,
+        // Deleting a conversation is a reviewer's; the service also needs MAIL.ACCESS.
+        'DELETE /api/v1/mail/threads/{id}' => Module::PERMISSION_REVIEW,
         'GET /api/v1/mail/messages/{id}/body' => Module::PERMISSION_ACCESS,
         'GET /api/v1/mail/attachments/{id}' => Module::PERMISSION_ACCESS,
     ];

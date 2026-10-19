@@ -44,7 +44,7 @@ use TriCab\Core\Mail\Domain\Service\ThreadProjector;
  * and counts read only those columns.
  *
  * Queue rules are stated in {@see self::QUEUE_SQL} and mirror `ThreadQueues`; a thread with no
- * assessment has NULL label columns and is in no list.
+ * assessment has NULL label columns and is in no list, and a deleted one (`deleted_at`) is in none either.
  */
 final class AzureSqlMailStore implements MailStore
 {
@@ -99,7 +99,7 @@ final class AzureSqlMailStore implements MailStore
             $columns[] = sprintf('SUM(CASE WHEN %1$s THEN 1 ELSE 0 END) AS [%2$s_total]', $predicate, $queue);
             $columns[] = sprintf('SUM(CASE WHEN (%1$s) AND [unread_count] > 0 THEN 1 ELSE 0 END) AS [%2$s_unread]', $predicate, $queue);
         }
-        $rows = $this->connection->fetchAll('SELECT ' . implode(', ', $columns) . ' FROM [mail].[threads] WHERE [label] IS NOT NULL');
+        $rows = $this->connection->fetchAll('SELECT ' . implode(', ', $columns) . ' FROM [mail].[threads] WHERE [label] IS NOT NULL AND [deleted_at] IS NULL');
         $row = $rows[0] ?? [];
 
         $counts = [];
@@ -115,7 +115,7 @@ final class AzureSqlMailStore implements MailStore
 
     public function listThreads(ThreadQuery $query): ThreadPage
     {
-        $where = ['[label] IS NOT NULL', '(' . self::QUEUE_SQL[$query->queue] . ')'];
+        $where = ['[label] IS NOT NULL', '[deleted_at] IS NULL', '(' . self::QUEUE_SQL[$query->queue] . ')'];
         $params = [];
         if ($query->unreadOnly) {
             $where[] = '[unread_count] > 0';
@@ -151,7 +151,7 @@ final class AzureSqlMailStore implements MailStore
 
     public function exportRows(ExportQuery $query): array
     {
-        $where = ['t.[label] IS NOT NULL'];
+        $where = ['t.[label] IS NOT NULL', 't.[deleted_at] IS NULL'];
         $params = [];
         if ($query->decidedOnly) {
             $where[] = 't.[decision_id] IS NOT NULL';
@@ -198,7 +198,7 @@ final class AzureSqlMailStore implements MailStore
     public function thread(string $threadId): ?ThreadRecord
     {
         $rows = $this->connection->fetchAll(
-            'SELECT ' . self::THREAD_COLUMNS . ', [assessment_id] FROM [mail].[threads] WHERE [id] = :id AND [label] IS NOT NULL',
+            'SELECT ' . self::THREAD_COLUMNS . ', [assessment_id] FROM [mail].[threads] WHERE [id] = :id AND [label] IS NOT NULL AND [deleted_at] IS NULL',
             ['id' => $threadId],
         );
         if ($rows === []) {
@@ -229,7 +229,10 @@ final class AzureSqlMailStore implements MailStore
     public function messageRef(string $messageId): ?MessageRef
     {
         $rows = $this->connection->fetchAll(
-            'SELECT m.[graph_message_id], b.[address] FROM [mail].[messages] m JOIN [mail].[mailboxes] b ON b.[id] = m.[mailbox_id] WHERE m.[id] = :id',
+            'SELECT m.[graph_message_id], b.[address] FROM [mail].[messages] m
+             JOIN [mail].[mailboxes] b ON b.[id] = m.[mailbox_id]
+             JOIN [mail].[threads] t ON t.[id] = m.[thread_id] AND t.[deleted_at] IS NULL
+             WHERE m.[id] = :id',
             ['id' => $messageId],
         );
 
@@ -243,6 +246,7 @@ final class AzureSqlMailStore implements MailStore
              FROM [mail].[attachments] a
              JOIN [mail].[messages] m ON m.[id] = a.[message_id]
              JOIN [mail].[mailboxes] b ON b.[id] = m.[mailbox_id]
+             JOIN [mail].[threads] t ON t.[id] = m.[thread_id] AND t.[deleted_at] IS NULL
              WHERE a.[id] = :id',
             ['id' => $attachmentId],
         );
@@ -338,6 +342,15 @@ final class AzureSqlMailStore implements MailStore
             $this->activityRow($threadId, null, V::ACTIVITY_IGNORED, $note !== null ? 'Ignored: ' . $note : 'Ignored.', $at, $userId, $actor);
             $this->refresh($threadId);
         });
+    }
+
+    public function deleteThread(string $threadId, MailParty $actor, int $userId, DateTimeImmutable $at): void
+    {
+        $this->connection->execute(
+            'UPDATE [mail].[threads] SET [deleted_at] = :at, [deleted_by_user_id] = :user, [deleted_by_name] = :name, [updated_at] = SYSUTCDATETIME()
+             WHERE [id] = :id AND [deleted_at] IS NULL',
+            ['at' => AzureSqlValueMapper::formatDateTime($at), 'user' => $userId, 'name' => mb_substr($actor->name, 0, 200), 'id' => $threadId],
+        );
     }
 
     public function ensureMailbox(string $address, string $displayName): string
@@ -481,6 +494,11 @@ final class AzureSqlMailStore implements MailStore
             );
         } else {
             $threadId = AzureSqlValueMapper::stringValue($found[0]['id']);
+            // A new message in a deleted conversation brings it back (a redelivered one never reaches here).
+            $this->connection->execute(
+                'UPDATE [mail].[threads] SET [deleted_at] = NULL, [deleted_by_user_id] = NULL, [deleted_by_name] = NULL WHERE [id] = :id AND [deleted_at] IS NOT NULL',
+                ['id' => $threadId],
+            );
         }
 
         $messageId = MailIds::new();

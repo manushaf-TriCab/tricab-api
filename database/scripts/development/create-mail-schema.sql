@@ -113,6 +113,12 @@ BEGIN TRY
                 CONSTRAINT [DF_mail_threads_created_at] DEFAULT (SYSUTCDATETIME()),
             [updated_at]            DATETIME2(6)   NOT NULL
                 CONSTRAINT [DF_mail_threads_updated_at] DEFAULT (SYSUTCDATETIME()),
+            -- Deleted from the inbox (not from Exchange): out of every list, count, export and read.
+            -- The rows stay so that Graph delivering the same mail again cannot bring the thread back;
+            -- a new message in the conversation clears these and the thread returns.
+            [deleted_at]            DATETIME2(6)   NULL,
+            [deleted_by_user_id]    BIGINT         NULL,
+            [deleted_by_name]       NVARCHAR(200)  NULL,
             CONSTRAINT [PK_mail_threads] PRIMARY KEY CLUSTERED ([id]),
             CONSTRAINT [FK_mail_threads_mailbox]
                 FOREIGN KEY ([mailbox_id]) REFERENCES [mail].[mailboxes] ([id]),

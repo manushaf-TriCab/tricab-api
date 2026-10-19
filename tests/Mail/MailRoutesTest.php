@@ -234,6 +234,43 @@ final class MailRoutesTest extends MailAppTestCase
         self::assertNull($this->data('/api/v1/mail/threads/' . $thread)['decision']);
     }
 
+    public function test_a_reviewer_deletes_a_conversation_from_the_inbox_whatever_its_state(): void
+    {
+        $this->boot(self::reviewer());
+        [$thread, $message] = $this->uncertain('d1');
+        $this->review($thread, ['action' => 'correct_label', 'label' => 'not_rfq']);
+        $this->review($thread, ['action' => 'ignore']);
+        [$kept] = $this->uncertain('d2');
+
+        [$status, $json] = $this->json('DELETE', '/api/v1/mail/threads/' . $thread);
+        self::assertSame(200, $status, json_encode($json, JSON_THROW_ON_ERROR));
+        self::assertSame(['id' => $thread, 'deleted' => true], $json['data']);
+
+        self::assertSame(404, $this->call('GET', '/api/v1/mail/threads/' . $thread)->getStatusCode());
+        self::assertSame(404, $this->call('GET', '/api/v1/mail/messages/' . $message . '/body')->getStatusCode());
+        self::assertSame([$kept], array_column(Payload::objList($this->data('/api/v1/mail/threads')['items']), 'id'));
+        self::assertSame(1, self::at($this->data('/api/v1/mail/queues'), 'all', 'total'));
+        self::assertSame(404, $this->call('DELETE', '/api/v1/mail/threads/' . $thread)->getStatusCode(), 'already deleted');
+        self::assertSame(404, $this->call('DELETE', '/api/v1/mail/threads/0123456789abcdef0123456789abcdef')->getStatusCode());
+    }
+
+    public function test_deleting_needs_review_and_access(): void
+    {
+        $this->boot([Module::PERMISSION_ACCESS]);
+        [$thread] = $this->uncertain();
+        self::assertSame(403, $this->call('DELETE', '/api/v1/mail/threads/' . $thread)->getStatusCode());
+
+        $this->boot([Module::PERMISSION_REVIEW]);
+        [$thread] = $this->uncertain();
+        [$status, $json] = $this->json('DELETE', '/api/v1/mail/threads/' . $thread);
+        self::assertSame(403, $status);
+        self::assertSame('MAIL_ACTION_FORBIDDEN', self::at($json, 'error', 'code'));
+
+        $this->boot(self::reviewer());
+        [$thread] = $this->uncertain();
+        self::assertSame(200, $this->call('DELETE', '/api/v1/mail/threads/' . $thread)->getStatusCode());
+    }
+
     public function test_a_bad_review_body_is_422(): void
     {
         $this->boot(self::reviewer());

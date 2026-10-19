@@ -27,7 +27,7 @@ use TriCab\Core\Mail\Application\DTO\ThreadRecord;
  * Queues. `all` is every classified thread; `marked` the threads with a label decision;
  * `skipped` the threads the pre-filter skipped; each label queue the threads whose
  * *effective* label (the decision's, else the classifier's) it names, skipped ones left out.
- * A thread nobody has classified yet is in no queue.
+ * A thread nobody has classified yet is in no queue, nor is a deleted one.
  */
 interface MailStore
 {
@@ -64,6 +64,14 @@ interface MailStore
 
     /** Moves the thread from open to ignored and records `ignored`. */
     public function recordIgnore(string $threadId, MailParty $actor, int $userId, ?string $note, DateTimeImmutable $at): void;
+
+    /**
+     * Deletes the thread from the inbox: from then on it is in no list, count or export, and `thread()`,
+     * `messageRef()` and `attachmentRef()` do not find it. Our own state: nothing is deleted in Exchange.
+     * The rows stay, so Graph delivering the same mail again changes nothing; a new message in the
+     * conversation brings the thread back.
+     */
+    public function deleteThread(string $threadId, MailParty $actor, int $userId, DateTimeImmutable $at): void;
 
     // --- written by the reader and the classifier (plan 2.5) ---
 

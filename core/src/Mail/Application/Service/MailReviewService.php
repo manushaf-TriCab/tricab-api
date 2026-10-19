@@ -20,7 +20,8 @@ use TriCab\Core\Mail\Domain\Service\MailAccessPolicy;
 use TriCab\Core\Shared\Time\Clock;
 
 /**
- * `POST /threads/{id}/review`: marks a label, creates a draft, ignores, or marks read or unread.
+ * `POST /threads/{id}/review`: marks a label, creates a draft, ignores, or marks read or unread; and
+ * `DELETE /threads/{id}`, which takes the conversation out of the inbox.
  *
  * The route holds `MAIL.ACCESS` (reading and unreading need no more); every other action needs
  * `MAIL.REVIEW`, which is checked here. Then {@see MailReviewGuard} decides, and a refusal is
@@ -85,5 +86,20 @@ final class MailReviewService
         }
 
         return $this->inbox->thread($actor, $threadId);
+    }
+
+    /**
+     * `DELETE /threads/{id}`: takes the conversation out of the inbox for everyone. Needs `MAIL.REVIEW`,
+     * whatever state the thread is in. Nothing is deleted in Exchange, and a new message in the
+     * conversation brings it back (see {@see MailStore::deleteThread()}).
+     */
+    public function delete(MailActor $actor, string $threadId): void
+    {
+        if (!MailAccessPolicy::canReview($actor)) {
+            throw new MailActionForbidden('You do not have permission to delete mail.');
+        }
+        // Not found (or already deleted) is a 404, as for every other read of the thread.
+        $this->inbox->thread($actor, $threadId);
+        $this->store->deleteThread($threadId, new MailParty($actor->name, $actor->email), $actor->userId, $this->clock->now());
     }
 }
