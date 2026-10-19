@@ -6,6 +6,7 @@ namespace TriCab\Api\Product\Persistence;
 
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Api\Product\Catalogue\CatalogueLeafDescription;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeProductRecord;
 use TriCab\Core\Product\Application\DTO\CatalogueNodeProductStyleRecord;
@@ -1615,9 +1616,11 @@ SQL;
     private function fetchPublicNodes(string $tabPublicId, ?string $regionCode): array
     {
         $productCountSelect = $this->publicNodeProductCountSelect($regionCode);
+        $leafProductApply = $this->publicLeafProductNameApply($regionCode);
         $params = [':tabPublicId' => $tabPublicId];
         if ($regionCode !== null && trim($regionCode) !== '') {
             $params[':regionCode'] = strtoupper(trim($regionCode));
+            $params[':leafRegionCode'] = strtoupper(trim($regionCode));
         }
 
         $rows = $this->connection->fetchAll(
@@ -1634,6 +1637,7 @@ SELECT
     n.[DisplayOrder],
     CONVERT(NVARCHAR(36), parent.[PublicId]) AS [ParentPublicId],
     leafThumb.[DedicatedUrl] AS [ProductThumbnailUrl],
+    leafProduct.[ProductName] AS [SingleProductName],
     {$productCountSelect}
 FROM [product].[CatalogueNodes] n
 INNER JOIN [product].[CatalogueTabs] t ON t.[CatalogueTabId] = n.[CatalogueTabId]
@@ -1673,6 +1677,7 @@ OUTER APPLY (
       )
     ORDER BY cnp.[DisplayOrder], p.[ProductId], img.[DisplayOrder], img.[ProductImagesId]
 ) leafThumb
+{$leafProductApply}
 WHERE t.[PublicId] = :tabPublicId
   AND n.[DeletedAtUtc] IS NULL
   AND n.[IsActive] = 1
@@ -1700,7 +1705,11 @@ SQL,
                 'nodeCode' => AzureSqlValueMapper::stringValue($row['NodeCode'] ?? ''),
                 'nodeName' => AzureSqlValueMapper::stringValue($row['NodeName'] ?? ''),
                 'slug' => AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
-                'description' => AzureSqlValueMapper::nullableString($row['Description'] ?? null),
+                'description' => CatalogueLeafDescription::resolve(
+                    AzureSqlValueMapper::nullableString($row['Description'] ?? null),
+                    AzureSqlValueMapper::nullableString($row['SingleProductName'] ?? null),
+                    AzureSqlValueMapper::stringValue($row['NodeName'] ?? ''),
+                ),
                 'nodeTypeCode' => AzureSqlValueMapper::stringValue($row['NodeTypeCode'] ?? 'category'),
                 'imageUrl' => AzureSqlValueMapper::nullableString($row['ImageUrl'] ?? null),
                 'productThumbnailUrl' => AzureSqlValueMapper::nullableString($row['ProductThumbnailUrl'] ?? null),
@@ -1849,9 +1858,11 @@ SQL,
     private function fetchPublicChildren(string $nodePublicId, ?string $regionCode): array
     {
         $productCountSelect = $this->publicNodeProductCountSelect($regionCode);
+        $leafProductApply = $this->publicLeafProductNameApply($regionCode);
         $params = [':nodePublicId' => $nodePublicId];
         if ($regionCode !== null && trim($regionCode) !== '') {
             $params[':regionCode'] = strtoupper(trim($regionCode));
+            $params[':leafRegionCode'] = strtoupper(trim($regionCode));
         }
 
         $rows = $this->connection->fetchAll(
@@ -1867,9 +1878,11 @@ SELECT
     n.[ImageAltText],
     n.[DisplayOrder],
     CONVERT(NVARCHAR(36), parent.[PublicId]) AS [ParentPublicId],
+    leafProduct.[ProductName] AS [SingleProductName],
     {$productCountSelect}
 FROM [product].[CatalogueNodes] n
 INNER JOIN [product].[CatalogueNodes] parent ON parent.[CatalogueNodeId] = n.[ParentNodeId]
+{$leafProductApply}
 WHERE parent.[PublicId] = :nodePublicId
   AND n.[DeletedAtUtc] IS NULL
   AND n.[IsActive] = 1
@@ -1897,7 +1910,11 @@ SQL,
                 'nodeCode' => AzureSqlValueMapper::stringValue($row['NodeCode'] ?? ''),
                 'nodeName' => AzureSqlValueMapper::stringValue($row['NodeName'] ?? ''),
                 'slug' => AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
-                'description' => AzureSqlValueMapper::nullableString($row['Description'] ?? null),
+                'description' => CatalogueLeafDescription::resolve(
+                    AzureSqlValueMapper::nullableString($row['Description'] ?? null),
+                    AzureSqlValueMapper::nullableString($row['SingleProductName'] ?? null),
+                    AzureSqlValueMapper::stringValue($row['NodeName'] ?? ''),
+                ),
                 'nodeTypeCode' => AzureSqlValueMapper::stringValue($row['NodeTypeCode'] ?? 'category'),
                 'imageUrl' => AzureSqlValueMapper::nullableString($row['ImageUrl'] ?? null),
                 'productThumbnailUrl' => AzureSqlValueMapper::nullableString($row['ProductThumbnailUrl'] ?? null),
@@ -1934,6 +1951,54 @@ SQL,
         }
 
         return $this->nodeVisibleForRegionCodes($this->loadRegionCodes($nodePublicId), $regionCode);
+    }
+
+    /**
+     * Name of the only publicly visible product on a leaf node, for the card subtitle.
+     * Uses its own :leafRegionCode because sqlsrv cannot repeat a named parameter.
+     */
+    private function publicLeafProductNameApply(?string $regionCode): string
+    {
+        $regionFilter = $regionCode === null || trim($regionCode) === ''
+            ? ''
+            : <<<'SQL'
+      AND EXISTS (
+          SELECT 1
+          FROM [product].[ProductRegions] prl
+          INNER JOIN [product].[Regions] rl ON rl.[RegionId] = prl.[RegionId]
+          WHERE prl.[ProductId] = lp.[ProductId]
+            AND prl.[DeletedAtUtc] IS NULL
+            AND prl.[IsVisible] = 1
+            AND rl.[RegionCode] = :leafRegionCode
+            AND (prl.[AvailableFromUtc] IS NULL OR prl.[AvailableFromUtc] <= SYSUTCDATETIME())
+            AND (prl.[AvailableToUtc] IS NULL OR prl.[AvailableToUtc] > SYSUTCDATETIME())
+      )
+SQL;
+
+        return <<<SQL
+OUTER APPLY (
+    SELECT CASE WHEN COUNT(*) = 1 THEN MAX(lp.[ProductName]) END AS [ProductName]
+    FROM [product].[CatalogueNodeProducts] lcnp
+    INNER JOIN [product].[Products] lp ON lp.[ProductId] = lcnp.[ProductId]
+    INNER JOIN [product].[ProductStatuses] lps ON lps.[ProductStatusId] = lp.[ProductStatusId]
+    WHERE lcnp.[CatalogueNodeId] = n.[CatalogueNodeId]
+      AND lcnp.[IsActive] = 1
+      AND lp.[DeletedAtUtc] IS NULL
+      AND lp.[IsActive] = 1
+      AND lps.[StatusCode] = N'published'
+      AND (lp.[PublishAtUtc] IS NULL OR lp.[PublishAtUtc] <= SYSUTCDATETIME())
+      AND (lp.[UnpublishAtUtc] IS NULL OR lp.[UnpublishAtUtc] > SYSUTCDATETIME())
+{$regionFilter}
+      AND NOT EXISTS (
+          SELECT 1
+          FROM [product].[CatalogueNodes] lchild
+          WHERE lchild.[ParentNodeId] = n.[CatalogueNodeId]
+            AND lchild.[DeletedAtUtc] IS NULL
+            AND lchild.[IsActive] = 1
+            AND lchild.[IsPublic] = 1
+      )
+) leafProduct
+SQL;
     }
 
     private function publicNodeProductCountSelect(?string $regionCode): string
