@@ -9,7 +9,9 @@ use DateTimeImmutable;
 /**
  * One task (`finance.task_tasks`). The stored status is one of `TaskRules::STATUSES`;
  * `overdue` is derived from the due date, never stored (decision D17). `priority` and `groupId`
- * came with the board (13 Oct 2026) and default to none, so older callers need not pass them.
+ * came with the board (13 Oct 2026) and default to none, so older callers need not pass them. `sortOrder` is the
+ * task's place in its group on the board (Nick Han, 20 Oct 2026: "can we move the task around by dragging"); none
+ * until someone drags, and such tasks follow the ordered ones, oldest first.
  */
 final class TaskRecord
 {
@@ -38,6 +40,7 @@ final class TaskRecord
         public DateTimeImmutable $updatedDate,
         public ?string $priority = null,
         public ?string $groupId = null,
+        public ?int $sortOrder = null,
     ) {
     }
 

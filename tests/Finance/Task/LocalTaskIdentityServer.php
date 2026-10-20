@@ -27,6 +27,7 @@ final class LocalTaskIdentityServer
         'alter-finance-task-project-status.sql',
         'alter-finance-task-simple-status.sql',
         'alter-finance-task-project-groups.sql',
+        'alter-finance-task-order.sql',
         'seed-finance-permissions.sql',
         'seed-finance-roles.sql',
         'seed-finance-task-permissions.sql',

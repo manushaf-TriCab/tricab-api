@@ -61,6 +61,7 @@ final class FinanceRouteTableTest extends TestCase
         'POST /api/v1/finance/task/projects/{id}/groups' => Module::PERMISSION_TASK_SETUP_MANAGE,
         'PATCH /api/v1/finance/task/groups/{id}' => Module::PERMISSION_TASK_SETUP_MANAGE,
         'DELETE /api/v1/finance/task/groups/{id}' => Module::PERMISSION_TASK_SETUP_MANAGE,
+        'POST /api/v1/finance/task/projects/{id}/task-order' => Module::PERMISSION_TASK_SETUP_MANAGE,
         'POST /api/v1/finance/task/projects/{id}/save-as-template' => Module::PERMISSION_TASK_SETUP_MANAGE,
         'GET /api/v1/finance/task/project-templates' => Module::PERMISSION_TASK_TASKS_READ,
         'POST /api/v1/finance/task/project-templates' => Module::PERMISSION_TASK_SETUP_MANAGE,

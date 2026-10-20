@@ -149,6 +149,7 @@ final class TaskPresenter
             'display_status' => self::displayStatus($t->status, $t->dueDate, $today),
             'priority' => $t->priority,
             'group_id' => $t->groupId,
+            'sort_order' => $t->sortOrder,
             'progress' => $t->progress,
             'due_date' => $t->dueDate ?? '',
             'due_date_requested' => $t->dueDateRequested,

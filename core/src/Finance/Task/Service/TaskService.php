@@ -468,6 +468,8 @@ final class TaskService
         if ($dependencies !== null) {
             $this->setDependencies($task->id, $dependencies, $now);
         }
+        $groupBefore = $task->groupId;
+        $projectBefore = $task->projectId;
         foreach ($fields as $key => $value) {
             match ($key) {
                 'name' => $task->name = (string) $value,
@@ -490,7 +492,8 @@ final class TaskService
             };
         }
         // A group belongs to one project: a group sent must be the task's project's, and moving the task to another
-        // project leaves its old group behind.
+        // project leaves its old group behind. A task that lands in another group goes to its end (its place on the
+        // board is the old group's).
         if (array_key_exists('group_id', $fields)) {
             $task->groupId = $this->groupIn(self::nullableStr($fields, 'group_id'), $task->projectId);
         } elseif ($task->groupId !== null && array_key_exists('project_id', $fields)) {
@@ -498,6 +501,9 @@ final class TaskService
             if ($group === null || $group->projectId !== $task->projectId) {
                 $task->groupId = null;
             }
+        }
+        if ($task->groupId !== $groupBefore || $task->projectId !== $projectBefore) {
+            $task->sortOrder = null;
         }
         if ($newStatus !== $oldStatus) {
             $task->completedAt = $newStatus === 'completed' ? $now : null;

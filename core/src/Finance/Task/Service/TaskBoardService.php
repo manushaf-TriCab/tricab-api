@@ -141,6 +141,77 @@ final class TaskBoardService
         });
     }
 
+    /**
+     * The board's tasks in the order dragged (Nick Han, 20 Oct 2026: "can we move the task around by dragging"). Each
+     * entry is one group (`group_id`, or null for the project's ungrouped tasks) and its tasks top to bottom; a task
+     * named under another group moves to it. Only the groups sent change. Neither the change log nor `updated_date`
+     * records a move: it is the board's layout, not a change to the task.
+     *
+     * @param array<string, mixed> $data `groups`: list of {group_id, task_ids}
+     * @return array{updated: int}
+     */
+    public function orderTasks(string $projectId, array $data): array
+    {
+        $this->liveProject($projectId);
+        $raw = $data['groups'] ?? null;
+        if (!is_array($raw) || !array_is_list($raw) || $raw === [] || count($raw) > self::MAX_GROUPS + 1) {
+            throw new TaskInvalid('Send the groups as a list, each with its task_ids');
+        }
+        $known = [];
+        foreach ($this->board->groupsFor($projectId) as $group) {
+            $known[$group->id] = true;
+        }
+        $plan = [];
+        $seenGroups = [];
+        foreach ($raw as $entry) {
+            if (!is_array($entry) || !is_array($entry['task_ids'] ?? null) || !array_is_list($entry['task_ids'])) {
+                throw new TaskInvalid('Each group needs its task_ids as a list');
+            }
+            $groupId = $entry['group_id'] ?? null;
+            if ($groupId === '') {
+                $groupId = null;
+            }
+            if ($groupId !== null && (!is_string($groupId) || !isset($known[$groupId]))) {
+                throw new TaskInvalid('That group belongs to another project');
+            }
+            $key = $groupId ?? '';
+            if (isset($seenGroups[$key])) {
+                throw new TaskInvalid('A group is sent twice');
+            }
+            $seenGroups[$key] = true;
+            foreach ($entry['task_ids'] as $position => $taskId) {
+                if (!is_string($taskId) || isset($plan[$taskId])) {
+                    throw new TaskInvalid('A task is sent twice, or its id is not text');
+                }
+                $plan[$taskId] = [$groupId, $position];
+            }
+        }
+        if (count($plan) > self::MAX_TEMPLATE_TASKS) {
+            throw new TaskInvalid('At most ' . self::MAX_TEMPLATE_TASKS . ' tasks can be ordered at once');
+        }
+        $tasks = $this->tasks->tasksByIds(array_map('strval', array_keys($plan)));
+        $live = array_filter($tasks, static fn (TaskRecord $t): bool => $t->deletedAt === null && $t->projectId === $projectId);
+        if (count($live) !== count($plan)) {
+            throw new TaskInvalid('Some of these tasks are not on this board. Refresh the page and try again.');
+        }
+
+        return $this->board->transactional(function () use ($live, $plan): array {
+            $updated = 0;
+            foreach ($live as $task) {
+                [$groupId, $position] = $plan[$task->id];
+                if ($task->groupId === $groupId && $task->sortOrder === $position) {
+                    continue;
+                }
+                $task->groupId = $groupId;
+                $task->sortOrder = $position;
+                $this->tasks->updateTask($task);
+                ++$updated;
+            }
+
+            return ['updated' => $updated];
+        });
+    }
+
     // ==================================================================================
     // Project templates
     // ==================================================================================

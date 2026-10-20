@@ -138,6 +138,26 @@ final class AzureSqlTaskBoardStoreTest extends TestCase
         self::assertSame([], $this->board->groupsFor($project['id']));
     }
 
+    public function test_a_dragged_order_is_written_and_read_back_in_sql(): void
+    {
+        $project = $this->setup->createProject($this->manager, ['name' => 'Daily Tasks']);
+        self::assertIsString($project['id']);
+        $ar = $this->service->createGroup($project['id'], ['name' => 'AR']);
+        $ap = $this->service->createGroup($project['id'], ['name' => 'AP']);
+        self::assertIsString($ar['id']);
+        self::assertIsString($ap['id']);
+        $one = $this->tasks->create($this->manager, ['name' => 'One', 'project_id' => $project['id'], 'group_id' => $ar['id']]);
+        $two = $this->tasks->create($this->manager, ['name' => 'Two', 'project_id' => $project['id'], 'group_id' => $ap['id']]);
+        self::assertIsString($one['id']);
+        self::assertIsString($two['id']);
+        self::assertNull($one['sort_order']);
+
+        $this->service->orderTasks($project['id'], ['groups' => [['group_id' => $ar['id'], 'task_ids' => [$two['id'], $one['id']]]]]);
+        $after = $this->tasks->get($this->manager, $two['id']);
+        self::assertSame([0, $ar['id']], [$after['sort_order'], $after['group_id']]);
+        self::assertSame(1, $this->tasks->get($this->manager, $one['id'])['sort_order']);
+    }
+
     public function test_a_group_round_trips_its_time_to_the_microsecond(): void
     {
         $project = $this->setup->createProject($this->manager, ['name' => 'Close']);

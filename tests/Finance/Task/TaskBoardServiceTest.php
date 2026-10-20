@@ -217,6 +217,67 @@ final class TaskBoardServiceTest extends TestCase
         $this->board->updateGroup($group, ['name' => 'Gone']);
     }
 
+    public function test_dragging_orders_a_groups_tasks_and_moves_a_task_to_another_group(): void
+    {
+        $project = $this->project();
+        $ar = self::id($this->board->createGroup($project, ['name' => 'AR']));
+        $ap = self::id($this->board->createGroup($project, ['name' => 'AP']));
+        $one = self::id($this->tasks->create($this->max, ['name' => 'One', 'project_id' => $project, 'group_id' => $ar]));
+        $two = self::id($this->tasks->create($this->max, ['name' => 'Two', 'project_id' => $project, 'group_id' => $ar]));
+        $three = self::id($this->tasks->create($this->max, ['name' => 'Three', 'project_id' => $project, 'group_id' => $ap]));
+        self::assertNull($this->tasks->get($this->max, $one)['sort_order']);
+        $updatedBefore = $this->tasks->get($this->max, $one)['updated_date'];
+
+        // Two above One in AR; Three dragged from AP to the bottom of AR; AP left empty.
+        $result = $this->board->orderTasks($project, ['groups' => [
+            ['group_id' => $ar, 'task_ids' => [$two, $one, $three]],
+            ['group_id' => $ap, 'task_ids' => []],
+        ]]);
+        self::assertSame(['updated' => 3], $result);
+        self::assertSame([0, $ar], [$this->tasks->get($this->max, $two)['sort_order'], $this->tasks->get($this->max, $two)['group_id']]);
+        self::assertSame(1, $this->tasks->get($this->max, $one)['sort_order']);
+        self::assertSame([2, $ar], [$this->tasks->get($this->max, $three)['sort_order'], $this->tasks->get($this->max, $three)['group_id']]);
+        // A move is the board's layout, not a change to the task.
+        self::assertSame($updatedBefore, $this->tasks->get($this->max, $one)['updated_date']);
+        self::assertCount(1, $this->tasks->history($this->max, $one), 'only the creation');
+
+        // The same order again changes nothing.
+        self::assertSame(['updated' => 0], $this->board->orderTasks($project, ['groups' => [['group_id' => $ar, 'task_ids' => [$two, $one, $three]]]]));
+
+        // A task that changes group in its form goes to the end of the new one.
+        self::assertNull($this->tasks->update($this->max, $three, ['group_id' => $ap])['sort_order']);
+    }
+
+    public function test_ordering_refuses_another_projects_task_or_group_and_a_task_sent_twice(): void
+    {
+        $project = $this->project();
+        $group = self::id($this->board->createGroup($project, ['name' => 'AR']));
+        $mine = self::id($this->tasks->create($this->max, ['name' => 'Mine', 'project_id' => $project, 'group_id' => $group]));
+        $elsewhere = $this->project('Audit');
+        $theirGroup = self::id($this->board->createGroup($elsewhere, ['name' => 'Other']));
+        $theirs = self::id($this->tasks->create($this->max, ['name' => 'Theirs', 'project_id' => $elsewhere]));
+
+        $cases = [
+            'Some of these tasks are not on this board. Refresh the page and try again.' => [['group_id' => $group, 'task_ids' => [$mine, $theirs]]],
+            'That group belongs to another project' => [['group_id' => $theirGroup, 'task_ids' => [$mine]]],
+            'A task is sent twice, or its id is not text' => [['group_id' => $group, 'task_ids' => [$mine, $mine]]],
+            'A group is sent twice' => [['group_id' => $group, 'task_ids' => [$mine]], ['group_id' => $group, 'task_ids' => []]],
+        ];
+        foreach ($cases as $message => $groups) {
+            try {
+                $this->board->orderTasks($project, ['groups' => $groups]);
+                self::fail('Expected: ' . $message);
+            } catch (TaskInvalid $e) {
+                self::assertSame($message, $e->getMessage());
+            }
+        }
+        self::assertNull($this->tasks->get($this->max, $mine)['sort_order']);
+
+        // The ungrouped tasks are a group of their own (null).
+        self::assertSame(['updated' => 1], $this->board->orderTasks($project, ['groups' => [['group_id' => null, 'task_ids' => [$mine]]]]));
+        self::assertNull($this->tasks->get($this->max, $mine)['group_id']);
+    }
+
     // ==== project templates (item 9) ===========================================================
 
     /** @return array<string, mixed> */

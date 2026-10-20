@@ -745,6 +745,8 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
         $app->delete($task . '/groups/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskGroupAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+        $app->post($task . '/projects/{id}/task-order', \TriCab\Api\Http\Action\Finance\Task\OrderTaskBoardTasksAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
         $app->post($task . '/projects/{id}/save-as-template', \TriCab\Api\Http\Action\Finance\Task\SaveTaskProjectAsTemplateAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
         $app->get($task . '/project-templates', \TriCab\Api\Http\Action\Finance\Task\ListTaskProjectTemplatesAction::class)

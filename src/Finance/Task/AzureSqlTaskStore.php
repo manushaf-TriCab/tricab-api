@@ -19,7 +19,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
 {
     private const COLUMNS = '[id], [name], [description], [requirements], [notes], [category], [finance_statement_area], [entity_id], [project_id],
         [preparer_user_id], [reviewer_user_id], [status], [progress], [due_date], [due_date_requested], [urgent], [completed_at],
-        [created_by_user_id], [deleted_at], [deleted_by], [created_date], [updated_date], [priority], [group_id]';
+        [created_by_user_id], [deleted_at], [deleted_by], [created_date], [updated_date], [priority], [group_id], [sort_order]';
 
     private const IN_LIMIT = 1000;
 
@@ -99,7 +99,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
         $this->connection->execute(
             'INSERT INTO [finance].[task_tasks] (' . self::COLUMNS . ')
              VALUES (:id, :name, :description, :requirements, :notes, :category, :area, :entity, :project, :preparer, :reviewer, :status, :progress,
-                     :due, :requested, :urgent, :completed, :createdBy, :deletedAt, :deletedBy, :created, :updated, :priority, :group)',
+                     :due, :requested, :urgent, :completed, :createdBy, :deletedAt, :deletedBy, :created, :updated, :priority, :group, :sortOrder)',
             self::params($task),
         );
     }
@@ -112,7 +112,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
                     [preparer_user_id] = :preparer, [reviewer_user_id] = :reviewer, [status] = :status, [progress] = :progress,
                     [due_date] = :due, [due_date_requested] = :requested, [urgent] = :urgent, [completed_at] = :completed,
                     [created_by_user_id] = :createdBy, [deleted_at] = :deletedAt, [deleted_by] = :deletedBy,
-                    [created_date] = :created, [updated_date] = :updated, [priority] = :priority, [group_id] = :group
+                    [created_date] = :created, [updated_date] = :updated, [priority] = :priority, [group_id] = :group, [sort_order] = :sortOrder
              WHERE [id] = :id',
             self::params($task),
         );
@@ -232,6 +232,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
             self::when($row['updated_date'], 'updated_date'),
             self::textOrNull($row['priority']),
             AzureSqlValueMapper::nullableString($row['group_id']),
+            AzureSqlValueMapper::nullableInt($row['sort_order']),
         );
     }
 
@@ -263,6 +264,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
             'updated' => self::at($t->updatedDate),
             'priority' => $t->priority,
             'group' => $t->groupId,
+            'sortOrder' => $t->sortOrder,
         ];
     }
 }
