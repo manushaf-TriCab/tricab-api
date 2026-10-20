@@ -15,6 +15,10 @@
 set -u
 APP=/home/site/wwwroot/app/cbsync
 export PYTHONPATH="$APP:$APP/_vendor"
+# Without this, Python block-buffers stdout into the WebJob log pipe, so a run's
+# output only appears when it ends, and never if a restart (any app-setting
+# change) kills it mid-run.
+export PYTHONUNBUFFERED=1
 HOUR="${CBSYNC_HOUR:-1}"
 STORE="${CBSYNC_STORE:-blob:cablebuilder}"
 ROTATE="${CBSYNC_ROTATE_PAGES:-70}"
