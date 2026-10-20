@@ -64,7 +64,7 @@ use TriCab\Core\Rfq\Storage\StoreProjection;
  */
 final class AzureSqlRfqRepository implements RfqRepository
 {
-    private const PEOPLE = <<<'SQL'
+    public const PEOPLE = <<<'SQL'
         WITH [addresses] AS (
             SELECT u.[NormalizedEmailAddress] AS [address], u.[UserId]
             FROM [identity].[Users] u

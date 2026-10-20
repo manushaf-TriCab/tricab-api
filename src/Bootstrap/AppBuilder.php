@@ -943,6 +943,10 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_ACCESS));
         $app->get('/api/v1/rfqs', ListRfqsAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
+        // Analytics plan A1: the Analytics tab. A static route, so FastRoute
+        // never reads "analytics" as a public id.
+        $app->get('/api/v1/rfqs/analytics', \TriCab\Api\Http\Action\Rfq\GetRfqAnalyticsAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_ANALYTICS_READ));
         $app->get('/api/v1/rfqs/{publicId}', GetRfqAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
         // Plan 3.7 and parity plan E2: Match Text (stores nothing), Save as Draft,

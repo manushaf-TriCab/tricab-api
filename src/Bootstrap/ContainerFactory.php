@@ -954,6 +954,8 @@ final class ContainerFactory
             // "not available".
             \TriCab\Core\Rfq\Contract\RfqRepository::class
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\InMemoryRfqRepository::class),
+            \TriCab\Core\Rfq\Contract\RfqAnalyticsSource::class
+                => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\InMemoryRfqAnalyticsSource::class),
             \TriCab\Core\Rfq\Contract\RfqBranchDirectory::class
                 => \DI\autowire(\TriCab\Core\Rfq\Infrastructure\UnconfiguredRfqBranchDirectory::class),
             \TriCab\Core\Rfq\Contract\RfqDraftStore::class
@@ -3330,6 +3332,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqDraftStore::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqRepository::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqRepository::class);
+            $definitions[\TriCab\Core\Rfq\Contract\RfqAnalyticsSource::class]
+                = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqAnalyticsSource::class);
             $definitions[\TriCab\Core\CableFit\Contract\CableFitCandidateRepository::class]
                 = \DI\autowire(\TriCab\Api\CableFit\Persistence\AzureSqlCableFitCandidateRepository::class);
             $definitions[\TriCab\Core\CableFit\Contract\ResearchSourceRepository::class]
