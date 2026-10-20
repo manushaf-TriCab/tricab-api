@@ -61,7 +61,8 @@ final class LocalRfqSqlServer
     /** Empties every RFQ table and the test's people, children first. */
     public static function truncate(PDO $pdo): void
     {
-        if ($pdo->query("SELECT OBJECT_ID(N'[rfq].[rfq_legacy_import_rows]', N'U')")?->fetchColumn() !== null) {
+        $ledger = $pdo->query("SELECT OBJECT_ID(N'[rfq].[rfq_legacy_import_rows]', N'U')");
+        if ($ledger !== false && $ledger->fetchColumn() !== null) {
             $pdo->exec('DELETE FROM [rfq].[rfq_legacy_import_rows]');
             $pdo->exec('DELETE FROM [rfq].[rfq_legacy_import_runs]');
         }
