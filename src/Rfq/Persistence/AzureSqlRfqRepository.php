@@ -293,6 +293,25 @@ final class AzureSqlRfqRepository implements RfqRepository
         return array_map(static fn (array $r): string => AzureSqlValueMapper::stringValue($r['branch']), $rows);
     }
 
+    public function assignees(): array
+    {
+        $rows = $this->connection->fetchAll(
+            self::PEOPLE . " SELECT u.[UserId], u.[DisplayName]
+             FROM [identity].[Users] u
+             WHERE u.[UserId] IN (
+                 SELECT p.[UserId] FROM [rfq].[rfq_draft_quotes] d
+                 INNER JOIN [people] p ON p.[address] = LOWER(LTRIM(RTRIM(d.[assignee_email])))
+             )
+             AND NULLIF(LTRIM(RTRIM(u.[DisplayName])), N'') IS NOT NULL
+             ORDER BY u.[DisplayName], u.[UserId]",
+        );
+
+        return array_map(static fn (array $r): array => [
+            'userId' => AzureSqlValueMapper::intValue($r['UserId']),
+            'name' => AzureSqlValueMapper::stringValue($r['DisplayName']),
+        ], $rows);
+    }
+
     public function findDetail(RfqRecord $record, array $allowedActions): RfqDetail
     {
         $draftId = StoreProjection::draftId($record->publicId);
@@ -468,6 +487,19 @@ final class AzureSqlRfqRepository implements RfqRepository
                 $either[] = "NULLIF(LTRIM(RTRIM(d.[branch])), N'') IS NULL";
             }
             $where[] = '(' . implode(' OR ', $either) . ')';
+        }
+        if ($query->assignee === RfqQueueQuery::ASSIGNEE_NONE) {
+            $where[] = "NULLIF(LTRIM(RTRIM(d.[assignee_email])), N'') IS NULL";
+        } elseif (is_int($query->assignee)) {
+            $params['assignee_user'] = $query->assignee;
+            $where[] = 'a.[UserId] = :assignee_user';
+        }
+        // The queue's 4js column: a quote number means the RFQ went to 4js.
+        $sent = "NULLIF(LTRIM(RTRIM(d.[refno])), N'') IS NOT NULL";
+        if ($query->fourJs === RfqQueueQuery::FOUR_JS_SENT) {
+            $where[] = $sent;
+        } elseif ($query->fourJs === RfqQueueQuery::FOUR_JS_NOT_SENT) {
+            $where[] = "NOT ({$sent})";
         }
         if ($query->statuses !== []) {
             $where[] = self::workflowStatusSql() . ' IN (' . self::bindList('status', array_map(

@@ -86,6 +86,24 @@ final class InMemoryRfqRepository implements RfqRepository
         return array_map(strval(...), $branches);
     }
 
+    public function assignees(): array
+    {
+        $names = [];
+        foreach ($this->records as $record) {
+            $id = $record->ownership->assigneeUserId;
+            if ($id !== null && $record->assigneeDisplayName !== null) {
+                $names[$id] = $record->assigneeDisplayName;
+            }
+        }
+        $assignees = [];
+        foreach ($names as $id => $name) {
+            $assignees[] = ['userId' => $id, 'name' => $name];
+        }
+        usort($assignees, static fn (array $a, array $b): int => [$a['name'], $a['userId']] <=> [$b['name'], $b['userId']]);
+
+        return $assignees;
+    }
+
     public function findDetail(RfqRecord $record, array $allowedActions): RfqDetail
     {
         return new RfqDetail(new RfqSummary($record, $allowedActions), null, [], [], []);
@@ -108,6 +126,16 @@ final class InMemoryRfqRepository implements RfqRepository
             if (!in_array($branch === '' ? RfqQueueQuery::BRANCH_NONE : $branch, $q->branches, true)) {
                 return false;
             }
+        }
+        if ($q->assignee === RfqQueueQuery::ASSIGNEE_NONE && $r->ownership->assigneeUserId !== null) {
+            return false;
+        }
+        if (is_int($q->assignee) && $r->ownership->assigneeUserId !== $q->assignee) {
+            return false;
+        }
+        $sent = trim((string) $r->quoteNumber) !== '';
+        if (($q->fourJs === RfqQueueQuery::FOUR_JS_SENT && !$sent) || ($q->fourJs === RfqQueueQuery::FOUR_JS_NOT_SENT && $sent)) {
+            return false;
         }
         if ($q->statuses !== [] && !$this->inList($r->workflowStatus->toString(), $q->statuses)) {
             return false;

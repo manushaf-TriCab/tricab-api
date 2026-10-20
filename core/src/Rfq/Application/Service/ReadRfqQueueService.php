@@ -44,12 +44,15 @@ final class ReadRfqQueueService
             $items[] = new RfqSummary($record, RfqAccessPolicy::allowedActions($actor, $record->ownership));
         }
 
+        $reads = $actor->can(Module::PERMISSION_DRAFT_READ);
+
         return new RfqQueuePage(
             $items,
             $result['total'],
             $query->page,
             $query->pageSize,
-            $actor->can(Module::PERMISSION_DRAFT_READ) ? $this->rfqs->branches() : [],
+            $reads ? $this->rfqs->branches() : [],
+            $reads ? $this->rfqs->assignees() : [],
         );
     }
 

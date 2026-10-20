@@ -126,6 +126,11 @@ final class ReadRfqQueueServiceTest extends TestCase
                 return [];
             }
 
+            public function assignees(): array
+            {
+                return [];
+            }
+
             public function findDetail(RfqRecord $record, array $allowedActions): RfqDetail
             {
                 return new RfqDetail(new RfqSummary($record, $allowedActions), null, [], [], []);
@@ -161,7 +166,14 @@ final class ReadRfqQueueServiceTest extends TestCase
         self::assertSame(2, $query->page);
         self::assertSame(RfqQueueQuery::ARCHIVED_ONLY, $query->archived);
 
-        foreach ([['status' => 'synced'], ['pageSize' => '500'], ['page' => '0'], ['page' => '-1'], ['archived' => 'maybe'], ['mine' => 'yes']] as $bad) {
+        $filtered = RfqQueueQuery::fromQueryParams(['assignee' => '42', 'fourJs' => 'notSent']);
+        self::assertSame(42, $filtered->assignee);
+        self::assertSame(RfqQueueQuery::FOUR_JS_NOT_SENT, $filtered->fourJs);
+        self::assertSame(RfqQueueQuery::ASSIGNEE_NONE, RfqQueueQuery::fromQueryParams(['assignee' => 'NONE'])->assignee);
+        self::assertNull(RfqQueueQuery::defaults()->assignee);
+
+        foreach ([['status' => 'synced'], ['pageSize' => '500'], ['page' => '0'], ['page' => '-1'], ['archived' => 'maybe'], ['mine' => 'yes'],
+            ['assignee' => 'someone@tricab.com'], ['assignee' => '0'], ['assignee' => '99999999999'], ['fourJs' => 'yes'], ['fourJs' => 'SENT']] as $bad) {
             try {
                 RfqQueueQuery::fromQueryParams($bad);
                 self::fail('Accepted ' . json_encode($bad));
@@ -169,5 +181,32 @@ final class ReadRfqQueueServiceTest extends TestCase
                 self::addToAssertionCount(1);
             }
         }
+    }
+
+    public function test_the_assignee_and_4js_filters_narrow_the_queue(): void
+    {
+        $assigned = static fn (string $id, ?int $assignee, ?string $name, ?string $quote): RfqRecord => new RfqRecord(
+            $id, 'RFQ-' . substr($id, 0, 4), 'Synthetic schedule', 'CUST01', 'Synthetic Customer Pty Ltd',
+            new RfqOwnership(10, $assignee, 'VIC', false), 'Owner Name', $name,
+            WorkflowStatus::new(), Priority::fromString('normal'), null, IntakeChannel::web(), ExtractionState::complete(),
+            null, $quote, 3, 1,
+            new DateTimeImmutable('2026-09-20T00:00:00Z'), new DateTimeImmutable('2026-09-20T00:00:00Z'),
+        );
+        $service = new ReadRfqQueueService((new InMemoryRfqRepository())
+            ->withRecord($assigned('aaaaaaaa-0000-4000-8000-000000000001', 7, 'Zoe Sales', 'Q1001'))
+            ->withRecord($assigned('aaaaaaaa-0000-4000-8000-000000000002', 7, 'Zoe Sales', null))
+            ->withRecord($assigned('aaaaaaaa-0000-4000-8000-000000000003', 8, 'Adam Sales', '  '))
+            ->withRecord($assigned('aaaaaaaa-0000-4000-8000-000000000004', null, null, 'Q1002')));
+        $total = static fn (array $params): int => $service->page(self::sales(), RfqQueueQuery::fromQueryParams($params))->total;
+
+        self::assertSame(
+            [['userId' => 8, 'name' => 'Adam Sales'], ['userId' => 7, 'name' => 'Zoe Sales']],
+            $service->page(self::sales(), RfqQueueQuery::defaults())->toArray()['assignees'],
+        );
+        self::assertSame(2, $total(['assignee' => '7']));
+        self::assertSame(1, $total(['assignee' => 'none']));
+        self::assertSame(2, $total(['fourJs' => 'sent']));
+        self::assertSame(2, $total(['fourJs' => 'notSent']), 'a blank quote number is not sent');
+        self::assertSame(1, $total(['assignee' => '7', 'fourJs' => 'sent']));
     }
 }

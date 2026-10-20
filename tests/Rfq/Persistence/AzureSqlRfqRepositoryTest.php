@@ -153,6 +153,29 @@ final class AzureSqlRfqRepositoryTest extends TestCase
         self::assertSame(['nsw', 'unassigned'], self::sortedNames(array_values(array_intersect($names(RfqQueueQuery::fromQueryParams(['branch' => 'NSW,none', 'pageSize' => '100'])), ['nsw', 'unassigned', 'vic']))));
         self::assertSame(['NSW', 'VIC'], $this->repository->branches());
 
+        $wide = static fn (array $params): RfqQueueQuery => RfqQueueQuery::fromQueryParams($params + ['pageSize' => '100']);
+        self::assertSame(['email'], $names($wide(['assignee' => (string) $this->users['carol']])), 'assignee matched through a verified second address');
+        self::assertSame(['urgent'], $names($wide(['assignee' => (string) $this->users['bob']])), 'address trimmed and compared case-insensitively');
+        $nobody = $names($wide(['assignee' => 'none']));
+        self::assertContains('vic', $nobody);
+        self::assertNotContains('mine', $nobody, 'a draft made without an assignee is its owner\'s');
+        self::assertNotContains('email', $nobody);
+        self::assertNotContains('nsw', $nobody, 'assigned to an address nobody owns is still assigned');
+        self::assertSame(['email'], $names($wide(['fourJs' => 'sent'])));
+        $notSent = $names($wide(['fourJs' => 'notSent']));
+        self::assertContains('vic', $notSent, 'a blank quote number is not sent');
+        self::assertNotContains('email', $notSent);
+        self::assertSame(
+            [
+                ['userId' => $this->users['alice'], 'name' => 'Alice A'],
+                ['userId' => $this->users['bob'], 'name' => 'Bob B'],
+                ['userId' => $this->users['carol'], 'name' => 'Carol C'],
+                ['userId' => $this->users['erin'], 'name' => 'Erin E'],
+            ],
+            $this->repository->assignees(),
+            'ghost@ and the unverified dave.alt@ name nobody',
+        );
+
         $carol = $this->actor('carol', Module::EMPLOYEE_PERMISSIONS, null);
         self::assertSame(['email'], $this->names($this->repository->pageVisibleTo($carol, $q('', [], [], RfqQueueQuery::ARCHIVED_EXCLUDE, true))['items']), 'mine = assigned to me');
     }
@@ -211,6 +234,9 @@ final class AzureSqlRfqRepositoryTest extends TestCase
         $set('urgent', "[priority] = N'Urgent '");
         $set('pending', "[status] = N'pending'");
         $set('ambiguous', "[status] = N''");
+        $set('urgent', "[assignee_email] = N' Bob@TriCab.com'");
+        $set('nsw', "[assignee_email] = N'ghost@tricab.com'"); // an address that maps to nobody
+        $set('vic', "[refno] = N'  '");
 
         $attempt = fn (string $name, string $state, string $at) => $this->pdo->exec(
             "INSERT INTO [rfq].[rfq_sync_attempts] ([id], [draft_id], [created_at], [state], [payload], [payload_sha256], [attempt_no])

@@ -52,6 +52,15 @@ interface RfqRepository
     public function branches(): array;
 
     /**
+     * The people RFQs are assigned to, for the queue's assignee filter: each
+     * platform user an assignee address maps to, by name, sorted by name.
+     * Addresses that map to nobody are not listed (no email leaves the server).
+     *
+     * @return list<array{userId: int, name: string}>
+     */
+    public function assignees(): array;
+
+    /**
      * Header, lines, documents, reads and attempts for a record the service
      * has already found visible. `$allowedActions` is the policy's answer for
      * that record, carried into the embedded summary.

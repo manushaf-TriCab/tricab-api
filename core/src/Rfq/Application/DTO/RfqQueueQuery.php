@@ -14,7 +14,9 @@ use TriCab\Core\Rfq\Domain\ValueObject\WorkflowStatus;
  * Everyone who reads RFQs reads all of them, so none of these is an access
  * decision. `branch` is a comma-separated list of branch codes, compared
  * upper-cased; `none` selects the RFQs that carry no branch. `mine=1` narrows
- * to the caller's own assigned work.
+ * to the caller's own assigned work. `assignee` is a platform user id, or
+ * `none` for the RFQs nobody is assigned. `fourJs` is `sent` (the RFQ carries
+ * a 4js quote number, as the queue's 4js column shows) or `notSent`.
  */
 final class RfqQueueQuery
 {
@@ -29,12 +31,21 @@ final class RfqQueueQuery
     /** The branch filter value for RFQs that carry no branch. */
     public const BRANCH_NONE = 'none';
 
+    /** The assignee filter value for RFQs nobody is assigned. */
+    public const ASSIGNEE_NONE = 'none';
+
+    public const FOUR_JS_ANY = '';
+    public const FOUR_JS_SENT = 'sent';
+    public const FOUR_JS_NOT_SENT = 'notSent';
+
     private const BRANCH_PATTERN = '/^[A-Z0-9_-]{1,32}$/';
 
     /**
      * @param list<WorkflowStatus> $statuses empty = any
      * @param list<Priority> $priorities empty = any
      * @param list<string> $branches upper-cased codes, or `BRANCH_NONE`; empty = any
+     * @param int|string|null $assignee a user id, `ASSIGNEE_NONE`, or null = any
+     * @param string $fourJs one of the `FOUR_JS_*` values
      */
     public function __construct(
         public readonly string $search,
@@ -45,6 +56,8 @@ final class RfqQueueQuery
         public readonly int $page,
         public readonly int $pageSize,
         public readonly array $branches = [],
+        public readonly int|string|null $assignee = null,
+        public readonly string $fourJs = self::FOUR_JS_ANY,
     ) {
     }
 
@@ -97,6 +110,23 @@ final class RfqQueueQuery
             }
             $branches[] = $branch;
         }
+        $assignee = self::string($params, 'assignee');
+        if ($assignee === '') {
+            $assignee = null;
+        } elseif (strtolower($assignee) === self::ASSIGNEE_NONE) {
+            $assignee = self::ASSIGNEE_NONE;
+        } elseif (preg_match('/^[1-9]\d{0,9}$/', $assignee) === 1 && (int) $assignee <= 2_147_483_647) {
+            $assignee = (int) $assignee;
+        } else {
+            throw InvalidRfqValue::forOneOf('assignee filter', $assignee, ['a user id', self::ASSIGNEE_NONE]);
+        }
+
+        $fourJs = self::string($params, 'fourJs');
+        $allowedFourJs = [self::FOUR_JS_SENT, self::FOUR_JS_NOT_SENT];
+        if ($fourJs !== self::FOUR_JS_ANY && !in_array($fourJs, $allowedFourJs, true)) {
+            throw InvalidRfqValue::forOneOf('4js filter', $fourJs, $allowedFourJs);
+        }
+
         $page = self::int($params, 'page', 1);
         if ($page < 1 || $page > 10_000) {
             throw InvalidRfqValue::outOfRange('page', $page, 1, 10_000);
@@ -116,6 +146,8 @@ final class RfqQueueQuery
             $page,
             $pageSize,
             array_values(array_unique($branches)),
+            $assignee,
+            $fourJs,
         );
     }
 
