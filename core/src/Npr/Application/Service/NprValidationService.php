@@ -395,6 +395,15 @@ final class NprValidationService
                     $errors[] = 'Amount must be a numeric value';
                 }
                 break;
+            case 'duration':
+                // valueTypes.duration: {amount: finite nonnegative number, unit: days|weeks|months}.
+                if (!is_array($value) || !isset($value['amount']) || !is_numeric($value['amount']) || (float) $value['amount'] < 0) {
+                    $errors[] = 'Duration must be a nonnegative number';
+                }
+                if (!is_array($value) || !in_array($value['unit'] ?? null, ['days', 'weeks', 'months'], true)) {
+                    $errors[] = "Duration unit must be 'days', 'weeks', or 'months'";
+                }
+                break;
             case 'money_rate':
                 if (!is_array($value) || !isset($value['amount']) || !is_numeric($value['amount'])) {
                     $errors[] = 'Amount must be a numeric value';

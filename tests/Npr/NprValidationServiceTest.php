@@ -97,6 +97,19 @@ final class NprValidationServiceTest extends TestCase
         self::assertSame('Invalid option(s): rubber', $errors[0]);
     }
 
+    public function test_a_duration_needs_a_nonnegative_amount_and_a_known_unit(): void
+    {
+        $field = NprFixtures::validator()->getFieldDefinition('development_duration');
+        self::assertNotNull($field);
+        $check = static fn (mixed $value): array => NprFixtures::validator()->validateAnswerEnvelope($field, ['state' => 'provided', 'value' => $value]);
+
+        self::assertSame([], $check(['amount' => 12, 'unit' => 'months']));
+        self::assertSame(['Duration must be a nonnegative number'], $check(['amount' => -1, 'unit' => 'weeks']));
+        self::assertSame(['Duration must be a nonnegative number'], $check(['unit' => 'weeks']));
+        self::assertSame(["Duration unit must be 'days', 'weeks', or 'months'"], $check(['amount' => 3, 'unit' => 'years']));
+        self::assertCount(2, $check('six months'));
+    }
+
     public function test_none_armour_cannot_coexist_with_other_armour(): void
     {
         $variants = NprFixtures::validVariants();
