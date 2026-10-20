@@ -90,6 +90,8 @@ for required in \
     "$api_root/bin/run-finance-jobs.php" \
     "$api_root/deploy/app-service/webjobs/cablefit-research/run.sh" \
     "$api_root/bin/run-cablefit-research.php" \
+    "$api_root/deploy/app-service/webjobs/rfq-legacy-sync/run.sh" \
+    "$api_root/bin/sync-rfq-legacy-store.php" \
     "$api_root/deploy/app-service/api/index.php" \
     "$api_root/core/python/requirements.txt" \
     "$api_root/core/python/wsgi.py" \
@@ -386,6 +388,13 @@ find "$cbsync_root/_vendor" -maxdepth 1 -name '*.dist-info' -exec basename {} .d
     | sort > "$cbsync_root/_vendor/VENDORED.txt"
 cp "$api_root/deploy/app-service/webjobs/cablebuilder-sync/run.sh" "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
+
+# The tc-web RFQ refresh (RFQ plan 7.2-7.4) and its continuous WebJob, the same way. Inert while
+# RFQ_LEGACY_SYNC_ENABLED is not true: each pass exits 3 at once.
+mkdir -p "$release_root/App_Data/jobs/continuous/rfq-legacy-sync"
+cp "$api_root/bin/sync-rfq-legacy-store.php" "$app_root/bin/sync-rfq-legacy-store.php"
+cp "$api_root/deploy/app-service/webjobs/rfq-legacy-sync/run.sh" "$release_root/App_Data/jobs/continuous/rfq-legacy-sync/run.sh"
+chmod +x "$release_root/App_Data/jobs/continuous/rfq-legacy-sync/run.sh"
 
 # Nothing in the archive may be a symlink -- App Service unpacks it verbatim.
 assert_no_symlinks "$release_root"

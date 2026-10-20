@@ -276,6 +276,12 @@ New-Item -ItemType Directory -Path $researchJobRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\run-cablefit-research.php') -Destination (Join-Path $appRoot 'bin\run-cablefit-research.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\cablefit-research\run.sh') -Destination (Join-Path $researchJobRoot 'run.sh') -Force
 
+# The tc-web RFQ refresh (RFQ plan 7.2-7.4) and its continuous WebJob, the same way.
+$legacySyncJobRoot = Join-Path $releaseRoot 'App_Data\jobs\continuous\rfq-legacy-sync'
+New-Item -ItemType Directory -Path $legacySyncJobRoot -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\sync-rfq-legacy-store.php') -Destination (Join-Path $appRoot 'bin\sync-rfq-legacy-store.php') -Force
+Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\rfq-legacy-sync\run.sh') -Destination (Join-Path $legacySyncJobRoot 'run.sh') -Force
+
 if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
 }

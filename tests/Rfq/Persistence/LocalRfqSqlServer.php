@@ -61,8 +61,14 @@ final class LocalRfqSqlServer
     /** Empties every RFQ table and the test's people, children first. */
     public static function truncate(PDO $pdo): void
     {
+        if ($pdo->query("SELECT OBJECT_ID(N'[rfq].[rfq_legacy_import_rows]', N'U')")?->fetchColumn() !== null) {
+            $pdo->exec('DELETE FROM [rfq].[rfq_legacy_import_rows]');
+            $pdo->exec('DELETE FROM [rfq].[rfq_legacy_import_runs]');
+        }
         foreach (['rfq_documents', 'rfq_draft_rows', 'rfq_draft_activity', 'rfq_draft_row_edits', 'rfq_entries', 'rfq_reader_jobs',
-            'rfq_sync_attempts', 'rfq_draft_quotes', 'rfq_sessions', 'rfq_correction_memory'] as $table) {
+            'rfq_sync_attempts', 'rfq_draft_quotes', 'rfq_sessions', 'rfq_correction_memory',
+            'rfq_roles', 'rfq_user_roles', 'rfq_identities', 'rfq_notification_outbox', 'rfq_mail_audit', 'rfq_activity_log',
+            'rfq_quote_relationships', 'rfq_user_accessory_preferences'] as $table) {
             $pdo->exec("DELETE FROM [rfq].[{$table}]");
         }
         $pdo->exec('DELETE FROM [identity].[UserEmailAddresses]');
@@ -71,7 +77,7 @@ final class LocalRfqSqlServer
 
     private static function applySchema(PDO $pdo): void
     {
-        foreach (['create-identity-schema.sql', 'create-identity-user-email-addresses.sql', 'create-rfq-schema.sql', 'create-rfq-documents-schema.sql'] as $file) {
+        foreach (['create-identity-schema.sql', 'create-identity-user-email-addresses.sql', 'create-rfq-schema.sql', 'create-rfq-documents-schema.sql', 'create-rfq-accessory-tables.sql', 'create-rfq-legacy-import-ledger.sql'] as $file) {
             $script = file_get_contents(dirname(__DIR__, 3) . '/database/scripts/development/' . $file);
             if ($script === false) {
                 throw new RuntimeException("{$file} is missing.");

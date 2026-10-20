@@ -130,6 +130,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-commerce-cart-schema.sql')      # signed-in carts; after identity, customer and product: FKs to all three
 Invoke-SqlFile (Join-Path $DevScripts 'create-rfq-schema.sql')               # the live MySQL RFQ store's shape; no FKs outside [rfq]
 Invoke-SqlFile (Join-Path $DevScripts 'create-rfq-accessory-tables.sql')     # MySQL's two 18 Oct RFQ tables; after create-rfq-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'create-rfq-legacy-import-ledger.sql')  # refresh ledger for the tc-web import; after create-rfq-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-schema.sql')           # shared finance tables (mailboxes, grants, mail ledger, audit); no FKs outside [finance]
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-jobs-schema.sql')         # job runner claims; after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-access-schema.sql')       # finance scopes and the portal user map; after create-finance-schema.sql

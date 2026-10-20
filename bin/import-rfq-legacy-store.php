@@ -36,6 +36,7 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 use Dotenv\Dotenv;
 use TriCab\Api\Bootstrap\CoreAutoload;
+use TriCab\Api\Rfq\Legacy\LegacyRfqRowHash;
 use TriCab\Core\Product\Migration\Live\LegacyReadOnlySqlGuard;
 use TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig;
 
@@ -192,15 +193,10 @@ foreach (array_keys(RFQ_TABLES) as $table) {
         continue;
     }
     $targetTypes = array_column($targetColumns, 'type', 'name');
-    $columns[$table] = array_map(static fn (string $name): array => [
-        'name' => $name,
-        'kind' => match ($targetTypes[$name]) {
-            'int', 'tinyint', 'smallint', 'bigint' => 'int',
-            'float', 'real' => 'float',
-            'char', 'nchar' => 'char',
-            default => 'text',
-        },
-    ], $sourceNames);
+    $columns[$table] = LegacyRfqRowHash::kinds(array_map(
+        static fn (string $name): array => ['name' => $name, 'type' => (string) $targetTypes[$name]],
+        $sourceNames,
+    ));
 
     $targetRows = (int) $sql->query("SELECT COUNT_BIG(*) FROM [rfq].[{$table}]")->fetchColumn();
     if ($targetRows !== 0) {
@@ -226,36 +222,9 @@ if (!$apply) {
 
 // ---- Load ---------------------------------------------------------------------
 
-/**
- * One value as both sides should agree on it: NULL stays NULL; integers and
- * floats by value (MySQL and SQL Server spell them differently); CHAR(n)
- * without the padding SQL Server adds; text byte for byte.
- */
-$canonical = static function (mixed $value, string $kind): ?string {
-    if ($value === null) {
-        return null;
-    }
-
-    return match ($kind) {
-        'int' => (string) (int) $value,
-        'float' => sprintf('%.17g', (float) $value),
-        'char' => rtrim((string) $value, ' '),
-        default => (string) $value,
-    };
-};
-/** @param array<string, mixed> $row */
-$rowKey = static fn (array $row, array $pk): string => implode("\x1f", array_map(
-    static fn (string $column): string => rtrim((string) $row[$column], ' '),
-    $pk,
-));
-/**
- * @param array<string, mixed> $row
- * @param list<array{name: string, kind: string}> $cols
- */
-$rowHash = static fn (array $row, array $cols): string => hash('sha256', json_encode(
-    array_map(static fn (array $c): ?string => $canonical($row[$c['name']], $c['kind']), $cols),
-    JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE,
-));
+// Row identity and content hashing: LegacyRfqRowHash, shared with bin/sync-rfq-legacy-store.php.
+$rowKey = LegacyRfqRowHash::key(...);
+$rowHash = LegacyRfqRowHash::row(...);
 
 $report = ['source' => 'tc-mysql-live/tc', 'snapshotAt' => $snapshotAt, 'target' => "{$server}/{$database}", 'tables' => []];
 $started = microtime(true);
@@ -329,10 +298,9 @@ try {
             ));
         }
 
-        ksort($sourceHashes, SORT_STRING);
         $report['tables'][$table] = [
             'rows' => count($sourceHashes),
-            'sha256' => hash('sha256', implode("\n", $sourceHashes)),
+            'sha256' => LegacyRfqRowHash::digest($sourceHashes),
         ];
         printf("  %-32s %7d rows loaded, every row verified\n", $table, count($sourceHashes));
     }
