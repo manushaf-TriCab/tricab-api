@@ -7,6 +7,7 @@
     python -m cbsync nightly [--rotate-pages 70]
     python -m cbsync rotate --pages 5
     python -m cbsync lookups
+    python -m cbsync check-schema                       (no CableBuilder, read-only)
 
 --store (or CBSYNC_STORE) is a local folder, or blob:<container> for Azure
 with BLOB_CONNECTION_STRING or --account-url. CableBuilder commands need
@@ -69,12 +70,23 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("rotate")
     p.add_argument("--pages", type=int, required=True)
     sub.add_parser("lookups")
+    sub.add_parser("check-schema", help="would every archived design fit the [cablebuilder] tables?")
+    sub.add_parser("load-db", help="load the archive into [cablebuilder] (DB_* settings)")
     args = ap.parse_args(argv)
 
     store = open_store(args.store, args.account_url)
     archive = Archive(store)
     started, t0 = utcnow(), time.monotonic()
     summary: dict = {"command": args.command, "started": started}
+
+    if args.command == "check-schema":
+        from .rows import check_fit
+
+        print(json.dumps(check_fit(archive), indent=2, default=str))
+        return 0
+
+    if args.command == "load-db":
+        return _load_db(archive)
 
     if args.command == "status":
         kinds: dict[str, int] = {}
@@ -139,6 +151,24 @@ def main(argv: list[str] | None = None) -> int:
     short = {k: v for k, v in summary.items() if k not in ("changed", "unidentified")}
     print(json.dumps(short, indent=2, default=str)[:4000])
     print(f"run record: {run}")
+    # The database copy is refreshed after the sync is recorded, so a database
+    # problem never costs a sync. The load compares hashes, so a missed night
+    # is caught up by the next one.
+    if args.command == "nightly" and os.environ.get("CBSYNC_DB_LOAD", "false").lower() == "true":
+        return _load_db(archive)
+    return 0
+
+
+def _load_db(archive: Archive) -> int:
+    from .dbload import connect, load
+
+    t0 = time.monotonic()
+    conn = connect()
+    try:
+        result = load(archive, conn)
+    finally:
+        conn.close()
+    print(json.dumps({"load_db": result, "seconds": round(time.monotonic() - t0, 1)}, indent=2))
     return 0
 
 

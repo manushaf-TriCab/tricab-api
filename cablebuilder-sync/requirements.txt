@@ -1,2 +1,4 @@
 requests>=2.31
 azure-storage-blob>=12.19
+# loader (CBSYNC_DB_LOAD); needs unixODBC and the Microsoft ODBC driver on the image
+pyodbc>=5.1
