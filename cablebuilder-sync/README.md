@@ -60,7 +60,8 @@ lookups                         all 186 lookup tables
 | Setting | Use |
 |---|---|
 | `BLOB_CONNECTION_STRING` | Already on the tc-web slots. `AZURE_STORAGE_CONNECTION_STRING` also works |
-| `CB_COOKIE` | CableBuilder `JSESSIONID`. **Expires**, see open items |
+| `CB_USER`, `CB_PASSWORD` | CableBuilder sign-in, from a dedicated read-only account. The job signs in at the start of each run and again if the session lapses. Keep the password in a Key Vault reference if one is available |
+| `CB_COOKIE` | Fallback when `CB_USER` is not set: a browser `JSESSIONID`, which **expires**. For manual runs |
 | `IDENTITY_ENDPOINT`, `IDENTITY_HEADER` | Set by App Service; used for the Dynamics token |
 | `D365_TENANT_ID`, `D365_CLIENT_ID`, `D365_CLIENT_SECRET` | Alternative to the managed identity |
 | `CBSYNC_ENABLED` | `true` to run. The WebJob ships switched off |
@@ -81,22 +82,27 @@ on with `CBSYNC_ENABLED=true`. `build-app-service-release.ps1` was already behin
 the bash script (it carries neither finance-jobs nor the Python vendoring) and is
 not changed.
 
-## Open items before it can run unattended
+## Status (2026-10-20)
 
-- **CableBuilder sign-in.** `CB_COOKIE` is a browser session and will expire.
-  The job needs to sign in by itself with a dedicated read-only account (the
-  shared login disconnects other users). The login form has not been examined
-  yet.
-- **Dynamics access.** A D365 administrator must add the core slot's managed
-  identity (or an app registration) on the *Microsoft Entra applications* page,
-  mapped to a read-only user. Tested 2026-10-20: an `az` token for an account
-  with a D365 user works (`az login --allow-no-subscriptions`, then
-  `cbsync feed`: 322 messages, 117 items for 19 October). An account without a
-  D365 user gets 403. So a manual run only needs `az login` as a D365 user;
-  the unattended job still needs the managed identity registered.
+Done and verified on the core slot:
+
+- **Dynamics access.** The core slot's managed identity (client id
+  `e22dea0a-4869-453e-b719-edb06675ad5a`) is registered in D365. `cbsync feed`
+  run on the slot read 322 messages, 117 items for 19 October. For manual runs
+  elsewhere, `az login --allow-no-subscriptions` as an account with a D365 user
+  works; an account without one gets 403.
+- **Blob access.** The same run read the archive index through
+  `BLOB_CONNECTION_STRING`.
+- **Network.** The slot reaches `40.115.95.39:8080` (HTTP 200).
+
+Still open:
+
+- **CableBuilder account.** Sign-in is built (`CB_USER`, `CB_PASSWORD`) and
+  tested against a fake server only. It needs a dedicated read-only account:
+  signing in as the shared one disconnects whoever is using it. The first real
+  sign-in shows in the first run's record. The client does not sign out
+  (CableBuilder's sign-out request is not known); the session lapses on its own.
 - **Licence.** Confirm CableBuilder's agreement allows scheduled read-only access.
-- **Network.** Not yet confirmed that the core slot can reach `40.115.95.39:8080`.
-  It is an Azure address, so this is expected to work.
 
 ## Tests
 

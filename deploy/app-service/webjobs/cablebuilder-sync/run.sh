@@ -6,7 +6,7 @@
 # swap finds the key done or the lock held and exits.
 #
 # WebJobs inherit the app settings: BLOB_CONNECTION_STRING (already set),
-# CB_COOKIE (CableBuilder session), and the managed identity's
+# CB_USER/CB_PASSWORD (CableBuilder sign-in), and the managed identity's
 # IDENTITY_ENDPOINT/IDENTITY_HEADER for Dynamics. CBSYNC_ENABLED must be
 # "true", so the job ships dark and is switched on with an app setting.
 #

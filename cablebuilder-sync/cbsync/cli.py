@@ -9,8 +9,8 @@
     python -m cbsync lookups
 
 --store (or CBSYNC_STORE) is a local folder, or blob:<container> for Azure
-with AZURE_STORAGE_CONNECTION_STRING or --account-url. CableBuilder commands
-need CB_COOKIE.
+with BLOB_CONNECTION_STRING or --account-url. CableBuilder commands need
+CB_USER and CB_PASSWORD (or a browser session in CB_COOKIE).
 """
 
 from __future__ import annotations
