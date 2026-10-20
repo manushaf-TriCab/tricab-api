@@ -200,6 +200,12 @@ x86_64 (about 30 MB, ELF-checked like the finder's), and installs
 `deploy/app-service/webjobs/cablebuilder-sync/run.sh` as a continuous WebJob.
 `azure-identity` is not vendored: the slot uses `BLOB_CONNECTION_STRING`.
 
+Each night's full output (the sync, then the database load) is written to
+`/home/LogFiles/cablebuilder-sync/<Melbourne date>.log`, kept for 60 days and
+readable from the slot's SSH console. The WebJob log gets one line a night: a
+continuous job's log stops taking output once its process hits the line limit,
+and the first night's progress lines alone reached it.
+
 The release ships with the job switched off. Set the app settings, then turn it
 on with `CBSYNC_ENABLED=true`. `build-app-service-release.ps1` was already behind
 the bash script (it carries neither finance-jobs nor the Python vendoring) and is

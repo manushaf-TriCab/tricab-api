@@ -22,17 +22,30 @@ export PYTHONUNBUFFERED=1
 HOUR="${CBSYNC_HOUR:-1}"
 STORE="${CBSYNC_STORE:-blob:cablebuilder}"
 ROTATE="${CBSYNC_ROTATE_PAGES:-70}"
+# The WebJob log stops taking output once a continuous job's process has
+# written its line limit, and this process lives for weeks, so each night's
+# full output goes to its own file here; the WebJob log gets one line a night.
+LOG_DIR=/home/LogFiles/cablebuilder-sync
+mkdir -p "$LOG_DIR"
 
 while true; do
     if [ "${CBSYNC_ENABLED:-false}" = "true" ]; then
         local_hour=$(TZ=Australia/Melbourne date +%-H)
         key=$(TZ=Australia/Melbourne date +%F)
         if [ "$local_hour" -ge "$HOUR" ]; then
-            python3 -m cbsync --store "$STORE" nightly --run-key "$key" --rotate-pages "$ROTATE"
+            log="$LOG_DIR/$key.log"
+            before=$(stat -c %s "$log" 2>/dev/null || echo 0)
+            echo "[$(date -u +%FT%TZ)] cbsync nightly $key" >>"$log"
+            python3 -m cbsync --store "$STORE" nightly --run-key "$key" --rotate-pages "$ROTATE" >>"$log" 2>&1
             status=$?
+            echo "[$(date -u +%FT%TZ)] exited $status" >>"$log"
+            # Hourly wake-ups that find the night done or locked stay out of the WebJob log.
             if [ "$status" -ne 0 ]; then
-                echo "[$(date -u +%FT%TZ)] cbsync nightly $key exited $status" >&2
+                echo "[$(date -u +%FT%TZ)] cbsync nightly $key exited $status; see $log" >&2
+            elif tail -c +"$((before + 1))" "$log" | grep -q '^run record:'; then
+                echo "[$(date -u +%FT%TZ)] cbsync nightly $key done; see $log"
             fi
+            find "$LOG_DIR" -name '*.log' -mtime +60 -delete
         fi
     fi
     sleep 3600

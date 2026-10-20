@@ -279,6 +279,21 @@ def load_lookups(archive: Archive, conn) -> dict:
     return counts
 
 
+def run_counts(s: dict) -> dict:
+    """new/changed/failed for a run record: nightly adds its feed pull to its
+    backstop rotate; pull and rotate keep counts at the top; seed under "designs"."""
+    parts = [(s.get(k) or {}).get("counts") for k in ("pull", "rotate")]
+    parts = [p for p in parts if isinstance(p, dict)]
+    if not parts:
+        top = s.get("counts") or s.get("designs") or {}
+        parts = [top] if isinstance(top, dict) else []
+    out = {}
+    for k in ("new", "changed", "failed"):
+        vals = [p[k] for p in parts if isinstance(p.get(k), int)]
+        out[k] = sum(vals) if vals else None
+    return out
+
+
 def load_runs(archive: Archive, conn) -> dict:
     cur = conn.cursor()
     cur.execute("SELECT run_record_blob FROM [cablebuilder].[sync_runs]")
@@ -288,9 +303,7 @@ def load_runs(archive: Archive, conn) -> dict:
         if name in have or not name.endswith(".json"):
             continue
         s = json.loads(archive.store.get(name))
-        # nightly/rotate keep counts under "pull"; pull/lookups at the top; seed under "designs"
-        c = (s.get("pull") or {}).get("counts") or s.get("counts") or s.get("designs") or {}
-        c = c if isinstance(c, dict) else {}
+        c = run_counts(s)
         cur.execute("INSERT INTO [cablebuilder].[sync_runs] (command, started_at, seconds, "
                     "run_record_blob, designs_new, designs_changed, designs_failed, summary_json) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",

@@ -27,3 +27,13 @@ def test_the_loader_writes_every_schema_column_it_should():
     for table, cols in TABLES.items():
         unwritten = table_columns(table) - {c for c, _ in cols} - own
         assert not unwritten, f"{table}: {sorted(unwritten)}"
+
+
+def test_run_counts_add_feed_and_backstop():
+    from cbsync.dbload import run_counts
+
+    nightly = {"pull": {"counts": {"new": 11, "changed": 22, "kind:full": 33}},
+               "rotate": {"counts": {"new": 1473, "changed": 9211, "failed": 3}}}
+    assert run_counts(nightly) == {"new": 1484, "changed": 9233, "failed": 3}
+    assert run_counts({"designs": {"new": 80, "unchanged": 40251}}) == {"new": 80, "changed": None, "failed": None}
+    assert run_counts({"command": "lookups"}) == {"new": None, "changed": None, "failed": None}
