@@ -92,7 +92,10 @@ for required in \
     "$api_root/bin/run-cablefit-research.php" \
     "$api_root/deploy/app-service/api/index.php" \
     "$api_root/core/python/requirements.txt" \
-    "$api_root/core/python/wsgi.py"
+    "$api_root/core/python/wsgi.py" \
+    "$api_root/deploy/app-service/webjobs/cablebuilder-sync/run.sh" \
+    "$api_root/cablebuilder-sync/requirements.txt" \
+    "$api_root/cablebuilder-sync/cbsync/__main__.py"
 do
     if [ ! -f "$required" ]; then
         echo "Required release input is missing: $required" >&2
@@ -277,7 +280,8 @@ rm -rf "$vendor_python/bin"
 # (pypdfium2's `libpdfium.so`, cryptography's `_rust.abi3.so`) that are correct
 # x86-64 Linux builds, and a wrong-platform library named correctly would have
 # passed. ELF class 2 is 64-bit; machine 62 (EM_X86_64) is x86-64.
-if ! python3 - "$vendor_python" <<'PY'
+assert_linux_x86_64() {
+if ! python3 - "$1" <<'PY'
 import os, struct, sys
 bad = []
 for root, _dirs, files in os.walk(sys.argv[1]):
@@ -298,6 +302,8 @@ then
     echo "Vendored tree contains a native library that is not x86-64 Linux (listed above)." >&2
     exit 1
 fi
+}
+assert_linux_x86_64 "$vendor_python"
 
 # requirements.txt is unpinned, so record what this build actually resolved.
 # The release is the only place those versions are fixed.
@@ -353,6 +359,33 @@ mkdir -p "$release_root/App_Data/jobs/continuous/cablefit-research"
 cp "$api_root/bin/run-cablefit-research.php" "$app_root/bin/run-cablefit-research.php"
 cp "$api_root/deploy/app-service/webjobs/cablefit-research/run.sh" "$release_root/App_Data/jobs/continuous/cablefit-research/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/cablefit-research/run.sh"
+
+# The CableBuilder nightly sync (cablebuilder-sync/README.md) and its continuous
+# WebJob. Python like the finder, so its dependencies are vendored the same way
+# and for the same reason. The job is inert while CBSYNC_ENABLED is not true.
+echo "==> Staging the CableBuilder sync"
+cbsync_root="$app_root/cbsync"
+mkdir -p "$cbsync_root" "$release_root/App_Data/jobs/continuous/cablebuilder-sync"
+cp -R "$api_root/cablebuilder-sync/cbsync" "$cbsync_root/cbsync"
+find "$cbsync_root" -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
+python3 -m pip install \
+    --quiet \
+    --target "$cbsync_root/_vendor" \
+    --requirement "$api_root/cablebuilder-sync/requirements.txt" \
+    --platform "$PY_PLATFORM" \
+    --python-version "$PY_VERSION" \
+    --implementation cp \
+    --only-binary=:all:
+if [ ! -d "$cbsync_root/_vendor/azure/storage/blob" ]; then
+    echo "Vendored CableBuilder sync dependencies are missing azure-storage-blob: $cbsync_root/_vendor" >&2
+    exit 1
+fi
+rm -rf "$cbsync_root/_vendor/bin"
+assert_linux_x86_64 "$cbsync_root/_vendor"
+find "$cbsync_root/_vendor" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
+    | sort > "$cbsync_root/_vendor/VENDORED.txt"
+cp "$api_root/deploy/app-service/webjobs/cablebuilder-sync/run.sh" "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
+chmod +x "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
 
 # Nothing in the archive may be a symlink -- App Service unpacks it verbatim.
 assert_no_symlinks "$release_root"
