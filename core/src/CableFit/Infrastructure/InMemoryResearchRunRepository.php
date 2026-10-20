@@ -77,6 +77,19 @@ final class InMemoryResearchRunRepository implements ResearchRunRepository
         return $list;
     }
 
+    public function latestForCandidates(array $candidatePublicIds): array
+    {
+        $wanted = array_flip($candidatePublicIds);
+        $latest = [];
+        foreach (array_reverse($this->runs) as $run) {
+            if (isset($wanted[$run->candidatePublicId]) && !isset($latest[$run->candidatePublicId])) {
+                $latest[$run->candidatePublicId] = $this->withCount($run);
+            }
+        }
+
+        return $latest;
+    }
+
     public function find(string $runPublicId): ?ResearchRun
     {
         $run = $this->runs[$runPublicId] ?? null;

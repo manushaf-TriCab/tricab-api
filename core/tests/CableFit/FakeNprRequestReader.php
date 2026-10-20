@@ -19,8 +19,19 @@ final class FakeNprRequestReader implements NprRequestReader
         $this->snapshots[$snapshot->publicId] = $snapshot;
     }
 
+    /** The request becomes unreadable (deleted, or no longer visible to TSD). */
+    public function forget(string $publicId): void
+    {
+        unset($this->snapshots[$publicId]);
+    }
+
     public function findForTsd(AuthenticatedUser $user, string $requestPublicId): ?NprRequestSnapshot
     {
         return $this->snapshots[$requestPublicId] ?? null;
+    }
+
+    public function findManyForTsd(AuthenticatedUser $user, array $requestPublicIds): array
+    {
+        return array_intersect_key($this->snapshots, array_flip($requestPublicIds));
     }
 }

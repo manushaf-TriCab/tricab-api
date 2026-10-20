@@ -82,6 +82,15 @@ final class TsdNprRequestReaderTest extends TestCase
         self::assertNull($this->reader()->findForTsd(NprFixtures::user(30, [Module::PERMISSION_TSD_WORK, 'TSD.ACCESS']), self::WITH_TSD));
     }
 
+    public function test_many_returns_only_the_readable_requests_keyed_by_public_id(): void
+    {
+        $many = $this->reader()->findManyForTsd(NprFixtures::tsd(), [self::WITH_TSD, self::DRAFT, '00000000-0000-4000-8000-0000000000ff', self::WITH_TSD]);
+
+        self::assertSame([self::WITH_TSD], array_keys($many));
+        self::assertSame('NPR-2026-0001', $many[self::WITH_TSD]->requestNumber);
+        self::assertSame([], $this->reader()->findManyForTsd(NprFixtures::requester(), [self::WITH_TSD]));
+    }
+
     public function test_the_container_binds_the_reader(): void
     {
         $app = \TriCab\Api\Tests\TestAppFactory::create();

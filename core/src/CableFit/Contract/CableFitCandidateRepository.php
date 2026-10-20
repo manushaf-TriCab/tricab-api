@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace TriCab\Core\CableFit\Contract;
 
 use TriCab\Core\CableFit\Domain\CableFitCandidate;
+use TriCab\Core\CableFit\Domain\CandidateListPage;
+use TriCab\Core\CableFit\Domain\CandidateSearch;
 use TriCab\Core\CableFit\Domain\CandidateRevision;
 use TriCab\Core\CableFit\Domain\CandidateVersionConflict;
 
@@ -19,6 +21,16 @@ interface CableFitCandidateRepository
      * @return list<CableFitCandidate>
      */
     public function listByNprRequest(string $nprRequestPublicId): array;
+
+    /** One page of every candidate, most recently updated first, with who made and last saved each. */
+    public function search(CandidateSearch $search): CandidateListPage;
+
+    /**
+     * Every distinct NPR request public id that some candidate is linked to.
+     *
+     * @return list<string>
+     */
+    public function linkedNprRequestPublicIds(): array;
 
     public function findByPublicId(string $candidatePublicId): ?CableFitCandidate;
 

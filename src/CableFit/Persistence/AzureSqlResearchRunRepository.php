@@ -146,6 +146,37 @@ SQL;
         return array_map(fn (array $row): ResearchRun => $this->run($row), $rows);
     }
 
+    public function latestForCandidates(array $candidatePublicIds): array
+    {
+        $placeholders = [];
+        $params = [];
+        foreach (array_values(array_unique($candidatePublicIds)) as $i => $id) {
+            if (preg_match(self::GUID, $id) === 1) {
+                $placeholders[] = ':c' . $i;
+                $params['c' . $i] = $id;
+            }
+        }
+        if ($placeholders === []) {
+            return [];
+        }
+
+        $rows = $this->connection->fetchAll(
+            self::SELECT . ' WHERE c.[public_id] IN (' . implode(', ', $placeholders) . ')
+               AND r.[run_id] = (SELECT TOP (1) l.[run_id] FROM [cablefit].[research_runs] l
+                                 WHERE l.[candidate_id] = r.[candidate_id]
+                                 ORDER BY l.[requested_at] DESC, l.[run_id] DESC)',
+            $params,
+        );
+
+        $latest = [];
+        foreach ($rows as $row) {
+            $run = $this->run($row);
+            $latest[$run->candidatePublicId] = $run;
+        }
+
+        return $latest;
+    }
+
     public function find(string $runPublicId): ?ResearchRun
     {
         if (preg_match(self::GUID, $runPublicId) !== 1) {

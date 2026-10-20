@@ -127,4 +127,27 @@ final class AzureSqlResearchRunRepositoryTest extends TestCase
 
         (new AzureSqlResearchRunRepository($connection))->queueWithinLimits(self::newRun(), 3, new DateTimeImmutable('2026-10-19T10:00:00Z'));
     }
+
+    public function test_latest_for_candidates_picks_each_candidates_newest_run_in_one_query(): void
+    {
+        $connection = new FakeSqlConnection([self::activeRow()]);
+
+        $latest = (new AzureSqlResearchRunRepository($connection))->latestForCandidates([self::CANDIDATE, 'not-a-guid', self::CANDIDATE]);
+
+        self::assertSame([self::CANDIDATE], array_keys($latest));
+        self::assertSame('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', $latest[self::CANDIDATE]->publicId);
+        self::assertCount(1, $connection->calls);
+        $call = $connection->calls[0];
+        self::assertStringContainsString('c.[public_id] IN (:c0)', $call['sql']);
+        self::assertStringContainsString('ORDER BY l.[requested_at] DESC, l.[run_id] DESC', $call['sql']);
+        self::assertSame(['c0' => self::CANDIDATE], $call['params']);
+    }
+
+    public function test_latest_for_no_valid_candidates_sends_nothing(): void
+    {
+        $connection = new FakeSqlConnection();
+
+        self::assertSame([], (new AzureSqlResearchRunRepository($connection))->latestForCandidates(['not-a-guid']));
+        self::assertSame([], $connection->calls);
+    }
 }

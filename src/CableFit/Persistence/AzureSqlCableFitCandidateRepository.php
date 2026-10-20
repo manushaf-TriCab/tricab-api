@@ -10,6 +10,9 @@ use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\CableFit\Contract\CableFitCandidateRepository;
 use TriCab\Core\CableFit\Domain\CableFitCandidate;
+use TriCab\Core\CableFit\Domain\CandidateListPage;
+use TriCab\Core\CableFit\Domain\CandidateListRow;
+use TriCab\Core\CableFit\Domain\CandidateSearch;
 use TriCab\Core\CableFit\Domain\CandidateRevision;
 use TriCab\Core\CableFit\Domain\CandidateVersionConflict;
 
@@ -42,6 +45,12 @@ SQL;
 
     private const GUID = '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i';
 
+    /**
+     * Every character LIKE treats as a wildcard, escaped for ESCAPE N'~'. A tilde, not a backslash:
+     * PDO's placeholder scanner reads N'\' as an unterminated string (see AzureSqlProductCodeSearchRepository).
+     */
+    private const LIKE_ESCAPE = ['~' => '~~', '%' => '~%', '_' => '~_', '[' => '~['];
+
     public function __construct(
         private readonly SqlConnection $connection,
     ) {
@@ -58,6 +67,73 @@ SQL;
         );
 
         return array_map(fn (array $row): CableFitCandidate => $this->candidate($row), $rows);
+    }
+
+    public function search(CandidateSearch $search): CandidateListPage
+    {
+        $where = '';
+        $params = [];
+        if ($search->text !== null) {
+            $where = " WHERE (c.[candidate_name] LIKE :text ESCAPE N'~'";
+            $params['text'] = '%' . strtr($search->text, self::LIKE_ESCAPE) . '%';
+            $placeholders = [];
+            foreach ($search->nprRequestPublicIds as $i => $id) {
+                $placeholders[] = ':npr' . $i;
+                $params['npr' . $i] = $id;
+            }
+            if ($placeholders !== []) {
+                $where .= ' OR c.[npr_request_public_id] IN (' . implode(', ', $placeholders) . ')';
+            }
+            $where .= ')';
+        }
+
+        $total = AzureSqlValueMapper::intValue(
+            $this->connection->fetchAll('SELECT COUNT(*) AS [total] FROM [cablefit].[candidates] c' . $where, $params)[0]['total'] ?? 0,
+        );
+        if ($total === 0) {
+            return new CandidateListPage([], 0);
+        }
+
+        $rows = $this->connection->fetchAll(
+            'SELECT ' . self::CANDIDATE_COLUMNS . ",
+                    COALESCE(NULLIF(cu.[DisplayName], N''), cu.[EmailAddress]) AS [created_by_name],
+                    cu.[EmailAddress] AS [created_by_email],
+                    COALESCE(NULLIF(uu.[DisplayName], N''), uu.[EmailAddress]) AS [updated_by_name],
+                    uu.[EmailAddress] AS [updated_by_email],
+                    r.[npr_revision_number], r.[stale]
+             FROM [cablefit].[candidates] c
+             LEFT JOIN [cablefit].[candidate_revisions] r
+               ON r.[candidate_id] = c.[candidate_id] AND r.[revision_number] = c.[current_revision_number]
+             LEFT JOIN [identity].[Users] cu ON cu.[UserId] = c.[created_by_user_id]
+             LEFT JOIN [identity].[Users] uu ON uu.[UserId] = c.[updated_by_user_id]"
+            . $where . '
+             ORDER BY c.[updated_at] DESC, c.[candidate_id] DESC
+             OFFSET ' . max(0, $search->offset) . ' ROWS FETCH NEXT ' . max(1, $search->limit) . ' ROWS ONLY',
+            $params,
+        );
+
+        return new CandidateListPage(
+            array_map(fn (array $row): CandidateListRow => new CandidateListRow(
+                $this->candidate($row),
+                AzureSqlValueMapper::nullableString($row['created_by_name'] ?? null),
+                AzureSqlValueMapper::nullableString($row['created_by_email'] ?? null),
+                AzureSqlValueMapper::nullableString($row['updated_by_name'] ?? null),
+                AzureSqlValueMapper::nullableString($row['updated_by_email'] ?? null),
+                AzureSqlValueMapper::nullableInt($row['npr_revision_number'] ?? null),
+                AzureSqlValueMapper::boolValue($row['stale'] ?? null),
+            ), $rows),
+            $total,
+        );
+    }
+
+    public function linkedNprRequestPublicIds(): array
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT DISTINCT [npr_request_public_id] FROM [cablefit].[candidates] WHERE [npr_request_public_id] IS NOT NULL',
+            [],
+        );
+
+        return array_map(static fn (array $row): string => AzureSqlValueMapper::stringValue($row['npr_request_public_id'] ?? null), $rows);
     }
 
     public function findByPublicId(string $candidatePublicId): ?CableFitCandidate

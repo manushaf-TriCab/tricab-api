@@ -912,6 +912,7 @@ final class ContainerFactory
             \TriCab\Core\CableFit\Contract\CableFitCandidateRepository::class
                 => \DI\autowire(\TriCab\Core\CableFit\Infrastructure\InMemoryCableFitCandidateRepository::class),
             \TriCab\Core\CableFit\Application\CableFitCandidateService::class => \DI\autowire(),
+            \TriCab\Core\CableFit\Application\CableFitCandidateListService::class => \DI\autowire(),
 
             // CableFit research agent (C3). In-memory by default; the azure-sql branch below stores in [cablefit].
             // The run only queues here; bin/run-cablefit-research.php (the cablefit-research WebJob) calls the model.

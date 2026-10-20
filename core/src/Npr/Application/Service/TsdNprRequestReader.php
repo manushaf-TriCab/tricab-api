@@ -50,4 +50,17 @@ final class TsdNprRequestReader implements NprRequestReader
             $request->variants,
         );
     }
+
+    public function findManyForTsd(AuthenticatedUser $user, array $requestPublicIds): array
+    {
+        $out = [];
+        foreach (array_unique($requestPublicIds) as $publicId) {
+            $snapshot = $this->findForTsd($user, $publicId);
+            if ($snapshot !== null) {
+                $out[$publicId] = $snapshot;
+            }
+        }
+
+        return $out;
+    }
 }

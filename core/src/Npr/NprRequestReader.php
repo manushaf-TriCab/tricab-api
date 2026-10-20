@@ -19,4 +19,14 @@ interface NprRequestReader
      * user may not read it. The two cases are not distinguishable.
      */
     public function findForTsd(AuthenticatedUser $user, string $requestPublicId): ?NprRequestSnapshot;
+
+    /**
+     * {@see findForTsd()} for several requests at once, keyed by public id.
+     * Requests that are missing or not readable are left out.
+     *
+     * @param list<string> $requestPublicIds
+     *
+     * @return array<string, NprRequestSnapshot>
+     */
+    public function findManyForTsd(AuthenticatedUser $user, array $requestPublicIds): array;
 }

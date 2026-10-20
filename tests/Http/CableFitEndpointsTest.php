@@ -10,6 +10,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Tests\TestAppFactory;
+use TriCab\Core\CableFit\Contract\ResearchRunRepository;
+use TriCab\Core\CableFit\Domain\ResearchRun;
+use TriCab\Core\CableFit\Infrastructure\InMemoryResearchRunRepository;
 use TriCab\Core\CableFit\Module;
 use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Npr\NprRequestReader;
@@ -77,6 +80,7 @@ final class CableFitEndpointsTest extends TestCase
         $this->grant([Module::PERMISSION_RESEARCH]);
 
         foreach ([
+            ['GET', '/api/v1/tsd/cablefit/candidates'],
             ['GET', '/api/v1/tsd/cablefit/candidates?nprRequest=x'],
             ['POST', '/api/v1/tsd/cablefit/candidates'],
             ['GET', '/api/v1/tsd/cablefit/candidates/' . self::MISSING],
@@ -122,10 +126,154 @@ final class CableFitEndpointsTest extends TestCase
         self::assertSame(404, $this->call('GET', '/api/v1/tsd/cablefit/candidates?nprRequest=npr-1')->getStatusCode());
     }
 
-    public function test_listing_needs_the_npr_request_parameter(): void
+    public function test_an_empty_npr_request_parameter_is_a_400(): void
     {
-        self::assertSame(400, $this->call('GET', '/api/v1/tsd/cablefit/candidates')->getStatusCode());
         self::assertSame(400, $this->call('GET', '/api/v1/tsd/cablefit/candidates?nprRequest=')->getStatusCode());
+    }
+
+    /**
+     * @return array{candidates: list<array<string, mixed>>, total: int, limit: int, offset: int}
+     */
+    private function listAll(string $query = ''): array
+    {
+        $response = $this->call('GET', '/api/v1/tsd/cablefit/candidates' . ($query === '' ? '' : '?' . $query));
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+        /** @var array{data: array{candidates: list<array<string, mixed>>, total: int, limit: int, offset: int}} $payload */
+        $payload = TestAppFactory::json($response);
+
+        return $payload['data'];
+    }
+
+    /**
+     * @param array{candidates: list<array<string, mixed>>} $list
+     *
+     * @return list<mixed>
+     */
+    private static function names(array $list): array
+    {
+        return array_column($list['candidates'], 'name');
+    }
+
+    private function putRequest(string $publicId, string $number, string $customer, int $revision = 1): void
+    {
+        $this->reader->put(new NprRequestSnapshot($publicId, $number, $revision, 'Title', $customer, [], []));
+    }
+
+    public function test_without_a_filter_every_design_is_listed_newest_first(): void
+    {
+        $this->createBlank('First');
+        $this->createBlank('Second');
+        $this->putRequest('npr-1', 'NPR-2026-0007', 'BHP');
+        self::assertSame(201, $this->call('POST', '/api/v1/tsd/cablefit/candidates', ['name' => 'Linked', 'nprRequestPublicId' => 'npr-1'])->getStatusCode());
+
+        $list = $this->listAll();
+
+        self::assertSame(['Linked', 'Second', 'First'], self::names($list));
+        self::assertSame(3, $list['total']);
+        self::assertSame(50, $list['limit']);
+        self::assertSame(0, $list['offset']);
+        self::assertSame('npr-1', $list['candidates'][0]['nprRequestPublicId']);
+        self::assertSame('NPR-2026-0007', $list['candidates'][0]['nprRequestNumber']);
+        self::assertSame(1, $list['candidates'][0]['currentRevision']);
+        self::assertFalse($list['candidates'][0]['stale']);
+        self::assertNull($list['candidates'][0]['latestResearch']);
+    }
+
+    public function test_a_design_without_an_npr_request_has_no_number(): void
+    {
+        $this->createBlank('Standalone');
+
+        $row = $this->listAll()['candidates'][0];
+
+        self::assertNull($row['nprRequestPublicId']);
+        self::assertNull($row['nprRequestNumber']);
+        self::assertArrayHasKey('createdBy', $row);
+        self::assertArrayHasKey('updatedBy', $row);
+        self::assertArrayHasKey('createdAt', $row);
+        self::assertArrayHasKey('updatedAt', $row);
+    }
+
+    public function test_q_matches_the_name_the_npr_number_or_the_customer(): void
+    {
+        $this->createBlank('Drag chain 4C');
+        $this->createBlank('Reeling 3C');
+        $this->putRequest('npr-1', 'NPR-2026-0007', 'Rio Tinto');
+        self::assertSame(201, $this->call('POST', '/api/v1/tsd/cablefit/candidates', ['name' => 'Trailing', 'nprRequestPublicId' => 'npr-1'])->getStatusCode());
+
+        self::assertSame(['Drag chain 4C'], self::names($this->listAll('q=drag')));
+        self::assertSame(['Trailing'], self::names($this->listAll('q=0007')));
+        self::assertSame(['Trailing'], self::names($this->listAll('q=rio')));
+        self::assertSame(['Reeling 3C', 'Drag chain 4C'], self::names($this->listAll('q=C')));
+        self::assertSame(0, $this->listAll('q=nothing')['total']);
+    }
+
+    public function test_an_npr_request_the_user_cannot_read_shows_no_number_and_is_not_searchable(): void
+    {
+        $this->putRequest('npr-1', 'NPR-2026-0007', 'BHP');
+        self::assertSame(201, $this->call('POST', '/api/v1/tsd/cablefit/candidates', ['name' => 'Linked', 'nprRequestPublicId' => 'npr-1'])->getStatusCode());
+        $this->reader->forget('npr-1');
+
+        $list = $this->listAll();
+
+        self::assertSame(['Linked'], self::names($list));
+        self::assertSame('npr-1', $list['candidates'][0]['nprRequestPublicId']);
+        self::assertNull($list['candidates'][0]['nprRequestNumber']);
+        self::assertSame(0, $this->listAll('q=0007')['total']);
+    }
+
+    public function test_a_design_built_from_an_older_npr_revision_is_stale(): void
+    {
+        $this->putRequest('npr-1', 'NPR-2026-0007', 'BHP');
+        self::assertSame(201, $this->call('POST', '/api/v1/tsd/cablefit/candidates', ['name' => 'Linked', 'nprRequestPublicId' => 'npr-1'])->getStatusCode());
+        $this->putRequest('npr-1', 'NPR-2026-0007', 'BHP', 2);
+
+        self::assertTrue($this->listAll()['candidates'][0]['stale']);
+    }
+
+    public function test_paging_uses_limit_and_offset_and_reports_the_total(): void
+    {
+        foreach (['A', 'B', 'C'] as $name) {
+            $this->createBlank($name);
+        }
+
+        $first = $this->listAll('limit=2');
+        $second = $this->listAll('limit=2&offset=2');
+
+        self::assertSame(['C', 'B'], self::names($first));
+        self::assertSame(['A'], self::names($second));
+        self::assertSame(3, $first['total']);
+        self::assertSame(3, $second['total']);
+        self::assertSame(200, $this->listAll('limit=500')['limit']);
+    }
+
+    public function test_bad_paging_or_query_values_are_a_400(): void
+    {
+        foreach (['limit=0', 'limit=-1', 'limit=abc', 'offset=-5', 'offset=1.5', 'q[]=x', 'q=' . str_repeat('x', 201)] as $query) {
+            self::assertSame(400, $this->call('GET', '/api/v1/tsd/cablefit/candidates?' . $query)->getStatusCode(), $query);
+        }
+    }
+
+    public function test_each_design_carries_its_latest_research_run(): void
+    {
+        $researched = $this->createBlank('Researched');
+        $this->createBlank('Never researched');
+        $container = $this->app->getContainer();
+        self::assertInstanceOf(ContainerInterface::class, $container);
+        $runs = $container->get(ResearchRunRepository::class);
+        self::assertInstanceOf(InMemoryResearchRunRepository::class, $runs);
+        $runs->add(ResearchRun::queued('44444444-4444-4444-8444-444444444441', $researched, 'Drag chain', [], [], 1, null, new \DateTimeImmutable('2026-10-20T00:00:00Z')));
+        $runs->add(ResearchRun::queued('44444444-4444-4444-8444-444444444442', $researched, 'Reeling', [], [], 1, null, new \DateTimeImmutable('2026-10-21T00:00:00Z')));
+
+        $rows = array_column($this->listAll()['candidates'], null, 'name');
+
+        self::assertNull($rows['Never researched']['latestResearch']);
+        self::assertSame([
+            'runPublicId' => '44444444-4444-4444-8444-444444444442',
+            'status' => 'queued',
+            'application' => 'Reeling',
+            'verdict' => null,
+            'finishedAt' => null,
+        ], $rows['Researched']['latestResearch']);
     }
 
     public function test_a_candidate_linked_to_a_readable_request_is_listed(): void

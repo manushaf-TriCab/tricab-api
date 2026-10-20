@@ -7,6 +7,7 @@ namespace TriCab\Api\Http\Action\CableFit;
 use DateTimeInterface;
 use stdClass;
 use TriCab\Core\CableFit\Application\CandidateDetail;
+use TriCab\Core\CableFit\Application\CandidateListItem;
 use TriCab\Core\CableFit\Application\CandidateSummary;
 use TriCab\Core\CableFit\Domain\CableFitCandidate;
 
@@ -42,6 +43,32 @@ final class CableFitCandidateSerializer
     }
 
     /**
+     * A row of the design list. `verdict` stays null until runs carry one.
+     *
+     * @return array<string, mixed>
+     */
+    public static function listItem(CandidateListItem $item): array
+    {
+        $row = $item->row;
+        $run = $item->latestResearch;
+
+        return self::candidate($row->candidate) + [
+            'currentRevision' => $row->candidate->version,
+            'createdBy' => self::person($row->createdByName, $row->createdByEmail),
+            'updatedBy' => self::person($row->updatedByName, $row->updatedByEmail),
+            'stale' => $item->stale,
+            'nprRequestNumber' => $item->nprRequestNumber,
+            'latestResearch' => $run === null ? null : [
+                'runPublicId' => $run->publicId,
+                'status' => $run->status,
+                'application' => $run->application,
+                'verdict' => null,
+                'finishedAt' => $run->finishedAt?->format(DateTimeInterface::ATOM),
+            ],
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function detail(CandidateDetail $d): array
@@ -57,5 +84,13 @@ final class CableFitCandidateSerializer
             'unresolvedRequirements' => $d->unresolvedRequirements,
             'chosenAlternatives' => $d->chosenAlternatives === [] ? new stdClass() : $d->chosenAlternatives,
         ];
+    }
+
+    /**
+     * @return array{name: string|null, email: string|null}|null
+     */
+    private static function person(?string $name, ?string $email): ?array
+    {
+        return $name === null && $email === null ? null : ['name' => $name, 'email' => $email];
     }
 }

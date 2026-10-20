@@ -36,6 +36,15 @@ interface ResearchRunRepository
      */
     public function listByCandidate(string $candidatePublicId): array;
 
+    /**
+     * Each candidate's newest run, keyed by candidate public id; candidates with no run are left out.
+     *
+     * @param list<string> $candidatePublicIds
+     *
+     * @return array<string, ResearchRun>
+     */
+    public function latestForCandidates(array $candidatePublicIds): array;
+
     public function find(string $runPublicId): ?ResearchRun;
 
     /**

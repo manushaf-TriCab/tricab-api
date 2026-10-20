@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use TriCab\Api\CableFit\Persistence\AzureSqlCableFitCandidateRepository;
 use TriCab\Api\Tests\Doubles\FakeSqlConnection;
 use TriCab\Core\CableFit\Domain\CandidateRevision;
+use TriCab\Core\CableFit\Domain\CandidateSearch;
 use TriCab\Core\CableFit\Domain\CandidateVersionConflict;
 
 /** Statement shape and transaction behaviour, against the recording connection double. */
@@ -90,5 +91,74 @@ final class AzureSqlCableFitCandidateRepositoryTest extends TestCase
         foreach ($connection->calls as $call) {
             self::assertStringNotContainsString('INSERT', $call['sql']);
         }
+    }
+
+    public function test_search_counts_then_pages_newest_first_with_the_authors_and_the_current_revision(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([['total' => 7]]);
+        $connection->queueFetch([self::candidateRow(2) + [
+            'created_by_name' => 'Chabilal',
+            'created_by_email' => 'chabilal@example.test',
+            'updated_by_name' => null,
+            'updated_by_email' => null,
+            'npr_revision_number' => 3,
+            'stale' => 1,
+        ]]);
+
+        $page = (new AzureSqlCableFitCandidateRepository($connection))->search(new CandidateSearch(null, [], 5, 10));
+
+        self::assertSame(7, $page->total);
+        self::assertCount(1, $page->rows);
+        $row = $page->rows[0];
+        self::assertSame(strtolower(self::ID), $row->candidate->publicId);
+        self::assertSame('Chabilal', $row->createdByName);
+        self::assertSame('chabilal@example.test', $row->createdByEmail);
+        self::assertNull($row->updatedByName);
+        self::assertSame(3, $row->sourceNprRevision);
+        self::assertTrue($row->storedStale);
+        self::assertStringNotContainsString('WHERE', $connection->calls[0]['sql']);
+        $sql = $connection->calls[1]['sql'];
+        self::assertStringContainsString('LEFT JOIN [identity].[Users] cu ON cu.[UserId] = c.[created_by_user_id]', $sql);
+        self::assertStringContainsString('LEFT JOIN [identity].[Users] uu ON uu.[UserId] = c.[updated_by_user_id]', $sql);
+        self::assertStringContainsString('r.[revision_number] = c.[current_revision_number]', $sql);
+        self::assertStringContainsString('ORDER BY c.[updated_at] DESC, c.[candidate_id] DESC', $sql);
+        self::assertStringContainsString('OFFSET 10 ROWS FETCH NEXT 5 ROWS ONLY', $sql);
+    }
+
+    public function test_search_text_matches_the_name_with_wildcards_escaped_or_the_given_npr_requests(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([['total' => 0]]);
+
+        $page = (new AzureSqlCableFitCandidateRepository($connection))->search(new CandidateSearch('50%_[x]~', ['npr-a', 'npr-b'], 50, 0));
+
+        self::assertSame(0, $page->total);
+        self::assertSame([], $page->rows);
+        self::assertCount(1, $connection->calls, 'no page query when nothing matches');
+        $call = $connection->calls[0];
+        self::assertStringContainsString("WHERE (c.[candidate_name] LIKE :text ESCAPE N'~' OR c.[npr_request_public_id] IN (:npr0, :npr1))", $call['sql']);
+        self::assertSame('%50~%~_~[x]~~%', $call['params']['text']);
+        self::assertSame('npr-a', $call['params']['npr0']);
+        self::assertSame('npr-b', $call['params']['npr1']);
+    }
+
+    public function test_search_text_with_no_matching_requests_filters_on_the_name_alone(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([['total' => 0]]);
+
+        (new AzureSqlCableFitCandidateRepository($connection))->search(new CandidateSearch('drag', [], 50, 0));
+
+        self::assertStringContainsString("WHERE (c.[candidate_name] LIKE :text ESCAPE N'~')", $connection->calls[0]['sql']);
+    }
+
+    public function test_linked_npr_requests_are_distinct_and_non_null(): void
+    {
+        $connection = new FakeSqlConnection([['npr_request_public_id' => 'npr-a'], ['npr_request_public_id' => 'npr-b']]);
+
+        self::assertSame(['npr-a', 'npr-b'], (new AzureSqlCableFitCandidateRepository($connection))->linkedNprRequestPublicIds());
+        self::assertStringContainsString('SELECT DISTINCT [npr_request_public_id]', $connection->calls[0]['sql']);
+        self::assertStringContainsString('IS NOT NULL', $connection->calls[0]['sql']);
     }
 }

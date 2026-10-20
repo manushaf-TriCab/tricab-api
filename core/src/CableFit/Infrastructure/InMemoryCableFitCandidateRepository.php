@@ -6,6 +6,9 @@ namespace TriCab\Core\CableFit\Infrastructure;
 
 use TriCab\Core\CableFit\Contract\CableFitCandidateRepository;
 use TriCab\Core\CableFit\Domain\CableFitCandidate;
+use TriCab\Core\CableFit\Domain\CandidateListPage;
+use TriCab\Core\CableFit\Domain\CandidateListRow;
+use TriCab\Core\CableFit\Domain\CandidateSearch;
 use TriCab\Core\CableFit\Domain\CandidateRevision;
 use TriCab\Core\CableFit\Domain\CandidateVersionConflict;
 
@@ -26,6 +29,42 @@ final class InMemoryCableFitCandidateRepository implements CableFitCandidateRepo
         usort($list, static fn (CableFitCandidate $a, CableFitCandidate $b): int => $b->updatedAt <=> $a->updatedAt);
 
         return $list;
+    }
+
+    /** User names are not known here, so they are null. */
+    public function search(CandidateSearch $search): CandidateListPage
+    {
+        $text = $search->text === null ? null : mb_strtolower($search->text);
+        $linked = array_flip($search->nprRequestPublicIds);
+        $list = array_values(array_filter(
+            $this->candidates,
+            static fn (CableFitCandidate $c): bool => $text === null
+                || str_contains(mb_strtolower($c->name), $text)
+                || ($c->nprRequestPublicId !== null && isset($linked[$c->nprRequestPublicId])),
+        ));
+        // Newest first; among equal times, the later created (array order) first, like candidate_id DESC.
+        $order = array_flip(array_keys($this->candidates));
+        usort($list, static fn (CableFitCandidate $a, CableFitCandidate $b): int => [$b->updatedAt, $order[$b->publicId]] <=> [$a->updatedAt, $order[$a->publicId]]);
+
+        $rows = [];
+        foreach (array_slice($list, $search->offset, $search->limit) as $candidate) {
+            $revision = $this->latestRevision($candidate->publicId);
+            $rows[] = new CandidateListRow($candidate, null, null, null, null, $revision?->sourceNprRevision, $revision !== null && $revision->stale);
+        }
+
+        return new CandidateListPage($rows, count($list));
+    }
+
+    public function linkedNprRequestPublicIds(): array
+    {
+        $ids = [];
+        foreach ($this->candidates as $candidate) {
+            if ($candidate->nprRequestPublicId !== null) {
+                $ids[] = $candidate->nprRequestPublicId;
+            }
+        }
+
+        return array_values(array_unique($ids));
     }
 
     public function findByPublicId(string $candidatePublicId): ?CableFitCandidate
