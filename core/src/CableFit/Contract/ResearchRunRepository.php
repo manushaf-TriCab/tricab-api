@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\CableFit\Contract;
 
 use DateTimeImmutable;
+use TriCab\Core\CableFit\Domain\ResearchAssessment;
 use TriCab\Core\CableFit\Domain\ResearchCost;
 use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
 use TriCab\Core\CableFit\Domain\ResearchFinding;
@@ -62,7 +63,7 @@ interface ResearchRunRepository
     public function outstanding(): int;
 
     /**
-     * Save the findings and mark the run succeeded, together.
+     * Save the findings, the verdict and the assessment, and mark the run succeeded, together.
      *
      * @param list<ResearchFinding> $findings
      * @param list<string>          $sourcesUsed
@@ -74,7 +75,21 @@ interface ResearchRunRepository
         ResearchCost $cost,
         int $droppedFindings,
         DateTimeImmutable $at,
+        ?ResearchAssessment $assessment = null,
     ): void;
+
+    /**
+     * The newest succeeded run of the candidate for that saved revision, application code and standard (null:
+     * no standard), that Evaluate can show again instead of starting a run. For OTHER, the free-text
+     * application must match too.
+     */
+    public function findReusable(
+        string $candidatePublicId,
+        int $candidateRevision,
+        string $applicationCode,
+        ?string $standardCode,
+        string $application,
+    ): ?ResearchRun;
 
     public function markFailed(string $runPublicId, string $error, ?ResearchCost $cost, DateTimeImmutable $at): void;
 }

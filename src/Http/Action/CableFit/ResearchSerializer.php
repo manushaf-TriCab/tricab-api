@@ -45,6 +45,10 @@ final class ResearchSerializer
             'finishedAt' => $r->finishedAt?->format(DateTimeInterface::ATOM),
             'findingCount' => $r->findingCount,
             'error' => $r->error,
+            'candidateRevision' => $r->candidateRevision,
+            'applicationCode' => $r->applicationCode,
+            'standardCode' => $r->standardCode,
+            'verdict' => $r->verdict,
         ];
     }
 
@@ -66,6 +70,9 @@ final class ResearchSerializer
             ],
             // Findings whose URL was not on an enabled source were dropped before saving.
             'droppedFindings' => $r->droppedFindings,
+            // Null on runs from before C4, and until the run has succeeded.
+            'assessment' => $r->assessment?->toArray(),
+            'ruleCheck' => $r->ruleCheck === null ? null : ($r->ruleCheck === [] ? new stdClass() : $r->ruleCheck),
             'findings' => array_map(static fn (ResearchFinding $f): array => self::finding($f, $d->isRecent($f)), $d->findings),
         ];
     }
@@ -87,6 +94,7 @@ final class ResearchSerializer
             'dateBasis' => $f->dateBasis,
             'withinRecentWindow' => $recent,
             'confidence' => $f->confidence,
+            'stance' => $f->stance,
         ];
     }
 }

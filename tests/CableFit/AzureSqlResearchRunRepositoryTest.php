@@ -10,7 +10,10 @@ use PHPUnit\Framework\TestCase;
 use TriCab\Api\CableFit\Persistence\AzureSqlResearchRunRepository;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Api\Tests\Doubles\FakeSqlConnection;
+use TriCab\Core\CableFit\Domain\ResearchAssessment;
+use TriCab\Core\CableFit\Domain\ResearchCost;
 use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
+use TriCab\Core\CableFit\Domain\ResearchFinding;
 use TriCab\Core\CableFit\Domain\ResearchRun;
 use TriCab\Core\CableFit\Domain\ResearchRunActive;
 
@@ -149,5 +152,93 @@ final class AzureSqlResearchRunRepositoryTest extends TestCase
 
         self::assertSame([], (new AzureSqlResearchRunRepository($connection))->latestForCandidates(['not-a-guid']));
         self::assertSame([], $connection->calls);
+    }
+
+    public function test_an_evaluate_run_is_inserted_with_its_revision_codes_and_rule_check(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([]);                                // findActive
+        $connection->queueFetch([['used' => 0, 'oldest' => null]]); // daily count
+        $connection->queueFetch([['run_id' => 5]]);                 // insert
+        $run = ResearchRun::queued('22222222-2222-4222-8222-222222222222', self::CANDIDATE, 'Drag Chain', ['a' => 1], ['iec.ch'], 7, 'User', new DateTimeImmutable('2026-10-21T10:00:00Z'), 3, 'DRAG_CHAIN', 'AS_NZS_2802', ['overallScore' => 64]);
+
+        (new AzureSqlResearchRunRepository($connection))->queueWithinLimits($run, 10, new DateTimeImmutable('2026-10-21T10:00:00Z'));
+
+        $insert = $connection->calls[2];
+        self::assertStringContainsString('[candidate_revision_number], [application_code], [standard_code], [rule_check_json]', $insert['sql']);
+        self::assertSame(3, $insert['params']['revision']);
+        self::assertSame('DRAG_CHAIN', $insert['params']['applicationCode']);
+        self::assertSame('AS_NZS_2802', $insert['params']['standardCode']);
+        self::assertSame('{"overallScore":64}', $insert['params']['ruleCheck']);
+    }
+
+    public function test_reuse_looks_for_the_newest_succeeded_run_with_a_null_standard_as_is_null(): void
+    {
+        $connection = new FakeSqlConnection([self::activeRow() + ['status' => 'succeeded', 'candidate_revision_number' => 3, 'application_code' => 'DRAG_CHAIN']]);
+
+        $run = (new AzureSqlResearchRunRepository($connection))->findReusable(self::CANDIDATE, 3, 'DRAG_CHAIN', null, 'Drag Chain');
+
+        self::assertNotNull($run);
+        self::assertSame(3, $run->candidateRevision);
+        $call = $connection->calls[0];
+        self::assertStringContainsString("r.[status] = N'succeeded'", $call['sql']);
+        self::assertStringContainsString('r.[candidate_revision_number] = :revision AND r.[application_code] = :applicationCode', $call['sql']);
+        self::assertStringContainsString('r.[standard_code] IS NULL', $call['sql']);
+        self::assertStringNotContainsString(':standardCode', $call['sql']);
+        self::assertStringNotContainsString(':application ', $call['sql'] . ' ');
+        self::assertStringContainsString('ORDER BY r.[finished_at] DESC', $call['sql']);
+        self::assertSame(['candidate' => self::CANDIDATE, 'revision' => 3, 'applicationCode' => 'DRAG_CHAIN'], $call['params']);
+    }
+
+    public function test_reuse_for_other_also_matches_the_description_and_a_standard_by_value(): void
+    {
+        $connection = new FakeSqlConnection();
+
+        self::assertNull((new AzureSqlResearchRunRepository($connection))->findReusable(self::CANDIDATE, 2, 'OTHER', 'AS_NZS_2802', 'Festoon'));
+
+        $call = $connection->calls[0];
+        self::assertStringContainsString('r.[standard_code] = :standardCode', $call['sql']);
+        self::assertStringContainsString('r.[application] = :application', $call['sql']);
+        self::assertSame('AS_NZS_2802', $call['params']['standardCode']);
+        self::assertSame('Festoon', $call['params']['application']);
+    }
+
+    public function test_success_saves_each_stance_and_the_verdict_and_assessment_and_reads_them_back(): void
+    {
+        $connection = new FakeSqlConnection();
+        $finding = new ResearchFinding('f-1', 'p', 'c', 'r', 'https://iec.ch/a', 't', null, null, 'undated', 'high', 0, 'concern');
+        $assessment = ResearchAssessment::fromModel(['verdict' => 'likely_unsuitable', 'cons' => [['point' => 'x', 'findingRefs' => [0]]]], [0 => 'f-1']);
+
+        (new AzureSqlResearchRunRepository($connection))->markSucceeded('22222222-2222-4222-8222-222222222222', [$finding], ['iec.ch'], new ResearchCost('m', 1, 1, 1), 0, new DateTimeImmutable('2026-10-21T10:00:00Z'), $assessment);
+
+        self::assertStringContainsString('[sort_order], [stance])', $connection->calls[1]['sql']);
+        self::assertSame('concern', $connection->calls[1]['params']['stance']);
+        $update = $connection->calls[2];
+        self::assertStringContainsString('[verdict] = :verdict, [assessment_json] = :assessment', $update['sql']);
+        self::assertSame('likely_unsuitable', $update['params']['verdict']);
+        self::assertIsString($update['params']['assessment']);
+        $stored = json_decode($update['params']['assessment'], true);
+        self::assertIsArray($stored);
+        /** @var array{cons: list<array{findingIds: list<string>}>} $stored */
+        self::assertSame(['f-1'], $stored['cons'][0]['findingIds']);
+
+        $read = new FakeSqlConnection([self::activeRow() + ['status' => 'succeeded', 'verdict' => 'likely_unsuitable', 'assessment_json' => $update['params']['assessment'], 'rule_check_json' => '{"overallScore":64}']]);
+        $run = (new AzureSqlResearchRunRepository($read))->find('22222222-2222-4222-8222-222222222222');
+        self::assertNotNull($run);
+        self::assertSame('likely_unsuitable', $run->verdict);
+        self::assertSame($assessment->toArray(), $run->assessment?->toArray());
+        self::assertSame(['overallScore' => 64], $run->ruleCheck);
+    }
+
+    public function test_a_run_from_before_c4_reads_back_with_nulls(): void
+    {
+        $run = (new AzureSqlResearchRunRepository(new FakeSqlConnection([self::activeRow()])))->find('22222222-2222-4222-8222-222222222222');
+
+        self::assertNotNull($run);
+        self::assertNull($run->candidateRevision);
+        self::assertNull($run->applicationCode);
+        self::assertNull($run->verdict);
+        self::assertNull($run->assessment);
+        self::assertNull($run->ruleCheck);
     }
 }

@@ -264,4 +264,69 @@ final class ResearchRunnerTest extends TestCase
         self::assertNull($this->runner($model)->runNext());
         self::assertSame([], $model->calls);
     }
+
+    public function test_the_assessment_is_saved_against_the_kept_findings_with_each_stance(): void
+    {
+        $this->runs->add(ResearchRun::queued(
+            'run-1',
+            self::CANDIDATE,
+            'Drag Chain',
+            ['sheath' => ['material' => 'PVC']],
+            ['iec.ch', 'prysmian.com'],
+            7,
+            'TSD User',
+            $this->now->modify('-5 minutes'),
+            3,
+            'DRAG_CHAIN',
+            null,
+            null,
+        ));
+        $model = new FakeResearchModel(FakeResearchModel::answer(FakeResearchModel::json(
+            [
+                FakeResearchModel::finding(['url' => 'https://webstore.iec.ch/p/1', 'stance' => 'supports']),
+                FakeResearchModel::finding(['url' => 'https://www.nexans.com/off-list', 'stance' => 'concern']),
+                FakeResearchModel::finding(['url' => 'https://www.prysmian.com/pur', 'stance' => 'Concern']),
+                FakeResearchModel::finding(['url' => 'https://www.prysmian.com/other', 'stance' => 'sideways']),
+            ],
+            [
+                'verdict' => 'suitable_with_concerns',
+                'summary' => 'Mostly fits.',
+                'pros' => [['point' => 'Flexible conductor', 'parameter' => 'conductor.class', 'reasoning' => 'r', 'findingRefs' => [0]]],
+                'cons' => [
+                    ['point' => 'Only the off-list page says so', 'parameter' => 'general', 'reasoning' => 'r', 'findingRefs' => [1]],
+                    ['point' => 'PVC abrades', 'parameter' => 'sheath.material', 'reasoning' => 'r', 'findingRefs' => [2]],
+                ],
+                'suggestedChanges' => [['change' => 'PUR sheath', 'parameter' => 'sheath.material', 'addressesCon' => 1, 'reasoning' => 'r', 'findingRefs' => [2]]],
+            ],
+        )));
+
+        $this->runner($model)->runNext();
+
+        $run = $this->stored();
+        self::assertSame('succeeded', $run->status);
+        self::assertSame('suitable_with_concerns', $run->verdict);
+        self::assertNotNull($run->assessment);
+        $findings = $this->runs->findings('run-1');
+        self::assertCount(3, $findings);
+        self::assertSame(1, $run->droppedFindings);
+        self::assertSame(['supports', 'concern', 'neutral'], array_map(static fn ($f) => $f->stance, $findings));
+        self::assertSame([$findings[0]->publicId], $run->assessment->pros[0]['findingIds']);
+        self::assertSame(['PVC abrades'], array_column($run->assessment->cons, 'point'));
+        self::assertSame([$findings[1]->publicId], $run->assessment->cons[0]['findingIds']);
+        self::assertSame(0, $run->assessment->suggestedChanges[0]['addressesCon']);
+        self::assertStringContainsString('Intended application: Drag Chain (DRAG_CHAIN)', $model->calls[0]['user']);
+        self::assertStringContainsString('minimum baseline', $model->calls[0]['user']);
+    }
+
+    public function test_an_answer_with_findings_but_no_assessment_still_succeeds_with_insufficient_evidence(): void
+    {
+        $this->queue();
+        $model = new FakeResearchModel(FakeResearchModel::answer(FakeResearchModel::json([FakeResearchModel::finding()])));
+
+        $this->runner($model)->runNext();
+
+        self::assertSame('succeeded', $this->stored()->status);
+        self::assertSame('insufficient_evidence', $this->stored()->verdict);
+        self::assertCount(1, $this->runs->findings('run-1'));
+    }
 }

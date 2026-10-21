@@ -10,6 +10,7 @@ use Throwable;
 use TriCab\Core\CableFit\Contract\ResearchModel;
 use TriCab\Core\CableFit\Contract\ResearchRunRepository;
 use TriCab\Core\CableFit\Contract\ResearchSourceRepository;
+use TriCab\Core\CableFit\Domain\ResearchAssessment;
 use TriCab\Core\CableFit\Domain\ResearchModelFailed;
 use TriCab\Core\CableFit\Domain\ResearchNoSources;
 use TriCab\Core\CableFit\Domain\ResearchRun;
@@ -19,7 +20,8 @@ use TriCab\Core\CableFit\Domain\ResearchRun;
  *
  * The result is advisory and touches nothing but the run: no fit score and no design. Any finding whose
  * URL host is not an enabled source domain (or a subdomain of one) is dropped before saving, whatever the
- * model was told, and the drops are counted on the run.
+ * model was told, and the drops are counted on the run. The assessment is then resolved against the findings
+ * kept ({@see ResearchAssessment::fromModel()}), so a pro, con or change citing only dropped findings goes.
  *
  * A model failure, unparseable answer or missing source list fails the run with a message that is safe to
  * show. A database failure is not caught: the claim then goes stale and a later pass takes the run again.
@@ -72,23 +74,43 @@ final class ResearchRunner
 
             $response = $this->model->research(
                 ResearchPrompt::system(),
-                ResearchPrompt::user($run->application, ResearchParameters::flatten($run->parameters), $domains, $this->maxSearches, $now),
+                ResearchPrompt::user(
+                    $run->application,
+                    ResearchParameters::flatten($run->parameters),
+                    $domains,
+                    $this->maxSearches,
+                    $now,
+                    $run->applicationCode,
+                    $run->standardCode,
+                    $run->ruleCheck,
+                ),
                 $domains,
                 $this->maxSearches,
             );
             $cost = $response->cost;
 
+            $answer = $this->parser->parseAnswer($response);
             $kept = [];
+            $keptIds = [];
             $dropped = 0;
-            foreach ($this->parser->parse($response) as $finding) {
+            foreach ($answer->findings as $i => $finding) {
                 if (ResearchSourcePolicy::allows($finding->url, $domains)) {
                     $kept[] = $finding->withSortOrder(count($kept));
+                    $keptIds[$answer->modelIndexes[$i]] = $finding->publicId;
                 } else {
                     $dropped++;
                 }
             }
 
-            $this->runs->markSucceeded($run->publicId, $kept, $domains, $cost, $dropped, ($this->clock)());
+            $this->runs->markSucceeded(
+                $run->publicId,
+                $kept,
+                $domains,
+                $cost,
+                $dropped,
+                ($this->clock)(),
+                ResearchAssessment::fromModel($answer->assessment, $keptIds),
+            );
         } catch (ResearchModelFailed | ResearchNoSources $failure) {
             $this->runs->markFailed($run->publicId, $failure->getMessage(), $cost, ($this->clock)());
         } catch (Throwable $failure) {

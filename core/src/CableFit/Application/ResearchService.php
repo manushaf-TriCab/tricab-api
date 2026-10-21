@@ -11,11 +11,13 @@ use TriCab\Core\CableFit\Contract\CableFitResearchWake;
 use TriCab\Core\CableFit\Contract\ResearchRunRepository;
 use TriCab\Core\CableFit\Contract\ResearchSourceRepository;
 use TriCab\Core\CableFit\Domain\CandidateNotFound;
+use TriCab\Core\CableFit\Domain\ResearchApplication;
 use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
 use TriCab\Core\CableFit\Domain\ResearchFinding;
 use TriCab\Core\CableFit\Domain\ResearchInputInvalid;
 use TriCab\Core\CableFit\Domain\ResearchNoSources;
 use TriCab\Core\CableFit\Domain\ResearchOff;
+use TriCab\Core\CableFit\Domain\ResearchRevisionMismatch;
 use TriCab\Core\CableFit\Domain\ResearchRun;
 use TriCab\Core\CableFit\Domain\ResearchRunActive;
 use TriCab\Core\CableFit\Domain\ResearchRunNotFound;
@@ -30,10 +32,16 @@ use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
  * visibility is {@see CableFitCandidateService}'s, so a run is as visible as its candidate.
  *
  * Running the model is not done here: a request saves a queued run and signals the worker.
+ *
+ * Evaluate (C4) goes through {@see self::evaluate()}: it names the saved revision, the application code and the
+ * standard, and a succeeded run for exactly those is shown again instead of starting (and paying for) another.
  */
 final readonly class ResearchService
 {
     private const DOMAIN = '/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{1,62}$/';
+
+    /** The browser rule check is context for the prompt; this bounds what a client can make it store. */
+    private const MAX_RULE_CHECK_BYTES = 20_000;
 
     /** @var Closure(): DateTimeImmutable */
     private Closure $clock;
@@ -136,6 +144,115 @@ final readonly class ResearchService
             throw new ResearchInputInvalid('application is required and at most 2000 characters.');
         }
         $parameters = $parameters === null || $parameters === [] ? $detail->construction : ResearchParameters::validate($parameters);
+
+        return $this->queue($user, $detail->candidate->publicId, $application, $parameters);
+    }
+
+    /**
+     * Evaluate's research: the saved revision of the design, for one application and standard. When a run for
+     * exactly those has succeeded and $force is not set, that run is answered (`reused`) and nothing is queued
+     * or counted towards the daily cap.
+     *
+     * @param mixed                        $applicationCode an ApplicationType code, or OTHER
+     * @param mixed                        $application     the description; required for OTHER, otherwise the label is used
+     * @param mixed                        $standardCode    a SuitabilityStandard code, or null/'' for none
+     * @param mixed                        $candidateRevision the revision the web saved and evaluated; must be the current one
+     * @param array<array-key, mixed>|null $ruleCheck       the browser rule check's result, stored with the run
+     *
+     * @throws ResearchOff
+     * @throws CandidateNotFound
+     * @throws ResearchInputInvalid
+     * @throws ResearchRevisionMismatch
+     * @throws ResearchNoSources
+     * @throws ResearchRunActive
+     * @throws ResearchDailyLimitReached
+     */
+    public function evaluate(
+        AuthenticatedUser $user,
+        string $candidatePublicId,
+        mixed $applicationCode,
+        mixed $application,
+        mixed $standardCode,
+        mixed $candidateRevision,
+        ?array $ruleCheck = null,
+        bool $force = false,
+    ): ResearchRequestResult {
+        if (!$this->enabled) {
+            throw new ResearchOff('Research is switched off.');
+        }
+        $detail = $this->candidates->get($user, $candidatePublicId);
+
+        $code = is_string($applicationCode) ? strtoupper(trim($applicationCode)) : '';
+        if (!ResearchApplication::isCode($code)) {
+            throw new ResearchInputInvalid('applicationCode must be one of ' . implode(', ', [...array_keys(ResearchApplication::LABELS), ResearchApplication::OTHER]) . '.');
+        }
+        if ($code === ResearchApplication::OTHER) {
+            $application = is_string($application) ? trim($application) : '';
+            if ($application === '' || mb_strlen($application) > 2000) {
+                throw new ResearchInputInvalid('Describe the application (at most 2000 characters) when applicationCode is OTHER.');
+            }
+        } else {
+            $application = ResearchApplication::LABELS[$code];
+        }
+
+        $standard = null;
+        if ($standardCode !== null && $standardCode !== '') {
+            if (!is_string($standardCode) || !isset(ResearchApplication::STANDARDS[$standardCode])) {
+                throw new ResearchInputInvalid('standardCode must be one of ' . implode(', ', array_keys(ResearchApplication::STANDARDS)) . ', or empty for none.');
+            }
+            $standard = $standardCode;
+        }
+
+        if (!is_int($candidateRevision) || $candidateRevision < 1) {
+            throw new ResearchInputInvalid('candidateRevision must be the number of the saved revision being evaluated.');
+        }
+        if ($candidateRevision !== $detail->candidate->version) {
+            throw new ResearchRevisionMismatch($detail->candidate->version);
+        }
+
+        if ($ruleCheck !== null) {
+            if ($ruleCheck !== [] && array_is_list($ruleCheck)) {
+                throw new ResearchInputInvalid('ruleCheck must be an object.');
+            }
+            if (strlen(json_encode($ruleCheck, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: '') > self::MAX_RULE_CHECK_BYTES) {
+                throw new ResearchInputInvalid('ruleCheck is too large.');
+            }
+        }
+        /** @var array<string, mixed>|null $ruleCheck */
+
+        if (!$force) {
+            $reusable = $this->runs->findReusable($detail->candidate->publicId, $candidateRevision, $code, $standard, $application);
+            if ($reusable !== null) {
+                return new ResearchRequestResult($reusable->publicId, $reusable->status, true);
+            }
+        }
+
+        $publicId = $this->queue($user, $detail->candidate->publicId, $application, $detail->construction, $candidateRevision, $code, $standard, $ruleCheck);
+
+        return new ResearchRequestResult($publicId, ResearchRun::QUEUED, false);
+    }
+
+    /**
+     * Check the parameters and the sources, then queue within the limits and wake the worker.
+     *
+     * @param array<string, mixed>      $parameters
+     * @param array<string, mixed>|null $ruleCheck
+     *
+     * @throws ResearchInputInvalid
+     * @throws ResearchNoSources
+     * @throws ResearchRunActive
+     * @throws ResearchDailyLimitReached
+     */
+    private function queue(
+        AuthenticatedUser $user,
+        string $candidatePublicId,
+        string $application,
+        array $parameters,
+        ?int $candidateRevision = null,
+        ?string $applicationCode = null,
+        ?string $standardCode = null,
+        ?array $ruleCheck = null,
+    ): string {
         if (ResearchParameters::flatten($parameters) === []) {
             throw new ResearchInputInvalid('The design has no parameters set yet; fill in some of the construction, or send parameters.');
         }
@@ -144,7 +261,7 @@ final readonly class ResearchService
             throw new ResearchNoSources('No research source is enabled.');
         }
 
-        $active = $this->runs->findActive($detail->candidate->publicId);
+        $active = $this->runs->findActive($candidatePublicId);
         if ($active !== null) {
             throw new ResearchRunActive($active->publicId);
         }
@@ -153,13 +270,17 @@ final readonly class ResearchService
         $publicId = ($this->idGenerator)();
         $this->runs->queueWithinLimits(ResearchRun::queued(
             $publicId,
-            $detail->candidate->publicId,
+            $candidatePublicId,
             $application,
             $parameters,
             $domains,
             $user->userId,
             $user->displayName,
             $now,
+            $candidateRevision,
+            $applicationCode,
+            $standardCode,
+            $ruleCheck,
         ), $this->dailyRunsPerUser, $now);
 
         try {

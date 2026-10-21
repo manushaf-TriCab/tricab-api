@@ -7,6 +7,8 @@ namespace TriCab\Core\CableFit\Infrastructure;
 use DateTimeImmutable;
 use RuntimeException;
 use TriCab\Core\CableFit\Contract\ResearchRunRepository;
+use TriCab\Core\CableFit\Domain\ResearchApplication;
+use TriCab\Core\CableFit\Domain\ResearchAssessment;
 use TriCab\Core\CableFit\Domain\ResearchCost;
 use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
 use TriCab\Core\CableFit\Domain\ResearchFinding;
@@ -131,8 +133,15 @@ final class InMemoryResearchRunRepository implements ResearchRunRepository
         return $count;
     }
 
-    public function markSucceeded(string $runPublicId, array $findings, array $sourcesUsed, ResearchCost $cost, int $droppedFindings, DateTimeImmutable $at): void
-    {
+    public function markSucceeded(
+        string $runPublicId,
+        array $findings,
+        array $sourcesUsed,
+        ResearchCost $cost,
+        int $droppedFindings,
+        DateTimeImmutable $at,
+        ?ResearchAssessment $assessment = null,
+    ): void {
         $run = $this->require($runPublicId);
         $this->findings[$runPublicId] = $findings;
         $this->runs[$runPublicId] = $this->copy(
@@ -143,7 +152,31 @@ final class InMemoryResearchRunRepository implements ResearchRunRepository
             droppedFindings: $droppedFindings,
             error: null,
             finishedAt: $at,
+            assessment: $assessment,
         );
+    }
+
+    public function findReusable(
+        string $candidatePublicId,
+        int $candidateRevision,
+        string $applicationCode,
+        ?string $standardCode,
+        string $application,
+    ): ?ResearchRun {
+        $best = null;
+        foreach ($this->runs as $run) {
+            if ($run->candidatePublicId === $candidatePublicId
+                && $run->status === ResearchRun::SUCCEEDED
+                && $run->candidateRevision === $candidateRevision
+                && $run->applicationCode === $applicationCode
+                && $run->standardCode === $standardCode
+                && ($applicationCode !== ResearchApplication::OTHER || $run->application === $application)
+                && ($best === null || $run->finishedAt > $best->finishedAt)) {
+                $best = $run;
+            }
+        }
+
+        return $best === null ? null : $this->withCount($best);
     }
 
     public function markFailed(string $runPublicId, string $error, ?ResearchCost $cost, DateTimeImmutable $at): void
@@ -175,6 +208,7 @@ final class InMemoryResearchRunRepository implements ResearchRunRepository
         ?int $findingCount = null,
         string|false|null $error = false,
         DateTimeImmutable|false|null $finishedAt = false,
+        ?ResearchAssessment $assessment = null,
     ): ResearchRun {
         return new ResearchRun(
             $run->publicId,
@@ -195,6 +229,12 @@ final class InMemoryResearchRunRepository implements ResearchRunRepository
             $startedAt ?? $run->startedAt,
             $finishedAt === false ? $run->finishedAt : $finishedAt,
             $findingCount ?? $run->findingCount,
+            $run->candidateRevision,
+            $run->applicationCode,
+            $run->standardCode,
+            $run->ruleCheck,
+            $assessment?->verdict ?? $run->verdict,
+            $assessment ?? $run->assessment,
         );
     }
 }

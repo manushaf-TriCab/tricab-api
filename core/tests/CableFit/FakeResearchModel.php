@@ -88,9 +88,10 @@ final class FakeResearchModel implements ResearchModel
 
     /**
      * @param list<array<string, mixed>> $findings
+     * @param array<string, mixed>|null  $assessment
      */
-    public static function json(array $findings): string
+    public static function json(array $findings, ?array $assessment = null): string
     {
-        return json_encode(['findings' => $findings], JSON_THROW_ON_ERROR);
+        return json_encode($assessment === null ? ['findings' => $findings] : ['findings' => $findings, 'assessment' => $assessment], JSON_THROW_ON_ERROR);
     }
 }

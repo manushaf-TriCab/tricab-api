@@ -20,6 +20,12 @@ final readonly class ResearchFinding
     public const CONFIDENCE_MEDIUM = 'medium';
     public const CONFIDENCE_LOW = 'low';
 
+    public const STANCE_SUPPORTS = 'supports';
+    public const STANCE_CONCERN = 'concern';
+    public const STANCE_NEUTRAL = 'neutral';
+
+    public const STANCES = [self::STANCE_SUPPORTS, self::STANCE_CONCERN, self::STANCE_NEUTRAL];
+
     /** The recent window, in months before the run was requested. */
     public const RECENT_MONTHS = 24;
 
@@ -35,6 +41,8 @@ final readonly class ResearchFinding
         public string $dateBasis,
         public string $confidence,
         public int $sortOrder,
+        /** For this design in this application; null on runs from before C4. */
+        public ?string $stance = null,
     ) {
     }
 
@@ -52,6 +60,7 @@ final readonly class ResearchFinding
             $this->dateBasis,
             $this->confidence,
             $sortOrder,
+            $this->stance,
         );
     }
 

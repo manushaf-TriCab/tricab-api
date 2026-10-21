@@ -11,6 +11,8 @@ use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\CableFit\Contract\ResearchRunRepository;
+use TriCab\Core\CableFit\Domain\ResearchApplication;
+use TriCab\Core\CableFit\Domain\ResearchAssessment;
 use TriCab\Core\CableFit\Domain\ResearchCost;
 use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
 use TriCab\Core\CableFit\Domain\ResearchFinding;
@@ -24,6 +26,9 @@ use TriCab\Core\CableFit\Domain\ResearchRunActive;
  * stale cut-off) is read with `UPDLOCK, READPAST` and moved to running, so two workers never get the same
  * run and neither waits for the other. Saving the findings and moving the run to succeeded share one
  * transaction. Public ids go out lowercase.
+ *
+ * The C4 columns (revision, application and standard codes, rule check, verdict, assessment, finding stance)
+ * come from alter-cablefit-research-assessment.sql, which must be applied before this code is deployed.
  */
 final class AzureSqlResearchRunRepository implements ResearchRunRepository
 {
@@ -38,7 +43,9 @@ final class AzureSqlResearchRunRepository implements ResearchRunRepository
             r.[requested_by_user_id],
             COALESCE(NULLIF(u.[DisplayName], N''), u.[EmailAddress]) AS [requested_by_name],
             r.[requested_at], r.[started_at], r.[finished_at],
-            (SELECT COUNT(*) FROM [cablefit].[research_findings] f WHERE f.[run_id] = r.[run_id]) AS [finding_count]
+            (SELECT COUNT(*) FROM [cablefit].[research_findings] f WHERE f.[run_id] = r.[run_id]) AS [finding_count],
+            r.[candidate_revision_number], r.[application_code], r.[standard_code], r.[rule_check_json],
+            r.[verdict], r.[assessment_json]
         FROM [cablefit].[research_runs] r
         JOIN [cablefit].[candidates] c ON c.[candidate_id] = r.[candidate_id]
         LEFT JOIN [identity].[Users] u ON u.[UserId] = r.[requested_by_user_id]
@@ -113,9 +120,11 @@ SQL;
         $inserted = $this->connection->fetchAll(
             'INSERT INTO [cablefit].[research_runs] (
                 [public_id], [candidate_id], [status], [application], [parameters_json], [sources_used_json],
-                [requested_by_user_id], [requested_at])
+                [requested_by_user_id], [requested_at],
+                [candidate_revision_number], [application_code], [standard_code], [rule_check_json])
              OUTPUT inserted.[run_id]
-             SELECT :publicId, c.[candidate_id], N\'queued\', :application, :parameters, :sources, :userId, :at
+             SELECT :publicId, c.[candidate_id], N\'queued\', :application, :parameters, :sources, :userId, :at,
+                    :revision, :applicationCode, :standardCode, :ruleCheck
              FROM [cablefit].[candidates] c
              WHERE c.[public_id] = :candidate',
             [
@@ -125,6 +134,10 @@ SQL;
                 'sources' => self::json($run->sourcesUsed),
                 'userId' => $run->requestedByUserId,
                 'at' => AzureSqlValueMapper::formatDateTime($run->requestedAt),
+                'revision' => $run->candidateRevision,
+                'applicationCode' => $run->applicationCode,
+                'standardCode' => $run->standardCode,
+                'ruleCheck' => $run->ruleCheck === null ? null : self::json($run->ruleCheck === [] ? new \stdClass() : $run->ruleCheck),
                 'candidate' => $run->candidatePublicId,
             ],
         );
@@ -177,6 +190,37 @@ SQL;
         return $latest;
     }
 
+    public function findReusable(
+        string $candidatePublicId,
+        int $candidateRevision,
+        string $applicationCode,
+        ?string $standardCode,
+        string $application,
+    ): ?ResearchRun {
+        if (preg_match(self::GUID, $candidatePublicId) !== 1) {
+            return null;
+        }
+        $params = ['candidate' => $candidatePublicId, 'revision' => $candidateRevision, 'applicationCode' => $applicationCode];
+        $where = " WHERE c.[public_id] = :candidate AND r.[status] = N'succeeded'
+               AND r.[candidate_revision_number] = :revision AND r.[application_code] = :applicationCode";
+        if ($standardCode === null) {
+            $where .= ' AND r.[standard_code] IS NULL';
+        } else {
+            $where .= ' AND r.[standard_code] = :standardCode';
+            $params['standardCode'] = $standardCode;
+        }
+        if ($applicationCode === ResearchApplication::OTHER) {
+            $where .= ' AND r.[application] = :application';
+            $params['application'] = $application;
+        }
+        $row = $this->connection->fetchAll(
+            self::SELECT . $where . ' ORDER BY r.[finished_at] DESC, r.[run_id] DESC',
+            $params,
+        )[0] ?? null;
+
+        return $row === null ? null : $this->run($row);
+    }
+
     public function find(string $runPublicId): ?ResearchRun
     {
         if (preg_match(self::GUID, $runPublicId) !== 1) {
@@ -198,7 +242,7 @@ SQL;
         $rows = $this->connection->fetchAll(
             'SELECT CONVERT(NVARCHAR(36), f.[public_id]) AS [public_id],
                     f.[parameter], f.[claim], f.[relevance], f.[url], f.[title], f.[publisher],
-                    f.[published_on], f.[date_basis], f.[confidence], f.[sort_order]
+                    f.[published_on], f.[date_basis], f.[confidence], f.[sort_order], f.[stance]
              FROM [cablefit].[research_findings] f
              JOIN [cablefit].[research_runs] r ON r.[run_id] = f.[run_id]
              WHERE r.[public_id] = :id
@@ -219,6 +263,7 @@ SQL;
                 AzureSqlValueMapper::stringValue($row['date_basis'] ?? null),
                 AzureSqlValueMapper::stringValue($row['confidence'] ?? null),
                 AzureSqlValueMapper::intValue($row['sort_order'] ?? null),
+                AzureSqlValueMapper::nullableString($row['stance'] ?? null),
             ),
             $rows,
         );
@@ -264,8 +309,9 @@ SQL;
         ResearchCost $cost,
         int $droppedFindings,
         DateTimeImmutable $at,
+        ?ResearchAssessment $assessment = null,
     ): void {
-        $this->runInTransaction($this->connection, function () use ($runPublicId, $findings, $sourcesUsed, $cost, $droppedFindings, $at): void {
+        $this->runInTransaction($this->connection, function () use ($runPublicId, $findings, $sourcesUsed, $cost, $droppedFindings, $at, $assessment): void {
             // A run taken again after a crash may have saved findings once already.
             $this->connection->execute(
                 'DELETE f FROM [cablefit].[research_findings] f
@@ -277,9 +323,9 @@ SQL;
                 $this->connection->execute(
                     'INSERT INTO [cablefit].[research_findings] (
                         [public_id], [run_id], [parameter], [claim], [relevance], [url], [title], [publisher],
-                        [published_on], [date_basis], [confidence], [sort_order])
+                        [published_on], [date_basis], [confidence], [sort_order], [stance])
                      SELECT :publicId, r.[run_id], :parameter, :claim, :relevance, :url, :title, :publisher,
-                            :publishedOn, :dateBasis, :confidence, :sortOrder
+                            :publishedOn, :dateBasis, :confidence, :sortOrder, :stance
                      FROM [cablefit].[research_runs] r
                      WHERE r.[public_id] = :run',
                     [
@@ -294,6 +340,7 @@ SQL;
                         'dateBasis' => $finding->dateBasis,
                         'confidence' => $finding->confidence,
                         'sortOrder' => $finding->sortOrder,
+                        'stance' => $finding->stance,
                         'run' => $runPublicId,
                     ],
                 );
@@ -302,7 +349,8 @@ SQL;
                 'UPDATE [cablefit].[research_runs]
                  SET [status] = N\'succeeded\', [sources_used_json] = :sources, [model] = :model,
                      [input_tokens] = :input, [output_tokens] = :output, [search_requests] = :searches,
-                     [dropped_findings] = :dropped, [error] = NULL, [finished_at] = :at
+                     [dropped_findings] = :dropped, [error] = NULL, [finished_at] = :at,
+                     [verdict] = :verdict, [assessment_json] = :assessment
                  WHERE [public_id] = :id',
                 [
                     'sources' => self::json($sourcesUsed),
@@ -312,6 +360,8 @@ SQL;
                     'searches' => $cost->searchRequests,
                     'dropped' => $droppedFindings,
                     'at' => AzureSqlValueMapper::formatDateTime($at),
+                    'verdict' => $assessment?->verdict,
+                    'assessment' => $assessment === null ? null : self::json($assessment->toArray()),
                     'id' => $runPublicId,
                 ],
             );
@@ -360,6 +410,8 @@ SQL;
         }
         /** @var array<string, mixed> $parameters */
         $parameters = is_array($parameters) ? $parameters : [];
+        $ruleCheck = self::decodeObject($row['rule_check_json'] ?? null);
+        $assessment = self::decodeObject($row['assessment_json'] ?? null);
 
         return new ResearchRun(
             strtolower(AzureSqlValueMapper::stringValue($row['public_id'] ?? null)),
@@ -380,6 +432,27 @@ SQL;
             AzureSqlValueMapper::nullableDateTime($row['started_at'] ?? null),
             AzureSqlValueMapper::nullableDateTime($row['finished_at'] ?? null),
             AzureSqlValueMapper::intValue($row['finding_count'] ?? 0),
+            AzureSqlValueMapper::nullableInt($row['candidate_revision_number'] ?? null),
+            AzureSqlValueMapper::nullableString($row['application_code'] ?? null),
+            AzureSqlValueMapper::nullableString($row['standard_code'] ?? null),
+            $ruleCheck,
+            AzureSqlValueMapper::nullableString($row['verdict'] ?? null),
+            $assessment === null ? null : ResearchAssessment::fromArray($assessment),
         );
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private static function decodeObject(mixed $json): ?array
+    {
+        $text = AzureSqlValueMapper::nullableString($json);
+        $decoded = $text === null ? null : json_decode($text, true);
+        if (!is_array($decoded)) {
+            return null;
+        }
+        /** @var array<string, mixed> $decoded */
+
+        return $decoded;
     }
 }

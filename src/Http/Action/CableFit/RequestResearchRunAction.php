@@ -14,12 +14,20 @@ use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
 use TriCab\Core\CableFit\Domain\ResearchInputInvalid;
 use TriCab\Core\CableFit\Domain\ResearchNoSources;
 use TriCab\Core\CableFit\Domain\ResearchOff;
+use TriCab\Core\CableFit\Domain\ResearchRevisionMismatch;
 use TriCab\Core\CableFit\Domain\ResearchRunActive;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 
 /**
- * POST /api/v1/tsd/cablefit/candidates/{candidatePublicId}/research - body {application, parameters?}.
- * 202 {runPublicId, status: 'queued'}; 422 CABLEFIT_NO_SOURCES with no enabled source; 503
+ * POST /api/v1/tsd/cablefit/candidates/{candidatePublicId}/research. Two bodies:
+ *
+ * - Evaluate (C4): {applicationCode, application?, standardCode?, candidateRevision, ruleCheck?, force?}. 200
+ *   {runPublicId, status: 'succeeded', reused: true} when a succeeded run for that saved revision, application
+ *   and standard exists (not counted towards the cap); otherwise 202 {runPublicId, status: 'queued', reused:
+ *   false}. 409 CABLEFIT_REVISION_MISMATCH (error.currentRevision) when the revision is no longer current.
+ * - The history panel and older clients: {application, parameters?}, always a new run.
+ *
+ * Both: 202 {runPublicId, status: 'queued'}; 422 CABLEFIT_NO_SOURCES with no enabled source; 503
  * CABLEFIT_RESEARCH_OFF while research is switched off; 409 CABLEFIT_RUN_ACTIVE (error.activeRunPublicId) while the
  * candidate has a queued or running run; 429 CABLEFIT_RESEARCH_DAILY_LIMIT (error.limit, error.retryAt, Retry-After)
  * once the user has used the daily cap. The model runs later, in the worker.
@@ -53,8 +61,41 @@ final class RequestResearchRunAction
             return $this->responder->error('CABLEFIT_INPUT_INVALID', 'parameters must be an object.', 422);
         }
 
+        $ruleCheck = $body['ruleCheck'] ?? null;
+        if ($ruleCheck !== null && !is_array($ruleCheck)) {
+            return $this->responder->error('CABLEFIT_INPUT_INVALID', 'ruleCheck must be an object.', 422);
+        }
+        $force = $body['force'] ?? false;
+        if (!is_bool($force)) {
+            return $this->responder->error('CABLEFIT_INPUT_INVALID', 'force must be true or false.', 422);
+        }
+
         try {
+            if (array_key_exists('applicationCode', $body)) {
+                $result = $this->research->evaluate(
+                    $user,
+                    $args['candidatePublicId'] ?? '',
+                    $body['applicationCode'],
+                    $body['application'] ?? null,
+                    $body['standardCode'] ?? null,
+                    $body['candidateRevision'] ?? null,
+                    $ruleCheck,
+                    $force,
+                );
+
+                return $this->responder->success(
+                    ['runPublicId' => $result->runPublicId, 'status' => $result->status, 'reused' => $result->reused],
+                    $result->reused ? 200 : 202,
+                );
+            }
             $runId = $this->research->requestRun($user, $args['candidatePublicId'] ?? '', $body['application'] ?? null, $parameters);
+        } catch (ResearchRevisionMismatch $mismatch) {
+            return $this->responder->errorWith(
+                'CABLEFIT_REVISION_MISMATCH',
+                'The design has been saved since; reload it and evaluate again.',
+                409,
+                ['currentRevision' => $mismatch->currentRevision],
+            );
         } catch (ResearchOff) {
             return $this->responder->error('CABLEFIT_RESEARCH_OFF', 'Research is switched off.', 503);
         } catch (CandidateNotFound) {

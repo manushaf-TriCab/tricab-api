@@ -11,9 +11,10 @@ use TriCab\Core\CableFit\Domain\ResearchModelFailed;
 use TriCab\Core\CableFit\Domain\ResearchModelResponse;
 
 /**
- * Turns the model's answer into findings. The answer is the JSON object in the final text (code fences and
- * lead-in text tolerated). A search result's `page_age`, matched by URL, beats the date the model states.
- * Items without a claim, a URL and a title are skipped; the source-domain check is the runner's.
+ * Turns the model's answer into findings and the raw assessment. The answer is the JSON object in the final
+ * text (code fences and lead-in text tolerated). A search result's `page_age`, matched by URL, beats the date
+ * the model states. Items without a claim, a URL and a title are skipped; a missing or unknown stance is
+ * neutral. The source-domain check, and resolving the assessment against the findings kept, are the runner's.
  */
 final class ResearchResponseParser
 {
@@ -35,6 +36,14 @@ final class ResearchResponseParser
      */
     public function parse(ResearchModelResponse $response): array
     {
+        return $this->parseAnswer($response)->findings;
+    }
+
+    /**
+     * @throws ResearchModelFailed when the answer is not the expected JSON, or has findings but none usable
+     */
+    public function parseAnswer(ResearchModelResponse $response): ResearchAnswer
+    {
         $decoded = $this->answer($response->content);
         $items = $decoded['findings'] ?? null;
         if (!is_array($items) || !array_is_list($items)) {
@@ -43,7 +52,8 @@ final class ResearchResponseParser
 
         $pageAges = $this->pageAges($response->content);
         $findings = [];
-        foreach ($items as $item) {
+        $indexes = [];
+        foreach ($items as $index => $item) {
             if (!is_array($item)) {
                 continue;
             }
@@ -51,6 +61,7 @@ final class ResearchResponseParser
             $finding = $this->finding($item, $pageAges, count($findings));
             if ($finding !== null) {
                 $findings[] = $finding;
+                $indexes[] = $index;
             }
             if (count($findings) >= self::MAX_FINDINGS) {
                 break;
@@ -60,7 +71,7 @@ final class ResearchResponseParser
             throw new ResearchModelFailed('The model returned findings, but none had a claim, a URL and a title.');
         }
 
-        return $findings;
+        return new ResearchAnswer($findings, $indexes, $decoded['assessment'] ?? null);
     }
 
     /**
@@ -230,6 +241,10 @@ final class ResearchResponseParser
         if (!in_array($confidence, [ResearchFinding::CONFIDENCE_HIGH, ResearchFinding::CONFIDENCE_MEDIUM, ResearchFinding::CONFIDENCE_LOW], true)) {
             $confidence = ResearchFinding::CONFIDENCE_LOW;
         }
+        $stance = is_string($item['stance'] ?? null) ? strtolower(trim($item['stance'])) : '';
+        if (!in_array($stance, ResearchFinding::STANCES, true)) {
+            $stance = ResearchFinding::STANCE_NEUTRAL;
+        }
 
         return new ResearchFinding(
             ($this->idGenerator)(),
@@ -243,6 +258,7 @@ final class ResearchResponseParser
             $basis,
             $confidence,
             $order,
+            $stance,
         );
     }
 

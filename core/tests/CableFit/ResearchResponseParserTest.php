@@ -236,4 +236,22 @@ final class ResearchResponseParserTest extends TestCase
         self::assertSame(500, mb_strlen($findings[0]->title));
         self::assertSame(200, mb_strlen((string) $findings[0]->publisher));
     }
+
+    public function test_parse_answer_keeps_the_models_index_the_stance_and_the_raw_assessment(): void
+    {
+        $parser = new \TriCab\Core\CableFit\Application\ResearchResponseParser(static fn (): string => 'id');
+        $answer = $parser->parseAnswer(FakeResearchModel::answer(FakeResearchModel::json(
+            [
+                FakeResearchModel::finding(['stance' => 'supports']),
+                ['claim' => 'no url'],
+                FakeResearchModel::finding(['stance' => 'CONCERN']),
+                FakeResearchModel::finding(),
+            ],
+            ['verdict' => 'likely_suitable'],
+        )));
+
+        self::assertSame([0, 2, 3], $answer->modelIndexes);
+        self::assertSame(['supports', 'concern', 'neutral'], array_map(static fn ($f) => $f->stance, $answer->findings));
+        self::assertSame(['verdict' => 'likely_suitable'], $answer->assessment);
+    }
 }

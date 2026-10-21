@@ -276,6 +276,31 @@ final class CableFitEndpointsTest extends TestCase
         ], $rows['Researched']['latestResearch']);
     }
 
+    public function test_the_latest_research_carries_its_verdict_once_assessed(): void
+    {
+        $id = $this->createBlank('Assessed');
+        $container = $this->app->getContainer();
+        self::assertInstanceOf(ContainerInterface::class, $container);
+        $runs = $container->get(ResearchRunRepository::class);
+        self::assertInstanceOf(InMemoryResearchRunRepository::class, $runs);
+        $runs->add(ResearchRun::queued('44444444-4444-4444-8444-444444444443', $id, 'Drag Chain', [], [], 1, null, new \DateTimeImmutable('2026-10-21T00:00:00Z')));
+        $runs->markSucceeded(
+            '44444444-4444-4444-8444-444444444443',
+            [],
+            [],
+            new \TriCab\Core\CableFit\Domain\ResearchCost('m', 1, 1, 0),
+            0,
+            new \DateTimeImmutable('2026-10-21T00:05:00Z'),
+            new \TriCab\Core\CableFit\Domain\ResearchAssessment('likely_unsuitable', 's', [], [], [], []),
+        );
+
+        $latest = $this->listAll()['candidates'][0]['latestResearch'];
+
+        self::assertIsArray($latest);
+        self::assertSame('succeeded', $latest['status']);
+        self::assertSame('likely_unsuitable', $latest['verdict']);
+    }
+
     public function test_a_candidate_linked_to_a_readable_request_is_listed(): void
     {
         $this->reader->put(new NprRequestSnapshot('npr-1', 'NPR-0001', 1, 'Title', 'Customer', [

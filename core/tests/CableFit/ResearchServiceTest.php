@@ -15,6 +15,7 @@ use TriCab\Core\CableFit\Domain\CandidateNotFound;
 use TriCab\Core\CableFit\Domain\ResearchInputInvalid;
 use TriCab\Core\CableFit\Domain\ResearchNoSources;
 use TriCab\Core\CableFit\Domain\ResearchOff;
+use TriCab\Core\CableFit\Domain\ResearchRevisionMismatch;
 use TriCab\Core\CableFit\Domain\ResearchDailyLimitReached;
 use TriCab\Core\CableFit\Domain\ResearchRunActive;
 use TriCab\Core\CableFit\Domain\ResearchRunNotFound;
@@ -470,5 +471,151 @@ final class ResearchServiceTest extends TestCase
         $this->runs->markSucceeded($active->publicId, [], [], new \TriCab\Core\CableFit\Domain\ResearchCost('m', 1, 1, 0), 0, $this->now);
         $this->expectException(ResearchDailyLimitReached::class);
         $service->requestRun($this->user(), $candidate, 'app');
+    }
+
+    // --- Evaluate (C4.5) -------------------------------------------------------------------------------------
+
+    private function succeed(string $runId): void
+    {
+        $this->runs->markSucceeded($runId, [], [], new \TriCab\Core\CableFit\Domain\ResearchCost('m', 1, 1, 0), 0, $this->now);
+    }
+
+    public function test_evaluate_queues_a_run_for_the_saved_revision_application_and_standard(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+
+        $result = $this->service()->evaluate($this->user(), $candidate, 'reeling_unreeling', 'ignored', 'AS_NZS_2802', 2, ['overallScore' => 70]);
+
+        self::assertFalse($result->reused);
+        self::assertSame('queued', $result->status);
+        $run = $this->runs->find($result->runPublicId);
+        self::assertNotNull($run);
+        self::assertSame(2, $run->candidateRevision);
+        self::assertSame('REELING_UNREELING', $run->applicationCode);
+        self::assertSame('Reeling & Unreeling', $run->application);
+        self::assertSame('AS_NZS_2802', $run->standardCode);
+        self::assertSame(['overallScore' => 70], $run->ruleCheck);
+        self::assertSame(['conductor' => ['material' => 'copper'], 'insulation' => ['material' => 'XLPE'], '_isPartial' => true], $run->parameters);
+        self::assertSame(1, $this->wake->signals);
+    }
+
+    public function test_evaluate_reuses_a_succeeded_run_for_the_same_revision_application_and_standard_without_counting_it(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+        $first = $this->service(dailyRuns: 1)->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, null, 2);
+        $this->succeed($first->runPublicId);
+
+        $again = $this->service(dailyRuns: 1)->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, '', 2);
+
+        self::assertTrue($again->reused);
+        self::assertSame($first->runPublicId, $again->runPublicId);
+        self::assertSame('succeeded', $again->status);
+        self::assertCount(1, $this->runs->listByCandidate($candidate));
+        self::assertSame(1, $this->wake->signals);
+    }
+
+    public function test_evaluate_misses_the_reuse_on_another_application_standard_or_revision(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+        $first = $this->service()->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, null, 2);
+        $this->succeed($first->runPublicId);
+
+        $standard = $this->service()->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, 'AS_NZS_2802', 2);
+        $this->succeed($standard->runPublicId);
+        $application = $this->service()->evaluate($this->user(), $candidate, 'CRANES', null, null, 2);
+        $this->succeed($application->runPublicId);
+        $this->candidates->save($this->user(), $candidate, 2, ['conductor' => ['material' => 'aluminium']]);
+        $revision = $this->service()->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, null, 3);
+
+        foreach ([$standard, $application, $revision] as $result) {
+            self::assertFalse($result->reused);
+            self::assertNotSame($first->runPublicId, $result->runPublicId);
+        }
+        self::assertSame(['conductor' => ['material' => 'aluminium']], $this->runs->find($revision->runPublicId)?->parameters);
+    }
+
+    public function test_other_reuses_only_the_same_description(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+        $first = $this->service()->evaluate($this->user(), $candidate, 'OTHER', ' Festoon on a ship loader ', null, 2);
+        $this->succeed($first->runPublicId);
+
+        self::assertTrue($this->service()->evaluate($this->user(), $candidate, 'OTHER', 'Festoon on a ship loader', null, 2)->reused);
+        self::assertFalse($this->service()->evaluate($this->user(), $candidate, 'OTHER', 'Mining trailing cable', null, 2)->reused);
+        self::assertSame('Festoon on a ship loader', $this->runs->find($first->runPublicId)?->application);
+    }
+
+    public function test_force_starts_a_new_run_even_when_one_could_be_reused(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+        $first = $this->service()->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, null, 2);
+        $this->succeed($first->runPublicId);
+
+        $forced = $this->service()->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, null, 2, null, true);
+
+        self::assertFalse($forced->reused);
+        self::assertNotSame($first->runPublicId, $forced->runPublicId);
+    }
+
+    public function test_a_failed_run_is_never_reused(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+        $first = $this->service()->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, null, 2);
+        $this->runs->markFailed($first->runPublicId, 'boom', null, $this->now);
+
+        self::assertFalse($this->service()->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, null, 2)->reused);
+    }
+
+    public function test_a_revision_that_is_not_the_current_one_is_a_mismatch_carrying_the_current(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+
+        try {
+            $this->service()->evaluate($this->user(), $candidate, 'DRAG_CHAIN', null, null, 1);
+            self::fail('Expected ResearchRevisionMismatch');
+        } catch (ResearchRevisionMismatch $mismatch) {
+            self::assertSame(2, $mismatch->currentRevision);
+        }
+        self::assertSame([], $this->runs->listByCandidate($candidate));
+    }
+
+    public function test_evaluate_validates_its_input(): void
+    {
+        $this->enableSource();
+        $candidate = $this->candidate();
+
+        foreach ([
+            ['NOPE', null, null, 2, null],
+            [null, null, null, 2, null],
+            ['OTHER', '', null, 2, null],
+            ['OTHER', str_repeat('x', 2001), null, 2, null],
+            ['DRAG_CHAIN', null, 'ISO_9999', 2, null],
+            ['DRAG_CHAIN', null, 5, 2, null],
+            ['DRAG_CHAIN', null, null, '2', null],
+            ['DRAG_CHAIN', null, null, 0, null],
+            ['DRAG_CHAIN', null, null, 2, [1, 2]],
+            ['DRAG_CHAIN', null, null, 2, ['x' => str_repeat('y', 20_001)]],
+        ] as [$code, $application, $standard, $revision, $ruleCheck]) {
+            try {
+                $this->service()->evaluate($this->user(), $candidate, $code, $application, $standard, $revision, $ruleCheck);
+                self::fail('Expected ResearchInputInvalid for ' . json_encode([$code, $standard, $revision]));
+            } catch (ResearchInputInvalid) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
+
+    public function test_evaluate_is_refused_while_research_is_off(): void
+    {
+        $this->expectException(ResearchOff::class);
+
+        $this->service(enabled: false)->evaluate($this->user(), 'cand-x', 'DRAG_CHAIN', null, null, 1);
     }
 }

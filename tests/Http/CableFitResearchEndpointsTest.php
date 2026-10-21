@@ -271,7 +271,7 @@ final class CableFitResearchEndpointsTest extends TestCase
         $list = self::rows($this->data($app, 'GET', "/api/v1/tsd/cablefit/candidates/$candidate/research"), 'runs');
         self::assertCount(1, $list);
         self::assertSame(
-            ['runPublicId', 'status', 'application', 'requestedAt', 'requestedByName', 'startedAt', 'finishedAt', 'findingCount', 'error'],
+            ['runPublicId', 'status', 'application', 'requestedAt', 'requestedByName', 'startedAt', 'finishedAt', 'findingCount', 'error', 'candidateRevision', 'applicationCode', 'standardCode', 'verdict'],
             array_keys($list[0]),
         );
         self::assertSame('queued', $list[0]['status']);
@@ -402,7 +402,7 @@ final class CableFitResearchEndpointsTest extends TestCase
         $findings = self::rows($detail, 'findings');
         self::assertSame(['fresh', 'old standard', 'no date'], array_map(static fn (array $f) => $f['claim'], $findings));
         self::assertSame(
-            ['publicId', 'parameter', 'claim', 'relevance', 'url', 'title', 'publisher', 'publishedOn', 'dateBasis', 'withinRecentWindow', 'confidence'],
+            ['publicId', 'parameter', 'claim', 'relevance', 'url', 'title', 'publisher', 'publishedOn', 'dateBasis', 'withinRecentWindow', 'confidence', 'stance'],
             array_keys($findings[0]),
         );
         self::assertSame($recent, $findings[0]['publishedOn']);
@@ -501,5 +501,130 @@ final class CableFitResearchEndpointsTest extends TestCase
         self::assertSame('CABLEFIT_RUN_ACTIVE', $this->errorCode($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", ['application' => 'b'], 409));
         $other = $this->candidate($app);
         self::assertSame('CABLEFIT_RESEARCH_DAILY_LIMIT', $this->errorCode($app, 'POST', "/api/v1/tsd/cablefit/candidates/$other/research", ['application' => 'b'], 429));
+    }
+
+    // --- Evaluate (C4.5) -------------------------------------------------------------------------------------
+
+    /**
+     * @param App<ContainerInterface>   $app
+     * @param array<string, mixed>|null $assessment
+     */
+    private function finishNextRun(App $app, ?array $assessment = null): void
+    {
+        $container = $app->getContainer();
+        self::assertInstanceOf(\DI\Container::class, $container);
+        $container->set(ResearchModel::class, new FakeResearchModel(FakeResearchModel::answer(FakeResearchModel::json(
+            [FakeResearchModel::finding(['url' => 'https://webstore.iec.ch/a', 'stance' => 'concern'])],
+            $assessment,
+        ))));
+        $runner = $container->get(ResearchRunner::class);
+        self::assertInstanceOf(ResearchRunner::class, $runner);
+        self::assertSame('succeeded', $runner->runNext()?->status);
+    }
+
+    public function test_evaluate_queues_with_a_202_then_reuses_the_succeeded_run_with_a_200(): void
+    {
+        $app = $this->app(dailyRuns: 1);
+        $candidate = $this->candidate($app);
+        $this->source($app);
+        $body = ['applicationCode' => 'DRAG_CHAIN', 'standardCode' => null, 'candidateRevision' => 2];
+
+        $queued = $this->data($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", $body, 202);
+        self::assertSame('queued', $queued['status']);
+        self::assertFalse($queued['reused']);
+        $this->finishNextRun($app);
+
+        $reused = $this->data($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", $body, 200);
+        self::assertSame(['runPublicId' => $queued['runPublicId'], 'status' => 'succeeded', 'reused' => true], $reused);
+
+        // The cap of 1 is used, so a forced run is refused while the reuse above was not.
+        self::assertSame(429, $this->call($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", $body + ['force' => true])->getStatusCode());
+    }
+
+    public function test_evaluate_with_an_old_revision_is_a_409_with_the_current_one(): void
+    {
+        $app = $this->app();
+        $candidate = $this->candidate($app);
+        $this->source($app);
+
+        $response = $this->call($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", ['applicationCode' => 'DRAG_CHAIN', 'candidateRevision' => 1]);
+
+        self::assertSame(409, $response->getStatusCode());
+        /** @var array{error: array{code: string, currentRevision: int}} $payload */
+        $payload = TestAppFactory::json($response);
+        self::assertSame('CABLEFIT_REVISION_MISMATCH', $payload['error']['code']);
+        self::assertSame(2, $payload['error']['currentRevision']);
+    }
+
+    public function test_evaluate_validates_its_body(): void
+    {
+        $app = $this->app();
+        $candidate = $this->candidate($app);
+        $this->source($app);
+
+        foreach ([
+            ['applicationCode' => 'NOPE', 'candidateRevision' => 2],
+            ['applicationCode' => 'OTHER', 'candidateRevision' => 2],
+            ['applicationCode' => 'DRAG_CHAIN'],
+            ['applicationCode' => 'DRAG_CHAIN', 'candidateRevision' => 2, 'standardCode' => 'X'],
+            ['applicationCode' => 'DRAG_CHAIN', 'candidateRevision' => 2, 'ruleCheck' => 'text'],
+            ['applicationCode' => 'DRAG_CHAIN', 'candidateRevision' => 2, 'force' => 'yes'],
+        ] as $body) {
+            self::assertSame(422, $this->call($app, 'POST', "/api/v1/tsd/cablefit/candidates/$candidate/research", $body)->getStatusCode(), json_encode($body, JSON_THROW_ON_ERROR));
+        }
+    }
+
+    public function test_the_old_body_still_starts_a_run_without_codes(): void
+    {
+        $app = $this->app();
+        $candidate = $this->candidate($app);
+        $this->source($app);
+
+        $run = $this->queueRun($app, $candidate, ['application' => 'underground']);
+        $detail = $this->data($app, 'GET', "/api/v1/tsd/cablefit/candidates/$candidate/research/$run");
+
+        self::assertNull($detail['applicationCode']);
+        self::assertNull($detail['candidateRevision']);
+        self::assertNull($detail['assessment']);
+        self::assertNull($detail['verdict']);
+    }
+
+    public function test_a_finished_evaluate_run_reads_back_with_its_codes_verdict_assessment_and_stances(): void
+    {
+        $app = $this->app();
+        $candidate = $this->candidate($app);
+        $this->source($app);
+        $run = $this->queueRun($app, $candidate, [
+            'applicationCode' => 'REELING_UNREELING',
+            'standardCode' => 'AS_NZS_2802',
+            'candidateRevision' => 2,
+            'ruleCheck' => ['overallScore' => 64],
+        ]);
+        $this->finishNextRun($app, [
+            'verdict' => 'likely_unsuitable',
+            'summary' => 'The sheath will not last.',
+            'cons' => [['point' => 'Sheath wear', 'parameter' => 'sheath.material', 'reasoning' => 'r', 'findingRefs' => [0]]],
+            'suggestedChanges' => [['change' => 'PUR sheath', 'parameter' => 'sheath.material', 'addressesCon' => 0, 'reasoning' => 'r', 'findingRefs' => [0]]],
+            'suggestedChecks' => [['check' => 'Reeling test', 'reason' => 'r']],
+        ]);
+
+        $detail = $this->data($app, 'GET', "/api/v1/tsd/cablefit/candidates/$candidate/research/$run");
+
+        self::assertSame(2, $detail['candidateRevision']);
+        self::assertSame('REELING_UNREELING', $detail['applicationCode']);
+        self::assertSame('AS_NZS_2802', $detail['standardCode']);
+        self::assertSame('Reeling & Unreeling', $detail['application']);
+        self::assertSame(['overallScore' => 64], $detail['ruleCheck']);
+        self::assertSame('likely_unsuitable', $detail['verdict']);
+        $assessment = $detail['assessment'];
+        self::assertIsArray($assessment);
+        /** @var array{verdict: string, cons: list<array{findingIds: list<string>}>, suggestedChanges: list<array{addressesCon: int|null}>, suggestedChecks: list<array<string, string>>} $assessment */
+        self::assertSame('likely_unsuitable', $assessment['verdict']);
+        $findings = self::rows($detail, 'findings');
+        self::assertSame('concern', $findings[0]['stance']);
+        self::assertSame([$findings[0]['publicId']], $assessment['cons'][0]['findingIds']);
+        self::assertSame(0, $assessment['suggestedChanges'][0]['addressesCon']);
+        self::assertSame([['check' => 'Reeling test', 'reason' => 'r']], $assessment['suggestedChecks']);
+        self::assertSame('likely_unsuitable', self::rows($this->data($app, 'GET', "/api/v1/tsd/cablefit/candidates/$candidate/research"), 'runs')[0]['verdict']);
     }
 }

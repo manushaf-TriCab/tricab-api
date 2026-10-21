@@ -43,7 +43,7 @@ final class CableFitCandidateSerializer
     }
 
     /**
-     * A row of the design list. `verdict` stays null until runs carry one.
+     * A row of the design list. `verdict` is null until the latest run has an assessment.
      *
      * @return array<string, mixed>
      */
@@ -62,7 +62,7 @@ final class CableFitCandidateSerializer
                 'runPublicId' => $run->publicId,
                 'status' => $run->status,
                 'application' => $run->application,
-                'verdict' => null,
+                'verdict' => $run->verdict,
                 'finishedAt' => $run->finishedAt?->format(DateTimeInterface::ATOM),
             ],
         ];
