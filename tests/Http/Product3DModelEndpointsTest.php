@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductStore;
 use TriCab\Api\Product\Storage\InMemoryProductBlobStore;
+use TriCab\Api\Tests\Support\GlbFixture;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Product\Contract\ProductBlobStore;
 
@@ -29,7 +30,7 @@ final class Product3DModelEndpointsTest extends TestCase
     {
         $app = $this->createApp();
         $productPublicId = $this->createProduct($app);
-        $binary = 'glb-bytes-for-3d-studio-test';
+        $binary = GlbFixture::build();
 
         $listEmpty = $app->handle(TestAppFactory::request(
             'GET',
@@ -177,7 +178,7 @@ final class Product3DModelEndpointsTest extends TestCase
     {
         $app = $this->createApp();
         $productPublicId = $this->createProduct($app);
-        $binary = 'glb-soft-delete';
+        $binary = GlbFixture::build();
 
         $initiate = $app->handle($this->jsonRequest(
             'POST',
@@ -299,7 +300,7 @@ final class Product3DModelEndpointsTest extends TestCase
         self::assertStringStartsWith('fnv1a32:', $data['sourceHash']);
         self::assertArrayNotHasKey('VOLTAGE', $data['values']);
 
-        $binary = 'glb-procedural-bytes';
+        $binary = GlbFixture::build();
         $initiate = $app->handle($this->jsonRequest(
             'POST',
             '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session',
@@ -351,7 +352,7 @@ final class Product3DModelEndpointsTest extends TestCase
     {
         $app = $this->createApp();
         $productPublicId = $this->createProduct($app);
-        $binary = 'glb-bytes-for-preview-test';
+        $binary = GlbFixture::build();
 
         $initiate = $app->handle($this->jsonRequest(
             'POST',
@@ -455,7 +456,7 @@ final class Product3DModelEndpointsTest extends TestCase
         $app = $this->createApp();
         $productPublicId = $this->createProduct($app);
 
-        $smallBinary = str_repeat('s', 1024);
+        $smallBinary = GlbFixture::build([], 1024);
         $session = TestAppFactory::json($app->handle($this->jsonRequest(
             'POST',
             '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session',
@@ -520,7 +521,7 @@ final class Product3DModelEndpointsTest extends TestCase
         self::assertNotEmpty($skipData['jobPublicId']);
         $rowVersion = (string) $skipData['model']['rowVersion'];
 
-        $largeBinary = str_repeat('L', 70_000);
+        $largeBinary = GlbFixture::build([], 70_000);
         $largeSession = TestAppFactory::json($app->handle($this->jsonRequest(
             'POST',
             '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session',
@@ -618,6 +619,218 @@ final class Product3DModelEndpointsTest extends TestCase
         self::assertSame($largeOriginalPath, $reverted['storagePath']);
         self::assertNotSame($activatedPath, $reverted['storagePath']);
         unset($originalPath);
+    }
+
+    public function test_invalid_glb_marks_model_failed_and_rejects_upload(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+        $modelPublicId = $this->startUpload($app, $productPublicId, 'not-a-glb-payload', $session);
+        $this->blobStore($app)->putObject(
+            (string) $session['storageContainer'],
+            (string) $session['storagePath'],
+            'model/gltf-binary',
+            'not-a-glb-payload',
+        );
+
+        $complete = $app->handle($this->jsonRequest('POST', '/api/v1/admin/product-3d-models/' . $modelPublicId . '/complete-upload', []));
+        self::assertSame(422, $complete->getStatusCode(), (string) $complete->getBody());
+        self::assertStringContainsString('GLB_BAD_MAGIC', (string) TestAppFactory::json($complete)['error']['message']);
+
+        $model = TestAppFactory::json($app->handle(TestAppFactory::request(
+            'GET',
+            '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $modelPublicId,
+        )))['data'];
+        self::assertSame('failed', $model['statusCode']);
+        self::assertSame('failed', $model['uploadStatusCode']);
+
+        $retry = $app->handle($this->jsonRequest('POST', '/api/v1/admin/product-3d-models/' . $modelPublicId . '/complete-upload', []));
+        self::assertSame(422, $retry->getStatusCode());
+    }
+
+    public function test_complete_upload_refuses_active_unknown_and_deleted_product_models(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+        $binary = GlbFixture::build();
+        $modelPublicId = $this->startUpload($app, $productPublicId, $binary, $session);
+        $this->blobStore($app)->putObject((string) $session['storageContainer'], (string) $session['storagePath'], 'model/gltf-binary', $binary);
+
+        $first = $app->handle($this->jsonRequest('POST', '/api/v1/admin/product-3d-models/' . $modelPublicId . '/complete-upload', []));
+        self::assertSame(200, $first->getStatusCode(), (string) $first->getBody());
+        $again = $app->handle($this->jsonRequest('POST', '/api/v1/admin/product-3d-models/' . $modelPublicId . '/complete-upload', []));
+        self::assertSame(422, $again->getStatusCode());
+        self::assertStringContainsString('not awaiting upload', (string) TestAppFactory::json($again)['error']['message']);
+
+        $unknown = $app->handle($this->jsonRequest('POST', '/api/v1/admin/product-3d-models/99999999-9999-9999-9999-999999999999/complete-upload', []));
+        self::assertSame(422, $unknown->getStatusCode());
+
+        $pendingId = $this->startUpload($app, $productPublicId, $binary, $pendingSession);
+        $this->blobStore($app)->putObject((string) $pendingSession['storageContainer'], (string) $pendingSession['storagePath'], 'model/gltf-binary', $binary);
+        $detail = TestAppFactory::json($app->handle(TestAppFactory::request('GET', '/api/v1/admin/products/' . $productPublicId)))['data'];
+        $deleted = $app->handle($this->jsonRequest('POST', '/api/v1/admin/products/' . $productPublicId . '/soft-delete', [
+            'expectedRowVersion' => (string) $detail['rowVersion'],
+        ]));
+        self::assertSame(200, $deleted->getStatusCode(), (string) $deleted->getBody());
+        $orphan = $app->handle($this->jsonRequest('POST', '/api/v1/admin/product-3d-models/' . $pendingId . '/complete-upload', []));
+        self::assertSame(404, $orphan->getStatusCode(), (string) $orphan->getBody());
+    }
+
+    public function test_public_3d_endpoint_returns_only_three_d_payload_without_caching(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+        $binary = GlbFixture::build();
+        $modelPublicId = $this->startUpload($app, $productPublicId, $binary, $session, true);
+        $this->blobStore($app)->putObject((string) $session['storageContainer'], (string) $session['storagePath'], 'model/gltf-binary', $binary);
+        $completed = TestAppFactory::json($app->handle($this->jsonRequest('POST', '/api/v1/admin/product-3d-models/' . $modelPublicId . '/complete-upload', [])))['data'];
+        $slug = $this->publishProductWithSlug($app, $productPublicId, '', 'public-3d-endpoint');
+
+        $beforePublish = $app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug . '/3d'));
+        self::assertSame(200, $beforePublish->getStatusCode(), (string) $beforePublish->getBody());
+        self::assertFalse(TestAppFactory::json($beforePublish)['data']['available']);
+
+        $publish = $app->handle($this->jsonRequest('POST', '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $modelPublicId . '/publish', [
+            'expectedRowVersion' => (string) $completed['rowVersion'],
+        ]));
+        self::assertSame(200, $publish->getStatusCode(), (string) $publish->getBody());
+
+        $response = $app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug . '/3d'));
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        $data = TestAppFactory::json($response)['data'];
+        self::assertSame(['available', 'primary', 'models'], array_keys($data));
+        self::assertTrue($data['available']);
+        self::assertSame($modelPublicId, $data['primary']['publicId']);
+        self::assertArrayNotHasKey('storagePath', $data['primary']);
+
+        $embedded = TestAppFactory::json($app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug)))['data']['threeD'];
+        self::assertSame($embedded, $data);
+
+        $missing = $app->handle(TestAppFactory::request('GET', '/api/v1/products/no-such-product-slug/3d'));
+        self::assertSame(404, $missing->getStatusCode());
+        self::assertSame('no-store', $missing->getHeaderLine('Cache-Control'));
+    }
+
+    public function test_visual_preview_model_requires_explicit_approval_to_publish(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+        $binary = GlbFixture::build();
+        $metadata = [
+            'version' => 1,
+            'source' => 'specifications',
+            'family' => 'accessory',
+            'accuracy' => ['class' => 'visual-preview'],
+            'assumptions' => ['generic stud'],
+            'dimensionsUsed' => ['OVERALL-LENGTH'],
+            'accessoryDefinition' => ['kind' => 'cable-lug'],
+        ];
+        $modelPublicId = $this->startUpload($app, $productPublicId, $binary, $session, false, $metadata);
+        $this->blobStore($app)->putObject((string) $session['storageContainer'], (string) $session['storagePath'], 'model/gltf-binary', $binary);
+        $completed = TestAppFactory::json($app->handle($this->jsonRequest('POST', '/api/v1/admin/product-3d-models/' . $modelPublicId . '/complete-upload', [])))['data'];
+        self::assertSame('visual-preview', $completed['generationMetadata']['accuracy']['class']);
+        self::assertSame('accessory', $completed['generationMetadata']['family']);
+        $publishUrl = '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $modelPublicId . '/publish';
+        $rowVersion = (string) $completed['rowVersion'];
+
+        $refused = $app->handle($this->jsonRequest('POST', $publishUrl, ['expectedRowVersion' => $rowVersion]));
+        self::assertSame(422, $refused->getStatusCode(), (string) $refused->getBody());
+        self::assertStringContainsString('approveApproximation', (string) TestAppFactory::json($refused)['error']['message']);
+
+        $blankNote = $app->handle($this->jsonRequest('POST', $publishUrl, [
+            'expectedRowVersion' => $rowVersion,
+            'approveApproximation' => true,
+            'approvalNote' => '   ',
+        ]));
+        self::assertSame(422, $blankNote->getStatusCode());
+
+        $accepted = $app->handle($this->jsonRequest('POST', $publishUrl, [
+            'expectedRowVersion' => $rowVersion,
+            'approveApproximation' => true,
+            'approvalNote' => 'Approved as indicative only',
+        ]));
+        self::assertSame(200, $accepted->getStatusCode(), (string) $accepted->getBody());
+        self::assertSame('published', TestAppFactory::json($accepted)['data']['statusCode']);
+
+        $audited = null;
+        foreach ($this->productStore($app)->auditEvents() as $event) {
+            if (($event['actionCode'] ?? '') === 'published' && ($event['entityTypeCode'] ?? '') === 'product-3d-model') {
+                $audited = json_decode((string) $event['newValuesJson'], true);
+            }
+        }
+        self::assertIsArray($audited);
+        self::assertTrue($audited['approveApproximation']);
+        self::assertSame('Approved as indicative only', $audited['approvalNote']);
+    }
+
+    public function test_accessory_specification_source_merges_product_and_variant_values(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+
+        $missing = $app->handle(TestAppFactory::request('GET', '/api/v1/admin/products/99999999-9999-9999-9999-999999999999/3d/accessory-specification-source'));
+        self::assertSame(404, $missing->getStatusCode());
+
+        $empty = $app->handle(TestAppFactory::request('GET', '/api/v1/admin/products/' . $productPublicId . '/3d/accessory-specification-source'));
+        self::assertSame(200, $empty->getStatusCode(), (string) $empty->getBody());
+        $emptyData = TestAppFactory::json($empty)['data'];
+        self::assertFalse($emptyData['canGenerate']);
+        self::assertSame([], $emptyData['values']);
+        self::assertContains('OVERALL-LENGTH', $emptyData['missing']);
+
+        $group = TestAppFactory::json($app->handle($this->jsonRequest('POST', '/api/v1/admin/specification-groups', [
+            'name' => 'Accessory dims',
+            'code' => 'ACCDIMS',
+        ])))['data'];
+        $length = TestAppFactory::json($app->handle($this->jsonRequest('POST', '/api/v1/admin/specification-definitions', [
+            'name' => 'Overall length',
+            'code' => 'OVERALL-LENGTH',
+            'dataTypeCode' => 'decimal',
+            'scopeCode' => 'product',
+            'groupPublicId' => $group['publicId'],
+            'unit' => 'cm',
+        ])))['data'];
+        $assign = $app->handle($this->jsonRequest('PUT', '/api/v1/admin/products/' . $productPublicId . '/specifications', [
+            'values' => [['definitionPublicId' => $length['publicId'], 'valueDecimal' => '4.5']],
+        ]));
+        self::assertSame(200, $assign->getStatusCode(), (string) $assign->getBody());
+
+        $source = $app->handle(TestAppFactory::request('GET', '/api/v1/admin/products/' . $productPublicId . '/3d/accessory-specification-source'));
+        self::assertSame(200, $source->getStatusCode(), (string) $source->getBody());
+        $data = TestAppFactory::json($source)['data'];
+        self::assertTrue($data['canGenerate']);
+        self::assertSame(45.0, (float) $data['values']['OVERALL-LENGTH']['value']);
+        self::assertSame('mm', $data['values']['OVERALL-LENGTH']['unit']);
+        self::assertSame('OVERALL-LENGTH', $data['values']['OVERALL-LENGTH']['definitionCode']);
+        self::assertStringStartsWith('fnv1a32:', $data['sourceHash']);
+        self::assertArrayHasKey('productInternalCode', $data);
+    }
+
+    /**
+     * Creates an upload session and returns the model public id.
+     *
+     * @param App<ContainerInterface> $app
+     * @param array<string, mixed>|null $session
+     * @param array<string, mixed>|null $metadata
+     */
+    private function startUpload(App $app, string $productPublicId, string $binary, ?array &$session, bool $primary = false, ?array $metadata = null): string
+    {
+        $body = [
+            'originalFileName' => 'model.glb',
+            'contentType' => 'model/gltf-binary',
+            'byteSize' => strlen($binary),
+            'isPrimary' => $primary,
+        ];
+        if ($metadata !== null) {
+            $body['sourceTypeCode'] = 'specification';
+            $body['generationMetadata'] = $metadata;
+        }
+        $initiate = $app->handle($this->jsonRequest('POST', '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session', $body));
+        self::assertSame(201, $initiate->getStatusCode(), (string) $initiate->getBody());
+        $session = TestAppFactory::json($initiate)['data'];
+
+        return (string) $session['entityPublicId'];
     }
 
     /**

@@ -176,6 +176,11 @@ final class ProductFileValidationPolicy
         );
     }
 
+    public function model3dMaxBytes(): int
+    {
+        return self::MODEL_3D_MAX_BYTES;
+    }
+
     /**
      * @return array{safeFileName: string, extension: string, contentType: string, byteSize: int, fileKind: string}
      */

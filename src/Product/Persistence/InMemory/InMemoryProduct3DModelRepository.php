@@ -225,6 +225,24 @@ final class InMemoryProduct3DModelRepository implements Product3DModelRepository
         return self::toSummary($row, $this->store);
     }
 
+    public function markUploadFailed(string $modelPublicId, UserId $actorUserId): Product3DModelSummary
+    {
+        unset($actorUserId);
+        $map = $this->store->threeDModelsMap();
+        $row = $map[$modelPublicId] ?? null;
+        if ($row === null || ($row['deletedAtUtc'] ?? null) !== null) {
+            throw Product3DModelNotFound::forPublicId($modelPublicId);
+        }
+        $row['uploadStatusCode'] = 'failed';
+        $row['statusCode'] = 'failed';
+        $row['rowVersion'] = $this->store->nextRowVersion()->toBase64();
+        $row['updatedAtUtc'] = $this->store->nowUtc();
+        $map[$modelPublicId] = $row;
+        $this->store->setThreeDModelsMap($map);
+
+        return self::toSummary($row, $this->store);
+    }
+
     public function publish(string $modelPublicId, string $expectedRowVersion, UserId $actorUserId): Product3DModelSummary
     {
         return $this->transition($modelPublicId, $expectedRowVersion, $actorUserId, 'published', true);

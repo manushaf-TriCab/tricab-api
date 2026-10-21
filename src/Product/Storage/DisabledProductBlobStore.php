@@ -71,4 +71,11 @@ final class DisabledProductBlobStore implements ProductBlobStore
 
         return null;
     }
+
+    public function getObjectRange(string $container, string $blobPath, int $offset, int $length): ?string
+    {
+        unset($container, $blobPath, $offset, $length);
+
+        return null;
+    }
 }

@@ -82,6 +82,14 @@ interface Product3DModelRepository
         UserId $actorUserId,
     ): Product3DModelSummary;
 
+    /**
+     * Marks an uploaded-but-rejected model as failed (status and upload status).
+     */
+    public function markUploadFailed(
+        string $modelPublicId,
+        UserId $actorUserId,
+    ): Product3DModelSummary;
+
     public function publish(
         string $modelPublicId,
         string $expectedRowVersion,

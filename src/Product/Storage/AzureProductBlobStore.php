@@ -130,4 +130,13 @@ final class AzureProductBlobStore implements ProductBlobStore
     {
         return $this->rest->get($container, $blobPath);
     }
+
+    public function getObjectRange(string $container, string $blobPath, int $offset, int $length): ?string
+    {
+        if ($offset < 0 || $length <= 0) {
+            return '';
+        }
+
+        return $this->rest->getRange($container, $blobPath, $offset, $length);
+    }
 }

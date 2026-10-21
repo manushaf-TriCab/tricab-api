@@ -151,6 +151,7 @@ use TriCab\Api\Http\Action\Admin\WithdrawProductDocumentAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductBySlugAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductCustomerViewAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductDocumentsAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProduct3DAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductMediaAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductRelationshipsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicProductSpecificationsAction;
@@ -704,6 +705,7 @@ use TriCab\Api\Http\Action\Admin\CompleteArModelUploadAction;
 use TriCab\Api\Http\Action\Admin\InitiateArModelUploadAction;
 use TriCab\Api\Http\Action\Admin\Product3DModelsAdminAction;
 use TriCab\Api\Http\Action\Admin\GetProduct3DSpecificationSourceAction;
+use TriCab\Api\Http\Action\Admin\GetProduct3DAccessorySpecificationSourceAction;
 use TriCab\Api\Http\Action\Admin\ActivateProduct360SetAction;
 use TriCab\Api\Http\Action\Admin\Complete360FrameUploadAction;
 use TriCab\Api\Http\Action\Admin\Initiate360FrameUploadAction;
@@ -713,6 +715,7 @@ use TriCab\Core\Product\Application\Service\InitiateArModelUploadService;
 use TriCab\Core\Product\Application\Service\CompleteProduct3DModelUploadService;
 use TriCab\Core\Product\Application\Service\CompleteProduct3DPreviewUploadService;
 use TriCab\Core\Product\Application\Service\GetProduct3DSpecificationSourceService;
+use TriCab\Core\Product\Application\Service\GetProduct3DAccessorySpecificationSourceService;
 use TriCab\Core\Product\Application\Service\InitiateProduct3DModelUploadService;
 use TriCab\Core\Product\Application\Service\InitiateProduct3DPreviewUploadService;
 use TriCab\Core\Product\Application\Service\ProcessProduct3DAssetService;
@@ -2350,6 +2353,7 @@ final class ContainerFactory
             GetPublicProductCustomerViewAction::class => \DI\autowire(GetPublicProductCustomerViewAction::class),
             GetPublicProductVariantsAction::class => \DI\autowire(GetPublicProductVariantsAction::class),
             GetPublicProductMediaAction::class => \DI\autowire(GetPublicProductMediaAction::class),
+            GetPublicProduct3DAction::class => \DI\autowire(GetPublicProduct3DAction::class),
             GetPublicProductDocumentsAction::class => \DI\autowire(GetPublicProductDocumentsAction::class),
             GetPublicProductRelationshipsAction::class => \DI\autowire(GetPublicProductRelationshipsAction::class),
             GetPublicProductSpecificationsAction::class => \DI\autowire(GetPublicProductSpecificationsAction::class),
@@ -2441,6 +2445,7 @@ final class ContainerFactory
             InitiateProduct3DPreviewUploadService::class => \DI\autowire(InitiateProduct3DPreviewUploadService::class),
             CompleteProduct3DPreviewUploadService::class => \DI\autowire(CompleteProduct3DPreviewUploadService::class),
             GetProduct3DSpecificationSourceService::class => \DI\autowire(GetProduct3DSpecificationSourceService::class),
+            GetProduct3DAccessorySpecificationSourceService::class => \DI\autowire(GetProduct3DAccessorySpecificationSourceService::class),
             Product3DGenerationProvider::class => static function () use ($settings): Product3DGenerationProvider {
                 if (!$settings->product3dEnabled) {
                     return new DisabledProduct3DGenerationProvider();
@@ -2462,6 +2467,7 @@ final class ContainerFactory
             CompleteArModelUploadAction::class => \DI\autowire(CompleteArModelUploadAction::class),
             Product3DModelsAdminAction::class => \DI\autowire(Product3DModelsAdminAction::class),
             GetProduct3DSpecificationSourceAction::class => \DI\autowire(GetProduct3DSpecificationSourceAction::class),
+            GetProduct3DAccessorySpecificationSourceAction::class => \DI\autowire(GetProduct3DAccessorySpecificationSourceAction::class),
             AddProductDocumentService::class => \DI\autowire(AddProductDocumentService::class),
             WithdrawProductDocumentService::class => \DI\autowire(WithdrawProductDocumentService::class),
             SoftDeleteProductDocumentService::class => \DI\autowire(SoftDeleteProductDocumentService::class),

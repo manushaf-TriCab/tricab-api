@@ -412,6 +412,35 @@ SQL,
         return $loaded;
     }
 
+    public function markUploadFailed(
+        string $modelPublicId,
+        UserId $actorUserId,
+    ): Product3DModelSummary {
+        $this->connection->execute(
+            <<<'SQL'
+UPDATE [product].[Product3DModels]
+SET
+    [UploadStatusCode] = N'failed',
+    [StatusCode] = N'failed',
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [PublicId] = :modelPublicId
+  AND [DeletedAtUtc] IS NULL
+SQL,
+            [
+                ':updatedByUserId' => $actorUserId->toInt(),
+                ':modelPublicId' => $modelPublicId,
+            ],
+        );
+
+        $loaded = $this->findByPublicId($modelPublicId);
+        if ($loaded === null) {
+            throw Product3DModelNotFound::forPublicId($modelPublicId);
+        }
+
+        return $loaded;
+    }
+
     public function publish(
         string $modelPublicId,
         string $expectedRowVersion,

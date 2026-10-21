@@ -87,6 +87,24 @@ final class AzureBlobRestClient
         return $response['body'];
     }
 
+    public function getRange(string $container, string $blobPath, int $offset, int $length): ?string
+    {
+        $response = $this->request('GET', $container, $blobPath, null, [
+            'x-ms-range' => sprintf('bytes=%d-%d', $offset, $offset + $length - 1),
+        ]);
+        if ($response['status'] === 404) {
+            return null;
+        }
+        if ($response['status'] === 416) {
+            return '';
+        }
+        if ($response['status'] < 200 || $response['status'] >= 300) {
+            throw new RuntimeException('Blob ranged GET failed with HTTP ' . $response['status']);
+        }
+
+        return substr($response['body'], 0, $length);
+    }
+
     public function delete(string $container, string $blobPath): void
     {
         $response = $this->request('DELETE', $container, $blobPath);

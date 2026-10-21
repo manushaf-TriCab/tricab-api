@@ -112,4 +112,25 @@ final class Product3DStudioDomainTest extends TestCase
         self::assertSame('derived', $resolved['values']['insulationThicknessMm']['source']);
         self::assertEqualsWithDelta(1.0, $resolved['values']['insulationThicknessMm']['value'], 0.0001);
     }
+
+    public function test_generation_metadata_allows_accessory_keys_and_still_rejects_script_content(): void
+    {
+        $validator = new \TriCab\Core\Product\Domain\Service\Product3DGenerationMetadataValidator();
+        $result = $validator->validate([
+            'version' => 1,
+            'family' => 'accessory',
+            'accuracy' => ['class' => 'visual-preview'],
+            'assumptions' => ['generic'],
+            'dimensionsUsed' => ['WIDTH'],
+            'accessoryDefinition' => ['kind' => 'lug'],
+            'unknownKey' => 'dropped',
+        ]);
+
+        self::assertSame('visual-preview', $result['data']['accuracy']['class']);
+        self::assertSame(['WIDTH'], $result['data']['dimensionsUsed']);
+        self::assertArrayNotHasKey('unknownKey', $result['data']);
+
+        $this->expectException(InvalidProductValue::class);
+        $validator->validate(['accuracy' => ['class' => 'x'], 'assumptions' => ['uses a shader']]);
+    }
 }

@@ -140,6 +140,16 @@ final class InMemoryProductBlobStore implements ProductBlobStore
         return $this->objects[$this->key($container, $blobPath)]['binary'] ?? null;
     }
 
+    public function getObjectRange(string $container, string $blobPath, int $offset, int $length): ?string
+    {
+        $binary = $this->getObjectBinary($container, $blobPath);
+        if ($binary === null) {
+            return null;
+        }
+
+        return $offset < 0 || $length <= 0 ? '' : substr($binary, $offset, $length);
+    }
+
     private function key(string $container, string $blobPath): string
     {
         return $container . "\0" . $blobPath;
