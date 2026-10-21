@@ -95,6 +95,76 @@ final class AssistantAnswerCardsTest extends TestCase
         self::assertSame([], $kept);
     }
 
+    public function test_a_style_named_as_a_bare_code_span_keeps_its_card(): void
+    {
+        $kept = AssistantAnswerCards::mentionedIn(
+            'For trailing duty, `KA` and `CA` are the usual picks.',
+            [self::styleCard('KA'), self::styleCard('CA'), self::styleCard('XA')],
+        );
+
+        self::assertSame(['KA', 'CA'], array_column($kept, 'styleCode'));
+    }
+
+    public function test_a_style_card_needs_the_code_span_itself(): void
+    {
+        // Two characters are matched only as a whole span, case-sensitively:
+        // "according" and "Ka" are prose, and `KA-PAXN/4C16OR` is a code.
+        $kept = AssistantAnswerCards::mentionedIn(
+            'According to the register, Ka armour suits it — `KA-PAXN/4C16OR` for example, or `ka`.',
+            [self::styleCard('KA'), self::styleCard('CC')],
+        );
+
+        self::assertSame([], $kept);
+    }
+
+    public function test_style_cards_follow_the_order_the_answer_names_them_and_stop_at_six(): void
+    {
+        $codes = ['V4', 'V3', 'V2', 'XA', 'KA', 'CA', 'BH'];
+        $answer = implode(', ', array_map(static fn (string $code): string => '`' . $code . '`', $codes));
+
+        $kept = AssistantAnswerCards::mentionedIn($answer, array_map(self::styleCard(...), array_reverse($codes)));
+
+        self::assertSame(array_slice($codes, 0, AssistantAnswerCards::MAX_STYLE_CARDS), array_column($kept, 'styleCode'));
+    }
+
+    public function test_a_style_card_is_dropped_when_a_code_card_already_shows_that_style(): void
+    {
+        $answer = '**No**, `KA` is not LSZH. For LSZH use `CA`. Your code is `KA-PASN/4C95OR`.';
+        $code = self::codeCard('KA-PASN/4C95OR');
+        $code['segments'] = ['styleCode' => 'KA'];
+
+        $kept = AssistantAnswerCards::mentionedIn($answer, [$code, self::styleCard('KA'), self::styleCard('CA')]);
+
+        self::assertSame(['product-code', 'style'], array_column($kept, 'type'));
+        self::assertSame('CA', $kept[1]['styleCode']);
+    }
+
+    public function test_a_code_card_without_segments_still_claims_its_style_by_prefix(): void
+    {
+        $kept = AssistantAnswerCards::mentionedIn(
+            '`KL-PAXN/2C2.5OR` is the code; `KL` is not fire resistant, `FR` is.',
+            [self::codeCard('KL-PAXN/2C2.5OR'), self::styleCard('KL'), self::styleCard('FR')],
+        );
+
+        self::assertSame(['KL-PAXN/2C2.5OR', 'FR'], array_map(
+            static fn (array $card): mixed => $card['codeValue'] ?? $card['styleCode'],
+            $kept,
+        ));
+    }
+
+    public function test_the_last_size_picker_is_kept_whatever_the_text_says(): void
+    {
+        $kept = AssistantAnswerCards::mentionedIn('How many cores do you need?', [
+            ['type' => 'size-picker', 'styleCode' => 'KA', 'coreCount' => null],
+            self::codeCard('KL-PAXN/1C95OR'),
+            ['type' => 'size-picker', 'styleCode' => 'KA', 'coreCount' => 4],
+        ]);
+
+        self::assertCount(1, $kept);
+        self::assertSame('size-picker', $kept[0]['type']);
+        self::assertSame(4, $kept[0]['coreCount']);
+    }
+
     public function test_nothing_survives_an_empty_answer_or_an_empty_set(): void
     {
         self::assertSame([], AssistantAnswerCards::mentionedIn('', [self::codeCard('KL-PAXN/1C95OR')]));
@@ -109,6 +179,16 @@ final class AssistantAnswerCardsTest extends TestCase
             'codeValue' => $codeValue,
             'title' => 'Flexible Rubber (Fixed Wiring)',
             'stockStatus' => 'STOCK',
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private static function styleCard(string $styleCode): array
+    {
+        return [
+            'type' => 'style',
+            'styleCode' => $styleCode,
+            'title' => 'Flexible Rubber Armoured',
         ];
     }
 

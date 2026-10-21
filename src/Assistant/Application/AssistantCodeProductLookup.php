@@ -21,4 +21,14 @@ interface AssistantCodeProductLookup
      * @param int|null $coreCount Breaks a tie when a style has a product per core count (M3P-1C, M3P-3C).
      */
     public function forCode(string $codeValue, ?string $styleCode, ?int $coreCount): ?AssistantCodeProduct;
+
+    /**
+     * The product standing in for each style, for the style cards: one assigned
+     * to the style itself, else to one of its child styles. One call for a whole
+     * page of styles; a style with neither is left out.
+     *
+     * @param list<string> $styleCodes
+     * @return array<string, AssistantCodeProduct> keyed by upper-case style code
+     */
+    public function forStyles(array $styleCodes): array;
 }

@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Assistant;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Api\Assistant\Application\AssistantAvailability;
 use TriCab\Api\Assistant\Application\AssistantCatalogueVisibility;
 use TriCab\Api\Assistant\Application\AssistantProductGrounder;
 use TriCab\Api\Assistant\Application\AssistantCodeProduct;
 use TriCab\Api\Assistant\Application\AssistantCodeProductLookup;
 use TriCab\Api\Assistant\Application\AssistantStyleOptionsProvider;
+use TriCab\Api\Assistant\Application\AssistantStyleSizes;
 use TriCab\Api\Assistant\Application\AssistantToolResult;
+use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantAvailability;
 use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantCodeProductLookup;
+use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantStyleSizes;
 use TriCab\Api\Assistant\Infrastructure\ProductAssistantToolExecutor;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProduct3DModelRepository;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductCodeSearchRepository;
@@ -56,12 +60,8 @@ final class ProductAssistantToolExecutorTest extends TestCase
             AssistantCatalogueVisibility::PUBLIC,
         );
 
-        $advisories = self::advisories($result);
-        self::assertSame(
-            ['Stock status is incomplete and must not be presented as a confirmed live availability promise.'],
-            $advisories,
-        );
-        self::assertStringNotContainsStringIgnoringCase('sizing', implode(' ', $advisories));
+        // Availability is live now, so a stated construction carries no caveat at all.
+        self::assertSame([], self::advisories($result));
 
         // Nor on the card the customer sees.
         $warnings = self::cardWarnings($result);
@@ -223,7 +223,7 @@ final class ProductAssistantToolExecutorTest extends TestCase
             AssistantCatalogueVisibility::PUBLIC,
         );
 
-        self::assertCount(2, self::advisories($result));
+        self::assertCount(1, self::advisories($result));
         self::assertStringContainsString(
             '29% of the measured cases',
             implode(' ', self::advisories($result)),
@@ -338,9 +338,125 @@ final class ProductAssistantToolExecutorTest extends TestCase
             ->data;
 
         self::assertSame('Showing all 2 matching styles.', $data['coverage']);
-        self::assertSame([], $this->executor(new NullProductFinderClient(), $styles)
-            ->execute('list_style_options', ['text' => 'earthing'], null, AssistantCatalogueVisibility::PUBLIC)
-            ->cards, 'a style answer offers no product cards');
+    }
+
+    public function test_each_style_row_becomes_a_style_card_with_its_picture(): void
+    {
+        $styles = $this->createStub(AssistantStyleOptionsProvider::class);
+        $styles->method('search')->willReturn([
+            'items' => [
+                ['styleCode' => 'KA', 'displayName' => 'Flexible Rubber Armoured', 'facets' => [
+                    'STYLE-SYNONYMS' => ['name' => 'Synonyms', 'value' => 'KA | Flexible Rubber Armoured | Flexible Rubber and Armour cable for Mining. | AS/NZS 1125 | 600/1000 V', 'label' => null],
+                    'VOLTAGE-CLASS' => ['name' => 'Voltage class', 'value' => 'LV', 'label' => '600/1000 V'],
+                    'IS-ARMOURED' => ['name' => 'Armoured', 'value' => true, 'label' => null],
+                    'IS-LSZH' => ['name' => 'LSZH', 'value' => false, 'label' => null],
+                    'MAX-TEMP-C' => ['name' => 'Max temp', 'value' => 110, 'label' => null],
+                ]],
+                ['styleCode' => 'XL', 'displayName' => 'XLPE Power', 'facets' => []],
+            ],
+            'totalItems' => 2,
+            'page' => 1,
+            'pageSize' => 20,
+        ]);
+        $products = new InMemoryAssistantCodeProductLookup();
+        $products->addStyle('KA', new AssistantCodeProduct('https://img.test/ka.png', '#ffffff', 'flexible-rubber-armoured', null));
+
+        $cards = $this->executor(new NullProductFinderClient(), $styles, $products)
+            ->execute('list_style_options', ['text' => 'mining'], null, AssistantCatalogueVisibility::PUBLIC)
+            ->cards;
+
+        self::assertCount(2, $cards);
+        self::assertSame('style', $cards[0]['type']);
+        self::assertSame('KA', $cards[0]['styleCode']);
+        self::assertSame('Flexible Rubber Armoured', $cards[0]['title']);
+        self::assertSame('Flexible Rubber and Armour cable for Mining.', $cards[0]['summary']);
+        self::assertSame('600/1000 V', $cards[0]['voltage']);
+        self::assertSame(110, $cards[0]['maxTempC']);
+        self::assertSame(['Armoured'], $cards[0]['tags'], 'only facets stated true become tags');
+        self::assertSame(['url' => 'https://img.test/ka.png', 'backgroundColor' => '#ffffff'], $cards[0]['image']);
+        self::assertSame('flexible-rubber-armoured', $cards[0]['productSlug']);
+
+        // XL has no catalogue product assigned: still a card, with no picture.
+        self::assertSame('XL', $cards[1]['styleCode']);
+        self::assertNull($cards[1]['image']);
+        self::assertNull($cards[1]['summary']);
+    }
+
+    public function test_the_finder_answer_takes_its_availability_live_and_drops_internal_notes(): void
+    {
+        $availability = new InMemoryAssistantAvailability();
+        $availability->set('CA-PASN/5C120OR', AssistantAvailability::MAKE);
+        $executor = $this->executor($this->finderReturning([
+            'status' => 'resolved',
+            'productCode' => 'CA-PASN/5C120OR',
+            'stocked' => true,
+            'sizing' => null,
+            'codeSegments' => ['style' => 'CA'],
+            'warnings' => [
+                "Read as Multi LSZH rather than SDI LSZH — the requirement is a multi-core AC circuit. Say 'single core' if separate cores are wanted.",
+                'Generated code CA-PASN/5C120OR is not in the autocomplete CSV; use the Cost API price/stock result as the authority.',
+                'This construction is not a catalogue line. It can be made — confirm with TSD before quoting.',
+            ],
+        ]), availability: $availability);
+
+        $result = $executor->execute('find_product', ['text' => '5 core 120mm2 LSZH armoured'], 'AU', AssistantCatalogueVisibility::PUBLIC);
+
+        // The snapshot said stocked; the live source says made to order, and both the agent and the card follow it.
+        self::assertFalse($result->data['stocked']);
+        self::assertSame('MAKE', $result->cards[0]['stockStatus']);
+        self::assertSame(
+            ["Read as Multi LSZH rather than SDI LSZH — the requirement is a multi-core AC circuit. Say 'single core' if separate cores are wanted."],
+            $result->data['warnings'],
+        );
+    }
+
+    public function test_a_code_the_live_source_cannot_answer_for_has_no_availability(): void
+    {
+        $executor = $this->executor($this->finderReturning([
+            'status' => 'resolved',
+            'productCode' => 'KL-PAXN/1C95OR',
+            'stocked' => true,
+            'sizing' => null,
+            'codeSegments' => ['style' => 'KL'],
+        ]));
+
+        $result = $executor->execute('find_product', ['text' => 'KL 1C 95mm'], null, AssistantCatalogueVisibility::PUBLIC);
+
+        self::assertNull($result->data['stocked'], 'a stale snapshot is worse than saying nothing');
+        self::assertNull($result->cards[0]['stockStatus']);
+    }
+
+    public function test_the_size_picker_offers_only_sizes_the_style_is_made_in(): void
+    {
+        $sizes = new InMemoryAssistantStyleSizes();
+        $sizes->add('KA', 3, 16, 25);
+        $sizes->add('KA', 4, 2.5, 16);
+
+        $result = $this->executor(new NullProductFinderClient(), styleSizes: $sizes)
+            ->execute('offer_size_picker', ['style' => 'ka', 'coreCount' => 4], null, AssistantCatalogueVisibility::PUBLIC);
+
+        self::assertTrue($result->data['shown']);
+        self::assertCount(1, $result->cards);
+        $card = $result->cards[0];
+        self::assertSame('size-picker', $card['type']);
+        self::assertSame('KA', $card['styleCode']);
+        self::assertSame(4, $card['coreCount']);
+        self::assertNull($card['crossSectionMm2']);
+        self::assertSame([
+            ['coreCount' => 3, 'sizesMm2' => [16.0, 25.0]],
+            ['coreCount' => 4, 'sizesMm2' => [2.5, 16.0]],
+        ], $card['options']);
+    }
+
+    public function test_a_style_with_no_sizes_shows_no_picker_and_says_to_ask_in_prose(): void
+    {
+        $result = $this->executor(new NullProductFinderClient())
+            ->execute('offer_size_picker', ['style' => 'ZZ'], null, AssistantCatalogueVisibility::PUBLIC);
+
+        self::assertFalse($result->data['shown']);
+        self::assertSame([], $result->cards);
+        self::assertIsString($result->data['reason']);
+        self::assertStringContainsString('in prose', $result->data['reason']);
     }
 
     public function test_style_search_takes_free_text_for_what_a_cable_is_for(): void
@@ -461,6 +577,8 @@ final class ProductAssistantToolExecutorTest extends TestCase
         ProductFinderClient $finder,
         ?AssistantStyleOptionsProvider $styles = null,
         ?AssistantCodeProductLookup $codeProducts = null,
+        ?AssistantStyleSizes $styleSizes = null,
+        ?AssistantAvailability $availability = null,
     ): ProductAssistantToolExecutor {
         // Only the finder seam matters here; the other tools have their own
         // tests and `find_product` never reaches them. The services are final,
@@ -482,6 +600,8 @@ final class ProductAssistantToolExecutorTest extends TestCase
             ),
             $styles ?? $this->createStub(AssistantStyleOptionsProvider::class),
             $codeProducts ?? new InMemoryAssistantCodeProductLookup(),
+            $styleSizes ?? new InMemoryAssistantStyleSizes(),
+            $availability ?? new InMemoryAssistantAvailability(),
         );
     }
 }

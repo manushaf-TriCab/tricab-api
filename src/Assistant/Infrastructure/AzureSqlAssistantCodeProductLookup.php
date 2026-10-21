@@ -44,9 +44,10 @@ final readonly class AzureSqlAssistantCodeProductLookup implements AssistantCode
         $prefix = strtoupper(explode('-', $code, 2)[0]);
         $indexStyle = $styleCode !== null && trim($styleCode) !== '' ? strtoupper(trim($styleCode)) : $prefix;
         $coreSuffix = $coreCount !== null ? '%-' . $coreCount . 'C' : '';
+        $thumbnail = self::thumbnailSql('p.[ProductId]');
 
         $rows = $this->connection->fetchAll(
-            <<<'SQL'
+            <<<SQL
 WITH [linked] AS (
     SELECT TOP 1 v.[ProductId], v.[PublicId] AS [VariantPublicId]
     FROM [product].[ProductCodeIndex] i
@@ -82,28 +83,7 @@ SELECT
           AND slug.[IsPrimary] = 1
         ORDER BY slug.[ProductSlugId]
     ) END AS [Slug],
-    (
-        SELECT TOP 1 COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl])
-        FROM [product].[ProductImages] img
-        WHERE img.[ProductId] = p.[ProductId]
-          AND img.[DeletedAtUtc] IS NULL
-          AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
-        ORDER BY
-          CASE WHEN EXISTS (
-              SELECT 1
-              FROM [product].[ProductImageRoleAssignments] ra
-              WHERE ra.[ProductImagesId] = img.[ProductImagesId]
-                AND ra.[RoleCode] = N'product-thumbnail'
-          ) THEN 0 ELSE 1 END,
-          CASE LOWER(img.[ImageRoleCode])
-              WHEN N'product-thumbnail' THEN 0
-              WHEN N'primary' THEN 1
-              ELSE 2
-          END,
-          CASE WHEN img.[IsPrimary] = 1 THEN 0 ELSE 1 END,
-          img.[DisplayOrder],
-          img.[ProductImagesId]
-    ) AS [ImageUrl]
+    ({$thumbnail}) AS [ImageUrl]
 FROM [product].[Products] p
 INNER JOIN [product].[ProductStatuses] ps ON ps.[ProductStatusId] = p.[ProductStatusId]
 WHERE p.[ProductId] = COALESCE((SELECT [ProductId] FROM [linked]), (SELECT [ProductId] FROM [styled]))
@@ -131,5 +111,118 @@ SQL,
             productSlug: AzureSqlValueMapper::nullableString($row['Slug'] ?? null),
             variantPublicId: AzureSqlValueMapper::nullableString($row['VariantPublicId'] ?? null),
         );
+    }
+
+    /**
+     * One query for a page of styles. Among a style's assigned products the one
+     * with a picture wins, then a published one, since the card exists to show
+     * the construction. A stand-in never supplies a variant: no single code is
+     * being quoted.
+     *
+     * Products assigned to a child style count too, after the style's own: the
+     * register names the family (`BV`, Shipboard Power & Control) while the
+     * catalogue assigns its products to the children (`BVA`, `BVC`, `BVM`,
+     * `BVP`), so without them every marine family showed no picture.
+     */
+    public function forStyles(array $styleCodes): array
+    {
+        $codes = array_values(array_unique(array_filter(
+            array_map(static fn (string $code): string => strtoupper(trim($code)), $styleCodes),
+            static fn (string $code): bool => $code !== '',
+        )));
+        if ($codes === []) {
+            return [];
+        }
+
+        $params = [];
+        foreach ($codes as $index => $code) {
+            $params['style' . $index] = $code;
+        }
+        $placeholders = implode(', ', array_map(static fn (string $key): string => ':' . $key, array_keys($params)));
+        $thumbnail = self::thumbnailSql('sp.[ProductId]');
+
+        $rows = $this->connection->fetchAll(
+            <<<SQL
+SELECT
+    s.[StyleCode],
+    pick.[ThumbnailBackgroundColor],
+    pick.[ImageUrl],
+    CASE WHEN pick.[StatusCode] = N'published' THEN (
+        SELECT TOP 1 slug.[Slug]
+        FROM [product].[ProductSlugs] slug
+        WHERE slug.[ProductId] = pick.[ProductId]
+          AND slug.[DeletedAtUtc] IS NULL
+          AND slug.[IsPrimary] = 1
+        ORDER BY slug.[ProductSlugId]
+    ) END AS [Slug]
+FROM [product].[ProductStyles] s
+CROSS APPLY (
+    SELECT TOP 1 sp.[ProductId], sp.[ThumbnailBackgroundColor], sps.[StatusCode], img.[ImageUrl]
+    FROM [product].[ProductStyleAssignments] a
+    INNER JOIN [product].[ProductStyles] assigned ON assigned.[ProductStyleId] = a.[ProductStyleId]
+    INNER JOIN [product].[Products] sp ON sp.[ProductId] = a.[ProductId]
+    INNER JOIN [product].[ProductStatuses] sps ON sps.[ProductStatusId] = sp.[ProductStatusId]
+    OUTER APPLY (SELECT ({$thumbnail}) AS [ImageUrl]) img
+    WHERE (assigned.[ProductStyleId] = s.[ProductStyleId] OR assigned.[ParentStyleId] = s.[ProductStyleId])
+      AND assigned.[DeletedAtUtc] IS NULL
+      AND sp.[DeletedAtUtc] IS NULL
+      AND sps.[StatusCode] IN (N'published', N'draft')
+    ORDER BY
+      CASE WHEN img.[ImageUrl] IS NULL THEN 1 ELSE 0 END,
+      CASE WHEN assigned.[ProductStyleId] = s.[ProductStyleId] THEN 0 ELSE 1 END,
+      CASE WHEN sps.[StatusCode] = N'published' THEN 0 ELSE 1 END,
+      sp.[ProductId]
+) pick
+WHERE s.[DeletedAtUtc] IS NULL
+  AND s.[StyleCode] IN ({$placeholders})
+SQL,
+            $params,
+        );
+
+        $found = [];
+        foreach ($rows as $row) {
+            $styleCode = strtoupper(AzureSqlValueMapper::stringValue($row['StyleCode'] ?? null));
+            if ($styleCode === '' || isset($found[$styleCode])) {
+                continue;
+            }
+            $found[$styleCode] = new AssistantCodeProduct(
+                imageUrl: $this->images->present(AzureSqlValueMapper::nullableString($row['ImageUrl'] ?? null)),
+                imageBackgroundColor: AzureSqlValueMapper::nullableString($row['ThumbnailBackgroundColor'] ?? null),
+                productSlug: AzureSqlValueMapper::nullableString($row['Slug'] ?? null),
+                variantPublicId: null,
+            );
+        }
+
+        return $found;
+    }
+
+    /**
+     * The product's thumbnail, chosen exactly as product search chooses it.
+     * Shared so a code card and a style card for the same product never differ.
+     */
+    private static function thumbnailSql(string $productIdColumn): string
+    {
+        return <<<SQL
+SELECT TOP 1 COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl])
+        FROM [product].[ProductImages] img
+        WHERE img.[ProductId] = {$productIdColumn}
+          AND img.[DeletedAtUtc] IS NULL
+          AND COALESCE(img.[ThumbnailPublicUrl], img.[PublicUrl]) IS NOT NULL
+        ORDER BY
+          CASE WHEN EXISTS (
+              SELECT 1
+              FROM [product].[ProductImageRoleAssignments] ra
+              WHERE ra.[ProductImagesId] = img.[ProductImagesId]
+                AND ra.[RoleCode] = N'product-thumbnail'
+          ) THEN 0 ELSE 1 END,
+          CASE LOWER(img.[ImageRoleCode])
+              WHEN N'product-thumbnail' THEN 0
+              WHEN N'primary' THEN 1
+              ELSE 2
+          END,
+          CASE WHEN img.[IsPrimary] = 1 THEN 0 ELSE 1 END,
+          img.[DisplayOrder],
+          img.[ProductImagesId]
+SQL;
     }
 }

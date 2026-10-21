@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace TriCab\Api\Assistant\Infrastructure;
 
 use InvalidArgumentException;
+use TriCab\Api\Assistant\Application\AssistantAvailability;
 use TriCab\Api\Assistant\Application\AssistantCatalogueVisibility;
 use TriCab\Api\Assistant\Application\AssistantProductGrounder;
 use TriCab\Api\Assistant\Application\AssistantReplySpec;
+use TriCab\Api\Assistant\Application\AssistantCodeProduct;
 use TriCab\Api\Assistant\Application\AssistantCodeProductLookup;
 use TriCab\Api\Assistant\Application\AssistantStyleOptionsProvider;
+use TriCab\Api\Assistant\Application\AssistantStyleSizes;
 use TriCab\Api\Assistant\Application\AssistantToolExecutor;
 use TriCab\Api\Assistant\Application\AssistantToolResult;
 use TriCab\Api\Assistant\Application\GroundedProduct;
@@ -39,6 +42,25 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
      */
     private const MAX_STYLE_RESULTS = 50;
 
+    /** What the agent is told about the live stock status it is given. */
+    private const AVAILABILITY_NOTE = 'Live from TriCab\'s stock system: STOCK (stocked: true) is held in stock, MAKE (stocked: false) is made to order, and null means unknown — then say nothing about availability.';
+
+    /**
+     * Finder notes written for staff and their systems. They tell the customer
+     * nothing they can act on, and the agent repeated them ("not a catalogue
+     * line", "confirm with TSD"), so they never reach it.
+     */
+    private const INTERNAL_NOTE_PATTERNS = ['/autocomplete CSV/i', '/catalogue line/i', '/Cost API/i', '/\bTSD\b/'];
+
+    /** The boolean style facets a style card shows as tags, only when stated true. */
+    private const STYLE_TAGS = [
+        'IS-LSZH' => 'LSZH',
+        'IS-FIRE-RESISTANT' => 'Fire resistant',
+        'IS-ARMOURED' => 'Armoured',
+        'HAS-SCREEN' => 'Screened',
+        'IS-TERMITE-RESISTANT' => 'Termite resistant',
+    ];
+
     public function __construct(
         private SearchProductCodesService $searchProductCodes,
         private ProductFinderClient $productFinder,
@@ -47,6 +69,8 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         private AssistantProductGrounder $productGrounder,
         private AssistantStyleOptionsProvider $styleOptions,
         private AssistantCodeProductLookup $codeProducts,
+        private AssistantStyleSizes $styleSizes,
+        private AssistantAvailability $availability,
     ) {
     }
 
@@ -141,6 +165,11 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
                 'page' => ['type' => 'integer', 'minimum' => 1],
                 'pageSize' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 50],
             ]),
+            $this->tool('offer_size_picker', 'Show the customer a picker under your reply: a core-count box and a dropdown of the conductor sizes that really exist for one style. Call it once the style is settled but the core count or the size is still missing, instead of asking for them in prose. After calling it, ask for the missing value in one short sentence and do not list the sizes or core counts yourself — the picker shows them. The customer\'s choice comes back as their next message.', [
+                'style' => ['type' => 'string', 'description' => 'The settled style code, e.g. "KA".'],
+                'coreCount' => ['type' => 'integer', 'minimum' => 1, 'description' => 'The core count, only when the customer has already given it; the picker starts on it.'],
+                'crossSectionMm2' => ['type' => 'number', 'exclusiveMinimum' => 0, 'description' => 'The size in mm², only when the customer has already given it.'],
+            ], ['style']),
         ];
     }
 
@@ -151,19 +180,23 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         AssistantCatalogueVisibility $catalogueVisibility,
     ): AssistantToolResult {
         return match ($name) {
-            'search_product_codes' => $this->searchProductCodes($input, $catalogueVisibility),
+            'search_product_codes' => $this->searchProductCodes($input, $catalogueVisibility, $regionCode),
             'find_product' => $this->findProduct($input, $regionCode),
             'calculate_cable' => $this->calculateCable($input),
             'search_products' => $this->searchProducts($input, $regionCode, $catalogueVisibility),
             'get_product_detail' => $this->getProductDetail($input, $regionCode, $catalogueVisibility),
             'list_style_options' => $this->listStyleOptions($input),
+            'offer_size_picker' => $this->offerSizePicker($input),
             default => throw new InvalidArgumentException('Unknown assistant tool.'),
         };
     }
 
     /** @param array<string, mixed> $input */
-    private function searchProductCodes(array $input, AssistantCatalogueVisibility $visibility): AssistantToolResult
-    {
+    private function searchProductCodes(
+        array $input,
+        AssistantCatalogueVisibility $visibility,
+        ?string $regionCode,
+    ): AssistantToolResult {
         $result = $this->searchProductCodes->execute(new ProductCodeSearchCriteria(
             text: $this->string($input, 'text'),
             styleCodes: $this->stringList($input, 'styleCodes'),
@@ -190,18 +223,32 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         ));
 
         $styleCodes = $this->stringList($input, 'styleCodes');
+        // The index's own status is a partial snapshot; the live one replaces it, item by item.
+        $live = $this->availability->forCodes(
+            array_map(static fn ($item): string => $item->codeValue, $result->items),
+            $regionCode,
+        );
+        $items = array_map(
+            static function ($item) use ($live): array {
+                $serialized = ProductManagementDtoSerializer::codeSearchResult($item);
+                $serialized['stockStatus'] = $live[$item->codeValue] ?? null;
+
+                return $serialized;
+            },
+            $result->items,
+        );
 
         return new AssistantToolResult(data: [
-            'items' => array_map(ProductManagementDtoSerializer::codeSearchResult(...), $result->items),
+            'items' => $items,
             'pagination' => [
                 'page' => $result->pagination->page,
                 'pageSize' => $result->pagination->pageSize,
                 'totalItems' => $result->pagination->totalItems,
                 'totalPages' => $result->pagination->totalPages,
             ],
-            'stockStatusCoverage' => 'incomplete; null means unknown and STOCK/MAKE comes from a partial snapshot',
+            'stockStatus' => self::AVAILABILITY_NOTE,
         ], cards: array_map(
-            $this->codeSearchCard(...),
+            fn ($item): array => $this->codeSearchCard($item, $live[$item->codeValue] ?? null),
             array_slice($result->items, 0, 4),
         ), spec: AssistantReplySpec::fromCodeSearch(
             $this->int($input, 'coreCount'),
@@ -237,21 +284,25 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         }
 
         $data = $this->productFinder->find($query)->toArray();
-
-        // The stock caveat is always true. The sizing one is only true when the
-        // finder actually sized something: a stated construction with no
-        // electrical duty comes back with `sizing: null`, and caveating absent
-        // sizing gives the agent a reason to distrust a correct construction
-        // answer and go looking for a second opinion it cannot get.
-        $advisories = [
-            'Stock status is incomplete and must not be presented as a confirmed live availability promise.',
-        ];
-        if (self::wasSized($data)) {
-            $advisories[] = 'Sizing is advisory: Technical has not yet approved the finder sizing snapshot, which differs from live MySQL for 29% of the measured cases.';
-        }
-        $data['assistantAdvisories'] = $advisories;
-
         $productCode = $data['productCode'] ?? null;
+
+        // `stocked` from the finder is the index snapshot; the live status replaces it, and with
+        // none the code says nothing about availability rather than something stale.
+        $live = is_string($productCode) && trim($productCode) !== ''
+            ? ($this->availability->forCodes([$productCode], $regionCode)[$productCode] ?? null)
+            : null;
+        $data['stocked'] = $live === null ? null : $live === AssistantAvailability::STOCK;
+        $data['stockStatus'] = self::AVAILABILITY_NOTE;
+        $data['warnings'] = self::customerNotes($data['warnings'] ?? null);
+
+        // The sizing caveat is only true when the finder actually sized
+        // something: a stated construction with no electrical duty comes back
+        // with `sizing: null`, and caveating absent sizing gives the agent a
+        // reason to distrust a correct construction answer and go looking for a
+        // second opinion it cannot get.
+        $data['assistantAdvisories'] = self::wasSized($data)
+            ? ['Sizing is advisory: Technical has not yet approved the finder sizing snapshot, which differs from live MySQL for 29% of the measured cases.']
+            : [];
 
         return new AssistantToolResult(
             data: $data,
@@ -337,8 +388,12 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             min(self::MAX_STYLE_RESULTS, $this->int($input, 'pageSize') ?? 20),
         );
         $shown = count($result['items']);
+        $products = $this->codeProducts->forStyles(array_values(array_filter(array_map(
+            static fn (array $style): string => is_string($style['styleCode'] ?? null) ? $style['styleCode'] : '',
+            $result['items'],
+        ))));
 
-        return new AssistantToolResult([
+        return new AssistantToolResult(data: [
             'styles' => $result['items'],
             'pagination' => [
                 'page' => $result['page'],
@@ -360,7 +415,90 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
                 )
                 : sprintf('Showing all %d matching styles.', $result['totalItems']),
             'classificationReview' => 'Some styles and facets are unknown pending Technical review; absence is not false.',
-        ]);
+        ], cards: array_map(
+            fn (array $style): array => $this->styleCard($style, $products),
+            $result['items'],
+        ));
+    }
+
+    /** @param array<string, mixed> $input */
+    private function offerSizePicker(array $input): AssistantToolResult
+    {
+        $style = strtoupper($this->requiredString($input, 'style'));
+        $options = $this->styleSizes->forStyle($style);
+        if ($options === []) {
+            // No card: an empty picker is worse than the question in prose.
+            return new AssistantToolResult(data: [
+                'shown' => false,
+                'reason' => sprintf('No metric product codes are indexed for style %s, so no picker was shown. Ask for the core count and size in prose.', $style),
+            ]);
+        }
+
+        $coreCount = $this->int($input, 'coreCount');
+        $crossSection = $this->float($input, 'crossSectionMm2');
+
+        return new AssistantToolResult(
+            data: [
+                'shown' => true,
+                'style' => $style,
+                'options' => $options,
+                'instruction' => 'The customer now sees a core-count box and a size dropdown under your reply. Ask for the missing value in one short sentence; do not list the sizes or core counts.',
+            ],
+            cards: [[
+                'type' => 'size-picker',
+                'styleCode' => $style,
+                'coreCount' => $coreCount,
+                'crossSectionMm2' => $crossSection,
+                'options' => $options,
+            ]],
+        );
+    }
+
+    /**
+     * A thumbnail card for one style row. The register line is
+     * `code | name | application | standards | voltage | temperature | …`, so
+     * its third field is the one-line "what it is for".
+     *
+     * @param array<string, mixed> $style
+     * @param array<string, AssistantCodeProduct> $products
+     * @return array<string, mixed>
+     */
+    private function styleCard(array $style, array $products): array
+    {
+        $styleCode = is_string($style['styleCode'] ?? null) ? $style['styleCode'] : '';
+        $facets = is_array($style['facets'] ?? null) ? $style['facets'] : [];
+        $facet = static function (string $code) use ($facets): ?array {
+            $value = $facets[$code] ?? null;
+
+            return is_array($value) ? $value : null;
+        };
+
+        $line = $facet('STYLE-SYNONYMS')['value'] ?? null;
+        $fields = is_string($line) ? array_map('trim', explode('|', $line)) : [];
+        $summary = ($fields[2] ?? '') !== '' ? $fields[2] : null;
+
+        $tags = [];
+        foreach (self::STYLE_TAGS as $code => $label) {
+            if (($facet($code)['value'] ?? null) === true) {
+                $tags[] = $label;
+            }
+        }
+
+        $voltage = $facet('VOLTAGE-CLASS');
+        $maxTemp = $facet('MAX-TEMP-C')['value'] ?? null;
+        $product = $products[strtoupper($styleCode)] ?? null;
+
+        return [
+            'type' => 'style',
+            'styleCode' => $styleCode,
+            'title' => is_string($style['displayName'] ?? null) ? $style['displayName'] : $styleCode,
+            'summary' => $summary,
+            'voltage' => $voltage !== null ? ($voltage['label'] ?? (is_string($voltage['value'] ?? null) ? $voltage['value'] : null)) : null,
+            'maxTempC' => is_int($maxTemp) ? $maxTemp : null,
+            'tags' => $tags,
+            'image' => $product?->image(),
+            'productSlug' => $product?->productSlug,
+        ];
     }
 
     /**
@@ -392,8 +530,11 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         return $data;
     }
 
-    /** @return array<string, mixed> */
-    private function codeSearchCard(\TriCab\Core\Product\Application\DTO\ProductCodeSearchResult $result): array
+    /**
+     * @param AssistantAvailability::STOCK|AssistantAvailability::MAKE|null $stockStatus
+     * @return array<string, mixed>
+     */
+    private function codeSearchCard(\TriCab\Core\Product\Application\DTO\ProductCodeSearchResult $result, ?string $stockStatus): array
     {
         $serialized = ProductManagementDtoSerializer::codeSearchResult($result);
         $product = $this->codeProducts->forCode($result->codeValue, $result->styleCode, $result->coreCount);
@@ -404,7 +545,7 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             'title' => $result->productName ?? $result->styleName ?? $result->styleCode,
             'description' => $result->description,
             'segments' => $serialized['segments'],
-            'stockStatus' => $result->stockStatus,
+            'stockStatus' => $stockStatus,
             'isCurrent' => $result->isCurrent,
             'matchTier' => $result->matchTier,
             'confidence' => null,
@@ -412,10 +553,35 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             'variantPublicId' => $result->variantPublicId ?? $product?->variantPublicId,
             'image' => $product?->image(),
             'working' => null,
-            'warnings' => [
-                'Stock status comes from a partial snapshot; an empty status means unknown.',
-            ],
+            'warnings' => [],
         ];
+    }
+
+    /**
+     * The finder's notes without the internal ones.
+     *
+     * @return list<string>
+     */
+    private static function customerNotes(mixed $warnings): array
+    {
+        if (!is_array($warnings)) {
+            return [];
+        }
+
+        $notes = [];
+        foreach ($warnings as $warning) {
+            if (!is_string($warning)) {
+                continue;
+            }
+            foreach (self::INTERNAL_NOTE_PATTERNS as $pattern) {
+                if (preg_match($pattern, $warning) === 1) {
+                    continue 2;
+                }
+            }
+            $notes[] = $warning;
+        }
+
+        return $notes;
     }
 
     /**
@@ -467,7 +633,6 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
         if (self::wasSized($data)) {
             $warnings[] = 'Sizing is advisory until Technical approves the finder sizing snapshot.';
         }
-        $warnings[] = 'Stock status is incomplete and is not a confirmed live availability promise.';
         $codeCount = $segments['conductorCount'] ?? null;
         $product = $this->codeProducts->forCode(
             is_string($data['productCode'] ?? null) ? $data['productCode'] : '',

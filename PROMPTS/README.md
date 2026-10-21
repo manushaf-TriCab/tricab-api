@@ -34,7 +34,7 @@ Current prompts:
   style-level question, tells the agent to search it by what a cable is *for* rather than only by
   style code, and requires it to read the new `pagination` / `coverage` fields before concluding
   that a style or a whole category does not exist.
-- `product-assistant-response-v7.md` is current. It closes four gaps found testing v6 against the
+- `product-assistant-response-v7.md` closes four gaps found testing v6 against the
   cable register: a quotation must come from a tool result received this turn (v6 let the agent
   reconstruct a plausible application sentence for one style out of a structurally equivalent
   style's wording); a record that does not carry the property asked about is reported as not
@@ -42,3 +42,13 @@ Current prompts:
   session's catalogue visibility are never narrated to the customer; and an answer stops once the
   question is answered, adding only a property the customer would otherwise wrongly assume. It also
   requires an application's qualifying condition to travel in the same sentence as the verdict.
+- `product-assistant-response-v8.md` shortens replies so they do not repeat the product card.
+- `product-assistant-response-v9.md` is current. It adds `offer_size_picker`, which shows the
+  customer a core-count box and a size dropdown instead of asking for both in prose, and the style
+  cards: a style the answer names as a bare `` `CODE` `` span is shown as a thumbnail card, so the
+  agent writes only the styles it suggests that way. It also answers every question in a message
+  (a requirement plus "is KA LSZH?" gets the no, checked with `list_style_options`, and the style
+  that has the property), always uses the picker to ask for cores or size once the style is known,
+  and keeps internal names (TSD, Cost API, tool names) out of customer replies. Stock status is
+  live from the Cost API, so availability is "in stock" or "made to order" and never "not a
+  catalogue line".

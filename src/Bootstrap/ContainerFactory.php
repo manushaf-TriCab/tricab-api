@@ -16,12 +16,14 @@ use TriCab\Api\Assistant\Application\AssistantConversationRepository;
 use TriCab\Api\Assistant\Application\AssistantProductGrounder;
 use TriCab\Api\Assistant\Application\AssistantCodeProductLookup;
 use TriCab\Api\Assistant\Application\AssistantStyleOptionsProvider;
+use TriCab\Api\Assistant\Application\AssistantStyleSizes;
 use TriCab\Api\Assistant\Application\AssistantToolExecutor;
 use TriCab\Api\Assistant\Application\ProductAssistantService;
 use TriCab\Api\Assistant\Infrastructure\AgentAssistantQueryInterpreter;
 use TriCab\Api\Assistant\Infrastructure\AzureSqlAssistantConversationRepository;
 use TriCab\Api\Assistant\Infrastructure\AzureSqlAssistantCodeProductLookup;
 use TriCab\Api\Assistant\Infrastructure\AzureSqlAssistantStyleOptionsProvider;
+use TriCab\Api\Assistant\Infrastructure\AzureSqlAssistantStyleSizes;
 use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantQueryInterpreter;
 use TriCab\Api\Assistant\Infrastructure\DeterministicAssistantResponseProvider;
 use TriCab\Api\Assistant\Infrastructure\FallbackAssistantResponseProvider;
@@ -30,6 +32,7 @@ use TriCab\Api\Assistant\Infrastructure\Foundry\ManagedIdentityFoundryAccessToke
 use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantConversationRepository;
 use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantCodeProductLookup;
 use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantStyleOptionsProvider;
+use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantStyleSizes;
 use TriCab\Api\Assistant\Infrastructure\ProductAssistantToolExecutor;
 use TriCab\Api\Assistant\Infrastructure\SearchGroundedDeterministicAssistantResponseProvider;
 use TriCab\Api\Assistant\Infrastructure\Prompt\MarkdownPromptRepository;
@@ -2073,7 +2076,7 @@ final class ContainerFactory
                     endpoint: $settings->foundryEndpoint,
                     deployment: $settings->foundryModelDeployment,
                     authMode: $settings->foundryAuthMode,
-                    prompt: $prompts->get('product-assistant-response', 'v8'),
+                    prompt: $prompts->get('product-assistant-response', 'v9'),
                     maxToolCalls: $settings->foundryMaxToolCalls,
                     apiKey: $settings->foundryApiKey,
                     trace: self::get($container, AssistantTurnTrace::class),
@@ -2098,6 +2101,8 @@ final class ContainerFactory
             AssistantProductGrounder::class => \DI\autowire(AssistantProductGrounder::class),
             ProductAssistantToolExecutor::class => \DI\autowire(ProductAssistantToolExecutor::class),
             AssistantToolExecutor::class => \DI\get(ProductAssistantToolExecutor::class),
+            // The pricing gateway, so availability follows LEGACY_COST_API_ENABLED: disabled, it reports none.
+            \TriCab\Api\Assistant\Application\AssistantAvailability::class => \DI\autowire(\TriCab\Api\Assistant\Infrastructure\CostApiAssistantAvailability::class),
             SearchGroundedDeterministicAssistantResponseProvider::class => \DI\autowire(SearchGroundedDeterministicAssistantResponseProvider::class),
             ProductAssistantService::class => \DI\autowire(ProductAssistantService::class),
             AssistantErrorMapper::class => \DI\autowire(AssistantErrorMapper::class),
@@ -3584,6 +3589,7 @@ final class ContainerFactory
             $definitions[AssistantConversationRepository::class] = \DI\autowire(AzureSqlAssistantConversationRepository::class);
             $definitions[AssistantStyleOptionsProvider::class] = \DI\autowire(AzureSqlAssistantStyleOptionsProvider::class);
             $definitions[AssistantCodeProductLookup::class] = \DI\autowire(AzureSqlAssistantCodeProductLookup::class);
+            $definitions[AssistantStyleSizes::class] = \DI\autowire(AzureSqlAssistantStyleSizes::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(AzureSqlProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(AzureSqlProductClassificationRepository::class);
             $definitions[ProductStyleRepository::class] = \DI\autowire(AzureSqlProductStyleRepository::class);
@@ -3743,6 +3749,7 @@ SQL,
             $definitions[ProductCodeSearchRepository::class] = \DI\autowire(InMemoryProductCodeSearchRepository::class);
             $definitions[AssistantStyleOptionsProvider::class] = \DI\autowire(InMemoryAssistantStyleOptionsProvider::class);
             $definitions[AssistantCodeProductLookup::class] = \DI\autowire(InMemoryAssistantCodeProductLookup::class);
+            $definitions[AssistantStyleSizes::class] = \DI\autowire(InMemoryAssistantStyleSizes::class);
             $definitions[ProductLookupRepository::class] = \DI\autowire(InMemoryProductLookupRepository::class);
             $definitions[ProductClassificationRepository::class] = \DI\autowire(InMemoryProductClassificationRepository::class);
             $definitions[ProductStyleRepository::class] = \DI\autowire(InMemoryProductStyleRepository::class);

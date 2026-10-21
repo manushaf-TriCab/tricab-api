@@ -27,12 +27,29 @@ namespace TriCab\Api\Assistant\Application;
  * (the product code, falling back to the series name) — the same test applied
  * to the identifiers a customer would recognise.
  *
+ * A style card is matched on its code written as a whole inline code span,
+ * `` `KA` ``, case-sensitively. Style codes are two characters, far too short
+ * for the substring test, but the prompt writes style codes in code spans too,
+ * and a span with nothing else in it is distinctive: it cannot occur inside
+ * "according", and `` `KA-PAXN/4C16OR` `` is a code, not the style. Style
+ * cards follow the order the answer names them in, capped so a long list does
+ * not bury the reply.
+ *
+ * A style card is dropped when the answer also carries a code card of that style: the code card
+ * already shows it, and the style is usually the one being ruled out ("No, `KA` is not LSZH —
+ * `KA-PASN/4C95OR` … for LSZH use `CA`" shows the code and `CA`, not `KA` twice).
+ *
+ * The size picker is not research: the agent called its tool to ask, so the
+ * last one asked for is always kept.
+ *
  * Deliberately not applied to the deterministic providers. Their text is
  * templated and does not reliably name what it found, and their cards are the
  * whole of the answer rather than a residue of research.
  */
 final class AssistantAnswerCards
 {
+    public const MAX_STYLE_CARDS = 6;
+
     /**
      * @param list<array<string, mixed>> $cards
      * @return list<array<string, mixed>>
@@ -44,7 +61,21 @@ final class AssistantAnswerCards
         }
 
         $kept = [];
+        $styles = [];
+        $picker = null;
         foreach ($cards as $card) {
+            $type = $card['type'] ?? null;
+            if ($type === 'size-picker') {
+                $picker = $card;
+                continue;
+            }
+            if ($type === 'style') {
+                $position = self::styleMention($text, $card);
+                if ($position !== null) {
+                    $styles[] = ['position' => $position, 'card' => $card];
+                }
+                continue;
+            }
             foreach (self::identifiers($card) as $identifier) {
                 if (stripos($text, $identifier) !== false) {
                     $kept[] = $card;
@@ -53,7 +84,61 @@ final class AssistantAnswerCards
             }
         }
 
+        // A code card already shows its style, so a style card for the same style only repeats it —
+        // and it is usually the style being ruled out ("No, KA is not LSZH… use CA").
+        $codedStyles = [];
+        foreach ($kept as $card) {
+            if (($card['type'] ?? null) === 'product-code') {
+                $codedStyles[self::codeStyle($card)] = true;
+            }
+        }
+        $styles = array_values(array_filter(
+            $styles,
+            static fn (array $style): bool => !is_string($style['card']['styleCode'] ?? null)
+                || !isset($codedStyles[strtoupper(trim($style['card']['styleCode']))]),
+        ));
+
+        usort($styles, static fn (array $a, array $b): int => $a['position'] <=> $b['position']);
+        foreach (array_slice($styles, 0, self::MAX_STYLE_CARDS) as $style) {
+            $kept[] = $style['card'];
+        }
+        if ($picker !== null) {
+            $kept[] = $picker;
+        }
+
         return $kept;
+    }
+
+    /**
+     * The style a code card belongs to: its style segment, else the code's prefix.
+     *
+     * @param array<string, mixed> $card
+     */
+    private static function codeStyle(array $card): string
+    {
+        $segments = is_array($card['segments'] ?? null) ? $card['segments'] : [];
+        $style = is_string($segments['styleCode'] ?? null) ? trim($segments['styleCode']) : '';
+        if ($style === '' && is_string($card['codeValue'] ?? null)) {
+            $style = explode('-', trim($card['codeValue']), 2)[0];
+        }
+
+        return strtoupper($style);
+    }
+
+    /**
+     * Where the answer first names this style as `` `CODE` ``, or null.
+     *
+     * @param array<string, mixed> $card
+     */
+    private static function styleMention(string $text, array $card): ?int
+    {
+        $code = is_string($card['styleCode'] ?? null) ? trim($card['styleCode']) : '';
+        if ($code === '') {
+            return null;
+        }
+        $position = strpos($text, '`' . $code . '`');
+
+        return $position === false ? null : $position;
     }
 
     /**

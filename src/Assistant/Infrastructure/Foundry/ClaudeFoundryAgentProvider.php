@@ -575,7 +575,7 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
         $unique = [];
         foreach ($cards as $card) {
             $type = is_string($card['type'] ?? null) ? $card['type'] : '';
-            $identity = $card['publicId'] ?? $card['codeValue'] ?? null;
+            $identity = $card['publicId'] ?? $card['codeValue'] ?? $card['styleCode'] ?? null;
             if (!is_string($identity) && !is_int($identity)) {
                 $identity = md5(serialize($card));
             }
