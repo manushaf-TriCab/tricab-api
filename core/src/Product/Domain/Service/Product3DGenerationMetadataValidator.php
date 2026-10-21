@@ -27,6 +27,7 @@ final class Product3DGenerationMetadataValidator
         'assumptions',
         'dimensionsUsed',
         'accessoryDefinition',
+        'representation',
     ];
 
     /**

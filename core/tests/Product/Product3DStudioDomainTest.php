@@ -130,6 +130,10 @@ final class Product3DStudioDomainTest extends TestCase
         self::assertSame(['WIDTH'], $result['data']['dimensionsUsed']);
         self::assertArrayNotHasKey('unknownKey', $result['data']);
 
+        $rep = $validator->validate(['representation' => ['scope' => 'product', 'sourceVariantCode' => 'A1'], 'unknownKey' => 1]);
+        self::assertSame('product', $rep['data']['representation']['scope']);
+        self::assertArrayNotHasKey('unknownKey', $rep['data']);
+
         $this->expectException(InvalidProductValue::class);
         $validator->validate(['accuracy' => ['class' => 'x'], 'assumptions' => ['uses a shader']]);
     }

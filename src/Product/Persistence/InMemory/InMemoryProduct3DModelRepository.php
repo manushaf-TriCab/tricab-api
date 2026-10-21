@@ -8,6 +8,7 @@ use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\Product3DAssetSummary;
 use TriCab\Core\Product\Application\DTO\Product3DModelSummary;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DModel;
+use TriCab\Core\Product\Domain\Service\Product3DPublicRepresentationProjector;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\Exception\Product3DModelNotFound;
 use TriCab\Core\Product\Application\Exception\ProductConcurrencyConflict;
@@ -73,6 +74,7 @@ final class InMemoryProduct3DModelRepository implements Product3DModelRepository
                 storageContainer: $item->storageContainer,
                 storagePath: $item->storagePath,
                 previewImageStoragePath: $item->previewImageStoragePath,
+                representation: (new Product3DPublicRepresentationProjector())->project($item->generationMetadata, $item->productVariantPublicId === null),
             );
         }
         if ($models === []) {

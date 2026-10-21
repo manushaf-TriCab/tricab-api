@@ -10,6 +10,7 @@ use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\Product3DModelSummary;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DModel;
+use TriCab\Core\Product\Domain\Service\Product3DPublicRepresentationProjector;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\Exception\Product3DModelNotFound;
 use TriCab\Core\Product\Application\Exception\ProductConcurrencyConflict;
@@ -183,6 +184,7 @@ SQL,
                 storageContainer: $summary->storageContainer,
                 storagePath: $summary->storagePath,
                 previewImageStoragePath: $summary->previewImageStoragePath,
+                representation: (new Product3DPublicRepresentationProjector())->project($summary->generationMetadata, $summary->productVariantPublicId === null),
             );
         }
 

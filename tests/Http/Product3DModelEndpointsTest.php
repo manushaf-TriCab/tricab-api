@@ -814,6 +814,130 @@ final class Product3DModelEndpointsTest extends TestCase
      * @param array<string, mixed>|null $session
      * @param array<string, mixed>|null $metadata
      */
+    /**
+     * @return array<string, mixed>
+     */
+    private function representationMetadata(): array
+    {
+        return [
+            'version' => 1,
+            'source' => 'specifications',
+            'family' => 'ring-terminal-uninsulated',
+            'representation' => ['scope' => 'product', 'sourceVariantPublicId' => '0b1f5c1e-1111-4222-8333-444455556666', 'sourceVariantCode' => 'A06-AMXX/6.5H2.5'],
+            'accuracy' => ['class' => 'visual-preview'],
+            'dimensionsUsed' => [
+                'overallLength' => ['label' => 'Overall length', 'valueMm' => 21.8, 'definitionCode' => 'OVERALL-LENGTH', 'source' => 'variant', 'value' => 21.8, 'unit' => 'mm'],
+                'studHole' => ['label' => 'Stud hole', 'valueMm' => 6.5, 'definitionCode' => 'STUD-HOLE', 'source' => 'variant', 'value' => 6.5, 'unit' => 'mm'],
+                'width' => ['label' => 'Width', 'valueMm' => 11.0, 'definitionCode' => 'WIDTH', 'source' => 'variant', 'value' => 11.0, 'unit' => 'mm'],
+            ],
+            'assumptions' => [['key' => 'plateThickness', 'label' => 'Plate thickness', 'valueMm' => 0.8, 'basis' => 'x']],
+            'sourceHash' => 'fnv1a32:abcd',
+        ];
+    }
+
+    /**
+     * Uploads + completes a model; optionally publishes it. Returns model public id.
+     *
+     * @param App<ContainerInterface> $app
+     * @param array<string, mixed>|null $metadata
+     */
+    private function seedModel(App $app, string $productPublicId, ?array $metadata, bool $publish, bool $primary = false, ?string $variantPublicId = null): string
+    {
+        $binary = GlbFixture::build();
+        $id = $this->startUpload($app, $productPublicId, $binary, $session, $primary, $metadata);
+        $this->blobStore($app)->putObject((string) $session['storageContainer'], (string) $session['storagePath'], 'model/gltf-binary', $binary);
+        $completed = TestAppFactory::json($app->handle($this->jsonRequest('POST', '/api/v1/admin/product-3d-models/' . $id . '/complete-upload', [])))['data'];
+        if ($variantPublicId !== null) {
+            $store = $this->productStore($app);
+            $map = $store->threeDModelsMap();
+            $map[$id]['productVariantPublicId'] = $variantPublicId;
+            $store->setThreeDModelsMap($map);
+        }
+        if ($publish) {
+            $body = ['expectedRowVersion' => (string) $completed['rowVersion']];
+            if (($metadata['accuracy']['class'] ?? null) === 'visual-preview') {
+                $body['approveApproximation'] = true;
+                $body['approvalNote'] = 'Approved as indicative only';
+            }
+            $r = $app->handle($this->jsonRequest('POST', '/api/v1/admin/products/' . $productPublicId . '/3d-models/' . $id . '/publish', $body));
+            self::assertSame(200, $r->getStatusCode(), (string) $r->getBody());
+        }
+
+        return $id;
+    }
+
+    public function test_public_payload_exposes_sanitised_product_level_representation(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+        $this->seedModel($app, $productPublicId, $this->representationMetadata(), true, true);
+        $slug = $this->publishProductWithSlug($app, $productPublicId, '', 'rep-product');
+
+        $response = $app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug . '/3d'));
+        $raw = (string) $response->getBody();
+        $data = json_decode($raw, true)['data'];
+        $expected = [
+            'scope' => 'product',
+            'accuracyClass' => 'visual-preview',
+            'sourceVariantCode' => 'A06-AMXX/6.5H2.5',
+            'dimensions' => [
+                ['label' => 'Overall length', 'value' => 21.8, 'unit' => 'mm'],
+                ['label' => 'Stud hole', 'value' => 6.5, 'unit' => 'mm'],
+                ['label' => 'Width', 'value' => 11, 'unit' => 'mm'],
+            ],
+            'illustrative' => [['label' => 'Plate thickness', 'value' => 0.8, 'unit' => 'mm']],
+        ];
+        self::assertSame($expected, $data['primary']['representation']);
+        foreach (['sourceHash', 'fnv1a32', 'definitionCode', 'sourceVariantPublicId', 'storagePath', 'basis'] as $needle) {
+            self::assertStringNotContainsString($needle, $raw, $needle);
+        }
+
+        $embeddedRaw = (string) $app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug))->getBody();
+        self::assertSame($expected, json_decode($embeddedRaw, true)['data']['threeD']['primary']['representation']);
+        foreach (['sourceHash', 'fnv1a32', 'definitionCode', 'sourceVariantPublicId', 'basis'] as $needle) {
+            self::assertStringNotContainsString($needle, $embeddedRaw, $needle);
+        }
+    }
+
+    public function test_draft_representation_model_is_absent_from_public_payload(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+        $this->seedModel($app, $productPublicId, $this->representationMetadata(), false, true);
+        $slug = $this->publishProductWithSlug($app, $productPublicId, '', 'rep-draft');
+
+        $raw = (string) $app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug . '/3d'))->getBody();
+        self::assertFalse(json_decode($raw, true)['data']['available']);
+        self::assertStringNotContainsString('representation', $raw);
+        self::assertStringNotContainsString('Overall length', $raw);
+    }
+
+    public function test_variant_level_model_has_null_representation(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+        $this->seedModel($app, $productPublicId, $this->representationMetadata(), true, false, '0b1f5c1e-1111-4222-8333-444455556666');
+        $slug = $this->publishProductWithSlug($app, $productPublicId, '', 'rep-variant');
+
+        $data = TestAppFactory::json($app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug . '/3d')))['data'];
+        self::assertTrue($data['available']);
+        self::assertArrayHasKey('representation', $data['models'][0]);
+        self::assertNull($data['models'][0]['representation']);
+    }
+
+    public function test_cable_style_model_has_null_representation(): void
+    {
+        $app = $this->createApp();
+        $productPublicId = $this->createProduct($app);
+        $modelId = $this->seedModel($app, $productPublicId, null, true, true);
+        $slug = $this->publishProductWithSlug($app, $productPublicId, '', 'rep-cable');
+
+        $data = TestAppFactory::json($app->handle(TestAppFactory::request('GET', '/api/v1/products/' . $slug . '/3d')))['data'];
+        self::assertSame($modelId, $data['primary']['publicId']);
+        self::assertArrayHasKey('representation', $data['primary']);
+        self::assertNull($data['primary']['representation']);
+    }
+
     private function startUpload(App $app, string $productPublicId, string $binary, ?array &$session, bool $primary = false, ?array $metadata = null): string
     {
         $body = [
