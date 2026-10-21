@@ -12,6 +12,16 @@ use TriCab\Core\ProductFinder\Application\DTO\ProductFinderQuery;
 
 final class HttpProductFinderClientTest extends TestCase
 {
+    public function test_it_sends_the_server_selected_model_snapshot(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = json_encode(['success' => true, 'data' => ['status' => 'resolved']], JSON_THROW_ON_ERROR);
+        (new HttpProductFinderClient($http, 'http://127.0.0.1:8001', 'provider/selected-model'))
+            ->find(new ProductFinderQuery(text: 'marine cable'));
+        self::assertNotNull($http->calls[0]['payload']);
+        self::assertSame('provider/selected-model', $http->calls[0]['payload']['runtimeModel']);
+    }
+
     public function test_it_passes_the_finder_payload_through_unchanged(): void
     {
         $http = new FakeJsonHttpClient();

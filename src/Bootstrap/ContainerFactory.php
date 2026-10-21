@@ -764,8 +764,38 @@ use TriCab\Core\DocumentGeneration\Legacy\LegacyStreamParser;
 
 final class ContainerFactory
 {
-    public static function create(Settings $settings): Container
+    // Runtime entry points opt in. Building an offline tool/test container must
+    // remain lazy and must not establish a database connection by itself.
+    // $refreshPlatformSettings false: use the cached copy and read the database only
+    // when there is none, for workers that must leave the serverless database asleep.
+    public static function create(Settings $settings, bool $hydratePlatformSettings = false, bool $refreshPlatformSettings = true): Container
     {
+        $baselineSettings = $settings;
+        if ($hydratePlatformSettings && $settings->usesAzureSqlUserRepository()) {
+            // Resolve persisted overrides before factory closures capture immutable Settings.
+            $runtimeCache = new \TriCab\Api\PlatformSettings\PlatformSettingsRuntimeCache(ApplicationCacheFactory::create($settings), $settings->appEnv);
+            $overrides = $runtimeCache->overrides(static function () use ($settings): array {
+                // A missing table during rollout means there are no overrides yet; other SQL
+                // failures propagate (or fall back to the last cached copy) so mail jobs
+                // cannot silently revert recipients.
+                try {
+                    $repository = new \TriCab\Api\PlatformSettings\AzureSqlPlatformSettingsRepository(
+                        self::get(self::create($settings, false), SqlConnection::class),
+                        $settings,
+                    );
+
+                    return (new \TriCab\Api\PlatformSettings\PlatformSettingsService($repository, $settings))->runtimeOverrides();
+                } catch (\Throwable $exception) {
+                    if (!str_contains(strtolower($exception->getMessage()), 'invalid object name')
+                        || !str_contains(strtolower($exception->getMessage()), 'platformsettings')) {
+                        throw $exception;
+                    }
+
+                    return [];
+                }
+            }, $refreshPlatformSettings);
+            $settings = $settings->withPlatformOverrides($overrides);
+        }
         $builder = new ContainerBuilder();
         $builder->useAutowiring(true);
         $documentResources = dirname(__DIR__, 2) . '/resources/document-generation';
@@ -773,6 +803,16 @@ final class ContainerFactory
 
         $definitions = [
             Settings::class => $settings,
+            \TriCab\Api\PlatformSettings\PlatformSettingsService::class => static function (Container $container) use ($baselineSettings): \TriCab\Api\PlatformSettings\PlatformSettingsService {
+                return new \TriCab\Api\PlatformSettings\PlatformSettingsService(
+                    self::get($container, \TriCab\Api\PlatformSettings\PlatformSettingsRepository::class),
+                    $baselineSettings,
+                    new \TriCab\Api\PlatformSettings\PlatformSettingsRuntimeCache(
+                        self::get($container, ApplicationCache::class),
+                        $baselineSettings->appEnv,
+                    ),
+                );
+            },
             JsonResponder::class => \DI\create(JsonResponder::class),
 
             // Tri Expense Stage 2/3/4 — memory defaults; azure-sql branch overrides persistence below.
@@ -990,6 +1030,8 @@ final class ContainerFactory
                     ),
                     $settings->rfqParserBaseUrl,
                     $settings->rfqParserInternalToken,
+                    null,
+                    $settings->platformAiModels,
                 );
             },
             \TriCab\Core\Rfq\Contract\RfqReaderJobStore::class
@@ -1155,6 +1197,8 @@ final class ContainerFactory
                         ),
                         $settings->financeAiBaseUrl,
                         $settings->financeAiInternalToken,
+                        null,
+                        $settings->platformAiModels,
                     );
                 },
             // Tri-Task (Phase 2). Everything is in memory by default; the azure-sql branch below
@@ -1527,6 +1571,8 @@ final class ContainerFactory
                         ),
                         $settings->rfqParserBaseUrl,
                         $settings->rfqParserInternalToken,
+                        null,
+                        $settings->platformAiModels,
                     )
                     : new \TriCab\Core\Rfq\Infrastructure\UndeployedRfqParserClient();
 
@@ -3195,6 +3241,7 @@ final class ContainerFactory
                 return new HttpProductFinderClient(
                     new StreamJsonHttpClient((float) $settings->productFinderTimeoutSeconds),
                     $settings->productFinderBaseUrl,
+                    $settings->platformAiModels['productFinderModel'] ?? null,
                 );
             },
             CalculateCableService::class => \DI\autowire(CalculateCableService::class),
@@ -3580,6 +3627,7 @@ final class ContainerFactory
             $definitions[ProductPageMediaLayoutRepository::class] = \DI\autowire(AzureSqlProductPageMediaLayoutRepository::class);
             $definitions[ProductPageContentRepository::class] = \DI\autowire(AzureSqlProductPageContentRepository::class);
             $definitions[SiteConfigurationRepository::class] = \DI\autowire(AzureSqlSiteConfigurationRepository::class);
+            $definitions[\TriCab\Api\PlatformSettings\PlatformSettingsRepository::class] = \DI\autowire(\TriCab\Api\PlatformSettings\AzureSqlPlatformSettingsRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(AzureSqlProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(AzureSqlProductPricingRepository::class);
             $definitions[\TriCab\Core\Product\Application\Pricing\VariantCommercialCatalogRepository::class] = \DI\autowire(\TriCab\Api\Product\Pricing\AzureSqlVariantCommercialCatalogRepository::class);
@@ -3712,6 +3760,7 @@ SQL,
             $definitions[ProductPageMediaLayoutRepository::class] = \DI\autowire(InMemoryProductPageMediaLayoutRepository::class);
             $definitions[ProductPageContentRepository::class] = \DI\autowire(InMemoryProductPageContentRepository::class);
             $definitions[SiteConfigurationRepository::class] = \DI\autowire(InMemorySiteConfigurationRepository::class);
+            $definitions[\TriCab\Api\PlatformSettings\PlatformSettingsRepository::class] = \DI\autowire(\TriCab\Api\PlatformSettings\InMemoryPlatformSettingsRepository::class);
             $definitions[ProductCodeRuleRepository::class] = \DI\autowire(InMemoryProductCodeRuleRepository::class);
             $definitions[ProductPricingRepository::class] = \DI\autowire(InMemoryProductPricingRepository::class);
             $definitions[PriceListRepository::class] = \DI\autowire(InMemoryPriceListRepository::class);

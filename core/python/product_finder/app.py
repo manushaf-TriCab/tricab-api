@@ -20,6 +20,7 @@ from typing import Any
 from flask import Flask, jsonify, request, send_from_directory
 
 from .config import CONFIG
+from .nl import model_snapshot
 from .selection import FINDER, FinderRequest, health, vocabularies
 
 logging.basicConfig(level=logging.INFO)
@@ -83,9 +84,17 @@ def api_find():
             422,
         )
 
+    model = payload.get("runtimeModel")
+    if model is not None and (
+        not isinstance(model, str) or not model.strip() or len(model) > 200
+        or any(character.isspace() for character in model)
+    ):
+        return failure("VALIDATION_FAILED", "Invalid runtime model.", 422)
+
     try:
         finder_request = FinderRequest.from_payload(payload)
-        result = FINDER.find(finder_request)
+        with model_snapshot(model):
+            result = FINDER.find(finder_request)
     except Exception as exc:  # noqa: BLE001 - surfaced as a clean API error
         log.exception("Find failed")
         return failure("FIND_FAILED", str(exc), 500)

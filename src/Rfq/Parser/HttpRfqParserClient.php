@@ -58,6 +58,8 @@ final class HttpRfqParserClient implements RfqParserClient
         private readonly string $baseUrl,
         private readonly string $internalToken,
         private readonly mixed $clock = null,
+        /** @var array<string, string> */
+        private readonly array $models = [],
     ) {
     }
 
@@ -233,6 +235,25 @@ final class HttpRfqParserClient implements RfqParserClient
      */
     private function post(string $path, array $payload, CorrelationId $id, int $deadlineMs): array
     {
+        if ($this->models !== []) {
+            $mapped = [];
+            foreach ([
+                'openrouterModel' => 'OPENROUTER_MODEL',
+                'rfqReaderModel' => 'RFQ_READER_MODEL',
+                'rfqReaderNormalizerModel' => 'RFQ_READER_NORMALIZER_MODEL',
+                'rfqNormalizerModel' => 'RFQ_NORMALIZER_MODEL',
+                'rfqTableShapeModel' => 'RFQ_TABLE_SHAPE_MODEL',
+                'visionOcrPrimaryModel' => 'VISION_OCR_PRIMARY_MODEL',
+                'visionOcrEscalationModel' => 'VISION_OCR_ESCALATION_MODEL',
+            ] as $key => $environmentName) {
+                if (isset($this->models[$key])) {
+                    $mapped[$environmentName] = $this->models[$key];
+                }
+            }
+            if ($mapped !== []) {
+                $payload['models'] = $mapped;
+            }
+        }
         $started = $this->now();
         try {
             $response = $this->http->postJson($this->url($path), $this->headers($id, $deadlineMs), $payload);

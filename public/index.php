@@ -14,7 +14,11 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 $basePath = dirname(__DIR__);
 $settings = Environment::settings($basePath);
-$container = ContainerFactory::create($settings);
+$requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$container = ContainerFactory::create(
+    $settings,
+    hydratePlatformSettings: !in_array($requestPath, ['/health', '/health/database'], true),
+);
 $app = AppBuilder::build($container);
 
 $app->run();

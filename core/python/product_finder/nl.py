@@ -20,6 +20,8 @@ import logging
 import re
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -27,6 +29,18 @@ from .config import CONFIG
 from .constants import CABLE_TYPES, INSTALL_METHODS
 
 log = logging.getLogger(__name__)
+
+_runtime_model: ContextVar[str | None] = ContextVar("product_finder_model", default=None)
+
+
+@contextmanager
+def model_snapshot(model: str | None):
+    """Keep the internal PHP-selected model local to this request."""
+    token = _runtime_model.set(model)
+    try:
+        yield
+    finally:
+        _runtime_model.reset(token)
 
 _NUM = r"(\d+(?:\.\d+)?)"
 
@@ -276,7 +290,7 @@ def ai_extract(text: str, already_known: dict[str, Any]) -> dict[str, Any]:
 
     known = ", ".join(sorted(already_known)) or "none"
     payload = {
-        "model": cfg.model,
+        "model": _runtime_model.get() or cfg.model,
         "temperature": 0,
         "messages": [
             {

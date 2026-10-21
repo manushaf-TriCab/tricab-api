@@ -24,6 +24,7 @@ import hmac
 import logging
 import os
 import re
+from dataclasses import replace
 from typing import Any
 
 from flask import Blueprint, jsonify, request
@@ -128,6 +129,13 @@ def complete(purpose_name: str):
     purpose = registry.get(purpose_name)
     if purpose is None:
         return _refuse(correlation_id, "unknown_purpose", "No such purpose is registered.", 404)
+
+    model = payload.get("model")
+    if model is not None:
+        if not isinstance(model, str) or not model.strip() or len(model) > 160 or not re.fullmatch(r"[A-Za-z0-9._:/-]+", model):
+            return _refuse(correlation_id, "invalid_request", "model is invalid.", 400)
+        # Purpose instances are immutable; each request gets its own model.
+        purpose = replace(purpose, model=model)
 
     data = payload.get("data")
     if not isinstance(data, dict):

@@ -32,6 +32,8 @@ green, and it amplified ~30x before anyone noticed.
 
 from __future__ import annotations
 
+from . import model_settings
+
 import json
 import os
 import time
@@ -105,7 +107,7 @@ def translator_model() -> str:
     Its own variable so a cheaper deployment can be measured on translation without
     touching the reader, whose numbers were taken on the model named there.
     """
-    return os.environ.get("RFQ_READER_NORMALIZER_MODEL", "").strip() or reader_model()
+    return model_settings.get("RFQ_READER_NORMALIZER_MODEL", "").strip() or reader_model()
 
 
 def translator_max_items() -> int:

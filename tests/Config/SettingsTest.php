@@ -10,6 +10,39 @@ use TriCab\Api\Config\Settings;
 
 final class SettingsTest extends TestCase
 {
+    public function test_platform_overrides_are_immutable_and_leave_delivery_switches_intact(): void
+    {
+        $base = Settings::fromEnvironment([
+            'APP_ENV' => 'development',
+            'FINANCE_MAIL_TEST_RECIPIENT' => 'before@example.com',
+            'NPR_MAIL_MODE' => 'off',
+        ]);
+        $updated = $base->withPlatformOverrides([
+            'ai' => ['tasks' => ['ap_extract' => 'vendor/new-model']],
+            'notifications' => ['financeMailTestRecipient' => 'AFTER@example.com'],
+        ]);
+
+        self::assertNotSame($base, $updated);
+        self::assertSame('before@example.com', $base->financeMailTestRecipient);
+        self::assertSame('after@example.com', $updated->financeMailTestRecipient);
+        self::assertSame($base->nprMailMode, $updated->nprMailMode);
+        self::assertSame(['ap_extract' => 'vendor/new-model'], $updated->platformAiModels);
+    }
+
+    public function test_platform_default_model_alone_does_not_override_task_defaults(): void
+    {
+        $base = Settings::fromEnvironment(['APP_ENV' => 'development']);
+        $updated = $base->withPlatformOverrides([
+            'ai' => ['defaultModel' => 'vendor/global'],
+            'notifications' => ['financeMailTestRecipient' => 'team@example.com'],
+        ]);
+
+        self::assertSame([], $updated->platformAiModels);
+        self::assertSame($base->foundryModelDeployment, $updated->foundryModelDeployment);
+        self::assertSame($base->rfqMailClassifierModel, $updated->rfqMailClassifierModel);
+        self::assertSame('team@example.com', $updated->financeMailTestRecipient);
+    }
+
     public function test_unknown_user_repository_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);

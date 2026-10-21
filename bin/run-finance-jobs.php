@@ -35,13 +35,14 @@ if (!$settings->financeModuleEnabled) {
     exit(0);
 }
 
-$runner = ContainerFactory::create($settings)->get(FinanceJobRunner::class);
-if (!$runner instanceof FinanceJobRunner) {
-    fwrite(STDERR, "Finance jobs: the container has no runner.\n");
-    exit(1);
-}
-
 do {
+    // Resolve persisted settings for each pass. A long-lived WebJob must see
+    // administrative changes before claiming its next due job.
+    $runner = ContainerFactory::create($settings, hydratePlatformSettings: true)->get(FinanceJobRunner::class);
+    if (!$runner instanceof FinanceJobRunner) {
+        fwrite(STDERR, "Finance jobs: the container has no runner.\n");
+        exit(1);
+    }
     $outcomes = $runner->runDue();
     $count = static fn (string $status): int => count(array_filter($outcomes, static fn (FinanceJobOutcome $o): bool => $o->status === $status));
     fwrite(STDOUT, json_encode([

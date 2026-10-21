@@ -33,6 +33,8 @@ final class HttpFinanceAiClient implements FinanceAiClient
         private readonly string $baseUrl,
         private readonly string $internalToken,
         private readonly mixed $clock = null,
+        /** @var array<string, string> */
+        private readonly array $models = [],
     ) {
     }
 
@@ -49,6 +51,7 @@ final class HttpFinanceAiClient implements FinanceAiClient
 
         $started = $this->now();
         try {
+            $model = $this->models[$purpose] ?? null;
             $response = $this->http->postJson(
                 $this->url(FinanceAiContract::PATH_COMPLETE . $purpose),
                 $this->headers($id),
@@ -57,6 +60,7 @@ final class HttpFinanceAiClient implements FinanceAiClient
                     'correlationId' => $id,
                     'deadlineMs' => $deadline,
                     'data' => $data === [] ? new \stdClass() : $data,
+                    ...($model !== null ? ['model' => $model] : []),
                 ],
             );
         } catch (Throwable) {

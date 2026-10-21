@@ -64,6 +64,7 @@ from tricab_cable_rules import ENGINE_VERSION
 from tricab_cable_rules.extractor import pair_circuit_label_lines
 
 from . import accounting, aliflex, corrections, intake, pipeline, quote_export, quote_import, quote_pricing, quote_sync, reading, vision_ocr
+from . import model_settings
 from .product_search import search_products
 from ._source import SOURCE_COMMIT
 from .quote_readiness import REGION_PROFILE, SUPPORTED_CURRENCIES, exclusion_reason, quote_readiness
@@ -140,6 +141,8 @@ def _envelope(payload: Any) -> tuple[dict[str, Any], str]:
         raise ContractError("invalid_request", "correlationId is missing or malformed.", 400)
     if payload.get("contract") != CONTRACT:
         raise ContractError("contract_mismatch", f"This parser speaks {CONTRACT}.", 400)
+    if not model_settings.install(payload.get("models")):
+        raise ContractError("invalid_request", "models contains an invalid task model.", 400)
     return payload, correlation_id
 
 

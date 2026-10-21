@@ -60,25 +60,7 @@ $idleCheck = max(1, (int) ($options['idle-check'] ?? $settings->cablefitResearch
 if (!$settings->cablefitResearchEnabled) {
     exit(EXIT_OFF);
 }
-if (!$settings->isCableFitResearchConfigured()) {
-    fwrite(STDERR, "CableFit research: switched on but not configured: needs FOUNDRY_ENABLED, FOUNDRY_ENDPOINT, CABLEFIT_RESEARCH_MODEL and, with FOUNDRY_AUTH_MODE=api-key, FOUNDRY_API_KEY.\n");
-    exit(EXIT_NOT_CONFIGURED);
-}
-
 try {
-    $container = ContainerFactory::create($settings);
-    $runs = $container->get(ResearchRunRepository::class);
-    $runner = $container->get(ResearchRunner::class);
-    if (!$runs instanceof ResearchRunRepository || !$runner instanceof ResearchRunner) {
-        fwrite(STDERR, "CableFit research: the container has no research runner.\n");
-        exit(EXIT_FAILED);
-    }
-    if ($runs instanceof InMemoryResearchRunRepository && !isset($options['allow-memory'])) {
-        // An in-memory store forgets every queued run at exit.
-        fwrite(STDERR, "CableFit research: the run store is in memory (USER_REPOSITORY is not azure-sql), so runs would be lost. Refusing.\n");
-        exit(EXIT_NOT_CONFIGURED);
-    }
-
     $wake = FileCableFitResearchWake::fromSettings($settings);
     $lock = FileMailReaderLock::acquire($wake->directory());
     if ($lock === null) {
@@ -90,6 +72,22 @@ try {
     do {
         if (!$ifWoken || $wake->beginPass($idleCheck)) {
             try {
+                $container = ContainerFactory::create($settings, hydratePlatformSettings: true);
+                $passSettings = $container->get(Settings::class);
+                if (!$passSettings->isCableFitResearchConfigured()) {
+                    fwrite(STDERR, "CableFit research: switched on but not configured: needs FOUNDRY_ENABLED, FOUNDRY_ENDPOINT, CABLEFIT_RESEARCH_MODEL and, with FOUNDRY_AUTH_MODE=api-key, FOUNDRY_API_KEY.\n");
+                    exit(EXIT_NOT_CONFIGURED);
+                }
+                $runs = $container->get(ResearchRunRepository::class);
+                $runner = $container->get(ResearchRunner::class);
+                if (!$runs instanceof ResearchRunRepository || !$runner instanceof ResearchRunner) {
+                    fwrite(STDERR, "CableFit research: the container has no research runner.\n");
+                    exit(EXIT_FAILED);
+                }
+                if ($runs instanceof InMemoryResearchRunRepository && !isset($options['allow-memory'])) {
+                    fwrite(STDERR, "CableFit research: the run store is in memory (USER_REPOSITORY is not azure-sql), so runs would be lost. Refusing.\n");
+                    exit(EXIT_NOT_CONFIGURED);
+                }
                 $processed = 0;
                 $succeeded = 0;
                 $failed = 0;

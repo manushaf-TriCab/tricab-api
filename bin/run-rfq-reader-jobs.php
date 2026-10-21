@@ -43,18 +43,18 @@ if (!$settings->isRfqParserEnabled()) {
     fwrite(STDERR, "RFQ reader: RFQ_PARSER_ENABLED (with a token) must be on.\n");
     exit(2);
 }
-$reader = ContainerFactory::create($settings)->get(RfqReaderService::class);
-if (!$reader instanceof RfqReaderService) {
-    fwrite(STDERR, "RFQ reader: the container has no reader service.\n");
-    exit(1);
-}
-
 $wake = FileRfqReaderWake::fromSettings($settings);
 $status = 0;
 
 do {
     if (!$ifWoken || $wake->beginPass($idleCheck)) {
         try {
+            // Each pass takes one settings snapshot before claiming reads.
+            $reader = ContainerFactory::create($settings, hydratePlatformSettings: true)->get(RfqReaderService::class);
+            if (!$reader instanceof RfqReaderService) {
+                fwrite(STDERR, "RFQ reader: the container has no reader service.\n");
+                exit(1);
+            }
             $summary = $reader->runWorker($drafts);
             $wake->endPass($summary['outstanding']);
             fwrite(STDOUT, json_encode(['at' => gmdate('c')] + $summary, JSON_THROW_ON_ERROR) . "\n");

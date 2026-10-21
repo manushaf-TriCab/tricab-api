@@ -73,6 +73,8 @@ use TriCab\Api\Http\Action\Admin\GetCustomerContactAction;
 use TriCab\Api\Http\Action\Admin\GetProductAction;
 use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerViewThemeAction;
+use TriCab\Api\Http\Action\Admin\PlatformSettingsAction;
+use TriCab\Api\Http\Middleware\RequirePlatformAdministratorMiddleware;
 use TriCab\Api\Http\Action\Admin\GetProductCustomerViewAction;
 use TriCab\Api\Http\Action\Admin\UpdateCustomerViewThemeAction;
 use TriCab\Api\Http\Action\Admin\ClearProductPresentationMediaRoleAction;
@@ -1341,6 +1343,18 @@ final class AppBuilder
     private static function registerAdminRoutes(App $app, Container $container): void
     {
         $require = new RequirePermission($container);
+
+        $platformAdmin = new RequirePlatformAdministratorMiddleware(new \TriCab\Api\Http\Response\JsonResponder());
+        $app->get('/api/v1/admin/settings/platform', PlatformSettingsAction::class)
+            ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
+        $app->put('/api/v1/admin/settings/platform', PlatformSettingsAction::class)
+            ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
+        $app->get('/api/v1/admin/settings/platform/history', PlatformSettingsAction::class)
+            ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
+        $app->post('/api/v1/admin/settings/platform/restore', PlatformSettingsAction::class)
+            ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
+        $app->post('/api/v1/admin/settings/platform/reset', PlatformSettingsAction::class)
+            ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
 
         $app->get('/api/v1/admin/dashboard', GetAdminDashboardAction::class)
             ->add(($require)('ACCOUNT.LOGIN'));

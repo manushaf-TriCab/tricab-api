@@ -109,6 +109,29 @@ MODULE_PATCHES: tuple[tuple[str, str, str, str], ...] = (
     ),
 )
 
+# These generated modules read model selectors through a request-local context.
+# Keep this transform in the generator so a source sync preserves live settings.
+REQUEST_MODEL_MODULES = frozenset({
+    "attachment_reader", "llm_fallback", "normalizer", "reader_normalizer",
+    "table_shape", "vision_ocr",
+})
+REQUEST_MODEL_NAMES = (
+    "OPENROUTER_MODEL", "RFQ_READER_MODEL", "RFQ_READER_NORMALIZER_MODEL",
+    "RFQ_NORMALIZER_MODEL", "RFQ_TABLE_SHAPE_MODEL", "VISION_OCR_PRIMARY_MODEL",
+    "VISION_OCR_ESCALATION_MODEL",
+)
+
+
+def _request_local_models(source: str) -> str:
+    pattern = r'os\.environ\.get\("(' + '|'.join(REQUEST_MODEL_NAMES) + r')"(,\s*[^\)]+)?\)'
+    updated, count = re.subn(pattern, lambda match: 'model_settings.get("' + match.group(1) + '"' + (match.group(2) or '') + ')', source)
+    if count == 0:
+        raise SystemExit("request-local model patch found no selectors")
+    marker = "from __future__ import annotations\n"
+    if marker not in updated:
+        raise SystemExit("request-local model patch needs future import")
+    return updated.replace(marker, marker + "\nfrom . import model_settings\n", 1)
+
 # Data files the parser reads, copied byte for byte (source <p> -> rfq_parser/<target>).
 DATA_FILES = (
     ("data/catalog/rfq_coverage_baselines.json", "data/rfq_coverage_baselines.json"),
@@ -433,7 +456,8 @@ def build_module(name: str, source: str) -> str:
         if count != 1:
             raise SystemExit(f"module patch '{why}' ({name}): text occurs {count} times, expected once:\n  {old!r}")
         source = source.replace(old, new)
-    return _rewrite_imports(source)
+    source = _rewrite_imports(source)
+    return _request_local_models(source) if name in REQUEST_MODEL_MODULES else source
 
 
 def build_reader_intake(source: str) -> str:

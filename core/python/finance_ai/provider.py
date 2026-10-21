@@ -132,7 +132,7 @@ def _complete(
         if request is None:
             raise ProviderError("internal_error", "A decisions purpose was called without its request.")
         url = OPENROUTER_DECISIONS_URL
-        payload: dict[str, Any] = request
+        payload: dict[str, Any] = {**request, "model": purpose.model}
     else:
         url = OPENROUTER_URL
         content: Any = [{"type": "text", "text": prompt}, *parts] if parts else prompt

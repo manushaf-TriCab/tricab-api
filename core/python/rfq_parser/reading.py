@@ -29,6 +29,8 @@ What it adds to the source, all at the boundary:
 
 from __future__ import annotations
 
+from . import model_settings
+
 import logging
 import os
 import re
@@ -109,7 +111,7 @@ def read(document: Document, *, subject: str, attachments: list[str], correlatio
         models["reader"] = attachment_reader.reader_model()
     vision = _default_vision_ocr() if document.is_image else None
     if vision is not None:
-        models["vision_ocr"] = os.environ.get("VISION_OCR_PRIMARY_MODEL", vision_ocr.DEFAULT_PRIMARY_MODEL)
+        models["vision_ocr"] = model_settings.get("VISION_OCR_PRIMARY_MODEL", vision_ocr.DEFAULT_PRIMARY_MODEL)
 
     items, raw_notes = read_one_file(document.file_name, document.data, document.content_type, vision_ocr=vision)
     notes: list[str] = []

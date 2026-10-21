@@ -56,7 +56,7 @@ if ($ifWoken && !$wake->beginPass($idleCheck)) {
     exit(0);
 }
 
-$dispatcher = ContainerFactory::create($settings)->get(NprMailDispatcher::class);
+$dispatcher = ContainerFactory::create($settings, hydratePlatformSettings: true)->get(NprMailDispatcher::class);
 if (!$dispatcher instanceof NprMailDispatcher) {
     fwrite(STDERR, "NPR mail sweep: the container has no dispatcher.\n");
     exit(1);

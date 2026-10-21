@@ -2,6 +2,8 @@
 # Change the source or the tool's declared patches, never this file.
 from __future__ import annotations
 
+from . import model_settings
+
 import base64
 import json
 import os
@@ -45,8 +47,8 @@ def vision_ocr_enabled() -> bool:
 
 def extract_table_with_qwen(image_bytes: bytes, mime_type: str) -> VisionOcrResult:
     mime_type = normalize_image_type(image_bytes, mime_type)
-    primary = os.environ.get("VISION_OCR_PRIMARY_MODEL", DEFAULT_PRIMARY_MODEL)
-    escalation = os.environ.get("VISION_OCR_ESCALATION_MODEL", DEFAULT_ESCALATION_MODEL)
+    primary = model_settings.get("VISION_OCR_PRIMARY_MODEL", DEFAULT_PRIMARY_MODEL)
+    escalation = model_settings.get("VISION_OCR_ESCALATION_MODEL", DEFAULT_ESCALATION_MODEL)
     threshold = _float_env("VISION_OCR_ESCALATION_THRESHOLD", 0.82)
 
     if mime_type not in ALLOWED_IMAGE_TYPES:
@@ -232,8 +234,8 @@ def public_result(result: VisionOcrResult) -> dict[str, Any]:
 def health() -> dict[str, Any]:
     return {
         "enabled": vision_ocr_enabled(),
-        "primary_model": os.environ.get("VISION_OCR_PRIMARY_MODEL", DEFAULT_PRIMARY_MODEL),
-        "escalation_model": os.environ.get("VISION_OCR_ESCALATION_MODEL", DEFAULT_ESCALATION_MODEL),
+        "primary_model": model_settings.get("VISION_OCR_PRIMARY_MODEL", DEFAULT_PRIMARY_MODEL),
+        "escalation_model": model_settings.get("VISION_OCR_ESCALATION_MODEL", DEFAULT_ESCALATION_MODEL),
         "escalation_threshold": _float_env("VISION_OCR_ESCALATION_THRESHOLD", 0.82),
         "max_tokens": int(_float_env("VISION_OCR_MAX_TOKENS", 9000)),
         "max_image_mb": _float_env("VISION_OCR_MAX_IMAGE_MB", 8),

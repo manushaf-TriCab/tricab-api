@@ -37,6 +37,8 @@ dependency is a deployment change, and this needs none.
 
 from __future__ import annotations
 
+from . import model_settings
+
 import base64
 import io
 import json
@@ -182,7 +184,7 @@ def reader_endpoint() -> str:
 
 def reader_model() -> str:
     """The Azure *deployment* name, which need not equal the model name."""
-    return os.environ.get("RFQ_READER_MODEL", "").strip()
+    return model_settings.get("RFQ_READER_MODEL", "").strip()
 
 
 def reader_api_version() -> str:

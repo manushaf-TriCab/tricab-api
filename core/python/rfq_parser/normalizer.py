@@ -24,6 +24,8 @@ original extracted text and are matched by the regex parser alone.
 
 from __future__ import annotations
 
+from . import model_settings
+
 import json
 import os
 from dataclasses import dataclass, field
@@ -60,7 +62,7 @@ def normalizer_enabled() -> bool:
 
 
 def normalizer_model() -> str:
-    return os.environ.get("RFQ_NORMALIZER_MODEL") or os.environ.get("OPENROUTER_MODEL", DEFAULT_MODEL)
+    return model_settings.get("RFQ_NORMALIZER_MODEL") or model_settings.get("OPENROUTER_MODEL", DEFAULT_MODEL)
 
 
 def normalizer_max_items() -> int:

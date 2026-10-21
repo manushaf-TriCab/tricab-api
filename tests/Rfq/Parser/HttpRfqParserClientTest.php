@@ -70,6 +70,21 @@ final class HttpRfqParserClientTest extends TestCase
         self::assertInstanceOf(stdClass::class, $response->lines[2]['fields']);
     }
 
+    public function test_it_only_sends_server_configured_model_keys(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = self::fixture('corr-client-000001');
+        $client = new HttpRfqParserClient($http, 'http://127.0.0.1:8002/', self::TOKEN, models: [
+            'rfqReaderModel' => 'vendor/new-reader',
+            'notAParserSetting' => 'ignored',
+        ]);
+
+        $client->parse(ParseRequest::forText($this->id, '4C 16mm2', false));
+
+        self::assertNotNull($http->calls[0]['payload']);
+        self::assertSame(['RFQ_READER_MODEL' => 'vendor/new-reader'], $http->calls[0]['payload']['models']);
+    }
+
     public function test_an_answer_to_another_request_is_refused(): void
     {
         $http = new FakeJsonHttpClient();

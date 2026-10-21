@@ -60,6 +60,21 @@ final class HttpFinanceAiClientTest extends TestCase
         self::assertSame($call['headers']['X-Correlation-Id'], $result->correlationId);
     }
 
+    public function test_it_snapshots_the_configured_purpose_model_without_altering_data(): void
+    {
+        $http = new EchoingFakeHttp(['result' => [], 'provider' => ['name' => 'openrouter', 'model' => 'vendor/new']]);
+        $client = new HttpFinanceAiClient($http, 'http://127.0.0.1:8003', self::TOKEN, models: ['ap_extract' => 'vendor/new']);
+
+        $client->complete('ap_extract', ['text' => 'invoice']);
+        $client->complete('task_details', ['text' => 'task']);
+
+        self::assertNotNull($http->calls[0]['payload']);
+        self::assertNotNull($http->calls[1]['payload']);
+        self::assertSame('vendor/new', $http->calls[0]['payload']['model']);
+        self::assertArrayNotHasKey('model', $http->calls[1]['payload']);
+        self::assertSame(['text' => 'invoice'], $http->calls[0]['payload']['data']);
+    }
+
     public function test_the_default_deadline_applies_and_the_bounds_are_enforced_before_any_call(): void
     {
         $http = new EchoingFakeHttp(['result' => [], 'provider' => ['name' => 'openrouter', 'model' => 'm']]);

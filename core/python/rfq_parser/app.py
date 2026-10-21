@@ -30,6 +30,8 @@ accounting and the contract envelope. These two stay as the parity surface that
 
 from __future__ import annotations
 
+from . import model_settings
+
 import hashlib
 import json
 import logging
@@ -73,6 +75,15 @@ MAX_LINES = _int_setting("RFQ_PARSER_MAX_LINES", 2_000)
 FILE_SUFFIXES = frozenset({".xlsx", ".xlsm", ".xls", ".docx", ".pdf", ".csv", ".txt"})
 
 app = Flask(__name__, static_folder=None)
+
+
+@app.before_request
+def _clear_request_models():
+    # The legacy /api routes do not have a v1 envelope. A pooled worker must
+    # never carry a previous /v1 request's model into one of those routes.
+    model_settings.install(None)
+
+
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES + 64 * 1024  # room for the form fields
 
 from .contract import v1 as _contract_v1  # noqa: E402 - needs the limits above
@@ -129,7 +140,7 @@ def versions() -> dict[str, Any]:
     AI path that is switched on. An AI path that is off is absent, not null."""
     models: dict[str, str] = {}
     if llm_fallback.openrouter_enabled():
-        models["line_fallback"] = os.environ.get("OPENROUTER_MODEL", llm_fallback.DEFAULT_MODEL)
+        models["line_fallback"] = model_settings.get("OPENROUTER_MODEL", llm_fallback.DEFAULT_MODEL)
     if normalizer.normalizer_enabled():
         models["normalizer"] = normalizer.normalizer_model()
     if table_shape.table_shape_enabled():
@@ -139,7 +150,7 @@ def versions() -> dict[str, Any]:
     if reader_normalizer.translator_enabled():
         models["translator"] = reader_normalizer.translator_model()
     if vision_ocr.vision_ocr_enabled():
-        models["vision_ocr"] = os.environ.get("VISION_OCR_PRIMARY_MODEL", vision_ocr.DEFAULT_PRIMARY_MODEL)
+        models["vision_ocr"] = model_settings.get("VISION_OCR_PRIMARY_MODEL", vision_ocr.DEFAULT_PRIMARY_MODEL)
     return {
         "engine": ENGINE_VERSION,
         "parser_source": SOURCE_COMMIT,

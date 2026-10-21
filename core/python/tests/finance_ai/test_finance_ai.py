@@ -74,6 +74,27 @@ def body(**over):
     return payload
 
 
+def test_model_override_is_request_local_and_registry_default_survives(client, fake_purpose, monkeypatch):
+    observed = []
+
+    def complete(purpose, *_args, **_kwargs):
+        observed.append(purpose.model)
+        return {"vendor": "Acme", "total": 1}
+
+    monkeypatch.setattr(provider, "complete_json", complete)
+    for payload in (body(model="vendor/new"), body()):
+        response = client.post("/v1/complete/fake-extract", json=payload, headers=headers())
+        assert response.status_code == 200
+    assert observed == ["vendor/new", "test/model"]
+    assert registry.get("fake-extract").model == "test/model"
+
+
+def test_bad_model_override_is_refused_before_provider_call(client, fake_purpose, monkeypatch):
+    monkeypatch.setattr(provider, "complete_json", lambda *_args, **_kwargs: pytest.fail("provider called"))
+    response = client.post("/v1/complete/fake-extract", json=body(model="bad model"), headers=headers())
+    assert response.status_code == 400
+
+
 def answer(content: str, status: int = 200):
     return status, json.dumps({"choices": [{"message": {"content": content}}]})
 

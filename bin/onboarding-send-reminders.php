@@ -36,7 +36,8 @@ $asJson = in_array('--json', $argvList, true);
 
 $basePath = dirname(__DIR__);
 $settings = Environment::settings($basePath);
-$container = ContainerFactory::create($settings);
+$container = ContainerFactory::create($settings, hydratePlatformSettings: true);
+$settings = $container->get(\TriCab\Api\Config\Settings::class);
 
 /** @var SendOnboardingRemindersService $service */
 $service = $container->get(SendOnboardingRemindersService::class);

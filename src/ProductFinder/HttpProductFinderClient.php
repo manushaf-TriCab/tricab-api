@@ -34,16 +34,22 @@ final class HttpProductFinderClient implements ProductFinderClient
     public function __construct(
         private readonly JsonHttpClient $http,
         private readonly string $baseUrl,
+        private readonly ?string $model = null,
     ) {
     }
 
     public function find(ProductFinderQuery $query): ProductFinderResult
     {
         try {
+            $payload = $query->toPayload();
+            if ($this->model !== null && $this->model !== '') {
+                // Selected by the server's settings resolver, never the public request.
+                $payload['runtimeModel'] = $this->model;
+            }
             $response = $this->http->postJson(
                 $this->url('/api/find'),
                 [],
-                $query->toPayload(),
+                $payload,
             );
         } catch (Throwable $exception) {
             return $this->down('Could not reach the product finder.', $exception);

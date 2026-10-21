@@ -60,7 +60,7 @@ if ($asUserId === null || $asUserId < 1) {
 
 $basePath = dirname(__DIR__);
 $settings = Environment::settings($basePath);
-$container = ContainerFactory::create($settings);
+$container = ContainerFactory::create($settings, hydratePlatformSettings: true);
 
 /** @var ExpenseProfileRepository $profiles */
 $profiles = $container->get(ExpenseProfileRepository::class);

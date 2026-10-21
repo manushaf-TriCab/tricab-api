@@ -23,6 +23,8 @@ OPENROUTER_API_KEY). Junk-flagged sheets (low_relevance_sheet) are never sent.
 
 from __future__ import annotations
 
+from . import model_settings
+
 import json
 import os
 import re
@@ -88,9 +90,9 @@ def table_shape_enabled() -> bool:
 
 def table_shape_model() -> str:
     return (
-        os.environ.get("RFQ_TABLE_SHAPE_MODEL")
-        or os.environ.get("RFQ_NORMALIZER_MODEL")
-        or os.environ.get("OPENROUTER_MODEL", DEFAULT_MODEL)
+        model_settings.get("RFQ_TABLE_SHAPE_MODEL")
+        or model_settings.get("RFQ_NORMALIZER_MODEL")
+        or model_settings.get("OPENROUTER_MODEL", DEFAULT_MODEL)
     )
 
 

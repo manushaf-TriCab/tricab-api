@@ -31,6 +31,7 @@ use TriCab\Api\Assistant\Infrastructure\Foundry\ManagedIdentityFoundryAccessToke
 use TriCab\Api\Assistant\Infrastructure\Prompt\MarkdownPromptRepository;
 use TriCab\Api\Bootstrap\ContainerFactory;
 use TriCab\Api\Config\Settings;
+use TriCab\Api\Infrastructure\Database\DatabaseTemporarilyUnavailable;
 use TriCab\Api\Infrastructure\Http\StreamJsonHttpClient;
 use TriCab\Api\Mail\Intake\FileMailReaderLock;
 use TriCab\Api\Mail\Intake\FileMailReaderState;
@@ -91,6 +92,16 @@ if (!$settings->rfqMailReadEnabled) {
     }
 }
 
+// Platform settings (mailbox, classifier model) come from the cached copy, so a pass still leaves `tc`
+// asleep. The database is read only when no copy exists yet.
+try {
+    $container = ContainerFactory::create($settings, hydratePlatformSettings: true, refreshPlatformSettings: false);
+} catch (DatabaseTemporarilyUnavailable) {
+    fwrite(STDERR, "RFQ mail reader: the database is not available yet (usually the serverless database resuming), so platform settings could not be read. The next pass retries.\n");
+    exit(MailReaderJob::EXIT_DATABASE_RESUMING);
+}
+$settings = $container->get(Settings::class);
+
 if ($settings->rfqMailReadEnabled) {
     $missing = [];
     if (!$settings->isMailBodyReadingConfigured()) {
@@ -105,7 +116,6 @@ if ($settings->rfqMailReadEnabled) {
     }
 }
 
-$container = ContainerFactory::create($settings);
 $store = $container->get(MailStore::class);
 if (!$store instanceof MailStore) {
     fwrite(STDERR, "RFQ mail reader: the container has no mail store.\n");

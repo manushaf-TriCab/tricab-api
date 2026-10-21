@@ -2,6 +2,8 @@
 # Change the source or the tool's declared patches, never this file.
 from __future__ import annotations
 
+from . import model_settings
+
 import json
 import os
 import re
@@ -465,7 +467,7 @@ def parse_with_openrouter(
     context: list[str] | None = None,
     previous_fields: dict[str, Any] | None = None,
 ) -> LlmParseResult:
-    model = os.environ.get("OPENROUTER_MODEL", DEFAULT_MODEL)
+    model = model_settings.get("OPENROUTER_MODEL", DEFAULT_MODEL)
     if not openrouter_enabled():
         return LlmParseResult(False, False, False, model, [], "OpenRouter is not configured.")
 

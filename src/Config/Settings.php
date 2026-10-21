@@ -10,6 +10,70 @@ use TriCab\Core\Finance\Ap\ApAiService;
 
 final readonly class Settings
 {
+    /**
+     * Apply a validated platform settings snapshot to this request or job. The
+     * source instance stays immutable, so concurrent requests never share
+     * process-wide configuration mutations.
+     *
+     * @param array<string, mixed> $effective
+     */
+    public function withPlatformOverrides(array $effective): self
+    {
+        $values = get_object_vars($this);
+        $ai = $effective['ai'] ?? [];
+        if (!is_array($ai)) {
+            throw new InvalidArgumentException('Invalid platform AI settings snapshot.');
+        }
+        $tasks = $ai['tasks'] ?? [];
+        $recipients = $effective['notifications'] ?? [];
+        if (!is_array($tasks) || !is_array($recipients)) {
+            throw new InvalidArgumentException('Invalid platform settings snapshot.');
+        }
+        $models = [];
+        foreach ($tasks as $key => $model) {
+            if (!is_string($key) || !is_string($model) || trim($model) === '') {
+                throw new InvalidArgumentException('Invalid platform AI task model.');
+            }
+            $models[$key] = trim($model);
+        }
+        $values['platformAiModels'] = $models;
+
+        foreach (['foundryModelDeployment', 'rfqMailClassifierModel', 'cablefitResearchModel'] as $key) {
+            if (!array_key_exists($key, $models)) {
+                continue;
+            }
+            $values[$key] = $models[$key];
+        }
+
+        foreach (['financeMailTestRecipient', 'triexpenseEmailTestRecipient', 'onboardingEmailTestRecipient', 'nprMailTestRecipient', 'nprDeputyCeoEmail', 'nprTsdQueueEmail', 'postmarkFromEmail', 'rfqMailbox', 'rfqMailMailbox', 'customerContactAccountsMailbox', 'financeArMailbox', 'financeApMailbox'] as $key) {
+            if (!array_key_exists($key, $recipients)) {
+                continue;
+            }
+            if (!is_string($recipients[$key])) {
+                throw new InvalidArgumentException("Invalid email recipient for {$key}.");
+            }
+            $address = strtolower(trim($recipients[$key]));
+            if ($address !== '' && filter_var($address, FILTER_VALIDATE_EMAIL) === false) {
+                throw new InvalidArgumentException("Invalid email recipient for {$key}.");
+            }
+            $values[$key] = $address;
+        }
+        if (array_key_exists('nprScreeningSignatoryEmails', $recipients)) {
+            if (!is_array($recipients['nprScreeningSignatoryEmails'])) {
+                throw new InvalidArgumentException('Invalid NPR screening signatories.');
+            }
+            foreach ($recipients['nprScreeningSignatoryEmails'] as $address) {
+                if (!is_string($address) || filter_var(trim($address), FILTER_VALIDATE_EMAIL) === false) {
+                    throw new InvalidArgumentException('Invalid NPR screening signatories.');
+                }
+            }
+            $values['nprScreeningSignatoryEmails'] = array_values(array_map(static fn (string $address): string => strtolower(trim($address)), $recipients['nprScreeningSignatoryEmails']));
+        }
+
+        // Reconstruct the readonly value object with named constructor arguments;
+        // infrastructure settings are copied intact and the constructor still runs.
+        return (new \ReflectionClass(self::class))->newInstanceArgs($values);
+    }
     public const USER_REPOSITORY_MEMORY = 'memory';
     public const USER_REPOSITORY_AZURE_SQL = 'azure-sql';
 
@@ -290,6 +354,8 @@ final readonly class Settings
         public int $cablefitResearchTimeoutSeconds = 300,
         public int $cablefitResearchIdleCheckMinutes = 1440,
         public string $cablefitResearchWakePath = 'var/cablefit-research',
+        /** @var array<string, string> */
+        public array $platformAiModels = [],
     ) {
     }
 
