@@ -284,7 +284,7 @@ final readonly class Settings
         public string $nprMailWakePath = 'var/npr-mail',
         // CableFit research agent (C3): advisory web research, run by the cablefit-research WebJob.
         public bool $cablefitResearchEnabled = false,
-        public string $cablefitResearchModel = 'claude-sonnet-5',
+        public string $cablefitResearchModel = 'claude-sonnet-5-5',
         public int $cablefitResearchMaxSearches = 8,
         public int $cablefitResearchDailyRunsPerUser = 10,
         public int $cablefitResearchTimeoutSeconds = 300,
@@ -1562,7 +1562,7 @@ final readonly class Settings
             nprAppBaseUrl: rtrim(self::string($env, 'NPR_APP_BASE_URL', 'https://tricab.ai'), '/'),
             nprMailWakePath: self::string($env, 'NPR_MAIL_WAKE_PATH', 'var/npr-mail'),
             cablefitResearchEnabled: self::bool($env, 'CABLEFIT_RESEARCH_ENABLED', false),
-            cablefitResearchModel: trim(self::string($env, 'CABLEFIT_RESEARCH_MODEL', 'claude-sonnet-5')) ?: 'claude-sonnet-5',
+            cablefitResearchModel: trim(self::string($env, 'CABLEFIT_RESEARCH_MODEL', 'claude-sonnet-5-5')) ?: 'claude-sonnet-5-5',
             cablefitResearchMaxSearches: self::boundedInt($env, 'CABLEFIT_RESEARCH_MAX_SEARCHES', 8, 1, 20),
             cablefitResearchDailyRunsPerUser: self::boundedInt($env, 'CABLEFIT_RESEARCH_DAILY_RUNS_PER_USER', 10, 1, 100),
             cablefitResearchTimeoutSeconds: self::boundedInt($env, 'CABLEFIT_RESEARCH_TIMEOUT_SECONDS', 300, 30, 900),

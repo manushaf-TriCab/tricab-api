@@ -298,6 +298,13 @@ final class SettingsTest extends TestCase
         }
     }
 
+    public function test_cablefit_research_uses_sonnet_5_5_unless_set(): void
+    {
+        self::assertSame('claude-sonnet-5-5', Settings::fromEnvironment(['APP_ENV' => 'development'])->cablefitResearchModel);
+        self::assertSame('claude-sonnet-5-5', Settings::fromEnvironment(['APP_ENV' => 'development', 'CABLEFIT_RESEARCH_MODEL' => '  '])->cablefitResearchModel);
+        self::assertSame('claude-opus-5-5', Settings::fromEnvironment(['APP_ENV' => 'development', 'CABLEFIT_RESEARCH_MODEL' => 'claude-opus-5-5'])->cablefitResearchModel);
+    }
+
     public function test_foundry_is_disabled_by_default(): void
     {
         $settings = Settings::fromEnvironment([
