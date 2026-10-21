@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Slim\App;
 use TriCab\Api\Product\Persistence\InMemory\InMemoryProductStore;
 use TriCab\Api\Product\Storage\InMemoryProductBlobStore;
+use TriCab\Api\Tests\Support\GlbFixture;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Product\Contract\ProductBlobStore;
 
@@ -29,7 +30,7 @@ final class Product3DModelEndpointsTest extends TestCase
     {
         $app = $this->createApp();
         $productPublicId = $this->createProduct($app);
-        $binary = 'glb-bytes-for-3d-studio-test';
+        $binary = GlbFixture::build();
 
         $listEmpty = $app->handle(TestAppFactory::request(
             'GET',
@@ -177,7 +178,7 @@ final class Product3DModelEndpointsTest extends TestCase
     {
         $app = $this->createApp();
         $productPublicId = $this->createProduct($app);
-        $binary = 'glb-soft-delete';
+        $binary = GlbFixture::build();
 
         $initiate = $app->handle($this->jsonRequest(
             'POST',
@@ -299,7 +300,7 @@ final class Product3DModelEndpointsTest extends TestCase
         self::assertStringStartsWith('fnv1a32:', $data['sourceHash']);
         self::assertArrayNotHasKey('VOLTAGE', $data['values']);
 
-        $binary = 'glb-procedural-bytes';
+        $binary = GlbFixture::build();
         $initiate = $app->handle($this->jsonRequest(
             'POST',
             '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session',
@@ -351,7 +352,7 @@ final class Product3DModelEndpointsTest extends TestCase
     {
         $app = $this->createApp();
         $productPublicId = $this->createProduct($app);
-        $binary = 'glb-bytes-for-preview-test';
+        $binary = GlbFixture::build();
 
         $initiate = $app->handle($this->jsonRequest(
             'POST',
@@ -455,7 +456,7 @@ final class Product3DModelEndpointsTest extends TestCase
         $app = $this->createApp();
         $productPublicId = $this->createProduct($app);
 
-        $smallBinary = str_repeat('s', 1024);
+        $smallBinary = GlbFixture::build([], 1024);
         $session = TestAppFactory::json($app->handle($this->jsonRequest(
             'POST',
             '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session',
@@ -520,7 +521,7 @@ final class Product3DModelEndpointsTest extends TestCase
         self::assertNotEmpty($skipData['jobPublicId']);
         $rowVersion = (string) $skipData['model']['rowVersion'];
 
-        $largeBinary = str_repeat('L', 70_000);
+        $largeBinary = GlbFixture::build([], 70_000);
         $largeSession = TestAppFactory::json($app->handle($this->jsonRequest(
             'POST',
             '/api/v1/admin/products/' . $productPublicId . '/3d-models/upload-session',

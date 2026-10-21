@@ -10,6 +10,7 @@ use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\Product3DModelSummary;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DModel;
+use TriCab\Core\Product\Domain\Service\Product3DPublicRepresentationProjector;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\Exception\Product3DModelNotFound;
 use TriCab\Core\Product\Application\Exception\ProductConcurrencyConflict;
@@ -183,6 +184,7 @@ SQL,
                 storageContainer: $summary->storageContainer,
                 storagePath: $summary->storagePath,
                 previewImageStoragePath: $summary->previewImageStoragePath,
+                representation: (new Product3DPublicRepresentationProjector())->project($summary->generationMetadata, $summary->productVariantPublicId === null),
             );
         }
 
@@ -399,6 +401,35 @@ SQL,
                 ':publicUrl' => $blobMeta['publicUrl'] ?? null,
                 ':mimeType' => $blobMeta['mimeType'] ?? null,
                 ':fileSizeBytes' => $blobMeta['fileSizeBytes'] ?? null,
+                ':updatedByUserId' => $actorUserId->toInt(),
+                ':modelPublicId' => $modelPublicId,
+            ],
+        );
+
+        $loaded = $this->findByPublicId($modelPublicId);
+        if ($loaded === null) {
+            throw Product3DModelNotFound::forPublicId($modelPublicId);
+        }
+
+        return $loaded;
+    }
+
+    public function markUploadFailed(
+        string $modelPublicId,
+        UserId $actorUserId,
+    ): Product3DModelSummary {
+        $this->connection->execute(
+            <<<'SQL'
+UPDATE [product].[Product3DModels]
+SET
+    [UploadStatusCode] = N'failed',
+    [StatusCode] = N'failed',
+    [UpdatedAtUtc] = SYSUTCDATETIME(),
+    [UpdatedByUserId] = :updatedByUserId
+WHERE [PublicId] = :modelPublicId
+  AND [DeletedAtUtc] IS NULL
+SQL,
+            [
                 ':updatedByUserId' => $actorUserId->toInt(),
                 ':modelPublicId' => $modelPublicId,
             ],

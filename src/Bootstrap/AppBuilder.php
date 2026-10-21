@@ -37,6 +37,8 @@ use TriCab\Api\Http\Action\Admin\CompleteArModelUploadAction;
 use TriCab\Api\Http\Action\Admin\InitiateArModelUploadAction;
 use TriCab\Api\Http\Action\Admin\Product3DModelsAdminAction;
 use TriCab\Api\Http\Action\Admin\GetProduct3DSpecificationSourceAction;
+use TriCab\Api\Http\Action\Admin\GetProduct3DAccessorySpecificationSourceAction;
+use TriCab\Api\Http\Action\PublicProduct\GetPublicProduct3DAction;
 use TriCab\Api\Http\Action\Admin\ActivateProduct360SetAction;
 use TriCab\Api\Http\Action\Admin\Complete360FrameUploadAction;
 use TriCab\Api\Http\Action\Admin\Initiate360FrameUploadAction;
@@ -1690,6 +1692,7 @@ final class AppBuilder
         $app->get('/api/v1/pricing/customers/{customerPublicId}/contacts', GetPricingCustomerContactsAction::class);
         $app->post('/api/v1/pricing/margin-override', PostPricingMarginOverrideAction::class);
         $app->get('/api/v1/products/{slug}/media', GetPublicProductMediaAction::class);
+        $app->get('/api/v1/products/{slug}/3d', GetPublicProduct3DAction::class);
         $app->get('/api/v1/products/{slug}/documents', GetPublicProductDocumentsAction::class);
         $app->get('/api/v1/products/{slug}/documents/{documentPublicId}/download', DownloadProductDocumentAction::class);
         $app->get('/api/v1/products/{slug}/relationships', GetPublicProductRelationshipsAction::class);
@@ -2237,6 +2240,8 @@ final class AppBuilder
         $app->get('/api/v1/admin/products/{productPublicId}/3d-models', Product3DModelsAdminAction::class)
             ->add(($require)('PRODUCT.READ'));
         $app->get('/api/v1/admin/products/{productPublicId}/3d/specification-source', GetProduct3DSpecificationSourceAction::class)
+            ->add(($require)('PRODUCT.READ'));
+        $app->get('/api/v1/admin/products/{productPublicId}/3d/accessory-specification-source', GetProduct3DAccessorySpecificationSourceAction::class)
             ->add(($require)('PRODUCT.READ'));
         $app->post('/api/v1/admin/products/{productPublicId}/3d-models/upload-session', Product3DModelsAdminAction::class)
             ->add(($require)('PRODUCT.MEDIA.MANAGE'));

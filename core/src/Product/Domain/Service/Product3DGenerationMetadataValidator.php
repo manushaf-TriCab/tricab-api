@@ -22,6 +22,12 @@ final class Product3DGenerationMetadataValidator
         'geometryStats',
         'units',
         'modelOrigin',
+        'family',
+        'accuracy',
+        'assumptions',
+        'dimensionsUsed',
+        'accessoryDefinition',
+        'representation',
     ];
 
     /**

@@ -8,6 +8,7 @@ use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Product\Application\DTO\Product3DAssetSummary;
 use TriCab\Core\Product\Application\DTO\Product3DModelSummary;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DModel;
+use TriCab\Core\Product\Domain\Service\Product3DPublicRepresentationProjector;
 use TriCab\Core\Product\Application\DTO\ProductPublic3DPayload;
 use TriCab\Core\Product\Application\Exception\Product3DModelNotFound;
 use TriCab\Core\Product\Application\Exception\ProductConcurrencyConflict;
@@ -73,6 +74,7 @@ final class InMemoryProduct3DModelRepository implements Product3DModelRepository
                 storageContainer: $item->storageContainer,
                 storagePath: $item->storagePath,
                 previewImageStoragePath: $item->previewImageStoragePath,
+                representation: (new Product3DPublicRepresentationProjector())->project($item->generationMetadata, $item->productVariantPublicId === null),
             );
         }
         if ($models === []) {
@@ -217,6 +219,24 @@ final class InMemoryProduct3DModelRepository implements Product3DModelRepository
         $row['publicUrl'] = $blobMeta['publicUrl'] ?? $row['publicUrl'];
         $row['mimeType'] = $blobMeta['mimeType'] ?? $row['mimeType'];
         $row['fileSizeBytes'] = $blobMeta['fileSizeBytes'] ?? $row['fileSizeBytes'];
+        $row['rowVersion'] = $this->store->nextRowVersion()->toBase64();
+        $row['updatedAtUtc'] = $this->store->nowUtc();
+        $map[$modelPublicId] = $row;
+        $this->store->setThreeDModelsMap($map);
+
+        return self::toSummary($row, $this->store);
+    }
+
+    public function markUploadFailed(string $modelPublicId, UserId $actorUserId): Product3DModelSummary
+    {
+        unset($actorUserId);
+        $map = $this->store->threeDModelsMap();
+        $row = $map[$modelPublicId] ?? null;
+        if ($row === null || ($row['deletedAtUtc'] ?? null) !== null) {
+            throw Product3DModelNotFound::forPublicId($modelPublicId);
+        }
+        $row['uploadStatusCode'] = 'failed';
+        $row['statusCode'] = 'failed';
         $row['rowVersion'] = $this->store->nextRowVersion()->toBase64();
         $row['updatedAtUtc'] = $this->store->nowUtc();
         $map[$modelPublicId] = $row;

@@ -58,4 +58,10 @@ interface ProductBlobStore
      * Returns null when the object is missing or the adapter cannot read.
      */
     public function getObjectBinary(string $container, string $blobPath): ?string;
+
+    /**
+     * Bounded read of $length bytes starting at $offset (may return fewer near EOF).
+     * Returns null when the object is missing or the adapter cannot read.
+     */
+    public function getObjectRange(string $container, string $blobPath, int $offset, int $length): ?string;
 }

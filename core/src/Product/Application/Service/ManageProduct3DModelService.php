@@ -87,6 +87,17 @@ final class ManageProduct3DModelService
                     'Model cannot be published until the file scan status is clean (or not_required/skipped).',
                 );
             }
+            $approval = [];
+            if (self::isVisualPreview($existing->generationMetadata)) {
+                $note = $command->approvalNote === null ? '' : trim($command->approvalNote);
+                if ($command->approveApproximation !== true || $note === '') {
+                    throw ProductFileUploadException::invalidState(
+                        'This model is a visual-preview approximation. Publishing requires approveApproximation=true '
+                        . 'and a non-empty approvalNote.',
+                    );
+                }
+                $approval = ['approveApproximation' => true, 'approvalNote' => $note];
+            }
             $updated = $this->models->publish(
                 $existing->publicId,
                 $command->expectedRowVersion,
@@ -98,11 +109,21 @@ final class ManageProduct3DModelService
                 entityTypeCode: 'product-3d-model',
                 entityId: null,
                 actionCode: 'published',
-                newValues: ['modelPublicId' => $updated->publicId],
+                newValues: ['modelPublicId' => $updated->publicId] + $approval,
             );
 
             return $updated;
         });
+    }
+
+    /**
+     * @param array<string, mixed>|null $generationMetadata
+     */
+    private static function isVisualPreview(?array $generationMetadata): bool
+    {
+        $accuracy = $generationMetadata['accuracy'] ?? null;
+
+        return is_array($accuracy) && ($accuracy['class'] ?? null) === 'visual-preview';
     }
 
     public function unpublish(ActorContext $actor, Product3DModelRowVersionCommand $command): Product3DModelSummary

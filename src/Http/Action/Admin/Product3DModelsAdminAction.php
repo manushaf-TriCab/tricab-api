@@ -121,7 +121,8 @@ final class Product3DModelsAdminAction
                     }
                 }
                 $actor = AdminActorFactory::fromRequest($request);
-                $completed = $this->transaction->run(fn () => $this->complete->execute(
+                // The service owns its transaction so a rejected GLB commits the failed status.
+                $completed = $this->complete->execute(
                     $actor,
                     new CompleteProduct3DModelUploadCommand(
                         modelPublicId: $modelPublicId,
@@ -129,7 +130,7 @@ final class Product3DModelsAdminAction
                             ? $body['binaryBase64']
                             : null,
                     ),
-                ));
+                );
 
                 return $this->responder->success(ProductManagementDtoSerializer::product3DModelSummary($completed, $this->devUrls));
             }
@@ -322,6 +323,15 @@ final class Product3DModelsAdminAction
 
             $cmd = new Product3DModelRowVersionCommand($productPublicId, $modelPublicId, $expected);
             if (str_ends_with($path, '/publish')) {
+                $approve = $body['approveApproximation'] ?? null;
+                $note = $body['approvalNote'] ?? null;
+                if ($approve !== null && !is_bool($approve)) {
+                    throw HttpRequestValidationFailed::unprocessable('VALIDATION_FAILED', 'approveApproximation must be a boolean.');
+                }
+                if ($note !== null && !is_string($note)) {
+                    throw HttpRequestValidationFailed::unprocessable('VALIDATION_FAILED', 'approvalNote must be a string.');
+                }
+                $cmd = new Product3DModelRowVersionCommand($productPublicId, $modelPublicId, $expected, $approve, $note);
                 $updated = $this->transaction->run(fn () => $this->manage->publish($actor, $cmd));
             } elseif (str_ends_with($path, '/unpublish')) {
                 $updated = $this->transaction->run(fn () => $this->manage->unpublish($actor, $cmd));

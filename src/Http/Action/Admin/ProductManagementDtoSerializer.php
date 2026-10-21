@@ -1631,6 +1631,7 @@ final class ProductManagementDtoSerializer
             'viewerConfiguration' => $model->viewerConfiguration,
             'isPrimary' => $model->isPrimary,
             'productVariantPublicId' => $model->productVariantPublicId,
+            'representation' => $model->representation,
         ];
     }
 

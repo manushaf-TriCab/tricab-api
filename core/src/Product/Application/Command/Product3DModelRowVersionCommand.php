@@ -10,6 +10,8 @@ final readonly class Product3DModelRowVersionCommand
         public string $productPublicId,
         public string $modelPublicId,
         public string $expectedRowVersion,
+        public ?bool $approveApproximation = null,
+        public ?string $approvalNote = null,
     ) {
     }
 }

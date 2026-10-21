@@ -32,6 +32,12 @@ final readonly class ProductPublic3DModel
         public ?string $storagePath = null,
         /** Internal only — preview blob path for READ SAS (not the GLB path). */
         public ?string $previewImageStoragePath = null,
+        /**
+         * Sanitised customer-safe representation (product-level models only).
+         *
+         * @var array<string, mixed>|null
+         */
+        public ?array $representation = null,
     ) {
     }
 }
