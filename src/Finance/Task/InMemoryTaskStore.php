@@ -142,7 +142,7 @@ final class InMemoryTaskStore extends InMemoryTaskSetupStore implements TaskStor
     {
         return self::newestFirst(array_values(array_filter(
             $this->history,
-            static fn (TaskHistoryRow $row): bool => $toStatus === null || $row->toStatus === $toStatus,
+            static fn (TaskHistoryRow $row): bool => $row->field === null && ($toStatus === null || $row->toStatus === $toStatus),
         )));
     }
 

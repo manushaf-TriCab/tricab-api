@@ -78,7 +78,7 @@ final class LocalFinanceSqlServer
 
     private static function applySchema(PDO $pdo): void
     {
-        foreach (['create-finance-schema.sql', 'create-finance-jobs-schema.sql', 'create-finance-attachments-schema.sql', 'create-finance-access-schema.sql', 'create-finance-odoo-schema.sql', 'create-finance-task-schema.sql', 'alter-finance-task-board.sql', 'alter-finance-task-project-status.sql', 'alter-finance-task-simple-status.sql', 'alter-finance-task-project-groups.sql', 'alter-finance-task-order.sql', 'create-finance-ar-schema.sql', 'create-finance-invoice-schema.sql', 'alter-finance-mail-status-suppressed.sql'] as $file) {
+        foreach (['create-finance-schema.sql', 'create-finance-jobs-schema.sql', 'create-finance-attachments-schema.sql', 'create-finance-access-schema.sql', 'create-finance-odoo-schema.sql', 'create-finance-task-schema.sql', 'alter-finance-task-board.sql', 'alter-finance-task-project-status.sql', 'alter-finance-task-simple-status.sql', 'alter-finance-task-project-groups.sql', 'alter-finance-task-order.sql', 'alter-finance-task-history-fields.sql', 'create-finance-ar-schema.sql', 'create-finance-invoice-schema.sql', 'alter-finance-mail-status-suppressed.sql'] as $file) {
             $script = file_get_contents(dirname(__DIR__, 2) . '/database/scripts/development/' . $file);
             if ($script === false) {
                 throw new RuntimeException($file . ' is missing.');

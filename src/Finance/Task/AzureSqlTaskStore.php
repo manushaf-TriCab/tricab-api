@@ -152,13 +152,16 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
     public function addHistory(TaskHistoryRow $row): void
     {
         $this->connection->execute(
-            'INSERT INTO [finance].[task_history] ([id], [task_id], [from_status], [to_status], [changed_by_user_id], [changed_by_name], [changed_at], [created_date], [updated_date])
-             VALUES (:id, :task, :from, :to, :by, :name, :at, :created, :updated)',
+            'INSERT INTO [finance].[task_history] ([id], [task_id], [from_status], [to_status], [field], [from_value], [to_value], [changed_by_user_id], [changed_by_name], [changed_at], [created_date], [updated_date])
+             VALUES (:id, :task, :from, :to, :field, :fromValue, :toValue, :by, :name, :at, :created, :updated)',
             [
                 'id' => $row->id,
                 'task' => $row->taskId,
                 'from' => $row->fromStatus,
                 'to' => $row->toStatus,
+                'field' => $row->field,
+                'fromValue' => $row->fromValue,
+                'toValue' => $row->toValue,
                 'by' => $row->changedByUserId,
                 'name' => $row->changedByName,
                 'at' => self::at($row->changedAt),
@@ -171,7 +174,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
     public function historyFor(string $taskId): array
     {
         $rows = $this->connection->fetchAll(
-            'SELECT [id], [task_id], [from_status], [to_status], [changed_by_user_id], [changed_by_name], [changed_at]
+            'SELECT [id], [task_id], [from_status], [to_status], [field], [from_value], [to_value], [changed_by_user_id], [changed_by_name], [changed_at]
              FROM [finance].[task_history] WHERE [task_id] = :id ORDER BY [changed_at] DESC, [id]',
             ['id' => $taskId],
         );
@@ -182,8 +185,8 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
     public function historyAll(?string $toStatus): array
     {
         $rows = $this->connection->fetchAll(
-            'SELECT [id], [task_id], [from_status], [to_status], [changed_by_user_id], [changed_by_name], [changed_at]
-             FROM [finance].[task_history]' . ($toStatus !== null ? ' WHERE [to_status] = :to' : '') . ' ORDER BY [changed_at] DESC, [id]',
+            'SELECT [id], [task_id], [from_status], [to_status], [field], [from_value], [to_value], [changed_by_user_id], [changed_by_name], [changed_at]
+             FROM [finance].[task_history] WHERE [field] IS NULL' . ($toStatus !== null ? ' AND [to_status] = :to' : '') . ' ORDER BY [changed_at] DESC, [id]',
             $toStatus !== null ? ['to' => $toStatus] : [],
         );
 
@@ -201,6 +204,9 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
             AzureSqlValueMapper::nullableInt($row['changed_by_user_id']),
             self::textOrNull($row['changed_by_name']),
             self::when($row['changed_at'], 'changed_at'),
+            self::textOrNull($row['field']),
+            self::textOrNull($row['from_value']),
+            self::textOrNull($row['to_value']),
         );
     }
 

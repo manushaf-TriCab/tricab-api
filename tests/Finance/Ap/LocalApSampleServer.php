@@ -38,6 +38,7 @@ final class LocalApSampleServer
         'alter-finance-task-simple-status.sql',
         'alter-finance-task-project-groups.sql',
         'alter-finance-task-order.sql',
+        'alter-finance-task-history-fields.sql',
         'create-finance-ar-schema.sql',
         'create-finance-invoice-schema.sql',
         'alter-finance-mail-status-suppressed.sql',

@@ -144,13 +144,14 @@ final class TaskBoardService
     /**
      * The board's tasks in the order dragged (Nick Han, 20 Oct 2026: "can we move the task around by dragging"). Each
      * entry is one group (`group_id`, or null for the project's ungrouped tasks) and its tasks top to bottom; a task
-     * named under another group moves to it. Only the groups sent change. Neither the change log nor `updated_date`
-     * records a move: it is the board's layout, not a change to the task.
+     * named under another group moves to it. Only the groups sent change. A new place is the board's layout, not a
+     * change to the task, so `updated_date` stays; a move into another group is a change of group, and the task's
+     * history logs it, as it would a change made in the form (Nick Han, 21 Oct 2026), when the caller is known.
      *
      * @param array<string, mixed> $data `groups`: list of {group_id, task_ids}
      * @return array{updated: int}
      */
-    public function orderTasks(string $projectId, array $data): array
+    public function orderTasks(string $projectId, array $data, ?TaskActor $actor = null): array
     {
         $this->liveProject($projectId);
         $raw = $data['groups'] ?? null;
@@ -195,12 +196,16 @@ final class TaskBoardService
             throw new TaskInvalid('Some of these tasks are not on this board. Refresh the page and try again.');
         }
 
-        return $this->board->transactional(function () use ($live, $plan): array {
+        return $this->board->transactional(function () use ($live, $plan, $actor): array {
             $updated = 0;
+            $now = $this->time->now();
             foreach ($live as $task) {
                 [$groupId, $position] = $plan[$task->id];
                 if ($task->groupId === $groupId && $task->sortOrder === $position) {
                     continue;
+                }
+                if ($actor !== null) {
+                    $this->taskService->recordGroupMove($actor, $task->id, $task->groupId, $groupId, $now);
                 }
                 $task->groupId = $groupId;
                 $task->sortOrder = $position;

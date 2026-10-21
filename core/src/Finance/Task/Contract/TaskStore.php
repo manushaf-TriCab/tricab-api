@@ -74,12 +74,12 @@ interface TaskStore extends TaskTransactions
 
     public function addHistory(TaskHistoryRow $row): void;
 
-    /** @return list<TaskHistoryRow> a task's changes, newest first */
+    /** @return list<TaskHistoryRow> a task's changes, every field's, newest first */
     public function historyFor(string $taskId): array;
 
     /**
      * @param ?string $toStatus only changes into this status
-     * @return list<TaskHistoryRow> every row, newest first; no limit
+     * @return list<TaskHistoryRow> every status change (no other field's), newest first; no limit
      */
     public function historyAll(?string $toStatus): array;
 }

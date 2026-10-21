@@ -422,7 +422,7 @@ final class TaskServiceTest extends TestCase
 
     // ==== status changes, blockers and history =================================================
 
-    public function test_a_status_change_writes_one_history_row_and_other_edits_write_none(): void
+    public function test_a_status_change_writes_one_status_row_and_every_other_change_a_row_of_its_own(): void
     {
         $t = $this->make($this->max, 'x');
         $id = self::id($t);
@@ -438,12 +438,72 @@ final class TaskServiceTest extends TestCase
         self::assertNotNull($same['completed_at']);
         self::assertNull($reopened['completed_at']);
         $rows = $this->tasks->history($this->max, $id);
-        self::assertCount(3, $rows, 'created, completed, reopened: five edits, three rows');
+        self::assertSame([
+            'name: x → y',
+            'progress: 0 → 10',
+            'progress: 10 → 100',
+            'progress: 100 → 75',
+            'status: - → active',
+            'status: active → completed',
+            'status: completed → active',
+        ], self::changes($rows), 'the second Done changes nothing, so it logs nothing');
+        $statuses = array_values(array_filter($rows, static fn (array $row): bool => $row['field'] === 'status'));
         self::assertSame([['completed', 'active'], ['active', 'completed'], [null, 'active']], array_map(
             static fn (array $row): array => [$row['from_status'], $row['to_status']],
-            $rows,
+            $statuses,
         ));
         self::assertSame('Max Manager', $rows[0]['changed_by']);
+    }
+
+    public function test_every_field_a_save_changes_is_logged_people_and_projects_by_name_and_long_text_without_its_words(): void
+    {
+        $close = self::id($this->setup->createProject($this->max, ['name' => 'Close']));
+        $id = self::id($this->make($this->max, 'Reconcile', ['preparer_id' => 11, 'reviewer_id' => 12, 'notes' => 'old']));
+        // A form sends every field, changed or not.
+        $this->tasks->update($this->max, $id, ['name' => 'Reconcile', 'preparer_id' => 11, 'reviewer_id' => 12, 'notes' => 'old', 'status' => 'active', 'progress' => 0]);
+        self::assertCount(1, $this->tasks->history($this->max, $id), 'a save that changes nothing logs nothing');
+        $this->tick();
+
+        $this->tasks->update($this->max, $id, [
+            'preparer_id' => 13, 'reviewer_id' => null, 'progress' => 25, 'notes' => 'new words', 'project_id' => $close,
+            'priority' => 'high', 'due_date' => '2026-10-31', 'urgent' => true, 'category' => 'ad_hoc',
+        ]);
+
+        $rows = $this->tasks->history($this->max, $id);
+        $latest = array_values(array_filter($rows, static fn (array $row): bool => $row['changed_at'] === $rows[0]['changed_at']));
+        self::assertSame([
+            'category: routine → ad_hoc',
+            'due_date: - → 2026-10-31',
+            'notes: - → -',
+            'preparer: Una User → Rae Reader',
+            'priority: - → high',
+            'progress: 0 → 25',
+            'project: General → Close',
+            'reviewer: Max Manager → -',
+            'urgent: no → yes',
+        ], self::changes($latest));
+        self::assertSame(array_fill(0, 9, 'Max Manager'), array_column($latest, 'changed_by'));
+        self::assertCount(1, $this->tasks->historyByStatus(null), 'the status feed has only status changes');
+    }
+
+    /**
+     * Each row as "field: from → to", sorted: the rows of one save share a time, in no set order.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @return list<string>
+     */
+    private static function changes(array $rows): array
+    {
+        $text = static fn (mixed $value): string => is_string($value) ? $value : '-';
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = $row['field'] === 'status'
+                ? 'status: ' . $text($row['from_status']) . ' → ' . $text($row['to_status'])
+                : $text($row['field']) . ': ' . $text($row['from_value']) . ' → ' . $text($row['to_value']);
+        }
+        sort($out);
+
+        return $out;
     }
 
     public function test_history_is_newest_first_and_records_the_name_at_the_time(): void
@@ -454,7 +514,7 @@ final class TaskServiceTest extends TestCase
         $this->tick();
         $this->tasks->update(new TaskActor(12, 'Max Renamed', 'max@example.test', $this->max->permissions), $id, ['status' => 'on_hold']);
 
-        $rows = $this->tasks->history($this->max, $id);
+        $rows = array_values(array_filter($this->tasks->history($this->max, $id), static fn (array $row): bool => $row['field'] === 'status'));
 
         self::assertSame(['on_hold', 'completed', 'active'], array_column($rows, 'to_status'));
         self::assertSame(['Max Renamed', 'Max Manager', 'Max Manager'], array_column($rows, 'changed_by'));

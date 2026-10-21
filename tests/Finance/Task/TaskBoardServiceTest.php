@@ -229,23 +229,29 @@ final class TaskBoardServiceTest extends TestCase
         $updatedBefore = $this->tasks->get($this->max, $one)['updated_date'];
 
         // Two above One in AR; Three dragged from AP to the bottom of AR; AP left empty.
+        $this->clock->advance('+1 second');
         $result = $this->board->orderTasks($project, ['groups' => [
             ['group_id' => $ar, 'task_ids' => [$two, $one, $three]],
             ['group_id' => $ap, 'task_ids' => []],
-        ]]);
+        ]], $this->max);
         self::assertSame(['updated' => 3], $result);
         self::assertSame([0, $ar], [$this->tasks->get($this->max, $two)['sort_order'], $this->tasks->get($this->max, $two)['group_id']]);
         self::assertSame(1, $this->tasks->get($this->max, $one)['sort_order']);
         self::assertSame([2, $ar], [$this->tasks->get($this->max, $three)['sort_order'], $this->tasks->get($this->max, $three)['group_id']]);
-        // A move is the board's layout, not a change to the task.
+        // A new place is the board's layout, not a change to the task; a new group is (Nick Han, 21 Oct 2026).
         self::assertSame($updatedBefore, $this->tasks->get($this->max, $one)['updated_date']);
         self::assertCount(1, $this->tasks->history($this->max, $one), 'only the creation');
+        $moved = $this->tasks->history($this->max, $three)[0];
+        self::assertSame(['group', 'AP', 'AR', 'Max Manager'], [$moved['field'], $moved['from_value'], $moved['to_value'], $moved['changed_by']]);
 
         // The same order again changes nothing.
         self::assertSame(['updated' => 0], $this->board->orderTasks($project, ['groups' => [['group_id' => $ar, 'task_ids' => [$two, $one, $three]]]]));
 
-        // A task that changes group in its form goes to the end of the new one.
+        // A task that changes group in its form goes to the end of the new one, and the change is logged as a drag's is.
+        $this->clock->advance('+1 second');
         self::assertNull($this->tasks->update($this->max, $three, ['group_id' => $ap])['sort_order']);
+        $moved = $this->tasks->history($this->max, $three)[0];
+        self::assertSame(['group', 'AR', 'AP'], [$moved['field'], $moved['from_value'], $moved['to_value']]);
     }
 
     public function test_ordering_refuses_another_projects_task_or_group_and_a_task_sent_twice(): void

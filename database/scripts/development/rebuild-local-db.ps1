@@ -140,6 +140,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-project-status.sql')  
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-simple-status.sql')   # Tri-Task tasks: Active, On Hold, Done; after alter-finance-task-board.sql
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-project-groups.sql')  # Tri-Task project groups (19 Oct 2026); after alter-finance-task-board.sql
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-order.sql')  # Tri-Task board order (20 Oct 2026); after alter-finance-task-project-groups.sql
+Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-history-fields.sql')  # Tri-Task history of every field (21 Oct 2026); after alter-finance-task-order.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-attachments-schema.sql')  # finance file store rows; after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-ar-schema.sql')           # Tri-AR's eight tables (Phase 5); after create-finance-schema.sql and create-finance-attachments-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-invoice-schema.sql')      # Tri-AP's fourteen tables (Phase 6); after create-finance-schema.sql and create-finance-attachments-schema.sql

@@ -465,7 +465,11 @@ final class TaskService
             }
         }
 
+        $before = clone $task;
+        $dependenciesChanged = false;
         if ($dependencies !== null) {
+            $old = $this->tasks->dependencyMap()[$task->id] ?? [];
+            $dependenciesChanged = array_diff($old, $dependencies) !== [] || array_diff($dependencies, $old) !== [];
             $this->setDependencies($task->id, $dependencies, $now);
         }
         $groupBefore = $task->groupId;
@@ -509,10 +513,22 @@ final class TaskService
             $task->completedAt = $newStatus === 'completed' ? $now : null;
             $this->recordStatusChange($actor, $task->id, $oldStatus, $newStatus, $now);
         }
+        $this->recordChanges($actor, $before, $task, $dependenciesChanged, $now);
         $task->updatedDate = $now;
         $this->tasks->updateTask($task);
 
         return $reviewDue;
+    }
+
+    /**
+     * A task dragged into another group on its board (TaskBoardService::orderTasks) is logged as a change of group,
+     * as the same move made in the form is. A new place in the same group is not a change to the task.
+     */
+    public function recordGroupMove(TaskActor $actor, string $taskId, ?string $from, ?string $to, DateTimeImmutable $now): void
+    {
+        if ($from !== $to) {
+            $this->recordChange($actor, $taskId, 'group', $this->groupName($from), $this->groupName($to), $now);
+        }
     }
 
     /**
@@ -674,6 +690,78 @@ final class TaskService
             $name === '' ? null : mb_substr($name, 0, 200),
             $now,
         ));
+    }
+
+    /**
+     * One history row for each field a save changed, besides the status (which has its own). People, the entity, the
+     * project and the group are kept by name as they were at the time, so the log still reads after a rename or a
+     * delete; codes (category, priority) stay codes for the page to label. Long text is logged as changed, without
+     * its words.
+     */
+    private function recordChanges(TaskActor $actor, TaskRecord $before, TaskRecord $after, bool $dependenciesChanged, DateTimeImmutable $now): void
+    {
+        $values = [
+            'name' => [$before->name, $after->name],
+            'category' => [$before->category, $after->category],
+            'priority' => [$before->priority, $after->priority],
+            'finance_statement_area' => [$before->financeStatementArea, $after->financeStatementArea],
+            'progress' => [(string) $before->progress, (string) $after->progress],
+            'due_date' => [$before->dueDate, $after->dueDate],
+            'due_date_requested' => [self::flag($before->dueDateRequested), self::flag($after->dueDateRequested)],
+            'urgent' => [self::flag($before->urgent), self::flag($after->urgent)],
+        ];
+        foreach ($values as $field => [$from, $to]) {
+            if (($from ?? '') !== ($to ?? '')) {
+                $this->recordChange($actor, $after->id, $field, $from, $to, $now);
+            }
+        }
+        $references = [
+            'project' => [$before->projectId, $after->projectId, fn (string $id): ?string => $this->setup->findProject($id)?->name],
+            'group' => [$before->groupId, $after->groupId, fn (string $id): ?string => $this->groupName($id)],
+            'entity' => [$before->entityId, $after->entityId, fn (string $id): ?string => $this->setup->findEntity($id)?->name],
+            'preparer' => [$before->preparerUserId, $after->preparerUserId, fn (int $id): ?string => $this->members->find($id)?->name],
+            'reviewer' => [$before->reviewerUserId, $after->reviewerUserId, fn (int $id): ?string => $this->members->find($id)?->name],
+        ];
+        foreach ($references as $field => [$from, $to, $name]) {
+            if ($from !== $to) {
+                $this->recordChange($actor, $after->id, $field, $from === null ? null : $name($from), $to === null ? null : $name($to), $now);
+            }
+        }
+        foreach (['description' => [$before->description, $after->description], 'requirements' => [$before->requirements, $after->requirements], 'notes' => [$before->notes, $after->notes]] as $field => [$from, $to]) {
+            if ($from !== $to) {
+                $this->recordChange($actor, $after->id, $field, null, null, $now);
+            }
+        }
+        if ($dependenciesChanged) {
+            $this->recordChange($actor, $after->id, 'dependencies', null, null, $now);
+        }
+    }
+
+    private function recordChange(TaskActor $actor, string $taskId, string $field, ?string $from, ?string $to, DateTimeImmutable $now): void
+    {
+        $name = $actor->historyName();
+        $this->tasks->addHistory(new TaskHistoryRow(
+            TaskRules::newId(),
+            $taskId,
+            null,
+            null,
+            $actor->userId,
+            $name === '' ? null : mb_substr($name, 0, 200),
+            $now,
+            $field,
+            $from === null ? null : mb_substr($from, 0, 400),
+            $to === null ? null : mb_substr($to, 0, 400),
+        ));
+    }
+
+    private function groupName(?string $groupId): ?string
+    {
+        return $groupId === null ? null : $this->board?->findGroup($groupId)?->name;
+    }
+
+    private static function flag(bool $value): string
+    {
+        return $value ? 'yes' : 'no';
     }
 
     /**

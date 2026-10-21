@@ -135,6 +135,9 @@ final class AzureSqlTaskStoreTest extends TestCase
         $this->tasks->update($this->max, $id, ['status' => 'completed']);
 
         $rows = $this->tasks->history($this->max, $id);
+        $progress = array_values(array_filter($rows, static fn (array $row): bool => $row['field'] === 'progress'));
+        self::assertSame([['0', '100']], array_map(static fn (array $row): array => [$row['from_value'], $row['to_value']], $progress), 'Done finishes the progress, and that is logged too');
+        $rows = array_values(array_filter($rows, static fn (array $row): bool => $row['field'] === 'status'));
 
         self::assertSame([['active', 'completed'], [null, 'active']], array_map(
             static fn (array $row): array => [$row['from_status'], $row['to_status']],
@@ -212,7 +215,7 @@ final class AzureSqlTaskStoreTest extends TestCase
 
         self::assertSame(2, $this->rows('task_tasks'));
         self::assertSame(0, $this->rows('task_dependencies'));
-        self::assertSame(3, $this->rows('task_history'), 'A has two rows, C one; B\'s went');
+        self::assertSame(4, $this->rows('task_history'), 'A has three rows (created, Done, 100%), C one; B\'s went');
         self::assertSame([], $this->tasks->get($this->max, self::id($c))['dependencies']);
     }
 

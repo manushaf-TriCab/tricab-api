@@ -28,7 +28,7 @@ final class OrderTaskBoardTasksAction
     {
         unset($response);
         try {
-            return $this->ok($this->responder, $this->service->orderTasks((string) ($args['id'] ?? ''), $this->bodyOf($request)));
+            return $this->ok($this->responder, $this->service->orderTasks((string) ($args['id'] ?? ''), $this->bodyOf($request), $this->actorOf($request)));
         } catch (TaskFailure $failure) {
             return $this->failure($this->responder, $failure);
         }
