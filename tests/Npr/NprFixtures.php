@@ -9,9 +9,12 @@ use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Npr\Application\Service\NprAccessPolicy;
 use TriCab\Core\Npr\Application\Service\NprRequestService;
 use TriCab\Core\Npr\Application\Service\NprValidationService;
+use TriCab\Core\Npr\Contract\NprRequesterDirectory;
 use TriCab\Core\Npr\Domain\NprRequest;
+use TriCab\Core\Npr\Domain\NprRequesterContact;
 use TriCab\Core\Npr\Domain\RequestStatus;
 use TriCab\Core\Npr\Infrastructure\InMemoryNprRequestRepository;
+use TriCab\Core\Npr\Infrastructure\NullNprRequesterDirectory;
 use TriCab\Core\Npr\Infrastructure\RosterNprBranchDirectory;
 use TriCab\Core\Npr\Module;
 
@@ -52,13 +55,29 @@ final class NprFixtures
         return self::user($id, Module::ROLE_PERMISSIONS[Module::ROLE_TSD_ENGINEER], 'chabilals@tricab.com', 'TSD Engineer');
     }
 
-    public static function service(InMemoryNprRequestRepository $repository): NprRequestService
+    public static function service(InMemoryNprRequestRepository $repository, ?NprRequesterDirectory $directory = null): NprRequestService
     {
         return new NprRequestService(
             $repository,
             new RosterNprBranchDirectory(self::resource('sales-roster.json')),
             new NprAccessPolicy(),
+            $directory ?? new NullNprRequesterDirectory(),
         );
+    }
+
+    /** A staff directory that knows everyone as the given office and phone. */
+    public static function directory(?string $officeLocation, ?string $phone): NprRequesterDirectory
+    {
+        return new class ($officeLocation, $phone) implements NprRequesterDirectory {
+            public function __construct(private readonly ?string $officeLocation, private readonly ?string $phone)
+            {
+            }
+
+            public function contactFor(string $email): NprRequesterContact
+            {
+                return new NprRequesterContact($this->officeLocation, $this->phone);
+            }
+        };
     }
 
     /**

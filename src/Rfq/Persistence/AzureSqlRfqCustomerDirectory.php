@@ -43,7 +43,7 @@ final class AzureSqlRfqCustomerDirectory implements RfqCustomerDirectory
         SQL;
 
     private const CONTACTS = <<<'SQL'
-        SELECT TOP (:limit) cc.[LegacyContactId], cc.[DisplayName], cc.[EmailAddress], cc.[PhoneNumber]
+        SELECT TOP (:limit) cc.[LegacyContactId], cc.[DisplayName], cc.[EmailAddress], cc.[PhoneNumber], cc.[PositionTitle]
         FROM [customer].[CustomerContacts] cc
         INNER JOIN [customer].[Customers] c ON c.[CustomerId] = cc.[CustomerId]
         WHERE c.[LegacyCustomerId] = :customerId AND cc.[LegacyContactId] IS NOT NULL
@@ -103,6 +103,7 @@ final class AzureSqlRfqCustomerDirectory implements RfqCustomerDirectory
                 AzureSqlValueMapper::nullableString($row['DisplayName']) ?? '',
                 AzureSqlValueMapper::nullableString($row['EmailAddress']),
                 AzureSqlValueMapper::nullableString($row['PhoneNumber']),
+                AzureSqlValueMapper::nullableString($row['PositionTitle'] ?? null),
             );
         }
 

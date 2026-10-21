@@ -6,6 +6,7 @@ namespace TriCab\Core\Npr\Application\Service;
 
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Npr\Contract\NprBranchDirectory;
+use TriCab\Core\Npr\Contract\NprRequesterDirectory;
 use TriCab\Core\Npr\Contract\NprRequestRepository;
 use TriCab\Core\Npr\Domain\Exception\InvalidNprInput;
 use TriCab\Core\Npr\Domain\Exception\NprRequestConflict;
@@ -13,6 +14,7 @@ use TriCab\Core\Npr\Domain\Exception\NprRequestNotEditable;
 use TriCab\Core\Npr\Domain\NewNprRequest;
 use TriCab\Core\Npr\Domain\NprDraftChange;
 use TriCab\Core\Npr\Domain\NprRequest;
+use TriCab\Core\Npr\Infrastructure\NullNprRequesterDirectory;
 
 /**
  * Drafts and reads (plan N1). Port of the npr-portal's `RequestService`
@@ -32,11 +34,14 @@ final class NprRequestService
         private readonly NprRequestRepository $requests,
         private readonly NprBranchDirectory $branches,
         private readonly NprAccessPolicy $policy,
+        private readonly NprRequesterDirectory $directory = new NullNprRequesterDirectory(),
     ) {
     }
 
     /**
      * Opens a draft. With no variants it starts with the source's default one.
+     * Region / branch and contact number start from the roster and the staff
+     * directory unless the body answers them; job title is left to the person.
      *
      * @throws InvalidNprInput
      */
@@ -44,12 +49,14 @@ final class NprRequestService
     {
         $answers = self::answers($answers);
         $variants = self::variants($variants);
+        $branch = $this->branches->branchForEmail($user->emailAddress);
+        $answers = $this->prefilled($answers, $user->emailAddress, $branch);
 
         $created = $this->requests->create(new NewNprRequest(
             $user->userId,
             strtolower($user->emailAddress),
             $user->displayName,
-            $this->branches->branchForEmail($user->emailAddress),
+            $branch,
             self::text($answers, 'job_title', self::DEFAULT_TITLE),
             self::text($answers, 'customer_name', ''),
             self::text($answers, 'urgency_level', self::DEFAULT_URGENCY),
@@ -191,6 +198,33 @@ final class NprRequestService
         }
 
         return $clean;
+    }
+
+    /**
+     * Fills `branch` (the roster's, else the directory's office) and
+     * `contact_number` (the directory's phone) where the body left them empty.
+     *
+     * @param array<string, mixed> $answers
+     * @return array<string, mixed>
+     */
+    private function prefilled(array $answers, string $email, string $rosterBranch): array
+    {
+        $missingBranch = self::text($answers, 'branch', '') === '';
+        $missingPhone = self::text($answers, 'contact_number', '') === '';
+        if (!$missingBranch && !$missingPhone) {
+            return $answers;
+        }
+        $contact = $this->directory->contactFor($email);
+        $branch = $rosterBranch !== NprBranchDirectory::UNASSIGNED ? $rosterBranch : $contact?->officeLocation;
+        if ($missingBranch && $branch !== null && trim($branch) !== '') {
+            $answers['branch'] = ['state' => 'provided', 'value' => trim($branch)];
+        }
+        $phone = $contact?->phone;
+        if ($missingPhone && $phone !== null && trim($phone) !== '') {
+            $answers['contact_number'] = ['state' => 'provided', 'value' => trim($phone)];
+        }
+
+        return $answers;
     }
 
     /** The `value` of a provided text answer, else `$fallback`; capped at the column's 255. */

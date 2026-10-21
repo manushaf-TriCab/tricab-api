@@ -861,6 +861,15 @@ final class ContainerFactory
                     => new \TriCab\Core\Npr\Infrastructure\RosterNprBranchDirectory(
                         dirname(__DIR__, 2) . '/resources/npr/sales-roster.json',
                     ),
+            // A new draft's branch and contact number start from the requester's Graph profile.
+            \TriCab\Core\Npr\Contract\NprRequesterDirectory::class
+                => static fn (Container $container): \TriCab\Core\Npr\Contract\NprRequesterDirectory
+                    => new \TriCab\Api\Npr\Directory\GraphNprRequesterDirectory(
+                        self::get($container, JsonHttpClient::class),
+                        $settings->graphTenantId,
+                        $settings->graphClientId,
+                        $settings->graphClientSecret,
+                    ),
             \TriCab\Core\Npr\Application\Service\NprValidationService::class
                 => static fn (): \TriCab\Core\Npr\Application\Service\NprValidationService
                     => \TriCab\Core\Npr\Application\Service\NprValidationService::fromFile(

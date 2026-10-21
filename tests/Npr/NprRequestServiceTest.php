@@ -85,6 +85,40 @@ final class NprRequestServiceTest extends TestCase
         self::assertSame('unassigned', $unknown->request->requesterBranch);
     }
 
+    public function test_branch_and_contact_number_are_prefilled_and_job_title_is_not(): void
+    {
+        $service = NprFixtures::service($this->repository, NprFixtures::directory('Brisbane Office', '+61 400 000 000'));
+
+        $rostered = $service->createDraft(NprFixtures::user(12, Module::ROLE_PERMISSIONS[Module::ROLE_REQUESTER], 'janek@tricab.com'), [], null)->request;
+        self::assertSame(['state' => 'provided', 'value' => 'SA/NT'], $rostered->answers['branch'], 'the roster branch wins over the office');
+        self::assertSame(['state' => 'provided', 'value' => '+61 400 000 000'], $rostered->answers['contact_number']);
+        self::assertArrayNotHasKey('job_title', $rostered->answers, 'job title is the project reference; Sales fills it in');
+
+        $unrostered = $service->createDraft(NprFixtures::user(11, Module::ROLE_PERMISSIONS[Module::ROLE_REQUESTER], 'nobody@example.com'), [], null)->request;
+        self::assertSame(['state' => 'provided', 'value' => 'Brisbane Office'], $unrostered->answers['branch']);
+        self::assertSame('unassigned', $unrostered->requesterBranch, 'the routing branch still comes only from the roster');
+    }
+
+    public function test_answers_in_the_body_are_not_overwritten_by_the_prefill(): void
+    {
+        $view = NprFixtures::service($this->repository, NprFixtures::directory('Brisbane Office', '+61 400 000 000'))->createDraft(NprFixtures::requester(), [
+            'branch' => ['state' => 'provided', 'value' => 'Perth'],
+            'contact_number' => ['state' => 'provided', 'value' => '08 9000 0000'],
+        ], null);
+
+        self::assertSame(['state' => 'provided', 'value' => 'Perth'], $view->request->answers['branch']);
+        self::assertSame(['state' => 'provided', 'value' => '08 9000 0000'], $view->request->answers['contact_number']);
+    }
+
+    public function test_nothing_is_prefilled_when_the_directory_knows_nothing(): void
+    {
+        $view = NprFixtures::service($this->repository, NprFixtures::directory(null, null))
+            ->createDraft(NprFixtures::user(11, Module::ROLE_PERMISSIONS[Module::ROLE_REQUESTER], 'nobody@example.com'), [], null);
+
+        self::assertArrayNotHasKey('branch', $view->request->answers);
+        self::assertArrayNotHasKey('contact_number', $view->request->answers);
+    }
+
     public function test_a_body_that_is_not_an_npr_is_refused(): void
     {
         $service = NprFixtures::service($this->repository);

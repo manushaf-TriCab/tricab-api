@@ -51,6 +51,8 @@ final class NprRouteTableTest extends TestCase
         'PUT /api/v1/npr/admin/manager-routes/{id}' => Module::PERMISSION_ADMIN,
         'GET /api/v1/npr/field-dictionary' => Module::PERMISSION_SELF_READ,
         'GET /api/v1/npr/tsd/field-dictionary' => Module::PERMISSION_TSD_READ,
+        'GET /api/v1/npr/lookups/customers' => Module::PERMISSION_SELF_CREATE,
+        'GET /api/v1/npr/lookups/contacts' => Module::PERMISSION_SELF_CREATE,
         'GET /api/v1/npr/me/requests/{publicId}/attachments' => Module::PERMISSION_SELF_READ,
         'POST /api/v1/npr/me/requests/{publicId}/attachments' => Module::PERMISSION_SELF_CREATE,
         'DELETE /api/v1/npr/me/requests/{publicId}/attachments/{attachmentPublicId}' => Module::PERMISSION_SELF_CREATE,

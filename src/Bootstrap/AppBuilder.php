@@ -1119,6 +1119,13 @@ final class AppBuilder
         $app->get('/api/v1/npr/tsd/field-dictionary', \TriCab\Api\Http\Action\Npr\GetNprFieldDictionaryAction::class)
             ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_TSD_READ));
 
+        // Section 1's customer and contact suggestions: the RFQ header's lookups over the same
+        // synced customer book, opened to whoever may write a request rather than to RFQ editors.
+        $app->get('/api/v1/npr/lookups/customers', \TriCab\Api\Http\Action\Rfq\SearchRfqCustomersAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_CREATE));
+        $app->get('/api/v1/npr/lookups/contacts', \TriCab\Api\Http\Action\Rfq\ListRfqContactsAction::class)
+            ->add(($require)(\TriCab\Core\Npr\Module::PERMISSION_SELF_CREATE));
+
         // N2.3 attachments: the requester's own door, read-only doors for the manager and TSD, and TSD uploads.
         $files = \TriCab\Api\Http\Action\Npr\NprAttachmentAction::class;
         $selfRead = \TriCab\Core\Npr\Module::PERMISSION_SELF_READ;
