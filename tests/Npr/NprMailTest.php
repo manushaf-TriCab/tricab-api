@@ -371,16 +371,19 @@ final class NprMailTest extends TestCase
         self::assertInstanceOf(InMemoryNprMailOutbox::class, $w->outbox);
     }
 
-    public function test_templates_are_short_and_link_to_the_right_screens(): void
+    public function test_templates_are_short_and_carry_one_link_that_routes_by_role(): void
     {
         $w = new W();
-        $w->withTsd();
+        [$id] = $w->withTsd();
 
         $submitted = $w->transport->sent[0];
-        self::assertStringContainsString('https://tricab.ai/npr/team/', $submitted->text);
+        self::assertStringContainsString('Open in TriCab: https://tricab.ai/npr/open/' . $id, $submitted->text);
+        self::assertSame(1, substr_count($submitted->html, '<a href='), 'one link, whoever reads it');
+        self::assertStringContainsString('>Open in TriCab</a>', $submitted->html);
         self::assertStringContainsString('Action required: endorsement needed', $submitted->subject);
         $endorsed = $w->transport->sent[1];
-        self::assertStringContainsString('https://tricab.ai/admin/tsd/npr/', $endorsed->text);
+        self::assertStringContainsString('https://tricab.ai/npr/open/' . $id, $endorsed->text);
+        self::assertStringNotContainsString('/admin/tsd/npr/', $endorsed->text);
         self::assertStringContainsString('NPR-2026-', $endorsed->subject);
         self::assertLessThan(1600, strlen($endorsed->text));
     }
