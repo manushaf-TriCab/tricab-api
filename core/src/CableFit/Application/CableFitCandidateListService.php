@@ -74,6 +74,7 @@ final readonly class CableFitCandidateListService
                 // The stored bit is refreshed when the design is opened; the live NPR revision is better when readable.
                 $snapshot === null ? $row->storedStale : $this->handoff->isStale($row->sourceNprRevision, $snapshot->currentRevision),
                 $research[$row->candidate->publicId] ?? null,
+                CableFitCandidateService::mayDelete($user, $row->candidate),
             );
         }
 

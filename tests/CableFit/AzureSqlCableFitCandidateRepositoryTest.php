@@ -117,7 +117,8 @@ final class AzureSqlCableFitCandidateRepositoryTest extends TestCase
         self::assertNull($row->updatedByName);
         self::assertSame(3, $row->sourceNprRevision);
         self::assertTrue($row->storedStale);
-        self::assertStringNotContainsString('WHERE', $connection->calls[0]['sql']);
+        self::assertStringContainsString('WHERE c.[deleted_at] IS NULL', $connection->calls[0]['sql']);
+        self::assertStringNotContainsString('LIKE', $connection->calls[0]['sql']);
         $sql = $connection->calls[1]['sql'];
         self::assertStringContainsString('LEFT JOIN [identity].[Users] cu ON cu.[UserId] = c.[created_by_user_id]', $sql);
         self::assertStringContainsString('LEFT JOIN [identity].[Users] uu ON uu.[UserId] = c.[updated_by_user_id]', $sql);
@@ -137,7 +138,7 @@ final class AzureSqlCableFitCandidateRepositoryTest extends TestCase
         self::assertSame([], $page->rows);
         self::assertCount(1, $connection->calls, 'no page query when nothing matches');
         $call = $connection->calls[0];
-        self::assertStringContainsString("WHERE (c.[candidate_name] LIKE :text ESCAPE N'~' OR c.[npr_request_public_id] IN (:npr0, :npr1))", $call['sql']);
+        self::assertStringContainsString("WHERE c.[deleted_at] IS NULL AND (c.[candidate_name] LIKE :text ESCAPE N'~' OR c.[npr_request_public_id] IN (:npr0, :npr1))", $call['sql']);
         self::assertSame('%50~%~_~[x]~~%', $call['params']['text']);
         self::assertSame('npr-a', $call['params']['npr0']);
         self::assertSame('npr-b', $call['params']['npr1']);
@@ -150,7 +151,7 @@ final class AzureSqlCableFitCandidateRepositoryTest extends TestCase
 
         (new AzureSqlCableFitCandidateRepository($connection))->search(new CandidateSearch('drag', [], 50, 0));
 
-        self::assertStringContainsString("WHERE (c.[candidate_name] LIKE :text ESCAPE N'~')", $connection->calls[0]['sql']);
+        self::assertStringContainsString("WHERE c.[deleted_at] IS NULL AND (c.[candidate_name] LIKE :text ESCAPE N'~')", $connection->calls[0]['sql']);
     }
 
     public function test_linked_npr_requests_are_distinct_and_non_null(): void
@@ -160,5 +161,51 @@ final class AzureSqlCableFitCandidateRepositoryTest extends TestCase
         self::assertSame(['npr-a', 'npr-b'], (new AzureSqlCableFitCandidateRepository($connection))->linkedNprRequestPublicIds());
         self::assertStringContainsString('SELECT DISTINCT [npr_request_public_id]', $connection->calls[0]['sql']);
         self::assertStringContainsString('IS NOT NULL', $connection->calls[0]['sql']);
+        self::assertStringContainsString('[deleted_at] IS NULL', $connection->calls[0]['sql']);
+    }
+
+    public function test_every_read_leaves_out_deleted_candidates(): void
+    {
+        $connection = new FakeSqlConnection();
+        $repo = new AzureSqlCableFitCandidateRepository($connection);
+
+        $repo->listByNprRequest('npr-a');
+        $repo->findByPublicId(self::ID);
+        $repo->latestRevision(self::ID);
+
+        self::assertCount(3, $connection->calls);
+        foreach ($connection->calls as $call) {
+            self::assertStringContainsString('c.[deleted_at] IS NULL', $call['sql']);
+        }
+    }
+
+    public function test_delete_stamps_who_and_when_once_and_reports_whether_a_row_changed(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([['candidate_id' => 4]]);
+        $connection->queueFetch([]);
+        $repo = new AzureSqlCableFitCandidateRepository($connection);
+        $at = new DateTimeImmutable('2026-10-21T09:00:00Z');
+
+        self::assertTrue($repo->markDeleted(strtolower(self::ID), 7, $at));
+        self::assertFalse($repo->markDeleted(strtolower(self::ID), 7, $at), 'already deleted');
+        self::assertFalse($repo->markDeleted('not-a-guid', 7, $at));
+
+        self::assertCount(2, $connection->calls, 'a malformed id is not sent');
+        $call = $connection->calls[0];
+        self::assertStringContainsString('SET [deleted_at] = :at, [deleted_by_user_id] = :userId', $call['sql']);
+        self::assertStringContainsString('WHERE [public_id] = :id AND [deleted_at] IS NULL', $call['sql']);
+        self::assertSame(7, $call['params']['userId']);
+    }
+
+    public function test_a_save_never_moves_a_deleted_candidate(): void
+    {
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([['candidate_id' => 4]]);
+        $connection->queueFetch([self::candidateRow(2)]);
+
+        (new AzureSqlCableFitCandidateRepository($connection))->appendRevision(strtolower(self::ID), 1, self::revision(2), 7);
+
+        self::assertStringContainsString('AND [deleted_at] IS NULL', $connection->calls[0]['sql']);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\CableFit\Infrastructure;
 
+use DateTimeImmutable;
 use TriCab\Core\CableFit\Contract\CableFitCandidateRepository;
 use TriCab\Core\CableFit\Domain\CableFitCandidate;
 use TriCab\Core\CableFit\Domain\CandidateListPage;
@@ -19,6 +20,9 @@ final class InMemoryCableFitCandidateRepository implements CableFitCandidateRepo
 
     /** @var array<string, array<int, CandidateRevision>> */
     private array $revisions = [];
+
+    /** @var array<string, CableFitCandidate> soft-deleted, kept like the SQL rows */
+    private array $deleted = [];
 
     public function listByNprRequest(string $nprRequestPublicId): array
     {
@@ -119,6 +123,24 @@ final class InMemoryCableFitCandidateRepository implements CableFitCandidateRepo
             $r->createdAt,
             $r->createdByUserId,
         );
+    }
+
+    public function markDeleted(string $candidatePublicId, int $userId, DateTimeImmutable $at): bool
+    {
+        $candidate = $this->candidates[$candidatePublicId] ?? null;
+        if ($candidate === null) {
+            return false;
+        }
+        $this->deleted[$candidatePublicId] = $candidate;
+        unset($this->candidates[$candidatePublicId]);
+
+        return true;
+    }
+
+    /** Whether a candidate was soft-deleted and is still stored (test helper). */
+    public function isDeleted(string $candidatePublicId): bool
+    {
+        return isset($this->deleted[$candidatePublicId]);
     }
 
     /** Number of stored revisions for a candidate (test helper). */

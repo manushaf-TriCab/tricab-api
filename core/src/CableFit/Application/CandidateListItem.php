@@ -18,6 +18,7 @@ final readonly class CandidateListItem
         public ?string $nprRequestNumber,
         public bool $stale,
         public ?ResearchRun $latestResearch,
+        public bool $canDelete = false,
     ) {
     }
 }

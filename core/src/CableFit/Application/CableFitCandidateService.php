@@ -8,6 +8,7 @@ use Closure;
 use DateTimeImmutable;
 use TriCab\Core\CableFit\Contract\CableFitCandidateRepository;
 use TriCab\Core\CableFit\Domain\CableFitCandidate;
+use TriCab\Core\CableFit\Domain\CandidateDeleteNotAllowed;
 use TriCab\Core\CableFit\Domain\CandidateNotFound;
 use TriCab\Core\CableFit\Domain\CandidateRevision;
 use TriCab\Core\CableFit\Domain\CandidateVersionConflict;
@@ -129,7 +130,7 @@ final readonly class CableFitCandidateService
             $this->candidates->markRevisionStale($candidatePublicId, $revision->revisionNumber, $stale);
         }
 
-        return $this->detail($candidate, $revision, $current, $stale);
+        return $this->detail($candidate, $revision, $current, $stale, self::mayDelete($user, $candidate));
     }
 
     /**
@@ -168,6 +169,39 @@ final readonly class CableFitCandidateService
         return $this->candidates->appendRevision($candidatePublicId, $expectedVersion, $next, $user->userId)->version;
     }
 
+    /**
+     * Soft delete: the design leaves the list, its NPR request and every lookup; its revisions and research runs stay
+     * on record. Only its creator or a platform Administrator may.
+     *
+     * @throws CandidateNotFound
+     * @throws CandidateDeleteNotAllowed
+     */
+    public function delete(AuthenticatedUser $user, string $candidatePublicId): void
+    {
+        [$candidate] = $this->load($user, $candidatePublicId);
+        if (!self::mayDelete($user, $candidate)) {
+            throw new CandidateDeleteNotAllowed('Only the person who created this design, or an Administrator, can delete it.');
+        }
+        if (!$this->candidates->markDeleted($candidatePublicId, $user->userId, ($this->clock)())) {
+            throw new CandidateNotFound('Candidate not found.');
+        }
+    }
+
+    /** Its creator, or a platform Administrator. */
+    public static function mayDelete(AuthenticatedUser $user, CableFitCandidate $candidate): bool
+    {
+        if ($candidate->createdByUserId === $user->userId) {
+            return true;
+        }
+        foreach ($user->roles as $role) {
+            if (strcasecmp($role, 'ADMINISTRATOR') === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** A lowercase RFC 4122 version 4 GUID, the format of the UNIQUEIDENTIFIER public_id. */
     private static function newGuid(): string
     {
@@ -201,7 +235,7 @@ final readonly class CableFitCandidateService
         return [$candidate, $revision, $snapshot];
     }
 
-    private function detail(CableFitCandidate $candidate, CandidateRevision $revision, ?int $current, bool $stale): CandidateDetail
+    private function detail(CableFitCandidate $candidate, CandidateRevision $revision, ?int $current, bool $stale, bool $canDelete): CandidateDetail
     {
         $design = $revision->design;
         $source = $revision->sourceNprRevision;
@@ -218,6 +252,7 @@ final readonly class CableFitCandidateService
             $this->arr($design['provenance'] ?? null),
             $this->listOfArrays($design['unresolvedRequirements'] ?? null),
             $this->arr($design['chosenAlternatives'] ?? null),
+            $canDelete,
         );
     }
 

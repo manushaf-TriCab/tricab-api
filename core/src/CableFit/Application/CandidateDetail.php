@@ -30,6 +30,7 @@ final readonly class CandidateDetail
         public array $provenance,
         public array $unresolvedRequirements,
         public array $chosenAlternatives,
+        public bool $canDelete = false,
     ) {
     }
 }

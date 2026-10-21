@@ -463,6 +463,9 @@ final class AppBuilder
             ->add(($require)($use));
         $app->put('/api/v1/tsd/cablefit/candidates/{publicId}', \TriCab\Api\Http\Action\CableFit\SaveCableFitCandidateAction::class)
             ->add(($require)($use));
+        // Creator or Administrator only; the service checks.
+        $app->delete('/api/v1/tsd/cablefit/candidates/{publicId}', \TriCab\Api\Http\Action\CableFit\DeleteCableFitCandidateAction::class)
+            ->add(($require)($use));
 
         // Research agent (C3): advisory only. Reads need USE; queueing a run and editing sources need RESEARCH.
         $research = \TriCab\Core\CableFit\Module::PERMISSION_RESEARCH;

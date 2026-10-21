@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use TriCab\Core\CableFit\Application\CableFitCandidateService;
 use TriCab\Core\CableFit\Application\CableFitHandoffService;
+use TriCab\Core\CableFit\Domain\CandidateDeleteNotAllowed;
 use TriCab\Core\CableFit\Domain\CandidateNotFound;
 use TriCab\Core\CableFit\Domain\CandidateVersionConflict;
 use TriCab\Core\CableFit\Domain\NprRequestNotAccessible;
@@ -178,5 +179,54 @@ final class CableFitCandidateServiceTest extends TestCase
         }
         self::assertSame(2, $this->repo->revisionCount($id));
         self::assertSame(['a' => 1], $this->service->get($this->user(), $id)->construction);
+    }
+
+    public function testTheCreatorDeletesAndTheDesignLeavesEveryReadButStaysStored(): void
+    {
+        $this->reader->put($this->request());
+        $id = $this->service->create($this->user(), 'npr-1', null, 'A');
+        self::assertTrue($this->service->get($this->user(), $id)->canDelete);
+
+        $this->service->delete($this->user(), $id);
+
+        self::assertTrue($this->repo->isDeleted($id));
+        self::assertSame(1, $this->repo->revisionCount($id), 'revisions are kept');
+        self::assertSame([], $this->service->listForNprRequest($this->user(), 'npr-1'));
+        $this->expectException(CandidateNotFound::class);
+        $this->service->get($this->user(), $id);
+    }
+
+    public function testSomeoneElseCannotDeleteIt(): void
+    {
+        $id = $this->service->create($this->user(), null, null, 'A');
+        $colleague = new AuthenticatedUser(8, 'user-8', 'other@example.test', 'Other', 'active', ['TSD'], ['TSD.CABLEFIT.USE']);
+        self::assertFalse($this->service->get($colleague, $id)->canDelete);
+
+        try {
+            $this->service->delete($colleague, $id);
+            self::fail('a colleague deleted it');
+        } catch (CandidateDeleteNotAllowed) {
+        }
+        self::assertFalse($this->repo->isDeleted($id));
+    }
+
+    public function testAnAdministratorCanDeleteAnyonesDesign(): void
+    {
+        $id = $this->service->create($this->user(), null, null, 'A');
+        $admin = new AuthenticatedUser(9, 'user-9', 'admin@example.test', 'Admin', 'active', ['EMPLOYEE', 'administrator'], ['TSD.CABLEFIT.USE']);
+        self::assertTrue($this->service->get($admin, $id)->canDelete);
+
+        $this->service->delete($admin, $id);
+
+        self::assertTrue($this->repo->isDeleted($id));
+    }
+
+    public function testDeletingTwiceOrAMissingDesignIsNotFound(): void
+    {
+        $id = $this->service->create($this->user(), null, null, 'A');
+        $this->service->delete($this->user(), $id);
+
+        $this->expectException(CandidateNotFound::class);
+        $this->service->delete($this->user(), $id);
     }
 }

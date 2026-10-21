@@ -58,6 +58,7 @@ final class CableFitCandidateSerializer
             'updatedBy' => self::person($row->updatedByName, $row->updatedByEmail),
             'stale' => $item->stale,
             'nprRequestNumber' => $item->nprRequestNumber,
+            'canDelete' => $item->canDelete,
             'latestResearch' => $run === null ? null : [
                 'runPublicId' => $run->publicId,
                 'status' => $run->status,
@@ -83,6 +84,7 @@ final class CableFitCandidateSerializer
             'provenance' => $d->provenance === [] ? new stdClass() : $d->provenance,
             'unresolvedRequirements' => $d->unresolvedRequirements,
             'chosenAlternatives' => $d->chosenAlternatives === [] ? new stdClass() : $d->chosenAlternatives,
+            'canDelete' => $d->canDelete,
         ];
     }
 

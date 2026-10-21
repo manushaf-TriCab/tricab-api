@@ -85,6 +85,7 @@ final class CableFitEndpointsTest extends TestCase
             ['POST', '/api/v1/tsd/cablefit/candidates'],
             ['GET', '/api/v1/tsd/cablefit/candidates/' . self::MISSING],
             ['PUT', '/api/v1/tsd/cablefit/candidates/' . self::MISSING],
+            ['DELETE', '/api/v1/tsd/cablefit/candidates/' . self::MISSING],
         ] as [$method, $path]) {
             self::assertSame(403, $this->call($method, $path, $method === 'GET' ? null : [])->getStatusCode(), "$method $path");
         }
@@ -366,5 +367,30 @@ final class CableFitEndpointsTest extends TestCase
         ] as $body) {
             self::assertSame(422, $this->call('PUT', $path, $body)->getStatusCode(), json_encode($body, JSON_THROW_ON_ERROR));
         }
+    }
+
+    public function test_delete_hides_the_design_from_the_list_and_lookups(): void
+    {
+        $id = $this->createBlank('Throwaway');
+        /** @var array{data: array{candidates: list<array<string, mixed>>}} $before */
+        $before = TestAppFactory::json($this->call('GET', '/api/v1/tsd/cablefit/candidates'));
+        self::assertTrue($before['data']['candidates'][0]['canDelete']);
+
+        $response = $this->call('DELETE', '/api/v1/tsd/cablefit/candidates/' . $id);
+        self::assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+        /** @var array{data: array<string, mixed>} $payload */
+        $payload = TestAppFactory::json($response);
+        self::assertSame(['candidatePublicId' => $id, 'deleted' => true], $payload['data']);
+
+        self::assertSame(404, $this->call('GET', '/api/v1/tsd/cablefit/candidates/' . $id)->getStatusCode());
+        self::assertSame(404, $this->call('DELETE', '/api/v1/tsd/cablefit/candidates/' . $id)->getStatusCode());
+        /** @var array{data: array{candidates: list<array<string, mixed>>, total: int}} $after */
+        $after = TestAppFactory::json($this->call('GET', '/api/v1/tsd/cablefit/candidates'));
+        self::assertSame(0, $after['data']['total']);
+    }
+
+    public function test_deleting_a_missing_design_is_not_found(): void
+    {
+        self::assertSame(404, $this->call('DELETE', '/api/v1/tsd/cablefit/candidates/' . self::MISSING)->getStatusCode());
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\CableFit\Persistence;
 
+use DateTimeImmutable;
 use RuntimeException;
 use TriCab\Api\Identity\Persistence\AzureSqlTransaction;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
@@ -25,7 +26,9 @@ use TriCab\Core\CableFit\Domain\CandidateVersionConflict;
  * someone else saved first. The update and the revision insert share one
  * transaction, so a revision never exists without the candidate pointing at it.
  *
- * Public ids go out lowercase, whatever case the server returns.
+ * Public ids go out lowercase, whatever case the server returns. A deleted
+ * candidate (`deleted_at` set, alter-cablefit-candidate-delete.sql) is left out
+ * of every read.
  */
 final class AzureSqlCableFitCandidateRepository implements CableFitCandidateRepository
 {
@@ -61,7 +64,7 @@ SQL;
         $rows = $this->connection->fetchAll(
             'SELECT ' . self::CANDIDATE_COLUMNS . '
              FROM [cablefit].[candidates] c
-             WHERE c.[npr_request_public_id] = :request
+             WHERE c.[npr_request_public_id] = :request AND c.[deleted_at] IS NULL
              ORDER BY c.[updated_at] DESC, c.[candidate_id] DESC',
             ['request' => $nprRequestPublicId],
         );
@@ -71,10 +74,10 @@ SQL;
 
     public function search(CandidateSearch $search): CandidateListPage
     {
-        $where = '';
+        $where = ' WHERE c.[deleted_at] IS NULL';
         $params = [];
         if ($search->text !== null) {
-            $where = " WHERE (c.[candidate_name] LIKE :text ESCAPE N'~'";
+            $where .= " AND (c.[candidate_name] LIKE :text ESCAPE N'~'";
             $params['text'] = '%' . strtr($search->text, self::LIKE_ESCAPE) . '%';
             $placeholders = [];
             foreach ($search->nprRequestPublicIds as $i => $id) {
@@ -129,7 +132,8 @@ SQL;
     public function linkedNprRequestPublicIds(): array
     {
         $rows = $this->connection->fetchAll(
-            'SELECT DISTINCT [npr_request_public_id] FROM [cablefit].[candidates] WHERE [npr_request_public_id] IS NOT NULL',
+            'SELECT DISTINCT [npr_request_public_id] FROM [cablefit].[candidates]
+             WHERE [npr_request_public_id] IS NOT NULL AND [deleted_at] IS NULL',
             [],
         );
 
@@ -144,7 +148,7 @@ SQL;
         $row = $this->connection->fetchAll(
             'SELECT ' . self::CANDIDATE_COLUMNS . '
              FROM [cablefit].[candidates] c
-             WHERE c.[public_id] = :id',
+             WHERE c.[public_id] = :id AND c.[deleted_at] IS NULL',
             ['id' => $candidatePublicId],
         )[0] ?? null;
 
@@ -164,7 +168,7 @@ SQL;
              FROM [cablefit].[candidates] c
              JOIN [cablefit].[candidate_revisions] r
                ON r.[candidate_id] = c.[candidate_id] AND r.[revision_number] = c.[current_revision_number]
-             WHERE c.[public_id] = :id',
+             WHERE c.[public_id] = :id AND c.[deleted_at] IS NULL',
             ['id' => $candidatePublicId],
         )[0] ?? null;
 
@@ -214,7 +218,7 @@ SQL;
                 'UPDATE [cablefit].[candidates]
                  SET [current_revision_number] = :newVersion, [updated_at] = :at, [updated_by_user_id] = :userId
                  OUTPUT inserted.[candidate_id]
-                 WHERE [public_id] = :id AND [current_revision_number] = :expected',
+                 WHERE [public_id] = :id AND [current_revision_number] = :expected AND [deleted_at] IS NULL',
                 [
                     'newVersion' => $revision->revisionNumber,
                     'at' => AzureSqlValueMapper::formatDateTime($revision->createdAt),
@@ -251,6 +255,21 @@ SQL;
              WHERE c.[public_id] = :id AND r.[revision_number] = :number',
             ['stale' => $stale ? 1 : 0, 'id' => $candidatePublicId, 'number' => $revisionNumber],
         );
+    }
+
+    public function markDeleted(string $candidatePublicId, int $userId, DateTimeImmutable $at): bool
+    {
+        if (preg_match(self::GUID, $candidatePublicId) !== 1) {
+            return false;
+        }
+
+        return $this->connection->fetchAll(
+            'UPDATE [cablefit].[candidates]
+             SET [deleted_at] = :at, [deleted_by_user_id] = :userId
+             OUTPUT inserted.[candidate_id]
+             WHERE [public_id] = :id AND [deleted_at] IS NULL',
+            ['at' => AzureSqlValueMapper::formatDateTime($at), 'userId' => $userId, 'id' => $candidatePublicId],
+        ) !== [];
     }
 
     private function insertRevision(int $candidateId, CandidateRevision $revision): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\CableFit\Contract;
 
+use DateTimeImmutable;
 use TriCab\Core\CableFit\Domain\CableFitCandidate;
 use TriCab\Core\CableFit\Domain\CandidateListPage;
 use TriCab\Core\CableFit\Domain\CandidateSearch;
@@ -12,6 +13,8 @@ use TriCab\Core\CableFit\Domain\CandidateVersionConflict;
 
 /**
  * Persistence for `[cablefit].candidates` and `[cablefit].candidate_revisions`.
+ *
+ * A deleted candidate is invisible to every read here, as if it did not exist.
  */
 interface CableFitCandidateRepository
 {
@@ -54,4 +57,11 @@ interface CableFitCandidateRepository
 
     /** Set the stale bit of a revision (the NPR request was revised after it was built). */
     public function markRevisionStale(string $candidatePublicId, int $revisionNumber, bool $stale): void;
+
+    /**
+     * Soft delete: the candidate leaves every read, but it, its revisions and its research runs stay stored.
+     *
+     * @return bool false when it does not exist or is already deleted
+     */
+    public function markDeleted(string $candidatePublicId, int $userId, DateTimeImmutable $at): bool;
 }
