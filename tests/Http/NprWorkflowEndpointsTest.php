@@ -332,7 +332,7 @@ final class NprWorkflowEndpointsTest extends TestCase
         $routes = $container->get(ManagerRouteRepository::class);
         self::assertInstanceOf(ManagerRouteRepository::class, $routes);
         $routes->create(new NewManagerRoute(
-            'Brisbane',
+            'QLD',
             new NprPerson($shane->id()->toInt(), 'shanep@tricab.com', 'Shane Plumridge'),
             false,
             new DateTimeImmutable('2026-01-01', new DateTimeZone('UTC')),

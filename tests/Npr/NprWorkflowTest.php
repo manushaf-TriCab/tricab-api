@@ -87,7 +87,7 @@ final class NprWorkflowTest extends TestCase
 
     public function test_submitting_without_a_manager_route_is_blocked_and_the_draft_stays_saved(): void
     {
-        $w = new W(brisbaneRouted: false);
+        $w = new W(qldRouted: false);
         [$id, $version] = $w->completeDraft();
 
         try {
@@ -95,7 +95,7 @@ final class NprWorkflowTest extends TestCase
             self::fail('Expected NprWorkflowRefused.');
         } catch (NprWorkflowRefused $refused) {
             self::assertSame('NPR_NO_MANAGER_ROUTE', $refused->reason);
-            self::assertStringContainsString('Brisbane', $refused->getMessage());
+            self::assertStringContainsString('QLD', $refused->getMessage());
         }
 
         $kept = $w->requests->find($id);
@@ -107,9 +107,9 @@ final class NprWorkflowTest extends TestCase
 
     public function test_an_inactive_manager_is_no_route(): void
     {
-        $w = new W(brisbaneRouted: false);
+        $w = new W(qldRouted: false);
         $w->directory->add(W::SHANE, 'shanep@tricab.com', 'Shane Plumridge', [], active: false);
-        $w->route('Brisbane', W::SHANE);
+        $w->route('QLD', W::SHANE);
         [$id, $version] = $w->completeDraft();
 
         $this->expectException(NprWorkflowRefused::class);
@@ -132,8 +132,8 @@ final class NprWorkflowTest extends TestCase
 
     public function test_the_branch_manager_cannot_submit_to_themselves(): void
     {
-        $w = new W(brisbaneRouted: false);
-        $w->route('Brisbane', W::SALES);
+        $w = new W(qldRouted: false);
+        $w->route('QLD', W::SALES);
         [$id, $version] = $w->completeDraft();
 
         try {

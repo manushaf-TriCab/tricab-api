@@ -56,7 +56,7 @@ final class NprWorkflowWorld
 
     /** @param list<string> $nominated signatory emails; empty leaves the signing policy unconfigured */
     public function __construct(
-        bool $brisbaneRouted = true,
+        bool $qldRouted = true,
         array $nominated = ['signatory@tricab.com'],
         NprMailMode $mode = NprMailMode::Live,
         string $testRecipient = '',
@@ -103,8 +103,8 @@ final class NprWorkflowWorld
             $this->clock,
         );
 
-        if ($brisbaneRouted) {
-            $this->route('Brisbane', self::SHANE);
+        if ($qldRouted) {
+            $this->route('QLD', self::SHANE);
         }
     }
 

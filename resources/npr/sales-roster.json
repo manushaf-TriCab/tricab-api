@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.1.0",
+  "schemaVersion": "0.2.0",
   "status": "source_roster_imported_not_authorisation",
   "source": {
     "path": "/Users/manushaf/Desktop/TriCab/rfq/tricab_sales_by_branch.csv",
@@ -9,7 +9,7 @@
     {
       "email": "janek@tricab.com",
       "displayName": "Jane Keszler",
-      "branch": "Adelaide",
+      "branch": "SA/NT",
       "jobTitle": "Sales & Admin Support - Customer Service",
       "department": "Sales",
       "officeLocationRaw": "Adelaide",
@@ -21,7 +21,7 @@
     {
       "email": "neilo@tricab.com",
       "displayName": "Neil O'Loughlin",
-      "branch": "Adelaide",
+      "branch": "SA/NT",
       "jobTitle": "SA & NT State Manager",
       "department": "Sales",
       "officeLocationRaw": "Adelaide",
@@ -33,7 +33,7 @@
     {
       "email": "rachelp@tricab.com",
       "displayName": "Rachel Pontifex",
-      "branch": "Adelaide",
+      "branch": "SA/NT",
       "jobTitle": "External Sales / Business Development Manager",
       "department": "",
       "officeLocationRaw": "Adelaide",
@@ -57,7 +57,7 @@
     {
       "email": "avis@tricab.com",
       "displayName": "Avi Sami",
-      "branch": "Auckland",
+      "branch": "NZ",
       "jobTitle": "External Sales / Business Development",
       "department": "",
       "officeLocationRaw": "Auckland",
@@ -69,7 +69,7 @@
     {
       "email": "harmanpreetk@tricab.com",
       "displayName": "Harmanpreet Kaur",
-      "branch": "Auckland",
+      "branch": "NZ",
       "jobTitle": "Internal Sales",
       "department": "",
       "officeLocationRaw": "Auckland",
@@ -81,7 +81,7 @@
     {
       "email": "owenc@tricab.com",
       "displayName": "Owen Carter",
-      "branch": "Auckland",
+      "branch": "NZ",
       "jobTitle": "Internal Sales",
       "department": "Sales",
       "officeLocationRaw": "Auckland",
@@ -93,7 +93,7 @@
     {
       "email": "saim@tricab.com",
       "displayName": "Sai Kiran Menga",
-      "branch": "Auckland",
+      "branch": "NZ",
       "jobTitle": "Accessories Sales Engineer",
       "department": "Sales",
       "officeLocationRaw": "Auckland",
@@ -105,7 +105,7 @@
     {
       "email": "sohilv@tricab.com",
       "displayName": "Sohil Visar",
-      "branch": "Auckland",
+      "branch": "NZ",
       "jobTitle": "NZ Sales/Project Manager",
       "department": "Sales",
       "officeLocationRaw": "Auckland",
@@ -129,7 +129,7 @@
     {
       "email": "amandaw@tricab.com",
       "displayName": "Amanda Williams",
-      "branch": "Brisbane",
+      "branch": "QLD",
       "jobTitle": "Internal Sales / Customer Service",
       "department": "Sales",
       "officeLocationRaw": "Brisbane",
@@ -141,7 +141,7 @@
     {
       "email": "felicityb@tricab.com",
       "displayName": "Felicity Brice",
-      "branch": "Brisbane",
+      "branch": "QLD",
       "jobTitle": "Sales Leader – QLD",
       "department": "Sales",
       "officeLocationRaw": "Brisbane",
@@ -153,7 +153,7 @@
     {
       "email": "shanep@tricab.com",
       "displayName": "Shane Plumridge",
-      "branch": "Brisbane",
+      "branch": "QLD",
       "jobTitle": "General Manager - Sales",
       "department": "Sales",
       "officeLocationRaw": "Brisbane",
@@ -165,7 +165,7 @@
     {
       "email": "guyc@tricab.com",
       "displayName": "Guy Cooper",
-      "branch": "Christchurch",
+      "branch": "NZ",
       "jobTitle": "Projects Coordinator / Internal Sales",
       "department": "Sales",
       "officeLocationRaw": "Christchurch",
@@ -177,7 +177,7 @@
     {
       "email": "nigeli@tricab.com",
       "displayName": "Nigel Isaac",
-      "branch": "Christchurch",
+      "branch": "NZ",
       "jobTitle": "External Sales/Business Development",
       "department": "",
       "officeLocationRaw": "Christchurch",
@@ -189,7 +189,7 @@
     {
       "email": "allisonmi@tricab.com",
       "displayName": "Allison Midgley",
-      "branch": "Hobart",
+      "branch": "TAS",
       "jobTitle": "Internal Sales / Customer Service",
       "department": "",
       "officeLocationRaw": "Hobart",
@@ -201,7 +201,7 @@
     {
       "email": "pauld@tricab.com",
       "displayName": "Paul Doran",
-      "branch": "Hobart",
+      "branch": "TAS",
       "jobTitle": "External Sales/Business Development",
       "department": "Sales",
       "officeLocationRaw": "Hobart",
@@ -213,7 +213,7 @@
     {
       "email": "rileyw@tricab.com",
       "displayName": "Riley Wilson",
-      "branch": "Hobart",
+      "branch": "TAS",
       "jobTitle": "Internal Sales/Customer Service",
       "department": "",
       "officeLocationRaw": "Hobart",
@@ -225,7 +225,7 @@
     {
       "email": "stuartj@tricab.com",
       "displayName": "Stuart Jones",
-      "branch": "Hobart",
+      "branch": "TAS",
       "jobTitle": "Tasmania State Manager",
       "department": "Sales",
       "officeLocationRaw": "Hobart",
@@ -237,7 +237,7 @@
     {
       "email": "farzadm@tricab.com",
       "displayName": "Farzad Nia",
-      "branch": "Melbourne",
+      "branch": "VIC",
       "jobTitle": "Tender Manager – NSW/VIC",
       "department": "Tenders",
       "officeLocationRaw": "Melbourne",
@@ -249,7 +249,7 @@
     {
       "email": "dulank@tricab.com",
       "displayName": "Dulan Karunatilaka",
-      "branch": "Perth",
+      "branch": "WA",
       "jobTitle": "External Sales / Business Development",
       "department": "Sales",
       "officeLocationRaw": "Perth",
@@ -261,7 +261,7 @@
     {
       "email": "scotth@tricab.com",
       "displayName": "Scott Hewitt",
-      "branch": "Perth",
+      "branch": "WA",
       "jobTitle": "WA State Manager",
       "department": "Sales",
       "officeLocationRaw": "Perth",
@@ -273,7 +273,7 @@
     {
       "email": "bhoomip@tricab.com",
       "displayName": "Bhoomi Panchal",
-      "branch": "Somerton",
+      "branch": "VIC",
       "jobTitle": "Internal Sales / Customer Service",
       "department": "Sales",
       "officeLocationRaw": "Somerton",
@@ -285,7 +285,7 @@
     {
       "email": "billya@tricab.com",
       "displayName": "Billy Allwood",
-      "branch": "Somerton",
+      "branch": "VIC",
       "jobTitle": "External Sales",
       "department": "Sales",
       "officeLocationRaw": "Somerton",
@@ -297,7 +297,7 @@
     {
       "email": "danielf@tricab.com",
       "displayName": "Daniel Fitzell",
-      "branch": "Somerton",
+      "branch": "VIC",
       "jobTitle": "VIC State Manager",
       "department": "Sales",
       "officeLocationRaw": "Somerton",
@@ -321,7 +321,7 @@
     {
       "email": "shanes@tricab.com",
       "displayName": "Shane Ann Stevens",
-      "branch": "Somerton",
+      "branch": "VIC",
       "jobTitle": "Business Solutions Manager",
       "department": "",
       "officeLocationRaw": "Somerton",
@@ -333,7 +333,7 @@
     {
       "email": "haydnr@tricab.com",
       "displayName": "Haydn Robertson",
-      "branch": "Sydney",
+      "branch": "NSW",
       "jobTitle": "External Sales / Business Development",
       "department": "Sales",
       "officeLocationRaw": "Sydney",
@@ -345,7 +345,7 @@
     {
       "email": "juliem@tricab.com",
       "displayName": "Julie Mitchell",
-      "branch": "Sydney",
+      "branch": "NSW",
       "jobTitle": "Internal Sales/Customer Service",
       "department": "Internal Sales",
       "officeLocationRaw": "Sydney",
@@ -357,7 +357,7 @@
     {
       "email": "raymondp@tricab.com",
       "displayName": "Raymond Powditch",
-      "branch": "Sydney",
+      "branch": "NSW",
       "jobTitle": "External Sales / BDM",
       "department": "",
       "officeLocationRaw": "Sydney",
@@ -369,7 +369,7 @@
     {
       "email": "venukam@tricab.com",
       "displayName": "Venuka Mongia",
-      "branch": "Sydney",
+      "branch": "NSW",
       "jobTitle": "Internal Sales / Customer Service",
       "department": "",
       "officeLocationRaw": "Sydney",
@@ -425,198 +425,121 @@
       "sourceRow": null,
       "staffId": null,
       "status": "temporary_it_pilot_remove_after_pilot"
-    }
-  ],
-  "branchRoutingReview": [
-    {
-      "sourceBranch": "Adelaide",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 3,
-      "managerCandidates": [
-        {
-          "email": "neilo@tricab.com",
-          "name": "Neil O'Loughlin",
-          "jobTitle": "SA & NT State Manager",
-          "evidence": "CSV category=leadership"
-        }
-      ],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "candidate_pending_confirmation"
     },
     {
-      "sourceBranch": "Asia",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 1,
-      "managerCandidates": [],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "manager_missing"
+      "email": "katherinef@tricab.com",
+      "displayName": "Katherine Felix",
+      "branch": "VIC",
+      "jobTitle": null,
+      "department": "Sales",
+      "officeLocationRaw": null,
+      "sourceCategory": "sales_territory_2026_10_22",
+      "sourceRow": null,
+      "staffId": null,
+      "status": "added_from_sales_territories_2026_10_22"
     },
     {
-      "sourceBranch": "Auckland",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 6,
-      "managerCandidates": [
-        {
-          "email": "steve.h@tricab.com",
-          "name": "Steve Hunt",
-          "jobTitle": "Country Manager NZ",
-          "evidence": "CSV category=leadership"
-        }
-      ],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "candidate_pending_confirmation"
+      "email": "uygenp@tricab.com",
+      "displayName": null,
+      "branch": "WA",
+      "jobTitle": null,
+      "department": "Sales",
+      "officeLocationRaw": null,
+      "sourceCategory": "sales_territory_2026_10_22",
+      "sourceRow": null,
+      "staffId": null,
+      "status": "added_from_sales_territories_2026_10_22"
     },
     {
-      "sourceBranch": "Brisbane",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 3,
-      "managerCandidates": [
-        {
-          "email": "felicityb@tricab.com",
-          "name": "Felicity Brice",
-          "jobTitle": "Sales Leader – QLD",
-          "evidence": "Sales leadership title; CSV category is not leadership"
-        },
-        {
-          "email": "shanep@tricab.com",
-          "name": "Shane Plumridge",
-          "jobTitle": "General Manager - Sales",
-          "evidence": "Sales leadership title; CSV category is not leadership"
-        }
-      ],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "ambiguous_candidates"
+      "email": "anu@tricab.com",
+      "displayName": "Anuradha Sharma",
+      "branch": "NSW",
+      "jobTitle": null,
+      "department": "Sales",
+      "officeLocationRaw": null,
+      "sourceCategory": "sales_territory_2026_10_22",
+      "sourceRow": null,
+      "staffId": null,
+      "status": "added_from_sales_territories_2026_10_22"
     },
     {
-      "sourceBranch": "Christchurch",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 2,
-      "managerCandidates": [],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "manager_missing"
+      "email": "anuradhas@tricab.com",
+      "displayName": "Anuradha Sharma",
+      "branch": "NSW",
+      "jobTitle": null,
+      "department": "Sales",
+      "officeLocationRaw": null,
+      "sourceCategory": "sales_territory_2026_10_22",
+      "sourceRow": null,
+      "staffId": null,
+      "status": "added_from_sales_territories_2026_10_22"
     },
     {
-      "sourceBranch": "Hobart",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 4,
-      "managerCandidates": [
-        {
-          "email": "stuartj@tricab.com",
-          "name": "Stuart Jones",
-          "jobTitle": "Tasmania State Manager",
-          "evidence": "CSV category=leadership"
-        }
-      ],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "candidate_pending_confirmation"
+      "email": "annah@tricab.com",
+      "displayName": null,
+      "branch": "NZ",
+      "jobTitle": null,
+      "department": "Sales",
+      "officeLocationRaw": null,
+      "sourceCategory": "sales_territory_2026_10_22",
+      "sourceRow": null,
+      "staffId": null,
+      "status": "added_from_sales_territories_2026_10_22"
     },
     {
-      "sourceBranch": "Melbourne",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 1,
-      "managerCandidates": [],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "manager_missing"
-    },
-    {
-      "sourceBranch": "Perth",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 2,
-      "managerCandidates": [
-        {
-          "email": "scotth@tricab.com",
-          "name": "Scott Hewitt",
-          "jobTitle": "WA State Manager",
-          "evidence": "CSV category=leadership"
-        }
-      ],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "candidate_pending_confirmation"
-    },
-    {
-      "sourceBranch": "Somerton",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 5,
-      "managerCandidates": [
-        {
-          "email": "danielf@tricab.com",
-          "name": "Daniel Fitzell",
-          "jobTitle": "VIC State Manager",
-          "evidence": "CSV category=leadership"
-        }
-      ],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "candidate_pending_confirmation"
-    },
-    {
-      "sourceBranch": "Sydney",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 4,
-      "managerCandidates": [],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "manager_missing"
-    },
-    {
-      "sourceBranch": "Worcester",
-      "effectiveWebsiteBranch": null,
-      "staffCount": 2,
-      "managerCandidates": [],
-      "selectedManagerEmail": null,
-      "selectedManagerStaffId": null,
-      "approvedBy": null,
-      "effectiveFrom": null,
-      "enabled": false,
-      "status": "manager_missing"
+      "email": "tiyanaj@tricab.com",
+      "displayName": "Tiyana Jansen",
+      "branch": "NZ",
+      "jobTitle": null,
+      "department": "Sales",
+      "officeLocationRaw": null,
+      "sourceCategory": "sales_territory_2026_10_22",
+      "sourceRow": null,
+      "staffId": null,
+      "status": "added_from_sales_territories_2026_10_22"
     }
   ],
   "unassignedBranchEmails": [
     "elizabethm@tricab.com"
   ],
   "rules": [
-    "Roster membership does not grant NPR approval roles or bypass verified staff access.",
-    "Candidates are evidence for review, not selected managers.",
-    "Source branch/office is not an authoritative effective territory; do not merge aliases without confirmation.",
-    "Never infer cross-branch approval from a country/state title.",
-    "Manager self-endorsement/delegates remain a separate TSD policy."
-  ]
+    "Roster membership does not grant NPR roles or bypass verified staff access.",
+    "branch is the person's sales territory (VIC, TAS, SA/NT, WA, NSW, QLD, NZ); a territory's manager comes from [npr].[ManagerRoutes], not from this file.",
+    "A manager may not endorse their own request; managers sit in the territory they manage, so their submissions are refused until another approver is routed."
+  ],
+  "territories": {
+    "confirmedBy": "manushaf@tricab.com",
+    "confirmedAt": "2026-10-22",
+    "note": "Each person's branch is their sales territory; [npr].[ManagerRoutes] routes each territory to its manager (seed-npr-manager-routes.sql). People left on an office name have no route, so their drafts cannot be submitted.",
+    "routes": [
+      {
+        "territory": "VIC",
+        "managerEmail": "danielf@tricab.com"
+      },
+      {
+        "territory": "TAS",
+        "managerEmail": "stuartj@tricab.com"
+      },
+      {
+        "territory": "SA/NT",
+        "managerEmail": "neilo@tricab.com"
+      },
+      {
+        "territory": "WA",
+        "managerEmail": "scotth@tricab.com"
+      },
+      {
+        "territory": "NSW",
+        "managerEmail": "shanep@tricab.com"
+      },
+      {
+        "territory": "QLD",
+        "managerEmail": "shanep@tricab.com"
+      },
+      {
+        "territory": "NZ",
+        "managerEmail": "shanep@tricab.com"
+      }
+    ]
+  }
 }

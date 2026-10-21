@@ -80,7 +80,7 @@ final class NprRequestServiceTest extends TestCase
         $known = $service->createDraft(NprFixtures::requester(), [], null);
         $unknown = $service->createDraft(NprFixtures::user(11, Module::ROLE_PERMISSIONS[Module::ROLE_REQUESTER], 'nobody@example.com'), [], null);
 
-        self::assertSame('Adelaide', $service->createDraft(NprFixtures::user(12, Module::ROLE_PERMISSIONS[Module::ROLE_REQUESTER], 'janek@tricab.com'), [], null)->request->requesterBranch);
+        self::assertSame('SA/NT', $service->createDraft(NprFixtures::user(12, Module::ROLE_PERMISSIONS[Module::ROLE_REQUESTER], 'janek@tricab.com'), [], null)->request->requesterBranch);
         self::assertNotSame('', $known->request->requesterBranch);
         self::assertSame('unassigned', $unknown->request->requesterBranch);
     }
