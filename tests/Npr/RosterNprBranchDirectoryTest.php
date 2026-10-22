@@ -23,7 +23,7 @@ final class RosterNprBranchDirectoryTest extends TestCase
 
         self::assertSame('VIC', $directory->branchForEmail('katherinef@tricab.com'));
         self::assertSame('TAS', $directory->branchForEmail('allisonmi@tricab.com'));
-        self::assertSame('WA', $directory->branchForEmail('uygenp@tricab.com'));
+        self::assertSame('WA', $directory->branchForEmail('ugyenp@tricab.com'));
         self::assertSame('NSW', $directory->branchForEmail('anu@tricab.com'));
         self::assertSame('QLD', $directory->branchForEmail('amandaw@tricab.com'));
         self::assertSame('NZ', $directory->branchForEmail('tiyanaj@tricab.com'));
