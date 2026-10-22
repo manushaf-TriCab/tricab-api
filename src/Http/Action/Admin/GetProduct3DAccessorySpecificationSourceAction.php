@@ -29,7 +29,8 @@ final class GetProduct3DAccessorySpecificationSourceAction
             $productPublicId = RouteParams::require($request, 'productPublicId');
             $query = QueryParams::normalize($request->getQueryParams());
             $variantPublicId = QueryParams::stringOrNull($query, 'variantPublicId');
-            $payload = $this->service->execute($productPublicId, $variantPublicId);
+            $dimensionSet = QueryParams::stringOrNull($query, 'dimensionSet');
+            $payload = $this->service->execute($productPublicId, $variantPublicId, $dimensionSet);
 
             return $this->responder->success($payload);
         } catch (Throwable $exception) {

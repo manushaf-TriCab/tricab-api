@@ -13,7 +13,7 @@ namespace TriCab\Core\Product\Domain\Service;
  */
 final class Accessory3DSpecificationMapping
 {
-    /** @var list<string> */
+    /** @var list<string> original (default) set; kept for existing callers */
     public const DIMENSION_CODES = [
         'OVERALL-LENGTH',
         'WIDTH',
@@ -22,9 +22,6 @@ final class Accessory3DSpecificationMapping
         'BARREL-LENGTH',
         'BARREL-OD',
         'STUD-OD',
-        // Pin terminals (A09): the catalogue value is used as the pin LENGTH. Evidence: overall length equals
-        // barrel length plus this value on every A09 variant, and the product drawing's D1 is the pin length.
-        // The definition is named "Pin Diameter" but holds 12 / 14 mm; it is not renamed here (catalogue owner).
         'PIN-DIAMETER',
         'INNER-DIAMETER',
         'OUTER-DIAMETER',
@@ -34,6 +31,7 @@ final class Accessory3DSpecificationMapping
 
     /**
      * @param list<array<string, mixed>> $specifications
+     * @param ?string $dimensionSet approved set name (see Accessory3DDimensionSets); null = default
      * @return array{
      *   canGenerate: bool,
      *   sourceHash: string,
@@ -41,7 +39,7 @@ final class Accessory3DSpecificationMapping
      *   missing: list<string>
      * }
      */
-    public function resolve(array $specifications): array
+    public function resolve(array $specifications, ?string $dimensionSet = null): array
     {
         $byCode = [];
         foreach ($specifications as $item) {
@@ -53,7 +51,7 @@ final class Accessory3DSpecificationMapping
 
         $values = [];
         $missing = [];
-        foreach (self::DIMENSION_CODES as $code) {
+        foreach (Accessory3DDimensionSets::codes($dimensionSet) as $code) {
             $mm = isset($byCode[$code]) ? $this->dimension($code, $byCode[$code]) : null;
             if ($mm === null) {
                 $missing[] = $code;

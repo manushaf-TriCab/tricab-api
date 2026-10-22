@@ -8,6 +8,7 @@ use TriCab\Core\Product\Application\Exception\ProductNotFound;
 use TriCab\Core\Product\Application\Exception\ProductVariantNotFound;
 use TriCab\Core\Product\Contract\ProductAdminQueryRepository;
 use TriCab\Core\Product\Contract\ProductSpecificationRepository;
+use TriCab\Core\Product\Domain\Service\Accessory3DDimensionSets;
 use TriCab\Core\Product\Domain\Service\Accessory3DSpecificationMapping;
 use TriCab\Core\Product\Domain\ValueObject\ProductPublicId;
 use TriCab\Core\Product\Domain\ValueObject\ProductVariantPublicId;
@@ -37,8 +38,11 @@ final class GetProduct3DAccessorySpecificationSourceService
      *   missing: list<string>
      * }
      */
-    public function execute(string $productPublicId, ?string $variantPublicId = null): array
+    public function execute(string $productPublicId, ?string $variantPublicId = null, ?string $dimensionSet = null): array
     {
+        // Validate first so an unsupported set never reaches the database.
+        Accessory3DDimensionSets::codes($dimensionSet);
+
         $productId = ProductPublicId::fromString($productPublicId);
         $detail = $this->products->findDetailByPublicId($productId);
         if ($detail === null) {
@@ -91,7 +95,7 @@ final class GetProduct3DAccessorySpecificationSourceService
             }
         }
 
-        $resolved = $this->mapping->resolve(array_values($merged));
+        $resolved = $this->mapping->resolve(array_values($merged), $dimensionSet);
 
         return [
             'productPublicId' => $productId->toString(),
