@@ -374,6 +374,31 @@ final class NprWorkflowService
     }
 
     /**
+     * The people TSD may nominate for screening: each configured address that is
+     * an active user able to decide, the same test requestScreening applies.
+     * Empty when the policy is unset or nobody on it qualifies.
+     *
+     * @return list<NprPerson>
+     */
+    public function screeningSignatories(): array
+    {
+        $people = [];
+        foreach ($this->signing->emails() as $email) {
+            $user = $this->people->findActiveWith(null, $email, Module::PERMISSION_SCREENING_DECIDE);
+            if ($user !== null) {
+                $people[] = NprPeople::person($user);
+            }
+        }
+
+        return $people;
+    }
+
+    public function signingConfigured(): bool
+    {
+        return $this->signing->isConfigured();
+    }
+
+    /**
      * Sends the assessed request to a nominated signatory.
      *
      * @throws NprWorkflowRefused SIGNING_POLICY_NOT_CONFIGURED

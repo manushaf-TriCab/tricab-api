@@ -1108,6 +1108,8 @@ final class AppBuilder
                 ->setArgument('step', 'tsd.' . $step)
                 ->add(($require)($tsdWork));
         }
+        $app->get('/api/v1/npr/tsd/screening-signatories', \TriCab\Api\Http\Action\Npr\ListNprScreeningSignatoriesAction::class)
+            ->add(($require)($tsdWork));
         $app->put('/api/v1/npr/tsd/requests/{publicId}/assessment', \TriCab\Api\Http\Action\Npr\NprWorkflowAction::class)
             ->setArgument('step', 'tsd.assessment')
             ->add(($require)($tsdWork));

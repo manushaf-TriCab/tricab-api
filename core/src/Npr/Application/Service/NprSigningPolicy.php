@@ -33,4 +33,10 @@ final class NprSigningPolicy
     {
         return in_array(strtolower(trim($email)), $this->emails, true);
     }
+
+    /** @return list<string> the nominated addresses, lowercased, in configured order */
+    public function emails(): array
+    {
+        return $this->emails;
+    }
 }

@@ -19,7 +19,9 @@ use TriCab\Core\Identity\Contract\UserRepository;
 use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Identity\Domain\ValueObject\PermissionCode;
 use TriCab\Core\Identity\Domain\ValueObject\RoleCode;
+use TriCab\Core\Identity\Domain\ValueObject\UserId;
 use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
+use TriCab\Core\Npr\Application\Service\NprSigningPolicy;
 use TriCab\Core\Npr\Contract\ManagerRouteRepository;
 use TriCab\Core\Npr\Contract\NprRequestRepository;
 use TriCab\Core\Npr\Domain\NewManagerRoute;
@@ -208,6 +210,27 @@ final class NprWorkflowEndpointsTest extends TestCase
         $decide = $app->handle($this->post(self::TSD . '/' . self::ASSIGNED . '/screening-decision', ['version' => '0x00000000000000AA', 'outcome' => 'approved', 'rationale' => 'Yes']));
         self::assertSame(409, $decide->getStatusCode());
         self::assertSame('NPR_SIGNING_POLICY_NOT_CONFIGURED', self::get(TestAppFactory::json($decide), 'error', 'code'));
+    }
+
+    public function test_screening_signatories_lists_who_tsd_can_nominate(): void
+    {
+        $app = $this->app([...Module::ROLE_PERMISSIONS[Module::ROLE_TSD_ENGINEER], Module::PERMISSION_SCREENING_DECIDE]);
+
+        $unset = $this->data($app->handle(TestAppFactory::request('GET', '/api/v1/npr/tsd/screening-signatories')));
+        self::assertSame(['configured' => false, 'items' => []], $unset);
+
+        $app = $this->app([...Module::ROLE_PERMISSIONS[Module::ROLE_TSD_ENGINEER], Module::PERMISSION_SCREENING_DECIDE]);
+        $container = $app->getContainer();
+        self::assertInstanceOf(\DI\Container::class, $container);
+        $users = $container->get(UserRepository::class);
+        self::assertInstanceOf(UserRepository::class, $users);
+        $me = $users->findById(UserId::fromInt(self::ME_USER));
+        self::assertNotNull($me);
+        $container->set(NprSigningPolicy::class, new NprSigningPolicy([$me->emailAddress()->toString(), 'nobody@tricab.com']));
+
+        $set = $this->data($app->handle(TestAppFactory::request('GET', '/api/v1/npr/tsd/screening-signatories')));
+        self::assertTrue($set['configured']);
+        self::assertSame([['userId' => self::ME_USER, 'name' => $me->displayName(), 'email' => $me->emailAddress()->toString()]], $set['items']);
     }
 
     public function test_only_the_assigned_signatory_reaches_the_decision(): void

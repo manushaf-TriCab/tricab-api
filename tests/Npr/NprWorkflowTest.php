@@ -396,6 +396,19 @@ final class NprWorkflowTest extends TestCase
         }
     }
 
+    public function test_screening_signatories_are_the_nominated_users_who_may_decide(): void
+    {
+        // tsdtwo is a user but cannot decide; nobody@ is not a user. Both are left out, as requestScreening would refuse them.
+        $w = new W(nominated: ['nobody@tricab.com', ' Signatory@tricab.com ', 'tsdtwo@tricab.com']);
+
+        self::assertTrue($w->workflow->signingConfigured());
+        self::assertEquals([new NprPerson(W::SIGNATORY, 'signatory@tricab.com', 'Sign Atory')], $w->workflow->screeningSignatories());
+
+        $none = new W(nominated: []);
+        self::assertFalse($none->workflow->signingConfigured());
+        self::assertSame([], $none->workflow->screeningSignatories());
+    }
+
     public function test_screening_stays_blocked_until_signatories_are_nominated(): void
     {
         $w = new W(nominated: []);

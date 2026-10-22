@@ -44,6 +44,7 @@ final class NprRouteTableTest extends TestCase
         'POST /api/v1/npr/tsd/requests/{publicId}/assign' => Module::PERMISSION_TSD_WORK,
         'POST /api/v1/npr/tsd/requests/{publicId}/return' => Module::PERMISSION_TSD_WORK,
         'POST /api/v1/npr/tsd/requests/{publicId}/request-screening' => Module::PERMISSION_TSD_WORK,
+        'GET /api/v1/npr/tsd/screening-signatories' => Module::PERMISSION_TSD_WORK,
         'PUT /api/v1/npr/tsd/requests/{publicId}/assessment' => Module::PERMISSION_TSD_WORK,
         'POST /api/v1/npr/tsd/requests/{publicId}/screening-decision' => Module::PERMISSION_SCREENING_DECIDE,
         'GET /api/v1/npr/admin/manager-routes' => Module::PERMISSION_ADMIN,
