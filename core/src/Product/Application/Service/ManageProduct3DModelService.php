@@ -122,8 +122,19 @@ final class ManageProduct3DModelService
     private static function isVisualPreview(?array $generationMetadata): bool
     {
         $accuracy = $generationMetadata['accuracy'] ?? null;
+        $class = is_array($accuracy) ? ($accuracy['class'] ?? null) : null;
+        if ($class === 'visual-preview') {
+            return true;
+        }
+        if ($class === 'dimension-verified') {
+            return false;
+        }
 
-        return is_array($accuracy) && ($accuracy['class'] ?? null) === 'visual-preview';
+        // Fail closed: generated accessory metadata (marked by accessoryDefinition / representation) whose
+        // accuracy class is missing or unrecognised is treated as an approximation and needs the approval note.
+        // Plain uploads and cable-style metadata (no such marker) keep their existing behaviour.
+        return is_array($generationMetadata)
+            && (isset($generationMetadata['accessoryDefinition']) || isset($generationMetadata['representation']));
     }
 
     public function unpublish(ActorContext $actor, Product3DModelRowVersionCommand $command): Product3DModelSummary
