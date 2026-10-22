@@ -22,6 +22,10 @@ final class Accessory3DSpecificationMapping
         'BARREL-LENGTH',
         'BARREL-OD',
         'STUD-OD',
+        // Pin terminals (A09): the catalogue value is used as the pin LENGTH. Evidence: overall length equals
+        // barrel length plus this value on every A09 variant, and the product drawing's D1 is the pin length.
+        // The definition is named "Pin Diameter" but holds 12 / 14 mm; it is not renamed here (catalogue owner).
+        'PIN-DIAMETER',
         'INNER-DIAMETER',
         'OUTER-DIAMETER',
     ];

@@ -36,6 +36,20 @@ final class Accessory3DSpecificationMappingTest extends TestCase
         self::assertTrue($result['canGenerate']);
     }
 
+    public function test_pin_diameter_is_passed_through_for_pin_terminals(): void
+    {
+        $result = (new Accessory3DSpecificationMapping())->resolve([
+            ['code' => 'PIN-DIAMETER', 'value' => 12, 'unit' => 'mm', 'source' => 'variant'],
+        ]);
+
+        self::assertSame(12.0, $result['values']['PIN-DIAMETER']['value']);
+        self::assertSame('mm', $result['values']['PIN-DIAMETER']['unit']);
+        self::assertSame('variant', $result['values']['PIN-DIAMETER']['source']);
+        self::assertSame('PIN-DIAMETER', $result['values']['PIN-DIAMETER']['definitionCode']);
+        self::assertTrue($result['canGenerate']);
+        self::assertNotContains('PIN-DIAMETER', $result['missing']);
+    }
+
     public function test_inch_conversion(): void
     {
         $result = (new Accessory3DSpecificationMapping())->resolve([
@@ -51,7 +65,7 @@ final class Accessory3DSpecificationMappingTest extends TestCase
         $empty = $mapping->resolve([]);
         self::assertFalse($empty['canGenerate']);
         self::assertSame([], $empty['values']);
-        self::assertCount(9, $empty['missing']);
+        self::assertCount(10, $empty['missing']);
 
         $materialsOnly = $mapping->resolve([['code' => 'MATERIALS', 'value' => 'Brass']]);
         self::assertFalse($materialsOnly['canGenerate']);
