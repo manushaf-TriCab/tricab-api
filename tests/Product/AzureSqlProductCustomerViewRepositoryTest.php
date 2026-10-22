@@ -100,6 +100,81 @@ final class AzureSqlProductCustomerViewRepositoryTest extends TestCase
         self::assertStringContainsString("NOT LIKE N'CODE[_]%'", $columnsSql, 'CODE_* definitions are never matrix columns');
     }
 
+    public function test_style_family_products_come_from_the_style_hierarchy_and_are_region_filtered(): void
+    {
+        $publicId = '550e8400-e29b-41d4-a716-446655440000';
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([[
+            'PublicId' => $publicId, 'ProductName' => 'Shipboard Power & Control', 'InternalCode' => 'BVA', 'ShortDescription' => null,
+            'FullDescription' => null, 'FamilyName' => null, 'CategoryName' => null, 'SeriesName' => null, 'StatusCode' => 'published',
+            'LifecycleStatusCode' => 'active', 'IsArchived' => 0, 'Slug' => 'bva',
+        ]]);
+        for ($i = 0; $i < 8; ++$i) {
+            $connection->queueFetch([]);
+        }
+        $connection->queueFetch([['FamilyCode' => 'CABLE']]);
+        $connection->queueFetch([]);
+        $connection->queueFetch([['StyleCode' => 'BVA', 'ParentStyleCode' => 'BV']]);
+        $connection->queueFetch([
+            ['PublicId' => $publicId, 'InternalCode' => 'BVA', 'StyleCode' => 'BVA', 'Slug' => 'bva',
+                'JacketOptionCodes' => 'JACKET-OPTION-A,JACKET-OPTION-C,JACKET-OPTION-M'],
+            ['PublicId' => 'B5FCDED9-F691-F111-B337-000D3AE094E4', 'InternalCode' => 'BVC', 'StyleCode' => 'BVC', 'Slug' => null,
+                'JacketOptionCodes' => 'JACKET-OPTION-C'],
+            ['PublicId' => '550e8400-e29b-41d4-a716-446655440099', 'InternalCode' => 'BVP', 'StyleCode' => 'BVP', 'Slug' => 'bvp',
+                'JacketOptionCodes' => null],
+        ]);
+
+        $repository = new AzureSqlProductCustomerViewRepository($connection, $this->createStub(Product3DModelRepository::class), false);
+        $detail = $repository->findByPublicId(ProductPublicId::fromString($publicId), 'au');
+        self::assertNotNull($detail);
+
+        self::assertSame(['BVA', 'BVC', 'BVP'], array_map(static fn ($p): string => $p->productCode, $detail->styleFamilyProducts));
+        self::assertSame(['JACKET-OPTION-A', 'JACKET-OPTION-C', 'JACKET-OPTION-M'], $detail->styleFamilyProducts[0]->jacketOptionCodes);
+        self::assertNull($detail->styleFamilyProducts[1]->slug);
+        self::assertSame('B5FCDED9-F691-F111-B337-000D3AE094E4', $detail->styleFamilyProducts[1]->publicId);
+        self::assertSame([], $detail->styleFamilyProducts[2]->jacketOptionCodes);
+
+        $familyCall = null;
+        foreach ($connection->calls as $call) {
+            if (str_contains($call['sql'], 'cv.style_family')) {
+                $familyCall = $call;
+            }
+        }
+        self::assertNotNull($familyCall);
+        self::assertSame('AU', $familyCall['params'][':regionCode']);
+        self::assertStringContainsString('[ParentStyleId]', $familyCall['sql']);
+        self::assertStringContainsString("[StatusCode] = N'published'", $familyCall['sql']);
+        self::assertStringContainsString('[ProductRegions]', $familyCall['sql']);
+        self::assertStringNotContainsString('LIKE :', $familyCall['sql'], 'family membership never comes from code matching');
+
+        $serialized = \TriCab\Api\Http\Action\Admin\ProductManagementDtoSerializer::customerViewDetail($detail);
+        self::assertIsArray($serialized['styleFamilyProducts']);
+        self::assertSame(
+            ['publicId' => 'B5FCDED9-F691-F111-B337-000D3AE094E4', 'productCode' => 'BVC', 'styleCode' => 'BVC', 'slug' => null,
+                'jacketOptionCodes' => ['JACKET-OPTION-C']],
+            $serialized['styleFamilyProducts'][1],
+        );
+    }
+
+    public function test_products_without_a_style_skip_the_family_query(): void
+    {
+        $publicId = '550e8400-e29b-41d4-a716-446655440000';
+        $connection = new FakeSqlConnection();
+        $connection->queueFetch([[
+            'PublicId' => $publicId, 'ProductName' => 'Tie', 'InternalCode' => 'H01', 'ShortDescription' => null,
+            'FullDescription' => null, 'FamilyName' => null, 'CategoryName' => null, 'SeriesName' => null, 'StatusCode' => 'published',
+            'LifecycleStatusCode' => 'active', 'IsArchived' => 0, 'Slug' => 'h01',
+        ]]);
+
+        $repository = new AzureSqlProductCustomerViewRepository($connection, $this->createStub(Product3DModelRepository::class), false);
+        $detail = $repository->findByPublicId(ProductPublicId::fromString($publicId), 'AU');
+        self::assertNotNull($detail);
+        self::assertSame([], $detail->styleFamilyProducts);
+        foreach ($connection->calls as $call) {
+            self::assertStringNotContainsString('cv.style_family', $call['sql']);
+        }
+    }
+
     public function test_variant_matrix_preserves_cells_nulls_decimals_and_options(): void
     {
         $publicId = '550e8400-e29b-41d4-a716-446655440000';

@@ -9,6 +9,7 @@ use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewDetail;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixColumn;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixRow;
+use TriCab\Core\Product\Application\DTO\ProductCustomerViewStyleFamilyProduct;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewVariantMatrix;
 use TriCab\Core\Product\Application\DTO\ProductDocumentSummary;
 use TriCab\Core\Product\Application\DTO\ProductMediaSummary;
@@ -108,6 +109,9 @@ SQL,
         $specifications = $this->listCustomerSpecifications($pid);
         $variantMatrix = $this->buildVariantMatrix($pid, $variants);
         $styleAssignment = $this->loadStyleAssignment($pid);
+        $styleFamilyProducts = $styleAssignment['styleCode'] === null
+            ? []
+            : $this->listStyleFamilyProducts($pid, $regionCode);
 
         $internalCode = AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null);
         $pageMedia = $this->pageMedia?->find($pid);
@@ -147,7 +151,126 @@ SQL,
             descriptionImageWidth: $pageMedia?->width(),
             descriptionImageAlignment: $pageMedia?->alignment(),
             pageContent: $pageContent,
+            styleFamilyProducts: $styleFamilyProducts,
         );
+    }
+
+    /**
+     * Published products sharing this product's style family: the parent style (or the product's own style when
+     * it has none) and every active style beneath it. Region-filtered when a region is given. One set-based query.
+     *
+     * @return list<ProductCustomerViewStyleFamilyProduct>
+     */
+    private function listStyleFamilyProducts(ProductPublicId $productPublicId, ?string $regionCode): array
+    {
+        $params = [':publicId' => $productPublicId->toString()];
+        $regionFilter = '';
+        if ($regionCode !== null && trim($regionCode) !== '') {
+            $regionFilter = <<<'SQL'
+  AND EXISTS (
+        SELECT 1
+        FROM [product].[ProductRegions] prv
+        INNER JOIN [product].[Regions] rv ON rv.[RegionId] = prv.[RegionId]
+        WHERE prv.[ProductId] = p.[ProductId]
+          AND prv.[DeletedAtUtc] IS NULL
+          AND prv.[IsVisible] = 1
+          AND rv.[RegionCode] = :regionCode
+          AND (prv.[AvailableFromUtc] IS NULL OR prv.[AvailableFromUtc] <= SYSUTCDATETIME())
+          AND (prv.[AvailableToUtc] IS NULL OR prv.[AvailableToUtc] > SYSUTCDATETIME())
+  )
+SQL;
+            $params[':regionCode'] = strtoupper(trim($regionCode));
+        }
+
+        $rows = $this->connection->fetchAll(
+            <<<SQL
+/*q:cv.style_family*/
+WITH [FamilyRoot] AS (
+    SELECT TOP 1 COALESCE(parent.[ProductStyleId], own.[ProductStyleId]) AS [ProductStyleId]
+    FROM [product].[ProductStyleAssignments] psa
+    INNER JOIN [product].[Products] prod ON prod.[ProductId] = psa.[ProductId]
+    INNER JOIN [product].[ProductStyles] own ON own.[ProductStyleId] = psa.[ProductStyleId]
+    LEFT JOIN [product].[ProductStyles] parent ON parent.[ProductStyleId] = own.[ParentStyleId]
+        AND parent.[DeletedAtUtc] IS NULL
+    WHERE prod.[PublicId] = :publicId
+      AND prod.[DeletedAtUtc] IS NULL
+      AND own.[DeletedAtUtc] IS NULL
+),
+[FamilyStyles] AS (
+    SELECT r.[ProductStyleId], 0 AS [Depth]
+    FROM [FamilyRoot] r
+    UNION ALL
+    SELECT child.[ProductStyleId], f.[Depth] + 1
+    FROM [FamilyStyles] f
+    INNER JOIN [product].[ProductStyles] child ON child.[ParentStyleId] = f.[ProductStyleId]
+    WHERE child.[DeletedAtUtc] IS NULL
+      AND child.[IsActive] = 1
+      AND f.[Depth] < 8
+)
+SELECT
+    CONVERT(NVARCHAR(36), p.[PublicId]) AS [PublicId],
+    p.[InternalCode],
+    s.[StyleCode],
+    (
+        SELECT TOP 1 slug.[Slug]
+        FROM [product].[ProductSlugs] slug
+        WHERE slug.[ProductId] = p.[ProductId]
+          AND slug.[DeletedAtUtc] IS NULL
+          AND slug.[IsActive] = 1
+          AND slug.[IsPrimary] = 1
+        ORDER BY slug.[ProductSlugId]
+    ) AS [Slug],
+    (
+        SELECT STRING_AGG(sd.[DefinitionCode], N',') WITHIN GROUP (ORDER BY sd.[DefinitionCode])
+        FROM [product].[ProductSpecificationValues] psv
+        INNER JOIN [product].[SpecificationDefinitions] sd
+            ON sd.[SpecificationDefinitionId] = psv.[SpecificationDefinitionId]
+        WHERE psv.[ProductId] = p.[ProductId]
+          AND psv.[DeletedAtUtc] IS NULL
+          AND sd.[DeletedAtUtc] IS NULL
+          AND sd.[IsActive] = 1
+          AND sd.[DefinitionCode] LIKE N'JACKET-OPTION-%'
+    ) AS [JacketOptionCodes]
+FROM [FamilyStyles] f
+INNER JOIN [product].[ProductStyles] s ON s.[ProductStyleId] = f.[ProductStyleId]
+INNER JOIN [product].[ProductStyleAssignments] psa ON psa.[ProductStyleId] = s.[ProductStyleId]
+INNER JOIN [product].[Products] p ON p.[ProductId] = psa.[ProductId]
+INNER JOIN [product].[ProductStatuses] ps ON ps.[ProductStatusId] = p.[ProductStatusId]
+WHERE p.[DeletedAtUtc] IS NULL
+  AND p.[IsActive] = 1
+  AND ps.[StatusCode] = N'published'
+  AND (p.[PublishAtUtc] IS NULL OR p.[PublishAtUtc] <= SYSUTCDATETIME())
+  AND (p.[UnpublishAtUtc] IS NULL OR p.[UnpublishAtUtc] > SYSUTCDATETIME())
+{$regionFilter}
+ORDER BY s.[StyleCode], p.[InternalCode]
+SQL,
+            $params,
+        );
+
+        $items = [];
+        $seen = [];
+        foreach ($rows as $row) {
+            $publicId = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
+            $styleCode = AzureSqlValueMapper::stringValue($row['StyleCode'] ?? '');
+            $key = strtolower($publicId);
+            if ($publicId === '' || $styleCode === '' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $codes = AzureSqlValueMapper::nullableString($row['JacketOptionCodes'] ?? null);
+            $items[] = new ProductCustomerViewStyleFamilyProduct(
+                publicId: $publicId,
+                productCode: AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null) ?? $styleCode,
+                styleCode: $styleCode,
+                slug: AzureSqlValueMapper::nullableString($row['Slug'] ?? null),
+                jacketOptionCodes: $codes === null ? [] : array_values(array_filter(
+                    array_map('trim', explode(',', $codes)),
+                    static fn (string $code): bool => $code !== '',
+                )),
+            );
+        }
+
+        return $items;
     }
 
     /**

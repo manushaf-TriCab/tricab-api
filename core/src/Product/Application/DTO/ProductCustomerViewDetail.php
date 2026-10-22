@@ -20,6 +20,7 @@ final readonly class ProductCustomerViewDetail
      * @param list<ProductPublicRelationshipItem> $relationships
      * @param list<ProductPublicSpecificationItem> $specifications
      * @param list<ProductApprovalCertificateItem> $approvalCertificates
+     * @param list<ProductCustomerViewStyleFamilyProduct> $styleFamilyProducts
      */
     public function __construct(
         public string $publicId,
@@ -54,6 +55,8 @@ final readonly class ProductCustomerViewDetail
         public ?string $descriptionImageWidth = null,
         public ?string $descriptionImageAlignment = null,
         public ?\TriCab\Core\Product\Domain\ValueObject\ProductPageContent $pageContent = null,
+        /** @var list<ProductCustomerViewStyleFamilyProduct> */
+        public array $styleFamilyProducts = [],
     ) {
     }
 }
