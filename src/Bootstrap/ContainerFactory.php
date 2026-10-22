@@ -36,6 +36,7 @@ use TriCab\Api\Assistant\Infrastructure\InMemoryAssistantStyleSizes;
 use TriCab\Api\Assistant\Infrastructure\ProductAssistantToolExecutor;
 use TriCab\Api\Assistant\Infrastructure\SearchGroundedDeterministicAssistantResponseProvider;
 use TriCab\Api\Assistant\Infrastructure\Prompt\MarkdownPromptRepository;
+use TriCab\Api\Config\ReleaseRevision;
 use TriCab\Api\Config\Settings;
 
 use TriCab\Api\Http\Action\Admin\AddProductDocumentAction;
@@ -2139,7 +2140,12 @@ final class ContainerFactory
             GenerateOcrPdfHandler::class => \DI\autowire(GenerateOcrPdfHandler::class),
             \TriCab\Api\QuoteOrder\DocumentGeneration\QuoteDetailsToTcquLegacyStreamMapper::class => \DI\autowire(),
             \TriCab\Api\QuoteOrder\DocumentGeneration\GenerateQuoteTemplatePdfService::class => \DI\autowire(),
-            HealthAction::class => \DI\autowire(HealthAction::class),
+            // release.json is written by scripts/build-app-service-release.sh.
+            HealthAction::class => static fn (Container $container): HealthAction => new HealthAction(
+                self::get($container, Settings::class),
+                self::get($container, JsonResponder::class),
+                ReleaseRevision::fromFile(dirname(__DIR__, 2) . '/release.json'),
+            ),
             DatabaseHealthAction::class => \DI\autowire(DatabaseHealthAction::class),
             GetAuthenticatedUserAction::class => \DI\autowire(GetAuthenticatedUserAction::class),
             GenerateDocumentPdfAction::class => \DI\autowire(GenerateDocumentPdfAction::class),

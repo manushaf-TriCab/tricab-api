@@ -250,13 +250,30 @@ jobs:
       name: production
       url: https://tricab.ai
     steps:
+      # A re-run of an older push waits its turn in the concurrency group and
+      # would then roll production back over a newer release.
+      - name: Skip if main has moved on
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tip="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)"
+          if [ "$tip" != "$GITHUB_SHA" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Not deploying ${GITHUB_SHA}: main is now at ${tip}."
+            echo "Deploy skipped: main moved on to ${tip}." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Download validated release package
+        if: steps.latest.outputs.skip != 'true'
         uses: actions/download-artifact@v4
         with:
           name: production-release
           path: release
 
       - name: Deploy to the production App Service slot
+        if: steps.latest.outputs.skip != 'true'
         uses: azure/webapps-deploy@v3
         with:
           app-name: tc-web
@@ -264,14 +281,23 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: release/tricab-app-service.zip
 
+      # Healthy is not enough: wait until the release reports this commit, so a
+      # previous release still serving cannot pass for this one.
       - name: Verify production health
+        if: steps.latest.outputs.skip != 'true'
         shell: bash
         run: |
-          for attempt in {1..12}; do
-            if curl --fail --silent --show-error --max-time 20 https://tricab.ai/health; then
-              exit 0
+          for attempt in {1..18}; do
+            if body="$(curl --fail --silent --show-error --max-time 20 https://tricab.ai/health)"; then
+              live="$(jq -r '.revision.api // empty' <<<"$body")"
+              if [ "$live" = "$GITHUB_SHA" ]; then
+                echo "$body"
+                exit 0
+              fi
+              echo "Health check attempt ${attempt}: serving ${live:-an unstamped release}, not ${GITHUB_SHA}; retrying in 10 seconds."
+            else
+              echo "Health check attempt ${attempt} failed; retrying in 10 seconds."
             fi
-            echo "Health check attempt ${attempt} failed; retrying in 10 seconds."
             sleep 10
           done
           exit 1

@@ -1,13 +1,17 @@
 includes:
     - phpstan-baseline.neon
+    - phpstan-core-baseline.neon
 
 parameters:
     tmpDir: var/cache/phpstan
     level: max
+    # core/src is analysed rather than scanned: PHPStan discards its whole
+    # result cache whenever a scanned file changes, so scanning core forced a
+    # full reanalysis on every core commit. Its pre-existing errors are held in
+    # phpstan-core-baseline.neon.
     paths:
         - src
         - tests
-    scanDirectories:
         - core/src
     excludePaths:
         - src/Product/Persistence/AzureSqlMigrationBatchRepository.php

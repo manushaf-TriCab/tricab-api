@@ -157,6 +157,13 @@ for file in composer.json composer.lock; do
     cp "$api_root/$file" "$app_root/$file"
 done
 
+# The commits this release is built from, reported by /health so the deploy
+# (and anyone else) can tell which release is serving.
+api_revision="$(git -C "$api_root" rev-parse HEAD 2>/dev/null || echo unknown)"
+web_revision="$(git -C "$web_root" rev-parse HEAD 2>/dev/null || echo unknown)"
+printf '{"api":"%s","web":"%s"}\n' "$api_revision" "$web_revision" > "$app_root/release.json"
+echo "    API $api_revision, website $web_revision"
+
 # Public content images (About / Technical / catalogue static copies) live under
 # public/media. PHP availability checks read app/public/media; nginx must also
 # serve the same tree at the site-root /media/ path (not under /api/v1).

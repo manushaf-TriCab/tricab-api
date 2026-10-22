@@ -155,7 +155,6 @@ final class ApplyCableSpecBatchD4TargetApplyService
             ];
         }
 
-        /** @phpstan-ignore argument.unresolvableType */
         return $this->transaction->run(function () use ($actor, $approvedFieldMappings, $preflight, $plan): array {
             $groups = is_array($preflight['groups'] ?? null) ? $preflight['groups'] : [];
             $units = is_array($preflight['units'] ?? null) ? $preflight['units'] : [];
