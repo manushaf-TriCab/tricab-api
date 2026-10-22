@@ -33,6 +33,30 @@ final class RegionAwareCatalogueTreeFilterTest extends TestCase
         self::assertSame('ali-flex', $filtered[0]->children[0]->slug);
     }
 
+    public function test_preserves_direct_product_counts(): void
+    {
+        $crimpers = new PublicCatalogueTreeNode(
+            publicId: 'crimpers',
+            nodeCode: 'CRIMPERS',
+            nodeName: 'crimpers',
+            slug: 'crimpers',
+            description: null,
+            nodeTypeCode: 'category',
+            imageUrl: null,
+            imageAltText: null,
+            displayOrder: 0,
+            depth: 1,
+            hasChildren: false,
+            hasProducts: true,
+            productCount: 10,
+        );
+
+        $filtered = $this->filter->filterTree([$this->node('tools', children: [$crimpers])]);
+
+        self::assertSame(0, $filtered[0]->productCount);
+        self::assertSame(10, $filtered[0]->children[0]->productCount);
+    }
+
     public function test_hides_parent_when_all_descendants_are_empty(): void
     {
         $tree = [

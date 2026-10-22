@@ -171,6 +171,7 @@ final class GetPublicCatalogueService
                 products: $products,
                 parentPublicId: $node->parentPublicId,
                 productThumbnailUrl: $node->productThumbnailUrl,
+                productCount: $node->productCount,
             );
         }
 

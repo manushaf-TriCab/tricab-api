@@ -55,6 +55,7 @@ use TriCab\Core\Product\Application\DTO\LegacyBaseCostComparison;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewDetail;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixColumn;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewMatrixRow;
+use TriCab\Core\Product\Application\DTO\ProductCustomerViewStyleFamilyProduct;
 use TriCab\Core\Product\Application\DTO\ProductPublicDetail;
 use TriCab\Core\Product\Application\DTO\ProductApprovalCertificateItem;
 use TriCab\Core\Product\Application\DTO\ProductPublishReadinessCheck;
@@ -328,6 +329,16 @@ final class ProductManagementDtoSerializer
             'threeD' => self::publicThreeD($detail->threeD, $devUrls),
             'styleCode' => $detail->styleCode,
             'parentStyleCode' => $detail->parentStyleCode,
+            'styleFamilyProducts' => array_map(
+                static fn (ProductCustomerViewStyleFamilyProduct $item): array => [
+                    'publicId' => $item->publicId,
+                    'productCode' => $item->productCode,
+                    'styleCode' => $item->styleCode,
+                    'slug' => $item->slug,
+                    'jacketOptionCodes' => $item->jacketOptionCodes,
+                ],
+                $detail->styleFamilyProducts,
+            ),
             'thumbnailBackgroundColor' => $detail->thumbnailBackgroundColor,
         ];
     }

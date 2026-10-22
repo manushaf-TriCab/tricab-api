@@ -269,6 +269,7 @@ final class CatalogueDtoSerializer
             'depth' => $node->depth,
             'hasChildren' => $node->hasChildren,
             'hasProducts' => $node->hasProducts,
+            'productCount' => $node->productCount,
             'parentPublicId' => $node->parentPublicId,
             'children' => array_map(self::publicTreeNode(...), $node->children),
             'products' => array_map(self::publicProductCard(...), $node->products),
