@@ -259,7 +259,7 @@ final readonly class CableFitCandidateService
     private function requireSnapshot(AuthenticatedUser $user, string $nprRequestPublicId): NprRequestSnapshot
     {
         return $this->nprReader->findForTsd($user, $nprRequestPublicId)
-            ?? throw new NprRequestNotAccessible('NPR request not found.');
+            ?? throw new NprRequestNotAccessible('NPD Request not found.');
     }
 
     /**

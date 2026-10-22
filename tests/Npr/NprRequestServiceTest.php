@@ -70,7 +70,7 @@ final class NprRequestServiceTest extends TestCase
     {
         $view = NprFixtures::service($this->repository)->createDraft(NprFixtures::requester(), [], null);
 
-        self::assertSame('Untitled New Product Request', $view->request->title);
+        self::assertSame('Untitled NPD Request', $view->request->title);
     }
 
     public function test_branch_comes_from_the_roster_by_email_else_unassigned(): void

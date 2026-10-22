@@ -53,8 +53,9 @@ should use consistent deployment settings. Secrets are never returned by the API
 
 ## Notifications
 
-The module manages finance, TriExpense, onboarding and NPR test recipients; NPR
-role/queue/signatory addresses; Postmark sender; RFQ mailboxes; customer-contact
+The module manages finance, TriExpense, onboarding and NPD Request test recipients;
+NPD Request role/queue/signatory addresses (the `NPR_*` settings; NPD Request is the
+name people see, NPR the name in code); Postmark sender; RFQ mailboxes; customer-contact
 accounts mailbox; and finance AR/AP mailboxes. Existing delivery enable flags,
 off/test/live modes and mailbox authorization stay in force. Setting an address
 does not grant Graph access or enable a disabled sender.
@@ -87,7 +88,7 @@ and `api` slots), under `platform-settings:runtime:<APP_ENV>`.
 
 - A save, reset or restore writes the new overrides to the cache straight away.
   If that write fails, the cached copy is dropped so readers go back to the database.
-- Web requests and the finance, RFQ reader, CableFit, NPR, onboarding and
+- Web requests and the finance, RFQ reader, CableFit, NPD Request, onboarding and
   TriExpense jobs use the copy and check the database again once it is more than
   5 minutes old (`PlatformSettingsRuntimeCache::REFRESH_SECONDS`).
 - The RFQ mail reader never checks a copy it has: it runs every minute and must

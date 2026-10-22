@@ -23,7 +23,7 @@ final class NprEmailTemplates
      */
     public function render(string $event, array $payload): array
     {
-        $number = self::str($payload, 'requestNumber', 'NPR');
+        $number = self::str($payload, 'requestNumber', 'NPD Request');
         $title = self::str($payload, 'title', 'Untitled request');
         $customer = self::str($payload, 'customer', '') !== '' ? self::str($payload, 'customer', '') : 'Customer';
         $urgency = strtoupper(self::str($payload, 'urgency', 'standard'));
@@ -47,7 +47,7 @@ final class NprEmailTemplates
             '',
             'Open in TriCab: ' . $link,
             '',
-            'Sign-in with your TriCab account is required. This is an automatic message from the NPR workflow.',
+            'Sign-in with your TriCab account is required. This is an automatic message from the NPD Request workflow.',
         ], static fn (?string $line): bool => $line !== null));
 
         $h = static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -59,7 +59,7 @@ final class NprEmailTemplates
             . $h($customer) . ', urgency ' . $h($urgency) . '</p>'
             . ($summary !== '' ? '<p style="margin:0 0 12px"><strong>' . $h($details['summaryTitle']) . ':</strong> ' . $h($summary) . '</p>' : '')
             . '<p style="margin:0 0 6px"><a href="' . $h($link) . '">Open in TriCab</a></p>'
-            . '<p style="margin:12px 0 0;color:#6b7280;font-size:12px">Sign-in with your TriCab account is required. This is an automatic message from the NPR workflow.</p>'
+            . '<p style="margin:12px 0 0;color:#6b7280;font-size:12px">Sign-in with your TriCab account is required. This is an automatic message from the NPD Request workflow.</p>'
             . '</div>';
 
         return ['subject' => $subject, 'html' => $html, 'text' => $text];
@@ -78,7 +78,7 @@ final class NprEmailTemplates
         return match ($event) {
             'sales_submitted' => [
                 'headline' => 'Action required: endorsement needed',
-                'lead' => "A new product request was submitted by {$actor} and needs your endorsement before it goes to TSD.",
+                'lead' => "A new NPD Request (New Product Design Request) was submitted by {$actor} and needs your endorsement before it goes to TSD.",
                 'next' => 'Review the requirements and the commercial case, then endorse or return it with feedback.',
                 'summaryTitle' => 'Submission',
             ],

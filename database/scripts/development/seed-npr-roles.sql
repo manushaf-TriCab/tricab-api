@@ -42,18 +42,18 @@ BEGIN TRY
 
     INSERT INTO @Roles ([RoleCode], [RoleName], [Description])
     VALUES
-        (N'NPR_REQUESTER',  N'NPR Requester',
-         N'Raise, edit and submit new product requests, and read one''s own.'),
-        (N'NPR_MANAGER',    N'NPR Manager',
+        (N'NPR_REQUESTER',  N'NPD Requester',
+         N'Raise, edit and submit NPD Requests (New Product Design Requests), and read one''s own.'),
+        (N'NPR_MANAGER',    N'NPD Request Manager',
          N'Read one''s own requests and endorse, return or reject those routed to the caller as branch manager.'),
         (N'TSD_ENGINEER',   N'TSD Engineer',
-         N'Open the TSD module, read every NPR that reached TSD, and acknowledge, assign, return and request screening.'),
+         N'Open the TSD module, read every NPD Request that reached TSD, and acknowledge, assign, return and request screening.'),
         (N'TSD_SIGNATORY',  N'TSD Signatory',
-         N'Open the TSD module, read NPRs that reached TSD and record the final screening outcome.'),
-        (N'NPR_VIEWER',     N'NPR Viewer',
-         N'Open the TSD module and read NPRs that reached TSD. Read-only.'),
-        (N'NPR_ADMIN',      N'NPR Admin',
-         N'Administer NPR manager routes and notifications, and read the TSD queue.');
+         N'Open the TSD module, read NPD Requests that reached TSD and record the final screening outcome.'),
+        (N'NPR_VIEWER',     N'NPD Request Viewer',
+         N'Open the TSD module and read NPD Requests that reached TSD. Read-only.'),
+        (N'NPR_ADMIN',      N'NPD Request Admin',
+         N'Administer NPD Request manager routes and notifications, and read the TSD queue.');
 
     INSERT INTO [identity].[Roles] ([RoleCode], [RoleName], [Description], [IsSystemRole], [IsActive])
     SELECT r.[RoleCode], r.[RoleName], r.[Description], 0, 1

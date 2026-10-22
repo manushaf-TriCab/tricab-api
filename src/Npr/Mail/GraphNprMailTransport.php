@@ -31,7 +31,7 @@ final class GraphNprMailTransport implements NprMailTransport
         private readonly string $clientId,
         private readonly string $clientSecret,
         private readonly string $mailbox,
-        private readonly string $fromName = 'TriCab NPR',
+        private readonly string $fromName = 'TriCab NPD Requests',
     ) {
     }
 

@@ -86,7 +86,7 @@ final readonly class CableFitHandoffService
     public function staleReason(int $builtFromRevision, int $currentRequestRevision): string
     {
         return sprintf(
-            'Candidate was generated from NPR revision %d, but the request has been amended to revision %d.',
+            'Candidate was generated from NPD Request revision %d, but the request has been amended to revision %d.',
             $builtFromRevision,
             $currentRequestRevision,
         );

@@ -27,7 +27,7 @@ use TriCab\Core\Npr\Infrastructure\NullNprRequesterDirectory;
  */
 final class NprRequestService
 {
-    private const DEFAULT_TITLE = 'Untitled New Product Request';
+    private const DEFAULT_TITLE = 'Untitled NPD Request';
     private const DEFAULT_URGENCY = 'standard';
 
     public function __construct(

@@ -70,7 +70,7 @@ final class NprSeedScriptTest extends TestCase
         self::assertContains(Module::PERMISSION_ADMIN, Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]);
         self::assertContains(Module::PERMISSION_TSD_READ, Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]);
         self::assertContains('TSD.ACCESS', Module::ROLE_PERMISSIONS[Module::ROLE_ADMIN]);
-        self::assertStringContainsString("N'NPR_ADMIN',      N'NPR Admin'", self::script('seed-npr-roles.sql'));
+        self::assertStringContainsString("N'NPR_ADMIN',      N'NPD Request Admin'", self::script('seed-npr-roles.sql'));
         foreach ([Module::ROLE_REQUESTER, Module::ROLE_MANAGER, Module::ROLE_TSD_ENGINEER, Module::ROLE_TSD_SIGNATORY, Module::ROLE_VIEWER] as $other) {
             self::assertNotContains(Module::PERMISSION_ADMIN, Module::ROLE_PERMISSIONS[$other]);
         }
