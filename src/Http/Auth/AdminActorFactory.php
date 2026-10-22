@@ -37,7 +37,7 @@ final class AdminActorFactory
         );
     }
 
-    private static function correlationId(ServerRequestInterface $request): ?string
+    public static function correlationId(ServerRequestInterface $request): ?string
     {
         foreach (['X-Request-Id', 'X-Correlation-Id'] as $header) {
             $value = trim($request->getHeaderLine($header));

@@ -23,14 +23,10 @@ final class RequirePlatformAdministratorMiddleware implements MiddlewareInterfac
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $user = $request->getAttribute(AuthenticatedUserAttribute::KEY);
-        if (!$user instanceof AuthenticatedUser || !in_array(ProtectedIdentityCatalog::ROLE_ADMINISTRATOR, $user->roles, true)) {
+        if (!$user instanceof AuthenticatedUser || !self::isAdministrator($user)) {
             return $this->responder->error('PLATFORM_ADMINISTRATOR_REQUIRED', 'Platform administrator role is required.', 403);
         }
-        $verified = $request->getAttribute(VerifiedIdentityAttribute::KEY);
-        $assurance = $verified instanceof VerifiedIdentity
-            ? AuthenticationAssurance::forProvider($verified->provider)
-            : AuthenticationAssurance::low();
-        if (!$assurance->satisfies(AuthenticationAssurance::substantial())) {
+        if (!self::hasSufficientAssurance($request)) {
             return $this->responder->error(
                 'INSUFFICIENT_AUTHENTICATION_ASSURANCE',
                 'This action requires a passkey or Microsoft sign-in.',
@@ -38,5 +34,30 @@ final class RequirePlatformAdministratorMiddleware implements MiddlewareInterfac
             );
         }
         return $handler->handle($request);
+    }
+
+    /**
+     * True when the user is a platform administrator signed in strongly enough
+     * for administrator actions. Shared with ActAsMiddleware, which has to make
+     * the same decision before it swaps in the target user.
+     */
+    public static function permits(AuthenticatedUser $user, ServerRequestInterface $request): bool
+    {
+        return self::isAdministrator($user) && self::hasSufficientAssurance($request);
+    }
+
+    private static function isAdministrator(AuthenticatedUser $user): bool
+    {
+        return in_array(ProtectedIdentityCatalog::ROLE_ADMINISTRATOR, $user->roles, true);
+    }
+
+    private static function hasSufficientAssurance(ServerRequestInterface $request): bool
+    {
+        $verified = $request->getAttribute(VerifiedIdentityAttribute::KEY);
+        $assurance = $verified instanceof VerifiedIdentity
+            ? AuthenticationAssurance::forProvider($verified->provider)
+            : AuthenticationAssurance::low();
+
+        return $assurance->satisfies(AuthenticationAssurance::substantial());
     }
 }

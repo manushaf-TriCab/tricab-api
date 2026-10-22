@@ -7,10 +7,12 @@ namespace TriCab\Api\Http\Action;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Core\DocumentGeneration\Application\Exception\InvalidOcrStream;
 use TriCab\Core\DocumentGeneration\Application\Exception\UnsupportedDocumentTemplate;
 use TriCab\Core\DocumentGeneration\Application\Handler\GenerateOcrPdfHandler;
+use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
 use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
 use TriCab\Core\Identity\Application\Exception\IdentityConflict;
@@ -107,6 +109,11 @@ final class GenerateDocumentPdfAction
 
     private function authenticate(ServerRequestInterface $request): ?ResponseInterface
     {
+        // A switched request already carries the resolved target user.
+        if ($request->getAttribute(AuthenticatedUserAttribute::KEY) instanceof AuthenticatedUser) {
+            return null;
+        }
+
         $verifiedIdentity = $request->getAttribute(VerifiedIdentityAttribute::KEY);
         if (!$verifiedIdentity instanceof VerifiedIdentity) {
             return $this->responder->error(

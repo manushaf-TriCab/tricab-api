@@ -6,7 +6,9 @@ namespace TriCab\Api\Http\Auth;
 
 use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Assistant\Application\AssistantCatalogueVisibility;
+use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
+use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
 use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
 use TriCab\Core\Identity\Application\Exception\IdentityConflict;
@@ -39,10 +41,14 @@ final readonly class AssistantCatalogueVisibilityResolver
             return AssistantCatalogueVisibility::PUBLIC;
         }
 
-        try {
-            $user = $this->resolveAuthenticatedUser->handle($identity);
-        } catch (UserNotRegistered|IdentityConflict|IdentityAmbiguous|AuthenticationNotAllowed) {
-            return AssistantCatalogueVisibility::PUBLIC;
+        // A switched request carries the target user; their access is what applies.
+        $user = $request->getAttribute(AuthenticatedUserAttribute::KEY);
+        if (!$user instanceof AuthenticatedUser) {
+            try {
+                $user = $this->resolveAuthenticatedUser->handle($identity);
+            } catch (UserNotRegistered|IdentityConflict|IdentityAmbiguous|AuthenticationNotAllowed) {
+                return AssistantCatalogueVisibility::PUBLIC;
+            }
         }
 
         foreach ($user->permissions as $permission) {

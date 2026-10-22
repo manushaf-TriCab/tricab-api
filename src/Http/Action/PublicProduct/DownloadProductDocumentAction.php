@@ -13,9 +13,11 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Request\GuestAuthRequestMetadata;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
+use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Product\Application\Command\GetRestrictedDocumentDownloadCommand;
@@ -47,9 +49,13 @@ final class DownloadProductDocumentAction
             $actor = new ActorContext(userId: 0, publicId: '', emailAddress: '');
             $hasManage = false;
             $verified = $request->getAttribute(VerifiedIdentityAttribute::KEY);
-            if ($verified instanceof VerifiedIdentity) {
+            $attached = $request->getAttribute(AuthenticatedUserAttribute::KEY);
+            if ($attached instanceof AuthenticatedUser || $verified instanceof VerifiedIdentity) {
                 try {
-                    $user = $this->resolveUser->handle($verified);
+                    // A switched request carries the target user; otherwise resolve as before.
+                    $user = $attached instanceof AuthenticatedUser
+                        ? $attached
+                        : $this->resolveUser->handle($verified);
                     $actor = new ActorContext(
                         userId: $user->userId,
                         publicId: $user->publicId,

@@ -13,6 +13,8 @@ use TriCab\Api\Http\Exception\HttpRequestValidationFailed;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Infrastructure\Database\DatabaseTemporarilyUnavailable;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
+use TriCab\Core\Identity\Application\Exception\ActAsNotAllowed;
+use TriCab\Core\Identity\Application\Exception\ActAsSessionNotFound;
 use TriCab\Core\Identity\Application\Exception\PermissionCodeConflict;
 use TriCab\Core\Identity\Application\Exception\PermissionNotFound;
 use TriCab\Core\Identity\Application\Exception\RoleCodeConflict;
@@ -58,6 +60,14 @@ final class UserManagementErrorMapper
 
         if ($exception instanceof UserNotFound) {
             return $this->responder->error('USER_NOT_FOUND', 'The requested user was not found.', 404);
+        }
+
+        if ($exception instanceof ActAsNotAllowed) {
+            return $this->responder->error('act_as_not_allowed', $exception->getMessage(), 403);
+        }
+
+        if ($exception instanceof ActAsSessionNotFound) {
+            return $this->responder->error('act_as_session_not_found', 'The act-as session was not found.', 404);
         }
 
         if ($exception instanceof RoleNotFound) {

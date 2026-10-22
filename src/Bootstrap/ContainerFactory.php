@@ -2209,6 +2209,13 @@ final class ContainerFactory
                 );
             },
             UserManagementAuditRecorder::class => \DI\autowire(UserManagementAuditRecorder::class),
+            \TriCab\Core\Identity\Application\Handler\StartActAsHandler::class => \DI\autowire(\TriCab\Core\Identity\Application\Handler\StartActAsHandler::class),
+            \TriCab\Core\Identity\Application\Handler\EndActAsHandler::class => \DI\autowire(\TriCab\Core\Identity\Application\Handler\EndActAsHandler::class),
+            \TriCab\Core\Identity\Application\Handler\ResolveActAsSessionHandler::class => \DI\autowire(\TriCab\Core\Identity\Application\Handler\ResolveActAsSessionHandler::class),
+            \TriCab\Api\Http\Action\Admin\StartActAsAction::class => \DI\autowire(\TriCab\Api\Http\Action\Admin\StartActAsAction::class),
+            \TriCab\Api\Http\Action\Admin\EndActAsAction::class => \DI\autowire(\TriCab\Api\Http\Action\Admin\EndActAsAction::class),
+            \TriCab\Api\Http\Action\Admin\ListActAsSessionsAction::class => \DI\autowire(\TriCab\Api\Http\Action\Admin\ListActAsSessionsAction::class),
+            \TriCab\Api\Http\Action\Admin\ListActAsSessionActionsAction::class => \DI\autowire(\TriCab\Api\Http\Action\Admin\ListActAsSessionActionsAction::class),
             ListUsersService::class => \DI\autowire(ListUsersService::class),
             GetUserDetailsService::class => \DI\autowire(GetUserDetailsService::class),
             CreateUserService::class => \DI\autowire(CreateUserService::class),
@@ -3367,6 +3374,7 @@ final class ContainerFactory
             $definitions[RoleManagementRepository::class] = \DI\autowire(AzureSqlRoleManagementRepository::class);
             $definitions[PermissionManagementRepository::class] = \DI\autowire(AzureSqlPermissionManagementRepository::class);
             $definitions[UserManagementAuditRepository::class] = \DI\autowire(AzureSqlUserManagementAuditRepository::class);
+            $definitions[\TriCab\Core\Identity\Contract\ActAsSessionRepository::class] = \DI\autowire(\TriCab\Api\Identity\Persistence\AzureSqlActAsSessionRepository::class);
             $definitions[AdminMutationTransaction::class] = \DI\autowire(AdminMutationTransaction::class);
             $definitions[CustomerRepository::class] = \DI\autowire(AzureSqlCustomerRepository::class);
             $definitions[\TriCab\Core\LogNote\Contract\LogNoteRepository::class] = \DI\autowire(\TriCab\Api\LogNote\Persistence\AzureSqlLogNoteRepository::class);
@@ -3723,6 +3731,14 @@ SQL,
             };
             $definitions[UserManagementAuditRepository::class] = static function (Container $container): UserManagementAuditRepository {
                 return self::get($container, InMemoryUserManagementStore::class)->audit();
+            };
+            $definitions[\TriCab\Core\Identity\Contract\ActAsSessionRepository::class] = static function (Container $container): \TriCab\Core\Identity\Contract\ActAsSessionRepository {
+                $users = self::get($container, UserRepository::class);
+                if (!$users instanceof \TriCab\Api\Identity\Persistence\InMemoryApiUserRepository) {
+                    throw new InvalidArgumentException('In-memory act-as sessions need the in-memory UserRepository.');
+                }
+
+                return new \TriCab\Api\Identity\Persistence\InMemoryActAsSessionRepository($users);
             };
 
             $definitions[InMemoryCustomerStore::class] = \DI\autowire(InMemoryCustomerStore::class);

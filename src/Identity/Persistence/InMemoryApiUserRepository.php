@@ -112,6 +112,17 @@ final class InMemoryApiUserRepository implements UserRepository, UserProvisionin
         return $this->usersById[$userId->toInt()] ?? null;
     }
 
+    public function findByPublicId(UserPublicId $publicId): ?User
+    {
+        foreach ($this->usersById as $user) {
+            if ($user->publicId()->toString() === $publicId->toString()) {
+                return $user;
+            }
+        }
+
+        return null;
+    }
+
     public function findByEmail(EmailAddress $emailAddress): ?User
     {
         $userId = $this->userIdsByEmail[$emailAddress->toString()] ?? null;

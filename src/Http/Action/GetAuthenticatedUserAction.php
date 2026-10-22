@@ -9,10 +9,12 @@ use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Http\Auth\IdentityResolutionErrorMapper;
+use TriCab\Api\Identity\Authentication\ActingAdminAttribute;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
 use TriCab\Core\Customer\Application\Service\ResolveAuthenticatedCustomerContextService;
+use TriCab\Core\Identity\Application\DTO\ActAs\ActingAdmin;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
 use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
@@ -40,7 +42,12 @@ final class GetAuthenticatedUserAction
 
         $attachedUser = $request->getAttribute(AuthenticatedUserAttribute::KEY);
         if ($attachedUser instanceof AuthenticatedUser) {
-            return $this->successfulResponse($attachedUser);
+            $actingAdmin = $request->getAttribute(ActingAdminAttribute::KEY);
+
+            return $this->successfulResponse(
+                $attachedUser,
+                $actingAdmin instanceof ActingAdmin ? $actingAdmin : null,
+            );
         }
 
         $verifiedIdentity = $request->getAttribute(VerifiedIdentityAttribute::KEY);
@@ -72,10 +79,14 @@ final class GetAuthenticatedUserAction
         return $this->successfulResponse($user);
     }
 
-    private function successfulResponse(AuthenticatedUser $user): ResponseInterface
+    private function successfulResponse(AuthenticatedUser $user, ?ActingAdmin $actingAdmin = null): ResponseInterface
     {
-        $response = $this->responder->success($this->serialize($user));
-        $this->loginRecorder->record($user);
+        $response = $this->responder->success($this->serialize($user, $actingAdmin));
+
+        // A switched request is the administrator working, not the target signing in.
+        if ($actingAdmin === null) {
+            $this->loginRecorder->record($user);
+        }
 
         return $response;
     }
@@ -83,7 +94,7 @@ final class GetAuthenticatedUserAction
     /**
      * @return array<string, mixed>
      */
-    private function serialize(AuthenticatedUser $user): array
+    private function serialize(AuthenticatedUser $user, ?ActingAdmin $actingAdmin): array
     {
         $customerContext = $this->resolveCustomerContext->execute(
             $user->publicId,
@@ -116,6 +127,20 @@ final class GetAuthenticatedUserAction
                 'contactPublicIds' => $customerContext->contactPublicIds,
                 'isCustomerAdmin' => $customerContext->isCustomerAdmin,
                 'marketCodes' => $customerContext->marketCodes,
+            ],
+            // Set only while an administrator is acting as this user.
+            'actingAs' => $actingAdmin === null ? null : [
+                'sessionId' => $actingAdmin->sessionId,
+                'target' => [
+                    'name' => $user->displayName,
+                    'email' => $user->emailAddress,
+                ],
+                'admin' => [
+                    'name' => $actingAdmin->admin->displayName,
+                ],
+                'expiresAt' => $actingAdmin->expiresAt
+                    ->setTimezone(new \DateTimeZone('Australia/Melbourne'))
+                    ->format(DATE_ATOM),
             ],
         ];
     }

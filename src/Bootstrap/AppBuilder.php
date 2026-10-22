@@ -76,7 +76,12 @@ use TriCab\Api\Http\Action\Admin\GetProductAction;
 use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerViewThemeAction;
 use TriCab\Api\Http\Action\Admin\PlatformSettingsAction;
+use TriCab\Api\Http\Middleware\ActAsMiddleware;
 use TriCab\Api\Http\Middleware\RequirePlatformAdministratorMiddleware;
+use TriCab\Api\Http\Action\Admin\EndActAsAction;
+use TriCab\Api\Http\Action\Admin\ListActAsSessionActionsAction;
+use TriCab\Api\Http\Action\Admin\ListActAsSessionsAction;
+use TriCab\Api\Http\Action\Admin\StartActAsAction;
 use TriCab\Api\Http\Action\Admin\GetProductCustomerViewAction;
 use TriCab\Api\Http\Action\Admin\UpdateCustomerViewThemeAction;
 use TriCab\Api\Http\Action\Admin\ClearProductPresentationMediaRoleAction;
@@ -321,6 +326,11 @@ final class AppBuilder
         AppFactory::setContainer($container);
         /** @var App<ContainerInterface> $app */
         $app = AppFactory::create();
+
+        // Added first, so it sits closest to the route: it runs after Bearer/Development
+        // authentication and after routing (it needs the matched route), but before any
+        // per-route middleware, so RequirePermissionMiddleware checks the target user.
+        $app->add(new ActAsMiddleware($container));
 
         $app->addBodyParsingMiddleware();
         $app->addRoutingMiddleware();
@@ -1366,6 +1376,15 @@ final class AppBuilder
         $app->post('/api/v1/admin/settings/platform/restore', PlatformSettingsAction::class)
             ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
         $app->post('/api/v1/admin/settings/platform/reset', PlatformSettingsAction::class)
+            ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
+
+        $app->post('/api/v1/admin/act-as', StartActAsAction::class)
+            ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
+        $app->delete('/api/v1/admin/act-as/{id}', EndActAsAction::class)
+            ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
+        $app->get('/api/v1/admin/act-as', ListActAsSessionsAction::class)
+            ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
+        $app->get('/api/v1/admin/act-as/{id}/actions', ListActAsSessionActionsAction::class)
             ->add($platformAdmin)->add(($require)('ACCOUNT.LOGIN'));
 
         $app->get('/api/v1/admin/dashboard', GetAdminDashboardAction::class)

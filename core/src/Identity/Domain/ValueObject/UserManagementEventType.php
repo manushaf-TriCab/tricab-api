@@ -20,6 +20,8 @@ final class UserManagementEventType
     public const ROLE_PERMISSION_REMOVED = 'ROLE_PERMISSION_REMOVED';
     public const PERMISSION_CREATED = 'PERMISSION_CREATED';
     public const PERMISSION_UPDATED = 'PERMISSION_UPDATED';
+    public const ACT_AS_STARTED = 'ACT_AS_STARTED';
+    public const ACT_AS_ENDED = 'ACT_AS_ENDED';
 
     private const ALLOWED = [
         self::USER_CREATED,
@@ -34,6 +36,8 @@ final class UserManagementEventType
         self::ROLE_PERMISSION_REMOVED,
         self::PERMISSION_CREATED,
         self::PERMISSION_UPDATED,
+        self::ACT_AS_STARTED,
+        self::ACT_AS_ENDED,
     ];
 
     private function __construct(private readonly string $value)
