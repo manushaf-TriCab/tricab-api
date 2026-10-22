@@ -61,6 +61,7 @@ final class RegionAwareCatalogueTreeFilter
             products: $node->products,
             parentPublicId: $node->parentPublicId,
             productThumbnailUrl: $node->productThumbnailUrl,
+            productCount: $node->productCount,
         );
     }
 }

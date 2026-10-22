@@ -1761,6 +1761,7 @@ SQL,
             products: $products,
             parentPublicId: $tree->parentPublicId,
             productThumbnailUrl: $tree->productThumbnailUrl,
+            productCount: $products !== [] ? count($products) : $tree->productCount,
         );
     }
 
@@ -1837,6 +1838,7 @@ SQL,
             productThumbnailUrl: isset($node['productThumbnailUrl']) && is_string($node['productThumbnailUrl'])
                 ? $node['productThumbnailUrl']
                 : null,
+            productCount: AzureSqlValueMapper::intValue($node['productCount'] ?? 0),
         );
     }
 

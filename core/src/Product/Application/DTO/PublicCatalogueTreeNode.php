@@ -9,6 +9,8 @@ final readonly class PublicCatalogueTreeNode
     /**
      * @param list<self> $children
      * @param list<PublicCatalogueProductCard> $products
+     * @param int $productCount Published, region-visible products placed directly on this node
+     *                          (excludes descendants and style-family links).
      */
     public function __construct(
         public string $publicId,
@@ -27,6 +29,7 @@ final readonly class PublicCatalogueTreeNode
         public array $products = [],
         public ?string $parentPublicId = null,
         public ?string $productThumbnailUrl = null,
+        public int $productCount = 0,
     ) {
     }
 }

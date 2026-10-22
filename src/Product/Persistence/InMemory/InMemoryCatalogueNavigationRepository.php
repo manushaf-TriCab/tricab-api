@@ -1153,6 +1153,7 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
             children: $tree->children,
             products: $products,
             parentPublicId: $tree->parentPublicId,
+            productCount: $products !== [] ? count($products) : $tree->productCount,
         );
     }
 
@@ -1177,13 +1178,9 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
             static fn (PublicCatalogueTreeNode $a, PublicCatalogueTreeNode $b): int =>
                 [$a->displayOrder, $a->nodeName] <=> [$b->displayOrder, $b->nodeName],
         );
-        $products = $includeProducts ? $this->listPublicNodeProducts($publicId, $regionCode) : [];
-        $productCount = $includeProducts
-            ? count($products)
-            : count(array_filter(
-                $this->nodeProducts[$publicId] ?? [],
-                static fn (array $placement): bool => (bool) ($placement['isActive'] ?? true),
-            ));
+        $visibleProducts = $this->listPublicNodeProducts($publicId, $regionCode);
+        $products = $includeProducts ? $visibleProducts : [];
+        $productCount = count($visibleProducts);
 
         return new PublicCatalogueTreeNode(
             publicId: $publicId,
@@ -1201,6 +1198,7 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
             children: $children,
             products: $products,
             parentPublicId: AzureSqlValueMapper::nullableString($row['parentPublicId'] ?? null),
+            productCount: $productCount,
         );
     }
 
