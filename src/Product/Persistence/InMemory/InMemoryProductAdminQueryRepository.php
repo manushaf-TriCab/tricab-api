@@ -47,6 +47,19 @@ final class InMemoryProductAdminQueryRepository implements ProductAdminQueryRepo
         );
     }
 
+    public function findDetailsByPublicIds(array $publicIds): array
+    {
+        $out = [];
+        foreach ($publicIds as $publicId) {
+            $detail = $this->findDetailByPublicId($publicId);
+            if ($detail !== null) {
+                $out[$publicId->toString()] = $detail;
+            }
+        }
+
+        return $out;
+    }
+
     public function findDetailByPublicId(ProductPublicId $publicId): ?ProductAdminDetail
     {
         $record = $this->store->productRecordByPublicId($publicId);

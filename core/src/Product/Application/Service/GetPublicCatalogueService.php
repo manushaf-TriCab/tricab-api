@@ -143,17 +143,37 @@ final class GetPublicCatalogueService
      */
     private function enrichTreeWithEffectiveProducts(array $tree, ?string $regionCode, bool $includeProducts): array
     {
+        $directHasProducts = [];
+        $this->collectDirectHasProducts($tree, $directHasProducts);
+        $summary = $this->effectiveProducts->summarizePublicNodes($directHasProducts, $regionCode, $includeProducts);
+
+        return $this->applyEffectiveProducts($tree, $summary);
+    }
+
+    /**
+     * @param list<PublicCatalogueTreeNode> $tree
+     * @param array<string, bool> $out
+     */
+    private function collectDirectHasProducts(array $tree, array &$out): void
+    {
+        foreach ($tree as $node) {
+            $out[$node->publicId] = $node->hasProducts;
+            $this->collectDirectHasProducts($node->children, $out);
+        }
+    }
+
+    /**
+     * @param list<PublicCatalogueTreeNode> $tree
+     * @param array{cards: array<string, list<PublicCatalogueProductCard>>, hasProducts: array<string, bool>} $summary
+     * @return list<PublicCatalogueTreeNode>
+     */
+    private function applyEffectiveProducts(array $tree, array $summary): array
+    {
         $out = [];
         foreach ($tree as $node) {
-            $children = $this->enrichTreeWithEffectiveProducts($node->children, $regionCode, $includeProducts);
-            $products = $includeProducts
-                ? $this->effectiveProducts->listPublicProductCards($node->publicId, $regionCode)
-                : [];
-            $hasProducts = $this->effectiveProducts->hasPublicVisibleProducts(
-                $node->publicId,
-                $node->hasProducts,
-                $regionCode,
-            );
+            $children = $this->applyEffectiveProducts($node->children, $summary);
+            $products = $summary['cards'][$node->publicId] ?? [];
+            $hasProducts = $summary['hasProducts'][$node->publicId] ?? false;
             $out[] = new PublicCatalogueTreeNode(
                 publicId: $node->publicId,
                 nodeCode: $node->nodeCode,

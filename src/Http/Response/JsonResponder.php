@@ -21,13 +21,20 @@ final class JsonResponder
         ], $status, $headers);
     }
 
+    /**
+     * @param array<string, string> $headers
+     */
     public function notModified(
         string $etag,
         string $cacheControl = 'public, max-age=60, stale-while-revalidate=120',
+        array $headers = [],
     ): ResponseInterface {
-        $response = new Response(304);
+        $response = (new Response(304))->withHeader('ETag', $etag)->withHeader('Cache-Control', $cacheControl);
+        foreach ($headers as $name => $value) {
+            $response = $response->withHeader($name, $value);
+        }
 
-        return $response->withHeader('ETag', $etag)->withHeader('Cache-Control', $cacheControl);
+        return $response;
     }
 
     /**

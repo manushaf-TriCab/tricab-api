@@ -535,6 +535,26 @@ final class InMemoryCatalogueNavigationRepository implements CatalogueNavigation
         return $out;
     }
 
+    public function listNodeProductsForNodes(array $nodePublicIds, bool $activeOnly = false): array
+    {
+        $out = [];
+        foreach ($nodePublicIds as $nodePublicId) {
+            $out[$nodePublicId] = $this->listNodeProducts($nodePublicId, $activeOnly);
+        }
+
+        return $out;
+    }
+
+    public function listNodeProductStylesForNodes(array $nodePublicIds, bool $activeOnly = false): array
+    {
+        $out = [];
+        foreach ($nodePublicIds as $nodePublicId) {
+            $out[$nodePublicId] = $this->listNodeProductStyles($nodePublicId, $activeOnly);
+        }
+
+        return $out;
+    }
+
     public function listNodeProductStyles(string $nodePublicId, bool $activeOnly = false): array
     {
         $out = [];

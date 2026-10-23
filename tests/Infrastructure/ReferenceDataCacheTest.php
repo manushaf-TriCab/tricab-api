@@ -40,6 +40,28 @@ final class ReferenceDataCacheTest extends TestCase
         self::assertNull($cache->getCatalogue($nz));
     }
 
+    public function test_node_and_tree_keys_share_catalogue_invalidation_with_the_panel(): void
+    {
+        $cache = new ReferenceDataCache(new ArrayApplicationCache());
+        $node = $cache->catalogueKey('node', ['node' => 'control-cables', 'tabSlug' => null, 'regionCode' => 'AU']);
+        $nodeNz = $cache->catalogueKey('node', ['node' => 'control-cables', 'tabSlug' => null, 'regionCode' => 'NZ']);
+        $tree = $cache->catalogueKey('tree', ['tabSlug' => 'products', 'regionCode' => 'AU', 'includeProducts' => '0']);
+        $panel = $cache->cataloguePanelKey(['tabSlug' => 'products', 'regionCode' => 'AU', 'includeProducts' => '0']);
+
+        self::assertStringStartsWith('catalogue:node:', $node);
+        self::assertStringStartsWith('catalogue:tree:', $tree);
+        self::assertNotSame($node, $nodeNz);
+        self::assertNotSame($tree, $panel);
+
+        foreach ([$node, $nodeNz, $tree, $panel] as $key) {
+            $cache->setCatalogue($key, ['data' => ['key' => $key]]);
+        }
+        $cache->invalidateCatalogue();
+        foreach ([$node, $nodeNz, $tree, $panel] as $key) {
+            self::assertNull($cache->getCatalogue($key));
+        }
+    }
+
     public function test_expired_items_are_not_returned(): void
     {
         $store = new ArrayApplicationCache();

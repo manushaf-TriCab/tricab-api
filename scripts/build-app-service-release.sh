@@ -79,6 +79,7 @@ for required in \
     "$web_root/package.json" \
     "$web_root/package-lock.json" \
     "$api_root/deploy/app-service/default" \
+    "$api_root/deploy/app-service/nginx-compression.conf" \
     "$api_root/deploy/app-service/startup.sh" \
     "$api_root/deploy/app-service/webjobs/rfq-reader/run.sh" \
     "$api_root/bin/run-rfq-reader-jobs.php" \
@@ -333,6 +334,8 @@ api_public_root="$release_root/api"
 mkdir -p "$api_public_root"
 cp "$api_root/deploy/app-service/api/index.php" "$api_public_root/index.php"
 cp "$api_root/deploy/app-service/default" "$release_root/default"
+# Inert until `default` includes it; see docs/deployment/response-compression.md.
+cp "$api_root/deploy/app-service/nginx-compression.conf" "$release_root/nginx-compression.conf"
 cp "$api_root/deploy/app-service/startup.sh" "$release_root/startup.sh"
 
 # The RFQ reader worker and the continuous WebJob that runs it on the existing
