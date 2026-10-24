@@ -11,10 +11,12 @@
 # "true", so the job ships dark and is switched on with an app setting.
 #
 # The python lives at app/cbsync with its dependencies vendored beside it,
-# because this image has python3 3.11 but no venv (see startup.sh).
+# because this image has python3 3.11 but no venv (see startup.sh). Anything the
+# finder's tree holds at the identical version (cryptography, cffi, ...) is left
+# out of cbsync/_vendor at build time and found in python/_vendor, last on the path.
 set -u
 APP=/home/site/wwwroot/app/cbsync
-export PYTHONPATH="$APP:$APP/_vendor"
+export PYTHONPATH="$APP:$APP/_vendor:/home/site/wwwroot/app/python/_vendor"
 # Without this, Python block-buffers stdout into the WebJob log pipe, so a run's
 # output only appears when it ends, and never if a restart (any app-setting
 # change) kills it mid-run.

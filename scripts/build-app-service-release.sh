@@ -165,19 +165,18 @@ printf '{"api":"%s","web":"%s"}\n' "$api_revision" "$web_revision" > "$app_root/
 echo "    API $api_revision, website $web_revision"
 
 # Public content images (About / Technical / catalogue static copies) live under
-# public/media. PHP availability checks read app/public/media; nginx must also
-# serve the same tree at the site-root /media/ path (not under /api/v1).
+# public/media. nginx serves them at the site-root /media/ path (not under
+# /api/v1), and PHP's availability checks read that same copy: from the app at
+# <wwwroot>/app they resolve to ../media (Content\PublicMediaDirectory). One
+# copy only -- symlinks are forbidden in the archive.
 echo "==> Staging public media"
 media_src="$api_root/public/media"
 if [ ! -d "$media_src" ]; then
     echo "Required public media directory is missing: $media_src" >&2
     exit 1
 fi
-mkdir -p "$app_root/public"
-cp -R "$media_src" "$app_root/public/media"
 cp -R "$media_src" "$release_root/media"
 for required_media in \
-    "$app_root/public/media/about/melbourne-facility.png" \
     "$release_root/media/about/melbourne-facility.png" \
     "$release_root/media/technical/lugging/lugging-1.jpg"
 do
@@ -325,6 +324,21 @@ echo "    vendored $(wc -l < "$vendor_python/VENDORED.txt" | tr -d ' ') distribu
 # tricab_cable_rules exists to prevent, even when one of them is unreachable.
 rm -rf "$vendor_core/python"
 
+# Nor does the release need Core's development surface. Composer mirrors core/
+# wholesale; docs/ alone is 22 MB of migration reports and mappings that no
+# runtime code loads (autoload is src/ only, tests/ is autoload-dev).
+for dev_only in docs tests phpunit.xml phpunit.xml.dist phpstan.neon phpstan.neon.dist README.md .gitignore .github; do
+    rm -rf "${vendor_core:?}/$dev_only"
+done
+
+# Conservative prune of third-party packages: only directories that hold
+# documentation, tests or CI config, one level inside vendor/<org>/<pkg>. The
+# autoloader is classmap-authoritative and built from each package's autoload
+# paths, none of which is one of these, and dompdf's fonts live in lib/.
+find "$app_root/vendor" -mindepth 3 -maxdepth 3 -type d \
+    \( -name tests -o -name docs -o -name doc -o -name .github \) \
+    -prune -exec rm -rf {} + 2>/dev/null || true
+
 assert_no_symlinks "$staged_core"
 rm -rf "$staged_core"
 
@@ -393,6 +407,36 @@ rm -rf "$cbsync_root/_vendor/bin"
 assert_linux_x86_64 "$cbsync_root/_vendor"
 find "$cbsync_root/_vendor" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
     | sort > "$cbsync_root/_vendor/VENDORED.txt"
+
+# Both trees resolve for the same interpreter and platform, so they share most
+# of their dependencies (cryptography alone is 15 MB). Drop from the sync's tree
+# every distribution that the finder's tree already holds at the identical
+# version; the WebJob's PYTHONPATH ends with ../python/_vendor to find them.
+# Matching is on the exact name-version, so a differing resolve keeps its own copy.
+python3 - "$vendor_python" "$cbsync_root/_vendor" <<'PY'
+import os, sys
+shared, own = sys.argv[1], sys.argv[2]
+have = {d for d in os.listdir(shared) if d.endswith('.dist-info')}
+dropped = []
+for dist in sorted(d for d in os.listdir(own) if d.endswith('.dist-info')):
+    if dist not in have:
+        continue
+    with open(os.path.join(own, dist, 'RECORD'), encoding='utf-8') as record:
+        names = [line.rsplit(',', 2)[0].strip('"') for line in record if line.strip()]
+    for name in names:
+        if name.startswith('..'):
+            continue
+        path = os.path.normpath(os.path.join(own, name))
+        if path.startswith(own + os.sep) and os.path.isfile(path):
+            os.remove(path)
+    dropped.append(dist[:-len('.dist-info')])
+for root, dirs, _files in os.walk(own, topdown=False):
+    if root != own and not os.listdir(root):
+        os.rmdir(root)
+with open(os.path.join(own, 'SHARED.txt'), 'w') as out:
+    out.write('\n'.join(dropped) + '\n')
+print('    cbsync shares %d distributions with the finder' % len(dropped))
+PY
 cp "$api_root/deploy/app-service/webjobs/cablebuilder-sync/run.sh" "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
 

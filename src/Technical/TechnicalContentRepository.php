@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Technical;
 
 use RuntimeException;
+use TriCab\Api\Content\PublicMediaDirectory;
 use TriCab\Api\Support\JsonValue;
 
 /**
@@ -25,7 +26,7 @@ final class TechnicalContentRepository
 
         return new self(
             $root . '/resources/technical/v1',
-            $root . '/public/media/technical',
+            PublicMediaDirectory::forProjectRoot($root) . '/media/technical',
         );
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Product\Catalogue;
 
+use TriCab\Api\Content\PublicMediaDirectory;
 use TriCab\Core\Product\Application\Service\CatalogueWebsiteAssetPath;
 
 /**
@@ -23,7 +24,7 @@ final class CatalogueStaticMediaResolver
 
     public static function instance(): self
     {
-        return self::$instance ??= new self(dirname(__DIR__, 3) . '/public');
+        return self::$instance ??= new self(PublicMediaDirectory::forProjectRoot(dirname(__DIR__, 3)));
     }
 
     public static function setInstance(?self $instance): void

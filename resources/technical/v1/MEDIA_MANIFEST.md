@@ -74,5 +74,5 @@ Optional UI glyphs present in legacy (not referenced by article JSON): `wrong.pn
 ## Deploy note
 
 Media files live under `public/media/technical/` in this repository. The App
-Service release builder stages them to both `app/public/media` (PHP
-`available` checks) and site-root `/media` (nginx static serving).
+Service release builder stages one copy at site-root `/media`, which nginx
+serves and PHP's `available` checks read as `../media` from `app/`.
