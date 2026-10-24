@@ -104,6 +104,72 @@ Saves made through `tricab.ai` land on the `core` slot, which also runs the WebJ
 If the RFQ mail reader must see a change made elsewhere sooner, clear its copy on
 `core` by deleting the cache entry or saving again from `tricab.ai`.
 
+## Which app settings still matter
+
+Until the first save in an environment, its App Service settings (or `.env`) are
+still the live source: the page shows them, and changing one in Azure works as
+before. The first save captures the current values as that environment's
+baseline. From then on:
+
+| Setting | Still maintained as an app setting? |
+|---|---|
+| The notification addresses in the Notifications tab | No. The page and the captured baseline apply; editing the app setting has no effect. |
+| `FOUNDRY_MODEL_DEPLOYMENT`, `RFQ_MAIL_CLASSIFIER_MODEL`, `CABLEFIT_RESEARCH_MODEL` | No, as above. |
+| Python service models (`RFQ_READER_MODEL`, `RFQ_READER_NORMALIZER_MODEL`, `RFQ_NORMALIZER_MODEL`, `RFQ_TABLE_SHAPE_MODEL`, `OPENROUTER_MODEL`, `VISION_OCR_PRIMARY_MODEL`, `VISION_OCR_ESCALATION_MODEL`) | Yes, unless the task has a model chosen in the page. The services keep their own setting otherwise. |
+| Finance AI models | Never were app settings: code defaults, or the page. |
+| Secrets, keys, endpoints, on/off switches and modes (`FOUNDRY_ENDPOINT`, `NPR_MAIL_MODE`, `RFQ_MAIL_READ_ENABLED`, ...) | Yes, always. They are deliberately not in the page. |
+| Addresses the page does not cover: `NPR_MAIL_SENDER`, `FINANCE_TASK_MAIL_FROM`, `POSTMARK_FROM_NAME` | Yes. Candidates to add to the page. |
+
+Once the page has been in use for a while, remove the app settings in the first
+two rows from each environment, so nobody edits a value that no longer applies.
+This is safe after the first save: the captured baseline no longer reads them.
+Each `APP_ENV` has its own baseline, so development and local `.env` files keep
+applying until someone saves in that environment.
+
+## Adding a setting for a new app
+
+Settings are typed, not a free key/value list, so a new one is a code change and a
+deploy. No database change is needed: overrides are stored as JSON. After the
+deploy the setting appears with the environment's current value as its baseline,
+and from then on an administrator changes it in the page.
+
+**A new AI task (one model choice)**
+
+1. `src/PlatformSettings/PlatformSettingsService.php`: add the key to
+   `PHP_TASKS` (PHP calls the model), `PYTHON_TASK_ENV` (a Python service
+   setting, mapped to its environment variable) or `FINANCE_PURPOSES` (a finance
+   AI purpose), and give it a baseline in `defaults()`: what the app uses today.
+2. `PlatformModelCatalog::requirements()`: the provider (`foundry` or
+   `openrouter`) and the capabilities it needs (`text`, `vision`, `structured`,
+   `decisions`), so only compatible models can be chosen.
+3. Make the app use it. PHP: add the key to the list in
+   `Settings::withPlatformOverrides()` and read the `Settings` property, or pass
+   `$settings->platformAiModels['<key>']` to the client. Python: use the model the
+   API sends with each request, as the RFQ parser (`rfq_parser/model_settings.py`),
+   finance AI (`model`) and product finder (`runtimeModel`) do.
+4. Web: add a label to the task list in `PlatformSettingsPage.tsx`. Without one the
+   task still shows, under its raw key.
+
+**A new notification address or mailbox**
+
+1. A `Settings` property for it (default `''`), added to
+   `PlatformSettingsService::RECIPIENTS` and to the address list in
+   `Settings::withPlatformOverrides()`. The app reads the property. A new address
+   needs no app setting: its baseline is blank and the page sets it.
+2. Web: add a label to the notifications list in `PlatformSettingsPage.tsx`.
+
+**For either**
+
+- If the app runs as a script or WebJob, build its container with
+  `ContainerFactory::create(..., hydratePlatformSettings: true)`, once per pass or
+  job. A worker that runs often and must leave `tc` asleep also passes
+  `refreshPlatformSettings: false` (see "Runtime cache").
+- Test the baseline, the validation (unknown key, incompatible model, invalid
+  address) and that a saved value reaches the app.
+- One key appears in up to four places: the service, the catalog, `Settings` and
+  the web page. A missed one fails quietly: a missing label shows the raw key, and
+  a key missing from `withPlatformOverrides()` is saved but never used by PHP.
+
 ## Non-browser verification
 
 Run the platform settings endpoint/service/catalog/runtime-cache tests, existing configuration
