@@ -8,6 +8,18 @@ and records the result. **Shadow mode only:** it creates no drafts and sends not
 Code: `bin/run-rfq-mail-reader.php` (one pass), `deploy/app-service/webjobs/rfq-mail/run.sh` (the loop),
 `core/src/Mail/Intake/` (the pass, pre-filter, classifier contract), `src/Mail/Intake/` (Graph, Foundry, files).
 
+## Mailbox changes
+
+**The reader does not change the Outlook mailbox.** Its Graph mail calls are GETs: delta pages, messages,
+headers and attachments. It does not mark messages read or unread, set flags or categories, move or delete
+messages, create Outlook drafts, or send replies. Opening a body in `/inbox` also leaves Outlook unchanged.
+The inbox's Mark read / Mark unread actions update `[mail]` only.
+
+This describes the code's behavior, not the app registration's permission boundary. The shared `GRAPH_*` app
+also holds `Mail.ReadWrite` and `Mail.Send`; the reader does not use those write permissions. As checked on
+19 Oct 2026, restricting the shared app's mailbox access is still an Exchange-admin follow-up; the scope must
+include the mailboxes used by its other features as well as melbourne@.
+
 ## How a pass behaves
 
 - It asks **Graph only**. It touches the database (serverless `tc`) only when Graph returns messages, plus a
