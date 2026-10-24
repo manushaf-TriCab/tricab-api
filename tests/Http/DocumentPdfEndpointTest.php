@@ -7,9 +7,7 @@ namespace TriCab\Api\Tests\Http;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ServerRequestInterface;
-use TriCab\Api\DocumentGeneration\Rendering\DompdfPdfRenderer;
 use TriCab\Api\Tests\TestAppFactory;
-use TriCab\Core\DocumentGeneration\Contract\PdfRenderer;
 
 final class DocumentPdfEndpointTest extends TestCase
 {
@@ -111,14 +109,19 @@ final class DocumentPdfEndpointTest extends TestCase
         self::assertSame('UNSUPPORTED_OCR_MEDIA_TYPE', $error['code']);
     }
 
-    public function test_container_binds_core_renderer_contract_to_dompdf_adapter(): void
+    public function test_rejects_unsupported_ocr_template(): void
     {
         $app = TestAppFactory::create();
 
-        self::assertInstanceOf(
-            DompdfPdfRenderer::class,
-            $app->getContainer()->get(PdfRenderer::class),
-        );
+        $response = $app->handle($this->requestWithBody('.RET.C:\\legacy\\unknown.ocr'));
+        $payload = TestAppFactory::json($response);
+
+        self::assertSame(422, $response->getStatusCode());
+        self::assertIsArray($payload['error']);
+        /** @var array<string, mixed> $error */
+        $error = $payload['error'];
+        self::assertSame('INVALID_OCR_STREAM', $error['code']);
+        self::assertSame('The OCR template unknown.ocr is not supported.', $error['message']);
     }
 
     private function requestWithBody(string $contents): ServerRequestInterface

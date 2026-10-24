@@ -1,6 +1,11 @@
 name: Set up API
 description: Install PHP and Composer dependencies for tricab-api. Check out the repository into ./tricab-api first.
 
+inputs:
+  docgen-deploy-key:
+    description: The read-only deploy key for the private tricab/docgen repository (the DOCGEN_DEPLOY_KEY secret)
+    required: true
+
 runs:
   using: composite
   steps:
@@ -11,6 +16,11 @@ runs:
         extensions: pdo_sqlsrv, sqlsrv
         coverage: none
         tools: composer:v2
+
+    - name: Load the docgen deploy key
+      uses: ./tricab-api/.github/actions/docgen-ssh
+      with:
+        deploy-key: ${{ inputs.docgen-deploy-key }}
 
     - name: Locate Composer download cache
       id: composer-cache
@@ -28,4 +38,5 @@ runs:
     - name: Install API dependencies
       shell: bash
       working-directory: tricab-api
-      run: composer install --prefer-dist --no-interaction --no-progress
+      # No --prefer-dist: it would override the per-package `source` preference for docgen.
+      run: composer install --no-interaction --no-progress

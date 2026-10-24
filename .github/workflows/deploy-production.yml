@@ -26,6 +26,8 @@ jobs:
   api-checks:
     name: API checks
     uses: ./.github/workflows/api-checks.yml
+    secrets:
+      DOCGEN_DEPLOY_KEY: ${{ secrets.DOCGEN_DEPLOY_KEY }}
 
   website-revision:
     name: Resolve website revision
@@ -89,6 +91,11 @@ jobs:
           extensions: pdo_sqlsrv, sqlsrv
           coverage: none
           tools: composer:v2
+
+      - name: Load the docgen deploy key
+        uses: ./tricab-api/.github/actions/docgen-ssh
+        with:
+          deploy-key: ${{ secrets.DOCGEN_DEPLOY_KEY }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v5

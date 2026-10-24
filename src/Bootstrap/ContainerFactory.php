@@ -164,7 +164,7 @@ use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 
-use TriCab\Api\DocumentGeneration\Rendering\DompdfPdfRenderer;
+use TriCab\DocGen\DocGen;
 
 use TriCab\Api\Http\Action\DatabaseHealthAction;
 use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
@@ -764,9 +764,6 @@ use TriCab\Core\Shared\Persistence\ApplicationTransaction;
 use TriCab\Core\Shared\Time\Clock;
 use TriCab\Core\Shared\Time\SystemClock;
 
-use TriCab\Core\DocumentGeneration\Application\Handler\GenerateOcrPdfHandler;
-use TriCab\Core\DocumentGeneration\Contract\PdfRenderer;
-use TriCab\Core\DocumentGeneration\Legacy\LegacyStreamParser;
 
 
 final class ContainerFactory
@@ -805,7 +802,6 @@ final class ContainerFactory
         }
         $builder = new ContainerBuilder();
         $builder->useAutowiring(true);
-        $documentResources = dirname(__DIR__, 2) . '/resources/document-generation';
         $prompts = new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS');
 
         $definitions = [
@@ -2133,12 +2129,11 @@ final class ContainerFactory
             },
             ResolveAuthenticatedUserHandler::class => \DI\autowire(ResolveAuthenticatedUserHandler::class),
             IdentityResolutionService::class => \DI\autowire(IdentityResolutionService::class),
-            LegacyStreamParser::class => \DI\autowire(LegacyStreamParser::class),
-            DompdfPdfRenderer::class => \DI\create(DompdfPdfRenderer::class)
-                ->constructor($documentResources . '/templates', $documentResources . '/assets'),
-            PdfRenderer::class => \DI\get(DompdfPdfRenderer::class),
-            GenerateOcrPdfHandler::class => \DI\autowire(GenerateOcrPdfHandler::class),
-            \TriCab\Api\QuoteOrder\DocumentGeneration\QuoteDetailsToTcquLegacyStreamMapper::class => \DI\autowire(),
+            // tricab/docgen renders with the theme shipped in the package.
+            DocGen::class => \DI\create(DocGen::class),
+            \TriCab\DocGen\Legacy\OcrDocumentReader::class => \DI\create(\TriCab\DocGen\Legacy\OcrDocumentReader::class),
+            \TriCab\Api\DocumentGeneration\GenerateOcrPdfService::class => \DI\autowire(),
+            \TriCab\Api\QuoteOrder\DocumentGeneration\QuoteDetailsToDocGenQuoteMapper::class => \DI\autowire(),
             \TriCab\Api\QuoteOrder\DocumentGeneration\GenerateQuoteTemplatePdfService::class => \DI\autowire(),
             // release.json is written by scripts/build-app-service-release.sh.
             HealthAction::class => static fn (Container $container): HealthAction => new HealthAction(

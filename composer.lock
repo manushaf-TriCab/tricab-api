@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d94143633215c2685d616dee2c36abea",
+    "content-hash": "97b55c3b0f4cdfcbbb5c5b8b5cb7cf98",
     "packages": [
         {
             "name": "brick/math",
@@ -3747,12 +3747,68 @@
             "time": "2026-02-04T18:08:13+00:00"
         },
         {
+            "name": "tricab/docgen",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:tricab/docgen.git",
+                "reference": "f1332b850249dbaa58bfa9ebdd1e961bf68165a5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tricab/docgen/zipball/f1332b850249dbaa58bfa9ebdd1e961bf68165a5",
+                "reference": "f1332b850249dbaa58bfa9ebdd1e961bf68165a5",
+                "shasum": ""
+            },
+            "require": {
+                "dompdf/dompdf": "^3.1",
+                "ext-mbstring": "*",
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^11.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "TriCab\\DocGen\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "TriCab\\DocGen\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "analyse": [
+                    "phpstan analyse"
+                ],
+                "check": [
+                    "@analyse",
+                    "@test"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "TriCab-branded PDF documents (quotation, order confirmation, pick list) rendered with Dompdf.",
+            "support": {
+                "source": "https://github.com/tricab/docgen/tree/v0.1.0",
+                "issues": "https://github.com/tricab/docgen/issues"
+            },
+            "time": "2026-10-24T03:42:12+00:00"
+        },
+        {
             "name": "tricab/tricab-core",
             "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "core",
-                "reference": "44f7cebdfc92d36639740e6bcd5a3f591e412f9a"
+                "reference": "83cb92a206de58ee9787ba5eeff925d5e33130d7"
             },
             "require": {
                 "php": "^8.3"

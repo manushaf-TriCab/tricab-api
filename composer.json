@@ -14,6 +14,7 @@
         "setasign/fpdi": "^2.6",
         "slim/psr7": "^1.7",
         "slim/slim": "^4.14",
+        "tricab/docgen": "^0.1",
         "tricab/tricab-core": "dev-main",
         "vlucas/phpdotenv": "^5.6",
         "web-auth/webauthn-lib": "^5.2"
@@ -26,6 +27,10 @@
         {
             "type": "path",
             "url": "core"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/tricab/docgen.git"
         }
     ],
     "autoload": {

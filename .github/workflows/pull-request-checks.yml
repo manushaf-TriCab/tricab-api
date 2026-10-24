@@ -37,6 +37,8 @@ jobs:
   api-checks:
     name: API
     uses: ./.github/workflows/api-checks.yml
+    secrets:
+      DOCGEN_DEPLOY_KEY: ${{ secrets.DOCGEN_DEPLOY_KEY }}
 
   frontend-checks:
     name: Frontend

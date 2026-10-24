@@ -196,9 +196,11 @@ done
 echo "==> Installing PHP dependencies"
 (
     cd "$app_root"
+    # No --prefer-dist: CI asks for tricab/docgen from source (cloned over SSH
+    # with its deploy key) and --prefer-dist would override that. Tagged
+    # packages install from dist by default anyway.
     COMPOSER_MIRROR_PATH_REPOS=1 composer install \
         --no-dev \
-        --prefer-dist \
         --optimize-autoloader \
         --classmap-authoritative \
         --no-interaction
@@ -332,11 +334,12 @@ for dev_only in docs tests phpunit.xml phpunit.xml.dist phpstan.neon phpstan.neo
 done
 
 # Conservative prune of third-party packages: only directories that hold
-# documentation, tests or CI config, one level inside vendor/<org>/<pkg>. The
+# documentation, tests, CI config or a git checkout (a package installed from
+# source, like tricab/docgen in CI), one level inside vendor/<org>/<pkg>. The
 # autoloader is classmap-authoritative and built from each package's autoload
 # paths, none of which is one of these, and dompdf's fonts live in lib/.
 find "$app_root/vendor" -mindepth 3 -maxdepth 3 -type d \
-    \( -name tests -o -name docs -o -name doc -o -name .github \) \
+    \( -name tests -o -name docs -o -name doc -o -name .github -o -name .git \) \
     -prune -exec rm -rf {} + 2>/dev/null || true
 
 assert_no_symlinks "$staged_core"

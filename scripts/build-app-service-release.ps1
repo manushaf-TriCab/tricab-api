@@ -211,7 +211,7 @@ foreach ($devOnly in @('docs', 'tests', 'phpunit.xml', 'phpunit.xml.dist', 'phps
 # one level inside vendor/<org>/<pkg>, as in the .sh.
 Get-ChildItem -LiteralPath (Join-Path $appRoot 'vendor') -Directory |
     ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory } |
-    ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory -Force | Where-Object { $_.Name -in @('tests', 'docs', 'doc', '.github') } } |
+    ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory -Force | Where-Object { $_.Name -in @('tests', 'docs', 'doc', '.github', '.git') } } |
     ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force }
 
 # The product finder's Python. `app/core` is deleted immediately below because

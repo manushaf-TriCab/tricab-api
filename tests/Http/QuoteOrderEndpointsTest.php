@@ -82,7 +82,7 @@ final class QuoteOrderEndpointsTest extends TestCase
         self::assertStringStartsWith('%PDF', $body);
         self::assertGreaterThan(500, strlen($body));
         $strandingAsset = file_get_contents(
-            dirname(__DIR__, 2) . '/resources/document-generation/assets/conductor-stranding.jpg',
+            dirname(__DIR__, 2) . '/vendor/tricab/docgen/resources/assets/conductor-stranding.jpg',
         );
         self::assertNotFalse($strandingAsset);
         self::assertStringNotContainsString($strandingAsset, $body);

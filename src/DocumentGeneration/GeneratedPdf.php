@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TriCab\Core\DocumentGeneration\Application\DTO;
+namespace TriCab\Api\DocumentGeneration;
 
 final readonly class GeneratedPdf
 {
