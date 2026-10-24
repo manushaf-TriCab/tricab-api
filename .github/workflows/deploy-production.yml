@@ -151,7 +151,9 @@ jobs:
               exit 1
             fi
           done
-          scripts/build-app-service-release.sh --web-origin https://tricab.ai --skip-npm-ci
+          # same-origin: the bundle calls the API and MSAL on whichever host serves it, so this one
+          # package works on tricab.ai, the core slot and the tricab-ai staging slot alike.
+          scripts/build-app-service-release.sh --web-origin same-origin --skip-npm-ci
 
       - name: Upload release package
         uses: actions/upload-artifact@v4
@@ -223,4 +225,188 @@ jobs:
             fi
             sleep 10
           done
+          exit 1
+
+  # The same validated package also goes to the tricab-ai staging slot, the future production
+  # path (zone-redundant plan, swap into production). It does not gate the tricab.ai deploy above.
+  # When TRICAB_AI_SWAP_ENABLED is 'true' it then warms the slot and swaps it into production.
+  deploy-staging:
+    name: Deploy to tricab-ai staging and swap
+    needs: [api-checks, frontend-checks, build]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # One staging deploy + swap at a time, and a running one is never cancelled halfway
+    # (a cancelled run could leave the slots mid-swap or without the rollback).
+    concurrency:
+      group: tricab-ai-staging-swap
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    environment:
+      name: staging
+      url: https://tricab-ai-staging.azurewebsites.net
+    steps:
+      # tricab-ai has SCM basic auth off, so this signs in through Entra (OIDC) instead of a
+      # publish profile. Until the federated credential exists the job skips with a notice.
+      - name: Check Azure sign-in is configured
+        id: configured
+        env:
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+        shell: bash
+        run: |
+          if [ -z "$AZURE_CLIENT_ID" ] || [ -z "$AZURE_TENANT_ID" ] || [ -z "$AZURE_SUBSCRIPTION_ID" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Staging deploy skipped: AZURE_CLIENT_ID, AZURE_TENANT_ID or AZURE_SUBSCRIPTION_ID is not set."
+            echo "Staging deploy skipped: Azure OIDC variables are not set." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Skip if main has moved on
+        id: latest
+        if: steps.configured.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          tip="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)"
+          if [ "$tip" != "$GITHUB_SHA" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Not deploying ${GITHUB_SHA} to staging: main is now at ${tip}."
+          fi
+
+      - name: Download validated release package
+        if: steps.configured.outputs.skip != 'true' && steps.latest.outputs.skip != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: production-release
+          path: release
+
+      - name: Sign in to Azure
+        if: steps.configured.outputs.skip != 'true' && steps.latest.outputs.skip != 'true'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to the tricab-ai staging slot
+        if: steps.configured.outputs.skip != 'true' && steps.latest.outputs.skip != 'true'
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: tricab-ai
+          slot-name: staging
+          package: release/tricab-app-service.zip
+
+      - name: Verify staging health
+        if: steps.configured.outputs.skip != 'true' && steps.latest.outputs.skip != 'true'
+        shell: bash
+        run: |
+          for attempt in {1..18}; do
+            if body="$(curl --fail --silent --show-error --max-time 20 https://tricab-ai-staging.azurewebsites.net/health)"; then
+              live="$(jq -r '.revision.api // empty' <<<"$body")"
+              if [ "$live" = "$GITHUB_SHA" ]; then
+                echo "$body"
+                exit 0
+              fi
+              echo "Health check attempt ${attempt}: serving ${live:-an unstamped release}, not ${GITHUB_SHA}; retrying in 10 seconds."
+            else
+              echo "Health check attempt ${attempt} failed; retrying in 10 seconds."
+            fi
+            sleep 10
+          done
+          exit 1
+
+      # Everything below runs only once the swap is switched on (repository variable
+      # TRICAB_AI_SWAP_ENABLED=true). Before cutover the release stops at staging.
+      - name: Check the swap is enabled
+        id: swap
+        if: steps.configured.outputs.skip != 'true' && steps.latest.outputs.skip != 'true'
+        env:
+          TRICAB_AI_SWAP_ENABLED: ${{ vars.TRICAB_AI_SWAP_ENABLED }}
+        shell: bash
+        run: |
+          if [ "$TRICAB_AI_SWAP_ENABLED" = "true" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Swap to production skipped: TRICAB_AI_SWAP_ENABLED is not 'true'. The release is on tricab-ai staging only."
+            echo "Swap skipped: TRICAB_AI_SWAP_ENABLED is not 'true'. Release is on tricab-ai staging only." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # Warm the staging slot before it takes traffic. A failure here stops the job before any
+      # swap, so production is untouched. Set TRICAB_AI_WARMUP_PATHS (space separated) to change the routes.
+      - name: Warm staging routes
+        if: steps.swap.outputs.enabled == 'true'
+        env:
+          WARMUP_PATHS: ${{ vars.TRICAB_AI_WARMUP_PATHS || '/ /health' }}
+        shell: bash
+        run: |
+          for path in $WARMUP_PATHS; do
+            for attempt in 1 2 3; do
+              code="$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 30 "https://tricab-ai-staging.azurewebsites.net${path}" || true)"
+              echo "Warm-up ${path} attempt ${attempt}: HTTP ${code}"
+              case "$code" in 2??|3??) continue 2 ;; esac
+              sleep 5
+            done
+            echo "::error::Staging route ${path} is not healthy (last HTTP ${code}); not swapping."
+            exit 1
+          done
+
+      # Swap staging into production, confirm production now reports this commit, and swap
+      # straight back if it does not. Swapping again is the rollback: the previous release sits
+      # in the staging slot after a swap.
+      - name: Swap staging into production and verify
+        if: steps.swap.outputs.enabled == 'true'
+        env:
+          PROD_URL: ${{ vars.TRICAB_AI_PRODUCTION_URL || 'https://tricab-ai.azurewebsites.net' }}
+        shell: bash
+        run: |
+          verify() {
+            for attempt in {1..18}; do
+              if body="$(curl --fail --silent --show-error --max-time 20 "${PROD_URL}/health")"; then
+                live="$(jq -r '.revision.api // empty' <<<"$body")"
+                if [ "$live" = "$1" ]; then
+                  echo "$body"
+                  return 0
+                fi
+                echo "Production check ${attempt}: serving ${live:-an unstamped release}, not $1; retrying in 10 seconds."
+              else
+                echo "Production check ${attempt} failed; retrying in 10 seconds."
+              fi
+              sleep 10
+            done
+            return 1
+          }
+
+          # Remember what production serves now, so the rollback can be confirmed.
+          previous="$(curl --silent --max-time 20 "${PROD_URL}/health" | jq -r '.revision.api // empty' || true)"
+          echo "Production currently serves: ${previous:-unknown}"
+
+          if ! az webapp deployment slot swap --resource-group tricab-mel --name tricab-ai \
+              --slot staging --target-slot production; then
+            echo "::error::The slot swap command failed. Check the tricab-ai slots by hand; no swap-back was attempted."
+            exit 1
+          fi
+
+          if verify "$GITHUB_SHA"; then
+            echo "Swapped ${GITHUB_SHA} into tricab-ai production." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "::error::Production did not report ${GITHUB_SHA} after the swap. Swapping back."
+          if ! az webapp deployment slot swap --resource-group tricab-mel --name tricab-ai \
+              --slot staging --target-slot production; then
+            echo "::error::ROLLBACK FAILED: the swap back also failed. tricab-ai production may be serving a bad release. Intervene now."
+            echo "ROLLBACK FAILED: swap back failed. Check tricab-ai slots immediately." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          if [ -n "$previous" ] && verify "$previous"; then
+            echo "::error::Swap of ${GITHUB_SHA} failed verification and was rolled back; production serves ${previous} again."
+            echo "Swap rolled back: production serves ${previous} again." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error::ROLLBACK UNCONFIRMED: swapped back but could not confirm production health (previous: ${previous:-unknown}). Intervene now."
+            echo "ROLLBACK UNCONFIRMED: check tricab-ai production immediately." >> "$GITHUB_STEP_SUMMARY"
+          fi
           exit 1

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidatePattern('^https://[^/]+$')]
+    [ValidatePattern('^(https://[^/]+|same-origin)$')]
     [string] $WebOrigin = 'https://tc-web-core-e7b7gdbjgadjd3ff.australiasoutheast-01.azurewebsites.net',
 
     [switch] $SkipNpmCi

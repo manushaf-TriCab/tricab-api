@@ -42,8 +42,10 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-if ! printf '%s' "$WEB_ORIGIN" | grep -Eq '^https://[^/]+$'; then
-    echo "Web origin must look like https://host with no trailing path: $WEB_ORIGIN" >&2
+# same-origin: the bundle resolves its API and MSAL redirect host at runtime (tricab-web
+# src/config/appOrigin.ts), so one package serves every registered host.
+if [ "$WEB_ORIGIN" != same-origin ] && ! printf '%s' "$WEB_ORIGIN" | grep -Eq '^https://[^/]+$'; then
+    echo "Web origin must be same-origin or look like https://host with no trailing path: $WEB_ORIGIN" >&2
     exit 1
 fi
 
