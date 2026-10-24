@@ -57,6 +57,103 @@ else
     log "WARNING: $WWWROOT/default is missing; nginx left as shipped"
 fi
 
+# ── 1b. PHP runtime: OPcache + php-fpm pool ──────────────────────────────────
+#
+# Neither is shipped by the image in a useful shape. Measured on
+# mcr.microsoft.com/appsvc/php:8.3-fpm and :8.5-fpm (Debian 12 / Ubuntu 24.04,
+# identical paths and identical /bin/init_container.sh):
+#   opcache.max_accelerated_files=4000 (the release has ~10,000 PHP files, so
+#   the cache thrashes), memory_consumption=128, interned_strings_buffer=8,
+#   and php-fpm `pm.max_children = 5` -- five concurrent requests in total, while
+#   one assistant SSE turn or one long RFQ call holds a worker for minutes.
+#
+# How this gets applied without an app setting (PHP_INI_SCAN_DIR would be one):
+# init_container.sh runs "<startup command>; php-fpm;" in sequence, so php-fpm
+# starts AFTER this script returns and reads conf.d and php-fpm.d fresh. Nothing
+# needs reloading. The pool file is named zz-tricab.conf so it sorts after
+# zz-docker.conf and wins; it does not touch `listen`.
+#
+# Nothing here may fail the deployment: a missing directory skips with a log
+# line, and a pool file that php-fpm rejects is removed again.
+
+PHP_CONF_DIR="${PHP_INI_DIR:-/usr/local/etc/php}/conf.d"
+FPM_POOL_DIR=/usr/local/etc/php-fpm.d
+
+apply_php_runtime() {
+    if [ -d "$PHP_CONF_DIR" ]; then
+        # opcache.validate_timestamps stays ON deliberately. The deploy is an
+        # in-place zipdeploy and nothing here proves the container restarts on
+        # every one, so a stale-forever cache is a worse failure than the stat
+        # cost. revalidate_freq stays at the image's 60 s: the production
+        # workflow's /health SHA check already tolerates that, and a longer
+        # window would only delay the new release becoming visible. Revisit once
+        # a restart on every deploy is confirmed.
+        #
+        # max_accelerated_files: OPcache rounds up to the next prime (32531).
+        # Realpath cache: /home is network storage, so path resolution is the
+        # other per-request stat cost; the tree has no symlinks, so a 10 minute
+        # TTL is safe.
+        cat > "$PHP_CONF_DIR/zz-tricab.ini" <<'INI'
+; Written by startup.sh. Edit deploy/app-service/startup.sh, not this file.
+opcache.enable=1
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=32
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=1
+opcache.revalidate_freq=60
+realpath_cache_size=8M
+realpath_cache_ttl=600
+INI
+        log "PHP ini written to $PHP_CONF_DIR/zz-tricab.ini"
+    else
+        log "WARNING: $PHP_CONF_DIR is missing; PHP ini tuning skipped"
+    fi
+
+    if [ -d "$FPM_POOL_DIR" ] && command -v php-fpm >/dev/null 2>&1; then
+        # Sizing: the plans are P1mv3 / P2v3 (16 GB each). The Python services
+        # take about 1-1.5 GB (up to three gunicorns x 2 workers, ~150 MB each
+        # for the catalogue); nginx and the continuous WebJobs a little more. A
+        # PHP worker is typically 40-80 MB and capped by memory_limit (128 MB
+        # default), so 40 children is ~3 GB expected and 5 GB at the hard worst
+        # case, which still fits an 8 GB plan. Workers are held for a whole
+        # assistant SSE stream or RFQ call (nginx fastcgi_read_timeout 3600), so
+        # the image's 5 was the real concurrency ceiling. pm.max_requests recycles
+        # a worker after 500 requests to bound leaks (only ever between requests).
+        # No request_terminate_timeout: it would cut the SSE streams.
+        cat > "$FPM_POOL_DIR/zz-tricab.conf" <<'POOL'
+; Written by startup.sh. Edit deploy/app-service/startup.sh, not this file.
+[www]
+pm = dynamic
+pm.max_children = 40
+pm.start_servers = 8
+pm.min_spare_servers = 4
+pm.max_spare_servers = 12
+pm.max_requests = 500
+POOL
+        if php-fpm -t >>"$LOG" 2>&1; then
+            log "php-fpm pool override written to $FPM_POOL_DIR/zz-tricab.conf"
+        else
+            rm -f "$FPM_POOL_DIR/zz-tricab.conf"
+            log "WARNING: php-fpm rejected the pool override and it was removed; image defaults apply (pm.max_children=5)"
+        fi
+    else
+        log "WARNING: $FPM_POOL_DIR or php-fpm is missing; php-fpm pool tuning skipped"
+    fi
+
+    # Effective values, so the live ones can be confirmed after a deploy.
+    # `php -i` is the CLI SAPI; `php-fpm -i` is the FPM SAPI that serves
+    # requests (they can differ); the pool comes from `php-fpm -tt`.
+    local pat='^(opcache\.(memory_consumption|max_accelerated_files|interned_strings_buffer|validate_timestamps|revalidate_freq)|realpath_cache_(size|ttl)) '
+    log "effective PHP (cli): $(php -i 2>/dev/null | grep -E "$pat" | awk -F' => ' '{printf "%s=%s; ", $1, $2}')"
+    if command -v php-fpm >/dev/null 2>&1; then
+        log "effective PHP (fpm): $(php-fpm -i 2>/dev/null | grep -E "$pat" | awk -F' => ' '{printf "%s=%s; ", $1, $2}')"
+        log "effective php-fpm pool: $(php-fpm -tt 2>&1 | grep -E 'NOTICE:[[:space:]]+pm(\.(max_children|start_servers|min_spare_servers|max_spare_servers|max_requests))? =' | sed 's/.*NOTICE:[[:space:]]*//' | tr '\n' ';')"
+    fi
+    return 0
+}
+
+apply_php_runtime || log "PHP runtime tuning hit an error; continuing with the image defaults"
+
 # ── 2. the product finder ────────────────────────────────────────────────────
 
 start_finder() {
@@ -117,7 +214,10 @@ start_finder() {
         delay=2
         while true; do
             log "starting gunicorn on $BIND ($WORKERS workers)"
-            "$PYTHON_BIN" -m gunicorn \
+            # --preload + TRICAB_WSGI_WARM: load the catalogue once in the master and
+            # share it copy-on-write (see wsgi.py). Partial saving only.
+            env TRICAB_WSGI_WARM=1 "$PYTHON_BIN" -m gunicorn \
+                --preload \
                 --chdir "$APP_PYTHON" \
                 --bind "$BIND" \
                 --workers "$WORKERS" \
@@ -174,7 +274,10 @@ start_rfq_parser() {
             # --timeout above every deadline PHP sends (interactive 60 s, a read
             # 600 s), so the parser answers `timeout` itself rather than gunicorn
             # killing a worker mid-answer.
-            "$PYTHON_BIN" -m gunicorn \
+            # --preload + TRICAB_WSGI_WARM: one catalogue in the master, shared
+            # copy-on-write by the workers (see rfq_wsgi.py). Partial saving only.
+            env TRICAB_WSGI_WARM=1 "$PYTHON_BIN" -m gunicorn \
+                --preload \
                 --chdir "$APP_PYTHON" \
                 --bind "$RFQ_BIND" \
                 --workers "$RFQ_WORKERS" \
@@ -232,7 +335,11 @@ start_finance_ai() {
         delay=2
         while true; do
             log "starting the finance AI service on $FINANCE_AI_BIND ($FINANCE_AI_WORKERS workers)"
+            # --preload shares the imported modules only: this service loads no
+            # catalogue, and finance_wsgi registers purposes in memory at import
+            # (no sockets, threads or connections), so a fork is safe.
             "$PYTHON_BIN" -m gunicorn \
+                --preload \
                 --chdir "$APP_PYTHON" \
                 --bind "$FINANCE_AI_BIND" \
                 --workers "$FINANCE_AI_WORKERS" \

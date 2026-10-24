@@ -109,9 +109,13 @@ directory and the bind address.
 | `PRODUCT_FINDER_ENABLED` | `false` | Off until the Python service is actually running. |
 | `PRODUCT_FINDER_BASE_URL` | `http://127.0.0.1:8001` | Loopback only; enforced at boot. |
 | `PRODUCT_FINDER_TIMEOUT_SECONDS` | `20` | Longer than the shared HTTP default: the first request loads an 18,994-product catalogue. |
-| `PRODUCT_FINDER_WORKERS` | `2` | Read by `startup.sh`. Each worker holds its own catalogue, ≈150 MB. |
+| `PRODUCT_FINDER_WORKERS` | `2` | Read by `startup.sh`. Each worker holds its own catalogue, ≈150 MB, less than that since gunicorn runs with `--preload` and `TRICAB_WSGI_WARM=1` (the master loads the catalogue once and forks; copy-on-write sharing is partial because refcounts dirty pages). |
 | `PRODUCT_FINDER_SIZING_SOURCE` | `json` | `json` \| `mysql` \| `auto`. Leave `json` — see below. |
 | `PRODUCT_FINDER_DATASET_DIR` | probed | The pinned snapshots. `startup.sh` sets it to `/home/site/wwwroot/app/resources/cable-calculator/v1`; set it by hand only for a layout neither depth covers. |
+
+### PHP runtime tuning
+
+`startup.sh` also writes `conf.d/zz-tricab.ini` (OPcache, realpath cache) and `php-fpm.d/zz-tricab.conf` (pool size) before php-fpm starts, because the image runs `<startup command>; php-fpm;` in sequence. The effective CLI and FPM values are logged to `startup.log` as `effective PHP (cli|fpm)` and `effective php-fpm pool`.
 
 ### Why the dataset path needs stating
 
