@@ -282,11 +282,27 @@ New-Item -ItemType Directory -Path $legacySyncJobRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\sync-rfq-legacy-store.php') -Destination (Join-Path $appRoot 'bin\sync-rfq-legacy-store.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\rfq-legacy-sync\run.sh') -Destination (Join-Path $legacySyncJobRoot 'run.sh') -Force
 
+# Continuous WebJobs run on every instance by default; each job ships a settings.job with is_singleton.
+foreach ($jobDir in Get-ChildItem -LiteralPath (Join-Path $releaseRoot 'App_Data\jobs\continuous') -Directory) {
+    $jobSettings = Join-Path $apiRoot ('deploy\app-service\webjobs\' + $jobDir.Name + '\settings.job')
+    if (-not (Test-Path -LiteralPath $jobSettings -PathType Leaf)) {
+        throw "WebJob is missing its settings.job: $jobSettings"
+    }
+    Copy-Item -LiteralPath $jobSettings -Destination (Join-Path $jobDir.FullName 'settings.job') -Force
+}
+
 if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
 }
 
-Compress-Archive -Path (Join-Path $releaseRoot '*') -DestinationPath $zipPath -CompressionLevel Optimal
+# Not Compress-Archive: Windows PowerShell 5.1 stores entries as app\bin\x.php, which the Linux
+# App Service unpacks as literal backslash names and the deployment fails. Windows' bsdtar writes
+# forward slashes. Called by full path because Git for Windows puts a GNU tar without zip on PATH.
+$tarExe = Join-Path $env:SystemRoot 'System32\tar.exe'
+& $tarExe -a -c -f $zipPath -C $releaseRoot .
+if ($LASTEXITCODE -ne 0) {
+    throw "tar failed with exit code $LASTEXITCODE."
+}
 
 $zip = Get-Item -LiteralPath $zipPath
 Write-Output "Release directory: $releaseRoot"

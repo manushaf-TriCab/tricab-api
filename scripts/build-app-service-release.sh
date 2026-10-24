@@ -403,6 +403,17 @@ cp "$api_root/bin/sync-rfq-legacy-store.php" "$app_root/bin/sync-rfq-legacy-stor
 cp "$api_root/deploy/app-service/webjobs/rfq-legacy-sync/run.sh" "$release_root/App_Data/jobs/continuous/rfq-legacy-sync/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/rfq-legacy-sync/run.sh"
 
+# Continuous WebJobs run on every instance by default; on a scaled-out plan that means every mail
+# or sync pass runs once per instance. Each job ships a settings.job with is_singleton.
+for job_dir in "$release_root"/App_Data/jobs/continuous/*/; do
+    job_settings="$api_root/deploy/app-service/webjobs/$(basename "$job_dir")/settings.job"
+    if [ ! -f "$job_settings" ]; then
+        echo "WebJob is missing its settings.job: $job_settings" >&2
+        exit 1
+    fi
+    cp "$job_settings" "$job_dir/settings.job"
+done
+
 # Nothing in the archive may be a symlink -- App Service unpacks it verbatim.
 assert_no_symlinks "$release_root"
 

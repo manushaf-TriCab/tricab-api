@@ -1,0 +1,6 @@
+# Files that run or are read on the Linux App Service must keep LF line endings,
+# even in a Windows checkout with core.autocrlf=true. With CRLF, startup.sh dies on
+# its first line, nginx falls back to the image default and MSAL popup sign-in hangs.
+*.sh text eol=lf
+*.job text eol=lf
+deploy/app-service/default text eol=lf
