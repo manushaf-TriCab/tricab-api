@@ -18,6 +18,8 @@ runs:
       shell: bash
       env:
         DOCGEN_DEPLOY_KEY: ${{ inputs.deploy-key }}
+        # Authenticated: anonymous api.github.com calls share a 60/hour limit per runner IP and got 403s.
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         if [ -z "$DOCGEN_DEPLOY_KEY" ]; then
           echo "The DOCGEN_DEPLOY_KEY secret is not set; Composer cannot install the private tricab/docgen package." >&2
@@ -28,7 +30,9 @@ runs:
         printf '%s\n' "$DOCGEN_DEPLOY_KEY" > ~/.ssh/docgen_deploy_key
         chmod 600 ~/.ssh/docgen_deploy_key
         # GitHub's published host keys, so the first connection is verified rather than trusted blindly.
-        curl -fsSL https://api.github.com/meta | jq -r '.ssh_keys[] | "github.com " + .' >> ~/.ssh/known_hosts
+        curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
+          -H "Authorization: Bearer $GITHUB_TOKEN" \
+          https://api.github.com/meta | jq -r '.ssh_keys[] | "github.com " + .' >> ~/.ssh/known_hosts
         cat >> ~/.ssh/config <<'EOF'
         Host github.com
           IdentityFile ~/.ssh/docgen_deploy_key
