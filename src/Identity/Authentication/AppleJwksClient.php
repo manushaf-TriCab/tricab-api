@@ -199,23 +199,7 @@ final class AppleJwksClient implements AppleJwksProvider
      */
     private static function captureResponseHeaders(): array
     {
-        if (function_exists('http_get_last_response_headers')) {
-            $headers = http_get_last_response_headers();
-            if (!is_array($headers)) {
-                return [];
-            }
-
-            $lines = [];
-            foreach ($headers as $line) {
-                if (is_string($line)) {
-                    $lines[] = $line;
-                }
-            }
-
-            return $lines;
-        }
-
-        return [];
+        return http_get_last_response_headers() ?? [];
     }
 
     /**

@@ -76,7 +76,7 @@ final class CheckRfqReadinessAction
                 if ($token !== null && (!is_string($token) || $token === '')) {
                     return $this->responder->error('RFQ_INPUT_INVALID', 'parseToken must be the match, or null for lines typed in.', 422);
                 }
-                $view = $this->review->previewNew($actor, $user->emailAddress, $token, QuoteHeaderEdit::fromInput($body['header'] ?? null), $lines ?? [], $id);
+                $view = $this->review->previewNew($actor, $user->emailAddress, $token, QuoteHeaderEdit::fromInput($body['header'] ?? null), $lines, $id);
             } else {
                 $header = array_key_exists('header', $body) ? QuoteHeaderEdit::fromInput($body['header']) : null;
                 $view = $this->review->previewDraft($actor, $user->emailAddress, $publicId, $header, $lines, $id);

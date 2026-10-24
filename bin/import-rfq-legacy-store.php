@@ -99,9 +99,9 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => true,
-        PDO::MYSQL_ATTR_MULTI_STATEMENTS => false,
-        PDO::MYSQL_ATTR_SSL_CA => '',
-        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+        \Pdo\Mysql::ATTR_MULTI_STATEMENTS => false,
+        \Pdo\Mysql::ATTR_SSL_CA => '',
+        \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT => false,
     ]);
     $mysql->exec("SET NAMES utf8mb4");
     $mysql->exec('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');

@@ -98,7 +98,6 @@ curl_setopt_array($ch, [
 ]);
 $raw = curl_exec($ch);
 $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
 echo "putHttp={$status}\n";
 if ($status < 200 || $status >= 300) {
     fwrite(STDERR, "FAIL: Blob PUT failed (redacted body).\n");

@@ -52,7 +52,6 @@ function postCalculate(string $apiBase, array $body): array
     $raw = curl_exec($ch);
     $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $err = curl_error($ch);
-    curl_close($ch);
 
     if ($raw === false) {
         return ['httpStatus' => 0, 'error' => $err, 'body' => null];
@@ -406,7 +405,6 @@ function concurrentPosts(string $apiBase, array $body, int $count): array
     foreach ($handles as $ch) {
         $statuses[] = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_multi_remove_handle($mh, $ch);
-        curl_close($ch);
     }
     curl_multi_close($mh);
 

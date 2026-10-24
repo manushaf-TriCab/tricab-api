@@ -43,20 +43,20 @@ final class ReadOnlyMysqlConnectionFactory
                 // Named placeholders + native MySQL prepares break SHOW / some meta reads.
                 PDO::ATTR_EMULATE_PREPARES => true,
             ];
-            if (defined('PDO::MYSQL_ATTR_MULTI_STATEMENTS')) {
-                $options[PDO::MYSQL_ATTR_MULTI_STATEMENTS] = false;
+            if (defined('Pdo\\Mysql::ATTR_MULTI_STATEMENTS')) {
+                $options[\Pdo\Mysql::ATTR_MULTI_STATEMENTS] = false;
             }
             $normalizedSsl = $sslMode !== null ? strtolower($sslMode) : null;
             if (
                 $normalizedSsl !== null
                 && in_array($normalizedSsl, ['required', 'verify_ca', 'verify_identity', 'true', '1'], true)
-                && defined('PDO::MYSQL_ATTR_SSL_CA')
+                && defined('Pdo\\Mysql::ATTR_SSL_CA')
             ) {
                 // Azure Database for MySQL requires TLS. Empty CA + disabled verify
                 // uses system trust where available without shipping a PEM in-repo.
-                $options[PDO::MYSQL_ATTR_SSL_CA] = '';
-                if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
-                    $options[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+                $options[\Pdo\Mysql::ATTR_SSL_CA] = '';
+                if (defined('Pdo\\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')) {
+                    $options[\Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = false;
                 }
             }
             $pdo = new PDO($dsn, $user, $password, $options);

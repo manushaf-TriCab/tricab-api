@@ -90,7 +90,7 @@ final class RfqOutputAction
                 if ($token !== null && (!is_string($token) || $token === '')) {
                     return $this->responder->error('RFQ_INPUT_INVALID', 'parseToken must be the match, or null for lines typed in.', 422);
                 }
-                $view = $this->review->exportNew($actor, $user->emailAddress, $token, QuoteHeaderEdit::fromInput($body['header'] ?? null), $lines ?? [], $includePrices, $id);
+                $view = $this->review->exportNew($actor, $user->emailAddress, $token, QuoteHeaderEdit::fromInput($body['header'] ?? null), $lines, $includePrices, $id);
             } else {
                 $header = array_key_exists('header', $body) ? QuoteHeaderEdit::fromInput($body['header']) : null;
                 $view = $this->review->exportDraft($actor, $user->emailAddress, $publicId, $header, $lines, $includePrices, $id);

@@ -107,7 +107,7 @@ final class ExpenseAuBankFeedCsvParser
             if (trim($line) === '') {
                 continue;
             }
-            $out[] = str_getcsv($line);
+            $out[] = str_getcsv($line, ',', '"', '\\');
         }
 
         return $out;

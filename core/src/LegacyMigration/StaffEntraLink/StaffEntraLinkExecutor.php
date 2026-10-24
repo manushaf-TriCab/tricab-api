@@ -65,7 +65,7 @@ final class StaffEntraLinkExecutor
                 if (($result['externalIdentityCreated'] ?? false) === true) {
                     ++$externalIdentitiesCreated;
                 }
-                if (($result['userActivated'] ?? false) === true) {
+                if ($result['userActivated'] === true) {
                     ++$usersActivated;
                 }
                 ++$succeeded;

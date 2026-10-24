@@ -29,8 +29,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: tricab-api/var/cache/phpstan
-          key: phpstan-${{ runner.os }}-php83-${{ hashFiles('tricab-api/composer.lock', 'tricab-api/phpstan*.neon') }}-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: phpstan-${{ runner.os }}-php83-${{ hashFiles('tricab-api/composer.lock', 'tricab-api/phpstan*.neon') }}-
+          key: phpstan-${{ runner.os }}-php85-${{ hashFiles('tricab-api/composer.lock', 'tricab-api/phpstan*.neon') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: phpstan-${{ runner.os }}-php85-${{ hashFiles('tricab-api/composer.lock', 'tricab-api/phpstan*.neon') }}-
 
       - name: Set up API
         uses: ./tricab-api/.github/actions/setup-api

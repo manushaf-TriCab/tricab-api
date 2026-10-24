@@ -170,7 +170,6 @@ final class ApplyBatchC2StyleFieldMappingServiceTest extends TestCase
     private function invokePrivate(object $svc, string $method, array $args): mixed
     {
         $m = new ReflectionMethod($svc, $method);
-        $m->setAccessible(true);
 
         return $m->invokeArgs($svc, $args);
     }

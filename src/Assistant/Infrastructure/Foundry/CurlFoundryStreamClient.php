@@ -91,7 +91,6 @@ final readonly class CurlFoundryStreamClient implements FoundryStreamClient
         $ok = curl_exec($handle);
         $errno = curl_errno($handle);
         $error = curl_error($handle);
-        curl_close($handle);
 
         if ($failure !== null) {
             throw $failure;

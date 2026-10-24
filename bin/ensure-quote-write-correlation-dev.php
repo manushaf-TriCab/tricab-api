@@ -50,7 +50,7 @@ $opts = [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
 ];
 if (strtolower((string) ($config->sslMode ?? '')) === 'required') {
-    $opts[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+    $opts[\Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = false;
 }
 
 try {

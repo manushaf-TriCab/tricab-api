@@ -306,7 +306,7 @@ final class InMemoryProductCustomerViewRepository implements ProductCustomerView
             $definitionPublicId = (string) $definition['publicId'];
             $columns[] = new ProductCustomerViewMatrixColumn(
                 definitionPublicId: $definitionPublicId,
-                code: is_string($definition['code'] ?? null) ? $definition['code'] : '',
+                code: $definition['code'],
                 name: is_string($definition['name'] ?? null) ? $definition['name'] : 'Specification',
                 groupName: is_string($definition['groupName'] ?? null) ? $definition['groupName'] : null,
                 unit: is_string($definition['unit'] ?? null) ? $definition['unit'] : null,

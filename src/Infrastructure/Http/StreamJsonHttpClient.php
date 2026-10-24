@@ -138,17 +138,7 @@ final class StreamJsonHttpClient implements JsonMethodHttpClient
             throw new RuntimeException('HTTP request failed.');
         }
 
-        if (function_exists('http_get_last_response_headers')) {
-            $http_response_header = http_get_last_response_headers();
-        }
-        $responseHeaders = [];
-        if (is_array($http_response_header)) {
-            foreach ($http_response_header as $header) {
-                if (is_string($header)) {
-                    $responseHeaders[] = $header;
-                }
-            }
-        }
+        $responseHeaders = http_get_last_response_headers() ?? [];
 
         return [
             'status' => self::statusFromResponseHeaders($responseHeaders),

@@ -65,7 +65,7 @@ final readonly class CableFitHandoffService
 
         return new HandoffResult(
             self::MAPPING_VERSION,
-            $variantId ?? 'default',
+            $variantId,
             $mapped['construction'],
             $mapped['provenance'],
             $mapped['unresolvedRequirements'],

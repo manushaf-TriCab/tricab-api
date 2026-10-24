@@ -12,7 +12,7 @@ runs:
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.3'
+        php-version: '8.5'
         extensions: pdo_sqlsrv, sqlsrv
         coverage: none
         tools: composer:v2
@@ -32,8 +32,8 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ steps.composer-cache.outputs.dir }}
-        key: composer-${{ runner.os }}-php83-${{ hashFiles('tricab-api/composer.lock') }}
-        restore-keys: composer-${{ runner.os }}-php83-
+        key: composer-${{ runner.os }}-php85-${{ hashFiles('tricab-api/composer.lock') }}
+        restore-keys: composer-${{ runner.os }}-php85-
 
     - name: Install API dependencies
       shell: bash
