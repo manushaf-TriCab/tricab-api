@@ -34,11 +34,14 @@ set -u
 WWWROOT=/home/site/wwwroot
 APP_PYTHON="$WWWROOT/app/python"
 # The dependencies ship in the release, already resolved for this image's
-# CPython 3.11 on x86_64. There is no virtualenv and no pip at runtime: this
+# CPython on x86_64: `_vendor/cp311` for the PHP|8.3 image (Debian 12, python3
+# 3.11) and `_vendor/cp312` for PHP|8.5 (Ubuntu 24.04, python3 3.12), chosen
+# from `python3 -V` below. There is no virtualenv and no pip at runtime: this
 # image has python3 but not Debian's python3-venv, so `python3 -m venv` fails
 # with "ensurepip is not available" and no amount of retrying helps. The build
 # script vendors the wheels instead -- see docs/product-finder/DEPLOYMENT.md.
-VENDOR="$APP_PYTHON/_vendor"
+VENDOR_ROOT="$APP_PYTHON/_vendor"
+VENDOR="$VENDOR_ROOT/cp$(python3 -c 'import sys; print("%d%d" % sys.version_info[:2])' 2>/dev/null || echo unknown)"
 LOG_DIR=/home/LogFiles/product-finder
 BIND=127.0.0.1:8001
 WORKERS="${PRODUCT_FINDER_WORKERS:-2}"
@@ -173,22 +176,15 @@ start_finder() {
     log "using $PYTHON_BIN ($("$PYTHON_BIN" --version 2>&1))"
 
     if [ ! -d "$VENDOR/gunicorn" ]; then
-        log "ERROR: $VENDOR carries no gunicorn. The release zip was built without the vendored dependencies."
+        log "ERROR: $VENDOR carries no gunicorn. The release zip has no wheels for this image's Python (has: $(ls "$VENDOR_ROOT" 2>/dev/null | tr '\n' ' '))."
         return 1
     fi
     if [ -f "$VENDOR/VENDORED.txt" ]; then
         log "vendored dependencies: $(tr '\n' ' ' < "$VENDOR/VENDORED.txt")"
     fi
 
-    # The wheels are compiled for CPython 3.11. A different minor version on the
-    # image cannot import MarkupSafe's extension, and the failure would surface
-    # as a worker that dies on every request rather than a clear startup error.
-    local py_minor
-    py_minor="$("$PYTHON_BIN" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || echo unknown)"
-    if [ "$py_minor" != "3.11" ]; then
-        log "WARNING: vendored wheels target CPython 3.11 but this image runs $py_minor; rebuild the release with PY_VERSION=$py_minor"
-    fi
-
+    # Wheels are compiled per CPython minor version and VENDOR already points at
+    # the one matching this image. If it is absent the failure above says so.
     # PYTHONPATH carries both the dependencies and the finder itself, so
     # `wsgi:application` and `product_finder.app` resolve without a venv.
     export PYTHONPATH="$VENDOR:$APP_PYTHON"

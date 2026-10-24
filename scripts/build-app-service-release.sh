@@ -15,9 +15,13 @@ WEB_ORIGIN='https://tc-web-core-e7b7gdbjgadjd3ff.australiasoutheast-01.azurewebs
 SKIP_NPM_CI=0
 
 # The finder's Python dependencies are cross-compiled for the App Service image,
-# not for this build machine. Keep these in step with the image's interpreter --
-# `startup.log` records it as "using /usr/bin/python3 (Python 3.11.2)".
-PY_VERSION='3.11'
+# not for this build machine. One release serves both App Service images, so
+# wheels are built for each interpreter and startup.sh picks the matching
+# `_vendor/cp3XX` directory from `python3 -V`:
+#   PHP|8.3 (Debian 12)   python3 3.11
+#   PHP|8.5 (Ubuntu 24.04) python3 3.12
+# `startup.log` records the one in use as "using /usr/bin/python3 (Python 3.x.y)".
+PY_VERSIONS='3.11 3.12'
 PY_PLATFORM='manylinux2014_x86_64'
 
 while [ $# -gt 0 ]; do
@@ -260,26 +264,27 @@ done
 # target is the image's CPython 3.11 on x86_64 Linux, so the platform triple is
 # pinned and --only-binary is required for pip to honour it. MarkupSafe is the
 # one dependency with a native extension; the rest are pure Python.
-echo "==> Vendoring the finder's Python dependencies for $PY_PLATFORM / cp$PY_VERSION"
+echo "==> Vendoring the finder's Python dependencies for $PY_PLATFORM / cp(${PY_VERSIONS// /, })"
 vendor_python="$app_python/_vendor"
-python3 -m pip install \
-    --quiet \
-    --target "$vendor_python" \
-    --requirement "$api_root/core/python/requirements.txt" \
-    --platform "$PY_PLATFORM" \
-    --python-version "$PY_VERSION" \
-    --implementation cp \
-    --only-binary=:all:
-
-if [ ! -d "$vendor_python/gunicorn" ]; then
-    echo "Vendored dependencies are missing gunicorn: $vendor_python" >&2
-    exit 1
-fi
+for py_version in $PY_VERSIONS; do
+    python3 -m pip install \
+        --quiet \
+        --target "$vendor_python/cp${py_version/./}" \
+        --requirement "$api_root/core/python/requirements.txt" \
+        --platform "$PY_PLATFORM" \
+        --python-version "$py_version" \
+        --implementation cp \
+        --only-binary=:all:
+    if [ ! -d "$vendor_python/cp${py_version/./}/gunicorn" ]; then
+        echo "Vendored dependencies are missing gunicorn: $vendor_python/cp${py_version/./}" >&2
+        exit 1
+    fi
+done
 
 # Console scripts carry this build machine's shebang, so they would point at a
 # python that does not exist on the instance. startup.sh runs `python3 -m
 # gunicorn` against PYTHONPATH instead; drop the scripts so nothing is tempted.
-rm -rf "$vendor_python/bin"
+rm -rf "$vendor_python"/cp*/bin
 
 # A wheel built for the wrong platform is the failure this step exists to
 # prevent, and it is silent until import time on the instance.
@@ -317,9 +322,12 @@ assert_linux_x86_64 "$vendor_python"
 
 # requirements.txt is unpinned, so record what this build actually resolved.
 # The release is the only place those versions are fixed.
-find "$vendor_python" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
-    | sort > "$vendor_python/VENDORED.txt"
-echo "    vendored $(wc -l < "$vendor_python/VENDORED.txt" | tr -d ' ') distributions"
+for py_version in $PY_VERSIONS; do
+    dir="$vendor_python/cp${py_version/./}"
+    find "$dir" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
+        | sort > "$dir/VENDORED.txt"
+    echo "    cp${py_version/./}: vendored $(wc -l < "$dir/VENDORED.txt" | tr -d ' ') distributions"
+done
 
 # Composer mirrored core/ wholesale, Python included. Drop that second copy:
 # two copies of the selection rules on one disk is the exact thing
@@ -394,29 +402,34 @@ cbsync_root="$app_root/cbsync"
 mkdir -p "$cbsync_root" "$release_root/App_Data/jobs/continuous/cablebuilder-sync"
 cp -R "$api_root/cablebuilder-sync/cbsync" "$cbsync_root/cbsync"
 find "$cbsync_root" -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
-python3 -m pip install \
-    --quiet \
-    --target "$cbsync_root/_vendor" \
-    --requirement "$api_root/cablebuilder-sync/requirements.txt" \
-    --platform "$PY_PLATFORM" \
-    --python-version "$PY_VERSION" \
-    --implementation cp \
-    --only-binary=:all:
-if [ ! -d "$cbsync_root/_vendor/azure/storage/blob" ]; then
-    echo "Vendored CableBuilder sync dependencies are missing azure-storage-blob: $cbsync_root/_vendor" >&2
-    exit 1
-fi
-rm -rf "$cbsync_root/_vendor/bin"
+for py_version in $PY_VERSIONS; do
+    dir="$cbsync_root/_vendor/cp${py_version/./}"
+    python3 -m pip install \
+        --quiet \
+        --target "$dir" \
+        --requirement "$api_root/cablebuilder-sync/requirements.txt" \
+        --platform "$PY_PLATFORM" \
+        --python-version "$py_version" \
+        --implementation cp \
+        --only-binary=:all:
+    if [ ! -d "$dir/azure/storage/blob" ]; then
+        echo "Vendored CableBuilder sync dependencies are missing azure-storage-blob: $dir" >&2
+        exit 1
+    fi
+    rm -rf "$dir/bin"
+    find "$dir" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
+        | sort > "$dir/VENDORED.txt"
+done
 assert_linux_x86_64 "$cbsync_root/_vendor"
-find "$cbsync_root/_vendor" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
-    | sort > "$cbsync_root/_vendor/VENDORED.txt"
-
 # Both trees resolve for the same interpreter and platform, so they share most
-# of their dependencies (cryptography alone is 15 MB). Drop from the sync's tree
-# every distribution that the finder's tree already holds at the identical
-# version; the WebJob's PYTHONPATH ends with ../python/_vendor to find them.
-# Matching is on the exact name-version, so a differing resolve keeps its own copy.
-python3 - "$vendor_python" "$cbsync_root/_vendor" <<'PY'
+# of their dependencies (cryptography alone is 15 MB). Per Python version, drop
+# from the sync's tree every distribution that the finder's tree already holds
+# at the identical version; the WebJob's PYTHONPATH ends with
+# ../python/_vendor/cpXY to find them. Matching is on the exact name-version,
+# so a differing resolve keeps its own copy.
+for py_version in $PY_VERSIONS; do
+    tag="cp${py_version/./}"
+    python3 - "$vendor_python/$tag" "$cbsync_root/_vendor/$tag" <<'PY'
 import os, sys
 shared, own = sys.argv[1], sys.argv[2]
 have = {d for d in os.listdir(shared) if d.endswith('.dist-info')}
@@ -438,8 +451,9 @@ for root, dirs, _files in os.walk(own, topdown=False):
         os.rmdir(root)
 with open(os.path.join(own, 'SHARED.txt'), 'w') as out:
     out.write('\n'.join(dropped) + '\n')
-print('    cbsync shares %d distributions with the finder' % len(dropped))
+print('    cbsync %s shares %d distributions with the finder' % (os.path.basename(own), len(dropped)))
 PY
+done
 cp "$api_root/deploy/app-service/webjobs/cablebuilder-sync/run.sh" "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
 
