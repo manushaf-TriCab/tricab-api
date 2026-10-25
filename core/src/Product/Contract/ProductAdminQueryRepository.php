@@ -24,6 +24,15 @@ interface ProductAdminQueryRepository
     public function findDetailByPublicId(ProductPublicId $publicId): ?ProductAdminDetail;
 
     /**
+     * findDetailByPublicId for many products at once. Keyed by ProductPublicId::toString();
+     * products that do not exist (or are deleted) are absent.
+     *
+     * @param list<ProductPublicId> $publicIds
+     * @return array<string, ProductAdminDetail>
+     */
+    public function findDetailsByPublicIds(array $publicIds): array;
+
+    /**
      * @return list<ProductVariantSummary>
      */
     public function listVariantSummariesByProduct(

@@ -12,6 +12,8 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Http\Response\PayloadEtag;
+use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
 use TriCab\Api\Product\Media\StableMediaUrlSigner;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
 use TriCab\Api\Product\Storage\ProductDevMediaUrlResolver;
@@ -28,6 +30,7 @@ final class GetPublicProductCustomerViewAction
         private readonly JsonResponder $responder,
         private readonly ProductManagementErrorMapper $errors,
         private readonly StableMediaUrlSigner $stableUrls,
+        private readonly CatalogueNavigationImageSigner $images,
     ) {
     }
 
@@ -38,14 +41,26 @@ final class GetPublicProductCustomerViewAction
         try {
             $slug = RouteParams::require($request, 'slug');
             $query = QueryParams::normalize($request->getQueryParams());
-            $regionCode = $this->regions->resolveCode($request, QueryParams::stringOrNull($query, 'regionCode'));
+            $region = $this->regions->resolve($request, QueryParams::stringOrNull($query, 'regionCode'));
+            $regionCode = $region['region']->code;
             $published = $this->getPublicProduct->bySlug($slug, $regionCode);
             $detail = $this->getCustomerView->execute($published->publicId, $regionCode);
 
-            return $this->responder->success($this->stableUrls->stabilizePayload(
+            $presented = $this->stableUrls->stabilizePayload(
                 ProductManagementDtoSerializer::customerViewDetail($detail, $this->devUrls),
                 $this->stableUrls->originFor($request),
-            ));
+            );
+            // A region taken from the cookie is not part of the URL, so shared caches must not store it.
+            $cacheControl = $this->images->cacheControl($region['source'] === 'explicit');
+            $etag = PayloadEtag::for($presented);
+            if (PayloadEtag::matches($request, $etag)) {
+                return $this->responder->notModified($etag, $cacheControl);
+            }
+
+            return $this->responder->success($presented, 200, [
+                'ETag' => $etag,
+                'Cache-Control' => $cacheControl,
+            ]);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

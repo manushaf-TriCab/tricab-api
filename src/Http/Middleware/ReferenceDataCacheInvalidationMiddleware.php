@@ -32,6 +32,25 @@ final class ReferenceDataCacheInvalidationMiddleware implements MiddlewareInterf
         '/api/v1/admin/catalogue-nodes',
     ];
 
+    /**
+     * Catalogue panel / node / tree payloads embed product names, slugs, codes, thumbnails,
+     * publication state and regional visibility, so these writes also drop the catalogue cache.
+     *
+     * @var list<string>
+     */
+    private const PRODUCT_CATALOGUE_PREFIXES = [
+        '/api/v1/admin/products',
+        '/api/v1/admin/product-styles',
+        '/api/v1/admin/product-variants',
+        '/api/v1/admin/product-media',
+        '/api/v1/admin/product-codes',
+        '/api/v1/admin/product-families',
+        '/api/v1/admin/product-categories',
+        '/api/v1/admin/product-series',
+        '/api/v1/admin/product-migration',
+        '/api/v1/admin/legacy-migration',
+    ];
+
     public function __construct(
         private readonly ReferenceDataCache $cache,
     ) {
@@ -60,6 +79,7 @@ final class ReferenceDataCacheInvalidationMiddleware implements MiddlewareInterf
         }
         if (
             $this->matches($path, self::CATALOGUE_PREFIXES)
+            || $this->matches($path, self::PRODUCT_CATALOGUE_PREFIXES)
             || str_contains($path, '/catalogue-placements')
         ) {
             $this->cache->invalidateCatalogue();

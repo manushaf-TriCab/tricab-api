@@ -195,4 +195,12 @@ interface ProductStyleRepository
      * @return list<string>
      */
     public function listAssignedProductPublicIds(string $stylePublicId): array;
+
+    /**
+     * listAssignedProductPublicIds for every style in one read, keyed by style public id.
+     * Styles without assignments may be absent.
+     *
+     * @return array<string, list<string>>
+     */
+    public function listAssignedProductPublicIdsByStyle(): array;
 }

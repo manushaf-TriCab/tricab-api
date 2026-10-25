@@ -11,6 +11,8 @@ use TriCab\Api\Http\Action\Admin\CatalogueDtoSerializer;
 use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Http\Response\PayloadEtag;
+use TriCab\Api\Http\Response\RegionScopedCacheHeaders;
 use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
@@ -38,7 +40,8 @@ final class GetPublicCataloguePanelAction
         try {
             $query = QueryParams::normalize($request->getQueryParams());
             $tabSlug = QueryParams::stringOrNull($query, 'tabSlug');
-            $regionCode = $this->regions->resolveCode($request, QueryParams::stringOrNull($query, 'regionCode'));
+            $region = $this->regions->resolve($request, QueryParams::stringOrNull($query, 'regionCode'));
+            $regionCode = $region['region']->code;
             $includeProducts = QueryParams::boolOrNull($query, 'includeProducts') ?? false;
             $cacheKey = $this->cache->cataloguePanelKey([
                 'tabSlug' => $tabSlug,
@@ -46,60 +49,36 @@ final class GetPublicCataloguePanelAction
                 'includeProducts' => $includeProducts ? '1' : '0',
             ]);
 
-            $cacheControl = $this->images->cacheControl(true);
+            $cacheHeaders = RegionScopedCacheHeaders::for($region['source'], $request, $this->images);
             $origin = $this->stableUrls->originFor($request);
-            $cached = $this->cache->getCatalogue($cacheKey);
-            if (is_array($cached) && isset($cached['data']) && is_array($cached['data'])) {
-                $this->metrics->recordCatalogueCacheHit(true);
-                /** @var array<string, mixed> $payload */
-                $payload = $cached['data'];
-            } else {
+            [$entry, $hit] = $this->cache->rememberCatalogue($cacheKey, function () use ($tabSlug, $regionCode, $includeProducts): array {
                 $this->metrics->recordCatalogueCacheHit(false);
-                $payload = CatalogueDtoSerializer::publicPanel(
+                $built = CatalogueDtoSerializer::publicPanel(
                     $this->catalogue->getPanel($tabSlug, $regionCode, $includeProducts),
                 );
-                $this->cache->setCatalogue($cacheKey, [
-                    'etag' => self::etagFor($payload),
-                    'data' => $payload,
-                ]);
-            }
 
-            // The ETag covers the payload as sent, so a 304 can never keep an expired read signature alive.
+                return ['etag' => PayloadEtag::for($built), 'data' => $built];
+            });
+            $this->metrics->recordCatalogueCacheHit($hit);
+            /** @var array<string, mixed> $payload */
+            $payload = is_array($entry['data'] ?? null) ? $entry['data'] : [];
+
             $presented = $this->images->signPublicDocument($payload, $origin !== '' ? $origin : null);
-            $etag = self::etagFor($presented);
-            if ($this->etagMatches($request, $etag)) {
-                return $this->responder->notModified($etag, $cacheControl);
+            $etag = RegionScopedCacheHeaders::etag($regionCode, $presented);
+            if (PayloadEtag::matches($request, $etag)) {
+                return $this->responder->notModified(
+                    $etag,
+                    $cacheHeaders['Cache-Control'],
+                    array_diff_key($cacheHeaders, ['Cache-Control' => true]),
+                );
             }
 
             return $this->responder->success($presented, 200, [
                 'ETag' => $etag,
-                'Cache-Control' => $cacheControl,
+                ...$cacheHeaders,
             ]);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }
-    }
-
-    /**
-     * @param array<string, mixed> $payload
-     */
-    private static function etagFor(array $payload): string
-    {
-        return '"' . hash('sha256', json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)) . '"';
-    }
-
-    private function etagMatches(ServerRequestInterface $request, string $etag): bool
-    {
-        $header = trim($request->getHeaderLine('If-None-Match'));
-        if ($header === '') {
-            return false;
-        }
-        foreach (explode(',', $header) as $part) {
-            if (trim($part) === $etag) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
