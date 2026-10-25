@@ -17,6 +17,7 @@ use TriCab\Api\Tests\Doubles\FixedClock;
 use TriCab\Api\Tests\Finance\LocalFinanceSqlServer;
 use TriCab\Core\Finance\Module;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
+use TriCab\Core\Finance\Task\Domain\TaskMember;
 use TriCab\Core\Finance\Task\Service\TaskService;
 use TriCab\Core\Finance\Task\Service\TaskTime;
 
@@ -44,7 +45,7 @@ final class AzureSqlTaskUserStateTest extends TestCase
         $connection = new PdoSqlConnection($pdo, new RequestPerformanceMetrics());
         $directory = new InMemoryFinanceTaskMemberDirectory();
         foreach ([11 => 'Una User', 12 => 'Max Manager', 13 => 'Rae Reader'] as $id => $name) {
-            $directory->add($id, $name, 'm' . $id . '@example.test');
+            $directory->add($id, $name, 'm' . $id . '@example.test', $id === 11 ? TaskMember::ROLE_USER : TaskMember::ROLE_MANAGER);
         }
         $this->clock = FixedClock::utc('2026-10-07 01:02:03.456789');
         $this->tasks = new TaskService(new AzureSqlTaskStore($connection), new AzureSqlTaskSetupStore($connection), $directory, new TaskTime($this->clock, 'Australia/Melbourne'));

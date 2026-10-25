@@ -11,6 +11,7 @@ use TriCab\Api\Finance\Task\InMemoryTaskStore;
 use TriCab\Api\Tests\Doubles\FixedClock;
 use TriCab\Core\Finance\Module;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
+use TriCab\Core\Finance\Task\Domain\TaskMember;
 use TriCab\Core\Finance\Task\Service\TaskService;
 use TriCab\Core\Finance\Task\Service\TaskTime;
 
@@ -27,7 +28,7 @@ final class TaskUserStateTest extends TestCase
     {
         $directory = new InMemoryFinanceTaskMemberDirectory();
         foreach ([11 => 'Una User', 12 => 'Max Manager', 13 => 'Rae Reader'] as $id => $name) {
-            $directory->add($id, $name, strtolower(explode(' ', $name)[0]) . '@example.test');
+            $directory->add($id, $name, strtolower(explode(' ', $name)[0]) . '@example.test', $id === 11 ? TaskMember::ROLE_USER : TaskMember::ROLE_MANAGER);
         }
         $this->store = new InMemoryTaskStore();
         $this->clock = FixedClock::utc('2026-10-07 01:00:00.123456');

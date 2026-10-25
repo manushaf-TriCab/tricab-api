@@ -15,6 +15,7 @@ use TriCab\Core\Finance\Task\Domain\TaskConflict;
 use TriCab\Core\Finance\Task\Domain\TaskForbidden;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
 use TriCab\Core\Finance\Task\Domain\TaskInvalid;
+use TriCab\Core\Finance\Task\Domain\TaskMember;
 use TriCab\Core\Finance\Task\Domain\TaskNotFound;
 use TriCab\Core\Finance\Task\Domain\TaskProject;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
@@ -151,6 +152,7 @@ final class TaskService
                 $this->setDependencies($task->id, $dependencies, $now);
             }
             $this->recordStatusChange($actor, $task->id, null, $task->status, $now);
+            $this->markMentioned($actor, $task, '', $now);
         });
 
         return $this->dict($task, $actor) + ($reviewDue ? ['review_due' => true] : []);
@@ -555,6 +557,7 @@ final class TaskService
         }
 
         $before = clone $task;
+        $notesBefore = $task->notes;
         $dependenciesChanged = false;
         if ($dependencies !== null) {
             $old = $this->tasks->dependencyMap()[$task->id] ?? [];
@@ -605,8 +608,27 @@ final class TaskService
         $this->recordChanges($actor, $before, $task, $dependenciesChanged, $now);
         $task->updatedDate = $now;
         $this->tasks->updateTask($task);
+        $this->markMentioned($actor, $task, $notesBefore, $now);
 
         return $reviewDue;
+    }
+
+    /**
+     * An @mention in the notes (Nick Han, 23 Oct 2026) makes the task unread for the person mentioned, as new mail
+     * is: no email, and only for a mention the save adds (one already in the old notes, or removed, changes nothing).
+     * Mentioning yourself does nothing. Only a member who can see the task is told: someone on it, or a Manager or
+     * Admin; the mention never widens who sees it.
+     */
+    private function markMentioned(TaskActor $actor, TaskRecord $task, string $notesBefore, DateTimeImmutable $now): void
+    {
+        $added = array_diff(TaskMentions::ids($task->notes), TaskMentions::ids($notesBefore), [$actor->userId]);
+        foreach ($added as $userId) {
+            $member = $this->members->find($userId);
+            if ($member === null || ($member->accessRole === TaskMember::ROLE_USER && !$task->isOwnedBy($userId))) {
+                continue;
+            }
+            $this->tasks->saveUserState($userId, $task->id, false, null, null, $now);
+        }
     }
 
     /**

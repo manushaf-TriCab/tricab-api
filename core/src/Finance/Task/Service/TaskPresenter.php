@@ -173,6 +173,8 @@ final class TaskPresenter
             'description' => $t->description,
             'requirements' => $t->requirements,
             'notes' => $t->notes,
+            // The people @mentioned in the notes (user ids, as `preparer_ids` are); the notes carry them as tokens.
+            'mentioned_ids' => self::people(TaskMentions::ids($t->notes)),
             'category' => $t->category,
             'finance_statement_area' => $t->financeStatementArea,
             'entity_id' => $t->entityId,

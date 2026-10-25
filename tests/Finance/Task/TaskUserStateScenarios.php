@@ -245,4 +245,111 @@ trait TaskUserStateScenarios
         $this->expectException(TaskNotFound::class);
         $this->tasks->get($this->max, $id);
     }
+
+    // ---- @mentions in the notes (Nick Han, 23 Oct 2026) ----
+
+    private const UNA = '@[Una User](user:11)';
+
+    private const RAE = '@[Rae Reader](user:13)';
+
+    /** Nothing is unread by default, so only a mention can light a task up. */
+    private function nothingUnreadByDefault(): void
+    {
+        $this->cutoffAt(new DateTimeImmutable('2099-01-01 00:00:00'));
+    }
+
+    public function test_a_mention_on_a_new_task_makes_it_unread_for_the_person_mentioned_only(): void
+    {
+        $this->nothingUnreadByDefault();
+        $id = self::taskId($this->make($this->max, 'Bank rec', ['preparer_id' => 11, 'notes' => 'Chase ' . self::UNA . ' please']));
+
+        self::assertTrue($this->row($this->una, $id)['is_unread']);
+        self::assertFalse($this->row($this->reader, $id)['is_unread']);
+        self::assertFalse($this->row($this->max, $id)['is_unread']);
+        self::assertSame(['11'], $this->row($this->una, $id)['mentioned_ids']);
+        self::assertSame(['11'], $this->row($this->max, $id)['mentioned_ids'], 'the mention is on the task, not per person');
+    }
+
+    public function test_a_mention_added_later_unreads_it_again_but_a_resave_or_a_removal_does_not(): void
+    {
+        $this->nothingUnreadByDefault();
+        $id = self::taskId($this->make($this->max, 'Bank rec', ['preparer_id' => 11, 'notes' => 'Plain']));
+        self::assertSame([], $this->row($this->una, $id)['mentioned_ids']);
+        self::assertFalse($this->row($this->una, $id)['is_unread']);
+
+        $this->tasks->update($this->max, $id, ['notes' => 'Plain ' . self::UNA]);
+        self::assertTrue($this->row($this->una, $id)['is_unread']);
+
+        $this->tasks->setUserState($this->una, $id, ['read' => true]);
+        $this->tasks->update($this->max, $id, ['notes' => 'Plain ' . self::UNA . ' and more words']);
+        self::assertFalse($this->row($this->una, $id)['is_unread'], 'the mention was already there');
+
+        $this->tasks->update($this->max, $id, ['notes' => 'No one now']);
+        self::assertFalse($this->row($this->una, $id)['is_unread'], 'removing a mention does not change read state');
+        self::assertSame([], $this->row($this->una, $id)['mentioned_ids']);
+
+        $this->tasks->setUserState($this->una, $id, ['read' => false]);
+        $this->tasks->update($this->max, $id, ['notes' => 'Still no one']);
+        self::assertTrue($this->row($this->una, $id)['is_unread'], 'an unread task stays unread');
+    }
+
+    public function test_a_mention_added_through_a_bulk_update_unreads_it_too(): void
+    {
+        $this->nothingUnreadByDefault();
+        $id = self::taskId($this->make($this->max, 'Bank rec', ['preparer_id' => 11]));
+
+        $this->tasks->bulkUpdate($this->max, [['id' => $id, 'notes' => self::UNA . ' ' . self::RAE]]);
+
+        self::assertTrue($this->row($this->una, $id)['is_unread']);
+        self::assertTrue($this->row($this->reader, $id)['is_unread']);
+        self::assertSame(['11', '13'], $this->row($this->max, $id)['mentioned_ids']);
+    }
+
+    public function test_mentioning_yourself_does_nothing(): void
+    {
+        $this->nothingUnreadByDefault();
+        $id = self::taskId($this->make($this->max, 'Bank rec', ['preparer_id' => 11]));
+        $this->tasks->setUserState($this->una, $id, ['read' => true]);
+
+        $this->tasks->update($this->una, $id, ['notes' => 'Note to self ' . self::UNA]);
+
+        self::assertFalse($this->row($this->una, $id)['is_unread']);
+        self::assertSame(['11'], $this->row($this->una, $id)['mentioned_ids'], 'it still reads as a mention for "Mentions me"');
+    }
+
+    public function test_someone_who_cannot_see_the_task_is_not_made_to_see_it(): void
+    {
+        $this->nothingUnreadByDefault();
+        $id = self::taskId($this->make($this->max, 'Private', ['notes' => self::UNA]));
+
+        self::assertSame([], array_column($this->tasks->list($this->una), 'id'), 'a mention does not widen who sees the task');
+        try {
+            $this->tasks->get($this->una, $id);
+            self::fail('Una must not see it');
+        } catch (TaskNotFound) {
+            $this->addToAssertionCount(1);
+        }
+        // She was not told, so when she is put on the task later it is not unread because of the old mention.
+        $this->tasks->update($this->max, $id, ['preparer_id' => 11]);
+        self::assertFalse($this->row($this->una, $id)['is_unread']);
+    }
+
+    public function test_a_manager_can_be_mentioned_on_a_task_they_are_not_on(): void
+    {
+        $this->nothingUnreadByDefault();
+        $id = self::taskId($this->make($this->una, 'Una task', ['preparer_id' => 11, 'notes' => self::RAE]));
+
+        self::assertTrue($this->row($this->reader, $id)['is_unread']);
+    }
+
+    public function test_an_unknown_person_in_a_token_is_ignored_and_a_task_without_mentions_has_none(): void
+    {
+        $this->nothingUnreadByDefault();
+        $id = self::taskId($this->make($this->max, 'Odd', ['notes' => 'Hi @[Ghost](user:999) and @[Una User](user:abc) and @Una']));
+
+        self::assertSame(['999'], $this->row($this->max, $id)['mentioned_ids']);
+        $plain = self::taskId($this->make($this->max, 'Plain', ['notes' => 'Just words']));
+        self::assertSame([], $this->row($this->max, $plain)['mentioned_ids']);
+        self::assertSame('Just words', $this->row($this->max, $plain)['notes']);
+    }
 }
