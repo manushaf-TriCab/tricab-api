@@ -1324,7 +1324,7 @@ final class ContainerFactory
                         $settings->triTaskAiModel,
                         $settings->foundryAuthMode,
                         $settings->foundryApiKey,
-                        (new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS'))->get('tri-task-create-draft', 'v1'),
+                        (new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS'))->get('tri-task-create-draft', 'v2'),
                     );
                 }
 

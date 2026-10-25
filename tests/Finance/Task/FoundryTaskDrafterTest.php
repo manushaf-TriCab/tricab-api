@@ -41,7 +41,7 @@ final class FoundryTaskDrafterTest extends TestCase
             'claude-sonnet-5-5',
             $authMode,
             'key-1',
-            (new MarkdownPromptRepository(dirname(__DIR__, 3) . '/PROMPTS'))->get('tri-task-create-draft', 'v1'),
+            (new MarkdownPromptRepository(dirname(__DIR__, 3) . '/PROMPTS'))->get('tri-task-create-draft', 'v2'),
             false,
             static fn (): string => 'abc123def456',
         );
@@ -67,21 +67,25 @@ final class FoundryTaskDrafterTest extends TestCase
     }
 
     /**
-     * @param array<string, mixed> $input
+     * @param array<string, mixed> $draft
      * @return array{status: int, body: string}
      */
-    private static function toolReply(array $input, string $name = FoundryTaskDrafter::TOOL): array
+    private static function jsonReply(array $draft, string $stopReason = 'end_turn'): array
     {
-        return ['status' => 200, 'body' => json_encode(['content' => [['type' => 'tool_use', 'id' => 'tu1', 'name' => $name, 'input' => $input]]], JSON_THROW_ON_ERROR)];
+        // As Sonnet 5.5 answers: an (empty) thinking block first, then the JSON as text.
+        return ['status' => 200, 'body' => json_encode([
+            'content' => [['type' => 'thinking', 'thinking' => '', 'signature' => 'sig'], ['type' => 'text', 'text' => json_encode($draft, JSON_THROW_ON_ERROR)]],
+            'stop_reason' => $stopReason,
+        ], JSON_THROW_ON_ERROR)];
     }
 
     /** @return array{status: int, body: string} */
     private static function good(): array
     {
-        return self::toolReply(['tasks' => [['name' => 'Lodge claim', 'preparer_id' => '11', 'due_phrase' => 'Friday']], 'injection_suspected' => false]);
+        return self::jsonReply(['tasks' => [['name' => 'Lodge claim', 'preparer_id' => '11', 'due_phrase' => 'Friday']], 'injection_suspected' => false]);
     }
 
-    public function test_a_valid_answer_is_the_tool_input(): void
+    public function test_a_valid_answer_is_the_json_in_the_text_block(): void
     {
         $this->http->queue = [self::good()];
 
@@ -90,10 +94,10 @@ final class FoundryTaskDrafterTest extends TestCase
         self::assertSame([['name' => 'Lodge claim', 'preparer_id' => '11', 'due_phrase' => 'Friday']], $raw['tasks']);
         self::assertFalse($raw['injection_suspected']);
         self::assertSame('claude-sonnet-5-5', $this->drafter()->modelName());
-        self::assertSame('tri-task-create-draft-v1', $this->drafter()->promptVersion());
+        self::assertSame('tri-task-create-draft-v2', $this->drafter()->promptVersion());
     }
 
-    public function test_the_request_forces_the_tool_and_limits_ids_to_the_lists_over_managed_identity(): void
+    public function test_the_request_asks_for_structured_output_limits_ids_to_the_lists_and_forces_no_tool(): void
     {
         $this->http->queue = [self::good()];
         $this->drafter()->draft($this->request());
@@ -104,8 +108,16 @@ final class FoundryTaskDrafterTest extends TestCase
         self::assertArrayNotHasKey('x-api-key', $call['headers']);
         $payload = $call['payload'];
         self::assertSame('claude-sonnet-5-5', self::at($payload, 'model'));
-        self::assertSame(['type' => 'tool', 'name' => 'record_draft'], self::at($payload, 'tool_choice'));
-        $schema = self::at($payload, 'tools', 0, 'input_schema');
+        self::assertIsArray($payload);
+        // Sonnet 5.5 rejects a forced tool_choice with a 400.
+        self::assertArrayNotHasKey('tool_choice', $payload);
+        self::assertArrayNotHasKey('tools', $payload);
+        self::assertSame('json_schema', self::at($payload, 'output_config', 'format', 'type'));
+        $schema = self::at($payload, 'output_config', 'format', 'schema');
+        self::assertFalse(self::at($schema, 'additionalProperties'));
+        $tasks = self::at($schema, 'properties', 'tasks');
+        self::assertIsArray($tasks);
+        self::assertArrayNotHasKey('maxItems', $tasks);
         self::assertSame(['tasks', 'injection_suspected'], self::at($schema, 'required'));
         $task = self::at($schema, 'properties', 'tasks', 'items', 'properties');
         self::assertSame(['', '11', '12'], self::at($task, 'preparer_id', 'enum'));
@@ -122,7 +134,7 @@ final class FoundryTaskDrafterTest extends TestCase
         $this->http->queue = [self::good()];
         $this->drafter()->draft($this->request(mayCreateProject: false));
 
-        $properties = self::at($this->http->calls[0]['payload'], 'tools', 0, 'input_schema', 'properties');
+        $properties = self::at($this->http->calls[0]['payload'], 'output_config', 'format', 'schema', 'properties');
         self::assertIsArray($properties);
         self::assertArrayNotHasKey('project', $properties);
         self::assertStringContainsString('NOT allowed', self::text(self::at($this->http->calls[0]['payload'], 'messages', 0, 'content')));
@@ -195,10 +207,13 @@ final class FoundryTaskDrafterTest extends TestCase
             [['status' => 400, 'body' => 'secret provider detail'], 'HTTP 400'],
             [new RuntimeException('connection reset to 10.0.0.4'), 'could not be reached'],
             [['status' => 200, 'body' => 'not json'], 'not JSON'],
-            [['status' => 200, 'body' => '{"content":[{"type":"text","text":"sure"}]}'], 'did not return the draft tool call'],
-            [self::toolReply(['tasks' => []], 'some_other_tool'), 'did not return the draft tool call'],
-            [self::toolReply(['tasks' => 'none', 'injection_suspected' => false]), 'did not return a list of tasks'],
-            [self::toolReply(['injection_suspected' => false]), 'did not return a list of tasks'],
+            [['status' => 200, 'body' => '{"content":[{"type":"text","text":"sure"}]}'], 'did not return the draft'],
+            [['status' => 200, 'body' => '{"content":[{"type":"thinking","thinking":""}]}'], 'did not return the draft'],
+            [['status' => 200, 'body' => '{"content":[{"type":"text","text":"[1,2]"}]}'], 'did not return the draft'],
+            [self::jsonReply(['tasks' => []], 'refusal'), 'declined this summary'],
+            [self::jsonReply(['tasks' => []], 'max_tokens'), 'too long to draft'],
+            [self::jsonReply(['tasks' => 'none', 'injection_suspected' => false]), 'did not return a list of tasks'],
+            [self::jsonReply(['injection_suspected' => false]), 'did not return a list of tasks'],
         ] as [$reply, $fragment]) {
             $this->http->queue = [$reply];
             $this->expectFailure($fragment);
