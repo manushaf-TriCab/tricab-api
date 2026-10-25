@@ -354,6 +354,11 @@ final readonly class Settings
         public int $cablefitResearchTimeoutSeconds = 300,
         public int $cablefitResearchIdleCheckMinutes = 1440,
         public string $cablefitResearchWakePath = 'var/cablefit-research',
+        // Tri-Task "Create with AI": turns a pasted or dictated summary into a draft of tasks and a project. Off by default.
+        public bool $triTaskAiEnabled = false,
+        // '' reads as FOUNDRY_MODEL_DEPLOYMENT, a deployment known to exist in each environment.
+        public string $triTaskAiModel = '',
+        public int $triTaskAiTimeoutSeconds = 45,
         /** @var array<string, string> */
         public array $platformAiModels = [],
     ) {
@@ -488,6 +493,19 @@ final readonly class Settings
             && $this->foundryEnabled
             && $this->foundryEndpoint !== ''
             && $this->cablefitResearchModel !== ''
+            && ($this->foundryAuthMode !== self::FOUNDRY_AUTH_MODE_API_KEY || $this->foundryApiKey !== '');
+    }
+
+    /**
+     * Tri-Task "Create with AI" calls Foundry; it needs the platform's Foundry connection (switched on, an
+     * endpoint, a key in api-key mode), a deployment name, and its own switch `TRI_TASK_AI_ENABLED`.
+     */
+    public function isTriTaskAiConfigured(): bool
+    {
+        return $this->triTaskAiEnabled
+            && $this->foundryEnabled
+            && $this->foundryEndpoint !== ''
+            && $this->triTaskAiModel !== ''
             && ($this->foundryAuthMode !== self::FOUNDRY_AUTH_MODE_API_KEY || $this->foundryApiKey !== '');
     }
 
@@ -1634,6 +1652,9 @@ final readonly class Settings
             cablefitResearchTimeoutSeconds: self::boundedInt($env, 'CABLEFIT_RESEARCH_TIMEOUT_SECONDS', 300, 30, 900),
             cablefitResearchIdleCheckMinutes: self::boundedInt($env, 'CABLEFIT_RESEARCH_IDLE_CHECK_MINUTES', 1440, 1, 10080),
             cablefitResearchWakePath: trim(self::string($env, 'CABLEFIT_RESEARCH_WAKE_PATH', 'var/cablefit-research')) ?: 'var/cablefit-research',
+            triTaskAiEnabled: self::bool($env, 'TRI_TASK_AI_ENABLED', false),
+            triTaskAiModel: trim(self::string($env, 'TRI_TASK_AI_MODEL', '')) ?: $foundryModelDeployment,
+            triTaskAiTimeoutSeconds: self::boundedInt($env, 'TRI_TASK_AI_TIMEOUT_SECONDS', 45, 5, 120),
         );
     }
 

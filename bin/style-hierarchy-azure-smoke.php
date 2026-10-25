@@ -405,7 +405,6 @@ function putViaSas(ProductUploadSessionResult $session, string $bytes): void
     $body = curl_exec($handle);
     $status = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
     $error = curl_error($handle);
-    curl_close($handle);
     if ($status < 200 || $status >= 300) {
         fwrite(STDERR, "SAS PUT failed HTTP {$status} {$error} " . (is_string($body) ? substr($body, 0, 300) : '') . "\n");
         exit(1);
@@ -431,7 +430,6 @@ function getViaSas(\TriCab\Core\Product\Application\DTO\ProductBlobWriteTicket $
     $body = curl_exec($handle);
     $status = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
     $error = curl_error($handle);
-    curl_close($handle);
     if ($status < 200 || $status >= 300 || !is_string($body) || $body === '') {
         fwrite(STDERR, "signed read GET failed HTTP {$status} {$error}\n");
         exit(1);

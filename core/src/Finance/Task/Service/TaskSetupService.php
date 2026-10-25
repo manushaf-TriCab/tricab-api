@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Task\Service;
 
 use DateTimeImmutable;
+use Throwable;
 use TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory;
 use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
@@ -41,6 +42,8 @@ final class TaskSetupService
         private readonly TaskSetupStore $store,
         private readonly FinanceTaskMemberDirectory $members,
         private readonly TaskTime $time,
+        // Files on tasks (23 Oct 2026): a project deleted for good takes its binned tasks' files with it.
+        private readonly ?TaskFileService $files = null,
     ) {
     }
 
@@ -55,9 +58,10 @@ final class TaskSetupService
     public function listProjects(TaskActor $actor, bool $deleted = false): array
     {
         $counts = $this->store->projectTaskCounts($this->visibleTo($actor));
+        $binned = $deleted ? $this->store->binnedProjectTaskCounts() : [];
 
         return array_map(
-            static fn (TaskProject $p): array => TaskPresenter::project($p, $counts[$p->id] ?? [0, 0]),
+            static fn (TaskProject $p): array => TaskPresenter::project($p, $counts[$p->id] ?? [0, 0], $binned[$p->id] ?? 0),
             $this->store->projects($deleted),
         );
     }
@@ -117,52 +121,85 @@ final class TaskSetupService
     }
 
     /**
-     * Soft delete into the Bin; `$permanent` only from the Bin and only when no task (live or
-     * binned) belongs to it.
+     * Soft delete into the Bin, and every live task of the project goes with it, stamped with the
+     * same time and user, in one transaction (Nick Han, 23 Oct 2026). `$permanent` only from the
+     * Bin: it deletes the project's binned tasks too, and is refused only while a live task (one
+     * restored on its own) still belongs to it.
      *
      * @return array<string, bool>
      */
     public function deleteProject(TaskActor $actor, string $id, bool $permanent = false): array
     {
-        $project = $this->store->findProject($id);
-        if ($project === null) {
-            throw new TaskNotFound('Project not found');
-        }
-        if ($permanent) {
+        $purged = [];
+        $result = $this->store->transactional(function () use ($actor, $id, $permanent, &$purged): array {
+            $project = $this->store->findProject($id);
+            if ($project === null) {
+                throw new TaskNotFound('Project not found');
+            }
+            if ($permanent) {
+                if ($project->deletedAt === null) {
+                    throw new TaskConflict('Move the project to the Bin before deleting it permanently');
+                }
+                $used = $this->store->projectLiveTaskCount($project->id);
+                if ($used > 0) {
+                    throw new TaskConflict($used . ' task(s) still belong to this project', ['count' => $used]);
+                }
+                $purged = $this->store->deleteBinnedProjectTasks($project->id);
+                $this->store->deleteProject($project->id);
+
+                return ['deleted' => true, 'permanent' => true];
+            }
             if ($project->deletedAt === null) {
-                throw new TaskConflict('Move the project to the Bin before deleting it permanently');
+                $now = $this->time->now();
+                $project->deletedAt = $now;
+                $project->deletedBy = $actor->userId;
+                $this->store->updateProject($project);
+                $this->store->binProjectTasks($project->id, $now, $actor->userId);
             }
-            $used = $this->store->projectTaskCount($project->id);
-            if ($used > 0) {
-                throw new TaskConflict($used . ' task(s) still belong to this project', ['count' => $used]);
+
+            return ['deleted' => true, 'permanent' => false];
+        });
+
+        // After the commit, the files of the tasks that went with the project (bytes, then rows). A failure leaves
+        // files nothing can reach, so it is reported, not turned into an error on a delete that happened.
+        if ($purged !== [] && $this->files !== null) {
+            try {
+                $this->files->purge($purged);
+            } catch (Throwable $failure) {
+                error_log('Tri-Task: files of tasks deleted with project ' . $id . ' were left behind: ' . $failure->getMessage());
+                $result['files_orphaned'] = true;
             }
-            $this->store->deleteProject($project->id);
-
-            return ['deleted' => true, 'permanent' => true];
-        }
-        if ($project->deletedAt === null) {
-            $project->deletedAt = $this->time->now();
-            $project->deletedBy = $actor->userId;
-            $this->store->updateProject($project);
         }
 
-        return ['deleted' => true, 'permanent' => false];
+        return $result;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Out of the Bin, with the tasks that went to the Bin with it (the ones stamped with the
+     * project's own `deleted_at`); tasks binned on their own earlier stay in the Bin.
+     *
+     * @return array<string, mixed>
+     */
     public function restoreProject(TaskActor $actor, string $id): array
     {
         $project = $this->store->findProject($id);
         if ($project === null) {
             throw new TaskNotFound('Project not found');
         }
-        if ($this->store->liveProjectNameTaken($project->name, $project->id)) {
-            throw new TaskConflict('A live project already has that name; rename one first');
-        }
-        $project->deletedAt = null;
-        $project->deletedBy = null;
-        $project->updatedDate = $this->time->now();
-        $this->store->updateProject($project);
+        $this->store->transactional(function () use ($project): void {
+            if ($project->deletedAt === null) {
+                return;
+            }
+            if ($this->store->liveProjectNameTaken($project->name, $project->id)) {
+                throw new TaskConflict('A live project already has that name; rename one first');
+            }
+            $now = $this->time->now();
+            $this->store->restoreProjectTasks($project->id, $now);
+            $project->deletedAt = null;
+            $project->deletedBy = null;
+            $project->updatedDate = $now;
+            $this->store->updateProject($project);
+        });
 
         return $this->projectDict($actor, $project);
     }
@@ -220,7 +257,9 @@ final class TaskSetupService
     {
         $counts = $this->store->projectTaskCounts($this->visibleTo($actor));
 
-        return TaskPresenter::project($project, $counts[$project->id] ?? [0, 0]);
+        $binned = $project->deletedAt === null ? 0 : ($this->store->binnedProjectTaskCounts()[$project->id] ?? 0);
+
+        return TaskPresenter::project($project, $counts[$project->id] ?? [0, 0], $binned);
     }
 
     private function visibleTo(TaskActor $actor): ?int
@@ -355,13 +394,15 @@ final class TaskSetupService
             self::str($fields, 'requirements'),
             self::str($fields, 'category', 'routine'),
             self::str($fields, 'finance_statement_area'),
-            self::person($fields, 'preparer_user_id'),
-            self::person($fields, 'reviewer_user_id'),
+            self::ids($fields, 'preparer_user_ids')[0] ?? null,
+            self::ids($fields, 'reviewer_user_ids')[0] ?? null,
             self::integer($fields, 'default_progress'),
             self::nullableStr($fields, 'due_date'),
             ($fields['due_date_requested'] ?? false) === true,
             $now,
             $now,
+            self::ids($fields, 'preparer_user_ids'),
+            self::ids($fields, 'reviewer_user_ids'),
         );
         $this->store->insertTemplate($template);
 
@@ -378,7 +419,15 @@ final class TaskSetupService
         if ($template === null) {
             throw new TaskNotFound('Template not found');
         }
-        foreach ($this->cleanTemplate($data, true) as $key => $value) {
+        $fields = $this->cleanTemplate($data, true);
+        // A client from before the lists sends one person: the same first person sent back leaves the others be.
+        foreach (['preparer' => $template->preparerUserIds, 'reviewer' => $template->reviewerUserIds] as $role => $current) {
+            $list = $role . '_user_ids';
+            if (($fields[$role . '_single_only'] ?? false) === true && self::ids($fields, $list) !== [] && self::ids($fields, $list)[0] === ($current[0] ?? null)) {
+                unset($fields[$list]);
+            }
+        }
+        foreach ($fields as $key => $value) {
             match ($key) {
                 'name' => $template->name = (string) $value,
                 'description' => $template->description = (string) $value,
@@ -388,8 +437,8 @@ final class TaskSetupService
                 'default_progress' => $template->defaultProgress = is_int($value) ? $value : 0,
                 'due_date' => $template->dueDate = is_string($value) ? $value : null,
                 'due_date_requested' => $template->dueDateRequested = $value === true,
-                'preparer_user_id' => $template->preparerUserId = is_int($value) ? $value : null,
-                'reviewer_user_id' => $template->reviewerUserId = is_int($value) ? $value : null,
+                'preparer_user_ids' => $template->setPreparers(self::ids($fields, 'preparer_user_ids')),
+                'reviewer_user_ids' => $template->setReviewers(self::ids($fields, 'reviewer_user_ids')),
                 default => null,
             };
         }
@@ -448,11 +497,16 @@ final class TaskSetupService
         if (array_key_exists('due_date_requested', $data)) {
             $out['due_date_requested'] = TaskRules::bool($data['due_date_requested']);
         }
-        foreach (['preparer_id' => 'preparer_user_id', 'reviewer_id' => 'reviewer_user_id'] as $apiKey => $column) {
-            if (array_key_exists($apiKey, $data)) {
-                $userId = TaskRules::userId($data[$apiKey]);
-                $this->requireMember($userId);
-                $out[$column] = $userId;
+        foreach (['preparer' => ['preparer_ids', 'preparer_id'], 'reviewer' => ['reviewer_ids', 'reviewer_id']] as $role => [$listKey, $singleKey]) {
+            $ids = TaskRules::people($data, $listKey, $singleKey);
+            if ($ids !== null) {
+                foreach ($ids as $userId) {
+                    $this->requireMember($userId);
+                }
+                $out[$role . '_user_ids'] = $ids;
+                if (!array_key_exists($listKey, $data)) {
+                    $out[$role . '_single_only'] = true;
+                }
             }
         }
 
@@ -777,12 +831,15 @@ final class TaskSetupService
         return is_int($value) ? $value : 0;
     }
 
-    /** @param array<string, mixed> $fields */
-    private static function person(array $fields, string $key): ?int
+    /**
+     * @param array<string, mixed> $fields
+     * @return list<int>
+     */
+    private static function ids(array $fields, string $key): array
     {
-        $value = $fields[$key] ?? null;
+        $value = $fields[$key] ?? [];
 
-        return is_int($value) ? $value : null;
+        return is_array($value) ? array_values(array_filter($value, 'is_int')) : [];
     }
 
     /**

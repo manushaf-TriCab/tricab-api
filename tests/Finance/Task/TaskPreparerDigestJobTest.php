@@ -192,4 +192,24 @@ final class TaskPreparerDigestJobTest extends TestCase
         $this->expectExceptionMessage('FINANCE_TASK_MAIL_FROM');
         $this->jobWith($this->transport, '  ')->run($this->now());
     }
+
+    public function test_a_task_with_several_preparers_is_in_each_ones_own_email(): void
+    {
+        $this->task('Shared late', '2026-10-01', ['preparer_ids' => ['11', '13']]);
+        $this->task('Una only', '2026-10-06', ['preparer_ids' => ['11']]);
+
+        $facts = $this->job->run($this->now());
+
+        self::assertSame(2, $facts['sent']);
+        self::assertSame(2, $facts['preparers']);
+        $byTo = [];
+        foreach ($this->transport->sent as $message) {
+            $byTo[$message->to[0]] = $message->body;
+        }
+        self::assertStringContainsString('Shared late', $byTo['una@example.test']);
+        self::assertStringContainsString('Una only', $byTo['una@example.test']);
+        self::assertStringContainsString('Shared late', $byTo['ivy@example.test']);
+        self::assertStringNotContainsString('Una only', $byTo['ivy@example.test']);
+        self::assertStringContainsString('Una User, Ivy User', $byTo['ivy@example.test'], 'the Preparer column names everyone');
+    }
 }

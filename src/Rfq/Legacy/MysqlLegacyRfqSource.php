@@ -40,9 +40,9 @@ final class MysqlLegacyRfqSource implements LegacyRfqSource
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => true,
-            PDO::MYSQL_ATTR_MULTI_STATEMENTS => false,
-            PDO::MYSQL_ATTR_SSL_CA => '',
-            PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+            \Pdo\Mysql::ATTR_MULTI_STATEMENTS => false,
+            \Pdo\Mysql::ATTR_SSL_CA => '',
+            \Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT => false,
         ]));
     }
 
@@ -112,13 +112,11 @@ final class MysqlLegacyRfqSource implements LegacyRfqSource
         $statement->execute($params);
         $rows = [];
         while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-            if (is_array($row)) {
-                $named = [];
-                foreach ($row as $column => $value) {
-                    $named[(string) $column] = $value;
-                }
-                $rows[] = $named;
+            $named = [];
+            foreach ($row as $column => $value) {
+                $named[(string) $column] = $value;
             }
+            $rows[] = $named;
         }
 
         return $rows;

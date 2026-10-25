@@ -56,7 +56,7 @@ final class EntraJwksClient implements EntraJwksProvider
 
         $body = @file_get_contents($url, false, $context);
         /** @var list<string> $responseHeaders */
-        $responseHeaders = $http_response_header;
+        $responseHeaders = http_get_last_response_headers() ?? [];
         $status = self::statusFromHeaders($responseHeaders);
         $bytes = is_string($body) ? strlen($body) : 0;
 

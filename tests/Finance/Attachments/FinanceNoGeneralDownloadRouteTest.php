@@ -33,6 +33,12 @@ final class FinanceNoGeneralDownloadRouteTest extends TestCase
         // by email id and mailbox scope under MAIL.READ, with the shared reader's read-grant check and an audit row.
         '/api/v1/finance/ap/emails/{id}/attachments',
         '/api/v1/finance/ap/emails/{id}/attachments/{aid}/file',
+        // Tri-Task (23 Oct 2026): a task's own files by task id (the task must be visible to the caller, and the file on that very
+        // task), and the unattached upload for a task not yet saved, which only its uploader can put on a task.
+        '/api/v1/finance/task/tasks/{id}/files',
+        '/api/v1/finance/task/tasks/{id}/files/{fid}',
+        '/api/v1/finance/task/tasks/{id}/files/{fid}/file',
+        '/api/v1/finance/task/task-uploads',
     ];
 
     public function test_no_finance_route_serves_files_by_id(): void

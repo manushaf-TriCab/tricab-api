@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Task\Service;
 
 use DateTimeImmutable;
+use Throwable;
 use TriCab\Core\Finance\Module;
 use TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory;
 use TriCab\Core\Finance\Task\Contract\TaskBoardStore;
+use TriCab\Core\Finance\Task\Contract\TaskCalendarInvites;
 use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Contract\TaskStore;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
@@ -15,6 +17,7 @@ use TriCab\Core\Finance\Task\Domain\TaskConflict;
 use TriCab\Core\Finance\Task\Domain\TaskForbidden;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
 use TriCab\Core\Finance\Task\Domain\TaskInvalid;
+use TriCab\Core\Finance\Task\Domain\TaskMember;
 use TriCab\Core\Finance\Task\Domain\TaskNotFound;
 use TriCab\Core\Finance\Task\Domain\TaskProject;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
@@ -43,6 +46,10 @@ final class TaskService
         private readonly TaskTime $time,
         // Task groups (13 Oct 2026). Without it a task cannot be put in a group, as before the board.
         private readonly ?TaskBoardStore $board = null,
+        // The latest calendar invite per task (23 Oct 2026). Without it no task carries one.
+        private readonly ?TaskCalendarInvites $invites = null,
+        // Files on tasks (23 Oct 2026): the paperclip count on every task, and removal of the files when a task is deleted for good.
+        private readonly ?TaskFileService $files = null,
     ) {
     }
 
@@ -57,13 +64,13 @@ final class TaskService
     {
         $rows = $this->tasks->tasks($deleted, $this->visibleTo($actor));
 
-        return $this->dicts($rows);
+        return $this->dicts($rows, $actor);
     }
 
     /** @return array<string, mixed> */
     public function get(TaskActor $actor, string $id): array
     {
-        return $this->dict($this->visibleTask($actor, $id));
+        return $this->dict($this->visibleTask($actor, $id), $actor);
     }
 
     /** @return list<array<string, mixed>> */
@@ -108,13 +115,13 @@ final class TaskService
             throw new TaskForbidden('Permission denied');
         }
         [$fields, $dependencies] = $this->clean($data, false);
-        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, TaskRules::DEFAULT_STATUS, 0, [self::nullableInt($fields, 'reviewer_user_id')]);
+        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, TaskRules::DEFAULT_STATUS, 0, [self::ids($fields, 'reviewer_user_ids')]);
         $now = $this->time->now();
         $status = is_string($fields['status'] ?? null) ? $fields['status'] : TaskRules::DEFAULT_STATUS;
         // A task given no project goes in "General" (item 3, Manusha 13 Oct 2026): anyone can allocate one
         // without a project existing first.
         $projectId = self::nullableStr($fields, 'project_id') ?? $this->generalProjectId($now);
-        $this->guardCompletion($actor, '', $status, [self::nullableInt($fields, 'reviewer_user_id')]);
+        $this->guardCompletion($actor, '', $status, [self::ids($fields, 'reviewer_user_ids')]);
         $task = new TaskRecord(
             TaskRules::newId(),
             (string) $fields['name'],
@@ -125,8 +132,8 @@ final class TaskService
             self::str($fields, 'finance_statement_area'),
             self::nullableStr($fields, 'entity_id'),
             $projectId,
-            self::nullableInt($fields, 'preparer_user_id'),
-            self::nullableInt($fields, 'reviewer_user_id'),
+            self::ids($fields, 'preparer_user_ids')[0] ?? null,
+            self::ids($fields, 'reviewer_user_ids')[0] ?? null,
             $status,
             self::int($fields, 'progress'),
             self::nullableStr($fields, 'due_date'),
@@ -140,6 +147,9 @@ final class TaskService
             $now,
             self::nullableStr($fields, 'priority'),
             $this->groupIn(self::nullableStr($fields, 'group_id'), $projectId),
+            null,
+            self::ids($fields, 'preparer_user_ids'),
+            self::ids($fields, 'reviewer_user_ids'),
         );
 
         $this->tasks->transactional(function () use ($task, $dependencies, $actor, $now): void {
@@ -148,9 +158,10 @@ final class TaskService
                 $this->setDependencies($task->id, $dependencies, $now);
             }
             $this->recordStatusChange($actor, $task->id, null, $task->status, $now);
+            $this->markMentioned($actor, $task, '', $now);
         });
 
-        return $this->dict($task) + ($reviewDue ? ['review_due' => true] : []);
+        return $this->dict($task, $actor) + ($reviewDue ? ['review_due' => true] : []);
     }
 
     /**
@@ -199,7 +210,7 @@ final class TaskService
             return $task;
         });
 
-        return $this->dict($task) + ($reviewDue ? ['review_due' => true] : []);
+        return $this->dict($task, $actor) + ($reviewDue ? ['review_due' => true] : []);
     }
 
     /**
@@ -244,7 +255,7 @@ final class TaskService
 
         return array_map(
             static fn (array $t): array => isset($due[$t['id']]) ? $t + ['review_due' => true] : $t,
-            $this->dicts($touched),
+            $this->dicts($touched, $actor),
         );
     }
 
@@ -255,7 +266,7 @@ final class TaskService
      */
     public function delete(TaskActor $actor, string $id, bool $permanent = false): array
     {
-        return $this->tasks->transactional(function () use ($actor, $id, $permanent): array {
+        $result = $this->tasks->transactional(function () use ($actor, $id, $permanent): array {
             $task = $this->visibleTask($actor, $id);
             if (!$this->canDelete($actor, $task)) {
                 throw new TaskForbidden('You do not have permission to delete this task');
@@ -278,6 +289,19 @@ final class TaskService
 
             return ['deleted' => true, 'permanent' => false];
         });
+
+        // The task is gone for good only now that the transaction has committed: take its files off (bytes, then
+        // rows). A failure here leaves files nothing can reach, so it is reported, never turned into an error.
+        if ($permanent && $this->files !== null) {
+            try {
+                $this->files->purge([$id]);
+            } catch (Throwable $failure) {
+                error_log('Tri-Task: files of deleted task ' . $id . ' were left behind: ' . $failure->getMessage());
+                $result['files_orphaned'] = true;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -328,6 +352,7 @@ final class TaskService
                     throw new TaskForbidden('You do not have permission to restore ' . $task->name);
                 }
                 if ($task->deletedAt !== null) {
+                    $this->requireProjectOutOfBin($task);
                     $task->deletedAt = null;
                     $task->deletedBy = null;
                     $task->updatedDate = $now;
@@ -339,7 +364,7 @@ final class TaskService
             return $out;
         });
 
-        return $this->dicts($restored);
+        return $this->dicts($restored, $actor);
     }
 
     /** @return list<string> the distinct ids of a bulk request */
@@ -372,12 +397,98 @@ final class TaskService
         if (!$this->canDelete($actor, $task)) {
             throw new TaskForbidden('You do not have permission to restore this task');
         }
+        if ($task->deletedAt !== null) {
+            $this->requireProjectOutOfBin($task);
+        }
         $task->deletedAt = null;
         $task->deletedBy = null;
         $task->updatedDate = $this->time->now();
         $this->tasks->updateTask($task);
 
-        return $this->dict($task);
+        return $this->dict($task, $actor);
+    }
+
+    /**
+     * A task whose project is in the Bin comes back with the project (Nick Han, 23 Oct 2026), not on
+     * its own: it would otherwise sit live under a project nobody can see.
+     */
+    private function requireProjectOutOfBin(TaskRecord $task): void
+    {
+        $project = $task->projectId === null ? null : $this->setup->findProject($task->projectId);
+        if ($project !== null && $project->deletedAt !== null) {
+            throw new TaskConflict('Its project "' . $project->name . '" is in the Bin. Restore the project from the Bin first.');
+        }
+    }
+
+    // ==================================================================================
+    // Unread, Flag and Pin (each person's own, like a mailbox)
+    // ==================================================================================
+
+    /**
+     * Sets the signed-in person's own marks on one task: `read` (true on opening it, false for "Mark as unread"),
+     * `flagged`, `pinned`. A mark left out is left as it is. Anyone who can see the task may; nobody else's
+     * marks change, and the task itself is not touched (no `updated_date`, no history).
+     *
+     * @param array<string, mixed> $marks
+     * @return array<string, mixed> the task as the person now sees it
+     */
+    public function setUserState(TaskActor $actor, string $id, array $marks): array
+    {
+        $marks = self::marks($marks);
+        $task = $this->tasks->transactional(function () use ($actor, $id, $marks): TaskRecord {
+            $task = $this->visibleTask($actor, $id);
+            $this->tasks->saveUserState($actor->userId, $task->id, $marks[0], $marks[1], $marks[2], $this->time->now());
+
+            return $task;
+        });
+
+        return $this->dict($task, $actor);
+    }
+
+    /**
+     * {@see setUserState} for several tasks at once, all or nothing.
+     *
+     * @param array<string, mixed> $marks
+     * @return list<array<string, mixed>>
+     */
+    public function bulkSetUserState(TaskActor $actor, mixed $ids, array $marks): array
+    {
+        $ids = self::bulkIds($ids);
+        $marks = self::marks($marks);
+        $tasks = $this->tasks->transactional(function () use ($actor, $ids, $marks): array {
+            $now = $this->time->now();
+            $out = [];
+            foreach ($ids as $id) {
+                $task = $this->visibleTask($actor, $id);
+                $this->tasks->saveUserState($actor->userId, $task->id, $marks[0], $marks[1], $marks[2], $now);
+                $out[] = $task;
+            }
+
+            return $out;
+        });
+
+        return $this->dicts($tasks, $actor);
+    }
+
+    /**
+     * @param array<string, mixed> $marks
+     * @return array{0: ?bool, 1: ?bool, 2: ?bool} read, flagged, pinned
+     */
+    private static function marks(array $marks): array
+    {
+        $out = [];
+        foreach (['read', 'flagged', 'pinned'] as $key) {
+            $value = $marks[$key] ?? null;
+            if ($value !== null && !is_bool($value)) {
+                throw new TaskInvalid('"' . $key . '" must be true or false');
+            }
+            $out[] = $value;
+        }
+        if ($out === [null, null, null]) {
+            throw new TaskInvalid('Send read, flagged or pinned');
+        }
+
+        return $out;
     }
 
     // ==================================================================================
@@ -399,7 +510,7 @@ final class TaskService
     private function visibleTask(TaskActor $actor, string $id): TaskRecord
     {
         $task = $this->tasks->findTask($id);
-        if ($task === null || (!$actor->seesAll() && !$task->isOwnedBy($actor->userId))) {
+        if ($task === null || !$actor->maySee($task)) {
             throw new TaskNotFound('Task not found');
         }
 
@@ -415,8 +526,7 @@ final class TaskService
     /** `can_edit_task`. */
     private function canEdit(TaskActor $actor, TaskRecord $task): bool
     {
-        return $actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)
-            || ($actor->can(Module::PERMISSION_TASK_TASKS_UPDATE_OWN) && $task->isOwnedBy($actor->userId));
+        return $actor->mayEdit($task);
     }
 
     /** `can_delete_task`. */
@@ -439,19 +549,18 @@ final class TaskService
             throw new TaskForbidden('You do not have permission to change this task');
         }
         [$fields, $dependencies] = $this->clean($data, true);
+        $fields = $this->keepPeopleOlderClientsCannotName($task, $fields);
         $oldStatus = TaskRules::status($task->status);
-        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, $oldStatus, $task->progress, [
-            $task->reviewerUserId,
-            array_key_exists('reviewer_user_id', $fields) ? self::nullableInt($fields, 'reviewer_user_id') : $task->reviewerUserId,
-        ]);
+        $reviewerSets = [
+            $task->reviewerUserIds,
+            array_key_exists('reviewer_user_ids', $fields) ? self::ids($fields, 'reviewer_user_ids') : $task->reviewerUserIds,
+        ];
+        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, $oldStatus, $task->progress, $reviewerSets);
         $newStatus = is_string($fields['status'] ?? null) ? $fields['status'] : $oldStatus;
         $now = $this->time->now();
 
-        // The reviewer before this save counts as well as after it, so one save cannot drop the reviewer and close the task.
-        $this->guardCompletion($actor, $oldStatus, $newStatus, [
-            $task->reviewerUserId,
-            array_key_exists('reviewer_user_id', $fields) ? self::nullableInt($fields, 'reviewer_user_id') : $task->reviewerUserId,
-        ]);
+        // The reviewers before this save count as well as after it, so one save cannot drop the reviewers and close the task.
+        $this->guardCompletion($actor, $oldStatus, $newStatus, $reviewerSets);
         if ($newStatus !== $oldStatus && in_array($newStatus, TaskRules::BLOCKED_STATUSES, true)) {
             // The browser used to warn ("Start anyway"); the server refuses, listing what is in the way,
             // checked against the dependencies this same request is about to set, if it sends any.
@@ -466,6 +575,7 @@ final class TaskService
         }
 
         $before = clone $task;
+        $notesBefore = $task->notes;
         $dependenciesChanged = false;
         if ($dependencies !== null) {
             $old = $this->tasks->dependencyMap()[$task->id] ?? [];
@@ -489,8 +599,8 @@ final class TaskService
                 'urgent' => $task->urgent = $value === true,
                 'entity_id' => $task->entityId = is_string($value) ? $value : null,
                 'project_id' => $task->projectId = is_string($value) ? $value : null,
-                'preparer_user_id' => $task->preparerUserId = is_int($value) ? $value : null,
-                'reviewer_user_id' => $task->reviewerUserId = is_int($value) ? $value : null,
+                'preparer_user_ids' => $task->setPreparers(self::intList($value)),
+                'reviewer_user_ids' => $task->setReviewers(self::intList($value)),
                 'priority' => $task->priority = is_string($value) ? $value : null,
                 default => null,
             };
@@ -516,8 +626,27 @@ final class TaskService
         $this->recordChanges($actor, $before, $task, $dependenciesChanged, $now);
         $task->updatedDate = $now;
         $this->tasks->updateTask($task);
+        $this->markMentioned($actor, $task, $notesBefore, $now);
 
         return $reviewDue;
+    }
+
+    /**
+     * An @mention in the notes (Nick Han, 23 Oct 2026) makes the task unread for the person mentioned, as new mail
+     * is: no email, and only for a mention the save adds (one already in the old notes, or removed, changes nothing).
+     * Mentioning yourself does nothing. Only a member who can see the task is told: someone on it, or a Manager or
+     * Admin; the mention never widens who sees it.
+     */
+    private function markMentioned(TaskActor $actor, TaskRecord $task, string $notesBefore, DateTimeImmutable $now): void
+    {
+        $added = array_diff(TaskMentions::ids($task->notes), TaskMentions::ids($notesBefore), [$actor->userId]);
+        foreach ($added as $userId) {
+            $member = $this->members->find($userId);
+            if ($member === null || ($member->accessRole === TaskMember::ROLE_USER && !$task->isOwnedBy($userId))) {
+                continue;
+            }
+            $this->tasks->saveUserState($userId, $task->id, false, null, null, $now);
+        }
     }
 
     /**
@@ -532,26 +661,31 @@ final class TaskService
     }
 
     /**
-     * The review step (13 Oct 2026, item 5): a task with a reviewer is marked Done by its reviewer, or by a Manager or
-     * Administrator (who hold TASKS.UPDATE). Anyone else presses Send for review instead.
+     * The review step (13 Oct 2026, item 5): a task with reviewers is marked Done by any one of them, or by a Manager or
+     * Administrator (who hold TASKS.UPDATE); no sign-off from the others (23 Oct 2026, several reviewers). Anyone else
+     * presses Send for review instead.
      *
-     * @param list<?int> $reviewerUserIds every reviewer the task has had in this save
+     * @param list<list<int>> $reviewerSets the task's reviewers before this save and after it
      */
-    private function guardCompletion(TaskActor $actor, string $oldStatus, string $newStatus, array $reviewerUserIds): void
+    private function guardCompletion(TaskActor $actor, string $oldStatus, string $newStatus, array $reviewerSets): void
     {
-        if ($newStatus === 'completed' && $oldStatus !== 'completed' && !$this->mayComplete($actor, $reviewerUserIds)) {
+        if ($newStatus === 'completed' && $oldStatus !== 'completed' && !$this->mayComplete($actor, $reviewerSets)) {
             throw new TaskForbidden('Only the reviewer can mark this task done. Use Send for review instead.');
         }
     }
 
-    /** @param list<?int> $reviewerUserIds */
-    private function mayComplete(TaskActor $actor, array $reviewerUserIds): bool
+    /**
+     * A set with reviewers must include the actor; a set with none puts no one in the way.
+     *
+     * @param list<list<int>> $reviewerSets
+     */
+    private function mayComplete(TaskActor $actor, array $reviewerSets): bool
     {
         if ($actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)) {
             return true;
         }
-        foreach ($reviewerUserIds as $reviewerUserId) {
-            if ($reviewerUserId !== null && $reviewerUserId !== $actor->userId) {
+        foreach ($reviewerSets as $reviewers) {
+            if ($reviewers !== [] && !in_array($actor->userId, $reviewers, true)) {
                 return false;
             }
         }
@@ -569,10 +703,10 @@ final class TaskService
      * A new task counts as Active before it is saved.
      *
      * @param array<string, mixed> $fields cleaned
-     * @param list<?int> $reviewerUserIds
-     * @return array{0: array<string, mixed>, 1: bool} the fields, and whether the reviewer should be asked
+     * @param list<list<int>> $reviewerSets
+     * @return array{0: array<string, mixed>, 1: bool} the fields, and whether the reviewers should be asked
      */
-    private function linkProgress(TaskActor $actor, array $fields, string $oldStatus, int $oldProgress, array $reviewerUserIds): array
+    private function linkProgress(TaskActor $actor, array $fields, string $oldStatus, int $oldProgress, array $reviewerSets): array
     {
         $hasProgress = array_key_exists('progress', $fields);
         $progress = $hasProgress && is_int($fields['progress']) ? $fields['progress'] : $oldProgress;
@@ -590,7 +724,7 @@ final class TaskService
             return [$fields, false];
         }
         if ($progress >= 100 && $oldStatus !== 'completed') {
-            if ($this->mayComplete($actor, $reviewerUserIds)) {
+            if ($this->mayComplete($actor, $reviewerSets)) {
                 $fields['status'] = 'completed';
 
                 return [$fields, false];
@@ -719,12 +853,16 @@ final class TaskService
             'project' => [$before->projectId, $after->projectId, fn (string $id): ?string => $this->setup->findProject($id)?->name],
             'group' => [$before->groupId, $after->groupId, fn (string $id): ?string => $this->groupName($id)],
             'entity' => [$before->entityId, $after->entityId, fn (string $id): ?string => $this->setup->findEntity($id)?->name],
-            'preparer' => [$before->preparerUserId, $after->preparerUserId, fn (int $id): ?string => $this->members->find($id)?->name],
-            'reviewer' => [$before->reviewerUserId, $after->reviewerUserId, fn (int $id): ?string => $this->members->find($id)?->name],
         ];
         foreach ($references as $field => [$from, $to, $name]) {
             if ($from !== $to) {
                 $this->recordChange($actor, $after->id, $field, $from === null ? null : $name($from), $to === null ? null : $name($to), $now);
+            }
+        }
+        // People are logged as the names on the task, "Una User, Max Manager", before and after.
+        foreach (['preparer' => [$before->preparerUserIds, $after->preparerUserIds], 'reviewer' => [$before->reviewerUserIds, $after->reviewerUserIds]] as $field => [$from, $to]) {
+            if ($from !== $to) {
+                $this->recordChange($actor, $after->id, $field, $this->peopleNames($from), $this->peopleNames($to), $now);
             }
         }
         foreach (['description' => [$before->description, $after->description], 'requirements' => [$before->requirements, $after->requirements], 'notes' => [$before->notes, $after->notes]] as $field => [$from, $to]) {
@@ -735,6 +873,16 @@ final class TaskService
         if ($dependenciesChanged) {
             $this->recordChange($actor, $after->id, 'dependencies', null, null, $now);
         }
+    }
+
+    /** @param list<int> $userIds */
+    private function peopleNames(array $userIds): ?string
+    {
+        if ($userIds === []) {
+            return null;
+        }
+
+        return implode(', ', array_map(fn (int $id): string => $this->members->find($id)->name ?? ('#' . $id), $userIds));
     }
 
     private function recordChange(TaskActor $actor, string $taskId, string $field, ?string $from, ?string $to, DateTimeImmutable $now): void
@@ -843,13 +991,20 @@ final class TaskService
             }
             $out['project_id'] = $projectId;
         }
-        foreach (['preparer_id' => 'preparer_user_id', 'reviewer_id' => 'reviewer_user_id'] as $apiKey => $column) {
-            if (array_key_exists($apiKey, $data)) {
-                $userId = TaskRules::userId($data[$apiKey]);
-                if ($userId !== null && $this->members->find($userId) === null) {
+        foreach (['preparer' => ['preparer_ids', 'preparer_id'], 'reviewer' => ['reviewer_ids', 'reviewer_id']] as $role => [$listKey, $singleKey]) {
+            $ids = TaskRules::people($data, $listKey, $singleKey);
+            if ($ids === null) {
+                continue;
+            }
+            foreach ($ids as $userId) {
+                if ($this->members->find($userId) === null) {
                     throw new TaskInvalid('The preparer and reviewer must be members of Tri-Task');
                 }
-                $out[$column] = $userId;
+            }
+            $out[$role . '_user_ids'] = $ids;
+            // Only the single key was sent: a client from before the lists. Whether it changes anything is for the task to say.
+            if (!array_key_exists($listKey, $data)) {
+                $out[$role . '_single_only'] = true;
             }
         }
         $dependencies = null;
@@ -873,6 +1028,29 @@ final class TaskService
         return [$out, $dependencies];
     }
 
+    /**
+     * A client from before the lists sends the one person it knows (`preparer_id`). On a task that has several, the
+     * same first person sent back unchanged must not drop the rest: if that person is the task's first the people stay
+     * as they are; a different person, or none, replaces them (the old behaviour).
+     *
+     * @param array<string, mixed> $fields cleaned
+     * @return array<string, mixed>
+     */
+    private function keepPeopleOlderClientsCannotName(TaskRecord $task, array $fields): array
+    {
+        foreach (['preparer' => $task->preparerUserIds, 'reviewer' => $task->reviewerUserIds] as $role => $current) {
+            $single = $role . '_single_only';
+            $list = $role . '_user_ids';
+            if (($fields[$single] ?? false) === true && isset($fields[$list]) && is_array($fields[$list]) && $fields[$list] !== []
+                && $fields[$list][0] === ($current[0] ?? null)) {
+                unset($fields[$list]);
+            }
+            unset($fields[$single]);
+        }
+
+        return $fields;
+    }
+
     /** An id from a payload: empty means none. */
     private static function identifier(mixed $value): ?string
     {
@@ -888,23 +1066,35 @@ final class TaskService
     // ==================================================================================
 
     /** @return array<string, mixed> */
-    private function dict(TaskRecord $task): array
+    private function dict(TaskRecord $task, ?TaskActor $actor = null): array
     {
-        return $this->dicts([$task])[0];
+        return $this->dicts([$task], $actor)[0];
     }
 
     /**
      * @param list<TaskRecord> $rows
+     * @param ?TaskActor $actor whose own Unread, Flag and Pin each row carries
      * @return list<array<string, mixed>>
      */
-    private function dicts(array $rows): array
+    private function dicts(array $rows, ?TaskActor $actor = null): array
     {
+        $states = $actor === null ? [] : $this->tasks->userStates($actor->userId);
+        $cutoff = $actor === null ? null : $this->tasks->unreadCutoff();
         $dependencies = $this->tasks->dependencyMap();
         $projects = $this->setup->projectNames();
+        $invites = $this->invites?->all() ?? [];
         $today = $this->time->today();
+        $fileCounts = $this->files?->counts() ?? [];
         $out = [];
         foreach ($rows as $task) {
-            $out[] = TaskPresenter::task($task, $dependencies, $projects, $today);
+            $out[] = TaskPresenter::task(
+                $task,
+                $dependencies,
+                $projects,
+                $today,
+                $actor === null ? null : TaskPresenter::mine($task, $states[$task->id] ?? null, $actor->userId, $cutoff),
+                TaskPresenter::calendarInvite($invites[$task->id] ?? null, $task->dueDate),
+            ) + ['file_count' => $fileCounts[$task->id] ?? 0];
         }
 
         return $out;
@@ -926,12 +1116,19 @@ final class TaskService
         return is_string($value) ? $value : null;
     }
 
-    /** @param array<string, mixed> $fields */
-    private static function nullableInt(array $fields, string $key): ?int
+    /**
+     * @param array<string, mixed> $fields
+     * @return list<int>
+     */
+    private static function ids(array $fields, string $key): array
     {
-        $value = $fields[$key] ?? null;
+        return self::intList($fields[$key] ?? []);
+    }
 
-        return is_int($value) ? $value : null;
+    /** @return list<int> */
+    private static function intList(mixed $value): array
+    {
+        return is_array($value) ? array_values(array_filter($value, 'is_int')) : [];
     }
 
     /** @param array<string, mixed> $fields */

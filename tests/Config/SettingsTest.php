@@ -352,6 +352,31 @@ final class SettingsTest extends TestCase
         self::assertSame(45, $settings->foundryTurnDeadlineSeconds);
     }
 
+    public function test_tri_task_ai_is_off_by_default_and_needs_its_own_switch_and_the_foundry_connection(): void
+    {
+        $off = Settings::fromEnvironment(['APP_ENV' => 'development']);
+        self::assertFalse($off->triTaskAiEnabled);
+        self::assertSame('', $off->triTaskAiModel);
+        self::assertSame(45, $off->triTaskAiTimeoutSeconds);
+        self::assertFalse($off->isTriTaskAiConfigured());
+
+        $foundry = [
+            'APP_ENV' => 'development',
+            'FOUNDRY_ENABLED' => 'true',
+            'FOUNDRY_ENDPOINT' => 'https://example.services.ai.azure.com/',
+            'FOUNDRY_MODEL_DEPLOYMENT' => 'product-assistant',
+        ];
+        self::assertFalse(Settings::fromEnvironment($foundry)->isTriTaskAiConfigured(), 'Foundry alone does not switch it on');
+        self::assertFalse(Settings::fromEnvironment(['APP_ENV' => 'development', 'TRI_TASK_AI_ENABLED' => 'true'])->isTriTaskAiConfigured(), 'its switch alone is not enough');
+
+        $on = Settings::fromEnvironment($foundry + ['TRI_TASK_AI_ENABLED' => 'true', 'TRI_TASK_AI_MODEL' => ' claude-haiku-5-5 ', 'TRI_TASK_AI_TIMEOUT_SECONDS' => '999']);
+        self::assertTrue($on->isTriTaskAiConfigured());
+        self::assertSame('claude-haiku-5-5', $on->triTaskAiModel);
+        self::assertSame('product-assistant', Settings::fromEnvironment($foundry + ['TRI_TASK_AI_ENABLED' => 'true'])->triTaskAiModel, 'blank reads as FOUNDRY_MODEL_DEPLOYMENT');
+        self::assertSame(120, $on->triTaskAiTimeoutSeconds);
+        self::assertTrue(Settings::fromEnvironment($foundry + ['TRI_TASK_AI_ENABLED' => 'true', 'TRI_TASK_AI_MODEL' => '   '])->isTriTaskAiConfigured(), 'a blank model falls back to the Foundry deployment');
+    }
+
     public function test_enabled_foundry_requires_endpoint_and_deployment(): void
     {
         $this->expectException(InvalidArgumentException::class);

@@ -164,7 +164,7 @@ use TriCab\Api\Http\Action\PublicProduct\SearchPublicProductsAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 
-use TriCab\Api\DocumentGeneration\Rendering\DompdfPdfRenderer;
+use TriCab\DocGen\DocGen;
 
 use TriCab\Api\Http\Action\DatabaseHealthAction;
 use TriCab\Api\Http\Action\GenerateDocumentPdfAction;
@@ -764,9 +764,6 @@ use TriCab\Core\Shared\Persistence\ApplicationTransaction;
 use TriCab\Core\Shared\Time\Clock;
 use TriCab\Core\Shared\Time\SystemClock;
 
-use TriCab\Core\DocumentGeneration\Application\Handler\GenerateOcrPdfHandler;
-use TriCab\Core\DocumentGeneration\Contract\PdfRenderer;
-use TriCab\Core\DocumentGeneration\Legacy\LegacyStreamParser;
 
 
 final class ContainerFactory
@@ -805,7 +802,6 @@ final class ContainerFactory
         }
         $builder = new ContainerBuilder();
         $builder->useAutowiring(true);
-        $documentResources = dirname(__DIR__, 2) . '/resources/document-generation';
         $prompts = new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS');
 
         $definitions = [
@@ -1170,9 +1166,13 @@ final class ContainerFactory
                         }
                     }
 
-                    // Tri-AR and Tri-AP keep files (T5.5, T6.5): uploads never put on a record are swept once a day. One job
-                    // sweeps every app's uploads, so it is registered once, whichever of the two is on.
-                    if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR) || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP)) {
+                    // Tri-AR, Tri-AP and Tri-Task keep files (T5.5, T6.5, 23 Oct 2026): uploads never put on a record are swept once
+                    // a day. One job sweeps every app's uploads, so it is registered once, whichever of them is on.
+                    if (
+                        $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR)
+                        || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP)
+                        || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_TASK)
+                    ) {
                         $jobs[] = new \TriCab\Core\Finance\Shared\Attachments\FinanceUnattachedAttachmentsJob(
                             self::get($container, \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class),
                         );
@@ -1242,9 +1242,21 @@ final class ContainerFactory
             // The project board's groups and project templates (13 Oct 2026); the azure-sql branch swaps in the tables.
             \TriCab\Core\Finance\Task\Contract\TaskBoardStore::class
                 => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryTaskBoardStore::class),
+            // The latest calendar invite per task (23 Oct 2026); the azure-sql branch swaps in the table.
+            \TriCab\Core\Finance\Task\Contract\TaskCalendarInvites::class
+                => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryTaskCalendarInvites::class),
             \TriCab\Core\Finance\Task\Service\TaskService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskService::class)
-                    ->constructorParameter('board', \DI\get(\TriCab\Core\Finance\Task\Contract\TaskBoardStore::class)),
+                    ->constructorParameter('board', \DI\get(\TriCab\Core\Finance\Task\Contract\TaskBoardStore::class))
+                    ->constructorParameter('files', \DI\get(\TriCab\Core\Finance\Task\Service\TaskFileService::class))
+                    ->constructorParameter('invites', \DI\get(\TriCab\Core\Finance\Task\Contract\TaskCalendarInvites::class)),
+            \TriCab\Core\Finance\Task\Service\TaskCalendarInviteService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskCalendarInviteService::class),
+            // Files on tasks (23 Oct 2026): the shared finance file store under app TASK, no new storage.
+            \TriCab\Core\Finance\Task\Service\TaskFileGuard::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskFileGuard::class),
+            \TriCab\Core\Finance\Task\Service\TaskFileService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskFileService::class),
             \TriCab\Core\Finance\Task\Service\TaskBoardService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskBoardService::class),
             // Task mail (T2.6): the links to the shared ledger and the daily-summary recipients.
@@ -1314,6 +1326,30 @@ final class ContainerFactory
             // The five drafting routes over finance_ai (T2.7). The service client is the shared one below.
             \TriCab\Core\Finance\Task\Service\TaskAiService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskAiService::class),
+            // "Create with AI": a summary becomes a draft of a project and tasks, nothing written. Claude on Foundry when
+            // TRI_TASK_AI_ENABLED is true with the Foundry connection; the stand-in locally (APP_ENV=development);
+            // otherwise a plain "not set up" answer.
+            \TriCab\Core\Finance\Task\Contract\TaskDrafter::class => static function () use ($settings): \TriCab\Core\Finance\Task\Contract\TaskDrafter {
+                if ($settings->isTriTaskAiConfigured()) {
+                    $http = new StreamJsonHttpClient((float) $settings->triTaskAiTimeoutSeconds, 10.0);
+
+                    return new \TriCab\Api\Finance\Task\FoundryTaskDrafter(
+                        $http,
+                        new ManagedIdentityFoundryAccessTokenProvider($http),
+                        $settings->foundryEndpoint,
+                        $settings->triTaskAiModel,
+                        $settings->foundryAuthMode,
+                        $settings->foundryApiKey,
+                        (new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS'))->get('tri-task-create-draft', 'v2'),
+                    );
+                }
+
+                return $settings->isDevelopment()
+                    ? new \TriCab\Core\Finance\Task\Infrastructure\HeuristicTaskDrafter()
+                    : new \TriCab\Core\Finance\Task\Infrastructure\UnavailableTaskDrafter();
+            },
+            \TriCab\Core\Finance\Task\Service\TaskDraftService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskDraftService::class),
             \TriCab\Core\Finance\Task\Service\TaskMailService::class
                 => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskMailService
                     => new \TriCab\Core\Finance\Task\Service\TaskMailService(
@@ -1330,7 +1366,8 @@ final class ContainerFactory
                         $settings->financeTaskSendAsUser,
                     ),
             \TriCab\Core\Finance\Task\Service\TaskSetupService::class
-                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskSetupService::class),
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskSetupService::class)
+                    ->constructorParameter('files', \DI\get(\TriCab\Core\Finance\Task\Service\TaskFileService::class)),
             // Tri-AR (Phase 5). Everything is in memory by default; the azure-sql branch below swaps in
             // the `finance.ar_*` tables and the identity-backed assignee directory. The routes are
             // registered only when FINANCE_AR_ENABLED is on (AppBuilder).
@@ -2133,12 +2170,11 @@ final class ContainerFactory
             },
             ResolveAuthenticatedUserHandler::class => \DI\autowire(ResolveAuthenticatedUserHandler::class),
             IdentityResolutionService::class => \DI\autowire(IdentityResolutionService::class),
-            LegacyStreamParser::class => \DI\autowire(LegacyStreamParser::class),
-            DompdfPdfRenderer::class => \DI\create(DompdfPdfRenderer::class)
-                ->constructor($documentResources . '/templates', $documentResources . '/assets'),
-            PdfRenderer::class => \DI\get(DompdfPdfRenderer::class),
-            GenerateOcrPdfHandler::class => \DI\autowire(GenerateOcrPdfHandler::class),
-            \TriCab\Api\QuoteOrder\DocumentGeneration\QuoteDetailsToTcquLegacyStreamMapper::class => \DI\autowire(),
+            // tricab/docgen renders with the theme shipped in the package.
+            DocGen::class => \DI\create(DocGen::class),
+            \TriCab\DocGen\Legacy\OcrDocumentReader::class => \DI\create(\TriCab\DocGen\Legacy\OcrDocumentReader::class),
+            \TriCab\Api\DocumentGeneration\GenerateOcrPdfService::class => \DI\autowire(),
+            \TriCab\Api\QuoteOrder\DocumentGeneration\QuoteDetailsToDocGenQuoteMapper::class => \DI\autowire(),
             \TriCab\Api\QuoteOrder\DocumentGeneration\GenerateQuoteTemplatePdfService::class => \DI\autowire(),
             // release.json is written by scripts/build-app-service-release.sh.
             HealthAction::class => static fn (Container $container): HealthAction => new HealthAction(
@@ -3526,6 +3562,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskBoardStore::class);
             $definitions[\TriCab\Core\Finance\Task\Contract\TaskMailLinks::class]
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskMailLinks::class);
+            $definitions[\TriCab\Core\Finance\Task\Contract\TaskCalendarInvites::class]
+                = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskCalendarInvites::class);
             $definitions[\TriCab\Core\Finance\Task\Contract\TaskReportRecipientStore::class]
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskReportRecipientStore::class);
             // Tri-AR (Phase 5): the assignee directory reads `[identity]`; the option lists are `finance.ar_option_lists`.

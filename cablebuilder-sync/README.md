@@ -195,8 +195,10 @@ the research (`planning/reveng-research/04-cablebuilder.md`) matter:
 The slot's image has `python3` 3.11 but no `venv`, so the dependencies are
 vendored into the release, as the product finder's are.
 `scripts/build-app-service-release.sh` stages `cbsync/` at `app/cbsync/cbsync`,
-vendors `requirements.txt` into `app/cbsync/_vendor` for CPython 3.11 manylinux
-x86_64 (about 30 MB, ELF-checked like the finder's), and installs
+vendors `requirements.txt` into `app/cbsync/_vendor/cp311` and `cp312` (CPython
+3.11 for PHP|8.3, 3.12 for PHP|8.5; manylinux x86_64, ELF-checked like the
+finder's), drops what the finder's `app/python/_vendor/cpXY` already holds at
+the same version, and installs
 `deploy/app-service/webjobs/cablebuilder-sync/run.sh` as a continuous WebJob.
 `azure-identity` is not vendored: the slot uses `BLOB_CONNECTION_STRING`.
 

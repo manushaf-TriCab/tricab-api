@@ -54,12 +54,12 @@ BEGIN TRY
 
     INSERT INTO @Roles ([RoleCode], [RoleName], [Description])
     VALUES
-        (N'RFQ_SALES',         N'RFQ Sales',
+        (N'RFQ_SALES',         N'Quotegen Sales',
          N'Work any RFQ: create, edit, claim, change workflow, comment, archive and send to 4js.'),
-        (N'RFQ_ADMIN',         N'RFQ Administrator',
-         N'RFQ Sales, plus assigning work, restoring archived RFQs, analytics, the activity log, reports, cost and margin, and module administration.'),
-        (N'RFQ_DEVELOPER',     N'RFQ Developer',
-         N'RFQ Administrator, plus review logs, parser diagnostics and permanent deletion.');
+        (N'RFQ_ADMIN',         N'Quotegen Administrator',
+         N'Quotegen Sales, plus assigning work, restoring archived RFQs, analytics, the activity log, reports, cost and margin, and module administration.'),
+        (N'RFQ_DEVELOPER',     N'Quotegen Developer',
+         N'Quotegen Administrator, plus review logs, parser diagnostics and permanent deletion.');
 
     /* ------------------------------------------------------------------
        The roles. IsSystemRole = 0 so an administrator can edit them in

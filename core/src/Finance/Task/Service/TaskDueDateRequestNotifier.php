@@ -43,10 +43,30 @@ final class TaskDueDateRequestNotifier
     ) {
     }
 
-    /** @param array<string, mixed> $task */
+    /**
+     * Every preparer other than the person asking is told, each once. The result is the best of their outcomes: sent,
+     * else failed, suppressed, skipped, not needed.
+     *
+     * @param array<string, mixed> $task
+     */
     public function notify(TaskActor $actor, array $task): string
     {
-        $preparerId = is_string($task['preparer_id'] ?? null) && ctype_digit($task['preparer_id']) ? (int) $task['preparer_id'] : null;
+        $seen = [];
+        foreach (TaskPresenter::peopleOf($task, 'preparer') as $preparerId) {
+            $seen[] = $this->notifyOne($actor, $task, $preparerId);
+        }
+        foreach ([self::SENT, self::FAILED, self::SUPPRESSED, self::SKIPPED] as $outcome) {
+            if (in_array($outcome, $seen, true)) {
+                return $outcome;
+            }
+        }
+
+        return self::NOT_NEEDED;
+    }
+
+    /** @param array<string, mixed> $task */
+    private function notifyOne(TaskActor $actor, array $task, int $preparerId): string
+    {
         $id = is_string($task['id'] ?? null) ? $task['id'] : '';
         if (
             $id === ''
@@ -54,7 +74,6 @@ final class TaskDueDateRequestNotifier
             || ($task['due_date'] ?? '') !== ''
             || ($task['status'] ?? '') === 'completed'
             || ($task['is_deleted'] ?? false) === true
-            || $preparerId === null
             || $preparerId === $actor->userId
         ) {
             return self::NOT_NEEDED;

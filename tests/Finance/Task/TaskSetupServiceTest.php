@@ -7,6 +7,7 @@ namespace TriCab\Api\Tests\Finance\Task;
 use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use TriCab\Api\Finance\Task\InMemoryFinanceTaskMemberDirectory;
 use TriCab\Api\Finance\Task\InMemoryTaskSetupStore;
 use TriCab\Api\Tests\Doubles\FixedClock;
@@ -45,6 +46,11 @@ final class TaskSetupServiceTest extends TestCase
             protected function taskRows(): array
             {
                 return $this->rows;
+            }
+
+            protected function forgetTasks(array $ids): void
+            {
+                $this->rows = array_values(array_filter($this->rows, static fn (TaskRecord $t): bool => !in_array($t->id, $ids, true)));
             }
         };
         $time = new TaskTime(FixedClock::utc('2026-10-07 01:00:00'), 'Australia/Melbourne');
@@ -229,12 +235,13 @@ final class TaskSetupServiceTest extends TestCase
         $this->service->deleteProject($this->manager, $id);
     }
 
-    public function test_a_project_still_used_by_any_task_cannot_be_deleted_for_good(): void
+    public function test_a_project_with_a_live_task_cannot_be_deleted_for_good_and_nothing_is_removed(): void
     {
-        $p = $this->project('Close');
-        $id = self::id($p);
-        $this->task('t1', $id, null, '', true);
+        $id = self::id($this->project('Close'));
         $this->service->deleteProject($this->manager, $id);
+        // A task restored on its own after the cascade, plus one still in the Bin.
+        $live = $this->task('live', $id);
+        $this->task('binned', $id, null, '', true);
 
         try {
             $this->service->deleteProject($this->manager, $id, true);
@@ -243,18 +250,118 @@ final class TaskSetupServiceTest extends TestCase
             self::assertSame('1 task(s) still belong to this project', $e->getMessage());
             self::assertSame(['count' => 1], $e->extra);
         }
+        self::assertCount(2, $this->tasks);
+        self::assertSame($live, $this->tasks[0]);
+    }
+
+    public function test_binning_a_project_bins_its_live_tasks_with_the_same_stamp_and_leaves_the_rest(): void
+    {
+        $id = self::id($this->project('Close'));
+        $other = self::id($this->project('Other'));
+        $a = $this->task('a', $id);
+        $b = $this->task('b', $id);
+        $early = $this->task('early', $id, null, '', true);
+        $early->deletedAt = new DateTimeImmutable('2026-09-01 00:00:00', new DateTimeZone('UTC'));
+        $early->deletedBy = 3;
+        $elsewhere = $this->task('else', $other);
+        $none = $this->task('none');
+
+        $this->service->deleteProject($this->manager, $id);
+
+        $project = $this->service->listProjects($this->manager, true)[0];
+        self::assertSame(2, $project['binned_task_count']);
+        foreach ([$a, $b] as $task) {
+            self::assertNotNull($task->deletedAt);
+            self::assertSame(7, $task->deletedBy);
+            self::assertSame('2026-10-07 01:00:00', $task->deletedAt->format('Y-m-d H:i:s'));
+        }
+        self::assertSame($a->deletedAt?->format('c'), $b->deletedAt?->format('c'));
+        self::assertSame('2026-09-01', $early->deletedAt->format('Y-m-d'));
+        self::assertSame(3, $early->deletedBy);
+        self::assertNull($elsewhere->deletedAt);
+        self::assertNull($none->deletedAt);
+        // It has left the live list, so only the other project (and its one task) is counted there.
+        self::assertSame([['Other', 1]], array_map(static fn (array $p): array => [$p['name'], $p['task_count']], $this->service->listProjects($this->manager)));
+    }
+
+    public function test_restoring_a_project_brings_back_only_the_tasks_that_went_with_it(): void
+    {
+        $id = self::id($this->project('Close'));
+        $a = $this->task('a', $id);
+        $early = $this->task('early', $id, null, '', true);
+        $early->deletedAt = new DateTimeImmutable('2026-09-01 00:00:00', new DateTimeZone('UTC'));
+        $early->deletedBy = 3;
+        $this->service->deleteProject($this->manager, $id);
+
+        $restored = $this->service->restoreProject($this->manager, $id);
+
+        self::assertFalse($restored['is_deleted']);
+        self::assertSame(1, $restored['task_count']);
+        self::assertSame(0, $restored['binned_task_count']);
+        self::assertNull($a->deletedAt);
+        self::assertNull($a->deletedBy);
+        self::assertNotNull($early->deletedAt);
+        self::assertSame(3, $early->deletedBy);
+    }
+
+    public function test_a_refused_restore_leaves_the_tasks_in_the_bin(): void
+    {
+        $id = self::id($this->project('Close'));
+        $a = $this->task('a', $id);
+        $this->service->deleteProject($this->manager, $id);
+        $this->project('Close');
+
+        try {
+            $this->service->restoreProject($this->manager, $id);
+            self::fail('Expected a conflict.');
+        } catch (TaskConflict) {
+            self::assertNotNull($a->deletedAt);
+        }
+    }
+
+    public function test_permanently_deleting_a_binned_project_deletes_its_binned_tasks_only(): void
+    {
+        $id = self::id($this->project('Close'));
+        $other = self::id($this->project('Other'));
+        $this->task('a', $id);
+        $this->task('early', $id, null, '', true);
+        $this->task('else', $other);
+        $this->service->deleteProject($this->manager, $id);
+
+        self::assertSame(['deleted' => true, 'permanent' => true], $this->service->deleteProject($this->manager, $id, true));
+
+        self::assertSame(['else'], array_map(static fn (TaskRecord $t): string => $t->id, $this->tasks));
+    }
+
+    public function test_binning_is_all_or_nothing(): void
+    {
+        $store = new class extends InMemoryTaskSetupStore {
+            public function binProjectTasks(string $projectId, DateTimeImmutable $at, ?int $by): void
+            {
+                throw new RuntimeException('The database went away');
+            }
+        };
+        $service = new TaskSetupService($store, $this->directory, new TaskTime(FixedClock::utc('2026-10-07 01:00:00'), 'Australia/Melbourne'));
+        $id = self::id($service->createProject($this->manager, ['name' => 'Close']));
+
+        try {
+            $service->deleteProject($this->manager, $id);
+            self::fail('Expected a failure.');
+        } catch (RuntimeException) {
+            self::assertNull($store->findProject($id)?->deletedAt);
+        }
     }
 
     public function test_project_counts_cover_live_tasks_only_and_a_caller_sees_only_their_own(): void
     {
         $id = self::id($this->project('Close'));
         $own = $this->task('own', $id);
-        $own->preparerUserId = 11;
+        $own->setPreparers([11]);
         $this->task('other', $id);
         $this->task('binned', $id, null, '', true);
         $done = $this->task('done', $id);
         $done->status = 'completed';
-        $done->reviewerUserId = 11;
+        $done->setReviewers([11]);
 
         $all = $this->service->listProjects($this->manager)[0];
         self::assertSame(3, $all['task_count']);
@@ -654,5 +761,26 @@ final class TaskSetupServiceTest extends TestCase
         self::assertSame('Fin — Ünïcode ✓', $this->service->listProjects($this->manager)[0]['name']);
         self::assertSame('Société Générale', $this->service->listEntities()[0]['name']);
         self::assertSame('Trésorerie', $this->service->listAreas()[0]['name']);
+    }
+
+    public function test_a_template_holds_several_preparers_and_reviewers_and_answers_the_first_for_older_clients(): void
+    {
+        $this->directory->add(9, 'Una User', 'una@example.test');
+        $this->directory->add(10, 'Ivy User', 'ivy@example.test');
+
+        $t = $this->service->createTemplate(['name' => 'Rec', 'preparer_ids' => ['9', 10, '9'], 'reviewer_ids' => ['10']]);
+
+        self::assertSame(['9', '10'], $t['preparer_ids']);
+        self::assertSame(['10'], $t['reviewer_ids']);
+        self::assertSame(['9', '10'], [$t['preparer_id'], $t['reviewer_id']]);
+        // An older client sends the first person back: nothing is dropped. Another person replaces the list.
+        $same = $this->service->updateTemplate(self::id($t), ['preparer_id' => '9', 'name' => 'Rec 2']);
+        self::assertSame(['9', '10'], $same['preparer_ids']);
+        $replaced = $this->service->updateTemplate(self::id($t), ['preparer_id' => '10']);
+        self::assertSame(['10'], $replaced['preparer_ids']);
+        $cleared = $this->service->updateTemplate(self::id($t), ['preparer_ids' => [], 'reviewer_id' => null]);
+        self::assertSame([[], null, [], null], [$cleared['preparer_ids'], $cleared['preparer_id'], $cleared['reviewer_ids'], $cleared['reviewer_id']]);
+        $this->expectException(TaskInvalid::class);
+        $this->service->createTemplate(['name' => 'Bad', 'reviewer_ids' => ['9', '99']]);
     }
 }

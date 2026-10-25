@@ -50,8 +50,8 @@ BEGIN TRY
 
     INSERT INTO @Permissions ([PermissionCode], [PermissionName], [Description])
     VALUES
-        (N'RFQ.ACCESS',            N'Access RFQs',
-         N'Reach the RFQ module and see one''s own RFQ access. Grants no RFQ.'),
+        (N'RFQ.ACCESS',            N'Access Quotegen',
+         N'Reach the Quotegen module and see one''s own RFQ access. Grants no RFQ.'),
         (N'RFQ.DRAFT.READ',        N'Read RFQs',
          N'List and open every RFQ.'),
         (N'RFQ.DRAFT.CREATE',      N'Create RFQs',
@@ -88,8 +88,8 @@ BEGIN TRY
          N'Raw review sessions and row edit history, including customer text.'),
         (N'RFQ.TECHNICAL.READ',    N'Read RFQ diagnostics',
          N'Parser, reader, catalogue and job diagnostics.'),
-        (N'RFQ.ADMIN',             N'Administer RFQs',
-         N'Administer the RFQ module. Reads no RFQ.'),
+        (N'RFQ.ADMIN',             N'Administer Quotegen',
+         N'Administer the Quotegen module. Reads no RFQ.'),
         (N'RFQ.MAIL.INGEST',       N'RFQ mailbox intake',
          N'For the mailbox worker''s service identity only. Never granted to a person''s role.');
 

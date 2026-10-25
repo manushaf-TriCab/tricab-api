@@ -6,6 +6,7 @@ namespace TriCab\Core\Finance\Task\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use TriCab\Core\Finance\Task\Domain\TaskCalendarInvite;
 use TriCab\Core\Finance\Task\Domain\TaskEntity;
 use TriCab\Core\Finance\Task\Domain\TaskGroup;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
@@ -15,6 +16,7 @@ use TriCab\Core\Finance\Task\Domain\TaskProjectGroup;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
 use TriCab\Core\Finance\Task\Domain\TaskStatementArea;
 use TriCab\Core\Finance\Task\Domain\TaskTemplate;
+use TriCab\Core\Finance\Task\Domain\TaskUserState;
 
 /**
  * Every record as the source's `*_dict` functions shaped it, which is what the ported pages
@@ -35,6 +37,37 @@ final class TaskPresenter
         return $userId === null ? null : (string) $userId;
     }
 
+    /**
+     * @param list<int> $userIds
+     * @return list<string> person ids as text, in order
+     */
+    public static function people(array $userIds): array
+    {
+        return array_map(static fn (int $id): string => (string) $id, $userIds);
+    }
+
+    /**
+     * The people of one role on a presented task (`preparer_ids`, else the lone `preparer_id` of a task made before the
+     * lists), as user ids.
+     *
+     * @param array<array-key, mixed> $task
+     * @return list<int>
+     */
+    public static function peopleOf(array $task, string $role): array
+    {
+        $list = $task[$role . '_ids'] ?? null;
+        $raw = is_array($list) ? $list : [$task[$role . '_id'] ?? null];
+        $out = [];
+        foreach ($raw as $item) {
+            $id = is_int($item) ? $item : (is_string($item) && ctype_digit($item) ? (int) $item : 0);
+            if ($id > 0 && !in_array($id, $out, true)) {
+                $out[] = $id;
+            }
+        }
+
+        return $out;
+    }
+
     /** `display_status`: completed, on_hold (even when past due), overdue (Active and due before today), or active. */
     public static function displayStatus(string $status, ?string $dueDate, string $today): string
     {
@@ -51,9 +84,10 @@ final class TaskPresenter
 
     /**
      * @param array{0?: int, 1?: int} $counts total and completed live tasks the caller may see
+     * @param int $binnedTaskCount for a project in the Bin: the tasks that went there with it and come back with it
      * @return array<string, mixed>
      */
-    public static function project(TaskProject $p, array $counts): array
+    public static function project(TaskProject $p, array $counts, int $binnedTaskCount = 0): array
     {
         return [
             'id' => $p->id,
@@ -65,6 +99,7 @@ final class TaskPresenter
             'group_id' => $p->groupId,
             'task_count' => $counts[0] ?? 0,
             'completed_count' => $counts[1] ?? 0,
+            'binned_task_count' => $binnedTaskCount,
             'is_deleted' => $p->deletedAt !== null,
             'deleted_at' => self::iso($p->deletedAt),
             'created_date' => self::iso($p->createdDate),
@@ -84,6 +119,8 @@ final class TaskPresenter
             'finance_statement_area' => $t->financeStatementArea,
             'preparer_id' => self::person($t->preparerUserId),
             'reviewer_id' => self::person($t->reviewerUserId),
+            'preparer_ids' => self::people($t->preparerUserIds),
+            'reviewer_ids' => self::people($t->reviewerUserIds),
             'progress' => $t->defaultProgress,
             'due_date' => $t->dueDate ?? '',
             'due_date_requested' => $t->dueDateRequested,
@@ -124,9 +161,11 @@ final class TaskPresenter
     /**
      * @param array<string, list<string>> $dependencies task id to the ids it waits for
      * @param array<string, string> $projectNames project id to name
+     * @param ?array{is_unread: bool, is_flagged: bool, pinned_at: ?string} $mine the signed-in person's own marks, when there is one
+     * @param ?array<string, mixed> $calendarInvite the task's latest calendar invite ({@see calendarInvite}), null when none
      * @return array<string, mixed>
      */
-    public static function task(TaskRecord $t, array $dependencies, array $projectNames, string $today): array
+    public static function task(TaskRecord $t, array $dependencies, array $projectNames, string $today, ?array $mine = null, ?array $calendarInvite = null): array
     {
         $project = $t->projectId !== null ? ($projectNames[$t->projectId] ?? '') : '';
 
@@ -136,6 +175,8 @@ final class TaskPresenter
             'description' => $t->description,
             'requirements' => $t->requirements,
             'notes' => $t->notes,
+            // The people @mentioned in the notes (user ids, as `preparer_ids` are); the notes carry them as tokens.
+            'mentioned_ids' => self::people(TaskMentions::ids($t->notes)),
             'category' => $t->category,
             'finance_statement_area' => $t->financeStatementArea,
             'entity_id' => $t->entityId,
@@ -143,8 +184,11 @@ final class TaskPresenter
             'project_name' => $project,
             // The pre-rewrite UI grouped by a project *name* string.
             'project' => $project,
+            // `preparer_id` / `reviewer_id` are the first of each list, for clients from before the lists (to drop in a later release).
             'preparer_id' => self::person($t->preparerUserId),
             'reviewer_id' => self::person($t->reviewerUserId),
+            'preparer_ids' => self::people($t->preparerUserIds),
+            'reviewer_ids' => self::people($t->reviewerUserIds),
             'status' => TaskRules::status($t->status),
             'display_status' => self::displayStatus($t->status, $t->dueDate, $today),
             'priority' => $t->priority,
@@ -161,6 +205,48 @@ final class TaskPresenter
             'deleted_at' => self::iso($t->deletedAt),
             'created_date' => self::iso($t->createdDate),
             'updated_date' => self::iso($t->updatedDate),
+            'calendar_invite' => $calendarInvite,
+        ] + ($mine ?? []);
+    }
+
+    /**
+     * The latest calendar invite sent for a task, or null when none (Nick Han, 23 Oct 2026): the due date it carried,
+     * when it went, its SEQUENCE and who sent it. `out_of_date` is true when the task's due date has moved since.
+     *
+     * @return array{due_date: string, sent_at: ?string, sequence: int, sent_by_id: ?string, recipient_count: int, out_of_date: bool}|null
+     */
+    public static function calendarInvite(?TaskCalendarInvite $invite, ?string $dueDate): ?array
+    {
+        if ($invite === null) {
+            return null;
+        }
+
+        return [
+            'due_date' => $invite->dueDateSent,
+            'sent_at' => self::iso($invite->sentAt),
+            'sequence' => $invite->sequence,
+            'sent_by_id' => self::person($invite->sentBy),
+            'recipient_count' => count($invite->recipients),
+            'out_of_date' => ($dueDate ?? '') !== $invite->dueDateSent,
+        ];
+    }
+
+    /**
+     * The signed-in person's own Unread, Flag and Pin on a task (Nick Han, 23 Oct 2026), the same for a mailbox:
+     * unread until they first open it, or after they mark it unread; a task created before `$cutoff` counts as
+     * read, and a person's own new task is never unread to them.
+     *
+     * @return array{is_unread: bool, is_flagged: bool, pinned_at: ?string}
+     */
+    public static function mine(TaskRecord $t, ?TaskUserState $state, int $userId, ?DateTimeImmutable $cutoff): array
+    {
+        $unread = $state !== null && $state->markedUnread
+            || ($state?->readAt === null && $cutoff !== null && $t->createdDate > $cutoff && $t->createdByUserId !== $userId);
+
+        return [
+            'is_unread' => $unread,
+            'is_flagged' => $state?->flaggedAt !== null,
+            'pinned_at' => self::iso($state?->pinnedAt),
         ];
     }
 

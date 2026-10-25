@@ -100,7 +100,6 @@ function te_graph_lookup(string $email): array
     ]);
     $body = curl_exec($ch);
     $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
     if (!is_string($body) || $status < 200 || $status > 299) {
         throw new RuntimeException('GRAPH_LOOKUP_FAILED status=' . $status);
     }
@@ -148,10 +147,10 @@ $opt = [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES => true,
 ];
-if (defined('PDO::MYSQL_ATTR_SSL_CA')) {
-    $opt[PDO::MYSQL_ATTR_SSL_CA] = '';
-    if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) {
-        $opt[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+if (defined('Pdo\\Mysql::ATTR_SSL_CA')) {
+    $opt[\Pdo\Mysql::ATTR_SSL_CA] = '';
+    if (defined('Pdo\\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')) {
+        $opt[\Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = false;
     }
 }
 $my = new PDO($dsn, $env['LEGACY_TC_USER'], $env['LEGACY_TC_PASSWORD'], $opt);

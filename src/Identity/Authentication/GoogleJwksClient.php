@@ -59,7 +59,7 @@ final class GoogleJwksClient implements GoogleJwksProvider
 
         $body = @file_get_contents(self::JWKS_URL, false, $context);
         /** @var list<string> $responseHeaders */
-        $responseHeaders = $http_response_header ?? [];
+        $responseHeaders = http_get_last_response_headers() ?? [];
         $status = self::statusFromHeaders($responseHeaders);
 
         if ($body === false || $body === '') {

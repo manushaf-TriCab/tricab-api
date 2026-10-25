@@ -75,23 +75,30 @@ final class TaskReviewRequestNotifier
     public function request(TaskActor $actor, array $task): array
     {
         $id = is_string($task['id'] ?? null) ? $task['id'] : '';
-        $preparerId = is_string($task['preparer_id'] ?? null) && ctype_digit($task['preparer_id']) ? (int) $task['preparer_id'] : null;
-        $reviewerId = is_string($task['reviewer_id'] ?? null) && ctype_digit($task['reviewer_id']) ? (int) $task['reviewer_id'] : null;
-        if ($preparerId !== $actor->userId && !$actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)) {
+        $preparerIds = TaskPresenter::peopleOf($task, 'preparer');
+        $reviewerIds = TaskPresenter::peopleOf($task, 'reviewer');
+        if (!in_array($actor->userId, $preparerIds, true) && !$actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)) {
             throw new TaskForbidden('Only the preparer can send this task for review');
         }
         if (($task['is_deleted'] ?? false) === true || ($task['status'] ?? '') === 'completed') {
             throw new TaskInvalid('This task is done or in the Bin');
         }
-        if ($reviewerId === null) {
+        if ($reviewerIds === []) {
             throw new TaskInvalid('This task has no reviewer. Choose one first.');
         }
-        if ($reviewerId === $actor->userId) {
-            throw new TaskInvalid('You are this task\'s reviewer: mark it Done when it is ready');
+        if (in_array($actor->userId, $reviewerIds, true)) {
+            throw new TaskInvalid(count($reviewerIds) > 1 ? 'You are one of this task\'s reviewers: mark it Done when it is ready' : 'You are this task\'s reviewer: mark it Done when it is ready');
         }
-        $reviewer = $this->members->find($reviewerId);
-        if ($reviewer === null || trim($reviewer->email) === '') {
-            throw new TaskInvalid('The reviewer has no email address');
+        // Every reviewer is asked, in one message; any one of them can mark the task Done.
+        $recipients = [];
+        foreach ($reviewerIds as $reviewerId) {
+            $reviewer = $this->members->find($reviewerId);
+            if ($reviewer !== null && trim($reviewer->email) !== '') {
+                $recipients[] = strtolower(trim($reviewer->email));
+            }
+        }
+        if ($recipients === []) {
+            throw new TaskInvalid(count($reviewerIds) > 1 ? 'None of the reviewers has an email address' : 'The reviewer has no email address');
         }
         $own = strtolower(trim($actor->email));
         $sender = $this->sendAsUser ? $own : strtolower(trim($this->from));
@@ -115,7 +122,7 @@ final class TaskReviewRequestNotifier
             $result = $this->mail->send(new FinanceMailMessage(
                 Module::APP_TASK,
                 $sender,
-                [strtolower(trim($reviewer->email))],
+                array_values(array_unique($recipients)),
                 'Ready for your review: ' . $name,
                 $body,
                 [],

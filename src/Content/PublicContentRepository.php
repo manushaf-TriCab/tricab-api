@@ -23,7 +23,7 @@ final class PublicContentRepository
     {
         return new self(
             rtrim($projectRoot, DIRECTORY_SEPARATOR) . '/resources/content/public',
-            rtrim($projectRoot, DIRECTORY_SEPARATOR) . '/public/media/about',
+            PublicMediaDirectory::forProjectRoot($projectRoot) . '/media/about',
         );
     }
 

@@ -90,6 +90,57 @@ final class FinanceTaskRegisterRoutesTest extends TestCase
         return $row['id'];
     }
 
+    public function test_flag_pin_and_read_are_the_callers_own_marks_on_the_task_routes(): void
+    {
+        $a = self::id(self::data($this->call('POST', '/tasks', ['name' => 'Bank rec', 'preparer_id' => '1'])[1]));
+        $b = self::id(self::data($this->call('POST', '/tasks', ['name' => 'Payroll', 'preparer_id' => '1'])[1]));
+
+        [$status, $json] = $this->call('POST', '/tasks/' . $a . '/user-state', ['flagged' => true, 'pinned' => true]);
+        self::assertSame(200, $status);
+        $row = (array) self::data($json);
+        self::assertTrue($row['is_flagged']);
+        self::assertIsString($row['pinned_at']);
+        self::assertFalse($row['is_unread']);
+
+        $flagged = [];
+        $pinned = [];
+        foreach ((array) self::data($this->call('GET', '/tasks')[1]) as $listed) {
+            self::assertIsArray($listed);
+            self::assertIsString($listed['name']);
+            $flagged[$listed['name']] = $listed['is_flagged'];
+            $pinned[$listed['name']] = $listed['pinned_at'];
+        }
+        self::assertTrue($flagged['Bank rec']);
+        self::assertFalse($flagged['Payroll']);
+        self::assertNull($pinned['Payroll']);
+
+        [$status, $json] = $this->call('POST', '/tasks/bulk-user-state', ['ids' => [$a, $b], 'read' => false, 'flagged' => false, 'pinned' => false]);
+        self::assertSame(200, $status);
+        $rows = (array) self::data($json);
+        self::assertSame([true, true], array_column($rows, 'is_unread'));
+        self::assertSame([false, false], array_column($rows, 'is_flagged'));
+        self::assertSame([null, null], array_column($rows, 'pinned_at'));
+    }
+
+    public function test_user_state_routes_refuse_bad_input_and_tasks_the_caller_may_not_see(): void
+    {
+        $a = self::id(self::data($this->call('POST', '/tasks', ['name' => 'Bank rec', 'preparer_id' => '9'])[1]));
+
+        // The caller (user 1) creates it but neither prepares nor reviews it, and has no READ_ALL.
+        self::assertSame(404, $this->call('POST', '/tasks/' . $a . '/user-state', ['flagged' => true])[0]);
+        self::assertSame(404, $this->call('POST', '/tasks/bulk-user-state', ['ids' => [$a], 'flagged' => true])[0]);
+        self::assertSame(404, $this->call('POST', '/tasks/nope/user-state', ['flagged' => true])[0]);
+
+        $this->as([Module::PERMISSION_TASK_TASKS_READ, Module::PERMISSION_TASK_TASKS_READ_ALL]);
+        self::assertSame(422, $this->call('POST', '/tasks/' . $a . '/user-state', [])[0]);
+        self::assertSame(422, $this->call('POST', '/tasks/' . $a . '/user-state', ['pinned' => 'yes'])[0]);
+        self::assertSame(422, $this->call('POST', '/tasks/bulk-user-state', ['ids' => [], 'read' => true])[0]);
+        self::assertSame(200, $this->call('POST', '/tasks/' . $a . '/user-state', ['flagged' => true])[0], 'read access is all it takes');
+
+        $this->as([]);
+        self::assertSame(403, $this->call('POST', '/tasks/' . $a . '/user-state', ['flagged' => true])[0]);
+    }
+
     public function test_several_tasks_go_to_the_bin_together_and_come_back_together(): void
     {
         $a = self::id(self::data($this->call('POST', '/tasks', ['name' => 'Bank rec', 'preparer_id' => '1'])[1]));
@@ -251,5 +302,31 @@ final class FinanceTaskRegisterRoutesTest extends TestCase
         [$status, $json] = $this->call('POST', '/tasks', []);
         self::assertSame(422, $status);
         self::assertSame('Name is required', self::error($json)['message']);
+    }
+
+    public function test_the_routes_take_either_the_lists_or_the_single_ids_and_answer_both(): void
+    {
+        [$status, $json] = $this->call('POST', '/tasks', ['name' => 'Shared', 'preparer_ids' => ['1', '9'], 'reviewer_ids' => ['9']]);
+        self::assertSame(201, $status);
+        $task = (array) self::data($json);
+        self::assertSame([['1', '9'], ['9'], '1', '9'], [$task['preparer_ids'], $task['reviewer_ids'], $task['preparer_id'], $task['reviewer_id']]);
+        $id = self::id($task);
+
+        // The caller is the first preparer; the second preparer's task is also theirs in the list.
+        [, $json] = $this->call('GET', '/tasks');
+        self::assertSame([['1', '9']], array_column((array) self::data($json), 'preparer_ids'));
+
+        // A client from before the lists, saving the first person back, drops nobody.
+        [$status, $json] = $this->call('PATCH', '/tasks/' . $id, ['preparer_id' => '1', 'progress' => 20]);
+        self::assertSame(200, $status);
+        self::assertSame(['1', '9'], ((array) self::data($json))['preparer_ids']);
+
+        [$status, $json] = $this->call('POST', '/tasks', ['name' => 'Old client', 'preparer_id' => '1', 'reviewer_id' => '9']);
+        self::assertSame(201, $status);
+        self::assertSame([['1'], ['9']], [((array) self::data($json))['preparer_ids'], ((array) self::data($json))['reviewer_ids']]);
+
+        [$status, $json] = $this->call('POST', '/tasks', ['name' => 'Bad', 'preparer_ids' => ['1', '77']]);
+        self::assertSame(422, $status);
+        self::assertSame('The preparer and reviewer must be members of Tri-Task', self::error($json)['message']);
     }
 }

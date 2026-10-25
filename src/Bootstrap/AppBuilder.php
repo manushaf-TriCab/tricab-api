@@ -802,10 +802,28 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
         $app->post($task . '/tasks/bulk-restore', \TriCab\Api\Http\Action\Finance\Task\BulkRestoreTasksAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
+        // Unread, Flag and Pin: each person's own, so the weakest permission, and only on tasks they may see (23 Oct 2026).
+        $app->post($task . '/tasks/bulk-user-state', \TriCab\Api\Http\Action\Finance\Task\BulkSetTaskUserStateAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/tasks/{id}/user-state', \TriCab\Api\Http\Action\Finance\Task\SetTaskUserStateAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
         $app->delete($task . '/tasks/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
         $app->post($task . '/tasks/{id}/restore', \TriCab\Api\Http\Action\Finance\Task\RestoreTaskAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
+        // Files on tasks (23 Oct 2026): the shared finance file store, app TASK. Reading follows TASKS.READ; adding and
+        // removing the weaker UPDATE_OWN, then the use case's own-versus-any edit rule. A file for a task not yet saved
+        // goes up as a loose upload (CREATE) and `POST /tasks` takes its id.
+        $app->post($task . '/task-uploads', \TriCab\Api\Http\Action\Finance\Task\UploadTaskLooseFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
+        $app->get($task . '/tasks/{id}/files', \TriCab\Api\Http\Action\Finance\Task\ListTaskFilesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/tasks/{id}/files', \TriCab\Api\Http\Action\Finance\Task\UploadTaskFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
+        $app->get($task . '/tasks/{id}/files/{fid}/file', \TriCab\Api\Http\Action\Finance\Task\GetTaskFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->delete($task . '/tasks/{id}/files/{fid}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
         $app->post($task . '/tasks/{id}/request-review', \TriCab\Api\Http\Action\Finance\Task\RequestTaskReviewAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
         $app->get($task . '/tasks/{id}/history', \TriCab\Api\Http\Action\Finance\Task\GetTaskHistoryAction::class)
@@ -819,6 +837,9 @@ final class AppBuilder
         $app->get($task . '/send-mailboxes', \TriCab\Api\Http\Action\Finance\Task\ListTaskSendMailboxesAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
         $app->post($task . '/mail/send', \TriCab\Api\Http\Action\Finance\Task\SendTaskMailAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
+        // Calendar invites by due date: an all-day event per task to its preparers and reviewers, from the person's own mailbox (23 Oct 2026). Same permission as reminders.
+        $app->post($task . '/calendar-invites', \TriCab\Api\Http\Action\Finance\Task\SendTaskCalendarInvitesAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
         $app->get($task . '/tasks/{id}/mail', \TriCab\Api\Http\Action\Finance\Task\ListTaskMailAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
@@ -837,6 +858,9 @@ final class AppBuilder
 
         // The five AI drafting routes, through finance_ai (T2.7).
         $app->post($task . '/ai/task-details', \TriCab\Api\Http\Action\Finance\Task\TaskAiDetailsAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
+        // "Create with AI": a draft of tasks and a project from a summary; writes nothing (the page creates through the routes above).
+        $app->post($task . '/ai/draft', \TriCab\Api\Http\Action\Finance\Task\TaskAiDraftAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
         $app->post($task . '/ai/statement-areas', \TriCab\Api\Http\Action\Finance\Task\TaskAiStatementAreasAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));

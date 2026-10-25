@@ -84,7 +84,7 @@ final class ExpenseReceipt
         ?ExpenseAttachmentRef $attachment,
         DateTimeImmutable $now,
         ?UserId $managerUserId = null,
-        LegacyExpenseIdentity $legacy = null,
+        ?LegacyExpenseIdentity $legacy = null,
         ?string $statementPeriod = null,
         ?string $customerId = null,
         ?string $customerCode = null,

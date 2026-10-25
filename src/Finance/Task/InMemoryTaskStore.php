@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use TriCab\Core\Finance\Task\Contract\TaskStore;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
+use TriCab\Core\Finance\Task\Domain\TaskUserState;
 
 /**
  * Tasks, dependencies and history held in memory, on top of the reference lists
@@ -25,9 +26,21 @@ final class InMemoryTaskStore extends InMemoryTaskSetupStore implements TaskStor
     /** @var list<TaskHistoryRow> */
     protected array $history = [];
 
+    /** @var array<int, array<string, TaskUserState>> user id, then task id */
+    protected array $userState = [];
+
+    protected ?DateTimeImmutable $unreadCutoff = null;
+
     protected function taskRows(): array
     {
         return array_values($this->taskRecords);
+    }
+
+    protected function forgetTasks(array $ids): void
+    {
+        foreach ($ids as $id) {
+            $this->deleteTaskPermanently($id);
+        }
     }
 
     public function tasks(bool $deleted, ?int $visibleToUserId): array
@@ -102,6 +115,9 @@ final class InMemoryTaskStore extends InMemoryTaskSetupStore implements TaskStor
     public function deleteTaskPermanently(string $id): void
     {
         unset($this->taskRecords[$id], $this->dependencies[$id]);
+        foreach (array_keys($this->userState) as $userId) {
+            unset($this->userState[$userId][$id]);
+        }
         foreach ($this->dependencies as $taskId => $waitsFor) {
             $kept = array_values(array_filter($waitsFor, static fn (string $dep): bool => $dep !== $id));
             if ($kept === []) {
@@ -126,6 +142,42 @@ final class InMemoryTaskStore extends InMemoryTaskSetupStore implements TaskStor
             return;
         }
         $this->dependencies[$taskId] = $dependencyIds;
+    }
+
+    public function userStates(int $userId): array
+    {
+        return $this->userState[$userId] ?? [];
+    }
+
+    public function unreadCutoff(): ?DateTimeImmutable
+    {
+        return $this->unreadCutoff;
+    }
+
+    /** For tests and the development app: where "unread by default" begins. */
+    public function setUnreadCutoff(?DateTimeImmutable $cutoff): void
+    {
+        $this->unreadCutoff = $cutoff;
+    }
+
+    public function saveUserState(int $userId, string $taskId, ?bool $read, ?bool $flagged, ?bool $pinned, DateTimeImmutable $now): void
+    {
+        $was = $this->userState[$userId][$taskId] ?? new TaskUserState();
+        $readAt = $was->readAt;
+        $unread = $was->markedUnread;
+        if ($read === true) {
+            $readAt = $now;
+            $unread = false;
+        } elseif ($read === false) {
+            $readAt = null;
+            $unread = true;
+        }
+        $this->userState[$userId][$taskId] = new TaskUserState(
+            $readAt,
+            $unread,
+            $flagged === null ? $was->flaggedAt : ($flagged ? ($was->flaggedAt ?? $now) : null),
+            $pinned === null ? $was->pinnedAt : ($pinned ? ($was->pinnedAt ?? $now) : null),
+        );
     }
 
     public function addHistory(TaskHistoryRow $row): void

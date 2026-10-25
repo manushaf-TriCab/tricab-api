@@ -141,4 +141,15 @@ final class TaskDueDateRequestNotifierTest extends TestCase
         // A later save tries again.
         self::assertSame(TaskDueDateRequestNotifier::SENT, $this->notifier()->notify($this->manager, $task));
     }
+
+    public function test_every_preparer_but_the_asker_is_told_once_each(): void
+    {
+        $task = $this->task(['preparer_ids' => ['11', '12', '13'], 'due_date_requested' => true]);
+
+        self::assertSame(TaskDueDateRequestNotifier::SENT, $this->notifier()->notify($this->manager, $task));
+
+        self::assertSame([['una@example.test'], ['ivy@example.test']], array_map(static fn (FinanceMailMessage $m): array => $m->to, $this->transport->sent));
+        self::assertSame(TaskDueDateRequestNotifier::SKIPPED, $this->notifier()->notify($this->manager, $task), 'saving again repeats nothing');
+        self::assertCount(2, $this->transport->sent);
+    }
 }

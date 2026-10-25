@@ -17,6 +17,9 @@ namespace TriCab\Core\Finance\Shared\Mail;
  * conversation. A transport that can thread ({@see FinanceReplyMailTransport}) does; any other sends a
  * standalone message. It is not part of the ledger row.
  *
+ * `calendar` (optional) is a calendar invite to send as the message's own `text/calendar` part, by a transport that can
+ * ({@see FinanceMimeMailTransport}); any other sends the message as a normal one, the invite only as its attachment.
+ *
  * `ownMailbox` marks a message sent from the acting person's own mailbox rather than a shared one in the
  * registry (Tri-Task's reminders, 13 Oct 2026). The calling app has checked that `mailbox` is that person's
  * own address; the service then needs no registry grant for it.
@@ -43,6 +46,7 @@ final readonly class FinanceMailMessage
         public ?int $actorUserId = null,
         public ?string $replyToMessageId = null,
         public bool $ownMailbox = false,
+        public ?FinanceMailCalendar $calendar = null,
     ) {
     }
 
@@ -70,6 +74,7 @@ final readonly class FinanceMailMessage
             $this->actorUserId,
             $this->replyToMessageId,
             $this->ownMailbox,
+            $this->calendar,
         );
     }
 }

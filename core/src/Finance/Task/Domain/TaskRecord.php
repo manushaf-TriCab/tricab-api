@@ -15,6 +15,12 @@ use DateTimeImmutable;
  */
 final class TaskRecord
 {
+    /**
+     * `preparerUserId` / `reviewerUserId` are the first of each list; when a list is not passed it is that one person.
+     *
+     * @param ?list<int> $preparerUserIds
+     * @param ?list<int> $reviewerUserIds
+     */
     public function __construct(
         public string $id,
         public string $name,
@@ -41,12 +47,47 @@ final class TaskRecord
         public ?string $priority = null,
         public ?string $groupId = null,
         public ?int $sortOrder = null,
+        ?array $preparerUserIds = null,
+        ?array $reviewerUserIds = null,
     ) {
+        $this->setPreparers($preparerUserIds ?? ($preparerUserId === null ? [] : [$preparerUserId]));
+        $this->setReviewers($reviewerUserIds ?? ($reviewerUserId === null ? [] : [$reviewerUserId]));
     }
 
-    /** The caller prepares or reviews this task (`_is_own`). */
+    /**
+     * Every preparer and reviewer (Nick Han, 23 Oct 2026), in order. `preparerUserId` and `reviewerUserId` stay as the
+     * first of each: what clients and columns before the lists read.
+     *
+     * @var list<int>
+     */
+    public array $preparerUserIds = [];
+
+    /** @var list<int> */
+    public array $reviewerUserIds = [];
+
+    /** @param list<int> $ids */
+    public function setPreparers(array $ids): void
+    {
+        $this->preparerUserIds = array_values(array_unique($ids));
+        $this->preparerUserId = $this->preparerUserIds[0] ?? null;
+    }
+
+    /** @param list<int> $ids */
+    public function setReviewers(array $ids): void
+    {
+        $this->reviewerUserIds = array_values(array_unique($ids));
+        $this->reviewerUserId = $this->reviewerUserIds[0] ?? null;
+    }
+
+    /** The caller is one of the task's preparers or reviewers (`_is_own`). */
     public function isOwnedBy(int $userId): bool
     {
-        return $this->preparerUserId === $userId || $this->reviewerUserId === $userId;
+        return in_array($userId, $this->preparerUserIds, true) || in_array($userId, $this->reviewerUserIds, true);
+    }
+
+    /** @return list<int> every preparer and reviewer, each once */
+    public function everyone(): array
+    {
+        return array_values(array_unique([...$this->preparerUserIds, ...$this->reviewerUserIds]));
     }
 }

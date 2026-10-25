@@ -8,8 +8,11 @@ use JsonException;
 use Throwable;
 use TriCab\Api\Infrastructure\Http\JsonHttpClient;
 use TriCab\Api\Infrastructure\Http\JsonMethodHttpClient;
+use TriCab\Api\Infrastructure\Http\RawHttpClient;
 use TriCab\Core\Finance\Shared\Mail\FinanceMailMessage;
 use TriCab\Core\Finance\Shared\Mail\FinanceMailRules;
+use TriCab\Core\Finance\Shared\Mail\FinanceMimeBuilder;
+use TriCab\Core\Finance\Shared\Mail\FinanceMimeMailTransport;
 use TriCab\Core\Finance\Shared\Mail\FinanceMailTransport;
 use TriCab\Core\Finance\Shared\Mail\FinanceReplyMailTransport;
 use TriCab\Core\Finance\Shared\Mail\FinanceMailTransportFailed;
@@ -28,7 +31,7 @@ use TriCab\Core\Finance\Shared\Mail\FinanceMailTransportFailed;
  * Nothing secret is put in an error: a failure names the status and Graph's own
  * error code.
  */
-final class GraphFinanceMailTransport implements FinanceReplyMailTransport
+final class GraphFinanceMailTransport implements FinanceReplyMailTransport, FinanceMimeMailTransport
 {
     private const GRAPH_SCOPE = 'https://graph.microsoft.com/.default';
 
@@ -92,6 +95,62 @@ final class GraphFinanceMailTransport implements FinanceReplyMailTransport
         }
 
         throw new FinanceMailTransportFailed(self::describe($status, $body));
+    }
+
+    /**
+     * Sends a message that carries a calendar invite as raw MIME (Graph "send Outlook messages in MIME format": the same
+     * `sendMail` URL and the same `Mail.Send` permission, with `Content-Type: text/plain` and the base64 of the whole
+     * RFC 5322 message), so the invite is the message's own `text/calendar` part and Outlook shows Accept, Tentative and
+     * Decline in the message. The test-recipient redirect applies as for JSON. Saved to Sent Items by default. The same
+     * three attempts and the same errors as {@see deliver}.
+     */
+    public function deliverMime(FinanceMailMessage $message): void
+    {
+        if (!$this->http instanceof RawHttpClient) {
+            throw new FinanceMailTransportFailed('MIME mail needs an HTTP client that can post text; none is configured.');
+        }
+        $redirect = $this->testRecipient !== null && $this->testRecipient !== '';
+        $mime = FinanceMimeBuilder::build(
+            $message,
+            $redirect ? [(string) $this->testRecipient] : $message->to,
+            $redirect ? [] : $message->cc,
+            new \DateTimeImmutable('now', new \DateTimeZone('UTC')),
+            bin2hex(random_bytes(16)),
+            bin2hex(random_bytes(12)),
+        );
+        $url = sprintf(self::SEND_MAIL_URL_TEMPLATE, rawurlencode($message->mailbox));
+        $body = base64_encode($mime);
+        $status = 0;
+        $answer = '';
+        for ($attempt = 1; $attempt <= self::MAX_ATTEMPTS; $attempt++) {
+            $token = $this->accessToken();
+            try {
+                $response = $this->http->postRaw($url, ['Authorization' => 'Bearer ' . $token, 'Content-Type' => 'text/plain'], $body);
+            } catch (Throwable) {
+                if ($attempt === self::MAX_ATTEMPTS) {
+                    throw new FinanceMailTransportFailed('Microsoft Graph could not be reached.');
+                }
+                $this->pause($attempt);
+                continue;
+            }
+            $status = $response['status'];
+            $answer = $response['body'];
+            if ($status >= 200 && $status <= 299) {
+                return;
+            }
+            if ($status === 401 || $status === 403) {
+                $this->token = null;
+                $this->tokenExpiresAt = 0;
+            }
+            if ($status >= 400 && $status < 500 && $status !== 429) {
+                break;
+            }
+            if ($attempt < self::MAX_ATTEMPTS) {
+                $this->pause($this->retryDelay($response, $attempt));
+            }
+        }
+
+        throw new FinanceMailTransportFailed(self::describe($status, $answer));
     }
 
     /**

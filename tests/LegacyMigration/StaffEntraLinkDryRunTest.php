@@ -392,13 +392,13 @@ final class InMemoryStaffEntraLinkWriteUnit implements StaffEntraLinkWriteUnit
     public function linkEntraIdentity(array $link): array
     {
         $this->links[] = $link;
-        if (($link['activateIfPending'] ?? false) === true) {
+        if ($link['activateIfPending'] === true) {
             $this->activated[] = (int) ($link['userId'] ?? 0);
         }
 
         return [
             'externalIdentityCreated' => true,
-            'userActivated' => ($link['activateIfPending'] ?? false) === true,
+            'userActivated' => $link['activateIfPending'] === true,
         ];
     }
 }

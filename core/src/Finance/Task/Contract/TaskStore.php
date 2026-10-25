@@ -7,6 +7,7 @@ namespace TriCab\Core\Finance\Task\Contract;
 use DateTimeImmutable;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
+use TriCab\Core\Finance\Task\Domain\TaskUserState;
 
 /**
  * Storage for tasks, their dependencies and their history (T2.4). The rules (who may see or
@@ -71,6 +72,27 @@ interface TaskStore extends TaskTransactions
      * @param list<string> $dependencyIds
      */
     public function replaceDependencies(string $taskId, array $dependencyIds, DateTimeImmutable $now): void;
+
+    /**
+     * One person's marks on the tasks they have touched (read, unread, flag, pin): a task with no entry has none.
+     * One query however many tasks, so a list costs nothing per row.
+     *
+     * @return array<string, TaskUserState> by task id
+     */
+    public function userStates(int $userId): array;
+
+    /**
+     * When the per-person unread state began: a task created after it is unread for everyone but its creator
+     * until they open it, an older one counts as read. Null (no marker stored) means nothing is unread by default.
+     */
+    public function unreadCutoff(): ?DateTimeImmutable;
+
+    /**
+     * Sets this person's marks on one task; a null leaves that mark as it is. Marking read stamps `read_at` and
+     * clears a "mark as unread"; marking unread sets that and clears `read_at`. A flag or pin already set keeps its
+     * time, so pins keep their order.
+     */
+    public function saveUserState(int $userId, string $taskId, ?bool $read, ?bool $flagged, ?bool $pinned, DateTimeImmutable $now): void;
 
     public function addHistory(TaskHistoryRow $row): void;
 

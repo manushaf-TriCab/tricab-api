@@ -7,6 +7,37 @@ server {
     server_name _;
     port_in_redirect off;
 
+    # Compression. nginx's default gzip_types is text/html only, so JS, CSS,
+    # SVG and the API's JSON went out uncompressed. woff2 and woff are already
+    # compressed, and images/video/xlsx/zip are left alone. The streamed
+    # assistant route sets `gzip off` itself (text/event-stream is not listed
+    # here either, but compression would buffer the stream).
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_types
+        text/plain
+        text/css
+        text/csv
+        text/xml
+        text/javascript
+        application/javascript
+        application/json
+        application/manifest+json
+        application/xml
+        application/wasm
+        image/svg+xml
+        font/ttf
+        font/otf
+        application/vnd.ms-fontobject;
+
+    # Caching headers. No security headers are set anywhere in this file, so
+    # the add_header inheritance rule (a location's add_header discards the
+    # server-level ones) costs nothing today. If a server-level add_header is
+    # ever added, repeat it in each location below that sets Cache-Control.
+
     location = /api {
         try_files /__tricab_api_front_controller__ @tricab_api;
     }
@@ -53,6 +84,26 @@ server {
     location = /api/v1/finance/task/import {
         client_max_body_size 8m;
         try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
+    # Tri-Task's task files: the app accepts files up to 20 MB (TaskFileService::MAX_BYTES),
+    # which nginx's 1 MB default refused with a 413. Only the two upload routes get 21m (a
+    # file plus multipart overhead); the rest of /api/v1/finance/task/ keeps 1 MB. The loose
+    # upload is an exact match. The per-task upload needs a regex, and a ^~ prefix location
+    # skips regex matching (the NPR note above), so it sits nested in the prefix that
+    # holds the task routes. The exact import location above still wins for its own path.
+    location = /api/v1/finance/task/task-uploads {
+        client_max_body_size 21m;
+        try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
+    location ^~ /api/v1/finance/task/tasks/ {
+        try_files /__tricab_api_front_controller__ @tricab_api;
+
+        location ~ ^/api/v1/finance/task/tasks/[^/]+/files$ {
+            client_max_body_size 21m;
+            try_files /__tricab_api_front_controller__ @tricab_api;
+        }
     }
 
     # The product assistant's streamed reply (text/event-stream). nginx buffers
@@ -154,6 +205,13 @@ upload_max_filesize=20M";
         add_header Cache-Control "no-store" always;
     }
 
+    # The SPA shell. It names the hashed bundles, so it must be revalidated on
+    # every load or a visitor keeps pointing at chunks the last deploy deleted.
+    location = /index.html {
+        try_files $uri =404;
+        add_header Cache-Control "no-cache" always;
+    }
+
     location = /auth-logout-complete.html {
         try_files $uri =404;
         add_header Cache-Control "no-store" always;
@@ -166,7 +224,50 @@ upload_max_filesize=20M";
         add_header Cache-Control "public, max-age=86400" always;
     }
 
+    # These cache headers omit `always` on purpose: a 404 must never carry a
+    # year-long immutable header into a browser or CDN cache.
+    #
+    # Vite output. A missing file here must be a real 404: falling through to
+    # index.html returned 200 HTML for a deleted chunk, and a tab opened before
+    # a deploy then failed its dynamic import and went blank.
+    # The nested regex is the hashed bundle (name-<8 chars>.ext, Vite's
+    # default), immutable for a year. The same directory also holds unhashed
+    # images and mp4s copied from public/assets, which get a day. (A ^~ prefix
+    # skips regex matching, so the regex has to sit inside it.)
+    location ^~ /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=86400";
+
+        location ~ "^/assets/.+-[A-Za-z0-9_-]{8}\.(?:js|mjs|css|woff2?|svg|png|jpe?g|webp|avif|gif|ico|mp4|webm|json|wasm)$" {
+            try_files $uri =404;
+            add_header Cache-Control "public, max-age=31536000, immutable";
+        }
+    }
+
+    # Unhashed files copied from the web repo's public/ (not under /assets/).
+    location ^~ /videos/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    location ^~ /certificates/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    location ^~ /finance-files/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    location ~ ^/(?:favicon\.(?:png|svg)|apple-touch-icon\.png|icons\.svg)$ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    # SPA fallback: always revalidate, same as index.html.
     location / {
         try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache" always;
     }
 }

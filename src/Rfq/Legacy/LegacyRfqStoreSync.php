@@ -390,13 +390,11 @@ final class LegacyRfqStoreSync
         $statement->execute($params);
         $rows = [];
         while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-            if (is_array($row)) {
-                $named = [];
-                foreach ($row as $column => $value) {
-                    $named[(string) $column] = $value;
-                }
-                $rows[] = $named;
+            $named = [];
+            foreach ($row as $column => $value) {
+                $named[(string) $column] = $value;
             }
+            $rows[] = $named;
         }
 
         return $rows;
@@ -420,9 +418,7 @@ final class LegacyRfqStoreSync
             $statement->execute(["[rfq].[{$table}]"]);
             $columns = [];
             while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                if (is_array($row)) {
-                    $columns[] = ['name' => LegacyRfqRowHash::text($row['name'] ?? ''), 'type' => LegacyRfqRowHash::text($row['type'] ?? '')];
-                }
+                $columns[] = ['name' => LegacyRfqRowHash::text($row['name'] ?? ''), 'type' => LegacyRfqRowHash::text($row['type'] ?? '')];
             }
             if ($columns === []) {
                 throw new LegacyRfqSyncRefused("[rfq].[{$table}] is missing on the platform.");

@@ -1,0 +1,66 @@
+name: Pull request checks
+
+# The same checks the production pipeline runs, before merge. Nothing here
+# builds or deploys.
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: pr-checks-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  website-revision:
+    name: Resolve website revision
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.revision.outputs.sha }}
+    steps:
+      - name: Check out website
+        uses: actions/checkout@v5
+        with:
+          repository: tricab/tricab-website-v2
+          ref: main
+          token: ${{ secrets.TRICAB_WEB_READ_TOKEN }}
+          path: tricab-web
+
+      - name: Pin website commit for tests
+        id: revision
+        run: echo "sha=$(git -C tricab-web rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  api-checks:
+    name: API
+    uses: ./.github/workflows/api-checks.yml
+    secrets:
+      DOCGEN_DEPLOY_KEY: ${{ secrets.DOCGEN_DEPLOY_KEY }}
+
+  frontend-checks:
+    name: Frontend
+    needs: website-revision
+    uses: ./.github/workflows/frontend-checks.yml
+    with:
+      website_sha: ${{ needs.website-revision.outputs.sha }}
+    secrets:
+      TRICAB_WEB_READ_TOKEN: ${{ secrets.TRICAB_WEB_READ_TOKEN }}
+
+  # One stable name to require in branch protection.
+  checks-passed:
+    name: Checks passed
+    if: ${{ always() }}
+    needs: [api-checks, frontend-checks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every check to succeed
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          echo "$RESULTS"
+          if jq -e 'all(. == "success")' <<<"$RESULTS" >/dev/null; then exit 0; fi
+          exit 1

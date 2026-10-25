@@ -177,7 +177,7 @@ parameters:
 		-
 			message: '#^Method TriCab\\Core\\CableCalculator\\Engine\\FindCableCalculator\:\:findCable\(\) should return array\<string, mixed\>\|null but returns array\.$#'
 			identifier: return.type
-			count: 7
+			count: 6
 			path: core/src/CableCalculator/Engine/FindCableCalculator.php
 
 		-
@@ -235,7 +235,7 @@ parameters:
 			path: core/src/CableCalculator/Engine/FindCableCalculator.php
 
 		-
-			message: '#^Strict comparison using \=\=\= between int\<min, 0\> and 1 will always evaluate to false\.$#'
+			message: '#^Strict comparison using \=\=\= between 0 and 1 will always evaluate to false\.$#'
 			identifier: identical.alwaysFalse
 			count: 1
 			path: core/src/CableCalculator/Engine/FindCableCalculator.php
@@ -1225,19 +1225,7 @@ parameters:
 			path: core/src/LegacyMigration/Application/Service/LegacyMigrationEngine.php
 
 		-
-			message: '#^Parameter \$canonical of class TriCab\\Core\\LegacyMigration\\Support\\NormalizedRecord constructor expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: core/src/LegacyMigration/Application/Service/LegacyMigrationEngine.php
-
-		-
 			message: '#^Parameter \$payload of class TriCab\\Core\\LegacyMigration\\Support\\RawRecord constructor expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: core/src/LegacyMigration/Application/Service/LegacyMigrationEngine.php
-
-		-
-			message: '#^Parameter \$rawPayload of class TriCab\\Core\\LegacyMigration\\Support\\NormalizedRecord constructor expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: core/src/LegacyMigration/Application/Service/LegacyMigrationEngine.php
@@ -1245,6 +1233,18 @@ parameters:
 		-
 			message: '#^Property TriCab\\Core\\LegacyMigration\\Application\\Service\\LegacyMigrationEngine\:\:\$uuids is never read, only written\.$#'
 			identifier: property.onlyWritten
+			count: 1
+			path: core/src/LegacyMigration/Application/Service/LegacyMigrationEngine.php
+
+		-
+			message: '#^Parameter \$canonical of class TriCab\\Core\\LegacyMigration\\Support\\NormalizedRecord constructor expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/LegacyMigration/Application/Service/LegacyMigrationEngine.php
+
+		-
+			message: '#^Parameter \$rawPayload of class TriCab\\Core\\LegacyMigration\\Support\\NormalizedRecord constructor expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
 			count: 1
 			path: core/src/LegacyMigration/Application/Service/LegacyMigrationEngine.php
 
@@ -1639,12 +1639,6 @@ parameters:
 			path: core/src/LegacyMigration/StaffEntraLink/StaffEntraLinkExecutor.php
 
 		-
-			message: '#^Offset ''userActivated'' on array\{externalIdentityCreated\: true, userActivated\: bool\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: core/src/LegacyMigration/StaffEntraLink/StaffEntraLinkExecutor.php
-
-		-
 			message: '#^Binary operation "\." between non\-falsy\-string and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
 			count: 1
@@ -1873,12 +1867,6 @@ parameters:
 			path: core/src/Npr/Application/Service/NprWorkflowService.php
 
 		-
-			message: '#^Parameter \$answerPatch of class TriCab\\Core\\Npr\\Domain\\NprTransition constructor expects array\<string, mixed\>, array\<int\|string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: core/src/Npr/Application/Service/NprWorkflowService.php
-
-		-
 			message: '#^Method TriCab\\Core\\Npr\\Domain\\NprJson\:\:answers\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -2101,12 +2089,6 @@ parameters:
 			path: core/src/Onboarding/Infrastructure/InMemoryOnboardingTrainingRepository.php
 
 		-
-			message: '#^Cannot access offset ''state'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: core/src/Onboarding/Migration/Form/SourceFormTranslator.php
-
-		-
 			message: '#^If condition is always false\.$#'
 			identifier: if.alwaysFalse
 			count: 1
@@ -2159,36 +2141,6 @@ parameters:
 			identifier: arrayValues.list
 			count: 1
 			path: core/src/Product/Application/DTO/ProductMediaSummary.php
-
-		-
-			message: '#^Deprecated in PHP 8\.0\: Required parameter \$applicationNames follows optional parameter \$thumbnailBackgroundColor\.$#'
-			identifier: parameter.requiredAfterOptional
-			count: 1
-			path: core/src/Product/Application/DTO/ProductPublicDetail.php
-
-		-
-			message: '#^Deprecated in PHP 8\.0\: Required parameter \$documents follows optional parameter \$thumbnailBackgroundColor\.$#'
-			identifier: parameter.requiredAfterOptional
-			count: 1
-			path: core/src/Product/Application/DTO/ProductPublicDetail.php
-
-		-
-			message: '#^Deprecated in PHP 8\.0\: Required parameter \$industryNames follows optional parameter \$thumbnailBackgroundColor\.$#'
-			identifier: parameter.requiredAfterOptional
-			count: 1
-			path: core/src/Product/Application/DTO/ProductPublicDetail.php
-
-		-
-			message: '#^Deprecated in PHP 8\.0\: Required parameter \$media follows optional parameter \$thumbnailBackgroundColor\.$#'
-			identifier: parameter.requiredAfterOptional
-			count: 1
-			path: core/src/Product/Application/DTO/ProductPublicDetail.php
-
-		-
-			message: '#^Deprecated in PHP 8\.1\: Required parameter \$variants follows optional parameter \$thumbnailBackgroundColor\.$#'
-			identifier: parameter.requiredAfterOptional
-			count: 1
-			path: core/src/Product/Application/DTO/ProductPublicDetail.php
 
 		-
 			message: '#^Parameter \#1 \$data of static method TriCab\\Core\\Product\\Application\\DTO\\SpecificationValidationRules\:\:fromArray\(\) expects array\<string, mixed\>\|null, array\<mixed(?:, mixed)?\> given\.$#'
@@ -2485,7 +2437,7 @@ parameters:
 			path: core/src/Product/Application/Service/ApplyProductCodeStyleMappingService.php
 
 		-
-			message: '#^Parameter \$byDbco of class TriCab\\Core\\Product\\Application\\DTO\\LegacyVariantPricingIdentityAuditSummary constructor expects array\<string, int\>, array\<int, int\<0, max\>\> given\.$#'
+			message: '#^Parameter \$byDbco of class TriCab\\Core\\Product\\Application\\DTO\\LegacyVariantPricingIdentityAuditSummary constructor expects array\<string, int\>, array\<int, int\<1, max\>\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: core/src/Product/Application/Service/AuditLegacyVariantPricingIdentityService.php
@@ -3049,6 +3001,18 @@ parameters:
 			path: core/src/Product/Application/Service/DiscoverExistingProductStyleMappingService.php
 
 		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: core/src/Product/Application/Service/DiscoverExistingProductStyleMappingService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: core/src/Product/Application/Service/DiscoverExistingProductStyleMappingService.php
+
+		-
 			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
@@ -3417,7 +3381,7 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$value of function count expects array\|Countable, mixed given\.$#'
 			identifier: argument.type
-			count: 12
+			count: 11
 			path: core/src/Product/Application/Service/DiscoverProductStyleFamilyTreeService.php
 
 		-
@@ -3611,6 +3575,12 @@ parameters:
 			identifier: offsetAccess.invalidOffset
 			count: 15
 			path: core/src/Product/Application/Service/DiscoverStyleSharedDataGeneralisationService.php
+
+		-
+			message: '#^Possibly invalid array key type int\<0, max\>\|null\.$#'
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: core/src/Product/Application/Service/EffectiveStyleSnapshotBuilder.php
 
 		-
 			message: '#^Call to method findAssignmentByProductPublicId\(\) on an unknown class TriCab\\Core\\Product\\Application\\Service\\ProductStyleRepository\.$#'
@@ -3889,6 +3859,12 @@ parameters:
 			path: core/src/Product/Application/Service/ReviewLegacyStyleHierarchyEvidenceService.php
 
 		-
+			message: '#^Strict comparison using \=\=\= between ''APPROVE_CANDIDATE'' and ''APPROVE_CANDIDATE'' will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 1
+			path: core/src/Product/Application/Service/ReviewLegacyStyleHierarchyEvidenceService.php
+
+		-
 			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
@@ -3991,9 +3967,15 @@ parameters:
 			path: core/src/Product/Domain/Service/Cable3DSpecificationMapping.php
 
 		-
-			message: '#^Right side of \|\| is always false\.$#'
-			identifier: booleanOr.rightAlwaysFalse
-			count: 2
+			message: '#^Call to function str_contains\(\) with non\-empty\-string and ''millimet'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: core/src/Product/Domain/Service/Cable3DSpecificationMapping.php
+
+		-
+			message: '#^Call to function str_contains\(\) with non\-empty\-string and ''centimet'' will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
 			path: core/src/Product/Domain/Service/Cable3DSpecificationMapping.php
 
 		-
@@ -5365,12 +5347,6 @@ parameters:
 			path: core/src/Product/Migration/Application/Service/RecordCableSpecBatchD2OperatorDecisionsService.php
 
 		-
-			message: '#^Parameter \#1 \$incoming of method TriCab\\Core\\Product\\Migration\\Application\\Service\\RecordCableSpecBatchD2OperatorDecisionsService\:\:mergeStyleFieldPresence\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: core/src/Product/Migration/Application/Service/RecordCableSpecBatchD2OperatorDecisionsService.php
-
-		-
 			message: '#^Parameter \#1 \$inventory of method TriCab\\Core\\Product\\Migration\\Application\\Service\\RecordCableSpecBatchD2OperatorDecisionsService\:\:extractStats\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -5390,6 +5366,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#4 \$azureDefinitions of method TriCab\\Core\\Product\\Migration\\Application\\Service\\RecordCableSpecBatchD2OperatorDecisionsService\:\:validateAmbientCreates\(\) expects list\<array\<string, mixed\>\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Product/Migration/Application/Service/RecordCableSpecBatchD2OperatorDecisionsService.php
+
+		-
+			message: '#^Parameter \#1 \$incoming of method TriCab\\Core\\Product\\Migration\\Application\\Service\\RecordCableSpecBatchD2OperatorDecisionsService\:\:mergeStyleFieldPresence\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: core/src/Product/Migration/Application/Service/RecordCableSpecBatchD2OperatorDecisionsService.php
@@ -5695,21 +5677,9 @@ parameters:
 			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
 
 		-
-			message: '#^Parameter \#1 \$categoryItems of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA2ClassificationService\:\:resolve\(\) expects list\<array\<string, mixed\>\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
-
-		-
 			message: '#^Parameter \#1 \$categoryItems of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA3OperatorApprovalService\:\:approvedCategoryCodes\(\) expects list\<array\<string, mixed\>\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
-			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
-
-		-
-			message: '#^Parameter \#1 \$categoryItems of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA3OperatorApprovalService\:\:rebuildProductsByTerm\(\) expects list\<array\<string, mixed\>\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 2
 			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
 
 		-
@@ -5755,12 +5725,6 @@ parameters:
 			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
 
 		-
-			message: '#^Parameter \#2 \$categoryItems of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA3OperatorApprovalService\:\:resolveTechnoFamily\(\) expects list\<array\<string, mixed\>\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
-
-		-
 			message: '#^Parameter \#2 \$series of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA3OperatorApprovalService\:\:countDecisions\(\) expects list\<array\<string, mixed\>\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -5785,12 +5749,6 @@ parameters:
 			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
 
 		-
-			message: '#^Parameter \#3 \$categoryItems of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA3OperatorApprovalService\:\:buildCategoryOverrides\(\) expects list\<array\<string, mixed\>\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
-
-		-
 			message: '#^Parameter \#6 \$wpEvidence of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA2ClassificationService\:\:resolve\(\) expects array\<string, mixed\>, mixed given\.$#'
 			identifier: argument.type
 			count: 1
@@ -5800,6 +5758,30 @@ parameters:
 			message: '#^Strict comparison using \!\=\= between ''CATEGORY_UNRESOLVED''\|''COMPOSITE_STYLE''\|''INVALID_STYLE''\|''SERIES_UNRESOLVED''\|''SOURCE_ONLY''\|''TARGET_CONFLICT'' and null will always evaluate to true\.$#'
 			identifier: notIdentical.alwaysTrue
 			count: 1
+			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
+
+		-
+			message: '#^Parameter \#2 \$categoryItems of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA3OperatorApprovalService\:\:resolveTechnoFamily\(\) expects list\<array\<string, mixed\>\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
+
+		-
+			message: '#^Parameter \#3 \$categoryItems of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA3OperatorApprovalService\:\:buildCategoryOverrides\(\) expects list\<array\<string, mixed\>\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
+
+		-
+			message: '#^Parameter \#1 \$categoryItems of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA2ClassificationService\:\:resolve\(\) expects list\<array\<string, mixed\>\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
+
+		-
+			message: '#^Parameter \#1 \$categoryItems of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveBatchA3OperatorApprovalService\:\:rebuildProductsByTerm\(\) expects list\<array\<string, mixed\>\>, array\<mixed, mixed\> given\.$#'
+			identifier: argument.type
+			count: 2
 			path: core/src/Product/Migration/Application/Service/ResolveBatchA3OperatorApprovalService.php
 
 		-
@@ -6685,12 +6667,6 @@ parameters:
 			path: core/src/Product/Migration/Application/Service/ResolveCableSpecFieldMappingService.php
 
 		-
-			message: '#^Parameter \#2 \$fieldDistributions of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveCableSpecFieldMappingService\:\:buildSpecialInvestigations\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: core/src/Product/Migration/Application/Service/ResolveCableSpecFieldMappingService.php
-
-		-
 			message: '#^Parameter \#2 \$stats of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveCableSpecFieldMappingService\:\:buildFieldDecisions\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -6716,6 +6692,12 @@ parameters:
 
 		-
 			message: '#^Parameter \#4 \$stats of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveCableSpecFieldMappingService\:\:evaluateProductReadiness\(\) expects array\<string, mixed\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Product/Migration/Application/Service/ResolveCableSpecFieldMappingService.php
+
+		-
+			message: '#^Parameter \#2 \$fieldDistributions of method TriCab\\Core\\Product\\Migration\\Application\\Service\\ResolveCableSpecFieldMappingService\:\:buildSpecialInvestigations\(\) expects array\<string, mixed\>, array\<mixed, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: core/src/Product/Migration/Application/Service/ResolveCableSpecFieldMappingService.php
@@ -6907,18 +6889,6 @@ parameters:
 			path: core/src/Product/Migration/Pricing/BuildLegacyBaseCostDryRunService.php
 
 		-
-			message: '#^Binary operation "\." between ''TCA\-BASE mapped to…'' and mixed results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: core/src/Product/Migration/Pricing/EnsureTcaPricingReferenceDataService.php
-
-		-
-			message: '#^Cannot cast mixed to string\.$#'
-			identifier: cast.string
-			count: 2
-			path: core/src/Product/Migration/Pricing/EnsureTcaPricingReferenceDataService.php
-
-		-
 			message: '#^Offset ''audCurrencyActive'' on array\{externalSystemPresent\: bool, audCurrencyPresent\: bool, audCurrencyActive\: bool, tcaBase\: array\{currencyCode\: string, isActive\: bool, deleted\: bool, dbcoMapped\: string\|null, priceListPublicId\?\: string\}\|null\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -6926,18 +6896,6 @@ parameters:
 
 		-
 			message: '#^Offset ''audCurrencyPresent'' on array\{externalSystemPresent\: bool, audCurrencyPresent\: bool, audCurrencyActive\: bool, tcaBase\: array\{currencyCode\: string, isActive\: bool, deleted\: bool, dbcoMapped\: string\|null, priceListPublicId\?\: string\}\|null\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: core/src/Product/Migration/Pricing/EnsureTcaPricingReferenceDataService.php
-
-		-
-			message: '#^Offset ''currencyCode'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: core/src/Product/Migration/Pricing/EnsureTcaPricingReferenceDataService.php
-
-		-
-			message: '#^Offset ''dbcoMapped'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
 			path: core/src/Product/Migration/Pricing/EnsureTcaPricingReferenceDataService.php
@@ -6955,7 +6913,13 @@ parameters:
 			path: core/src/Product/Migration/Pricing/EnsureTcaPricingReferenceDataService.php
 
 		-
-			message: '#^Offset ''isActive'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
+			message: '#^Offset ''isActive'' on array\{currencyCode\: string, isActive\: bool, deleted\: bool, dbcoMapped\: string\|null, priceListPublicId\?\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: core/src/Product/Migration/Pricing/EnsureTcaPricingReferenceDataService.php
+
+		-
+			message: '#^Offset ''currencyCode'' on array\{currencyCode\: string, isActive\: true, deleted\: bool, dbcoMapped\: string\|null, priceListPublicId\?\: string\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
 			path: core/src/Product/Migration/Pricing/EnsureTcaPricingReferenceDataService.php

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidatePattern('^https://[^/]+$')]
+    [ValidatePattern('^(https://[^/]+|same-origin)$')]
     [string] $WebOrigin = 'https://tc-web-core-e7b7gdbjgadjd3ff.australiasoutheast-01.azurewebsites.net',
 
     [switch] $SkipNpmCi
@@ -148,18 +148,17 @@ foreach ($file in @('composer.json', 'composer.lock')) {
 }
 
 # Public content images (About / Technical / catalogue static copies) live under
-# public/media. PHP availability checks read app/public/media; nginx must also
-# serve the same tree at the site-root /media/ path (not under /api/v1).
+# public/media. nginx serves them at the site-root /media/ path (not under
+# /api/v1), and PHP's availability checks read that same copy: from the app at
+# <wwwroot>/app they resolve to ../media (Content\PublicMediaDirectory). One
+# copy only.
 Write-Host '==> Staging public media'
 $mediaSrc = Join-Path $apiRoot 'public\media'
 if (-not (Test-Path -LiteralPath $mediaSrc -PathType Container)) {
     throw "Required public media directory is missing: $mediaSrc"
 }
-New-Item -ItemType Directory -Path (Join-Path $appRoot 'public') -Force | Out-Null
-Copy-Item -LiteralPath $mediaSrc -Destination (Join-Path $appRoot 'public\media') -Recurse -Force
 Copy-Item -LiteralPath $mediaSrc -Destination (Join-Path $releaseRoot 'media') -Recurse -Force
 foreach ($requiredMedia in @(
-    (Join-Path $appRoot 'public\media\about\melbourne-facility.png'),
     (Join-Path $releaseRoot 'media\about\melbourne-facility.png'),
     (Join-Path $releaseRoot 'media\technical\lugging\lugging-1.jpg')
 )) {
@@ -198,6 +197,22 @@ $vendorCore = Get-Item -LiteralPath (Join-Path $appRoot 'vendor\tricab\tricab-co
 if (($vendorCore.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
     throw "Release vendor Core must be mirrored, not linked: $($vendorCore.FullName)"
 }
+
+# Core's development surface is not runtime: autoload is src/ only. docs/ alone
+# is 22 MB. Same list as build-app-service-release.sh.
+foreach ($devOnly in @('docs', 'tests', 'phpunit.xml', 'phpunit.xml.dist', 'phpstan.neon', 'phpstan.neon.dist', 'README.md', '.gitignore', '.github')) {
+    $devPath = Join-Path $vendorCore.FullName $devOnly
+    if (Test-Path -LiteralPath $devPath) {
+        Remove-Item -LiteralPath $devPath -Recurse -Force
+    }
+}
+
+# Conservative prune of third-party packages: docs/tests/CI directories exactly
+# one level inside vendor/<org>/<pkg>, as in the .sh.
+Get-ChildItem -LiteralPath (Join-Path $appRoot 'vendor') -Directory |
+    ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory } |
+    ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory -Force | Where-Object { $_.Name -in @('tests', 'docs', 'doc', '.github', '.git') } } |
+    ForEach-Object { Remove-Item -LiteralPath $_.FullName -Recurse -Force }
 
 # The product finder's Python. `app/core` is deleted immediately below because
 # Composer has already mirrored it into vendor/tricab/tricab-core, so Python
@@ -270,6 +285,13 @@ New-Item -ItemType Directory -Path $nprMailJobRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\run-npr-mail-sweep.php') -Destination (Join-Path $appRoot 'bin\run-npr-mail-sweep.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\npr-mail\run.sh') -Destination (Join-Path $nprMailJobRoot 'run.sh') -Force
 
+# The finance job runner and its continuous WebJob (F1.8), the same way. Inert while
+# FINANCE_MODULE_ENABLED is not true.
+$financeJobRoot = Join-Path $releaseRoot 'App_Data\jobs\continuous\finance-jobs'
+New-Item -ItemType Directory -Path $financeJobRoot -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\run-finance-jobs.php') -Destination (Join-Path $appRoot 'bin\run-finance-jobs.php') -Force
+Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\finance-jobs\run.sh') -Destination (Join-Path $financeJobRoot 'run.sh') -Force
+
 # The CableFit research worker (C3) and its continuous WebJob, the same way.
 $researchJobRoot = Join-Path $releaseRoot 'App_Data\jobs\continuous\cablefit-research'
 New-Item -ItemType Directory -Path $researchJobRoot -Force | Out-Null
@@ -282,11 +304,27 @@ New-Item -ItemType Directory -Path $legacySyncJobRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\sync-rfq-legacy-store.php') -Destination (Join-Path $appRoot 'bin\sync-rfq-legacy-store.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\rfq-legacy-sync\run.sh') -Destination (Join-Path $legacySyncJobRoot 'run.sh') -Force
 
+# Continuous WebJobs run on every instance by default; each job ships a settings.job with is_singleton.
+foreach ($jobDir in Get-ChildItem -LiteralPath (Join-Path $releaseRoot 'App_Data\jobs\continuous') -Directory) {
+    $jobSettings = Join-Path $apiRoot ('deploy\app-service\webjobs\' + $jobDir.Name + '\settings.job')
+    if (-not (Test-Path -LiteralPath $jobSettings -PathType Leaf)) {
+        throw "WebJob is missing its settings.job: $jobSettings"
+    }
+    Copy-Item -LiteralPath $jobSettings -Destination (Join-Path $jobDir.FullName 'settings.job') -Force
+}
+
 if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
 }
 
-Compress-Archive -Path (Join-Path $releaseRoot '*') -DestinationPath $zipPath -CompressionLevel Optimal
+# Not Compress-Archive: Windows PowerShell 5.1 stores entries as app\bin\x.php, which the Linux
+# App Service unpacks as literal backslash names and the deployment fails. Windows' bsdtar writes
+# forward slashes. Called by full path because Git for Windows puts a GNU tar without zip on PATH.
+$tarExe = Join-Path $env:SystemRoot 'System32\tar.exe'
+& $tarExe -a -c -f $zipPath -C $releaseRoot .
+if ($LASTEXITCODE -ne 0) {
+    throw "tar failed with exit code $LASTEXITCODE."
+}
 
 $zip = Get-Item -LiteralPath $zipPath
 Write-Output "Release directory: $releaseRoot"

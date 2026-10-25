@@ -10,7 +10,7 @@ use DateTimeImmutable;
 final readonly class LinkView
 {
     /** Where tricab-web shows an RFQ. */
-    public const RFQ_HREF = '/admin/rfqs/';
+    public const RFQ_HREF = '/admin/quotegen/';
 
     public function __construct(
         public string $publicId,

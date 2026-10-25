@@ -18,3 +18,6 @@
 # Onboarding migration snapshots and reports (personal data when real)
 /var/onboarding-migration/
 /var/au-catalogue-population/
+
+# Local Azure CLI profile (AZURE_CONFIG_DIR); never commit
+.azure-cli-local/

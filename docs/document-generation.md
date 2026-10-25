@@ -56,26 +56,24 @@ Errors use the API's normal JSON envelope.
 
 ## Architecture
 
-`tricab-core` owns the reusable `DocumentGeneration` module:
+Rendering lives in [tricab/docgen](https://github.com/tricab/docgen), a private Composer package that other PHP projects use as well: the document model, the 4js `.ocr` reader, the templates, the stylesheet and the images. The record dictionary for the `.ocr` fields is in that repository (`docs/legacy-record-dictionary.md`).
 
-- `LegacyStreamParser` and the legacy record model
-- `LegacyDocumentData`
-- `PdfRenderer` contract
-- `GenerateOcrPdfHandler`
+`tricab-api` owns delivery:
 
-`tricab-api` owns infrastructure and delivery:
-
-- `DompdfPdfRenderer`
-- HTML/CSS templates and image assets
+- `GenerateOcrPdfService`: `.ocr` stream → `OcrDocumentReader` → `DocGen::render()`, with the download names above
+- `QuoteDetailsToDocGenQuoteMapper` and `GenerateQuoteTemplatePdfService` for `GET /api/v1/quotes/{id}/document`, which renders a quote from the quote read model
 - dependency-injection bindings
-- authentication and the Slim HTTP action
+- authentication and the Slim HTTP actions
 
-This split keeps Dompdf, filesystem resources, Slim, and PSR-7 outside Core while allowing other applications to reuse the parser and generation use case with their own `PdfRenderer` adapter.
+Installing the package needs read access to `tricab/docgen`:
+
+- **Locally:** your own GitHub access to `tricab/docgen`, given to Composer once with `composer config --global github-oauth.github.com "$(gh auth token)"` (or a personal token).
+- **GitHub Actions:** the `DOCGEN_DEPLOY_KEY` secret, the private half of a read-only deploy key on `tricab/docgen` (Settings → Deploy keys). `.github/actions/docgen-ssh` loads it, and Composer clones docgen over SSH from source; the release build drops its `.git` folder. A deploy key belongs to the repository, so it doesn't expire or depend on any one person. To rotate it: generate a new key pair, add the public key to docgen, replace the secret, then delete the old deploy key.
 
 ## Current limitations
 
 - Only `tcord.ocr`, `tcpick.ocr`, and `tcqu.ocr` are allowlisted.
-- Current captured examples are single-page documents; multi-page behaviour needs additional fixtures.
+- Order confirmations and pick lists always print "Page 1 of 1"; quotations number their pages.
 - The supplied order fixture has four omitted trailing blank fields and is accepted with a warning.
 - Legal-entity branding is not yet configuration-driven.
 - The quotation intentionally matches the observed omission of `V4270` body text.

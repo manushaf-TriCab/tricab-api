@@ -67,11 +67,11 @@ final class TaskPreparerDigestJob implements FinanceJob
         /** @var array<int, array{overdue: list<TaskRecord>, dueToday: list<TaskRecord>}> $byPreparer */
         $byPreparer = [];
         foreach ($this->tasks->dueOnOrBefore($today) as $task) {
-            if ($task->preparerUserId === null) {
-                continue;
+            // A task with several preparers is in each one's own email (23 Oct 2026).
+            foreach ($task->preparerUserIds as $preparerId) {
+                $byPreparer[$preparerId] ??= ['overdue' => [], 'dueToday' => []];
+                $byPreparer[$preparerId][($task->dueDate ?? '') < $today ? 'overdue' : 'dueToday'][] = $task;
             }
-            $byPreparer[$task->preparerUserId] ??= ['overdue' => [], 'dueToday' => []];
-            $byPreparer[$task->preparerUserId][($task->dueDate ?? '') < $today ? 'overdue' : 'dueToday'][] = $task;
         }
         if ($byPreparer === []) {
             return ['status' => 'nothing_due', 'sent' => 0, 'preparers' => 0];

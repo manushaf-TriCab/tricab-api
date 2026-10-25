@@ -91,7 +91,7 @@ final class MatchRfqAccessoriesAction
                 if ($token !== null && (!is_string($token) || $token === '')) {
                     return $this->responder->error('RFQ_INPUT_INVALID', 'parseToken must be the match, or null for lines typed in.', 422);
                 }
-                $found = $this->review->accessoriesNew($actor, $user->emailAddress, $token, QuoteHeaderEdit::fromInput($body['header'] ?? null), $lines ?? [], $uids, $id);
+                $found = $this->review->accessoriesNew($actor, $user->emailAddress, $token, QuoteHeaderEdit::fromInput($body['header'] ?? null), $lines, $uids, $id);
             } else {
                 $header = array_key_exists('header', $body) ? QuoteHeaderEdit::fromInput($body['header']) : null;
                 $found = $this->review->accessoriesDraft($actor, $user->emailAddress, $publicId, $header, $lines, $uids, $id);

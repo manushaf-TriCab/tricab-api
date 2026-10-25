@@ -59,6 +59,18 @@ final class InMemoryFinanceAttachmentStore implements FinanceAttachmentStore
         return $rows;
     }
 
+    public function countsByRecordType(string $application, string $recordType): array
+    {
+        $counts = [];
+        foreach ($this->rows as $row) {
+            if ($row->application === $application && $row->recordType === $recordType && $row->recordId !== null) {
+                $counts[$row->recordId] = ($counts[$row->recordId] ?? 0) + 1;
+            }
+        }
+
+        return $counts;
+    }
+
     public function deleteForRecord(string $application, string $recordType, string $recordId): int
     {
         $rows = $this->forRecord($application, $recordType, $recordId);

@@ -154,4 +154,21 @@ final class FinanceTaskSchemaScriptTest extends TestCase
             strpos($rebuild, "'create-finance-schema.sql'"),
         );
     }
+
+    public function test_the_assignees_script_is_idempotent_additive_and_says_it_must_run_first(): void
+    {
+        $sql = self::script('alter-finance-task-assignees.sql');
+        $code = preg_replace('~/\*.*?\*/~s', '', $sql) ?? '';
+
+        self::assertStringContainsString('NOT APPLIED to any shared database', $sql);
+        self::assertStringContainsString('RUN IT BEFORE THE API', $sql);
+        self::assertDoesNotMatchRegularExpression('/\b(DROP|TRUNCATE|DELETE|UPDATE)\b/i', $code, 'nothing existing is changed or removed');
+        foreach (['task_assignees', 'task_template_assignees'] as $table) {
+            self::assertStringContainsString("IF OBJECT_ID(N'[finance].[" . $table . "]', N'U') IS NULL", $code, $table);
+        }
+        self::assertSame(4, substr_count($code, 'WHERE NOT EXISTS') + substr_count($code, 'AND NOT EXISTS'), 'each backfill skips what is already linked');
+        self::assertStringContainsString("CHECK ([role] IN (N'preparer', N'reviewer'))", $code);
+        self::assertStringNotContainsString('ON DELETE CASCADE', $code);
+        self::assertSame(1, substr_count($code, 'BEGIN TRANSACTION;'));
+    }
 }

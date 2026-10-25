@@ -529,7 +529,6 @@ final class SyntheticSourceBuilder
         ob_start();
         imagepng($image);
         $png = (string) ob_get_clean();
-        imagedestroy($image);
 
         return 'data:image/png;base64,' . base64_encode($png);
     }

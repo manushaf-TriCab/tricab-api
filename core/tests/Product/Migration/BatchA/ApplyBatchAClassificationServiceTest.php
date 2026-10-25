@@ -181,7 +181,6 @@ final class ApplyBatchAClassificationServiceTest extends TestCase
     private function invokePrivate(object $svc, string $method, array $args): mixed
     {
         $ref = new ReflectionMethod($svc, $method);
-        $ref->setAccessible(true);
 
         return $ref->invokeArgs($svc, $args);
     }

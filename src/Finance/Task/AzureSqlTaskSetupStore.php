@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Finance\Task;
 
+use DateTimeImmutable;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Domain\TaskEntity;
@@ -102,13 +103,80 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
         return AzureSqlValueMapper::intValue($rows[0]['n'] ?? 0);
     }
 
+    public function projectLiveTaskCount(string $id): int
+    {
+        $rows = $this->connection->fetchAll('SELECT COUNT(*) AS [n] FROM [finance].[task_tasks] WHERE [project_id] = :id AND [deleted_at] IS NULL', ['id' => $id]);
+
+        return AzureSqlValueMapper::intValue($rows[0]['n'] ?? 0);
+    }
+
+    public function binProjectTasks(string $projectId, DateTimeImmutable $at, ?int $by): void
+    {
+        $this->connection->execute(
+            'UPDATE [finance].[task_tasks] SET [deleted_at] = :at, [deleted_by] = :by, [updated_date] = :updated
+             WHERE [project_id] = :id AND [deleted_at] IS NULL',
+            ['at' => self::at($at), 'by' => $by, 'updated' => self::at($at), 'id' => $projectId],
+        );
+    }
+
+    public function restoreProjectTasks(string $projectId, DateTimeImmutable $now): void
+    {
+        $this->connection->execute(
+            'UPDATE t SET t.[deleted_at] = NULL, t.[deleted_by] = NULL, t.[updated_date] = :now
+             FROM [finance].[task_tasks] t INNER JOIN [finance].[task_projects] p ON p.[id] = t.[project_id]
+             WHERE p.[id] = :id AND p.[deleted_at] IS NOT NULL AND t.[deleted_at] = p.[deleted_at]',
+            ['now' => self::at($now), 'id' => $projectId],
+        );
+    }
+
+    public function deleteBinnedProjectTasks(string $projectId): array
+    {
+        $ids = array_map(
+            static fn (array $row): string => self::id($row['id']),
+            $this->connection->fetchAll(
+                'SELECT [id] FROM [finance].[task_tasks] WHERE [project_id] = :project AND [deleted_at] IS NOT NULL',
+                ['project' => $projectId],
+            ),
+        );
+        // PDO_SQLSRV binds every occurrence of a named parameter separately, so each one gets its own name.
+        $binned = static fn (string $name): string => 'SELECT [id] FROM [finance].[task_tasks] WHERE [project_id] = :' . $name . ' AND [deleted_at] IS NOT NULL';
+        $this->connection->execute(
+            'DELETE FROM [finance].[task_dependencies] WHERE [task_id] IN (' . $binned('a') . ') OR [depends_on_task_id] IN (' . $binned('b') . ')',
+            ['a' => $projectId, 'b' => $projectId],
+        );
+        $this->connection->execute('DELETE FROM [finance].[task_history] WHERE [task_id] IN (' . $binned('a') . ')', ['a' => $projectId]);
+        $this->connection->execute('DELETE FROM [finance].[task_assignees] WHERE [task_id] IN (' . $binned('a') . ')', ['a' => $projectId]);
+        $this->connection->execute('DELETE FROM [finance].[task_user_state] WHERE [task_id] IN (' . $binned('a') . ')', ['a' => $projectId]);
+        $this->connection->execute('DELETE FROM [finance].[task_tasks] WHERE [project_id] = :project AND [deleted_at] IS NOT NULL', ['project' => $projectId]);
+
+        return $ids;
+    }
+
+    public function binnedProjectTaskCounts(): array
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT t.[project_id] AS [project_id], COUNT(*) AS [n] FROM [finance].[task_tasks] t
+             INNER JOIN [finance].[task_projects] p ON p.[id] = t.[project_id]
+             WHERE p.[deleted_at] IS NOT NULL AND t.[deleted_at] = p.[deleted_at] GROUP BY t.[project_id]',
+        );
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[self::id($row['project_id'])] = AzureSqlValueMapper::intValue($row['n']);
+        }
+
+        return $counts;
+    }
+
     public function projectTaskCounts(?int $visibleToUserId): array
     {
         $params = [];
         $visible = '';
         if ($visibleToUserId !== null) {
-            $visible = ' AND ([preparer_user_id] = :preparer OR [reviewer_user_id] = :reviewer)';
-            $params = ['preparer' => $visibleToUserId, 'reviewer' => $visibleToUserId];
+            // The link table is who is on the task; the old columns (the first of each list, written with it) also count,
+            // for a row an older API wrote with no link rows.
+            $visible = ' AND (EXISTS (SELECT 1 FROM [finance].[task_assignees] a WHERE a.[task_id] = [finance].[task_tasks].[id] AND a.[user_id] = :person)'
+                . ' OR [preparer_user_id] = :preparer OR [reviewer_user_id] = :reviewer)';
+            $params = ['person' => $visibleToUserId, 'preparer' => $visibleToUserId, 'reviewer' => $visibleToUserId];
         }
         $rows = $this->connection->fetchAll(
             'SELECT [project_id], [status], COUNT(*) AS [n] FROM [finance].[task_tasks]
@@ -174,14 +242,14 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
     {
         $rows = $this->connection->fetchAll('SELECT ' . self::TEMPLATE_COLUMNS . ' FROM [finance].[task_templates] ORDER BY [name], [id]');
 
-        return array_map(self::template(...), $rows);
+        return $this->templatesFrom($rows);
     }
 
     public function findTemplate(string $id): ?TaskTemplate
     {
         $rows = $this->connection->fetchAll('SELECT ' . self::TEMPLATE_COLUMNS . ' FROM [finance].[task_templates] WHERE [id] = :id', ['id' => $id]);
 
-        return $rows === [] ? null : self::template($rows[0]);
+        return $rows === [] ? null : $this->templatesFrom($rows)[0];
     }
 
     public function insertTemplate(TaskTemplate $template): void
@@ -191,6 +259,7 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
              VALUES (:id, :name, :description, :requirements, :category, :area, :preparer, :reviewer, :progress, :due, :requested, :created, :updated)',
             self::templateParams($template),
         );
+        $this->replaceTemplateAssignees($template);
     }
 
     public function updateTemplate(TaskTemplate $template): void
@@ -202,10 +271,42 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
              WHERE [id] = :id',
             self::templateParams($template),
         );
+        $this->replaceTemplateAssignees($template);
+    }
+
+    /** Makes the template's preparers and reviewers exactly its lists, in order (templates are few and small: all rewritten). */
+    private function replaceTemplateAssignees(TaskTemplate $template): void
+    {
+        $this->connection->execute('DELETE FROM [finance].[task_template_assignees] WHERE [template_id] = :id', ['id' => $template->id]);
+        foreach (['preparer' => $template->preparerUserIds, 'reviewer' => $template->reviewerUserIds] as $role => $ids) {
+            foreach ($ids as $order => $userId) {
+                $this->connection->execute(
+                    'INSERT INTO [finance].[task_template_assignees] ([template_id], [role], [user_id], [sort_order]) VALUES (:id, :role, :user, :sort)',
+                    ['id' => $template->id, 'role' => $role, 'user' => $userId, 'sort' => $order],
+                );
+            }
+        }
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<TaskTemplate>
+     */
+    private function templatesFrom(array $rows): array
+    {
+        $people = [];
+        if ($rows !== []) {
+            foreach ($this->connection->fetchAll('SELECT [template_id], [role], [user_id] FROM [finance].[task_template_assignees] ORDER BY [sort_order], [user_id]') as $row) {
+                $people[self::id($row['template_id'])][self::text($row['role'])][] = AzureSqlValueMapper::intValue($row['user_id']);
+            }
+        }
+
+        return array_map(static fn (array $row): TaskTemplate => self::template($row, $people[self::id($row['id'])] ?? []), $rows);
     }
 
     public function deleteTemplate(string $id): void
     {
+        $this->connection->execute('DELETE FROM [finance].[task_template_assignees] WHERE [template_id] = :id', ['id' => $id]);
         $this->connection->execute('DELETE FROM [finance].[task_templates] WHERE [id] = :id', ['id' => $id]);
     }
 
@@ -392,9 +493,15 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
         ];
     }
 
-    /** @param array<string, mixed> $row */
-    private static function template(array $row): TaskTemplate
+    /**
+     * @param array<string, mixed> $row
+     * @param array<string, list<int>> $people `preparer` and `reviewer` user ids; a role with none falls back to the old column
+     */
+    private static function template(array $row, array $people): TaskTemplate
     {
+        $preparer = AzureSqlValueMapper::nullableInt($row['preparer_user_id']);
+        $reviewer = AzureSqlValueMapper::nullableInt($row['reviewer_user_id']);
+
         return new TaskTemplate(
             self::id($row['id']),
             self::text($row['name']),
@@ -402,13 +509,15 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
             self::text($row['requirements']),
             self::text($row['category']),
             self::text($row['finance_statement_area']),
-            AzureSqlValueMapper::nullableInt($row['preparer_user_id']),
-            AzureSqlValueMapper::nullableInt($row['reviewer_user_id']),
+            $preparer,
+            $reviewer,
             AzureSqlValueMapper::intValue($row['default_progress']),
             self::textOrNull($row['due_date']),
             AzureSqlValueMapper::boolValue($row['due_date_requested']),
             self::when($row['created_date'], 'created_date'),
             self::when($row['updated_date'], 'updated_date'),
+            $people['preparer'] ?? ($preparer === null ? [] : [$preparer]),
+            $people['reviewer'] ?? ($reviewer === null ? [] : [$reviewer]),
         );
     }
 

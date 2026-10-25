@@ -1,3 +1,0 @@
-CMD-LOG-LINE-BEGIN 12537 | 2026-09-23 06:56:06,179 | INFO | az_command_data_logger | command args: account get-access-token --resource {} --query {} -o {}
-CMD-LOG-LINE-BEGIN 12537 | 2026-09-23 06:56:06,232 | ERROR | az_command_data_logger | Please run 'az login' to setup account.
-CMD-LOG-LINE-BEGIN 12537 | 2026-09-23 06:56:06,233 | INFO | az_command_data_logger | exit code: 1

@@ -17,6 +17,7 @@ final readonly class TaskMailLink
     public const KIND_TASK_EMAIL = 'task_email';
     public const KIND_REMINDER = 'reminder';
     public const KIND_DAILY_SUMMARY = 'daily_summary';
+    public const KIND_CALENDAR_INVITE = 'calendar_invite';
 
     public function __construct(
         public string $id,

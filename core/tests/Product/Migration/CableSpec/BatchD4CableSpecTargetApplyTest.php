@@ -401,7 +401,6 @@ final class BatchD4CableSpecTargetApplyTest extends TestCase
             },
         ] as $prop => $value) {
             $p = $ref->getProperty($prop);
-            $p->setAccessible(true);
             $p->setValue($svc, $value);
         }
 
@@ -414,7 +413,6 @@ final class BatchD4CableSpecTargetApplyTest extends TestCase
     private function invokePrivate(object $svc, string $method, array $args): mixed
     {
         $m = new ReflectionMethod($svc, $method);
-        $m->setAccessible(true);
 
         return $m->invokeArgs($svc, $args);
     }

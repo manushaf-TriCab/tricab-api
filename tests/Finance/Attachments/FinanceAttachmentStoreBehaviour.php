@@ -272,6 +272,24 @@ abstract class FinanceAttachmentStoreBehaviour extends TestCase
         self::assertSame(0, $this->service->removeRecordFiles('AR', 'email_record', '12'));
     }
 
+    public function test_counts_by_record_type_are_one_read_of_each_records_files_for_one_app(): void
+    {
+        $files = [
+            ['TASK', 'task', 't1'], ['TASK', 'task', 't1'], ['TASK', 'task', 't2'],
+            ['TASK', 'other_kind', 't1'], ['AR', 'task', 't1'],
+        ];
+        foreach ($files as [$app, $type, $record]) {
+            $file = $this->service->upload($app, 'f.pdf', 'application/pdf', 'x', 1);
+            $this->service->attach($app, $file->id, $type, $record, 1);
+        }
+        $this->service->upload('TASK', 'loose.pdf', 'application/pdf', 'x', 1);
+
+        self::assertSame(['t1' => 2, 't2' => 1], $this->store->countsByRecordType('TASK', 'task'));
+        self::assertSame([], $this->store->countsByRecordType('AP', 'task'));
+        $this->service->removeRecordFiles('TASK', 'task', 't1');
+        self::assertSame(['t2' => 1], $this->store->countsByRecordType('TASK', 'task'));
+    }
+
     public function test_one_file_can_be_removed_and_a_missing_one_says_so(): void
     {
         $file = $this->service->upload('TASK', 'a.pdf', 'application/pdf', 'A', 1);

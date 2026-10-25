@@ -324,8 +324,8 @@ final class TaskImportService
                     'category' => $category,
                     'status' => $status,
                     'entity_id' => $entityId,
-                    'preparer_id' => self::resolve($row['preparer'] ?? null, $memberLookup, 'Preparer', $errors, 'is not a member of Tri-Task'),
-                    'reviewer_id' => self::resolve($row['reviewer'] ?? null, $memberLookup, 'Reviewer', $errors, 'is not a member of Tri-Task'),
+                    'preparer_ids' => self::resolveMany($row['preparer'] ?? null, $memberLookup, 'Preparer', $errors, 'is not a member of Tri-Task'),
+                    'reviewer_ids' => self::resolveMany($row['reviewer'] ?? null, $memberLookup, 'Reviewer', $errors, 'is not a member of Tri-Task'),
                     'progress' => self::progress($row['progress'] ?? null, $errors),
                     'due_date' => self::date($row['due_date'] ?? null, 'Due Date', $errors),
                     'due_date_requested' => self::yesNo($row['due_date_requested'] ?? null, 'Due Date Requested', $errors),
@@ -502,13 +502,33 @@ final class TaskImportService
             && $payload['category'] === $task->category
             && $payload['status'] === TaskRules::status($task->status)
             && self::idText($payload['entity_id'] ?? null) === ($task->entityId ?? '')
-            && $payload['preparer_id'] === $task->preparerUserId
-            && $payload['reviewer_id'] === $task->reviewerUserId
+            && self::sameIds(self::intList($payload['preparer_ids'] ?? null), $task->preparerUserIds)
+            && self::sameIds(self::intList($payload['reviewer_ids'] ?? null), $task->reviewerUserIds)
             && $payload['progress'] === $task->progress
             && $payload['due_date'] === $task->dueDate
             && $payload['due_date_requested'] === $task->dueDateRequested
             && $payload['urgent'] === $task->urgent
             && $payload['priority'] === $task->priority;
+    }
+
+    /** @return list<int> */
+    private static function intList(mixed $value): array
+    {
+        return is_array($value) ? array_values(array_filter($value, 'is_int')) : [];
+    }
+
+    /**
+     * The same people, whatever their order.
+     *
+     * @param list<int> $a
+     * @param list<int> $b
+     */
+    private static function sameIds(array $a, array $b): bool
+    {
+        sort($a);
+        sort($b);
+
+        return $a === $b;
     }
 
     /**
@@ -828,5 +848,43 @@ final class TaskImportService
         $errors[] = $label . ' "' . $text . '" ' . ($found !== [] ? 'matches more than one person' : $missing);
 
         return null;
+    }
+
+    /**
+     * One or more people in one cell, names (or emails) separated by "; " (Nick Han, 23 Oct 2026: several preparers
+     * and reviewers). A cell that is one person's whole name or email as it stands is that person, so a file from
+     * before the lists, or a name with no semicolon, reads as it always did. Each name is checked on its own, and each
+     * one that is unknown or ambiguous is an error naming it.
+     *
+     * @param array<string, list<int|string>> $lookup
+     * @param list<string> $errors
+     * @return list<int>
+     */
+    private static function resolveMany(mixed $value, array $lookup, string $label, array &$errors, string $missing): array
+    {
+        $text = self::cellText($value);
+        if ($text === '') {
+            return [];
+        }
+        $whole = $lookup[self::key($text)] ?? [];
+        if (count($whole) === 1 && is_int($whole[0])) {
+            return [$whole[0]];
+        }
+        $out = [];
+        foreach (explode(';', $text) as $part) {
+            $part = trim($part);
+            if ($part === '') {
+                continue;
+            }
+            $id = self::resolve($part, $lookup, $label, $errors, $missing);
+            if (is_int($id) && !in_array($id, $out, true)) {
+                $out[] = $id;
+            }
+        }
+        if (count($out) > TaskRules::MAX_ASSIGNEES) {
+            $errors[] = $label . ' lists more than ' . TaskRules::MAX_ASSIGNEES . ' people';
+        }
+
+        return $out;
     }
 }

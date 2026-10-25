@@ -40,7 +40,7 @@ if (!str_contains(strtolower((string)$safety[0]['serverName']), 'tricab-mel') ||
 $guard = new LegacyReadOnlySqlGuard();
 $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $env['LEGACY_TC_HOST'], $env['LEGACY_TC_PORT'] ?? '3306', $env['LEGACY_TC_DATABASE']);
 $opt = [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES => true];
-if (defined('PDO::MYSQL_ATTR_SSL_CA')) { $opt[PDO::MYSQL_ATTR_SSL_CA] = ''; if (defined('PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT')) $opt[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false; }
+if (defined('Pdo\\Mysql::ATTR_SSL_CA')) { $opt[\Pdo\Mysql::ATTR_SSL_CA] = ''; if (defined('Pdo\\Mysql::ATTR_SSL_VERIFY_SERVER_CERT')) $opt[\Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = false; }
 $my = new PDO($dsn, $env['LEGACY_TC_USER'], $env['LEGACY_TC_PASSWORD'], $opt);
 $q = function (string $sql) use ($my, $guard): array { $guard->assertReadOnly($sql); return $my->query($sql)->fetchAll(PDO::FETCH_ASSOC); };
 try { $guard->assertReadOnly('UPDATE tc.triexpense_users SET is_active=1'); fwrite(STDERR, "GUARD_FAILED\n"); exit(5); }

@@ -20,6 +20,8 @@ use TriCab\Core\Shared\Time\SystemClock;
 
 require dirname(__DIR__, 4) . '/vendor/autoload.php';
 
+/** @var list<string> $argv */
+$argv = $_SERVER['argv'];
 [, $draftId, $expected, $who, $barrier] = $argv;
 $pdo = LocalRfqSqlServer::open(
     (string) getenv('RFQ_TEST_SQLSERVER'),

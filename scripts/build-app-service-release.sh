@@ -15,9 +15,13 @@ WEB_ORIGIN='https://tc-web-core-e7b7gdbjgadjd3ff.australiasoutheast-01.azurewebs
 SKIP_NPM_CI=0
 
 # The finder's Python dependencies are cross-compiled for the App Service image,
-# not for this build machine. Keep these in step with the image's interpreter --
-# `startup.log` records it as "using /usr/bin/python3 (Python 3.11.2)".
-PY_VERSION='3.11'
+# not for this build machine. One release serves both App Service images, so
+# wheels are built for each interpreter and startup.sh picks the matching
+# `_vendor/cp3XX` directory from `python3 -V`:
+#   PHP|8.3 (Debian 12)   python3 3.11
+#   PHP|8.5 (Ubuntu 24.04) python3 3.12
+# `startup.log` records the one in use as "using /usr/bin/python3 (Python 3.x.y)".
+PY_VERSIONS='3.11 3.12'
 PY_PLATFORM='manylinux2014_x86_64'
 
 while [ $# -gt 0 ]; do
@@ -38,8 +42,10 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-if ! printf '%s' "$WEB_ORIGIN" | grep -Eq '^https://[^/]+$'; then
-    echo "Web origin must look like https://host with no trailing path: $WEB_ORIGIN" >&2
+# same-origin: the bundle resolves its API and MSAL redirect host at runtime (tricab-web
+# src/config/appOrigin.ts), so one package serves every registered host.
+if [ "$WEB_ORIGIN" != same-origin ] && ! printf '%s' "$WEB_ORIGIN" | grep -Eq '^https://[^/]+$'; then
+    echo "Web origin must be same-origin or look like https://host with no trailing path: $WEB_ORIGIN" >&2
     exit 1
 fi
 
@@ -166,19 +172,18 @@ printf '{"api":"%s","web":"%s"}\n' "$api_revision" "$web_revision" > "$app_root/
 echo "    API $api_revision, website $web_revision"
 
 # Public content images (About / Technical / catalogue static copies) live under
-# public/media. PHP availability checks read app/public/media; nginx must also
-# serve the same tree at the site-root /media/ path (not under /api/v1).
+# public/media. nginx serves them at the site-root /media/ path (not under
+# /api/v1), and PHP's availability checks read that same copy: from the app at
+# <wwwroot>/app they resolve to ../media (Content\PublicMediaDirectory). One
+# copy only -- symlinks are forbidden in the archive.
 echo "==> Staging public media"
 media_src="$api_root/public/media"
 if [ ! -d "$media_src" ]; then
     echo "Required public media directory is missing: $media_src" >&2
     exit 1
 fi
-mkdir -p "$app_root/public"
-cp -R "$media_src" "$app_root/public/media"
 cp -R "$media_src" "$release_root/media"
 for required_media in \
-    "$app_root/public/media/about/melbourne-facility.png" \
     "$release_root/media/about/melbourne-facility.png" \
     "$release_root/media/technical/lugging/lugging-1.jpg"
 do
@@ -198,9 +203,11 @@ done
 echo "==> Installing PHP dependencies"
 (
     cd "$app_root"
+    # No --prefer-dist: CI asks for tricab/docgen from source (cloned over SSH
+    # with its deploy key) and --prefer-dist would override that. Tagged
+    # packages install from dist by default anyway.
     COMPOSER_MIRROR_PATH_REPOS=1 composer install \
         --no-dev \
-        --prefer-dist \
         --optimize-autoloader \
         --classmap-authoritative \
         --no-interaction
@@ -260,26 +267,27 @@ done
 # target is the image's CPython 3.11 on x86_64 Linux, so the platform triple is
 # pinned and --only-binary is required for pip to honour it. MarkupSafe is the
 # one dependency with a native extension; the rest are pure Python.
-echo "==> Vendoring the finder's Python dependencies for $PY_PLATFORM / cp$PY_VERSION"
+echo "==> Vendoring the finder's Python dependencies for $PY_PLATFORM / cp(${PY_VERSIONS// /, })"
 vendor_python="$app_python/_vendor"
-python3 -m pip install \
-    --quiet \
-    --target "$vendor_python" \
-    --requirement "$api_root/core/python/requirements.txt" \
-    --platform "$PY_PLATFORM" \
-    --python-version "$PY_VERSION" \
-    --implementation cp \
-    --only-binary=:all:
-
-if [ ! -d "$vendor_python/gunicorn" ]; then
-    echo "Vendored dependencies are missing gunicorn: $vendor_python" >&2
-    exit 1
-fi
+for py_version in $PY_VERSIONS; do
+    python3 -m pip install \
+        --quiet \
+        --target "$vendor_python/cp${py_version/./}" \
+        --requirement "$api_root/core/python/requirements.txt" \
+        --platform "$PY_PLATFORM" \
+        --python-version "$py_version" \
+        --implementation cp \
+        --only-binary=:all:
+    if [ ! -d "$vendor_python/cp${py_version/./}/gunicorn" ]; then
+        echo "Vendored dependencies are missing gunicorn: $vendor_python/cp${py_version/./}" >&2
+        exit 1
+    fi
+done
 
 # Console scripts carry this build machine's shebang, so they would point at a
 # python that does not exist on the instance. startup.sh runs `python3 -m
 # gunicorn` against PYTHONPATH instead; drop the scripts so nothing is tempted.
-rm -rf "$vendor_python/bin"
+rm -rf "$vendor_python"/cp*/bin
 
 # A wheel built for the wrong platform is the failure this step exists to
 # prevent, and it is silent until import time on the instance.
@@ -317,14 +325,33 @@ assert_linux_x86_64 "$vendor_python"
 
 # requirements.txt is unpinned, so record what this build actually resolved.
 # The release is the only place those versions are fixed.
-find "$vendor_python" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
-    | sort > "$vendor_python/VENDORED.txt"
-echo "    vendored $(wc -l < "$vendor_python/VENDORED.txt" | tr -d ' ') distributions"
+for py_version in $PY_VERSIONS; do
+    dir="$vendor_python/cp${py_version/./}"
+    find "$dir" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
+        | sort > "$dir/VENDORED.txt"
+    echo "    cp${py_version/./}: vendored $(wc -l < "$dir/VENDORED.txt" | tr -d ' ') distributions"
+done
 
 # Composer mirrored core/ wholesale, Python included. Drop that second copy:
 # two copies of the selection rules on one disk is the exact thing
 # tricab_cable_rules exists to prevent, even when one of them is unreachable.
 rm -rf "$vendor_core/python"
+
+# Nor does the release need Core's development surface. Composer mirrors core/
+# wholesale; docs/ alone is 22 MB of migration reports and mappings that no
+# runtime code loads (autoload is src/ only, tests/ is autoload-dev).
+for dev_only in docs tests phpunit.xml phpunit.xml.dist phpstan.neon phpstan.neon.dist README.md .gitignore .github; do
+    rm -rf "${vendor_core:?}/$dev_only"
+done
+
+# Conservative prune of third-party packages: only directories that hold
+# documentation, tests, CI config or a git checkout (a package installed from
+# source, like tricab/docgen in CI), one level inside vendor/<org>/<pkg>. The
+# autoloader is classmap-authoritative and built from each package's autoload
+# paths, none of which is one of these, and dompdf's fonts live in lib/.
+find "$app_root/vendor" -mindepth 3 -maxdepth 3 -type d \
+    \( -name tests -o -name docs -o -name doc -o -name .github -o -name .git \) \
+    -prune -exec rm -rf {} + 2>/dev/null || true
 
 assert_no_symlinks "$staged_core"
 rm -rf "$staged_core"
@@ -380,22 +407,58 @@ cbsync_root="$app_root/cbsync"
 mkdir -p "$cbsync_root" "$release_root/App_Data/jobs/continuous/cablebuilder-sync"
 cp -R "$api_root/cablebuilder-sync/cbsync" "$cbsync_root/cbsync"
 find "$cbsync_root" -type d -name __pycache__ -prune -exec rm -rf {} + 2>/dev/null || true
-python3 -m pip install \
-    --quiet \
-    --target "$cbsync_root/_vendor" \
-    --requirement "$api_root/cablebuilder-sync/requirements.txt" \
-    --platform "$PY_PLATFORM" \
-    --python-version "$PY_VERSION" \
-    --implementation cp \
-    --only-binary=:all:
-if [ ! -d "$cbsync_root/_vendor/azure/storage/blob" ]; then
-    echo "Vendored CableBuilder sync dependencies are missing azure-storage-blob: $cbsync_root/_vendor" >&2
-    exit 1
-fi
-rm -rf "$cbsync_root/_vendor/bin"
+for py_version in $PY_VERSIONS; do
+    dir="$cbsync_root/_vendor/cp${py_version/./}"
+    python3 -m pip install \
+        --quiet \
+        --target "$dir" \
+        --requirement "$api_root/cablebuilder-sync/requirements.txt" \
+        --platform "$PY_PLATFORM" \
+        --python-version "$py_version" \
+        --implementation cp \
+        --only-binary=:all:
+    if [ ! -d "$dir/azure/storage/blob" ]; then
+        echo "Vendored CableBuilder sync dependencies are missing azure-storage-blob: $dir" >&2
+        exit 1
+    fi
+    rm -rf "$dir/bin"
+    find "$dir" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
+        | sort > "$dir/VENDORED.txt"
+done
 assert_linux_x86_64 "$cbsync_root/_vendor"
-find "$cbsync_root/_vendor" -maxdepth 1 -name '*.dist-info' -exec basename {} .dist-info \; \
-    | sort > "$cbsync_root/_vendor/VENDORED.txt"
+# Both trees resolve for the same interpreter and platform, so they share most
+# of their dependencies (cryptography alone is 15 MB). Per Python version, drop
+# from the sync's tree every distribution that the finder's tree already holds
+# at the identical version; the WebJob's PYTHONPATH ends with
+# ../python/_vendor/cpXY to find them. Matching is on the exact name-version,
+# so a differing resolve keeps its own copy.
+for py_version in $PY_VERSIONS; do
+    tag="cp${py_version/./}"
+    python3 - "$vendor_python/$tag" "$cbsync_root/_vendor/$tag" <<'PY'
+import os, sys
+shared, own = sys.argv[1], sys.argv[2]
+have = {d for d in os.listdir(shared) if d.endswith('.dist-info')}
+dropped = []
+for dist in sorted(d for d in os.listdir(own) if d.endswith('.dist-info')):
+    if dist not in have:
+        continue
+    with open(os.path.join(own, dist, 'RECORD'), encoding='utf-8') as record:
+        names = [line.rsplit(',', 2)[0].strip('"') for line in record if line.strip()]
+    for name in names:
+        if name.startswith('..'):
+            continue
+        path = os.path.normpath(os.path.join(own, name))
+        if path.startswith(own + os.sep) and os.path.isfile(path):
+            os.remove(path)
+    dropped.append(dist[:-len('.dist-info')])
+for root, dirs, _files in os.walk(own, topdown=False):
+    if root != own and not os.listdir(root):
+        os.rmdir(root)
+with open(os.path.join(own, 'SHARED.txt'), 'w') as out:
+    out.write('\n'.join(dropped) + '\n')
+print('    cbsync %s shares %d distributions with the finder' % (os.path.basename(own), len(dropped)))
+PY
+done
 cp "$api_root/deploy/app-service/webjobs/cablebuilder-sync/run.sh" "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/cablebuilder-sync/run.sh"
 
@@ -405,6 +468,17 @@ mkdir -p "$release_root/App_Data/jobs/continuous/rfq-legacy-sync"
 cp "$api_root/bin/sync-rfq-legacy-store.php" "$app_root/bin/sync-rfq-legacy-store.php"
 cp "$api_root/deploy/app-service/webjobs/rfq-legacy-sync/run.sh" "$release_root/App_Data/jobs/continuous/rfq-legacy-sync/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/rfq-legacy-sync/run.sh"
+
+# Continuous WebJobs run on every instance by default; on a scaled-out plan that means every mail
+# or sync pass runs once per instance. Each job ships a settings.job with is_singleton.
+for job_dir in "$release_root"/App_Data/jobs/continuous/*/; do
+    job_settings="$api_root/deploy/app-service/webjobs/$(basename "$job_dir")/settings.job"
+    if [ ! -f "$job_settings" ]; then
+        echo "WebJob is missing its settings.job: $job_settings" >&2
+        exit 1
+    fi
+    cp "$job_settings" "$job_dir/settings.job"
+done
 
 # Nothing in the archive may be a symlink -- App Service unpacks it verbatim.
 assert_no_symlinks "$release_root"

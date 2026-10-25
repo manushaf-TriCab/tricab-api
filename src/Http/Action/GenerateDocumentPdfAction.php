@@ -6,12 +6,10 @@ namespace TriCab\Api\Http\Action;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use TriCab\Api\DocumentGeneration\GenerateOcrPdfService;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\VerifiedIdentityAttribute;
-use TriCab\Core\DocumentGeneration\Application\Exception\InvalidOcrStream;
-use TriCab\Core\DocumentGeneration\Application\Exception\UnsupportedDocumentTemplate;
-use TriCab\Core\DocumentGeneration\Application\Handler\GenerateOcrPdfHandler;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 use TriCab\Core\Identity\Application\DTO\VerifiedIdentity;
 use TriCab\Core\Identity\Application\Exception\IdentityAmbiguous;
@@ -19,6 +17,8 @@ use TriCab\Core\Identity\Application\Exception\IdentityConflict;
 use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
+use TriCab\DocGen\Exception\InvalidOcrStream;
+use TriCab\DocGen\Exception\UnsupportedOcrTemplate;
 
 final class GenerateDocumentPdfAction
 {
@@ -32,7 +32,7 @@ final class GenerateDocumentPdfAction
     ];
 
     public function __construct(
-        private readonly GenerateOcrPdfHandler $generatePdf,
+        private readonly GenerateOcrPdfService $generatePdf,
         private readonly ResolveAuthenticatedUserHandler $resolveUser,
         private readonly JsonResponder $responder,
     ) {
@@ -87,7 +87,7 @@ final class GenerateDocumentPdfAction
 
         try {
             $result = $this->generatePdf->handle($ocrContents);
-        } catch (InvalidOcrStream|UnsupportedDocumentTemplate $exception) {
+        } catch (InvalidOcrStream|UnsupportedOcrTemplate $exception) {
             return $this->responder->error(
                 'INVALID_OCR_STREAM',
                 $exception->getMessage(),

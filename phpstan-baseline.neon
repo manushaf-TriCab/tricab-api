@@ -139,6 +139,12 @@ parameters:
 			path: src/CableCalculator/LegacyCliTriCalcEngine.php
 
 		-
+			message: '#^Comparison operation "\<\=" between 1\|2 and 2 is always true\.$#'
+			identifier: smallerOrEqual.alwaysTrue
+			count: 1
+			path: src/CableFit/Research/FoundryResearchModel.php
+
+		-
 			message: '#^Parameter \#1 \$num1 of function bcmul expects numeric\-string, string given\.$#'
 			identifier: argument.type
 			count: 1
@@ -871,12 +877,6 @@ parameters:
 			path: src/Http/Request/Admin/Product/UpsertSpecificationDefinitionRequest.php
 
 		-
-			message: '#^Variable \$http_response_header on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.variable
-			count: 1
-			path: src/Identity/Authentication/GoogleJwksClient.php
-
-		-
 			message: '#^Method TriCab\\Api\\Identity\\Authentication\\GoogleOidcIdTokenValidator\:\:__construct\(\) has parameter \$googleClientIds with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -973,12 +973,6 @@ parameters:
 			path: src/LegacyMigration/Application/Service/StaffEntraLinkDryRunService.php
 
 		-
-			message: '#^Offset ''graphErrorCode'' on \*NEVER\* on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/LegacyMigration/Application/Service/StaffEntraLinkDryRunService.php
-
-		-
 			message: '#^Parameter \#1 \$array \(non\-empty\-list\<int\>\) of array_values is already a list, call has no effect\.$#'
 			identifier: arrayValues.list
 			count: 1
@@ -1059,13 +1053,13 @@ parameters:
 		-
 			message: '#^Binary operation "\-" between \(float\|int\) and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 4
+			count: 2
 			path: src/LegacyMigration/Application/Service/StaffUserMigrationExecuteService.php
 
 		-
 			message: '#^Binary operation "\-" between 617 and mixed results in an error\.$#'
 			identifier: binaryOp.invalid
-			count: 2
+			count: 1
 			path: src/LegacyMigration/Application/Service/StaffUserMigrationExecuteService.php
 
 		-
@@ -1081,12 +1075,6 @@ parameters:
 			path: src/LegacyMigration/Application/Service/StaffUserMigrationExecuteService.php
 
 		-
-			message: '#^Offset ''notAttempted'' on non\-empty\-array\<string, mixed\> on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: src/LegacyMigration/Application/Service/StaffUserMigrationExecuteService.php
-
-		-
 			message: '#^Parameter \#1 \$summary of method TriCab\\Api\\LegacyMigration\\Application\\Service\\StaffUserMigrationExecuteService\:\:assertBatch1Counts\(\) expects array\<string, int\|string\>, array\<mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1095,6 +1083,24 @@ parameters:
 		-
 			message: '#^Parameter \#3 \$dryRunSummary of method TriCab\\Api\\LegacyMigration\\Application\\Service\\StaffUserMigrationExecuteService\:\:verifyPostExecution\(\) expects array\<string, int\|string\>, array\<mixed\> given\.$#'
 			identifier: argument.type
+			count: 1
+			path: src/LegacyMigration/Application/Service/StaffUserMigrationExecuteService.php
+
+		-
+			message: '#^Offset ''succeeded'' on array\{identityUsersCreated\: 0, userRolesCreated\: 0, legacyMappingsCreated\: 0, externalIdentitiesCreated\: 0, existingUsersModified\: 0, missingEmailUsersCreated\: 0, blockedRoleUsersCreated\: 0, succeeded\: 0, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/LegacyMigration/Application/Service/StaffUserMigrationExecuteService.php
+
+		-
+			message: '#^Offset ''failed'' on array\{identityUsersCreated\: 0, userRolesCreated\: 0, legacyMappingsCreated\: 0, externalIdentitiesCreated\: 0, existingUsersModified\: 0, missingEmailUsersCreated\: 0, blockedRoleUsersCreated\: 0, succeeded\: 0, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: src/LegacyMigration/Application/Service/StaffUserMigrationExecuteService.php
+
+		-
+			message: '#^Offset ''skipped'' on array\{identityUsersCreated\: 0, userRolesCreated\: 0, legacyMappingsCreated\: 0, externalIdentitiesCreated\: 0, existingUsersModified\: 0, missingEmailUsersCreated\: 0, blockedRoleUsersCreated\: 0, succeeded\: 0, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
 			count: 1
 			path: src/LegacyMigration/Application/Service/StaffUserMigrationExecuteService.php
 
@@ -1409,6 +1415,12 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/LegacyMigration/Persistence/InMemoryLegacyMigrationStore.php
+
+		-
+			message: '#^Comparison operation "\<\=" between 1\|2 and 2 is always true\.$#'
+			identifier: smallerOrEqual.alwaysTrue
+			count: 1
+			path: src/Mail/Intake/FoundryMailClassifier.php
 
 		-
 			message: '#^Anonymous function should return string but returns mixed\.$#'
@@ -3283,6 +3295,18 @@ parameters:
 			path: src/Product/Pricing/AzureSqlVariantCommercialCatalogRepository.php
 
 		-
+			message: '#^Comparison operation "\<" between 0\|1 and 2 is always true\.$#'
+			identifier: smaller.alwaysTrue
+			count: 1
+			path: src/Product/Pricing/HttpLegacyCostCalculationGateway.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: src/Product/Pricing/HttpLegacyCostCalculationGateway.php
+
+		-
 			message: '#^Cannot cast mixed to string\.$#'
 			identifier: cast.string
 			count: 2
@@ -3353,6 +3377,12 @@ parameters:
 			identifier: return.unusedType
 			count: 1
 			path: src/Product/Storage/AzureProductBlobStore.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with ''managed\-token'' and ''managed\-token'' will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Assistant/ManagedIdentityFoundryAccessTokenProviderTest.php
 
 		-
 			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertNotNull\(\) with Psr\\Container\\ContainerInterface will always evaluate to true\.$#'
@@ -3545,6 +3575,18 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: tests/Config/SettingsTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with 1 and 1 will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Finance/Ap/AzureSqlApOutboundStoreTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with array\{deleted\: true, permanent\: false\} and array\{deleted\: true, permanent\: false\} will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Finance/Task/TaskSetupServiceTest.php
 
 		-
 			message: '#^Cannot cast mixed to string\.$#'
@@ -3767,6 +3809,12 @@ parameters:
 			identifier: cast.double
 			count: 4
 			path: tests/Http/CableCalculatorCalculateEndpointTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with ''CABLEFIT_NO_SOURCES'' and ''CABLEFIT_NO_SOURCES'' will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Http/CableFitResearchEndpointsTest.php
 
 		-
 			message: '#^Cannot access offset ''code'' on mixed\.$#'
@@ -5005,6 +5053,18 @@ parameters:
 			path: tests/Identity/Authentication/AppleOidcIdTokenValidatorTest.php
 
 		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with ''sql\-mi\-token'' and ''sql\-mi\-token'' will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Infrastructure/Authentication/ManagedIdentitySqlAccessTokenProviderTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with ''tok\-1'' and ''tok\-1'' will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Infrastructure/AzureCliAccessTokenProviderTest.php
+
+		-
 			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertTrue\(\) with false will always evaluate to false\.$#'
 			identifier: staticMethod.impossibleType
 			count: 1
@@ -5413,18 +5473,6 @@ parameters:
 			path: tests/LegacyMigration/StaffEntraLinkDryRunTest.php
 
 		-
-			message: '#^Offset ''activateIfPending'' on array\{userId\: int, providerCode\: string, tenantIdentifier\: string, subjectIdentifier\: string, emailClaim\: string, normalizedEmailClaim\: string, activateIfPending\: bool\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: tests/LegacyMigration/StaffEntraLinkDryRunTest.php
-
-		-
-			message: '#^Offset ''activateIfPending'' on array\{userId\: int, providerCode\: string, tenantIdentifier\: string, subjectIdentifier\: string, emailClaim\: string, normalizedEmailClaim\: string, activateIfPending\: true\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 1
-			path: tests/LegacyMigration/StaffEntraLinkDryRunTest.php
-
-		-
 			message: '#^Offset ''userId'' on array\{userId\: int, providerCode\: string, tenantIdentifier\: string, subjectIdentifier\: string, emailClaim\: string, normalizedEmailClaim\: string, activateIfPending\: true\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
 			count: 1
@@ -5469,12 +5517,6 @@ parameters:
 		-
 			message: '#^Parameter \#7 \$usersByNormalizedEmail of method TriCab\\Core\\LegacyMigration\\StaffEntraLink\\StaffEntraLinkDryRun\:\:run\(\) expects array\<string, list\<array\<string, mixed\>\>\>, array given\.$#'
 			identifier: argument.type
-			count: 1
-			path: tests/LegacyMigration/StaffEntraLinkDryRunTest.php
-
-		-
-			message: '#^Strict comparison using \=\=\= between true and true will always evaluate to true\.$#'
-			identifier: identical.alwaysTrue
 			count: 1
 			path: tests/LegacyMigration/StaffEntraLinkDryRunTest.php
 

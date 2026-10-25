@@ -10,14 +10,13 @@ TriCab Core owns:
 - business rules
 - application use cases / handlers
 - repository contracts
-- legacy OCR stream parsing and document-generation contracts
 - domain and application exceptions
 
 TriCab Core does **not** depend on Slim, PDO, Azure SQL, Microsoft Entra SDKs, HTTP messages, PHP sessions, React, application config, or environment variables.
 
 Infrastructure (routing, auth token validation, SQL repositories, DI, JSON responses) belongs in the API application.
 
-The `DocumentGeneration` module provides the reusable OCR parser, record model, document data projection, `PdfRenderer` contract, and `GenerateOcrPdfHandler`. Concrete PDF engines, templates, assets, and HTTP transport remain in consuming applications such as `tricab-api`.
+TriCab documents (quotation, order confirmation, pick list) and the 4js OCR stream reader are in the separate [tricab/docgen](https://github.com/tricab/docgen) package, not in Core.
 
 ## Requirements
 
@@ -62,5 +61,5 @@ TriCab\Core\
 
 ## Document-generation references
 
-- [Legacy record dictionary](docs/document-generation/legacy-record-dictionary.md)
+- Legacy record dictionary: `docs/legacy-record-dictionary.md` in [tricab/docgen](https://github.com/tricab/docgen)
 - [Migration plan](docs/document-generation/migration-plan.md)

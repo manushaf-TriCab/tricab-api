@@ -653,6 +653,47 @@ final class TaskServiceTest extends TestCase
         $this->tasks->get($this->max, $id);
     }
 
+    public function test_a_task_in_a_binned_project_comes_back_with_the_project_not_on_its_own(): void
+    {
+        $manager = new TaskActor(12, 'Max Manager', 'max@example.test', $this->max->permissions);
+        $project = self::id($this->setup->createProject($manager, ['name' => 'Close']));
+        $a = self::id($this->make($this->max, 'A', ['project_id' => $project]));
+        $b = self::id($this->make($this->max, 'B', ['project_id' => $project]));
+        $this->setup->deleteProject($manager, $project);
+
+        foreach ([fn () => $this->tasks->restore($this->max, $a), fn () => $this->tasks->bulkRestore($this->max, [$a, $b])] as $attempt) {
+            try {
+                $attempt();
+                self::fail('Expected a conflict.');
+            } catch (TaskConflict $e) {
+                self::assertSame('Its project "Close" is in the Bin. Restore the project from the Bin first.', $e->getMessage());
+            }
+        }
+        self::assertCount(2, $this->tasks->list($this->max, true));
+
+        $this->setup->restoreProject($manager, $project);
+
+        self::assertCount(0, $this->tasks->list($this->max, true));
+        self::assertCount(2, $this->tasks->list($this->max));
+    }
+
+    public function test_deleting_a_project_for_good_takes_its_binned_tasks_their_history_and_dependencies_with_it(): void
+    {
+        $manager = new TaskActor(12, 'Max Manager', 'max@example.test', $this->max->permissions);
+        $project = self::id($this->setup->createProject($manager, ['name' => 'Close']));
+        $outside = $this->make($this->max, 'Outside');
+        $a = $this->make($this->max, 'A', ['project_id' => $project]);
+        $this->make($this->max, 'B', ['project_id' => $project, 'dependencies' => [self::id($a), self::id($outside)]]);
+        $this->tasks->update($this->max, self::id($outside), ['dependencies' => [self::id($a)]]);
+
+        $this->setup->deleteProject($manager, $project);
+        $this->setup->deleteProject($manager, $project, true);
+
+        self::assertSame(['Outside'], array_column($this->tasks->list($this->max, true) + $this->tasks->list($this->max), 'name'));
+        self::assertSame([], $this->tasks->get($this->max, self::id($outside))['dependencies']);
+        self::assertCount(1, $this->tasks->historyByStatus(null));
+    }
+
     public function test_a_permanent_delete_removes_the_tasks_history_and_every_dependency_naming_it(): void
     {
         $a = $this->make($this->max, 'A');

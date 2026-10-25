@@ -736,4 +736,43 @@ final class TaskImportServiceTest extends TestCase
 
         self::assertSame([['Group "Reconciliations" is not a group of "Month End"']], array_column($this->lines($report['tasks']), 'errors'));
     }
+
+    // ---- several preparers and reviewers in one cell (23 Oct 2026) -----------------------
+
+    public function test_a_cell_may_name_several_people_separated_by_semicolons_and_an_old_single_name_still_loads(): void
+    {
+        $this->file(tasks: [
+            self::row('Shared', cells: ['Preparer' => 'Una User; mo@example.test', 'Reviewer' => 'Mo Manager;Una User; ']),
+            self::row('Single', cells: ['Preparer' => 'Una User', 'Reviewer' => '']),
+            self::row('Bad', cells: ['Preparer' => 'Una User; Nobody Here; Ada Admin']),
+        ]);
+
+        $report = $this->load($this->admin, false);
+
+        $lines = $this->lines($report['tasks']);
+        self::assertSame(['created', 'created', 'error'], array_column($lines, 'action'));
+        self::assertSame(['Preparer "Nobody Here" is not a member of Tri-Task', 'Preparer "Ada Admin" matches more than one person'], $lines[2]['errors']);
+        $byName = [];
+        foreach ($this->register() as $task) {
+            $byName[Typed::string($task['name'])] = $task;
+        }
+        self::assertSame([['11', '12'], ['12', '11']], [$byName['Shared']['preparer_ids'], $byName['Shared']['reviewer_ids']]);
+        self::assertSame([['11'], []], [$byName['Single']['preparer_ids'], $byName['Single']['reviewer_ids']]);
+        self::assertSame(['11', null], [$byName['Single']['preparer_id'], $byName['Single']['reviewer_id']]);
+    }
+
+    public function test_an_exported_file_with_several_names_changes_nothing_until_a_name_changes(): void
+    {
+        $this->file(tasks: [self::row(cells: ['Preparer' => 'Una User; Mo Manager'])]);
+        $this->load($this->admin, false);
+        $id = Typed::string($this->register()[0]['id']);
+
+        $this->exported([self::exportRow('Bank rec', 'Month End', ['Task ID' => $id, 'Preparer' => 'Mo Manager; Una User', 'Reviewer' => 'Mo Manager'])]);
+        $same = $this->load($this->admin);
+        self::assertSame(['unchanged'], array_column($this->lines($same['tasks']), 'action'), 'the same people in another order');
+
+        $this->exported([self::exportRow('Bank rec', 'Month End', ['Task ID' => $id, 'Preparer' => 'Mo Manager', 'Reviewer' => 'Mo Manager'])]);
+        $this->load($this->admin, false);
+        self::assertSame(['12'], $this->register()[0]['preparer_ids']);
+    }
 }

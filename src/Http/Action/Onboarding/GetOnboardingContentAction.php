@@ -33,9 +33,8 @@ final class GetOnboardingContentAction
     ): ResponseInterface {
         unset($response);
 
-        return $this->responder->run($request, function (AuthenticatedUser $user) use ($request, $arguments): ResponseInterface {
+        return $this->responder->run($request, function (AuthenticatedUser $user): ResponseInterface {
             unset($user);
-            unset($request, $arguments);
 
             return $this->responder->success([
                 'items' => array_map(

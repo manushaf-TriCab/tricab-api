@@ -422,4 +422,37 @@ final class TaskBoardServiceTest extends TestCase
         self::assertSame(12, $this->board->defaultReviewer(15));
         self::assertSame(15, $this->board->defaultReviewer(null));
     }
+
+    public function test_a_project_template_carries_several_people_and_older_templates_still_apply(): void
+    {
+        $template = $this->board->createProjectTemplate($this->max, ['name' => 'Close', 'groups' => [['name' => 'G', 'tasks' => [
+            ['name' => 'Two and two', 'preparer_ids' => ['11', '13'], 'reviewer_ids' => ['12', '15']],
+            ['name' => 'Old shape', 'preparer_id' => '11', 'reviewer_id' => '12'],
+            ['name' => 'Default reviewer', 'preparer_ids' => ['12']],
+        ]]]]);
+        $stored = ((array) ((array) ((array) $template['groups'])[0])['tasks']);
+        self::assertSame(['11', '13'], ((array) $stored[0])['preparer_ids']);
+        self::assertSame('11', ((array) $stored[0])['preparer_id']);
+        self::assertSame(['12'], ((array) $stored[1])['reviewer_ids']);
+
+        $out = $this->board->applyProjectTemplate($this->max, self::id($template), ['name' => 'November close']);
+
+        self::assertSame(3, $out['tasks_created']);
+        $byName = [];
+        foreach ($this->tasks->list($this->max) as $task) {
+            $byName[Typed::string($task['name'])] = $task;
+        }
+        self::assertSame([['11', '13'], ['12', '15']], [$byName['Two and two']['preparer_ids'], $byName['Two and two']['reviewer_ids']]);
+        self::assertSame([['11'], ['12']], [$byName['Old shape']['preparer_ids'], $byName['Old shape']['reviewer_ids']]);
+        // The default reviewer is a manager who is not one of the preparers.
+        self::assertSame(['15'], $byName['Default reviewer']['reviewer_ids']);
+
+        $saved = $this->board->saveProjectAsTemplate($this->max, Typed::string(((array) $out['project'])['id']), ['name' => 'Again']);
+        $again = ((array) ((array) $saved['groups'])[0]);
+        $savedTasks = [];
+        foreach ((array) $again['tasks'] as $item) {
+            $savedTasks[Typed::string(((array) $item)['name'])] = (array) $item;
+        }
+        self::assertSame([['11', '13'], ['12', '15']], [$savedTasks['Two and two']['preparer_ids'], $savedTasks['Two and two']['reviewer_ids']]);
+    }
 }
