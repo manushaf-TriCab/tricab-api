@@ -93,9 +93,9 @@ final class FinanceTaskMailRoutesTest extends TestCase
         return $out;
     }
 
-    private function task(): string
+    private function task(string $dueDate = ''): string
     {
-        [$status, $json] = $this->call('POST', '/tasks', ['name' => 'Bank rec', 'preparer_id' => 1]);
+        [$status, $json] = $this->call('POST', '/tasks', ['name' => 'Bank rec', 'preparer_id' => 1] + ($dueDate !== '' ? ['due_date' => $dueDate] : []));
         self::assertSame(201, $status);
         $data = self::data($json);
         self::assertIsArray($data);
@@ -190,5 +190,51 @@ final class FinanceTaskMailRoutesTest extends TestCase
         $message = self::error($json)['message'];
         self::assertIsString($message);
         self::assertStringContainsString('someone@example.test', $message);
+    }
+
+    // ==== calendar invites (23 Oct 2026) ===========================================================
+
+    public function test_the_calendar_invite_route_skips_a_task_without_a_due_date_and_with_mail_off_records_no_invite(): void
+    {
+        $dated = $this->task('2026-10-30');
+        $undated = $this->task();
+
+        [$status, $json] = $this->call('POST', '/calendar-invites', ['ids' => [$undated, $dated], 'link_origin' => 'https://tricab.ai']);
+
+        self::assertSame(200, $status);
+        $data = self::data($json);
+        self::assertIsArray($data);
+        self::assertSame([0, 1, 1], [$data['sent'], $data['skipped'], $data['failed']]);
+        $results = $data['results'];
+        self::assertIsArray($results);
+        self::assertIsArray($results[0]);
+        self::assertIsArray($results[1]);
+        self::assertSame('It has no due date', $results[0]['reason']);
+        self::assertSame('Mail is switched off', $results[1]['error']);
+        $ledger = $this->app->getContainer()->get(FinanceMailLedger::class);
+        self::assertInstanceOf(InMemoryFinanceMailLedger::class, $ledger);
+        self::assertSame(['thilanh@tricab.com'], array_map(static fn ($row): string => $row->mailbox, $ledger->all()), 'from the signed-in person own mailbox');
+
+        [, $json] = $this->call('GET', '/tasks/' . $dated);
+        $task = self::data($json);
+        self::assertIsArray($task);
+        self::assertArrayHasKey('calendar_invite', $task);
+        self::assertNull($task['calendar_invite']);
+    }
+
+    public function test_the_calendar_invite_route_needs_the_same_permission_as_reminders_and_a_list_of_ids(): void
+    {
+        $id = $this->task();
+        [$status, $json] = $this->call('POST', '/calendar-invites', ['ids' => []]);
+        self::assertSame(422, $status);
+        self::assertSame('FINANCE_TASK_INPUT_INVALID', self::error($json)['code']);
+        [$status] = $this->call('POST', '/calendar-invites', ['ids' => ['ffffffffffffffffffffffffffffffff']]);
+        self::assertSame(404, $status);
+
+        $users = $this->app->getContainer()->get(UserRepository::class);
+        self::assertInstanceOf(InMemoryApiUserRepository::class, $users);
+        $users->replacePermissions(1, ['account.login', Module::PERMISSION_TASK_TASKS_READ], ['EMPLOYEE']);
+        [$status] = $this->call('POST', '/calendar-invites', ['ids' => [$id]]);
+        self::assertSame(403, $status);
     }
 }

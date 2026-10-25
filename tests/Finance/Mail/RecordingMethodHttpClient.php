@@ -6,12 +6,13 @@ namespace TriCab\Api\Tests\Finance\Mail;
 
 use RuntimeException;
 use TriCab\Api\Infrastructure\Http\JsonMethodHttpClient;
+use TriCab\Api\Infrastructure\Http\RawHttpClient;
 
 /**
  * An HTTP client for the threaded-reply tests: it never leaves the process, records every call with its verb, and
  * answers from a queue of responses (or throws a queued exception). A call with nothing queued is a test bug.
  */
-final class RecordingMethodHttpClient implements JsonMethodHttpClient
+final class RecordingMethodHttpClient implements JsonMethodHttpClient, RawHttpClient
 {
     /** @var list<array{method: string, url: string, headers: array<string, string>, payload: array<string, mixed>|null}> */
     public array $calls = [];
@@ -27,6 +28,11 @@ final class RecordingMethodHttpClient implements JsonMethodHttpClient
     public function postJson(string $url, array $headers, array $payload): array
     {
         return $this->record('POST', $url, $headers, $payload);
+    }
+
+    public function postRaw(string $url, array $headers, string $body): array
+    {
+        return $this->record('RAW', $url, $headers, ['raw' => $body]);
     }
 
     public function postForm(string $url, array $headers, array $fields): array

@@ -6,6 +6,7 @@ namespace TriCab\Core\Finance\Task\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use TriCab\Core\Finance\Task\Domain\TaskCalendarInvite;
 use TriCab\Core\Finance\Task\Domain\TaskEntity;
 use TriCab\Core\Finance\Task\Domain\TaskGroup;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
@@ -161,9 +162,10 @@ final class TaskPresenter
      * @param array<string, list<string>> $dependencies task id to the ids it waits for
      * @param array<string, string> $projectNames project id to name
      * @param ?array{is_unread: bool, is_flagged: bool, pinned_at: ?string} $mine the signed-in person's own marks, when there is one
+     * @param ?array<string, mixed> $calendarInvite the task's latest calendar invite ({@see calendarInvite}), null when none
      * @return array<string, mixed>
      */
-    public static function task(TaskRecord $t, array $dependencies, array $projectNames, string $today, ?array $mine = null): array
+    public static function task(TaskRecord $t, array $dependencies, array $projectNames, string $today, ?array $mine = null, ?array $calendarInvite = null): array
     {
         $project = $t->projectId !== null ? ($projectNames[$t->projectId] ?? '') : '';
 
@@ -203,7 +205,30 @@ final class TaskPresenter
             'deleted_at' => self::iso($t->deletedAt),
             'created_date' => self::iso($t->createdDate),
             'updated_date' => self::iso($t->updatedDate),
+            'calendar_invite' => $calendarInvite,
         ] + ($mine ?? []);
+    }
+
+    /**
+     * The latest calendar invite sent for a task, or null when none (Nick Han, 23 Oct 2026): the due date it carried,
+     * when it went, its SEQUENCE and who sent it. `out_of_date` is true when the task's due date has moved since.
+     *
+     * @return array{due_date: string, sent_at: ?string, sequence: int, sent_by_id: ?string, recipient_count: int, out_of_date: bool}|null
+     */
+    public static function calendarInvite(?TaskCalendarInvite $invite, ?string $dueDate): ?array
+    {
+        if ($invite === null) {
+            return null;
+        }
+
+        return [
+            'due_date' => $invite->dueDateSent,
+            'sent_at' => self::iso($invite->sentAt),
+            'sequence' => $invite->sequence,
+            'sent_by_id' => self::person($invite->sentBy),
+            'recipient_count' => count($invite->recipients),
+            'out_of_date' => ($dueDate ?? '') !== $invite->dueDateSent,
+        ];
     }
 
     /**

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use TriCab\Core\Finance\Module;
 use TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory;
 use TriCab\Core\Finance\Task\Contract\TaskBoardStore;
+use TriCab\Core\Finance\Task\Contract\TaskCalendarInvites;
 use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Contract\TaskStore;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
@@ -44,6 +45,8 @@ final class TaskService
         private readonly TaskTime $time,
         // Task groups (13 Oct 2026). Without it a task cannot be put in a group, as before the board.
         private readonly ?TaskBoardStore $board = null,
+        // The latest calendar invite per task (23 Oct 2026). Without it no task carries one.
+        private readonly ?TaskCalendarInvites $invites = null,
     ) {
     }
 
@@ -1064,6 +1067,7 @@ final class TaskService
         $cutoff = $actor === null ? null : $this->tasks->unreadCutoff();
         $dependencies = $this->tasks->dependencyMap();
         $projects = $this->setup->projectNames();
+        $invites = $this->invites?->all() ?? [];
         $today = $this->time->today();
         $out = [];
         foreach ($rows as $task) {
@@ -1073,6 +1077,7 @@ final class TaskService
                 $projects,
                 $today,
                 $actor === null ? null : TaskPresenter::mine($task, $states[$task->id] ?? null, $actor->userId, $cutoff),
+                TaskPresenter::calendarInvite($invites[$task->id] ?? null, $task->dueDate),
             );
         }
 

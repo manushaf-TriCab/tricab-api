@@ -825,6 +825,9 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
         $app->post($task . '/mail/send', \TriCab\Api\Http\Action\Finance\Task\SendTaskMailAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
+        // Calendar invites by due date: an all-day event per task to its preparers and reviewers, from the person's own mailbox (23 Oct 2026). Same permission as reminders.
+        $app->post($task . '/calendar-invites', \TriCab\Api\Http\Action\Finance\Task\SendTaskCalendarInvitesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_MAIL_SEND));
         $app->get($task . '/tasks/{id}/mail', \TriCab\Api\Http\Action\Finance\Task\ListTaskMailAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
 

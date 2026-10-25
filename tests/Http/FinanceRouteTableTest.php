@@ -92,6 +92,7 @@ final class FinanceRouteTableTest extends TestCase
         'GET /api/v1/finance/task/analytics' => Module::PERMISSION_TASK_ANALYTICS_READ,
         'GET /api/v1/finance/task/send-mailboxes' => Module::PERMISSION_TASK_MAIL_SEND,
         'POST /api/v1/finance/task/mail/send' => Module::PERMISSION_TASK_MAIL_SEND,
+        'POST /api/v1/finance/task/calendar-invites' => Module::PERMISSION_TASK_MAIL_SEND,
         'GET /api/v1/finance/task/tasks/{id}/mail' => Module::PERMISSION_TASK_TASKS_READ,
         'GET /api/v1/finance/task/settings/report-recipients' => Module::PERMISSION_TASK_SETTINGS_MANAGE,
         'POST /api/v1/finance/task/settings/report-recipients' => Module::PERMISSION_TASK_SETTINGS_MANAGE,

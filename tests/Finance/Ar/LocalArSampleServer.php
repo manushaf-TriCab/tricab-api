@@ -39,6 +39,7 @@ final class LocalArSampleServer
         'alter-finance-task-history-fields.sql',
         'alter-finance-task-assignees.sql',
         'alter-finance-task-user-state.sql',
+        'alter-finance-task-calendar-invites.sql',
         'create-finance-ar-schema.sql',
         'create-finance-invoice-schema.sql',
         'alter-finance-mail-status-suppressed.sql',

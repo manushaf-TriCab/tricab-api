@@ -10,7 +10,7 @@ use RuntimeException;
 /**
  * Lightweight HTTPS client using PHP streams (no third-party HTTP SDK).
  */
-final class StreamJsonHttpClient implements JsonMethodHttpClient
+final class StreamJsonHttpClient implements JsonMethodHttpClient, RawHttpClient
 {
     /**
      * @param ?float $connectTimeoutSeconds PHP's HTTP stream wrapper takes the
@@ -71,6 +71,11 @@ final class StreamJsonHttpClient implements JsonMethodHttpClient
         }
 
         return $this->request($method, $url, $headers, $encoded);
+    }
+
+    public function postRaw(string $url, array $headers, string $body): array
+    {
+        return $this->request('POST', $url, array_merge(['Accept' => 'application/json'], $headers), $body);
     }
 
     public function postForm(string $url, array $headers, array $fields): array

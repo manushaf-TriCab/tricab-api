@@ -1238,9 +1238,15 @@ final class ContainerFactory
             // The project board's groups and project templates (13 Oct 2026); the azure-sql branch swaps in the tables.
             \TriCab\Core\Finance\Task\Contract\TaskBoardStore::class
                 => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryTaskBoardStore::class),
+            // The latest calendar invite per task (23 Oct 2026); the azure-sql branch swaps in the table.
+            \TriCab\Core\Finance\Task\Contract\TaskCalendarInvites::class
+                => \DI\autowire(\TriCab\Api\Finance\Task\InMemoryTaskCalendarInvites::class),
             \TriCab\Core\Finance\Task\Service\TaskService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskService::class)
-                    ->constructorParameter('board', \DI\get(\TriCab\Core\Finance\Task\Contract\TaskBoardStore::class)),
+                    ->constructorParameter('board', \DI\get(\TriCab\Core\Finance\Task\Contract\TaskBoardStore::class))
+                    ->constructorParameter('invites', \DI\get(\TriCab\Core\Finance\Task\Contract\TaskCalendarInvites::class)),
+            \TriCab\Core\Finance\Task\Service\TaskCalendarInviteService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskCalendarInviteService::class),
             \TriCab\Core\Finance\Task\Service\TaskBoardService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskBoardService::class),
             // Task mail (T2.6): the links to the shared ledger and the daily-summary recipients.
@@ -3545,6 +3551,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskBoardStore::class);
             $definitions[\TriCab\Core\Finance\Task\Contract\TaskMailLinks::class]
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskMailLinks::class);
+            $definitions[\TriCab\Core\Finance\Task\Contract\TaskCalendarInvites::class]
+                = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskCalendarInvites::class);
             $definitions[\TriCab\Core\Finance\Task\Contract\TaskReportRecipientStore::class]
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskReportRecipientStore::class);
             // Tri-AR (Phase 5): the assignee directory reads `[identity]`; the option lists are `finance.ar_option_lists`.

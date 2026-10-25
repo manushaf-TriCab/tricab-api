@@ -31,6 +31,7 @@ final class LocalTaskIdentityServer
         'alter-finance-task-history-fields.sql',
         'alter-finance-task-assignees.sql',
         'alter-finance-task-user-state.sql',
+        'alter-finance-task-calendar-invites.sql',
         'seed-finance-permissions.sql',
         'seed-finance-roles.sql',
         'seed-finance-task-permissions.sql',

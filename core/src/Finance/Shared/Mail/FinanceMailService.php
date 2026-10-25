@@ -134,7 +134,9 @@ final class FinanceMailService implements FinanceMailSender
         $threaded = false;
         try {
             $outgoing = $message->normalised($sender, $to, $cc, $bcc, $subject, $contentType, $key);
-            if ($outgoing->replyToMessageId !== null && $this->transport instanceof FinanceReplyMailTransport) {
+            if ($outgoing->calendar !== null && $this->transport instanceof FinanceMimeMailTransport) {
+                $this->transport->deliverMime($outgoing);
+            } elseif ($outgoing->replyToMessageId !== null && $this->transport instanceof FinanceReplyMailTransport) {
                 $threaded = $this->transport->deliverReply($outgoing, $outgoing->replyToMessageId);
             } else {
                 $this->transport->deliver($outgoing);
