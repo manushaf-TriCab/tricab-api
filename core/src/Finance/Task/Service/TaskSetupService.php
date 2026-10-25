@@ -377,13 +377,15 @@ final class TaskSetupService
             self::str($fields, 'requirements'),
             self::str($fields, 'category', 'routine'),
             self::str($fields, 'finance_statement_area'),
-            self::person($fields, 'preparer_user_id'),
-            self::person($fields, 'reviewer_user_id'),
+            self::ids($fields, 'preparer_user_ids')[0] ?? null,
+            self::ids($fields, 'reviewer_user_ids')[0] ?? null,
             self::integer($fields, 'default_progress'),
             self::nullableStr($fields, 'due_date'),
             ($fields['due_date_requested'] ?? false) === true,
             $now,
             $now,
+            self::ids($fields, 'preparer_user_ids'),
+            self::ids($fields, 'reviewer_user_ids'),
         );
         $this->store->insertTemplate($template);
 
@@ -400,7 +402,15 @@ final class TaskSetupService
         if ($template === null) {
             throw new TaskNotFound('Template not found');
         }
-        foreach ($this->cleanTemplate($data, true) as $key => $value) {
+        $fields = $this->cleanTemplate($data, true);
+        // A client from before the lists sends one person: the same first person sent back leaves the others be.
+        foreach (['preparer' => $template->preparerUserIds, 'reviewer' => $template->reviewerUserIds] as $role => $current) {
+            $list = $role . '_user_ids';
+            if (($fields[$role . '_single_only'] ?? false) === true && self::ids($fields, $list) !== [] && self::ids($fields, $list)[0] === ($current[0] ?? null)) {
+                unset($fields[$list]);
+            }
+        }
+        foreach ($fields as $key => $value) {
             match ($key) {
                 'name' => $template->name = (string) $value,
                 'description' => $template->description = (string) $value,
@@ -410,8 +420,8 @@ final class TaskSetupService
                 'default_progress' => $template->defaultProgress = is_int($value) ? $value : 0,
                 'due_date' => $template->dueDate = is_string($value) ? $value : null,
                 'due_date_requested' => $template->dueDateRequested = $value === true,
-                'preparer_user_id' => $template->preparerUserId = is_int($value) ? $value : null,
-                'reviewer_user_id' => $template->reviewerUserId = is_int($value) ? $value : null,
+                'preparer_user_ids' => $template->setPreparers(self::ids($fields, 'preparer_user_ids')),
+                'reviewer_user_ids' => $template->setReviewers(self::ids($fields, 'reviewer_user_ids')),
                 default => null,
             };
         }
@@ -470,11 +480,16 @@ final class TaskSetupService
         if (array_key_exists('due_date_requested', $data)) {
             $out['due_date_requested'] = TaskRules::bool($data['due_date_requested']);
         }
-        foreach (['preparer_id' => 'preparer_user_id', 'reviewer_id' => 'reviewer_user_id'] as $apiKey => $column) {
-            if (array_key_exists($apiKey, $data)) {
-                $userId = TaskRules::userId($data[$apiKey]);
-                $this->requireMember($userId);
-                $out[$column] = $userId;
+        foreach (['preparer' => ['preparer_ids', 'preparer_id'], 'reviewer' => ['reviewer_ids', 'reviewer_id']] as $role => [$listKey, $singleKey]) {
+            $ids = TaskRules::people($data, $listKey, $singleKey);
+            if ($ids !== null) {
+                foreach ($ids as $userId) {
+                    $this->requireMember($userId);
+                }
+                $out[$role . '_user_ids'] = $ids;
+                if (!array_key_exists($listKey, $data)) {
+                    $out[$role . '_single_only'] = true;
+                }
             }
         }
 
@@ -799,12 +814,15 @@ final class TaskSetupService
         return is_int($value) ? $value : 0;
     }
 
-    /** @param array<string, mixed> $fields */
-    private static function person(array $fields, string $key): ?int
+    /**
+     * @param array<string, mixed> $fields
+     * @return list<int>
+     */
+    private static function ids(array $fields, string $key): array
     {
-        $value = $fields[$key] ?? null;
+        $value = $fields[$key] ?? [];
 
-        return is_int($value) ? $value : null;
+        return is_array($value) ? array_values(array_filter($value, 'is_int')) : [];
     }
 
     /**

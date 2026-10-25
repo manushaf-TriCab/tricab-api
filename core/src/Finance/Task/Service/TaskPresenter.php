@@ -36,6 +36,37 @@ final class TaskPresenter
         return $userId === null ? null : (string) $userId;
     }
 
+    /**
+     * @param list<int> $userIds
+     * @return list<string> person ids as text, in order
+     */
+    public static function people(array $userIds): array
+    {
+        return array_map(static fn (int $id): string => (string) $id, $userIds);
+    }
+
+    /**
+     * The people of one role on a presented task (`preparer_ids`, else the lone `preparer_id` of a task made before the
+     * lists), as user ids.
+     *
+     * @param array<array-key, mixed> $task
+     * @return list<int>
+     */
+    public static function peopleOf(array $task, string $role): array
+    {
+        $list = $task[$role . '_ids'] ?? null;
+        $raw = is_array($list) ? $list : [$task[$role . '_id'] ?? null];
+        $out = [];
+        foreach ($raw as $item) {
+            $id = is_int($item) ? $item : (is_string($item) && ctype_digit($item) ? (int) $item : 0);
+            if ($id > 0 && !in_array($id, $out, true)) {
+                $out[] = $id;
+            }
+        }
+
+        return $out;
+    }
+
     /** `display_status`: completed, on_hold (even when past due), overdue (Active and due before today), or active. */
     public static function displayStatus(string $status, ?string $dueDate, string $today): string
     {
@@ -87,6 +118,8 @@ final class TaskPresenter
             'finance_statement_area' => $t->financeStatementArea,
             'preparer_id' => self::person($t->preparerUserId),
             'reviewer_id' => self::person($t->reviewerUserId),
+            'preparer_ids' => self::people($t->preparerUserIds),
+            'reviewer_ids' => self::people($t->reviewerUserIds),
             'progress' => $t->defaultProgress,
             'due_date' => $t->dueDate ?? '',
             'due_date_requested' => $t->dueDateRequested,
@@ -147,8 +180,11 @@ final class TaskPresenter
             'project_name' => $project,
             // The pre-rewrite UI grouped by a project *name* string.
             'project' => $project,
+            // `preparer_id` / `reviewer_id` are the first of each list, for clients from before the lists (to drop in a later release).
             'preparer_id' => self::person($t->preparerUserId),
             'reviewer_id' => self::person($t->reviewerUserId),
+            'preparer_ids' => self::people($t->preparerUserIds),
+            'reviewer_ids' => self::people($t->reviewerUserIds),
             'status' => TaskRules::status($t->status),
             'display_status' => self::displayStatus($t->status, $t->dueDate, $today),
             'priority' => $t->priority,

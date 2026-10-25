@@ -323,8 +323,12 @@ final class TaskBoardService
                     if (!is_array($item)) {
                         continue;
                     }
-                    $preparer = self::memberOrNull($item['preparer_id'] ?? null, $members);
-                    $reviewer = self::memberOrNull($item['reviewer_id'] ?? null, $members) ?? $this->defaultReviewer($preparer, $members);
+                    $preparers = self::membersOrNone(TaskPresenter::peopleOf($item, 'preparer'), $members);
+                    $reviewers = self::membersOrNone(TaskPresenter::peopleOf($item, 'reviewer'), $members);
+                    if ($reviewers === []) {
+                        $default = $this->defaultReviewer($preparers, $members);
+                        $reviewers = $default === null ? [] : [$default];
+                    }
                     $offset = $item['due_offset_days'] ?? null;
                     $this->taskService->create($actor, [
                         'name' => $item['name'] ?? '',
@@ -333,8 +337,8 @@ final class TaskBoardService
                         'category' => $item['category'] ?? 'routine',
                         'finance_statement_area' => $item['finance_statement_area'] ?? '',
                         'priority' => $item['priority'] ?? null,
-                        'preparer_id' => $preparer,
-                        'reviewer_id' => $reviewer,
+                        'preparer_ids' => $preparers,
+                        'reviewer_ids' => $reviewers,
                         'due_date' => is_int($offset) ? self::addDays($start, $offset) : null,
                         'due_date_requested' => ($item['due_date_requested'] ?? false) === true,
                         'project_id' => $projectId,
@@ -396,16 +400,19 @@ final class TaskBoardService
     }
 
     /**
-     * The default reviewer (item 5, decided 13 Oct 2026): the first Manager by name who is not the preparer, else the
+     * The default reviewer (item 5, decided 13 Oct 2026): the first Manager by name who is not a preparer, else the
      * first such Administrator, else none.
      *
      * @param array<int, TaskMember> $members
+     *
+     * @param list<int>|int|null $preparer
      */
-    public function defaultReviewer(?int $preparer, ?array $members = null): ?int
+    public function defaultReviewer(array|int|null $preparer, ?array $members = null): ?int
     {
+        $preparers = is_array($preparer) ? $preparer : ($preparer === null ? [] : [$preparer]);
         $members ??= $this->memberMap();
         foreach ([TaskMember::ROLE_MANAGER, TaskMember::ROLE_ADMIN] as $role) {
-            $candidates = array_values(array_filter($members, static fn (TaskMember $m): bool => $m->accessRole === $role && $m->userId !== $preparer));
+            $candidates = array_values(array_filter($members, static fn (TaskMember $m): bool => $m->accessRole === $role && !in_array($m->userId, $preparers, true)));
             usort($candidates, static fn (TaskMember $a, TaskMember $b): int => [mb_strtolower($a->name), $a->userId] <=> [mb_strtolower($b->name), $b->userId]);
             if ($candidates !== []) {
                 return $candidates[0]->userId;
@@ -510,13 +517,12 @@ final class TaskBoardService
         if ($priority !== null && (!is_string($priority) || !in_array($priority, TaskRules::PRIORITIES, true))) {
             throw new TaskInvalid('Priority must be critical, high, medium or low' . $where);
         }
-        $people = [];
-        foreach (['preparer_id', 'reviewer_id'] as $key) {
-            $id = TaskRules::userId($item[$key] ?? null);
-            if ($id !== null && !isset($members[$id])) {
+        $preparers = TaskRules::people($item, 'preparer_ids', 'preparer_id') ?? [];
+        $reviewers = TaskRules::people($item, 'reviewer_ids', 'reviewer_id') ?? [];
+        foreach ([...$preparers, ...$reviewers] as $id) {
+            if (!isset($members[$id])) {
                 throw new TaskInvalid('The preparer and reviewer must be members of Tri-Task' . $where);
             }
-            $people[$key] = $id === null ? null : (string) $id;
         }
         $offset = $item['due_offset_days'] ?? null;
         if ($offset === '' || $offset === null) {
@@ -537,8 +543,10 @@ final class TaskBoardService
             'category' => $category,
             'finance_statement_area' => TaskRules::text($item, 'finance_statement_area', 300) ?? '',
             'priority' => $priority,
-            'preparer_id' => $people['preparer_id'],
-            'reviewer_id' => $people['reviewer_id'],
+            'preparer_id' => $preparers === [] ? null : (string) $preparers[0],
+            'reviewer_id' => $reviewers === [] ? null : (string) $reviewers[0],
+            'preparer_ids' => TaskPresenter::people($preparers),
+            'reviewer_ids' => TaskPresenter::people($reviewers),
             'due_offset_days' => $offset,
             'due_date_requested' => TaskRules::bool($item['due_date_requested'] ?? false),
         ];
@@ -561,17 +569,21 @@ final class TaskBoardService
             'priority' => $t->priority,
             'preparer_id' => TaskPresenter::person($t->preparerUserId),
             'reviewer_id' => TaskPresenter::person($t->reviewerUserId),
+            'preparer_ids' => TaskPresenter::people($t->preparerUserIds),
+            'reviewer_ids' => TaskPresenter::people($t->reviewerUserIds),
             'due_offset_days' => $offset,
             'due_date_requested' => $t->dueDateRequested,
         ];
     }
 
-    /** @param array<int, TaskMember> $members */
-    private static function memberOrNull(mixed $id, array $members): ?int
+    /**
+     * @param list<int> $ids
+     * @param array<int, TaskMember> $members
+     * @return list<int> those who are still members
+     */
+    private static function membersOrNone(array $ids, array $members): array
     {
-        $userId = is_string($id) && ctype_digit($id) ? (int) $id : (is_int($id) ? $id : null);
-
-        return $userId !== null && isset($members[$userId]) ? $userId : null;
+        return array_values(array_filter($ids, static fn (int $id): bool => isset($members[$id])));
     }
 
     private static function addDays(string $date, int $days): string

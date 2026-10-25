@@ -356,12 +356,12 @@ final class TaskSetupServiceTest extends TestCase
     {
         $id = self::id($this->project('Close'));
         $own = $this->task('own', $id);
-        $own->preparerUserId = 11;
+        $own->setPreparers([11]);
         $this->task('other', $id);
         $this->task('binned', $id, null, '', true);
         $done = $this->task('done', $id);
         $done->status = 'completed';
-        $done->reviewerUserId = 11;
+        $done->setReviewers([11]);
 
         $all = $this->service->listProjects($this->manager)[0];
         self::assertSame(3, $all['task_count']);
@@ -761,5 +761,26 @@ final class TaskSetupServiceTest extends TestCase
         self::assertSame('Fin — Ünïcode ✓', $this->service->listProjects($this->manager)[0]['name']);
         self::assertSame('Société Générale', $this->service->listEntities()[0]['name']);
         self::assertSame('Trésorerie', $this->service->listAreas()[0]['name']);
+    }
+
+    public function test_a_template_holds_several_preparers_and_reviewers_and_answers_the_first_for_older_clients(): void
+    {
+        $this->directory->add(9, 'Una User', 'una@example.test');
+        $this->directory->add(10, 'Ivy User', 'ivy@example.test');
+
+        $t = $this->service->createTemplate(['name' => 'Rec', 'preparer_ids' => ['9', 10, '9'], 'reviewer_ids' => ['10']]);
+
+        self::assertSame(['9', '10'], $t['preparer_ids']);
+        self::assertSame(['10'], $t['reviewer_ids']);
+        self::assertSame(['9', '10'], [$t['preparer_id'], $t['reviewer_id']]);
+        // An older client sends the first person back: nothing is dropped. Another person replaces the list.
+        $same = $this->service->updateTemplate(self::id($t), ['preparer_id' => '9', 'name' => 'Rec 2']);
+        self::assertSame(['9', '10'], $same['preparer_ids']);
+        $replaced = $this->service->updateTemplate(self::id($t), ['preparer_id' => '10']);
+        self::assertSame(['10'], $replaced['preparer_ids']);
+        $cleared = $this->service->updateTemplate(self::id($t), ['preparer_ids' => [], 'reviewer_id' => null]);
+        self::assertSame([[], null, [], null], [$cleared['preparer_ids'], $cleared['preparer_id'], $cleared['reviewer_ids'], $cleared['reviewer_id']]);
+        $this->expectException(TaskInvalid::class);
+        $this->service->createTemplate(['name' => 'Bad', 'reviewer_ids' => ['9', '99']]);
     }
 }

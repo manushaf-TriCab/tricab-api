@@ -233,8 +233,8 @@ final class TaskDailySummaryJob implements FinanceJob
     private static function row(TaskRecord $t, array $names): string
     {
         $area = $t->financeStatementArea !== '' ? $t->financeStatementArea : '—';
-        $preparer = $t->preparerUserId !== null ? ($names[$t->preparerUserId] ?? '—') : '—';
-        $reviewer = $t->reviewerUserId !== null ? ($names[$t->reviewerUserId] ?? '—') : '—';
+        $preparer = self::peopleNames($t->preparerUserIds, $names);
+        $reviewer = self::peopleNames($t->reviewerUserIds, $names);
 
         return '<tr>'
             . '<td ' . self::TD . '>' . self::esc($t->name) . '</td>'
@@ -244,6 +244,20 @@ final class TaskDailySummaryJob implements FinanceJob
             . '<td ' . self::TD . '>' . self::esc(self::formatDate($t->dueDate ?? '')) . '</td>'
             . '<td ' . self::TD . '>' . self::esc($t->progress . '%') . '</td>'
             . '</tr>';
+    }
+
+    /**
+     * @param list<int> $userIds
+     * @param array<int, string> $names
+     */
+    private static function peopleNames(array $userIds, array $names): string
+    {
+        $out = [];
+        foreach ($userIds as $id) {
+            $out[] = $names[$id] ?? '—';
+        }
+
+        return $out === [] ? '—' : implode(', ', $out);
     }
 
     /** `_fmt_date`: `06 Oct 2026`, a dash for none, and the text itself (escaped) when it is not a date. */

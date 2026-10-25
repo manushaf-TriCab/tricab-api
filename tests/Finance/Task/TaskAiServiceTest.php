@@ -184,7 +184,7 @@ final class TaskAiServiceTest extends TestCase
 
         self::assertCount(1, $out['drafts']);
         self::assertSame(
-            ['taskId' => $mine, 'taskName' => 'Mine', 'to' => 'una@example.test', 'toName' => 'Una User', 'subject' => 'Hello', 'body' => 'Please do it.'],
+            ['taskId' => $mine, 'taskName' => 'Mine', 'to' => 'una@example.test', 'toName' => 'Una User', 'recipients' => [['email' => 'una@example.test', 'name' => 'Una User']], 'subject' => 'Hello', 'body' => 'Please do it.'],
             $out['drafts'][0],
         );
         self::assertCount(1, $this->ai->calls);
@@ -416,5 +416,33 @@ final class TaskAiServiceTest extends TestCase
         $this->expectException(TaskAiFailed::class);
         $this->expectExceptionMessage('The AI draft failed:');
         $this->service->taskDetails(['name' => 'x']);
+    }
+
+    public function test_a_reminder_goes_to_every_preparer_and_reviewer_each_once(): void
+    {
+        $id = $this->task(['preparer_ids' => [11, 14], 'reviewer_ids' => [12, 11]]);
+        $this->ai->queue[] = ['subject' => 'Reminder', 'body' => 'Soon.'];
+
+        $out = $this->service->reminders($this->max, ['taskId' => $id]);
+
+        self::assertSame(['una@example.test', 'ada@example.test', 'max@example.test'], array_column(self::rows($out['recipients']), 'email'));
+        self::assertSame(['preparer', 'preparer', 'reviewer'], array_column(self::rows($out['recipients']), 'role'));
+        self::assertCount(1, $this->ai->calls);
+    }
+
+    public function test_task_emails_and_drafts_default_to_every_preparer(): void
+    {
+        $id = $this->task(['preparer_ids' => [11, 14], 'reviewer_ids' => [12]]);
+        $this->ai->queue[] = ['subject' => 'Hello', 'body' => 'Please do it.'];
+        $drafts = $this->service->taskEmails($this->max, ['taskIds' => [$id]])['drafts'];
+
+        self::assertSame('una@example.test', $drafts[0]['to'], 'the first preparer, for clients from before the lists');
+        self::assertSame('Una User, Ada Admin', $drafts[0]['toName']);
+        self::assertSame([['email' => 'una@example.test', 'name' => 'Una User'], ['email' => 'ada@example.test', 'name' => 'Ada Admin']], $drafts[0]['recipients']);
+        self::assertSame('Una User and Ada Admin', $this->ai->calls[0]['data']['preparer_name']);
+
+        $this->ai->queue[] = ['subject' => 'S', 'body' => 'B'];
+        $draft = $this->service->emailDraft($this->max, ['taskId' => $id, 'kind' => 'task_email', 'instruction' => 'Chase']);
+        self::assertSame(['una@example.test', 'ada@example.test'], array_column(self::rows($draft['recipients']), 'email'));
     }
 }

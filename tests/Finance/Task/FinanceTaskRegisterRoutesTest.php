@@ -303,4 +303,30 @@ final class FinanceTaskRegisterRoutesTest extends TestCase
         self::assertSame(422, $status);
         self::assertSame('Name is required', self::error($json)['message']);
     }
+
+    public function test_the_routes_take_either_the_lists_or_the_single_ids_and_answer_both(): void
+    {
+        [$status, $json] = $this->call('POST', '/tasks', ['name' => 'Shared', 'preparer_ids' => ['1', '9'], 'reviewer_ids' => ['9']]);
+        self::assertSame(201, $status);
+        $task = (array) self::data($json);
+        self::assertSame([['1', '9'], ['9'], '1', '9'], [$task['preparer_ids'], $task['reviewer_ids'], $task['preparer_id'], $task['reviewer_id']]);
+        $id = self::id($task);
+
+        // The caller is the first preparer; the second preparer's task is also theirs in the list.
+        [, $json] = $this->call('GET', '/tasks');
+        self::assertSame([['1', '9']], array_column((array) self::data($json), 'preparer_ids'));
+
+        // A client from before the lists, saving the first person back, drops nobody.
+        [$status, $json] = $this->call('PATCH', '/tasks/' . $id, ['preparer_id' => '1', 'progress' => 20]);
+        self::assertSame(200, $status);
+        self::assertSame(['1', '9'], ((array) self::data($json))['preparer_ids']);
+
+        [$status, $json] = $this->call('POST', '/tasks', ['name' => 'Old client', 'preparer_id' => '1', 'reviewer_id' => '9']);
+        self::assertSame(201, $status);
+        self::assertSame([['1'], ['9']], [((array) self::data($json))['preparer_ids'], ((array) self::data($json))['reviewer_ids']]);
+
+        [$status, $json] = $this->call('POST', '/tasks', ['name' => 'Bad', 'preparer_ids' => ['1', '77']]);
+        self::assertSame(422, $status);
+        self::assertSame('The preparer and reviewer must be members of Tri-Task', self::error($json)['message']);
+    }
 }

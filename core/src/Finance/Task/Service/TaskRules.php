@@ -159,6 +159,50 @@ final class TaskRules
         throw new TaskInvalid('The preparer and reviewer must be members of Tri-Task');
     }
 
+    /** The most preparers (or reviewers) one task can have: a guard against a runaway payload, far above any real team. */
+    public const MAX_ASSIGNEES = 20;
+
+    /**
+     * The people of one role from a payload (Nick Han, 23 Oct 2026: "multiple Preparers and Reviewers"). The list key
+     * (`preparer_ids`) wins when it is sent; otherwise the single key (`preparer_id`, what clients before this release
+     * send) names one person, or none when empty. Neither sent returns null: the role is left as it is. Duplicates and
+     * empty entries drop out; the order is kept (the first person is the one older clients see).
+     *
+     * @param array<string, mixed> $data
+     * @return ?list<int>
+     */
+    public static function people(array $data, string $listKey, string $singleKey): ?array
+    {
+        if (array_key_exists($listKey, $data)) {
+            $raw = $data[$listKey];
+            if ($raw === null || $raw === '' || $raw === false) {
+                return [];
+            }
+            if (!is_array($raw) || !array_is_list($raw)) {
+                throw new TaskInvalid('The preparers and reviewers must be lists of Tri-Task members');
+            }
+            $out = [];
+            foreach ($raw as $item) {
+                $id = self::userId($item);
+                if ($id !== null && !in_array($id, $out, true)) {
+                    $out[] = $id;
+                }
+            }
+            if (count($out) > self::MAX_ASSIGNEES) {
+                throw new TaskInvalid('A task can have at most ' . self::MAX_ASSIGNEES . ' preparers and ' . self::MAX_ASSIGNEES . ' reviewers');
+            }
+
+            return $out;
+        }
+        if (array_key_exists($singleKey, $data)) {
+            $id = self::userId($data[$singleKey]);
+
+            return $id === null ? [] : [$id];
+        }
+
+        return null;
+    }
+
     /** A stored status as it is now: a legacy one is Active. */
     public static function status(string $stored): string
     {

@@ -132,7 +132,7 @@ final class TaskAiService
 
     /**
      * @param array<string, mixed> $data `{taskIds: [...]}`: one to twenty tasks; ones the caller may not see, or with no preparer who is a member, are skipped
-     * @return array{drafts: list<array<string, string>>}
+     * @return array{drafts: list<array<string, mixed>>}
      */
     public function taskEmails(TaskActor $actor, array $data): array
     {
@@ -151,18 +151,21 @@ final class TaskAiService
             } catch (TaskNotFound) {
                 continue;
             }
-            $preparer = $this->memberOf($task['preparer_id'] ?? null);
-            if ($preparer === null) {
+            $preparers = $this->membersOf($task, 'preparer');
+            if ($preparers === []) {
                 continue;
             }
+            $preparerNames = implode(' and ', array_map(self::displayName(...), $preparers));
             // A failure stops the batch with the source's message, and the drafts so far are not returned.
-            $result = $this->ask(self::PURPOSE_TASK_EMAIL, ['task' => self::taskData($task), 'preparer_name' => self::displayName($preparer)]);
+            $result = $this->ask(self::PURPOSE_TASK_EMAIL, ['task' => self::taskData($task), 'preparer_name' => $preparerNames]);
             $subject = self::answer($result, 'subject');
+            // One draft per task, to every preparer (23 Oct 2026). `to` stays the first preparer's address for clients from before.
             $drafts[] = [
                 'taskId' => (string) $task['id'],
                 'taskName' => (string) $task['name'],
-                'to' => $preparer->email,
-                'toName' => self::displayName($preparer),
+                'to' => $preparers[0]->email,
+                'toName' => implode(', ', array_map(self::displayName(...), $preparers)),
+                'recipients' => array_map(static fn (TaskMember $m): array => ['email' => $m->email, 'name' => self::displayName($m)], $preparers),
                 'subject' => $subject !== '' ? $subject : 'Update on task: ' . (string) $task['name'],
                 'body' => self::answer($result, 'body'),
             ];
@@ -214,7 +217,7 @@ final class TaskAiService
 
     /**
      * `to` is one address or several, all Tri-Task members (else 422 naming the strays); none given means
-     * the task's preparer.
+     * the task's preparers.
      *
      * @param array<string, mixed> $data `{taskId, kind, instruction, to, previous_draft}`
      * @return array<string, mixed>
@@ -257,7 +260,10 @@ final class TaskAiService
                 $recipients[] = [$member, $roles[$member->userId] ?? 'other'];
             }
         } else {
-            $recipients = array_slice($people, 0, 1);
+            $recipients = array_values(array_filter($people, static fn (array $p): bool => $p[1] === 'preparer'));
+            if ($recipients === []) {
+                $recipients = array_slice($people, 0, 1);
+            }
         }
         if ($recipients === []) {
             throw new TaskInvalid('The task has no preparer or reviewer to write to');
@@ -344,15 +350,27 @@ final class TaskAiService
         return $out;
     }
 
-    private function memberOf(mixed $userId): ?TaskMember
+    /**
+     * The members of one role on a presented task, in order.
+     *
+     * @param array<string, mixed> $task
+     * @return list<TaskMember>
+     */
+    private function membersOf(array $task, string $role): array
     {
-        $id = is_string($userId) || is_int($userId) ? TaskRules::userId($userId) : null;
+        $out = [];
+        foreach (TaskPresenter::peopleOf($task, $role) as $userId) {
+            $member = $this->members->find($userId);
+            if ($member !== null) {
+                $out[] = $member;
+            }
+        }
 
-        return $id === null ? null : $this->members->find($id);
+        return $out;
     }
 
     /**
-     * The task's preparer and reviewer as `[member, role]`, each person once (`_task_people`).
+     * The task's preparers and reviewers as `[member, role]`, each person once (`_task_people`).
      *
      * @param array<string, mixed> $task
      * @return list<array{0: TaskMember, 1: string}>
@@ -361,11 +379,12 @@ final class TaskAiService
     {
         $people = [];
         $seen = [];
-        foreach (['preparer' => $task['preparer_id'] ?? null, 'reviewer' => $task['reviewer_id'] ?? null] as $role => $userId) {
-            $member = $this->memberOf($userId);
-            if ($member !== null && !isset($seen[$member->userId])) {
-                $seen[$member->userId] = true;
-                $people[] = [$member, $role];
+        foreach (['preparer', 'reviewer'] as $role) {
+            foreach ($this->membersOf($task, $role) as $member) {
+                if (!isset($seen[$member->userId])) {
+                    $seen[$member->userId] = true;
+                    $people[] = [$member, $role];
+                }
             }
         }
 

@@ -108,13 +108,13 @@ final class TaskService
             throw new TaskForbidden('Permission denied');
         }
         [$fields, $dependencies] = $this->clean($data, false);
-        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, TaskRules::DEFAULT_STATUS, 0, [self::nullableInt($fields, 'reviewer_user_id')]);
+        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, TaskRules::DEFAULT_STATUS, 0, [self::ids($fields, 'reviewer_user_ids')]);
         $now = $this->time->now();
         $status = is_string($fields['status'] ?? null) ? $fields['status'] : TaskRules::DEFAULT_STATUS;
         // A task given no project goes in "General" (item 3, Manusha 13 Oct 2026): anyone can allocate one
         // without a project existing first.
         $projectId = self::nullableStr($fields, 'project_id') ?? $this->generalProjectId($now);
-        $this->guardCompletion($actor, '', $status, [self::nullableInt($fields, 'reviewer_user_id')]);
+        $this->guardCompletion($actor, '', $status, [self::ids($fields, 'reviewer_user_ids')]);
         $task = new TaskRecord(
             TaskRules::newId(),
             (string) $fields['name'],
@@ -125,8 +125,8 @@ final class TaskService
             self::str($fields, 'finance_statement_area'),
             self::nullableStr($fields, 'entity_id'),
             $projectId,
-            self::nullableInt($fields, 'preparer_user_id'),
-            self::nullableInt($fields, 'reviewer_user_id'),
+            self::ids($fields, 'preparer_user_ids')[0] ?? null,
+            self::ids($fields, 'reviewer_user_ids')[0] ?? null,
             $status,
             self::int($fields, 'progress'),
             self::nullableStr($fields, 'due_date'),
@@ -140,6 +140,9 @@ final class TaskService
             $now,
             self::nullableStr($fields, 'priority'),
             $this->groupIn(self::nullableStr($fields, 'group_id'), $projectId),
+            null,
+            self::ids($fields, 'preparer_user_ids'),
+            self::ids($fields, 'reviewer_user_ids'),
         );
 
         $this->tasks->transactional(function () use ($task, $dependencies, $actor, $now): void {
@@ -526,19 +529,18 @@ final class TaskService
             throw new TaskForbidden('You do not have permission to change this task');
         }
         [$fields, $dependencies] = $this->clean($data, true);
+        $fields = $this->keepPeopleOlderClientsCannotName($task, $fields);
         $oldStatus = TaskRules::status($task->status);
-        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, $oldStatus, $task->progress, [
-            $task->reviewerUserId,
-            array_key_exists('reviewer_user_id', $fields) ? self::nullableInt($fields, 'reviewer_user_id') : $task->reviewerUserId,
-        ]);
+        $reviewerSets = [
+            $task->reviewerUserIds,
+            array_key_exists('reviewer_user_ids', $fields) ? self::ids($fields, 'reviewer_user_ids') : $task->reviewerUserIds,
+        ];
+        [$fields, $reviewDue] = $this->linkProgress($actor, $fields, $oldStatus, $task->progress, $reviewerSets);
         $newStatus = is_string($fields['status'] ?? null) ? $fields['status'] : $oldStatus;
         $now = $this->time->now();
 
-        // The reviewer before this save counts as well as after it, so one save cannot drop the reviewer and close the task.
-        $this->guardCompletion($actor, $oldStatus, $newStatus, [
-            $task->reviewerUserId,
-            array_key_exists('reviewer_user_id', $fields) ? self::nullableInt($fields, 'reviewer_user_id') : $task->reviewerUserId,
-        ]);
+        // The reviewers before this save count as well as after it, so one save cannot drop the reviewers and close the task.
+        $this->guardCompletion($actor, $oldStatus, $newStatus, $reviewerSets);
         if ($newStatus !== $oldStatus && in_array($newStatus, TaskRules::BLOCKED_STATUSES, true)) {
             // The browser used to warn ("Start anyway"); the server refuses, listing what is in the way,
             // checked against the dependencies this same request is about to set, if it sends any.
@@ -576,8 +578,8 @@ final class TaskService
                 'urgent' => $task->urgent = $value === true,
                 'entity_id' => $task->entityId = is_string($value) ? $value : null,
                 'project_id' => $task->projectId = is_string($value) ? $value : null,
-                'preparer_user_id' => $task->preparerUserId = is_int($value) ? $value : null,
-                'reviewer_user_id' => $task->reviewerUserId = is_int($value) ? $value : null,
+                'preparer_user_ids' => $task->setPreparers(self::intList($value)),
+                'reviewer_user_ids' => $task->setReviewers(self::intList($value)),
                 'priority' => $task->priority = is_string($value) ? $value : null,
                 default => null,
             };
@@ -619,26 +621,31 @@ final class TaskService
     }
 
     /**
-     * The review step (13 Oct 2026, item 5): a task with a reviewer is marked Done by its reviewer, or by a Manager or
-     * Administrator (who hold TASKS.UPDATE). Anyone else presses Send for review instead.
+     * The review step (13 Oct 2026, item 5): a task with reviewers is marked Done by any one of them, or by a Manager or
+     * Administrator (who hold TASKS.UPDATE); no sign-off from the others (23 Oct 2026, several reviewers). Anyone else
+     * presses Send for review instead.
      *
-     * @param list<?int> $reviewerUserIds every reviewer the task has had in this save
+     * @param list<list<int>> $reviewerSets the task's reviewers before this save and after it
      */
-    private function guardCompletion(TaskActor $actor, string $oldStatus, string $newStatus, array $reviewerUserIds): void
+    private function guardCompletion(TaskActor $actor, string $oldStatus, string $newStatus, array $reviewerSets): void
     {
-        if ($newStatus === 'completed' && $oldStatus !== 'completed' && !$this->mayComplete($actor, $reviewerUserIds)) {
+        if ($newStatus === 'completed' && $oldStatus !== 'completed' && !$this->mayComplete($actor, $reviewerSets)) {
             throw new TaskForbidden('Only the reviewer can mark this task done. Use Send for review instead.');
         }
     }
 
-    /** @param list<?int> $reviewerUserIds */
-    private function mayComplete(TaskActor $actor, array $reviewerUserIds): bool
+    /**
+     * A set with reviewers must include the actor; a set with none puts no one in the way.
+     *
+     * @param list<list<int>> $reviewerSets
+     */
+    private function mayComplete(TaskActor $actor, array $reviewerSets): bool
     {
         if ($actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)) {
             return true;
         }
-        foreach ($reviewerUserIds as $reviewerUserId) {
-            if ($reviewerUserId !== null && $reviewerUserId !== $actor->userId) {
+        foreach ($reviewerSets as $reviewers) {
+            if ($reviewers !== [] && !in_array($actor->userId, $reviewers, true)) {
                 return false;
             }
         }
@@ -656,10 +663,10 @@ final class TaskService
      * A new task counts as Active before it is saved.
      *
      * @param array<string, mixed> $fields cleaned
-     * @param list<?int> $reviewerUserIds
-     * @return array{0: array<string, mixed>, 1: bool} the fields, and whether the reviewer should be asked
+     * @param list<list<int>> $reviewerSets
+     * @return array{0: array<string, mixed>, 1: bool} the fields, and whether the reviewers should be asked
      */
-    private function linkProgress(TaskActor $actor, array $fields, string $oldStatus, int $oldProgress, array $reviewerUserIds): array
+    private function linkProgress(TaskActor $actor, array $fields, string $oldStatus, int $oldProgress, array $reviewerSets): array
     {
         $hasProgress = array_key_exists('progress', $fields);
         $progress = $hasProgress && is_int($fields['progress']) ? $fields['progress'] : $oldProgress;
@@ -677,7 +684,7 @@ final class TaskService
             return [$fields, false];
         }
         if ($progress >= 100 && $oldStatus !== 'completed') {
-            if ($this->mayComplete($actor, $reviewerUserIds)) {
+            if ($this->mayComplete($actor, $reviewerSets)) {
                 $fields['status'] = 'completed';
 
                 return [$fields, false];
@@ -806,12 +813,16 @@ final class TaskService
             'project' => [$before->projectId, $after->projectId, fn (string $id): ?string => $this->setup->findProject($id)?->name],
             'group' => [$before->groupId, $after->groupId, fn (string $id): ?string => $this->groupName($id)],
             'entity' => [$before->entityId, $after->entityId, fn (string $id): ?string => $this->setup->findEntity($id)?->name],
-            'preparer' => [$before->preparerUserId, $after->preparerUserId, fn (int $id): ?string => $this->members->find($id)?->name],
-            'reviewer' => [$before->reviewerUserId, $after->reviewerUserId, fn (int $id): ?string => $this->members->find($id)?->name],
         ];
         foreach ($references as $field => [$from, $to, $name]) {
             if ($from !== $to) {
                 $this->recordChange($actor, $after->id, $field, $from === null ? null : $name($from), $to === null ? null : $name($to), $now);
+            }
+        }
+        // People are logged as the names on the task, "Una User, Max Manager", before and after.
+        foreach (['preparer' => [$before->preparerUserIds, $after->preparerUserIds], 'reviewer' => [$before->reviewerUserIds, $after->reviewerUserIds]] as $field => [$from, $to]) {
+            if ($from !== $to) {
+                $this->recordChange($actor, $after->id, $field, $this->peopleNames($from), $this->peopleNames($to), $now);
             }
         }
         foreach (['description' => [$before->description, $after->description], 'requirements' => [$before->requirements, $after->requirements], 'notes' => [$before->notes, $after->notes]] as $field => [$from, $to]) {
@@ -822,6 +833,16 @@ final class TaskService
         if ($dependenciesChanged) {
             $this->recordChange($actor, $after->id, 'dependencies', null, null, $now);
         }
+    }
+
+    /** @param list<int> $userIds */
+    private function peopleNames(array $userIds): ?string
+    {
+        if ($userIds === []) {
+            return null;
+        }
+
+        return implode(', ', array_map(fn (int $id): string => $this->members->find($id)->name ?? ('#' . $id), $userIds));
     }
 
     private function recordChange(TaskActor $actor, string $taskId, string $field, ?string $from, ?string $to, DateTimeImmutable $now): void
@@ -930,13 +951,20 @@ final class TaskService
             }
             $out['project_id'] = $projectId;
         }
-        foreach (['preparer_id' => 'preparer_user_id', 'reviewer_id' => 'reviewer_user_id'] as $apiKey => $column) {
-            if (array_key_exists($apiKey, $data)) {
-                $userId = TaskRules::userId($data[$apiKey]);
-                if ($userId !== null && $this->members->find($userId) === null) {
+        foreach (['preparer' => ['preparer_ids', 'preparer_id'], 'reviewer' => ['reviewer_ids', 'reviewer_id']] as $role => [$listKey, $singleKey]) {
+            $ids = TaskRules::people($data, $listKey, $singleKey);
+            if ($ids === null) {
+                continue;
+            }
+            foreach ($ids as $userId) {
+                if ($this->members->find($userId) === null) {
                     throw new TaskInvalid('The preparer and reviewer must be members of Tri-Task');
                 }
-                $out[$column] = $userId;
+            }
+            $out[$role . '_user_ids'] = $ids;
+            // Only the single key was sent: a client from before the lists. Whether it changes anything is for the task to say.
+            if (!array_key_exists($listKey, $data)) {
+                $out[$role . '_single_only'] = true;
             }
         }
         $dependencies = null;
@@ -958,6 +986,29 @@ final class TaskService
         }
 
         return [$out, $dependencies];
+    }
+
+    /**
+     * A client from before the lists sends the one person it knows (`preparer_id`). On a task that has several, the
+     * same first person sent back unchanged must not drop the rest: if that person is the task's first the people stay
+     * as they are; a different person, or none, replaces them (the old behaviour).
+     *
+     * @param array<string, mixed> $fields cleaned
+     * @return array<string, mixed>
+     */
+    private function keepPeopleOlderClientsCannotName(TaskRecord $task, array $fields): array
+    {
+        foreach (['preparer' => $task->preparerUserIds, 'reviewer' => $task->reviewerUserIds] as $role => $current) {
+            $single = $role . '_single_only';
+            $list = $role . '_user_ids';
+            if (($fields[$single] ?? false) === true && isset($fields[$list]) && is_array($fields[$list]) && $fields[$list] !== []
+                && $fields[$list][0] === ($current[0] ?? null)) {
+                unset($fields[$list]);
+            }
+            unset($fields[$single]);
+        }
+
+        return $fields;
     }
 
     /** An id from a payload: empty means none. */
@@ -1022,12 +1073,19 @@ final class TaskService
         return is_string($value) ? $value : null;
     }
 
-    /** @param array<string, mixed> $fields */
-    private static function nullableInt(array $fields, string $key): ?int
+    /**
+     * @param array<string, mixed> $fields
+     * @return list<int>
+     */
+    private static function ids(array $fields, string $key): array
     {
-        $value = $fields[$key] ?? null;
+        return self::intList($fields[$key] ?? []);
+    }
 
-        return is_int($value) ? $value : null;
+    /** @return list<int> */
+    private static function intList(mixed $value): array
+    {
+        return is_array($value) ? array_values(array_filter($value, 'is_int')) : [];
     }
 
     /** @param array<string, mixed> $fields */

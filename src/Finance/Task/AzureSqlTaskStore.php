@@ -13,7 +13,9 @@ use TriCab\Core\Finance\Task\Domain\TaskUserState;
 
 /**
  * Tasks, dependencies and history in `finance.task_tasks`, `task_dependencies` and `task_history`
- * (`create-finance-task-schema.sql`). Lists sort on `updated_date` then `id`, never on a long text
+ * (`create-finance-task-schema.sql`), and the people on each in `task_assignees` (`alter-finance-task-assignees.sql`: the
+ * source of truth for who prepares and reviews). The old single columns are written too, with the first of each list, and
+ * read when a task has no link rows (a row an older API wrote). Lists sort on `updated_date` then `id`, never on a long text
  * column. A permanent delete removes the children first (the foreign keys have no cascade).
  */
 final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
@@ -29,8 +31,11 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
         $params = [];
         $visible = '';
         if ($visibleToUserId !== null) {
-            $visible = ' AND ([preparer_user_id] = :preparer OR [reviewer_user_id] = :reviewer)';
-            $params = ['preparer' => $visibleToUserId, 'reviewer' => $visibleToUserId];
+            // The link table is who is on the task; the old columns (the first of each list, written with it) also count,
+            // for a row an older API wrote with no link rows.
+            $visible = ' AND (EXISTS (SELECT 1 FROM [finance].[task_assignees] a WHERE a.[task_id] = [finance].[task_tasks].[id] AND a.[user_id] = :person)'
+                . ' OR [preparer_user_id] = :preparer OR [reviewer_user_id] = :reviewer)';
+            $params = ['person' => $visibleToUserId, 'preparer' => $visibleToUserId, 'reviewer' => $visibleToUserId];
         }
         $rows = $this->connection->fetchAll(
             'SELECT ' . self::COLUMNS . ' FROM [finance].[task_tasks] WHERE [deleted_at] IS ' . ($deleted ? 'NOT NULL' : 'NULL')
@@ -38,14 +43,14 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
             $params,
         );
 
-        return array_map(self::task(...), $rows);
+        return $this->tasksFrom($rows);
     }
 
     public function findTask(string $id): ?TaskRecord
     {
         $rows = $this->connection->fetchAll('SELECT ' . self::COLUMNS . ' FROM [finance].[task_tasks] WHERE [id] = :id', ['id' => $id]);
 
-        return $rows === [] ? null : self::task($rows[0]);
+        return $rows === [] ? null : $this->tasksFrom($rows)[0];
     }
 
     public function liveTaskIdentities(): array
@@ -72,11 +77,11 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
                 $params['id' . $i] = $id;
                 $marks[] = ':id' . $i;
             }
-            foreach ($this->connection->fetchAll(
+            foreach ($this->tasksFrom($this->connection->fetchAll(
                 'SELECT ' . self::COLUMNS . ' FROM [finance].[task_tasks] WHERE [id] IN (' . implode(', ', $marks) . ')',
                 $params,
-            ) as $row) {
-                $out[] = self::task($row);
+            )) as $task) {
+                $out[] = $task;
             }
         }
 
@@ -92,7 +97,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
             ['today' => $today],
         );
 
-        return array_map(self::task(...), $rows);
+        return $this->tasksFrom($rows);
     }
 
     public function insertTask(TaskRecord $task): void
@@ -103,6 +108,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
                      :due, :requested, :urgent, :completed, :createdBy, :deletedAt, :deletedBy, :created, :updated, :priority, :group, :sortOrder)',
             self::params($task),
         );
+        $this->replaceAssignees($task);
     }
 
     public function updateTask(TaskRecord $task): void
@@ -117,6 +123,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
              WHERE [id] = :id',
             self::params($task),
         );
+        $this->replaceAssignees($task);
     }
 
     public function deleteTaskPermanently(string $id): void
@@ -127,6 +134,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
             ['task' => $id, 'dependsOn' => $id],
         );
         $this->connection->execute('DELETE FROM [finance].[task_history] WHERE [task_id] = :id', ['id' => $id]);
+        $this->connection->execute('DELETE FROM [finance].[task_assignees] WHERE [task_id] = :id', ['id' => $id]);
         $this->connection->execute('DELETE FROM [finance].[task_tasks] WHERE [id] = :id', ['id' => $id]);
     }
 
@@ -254,6 +262,76 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
         return array_map(self::history(...), $rows);
     }
 
+    /**
+     * Makes the task's preparers and reviewers exactly its lists, in order. Only rows that differ are touched, so a
+     * save that did not change the people writes nothing here.
+     */
+    private function replaceAssignees(TaskRecord $task): void
+    {
+        $now = $this->connection->fetchAll(
+            'SELECT [role], [user_id], [sort_order] FROM [finance].[task_assignees] WHERE [task_id] = :id',
+            ['id' => $task->id],
+        );
+        $have = [];
+        foreach ($now as $row) {
+            $have[self::text($row['role']) . ':' . AzureSqlValueMapper::intValue($row['user_id'])] = AzureSqlValueMapper::intValue($row['sort_order']);
+        }
+        $want = [];
+        foreach (['preparer' => $task->preparerUserIds, 'reviewer' => $task->reviewerUserIds] as $role => $ids) {
+            foreach ($ids as $order => $userId) {
+                $want[$role . ':' . $userId] = [$role, $userId, $order];
+            }
+        }
+        foreach ($have as $key => $order) {
+            if (!isset($want[$key])) {
+                [$role, $userId] = explode(':', $key);
+                $this->connection->execute(
+                    'DELETE FROM [finance].[task_assignees] WHERE [task_id] = :id AND [role] = :role AND [user_id] = :user',
+                    ['id' => $task->id, 'role' => $role, 'user' => (int) $userId],
+                );
+            }
+        }
+        foreach ($want as $key => [$role, $userId, $order]) {
+            if (!isset($have[$key])) {
+                $this->connection->execute(
+                    'INSERT INTO [finance].[task_assignees] ([task_id], [role], [user_id], [sort_order]) VALUES (:id, :role, :user, :sort)',
+                    ['id' => $task->id, 'role' => $role, 'user' => $userId, 'sort' => $order],
+                );
+            } elseif ($have[$key] !== $order) {
+                $this->connection->execute(
+                    'UPDATE [finance].[task_assignees] SET [sort_order] = :sort WHERE [task_id] = :id AND [role] = :role AND [user_id] = :user',
+                    ['id' => $task->id, 'role' => $role, 'user' => $userId, 'sort' => $order],
+                );
+            }
+        }
+    }
+
+    /**
+     * @param list<array<string, mixed>> $rows
+     * @return list<TaskRecord>
+     */
+    private function tasksFrom(array $rows): array
+    {
+        $people = [];
+        $ids = array_map(static fn (array $row): string => self::id($row['id']), $rows);
+        foreach (array_chunk($ids, self::IN_LIMIT) as $chunk) {
+            $params = [];
+            $marks = [];
+            foreach ($chunk as $i => $id) {
+                $params['t' . $i] = $id;
+                $marks[] = ':t' . $i;
+            }
+            foreach ($this->connection->fetchAll(
+                'SELECT [task_id], [role], [user_id] FROM [finance].[task_assignees] WHERE [task_id] IN (' . implode(', ', $marks) . ') ORDER BY [sort_order], [user_id]',
+                $params,
+            ) as $row) {
+                $people[self::id($row['task_id'])][self::text($row['role'])][] = AzureSqlValueMapper::intValue($row['user_id']);
+            }
+        }
+
+        return array_map(static fn (array $row): TaskRecord => self::task($row, $people[self::id($row['id'])] ?? []), $rows);
+    }
+
     /** @param array<string, mixed> $row */
     private static function history(array $row): TaskHistoryRow
     {
@@ -271,9 +349,15 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
         );
     }
 
-    /** @param array<string, mixed> $row */
-    private static function task(array $row): TaskRecord
+    /**
+     * @param array<string, mixed> $row
+     * @param array<string, list<int>> $people the task's `preparer` and `reviewer` user ids; a role with none falls back to the old column
+     */
+    private static function task(array $row, array $people): TaskRecord
     {
+        $preparer = AzureSqlValueMapper::nullableInt($row['preparer_user_id']);
+        $reviewer = AzureSqlValueMapper::nullableInt($row['reviewer_user_id']);
+
         return new TaskRecord(
             self::id($row['id']),
             self::text($row['name']),
@@ -284,8 +368,8 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
             self::text($row['finance_statement_area']),
             AzureSqlValueMapper::nullableString($row['entity_id']),
             AzureSqlValueMapper::nullableString($row['project_id']),
-            AzureSqlValueMapper::nullableInt($row['preparer_user_id']),
-            AzureSqlValueMapper::nullableInt($row['reviewer_user_id']),
+            $preparer,
+            $reviewer,
             self::text($row['status']),
             AzureSqlValueMapper::intValue($row['progress']),
             self::textOrNull($row['due_date']),
@@ -300,6 +384,8 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
             self::textOrNull($row['priority']),
             AzureSqlValueMapper::nullableString($row['group_id']),
             AzureSqlValueMapper::nullableInt($row['sort_order']),
+            $people['preparer'] ?? ($preparer === null ? [] : [$preparer]),
+            $people['reviewer'] ?? ($reviewer === null ? [] : [$reviewer]),
         );
     }
 

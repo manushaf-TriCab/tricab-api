@@ -190,4 +190,35 @@ final class TaskReviewRequestNotifierTest extends TestCase
         self::assertSame(['suppressed'], array_map(static fn ($d): string => $d->status, $this->ledger->all()));
         self::assertCount(1, $this->links->forTask($task['id']));
     }
+
+    // ==== several reviewers (Nick Han, 23 Oct 2026) ===========================================
+
+    public function test_every_reviewer_is_asked_in_one_email_and_a_second_preparer_may_ask(): void
+    {
+        $task = $this->task(['preparer_ids' => ['11', '13'], 'reviewer_ids' => ['12', '15', '12']]);
+        self::assertSame(['12', '15'], $task['reviewer_ids']);
+        // Rae is the task's second preparer, so she may press Send for review; the reviewer without an address is left out.
+        self::assertSame(['status' => TaskReviewRequestNotifier::SENT], $this->notifier->request($this->rae, $task));
+        self::assertCount(1, $this->transport->sent);
+        self::assertSame(['max@example.test'], $this->transport->sent[0]->to);
+
+        $two = $this->task(['reviewer_ids' => ['12', '13']]);
+        self::assertSame(['status' => TaskReviewRequestNotifier::SENT], $this->notifier->request($this->una, $two));
+        self::assertSame(['max@example.test', 'rae@example.test'], $this->transport->sent[1]->to);
+    }
+
+    public function test_a_reviewer_among_several_marks_it_done_instead_and_none_with_mail_is_refused(): void
+    {
+        $withMe = $this->task(['reviewer_ids' => ['12', '11']]);
+        try {
+            $this->notifier->request($this->una, $withMe);
+            self::fail('A reviewer cannot ask themselves.');
+        } catch (TaskInvalid $e) {
+            self::assertSame('You are one of this task\'s reviewers: mark it Done when it is ready', $e->getMessage());
+        }
+        $noMail = $this->task(['reviewer_ids' => ['15']]);
+        $this->expectException(TaskInvalid::class);
+        $this->expectExceptionMessage('The reviewer has no email address');
+        $this->notifier->request($this->una, $noMail);
+    }
 }
