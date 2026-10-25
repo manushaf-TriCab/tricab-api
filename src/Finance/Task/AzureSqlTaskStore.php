@@ -9,6 +9,7 @@ use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Core\Finance\Task\Contract\TaskStore;
 use TriCab\Core\Finance\Task\Domain\TaskHistoryRow;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
+use TriCab\Core\Finance\Task\Domain\TaskUserState;
 
 /**
  * Tasks, dependencies and history in `finance.task_tasks`, `task_dependencies` and `task_history`
@@ -120,6 +121,7 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
 
     public function deleteTaskPermanently(string $id): void
     {
+        $this->connection->execute('DELETE FROM [finance].[task_user_state] WHERE [task_id] = :id', ['id' => $id]);
         $this->connection->execute(
             'DELETE FROM [finance].[task_dependencies] WHERE [task_id] = :task OR [depends_on_task_id] = :dependsOn',
             ['task' => $id, 'dependsOn' => $id],
@@ -147,6 +149,65 @@ final class AzureSqlTaskStore extends AzureSqlTaskSupport implements TaskStore
                 ['id' => bin2hex(random_bytes(16)), 'task' => $taskId, 'dependsOn' => $dependencyId, 'created' => self::at($now)],
             );
         }
+    }
+
+    public function userStates(int $userId): array
+    {
+        $out = [];
+        foreach ($this->connection->fetchAll(
+            'SELECT [task_id], [read_at], [marked_unread], [flagged_at], [pinned_at] FROM [finance].[task_user_state] WHERE [user_id] = :user',
+            ['user' => $userId],
+        ) as $row) {
+            $out[self::id($row['task_id'])] = new TaskUserState(
+                self::whenOrNull($row['read_at']),
+                (bool) $row['marked_unread'],
+                self::whenOrNull($row['flagged_at']),
+                self::whenOrNull($row['pinned_at']),
+            );
+        }
+
+        return $out;
+    }
+
+    public function unreadCutoff(): ?DateTimeImmutable
+    {
+        $rows = $this->connection->fetchAll('SELECT [cutoff_at] FROM [finance].[task_unread_cutoff] WHERE [id] = 1');
+
+        return $rows === [] ? null : self::whenOrNull($rows[0]['cutoff_at']);
+    }
+
+    public function saveUserState(int $userId, string $taskId, ?bool $read, ?bool $flagged, ?bool $pinned, DateTimeImmutable $now): void
+    {
+        // One MERGE that creates the row on the first mark and changes only the marks named.
+        $at = self::at($now);
+        $this->connection->execute(
+            'MERGE [finance].[task_user_state] WITH (HOLDLOCK) AS t
+             USING (SELECT :task AS [task_id], :user AS [user_id]) AS s ON t.[task_id] = s.[task_id] AND t.[user_id] = s.[user_id]
+             WHEN MATCHED THEN UPDATE SET
+                 [read_at] = CASE WHEN :readA = 1 THEN CAST(:readAt AS DATETIME2(6)) WHEN :readB = 0 THEN NULL ELSE t.[read_at] END,
+                 [marked_unread] = CASE WHEN :readC = 1 THEN 0 WHEN :readD = 0 THEN 1 ELSE t.[marked_unread] END,
+                 [flagged_at] = CASE WHEN :flagA = 1 THEN COALESCE(t.[flagged_at], CAST(:flagAt AS DATETIME2(6))) WHEN :flagB = 0 THEN NULL ELSE t.[flagged_at] END,
+                 [pinned_at] = CASE WHEN :pinA = 1 THEN COALESCE(t.[pinned_at], CAST(:pinAt AS DATETIME2(6))) WHEN :pinB = 0 THEN NULL ELSE t.[pinned_at] END
+             WHEN NOT MATCHED THEN INSERT ([task_id], [user_id], [read_at], [marked_unread], [flagged_at], [pinned_at])
+                 VALUES (s.[task_id], s.[user_id],
+                     CASE WHEN :readE = 1 THEN CAST(:readAt2 AS DATETIME2(6)) ELSE NULL END,
+                     CASE WHEN :readF = 0 THEN 1 ELSE 0 END,
+                     CASE WHEN :flagC = 1 THEN CAST(:flagAt2 AS DATETIME2(6)) ELSE NULL END,
+                     CASE WHEN :pinC = 1 THEN CAST(:pinAt2 AS DATETIME2(6)) ELSE NULL END);',
+            [
+                'task' => $taskId, 'user' => $userId,
+                'readA' => self::bit($read), 'readB' => self::bit($read), 'readC' => self::bit($read), 'readD' => self::bit($read),
+                'readE' => self::bit($read), 'readF' => self::bit($read), 'readAt' => $at, 'readAt2' => $at,
+                'flagA' => self::bit($flagged), 'flagB' => self::bit($flagged), 'flagC' => self::bit($flagged), 'flagAt' => $at, 'flagAt2' => $at,
+                'pinA' => self::bit($pinned), 'pinB' => self::bit($pinned), 'pinC' => self::bit($pinned), 'pinAt' => $at, 'pinAt2' => $at,
+            ],
+        );
+    }
+
+    /** A named parameter can be bound once: 1, 0, or null for "leave as it is". */
+    private static function bit(?bool $value): ?int
+    {
+        return $value === null ? null : ($value ? 1 : 0);
     }
 
     public function addHistory(TaskHistoryRow $row): void

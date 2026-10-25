@@ -57,13 +57,13 @@ final class TaskService
     {
         $rows = $this->tasks->tasks($deleted, $this->visibleTo($actor));
 
-        return $this->dicts($rows);
+        return $this->dicts($rows, $actor);
     }
 
     /** @return array<string, mixed> */
     public function get(TaskActor $actor, string $id): array
     {
-        return $this->dict($this->visibleTask($actor, $id));
+        return $this->dict($this->visibleTask($actor, $id), $actor);
     }
 
     /** @return list<array<string, mixed>> */
@@ -150,7 +150,7 @@ final class TaskService
             $this->recordStatusChange($actor, $task->id, null, $task->status, $now);
         });
 
-        return $this->dict($task) + ($reviewDue ? ['review_due' => true] : []);
+        return $this->dict($task, $actor) + ($reviewDue ? ['review_due' => true] : []);
     }
 
     /**
@@ -199,7 +199,7 @@ final class TaskService
             return $task;
         });
 
-        return $this->dict($task) + ($reviewDue ? ['review_due' => true] : []);
+        return $this->dict($task, $actor) + ($reviewDue ? ['review_due' => true] : []);
     }
 
     /**
@@ -244,7 +244,7 @@ final class TaskService
 
         return array_map(
             static fn (array $t): array => isset($due[$t['id']]) ? $t + ['review_due' => true] : $t,
-            $this->dicts($touched),
+            $this->dicts($touched, $actor),
         );
     }
 
@@ -340,7 +340,7 @@ final class TaskService
             return $out;
         });
 
-        return $this->dicts($restored);
+        return $this->dicts($restored, $actor);
     }
 
     /** @return list<string> the distinct ids of a bulk request */
@@ -381,7 +381,7 @@ final class TaskService
         $task->updatedDate = $this->time->now();
         $this->tasks->updateTask($task);
 
-        return $this->dict($task);
+        return $this->dict($task, $actor);
     }
 
     /**
@@ -394,6 +394,77 @@ final class TaskService
         if ($project !== null && $project->deletedAt !== null) {
             throw new TaskConflict('Its project "' . $project->name . '" is in the Bin. Restore the project from the Bin first.');
         }
+    }
+
+    // ==================================================================================
+    // Unread, Flag and Pin (each person's own, like a mailbox)
+    // ==================================================================================
+
+    /**
+     * Sets the signed-in person's own marks on one task: `read` (true on opening it, false for "Mark as unread"),
+     * `flagged`, `pinned`. A mark left out is left as it is. Anyone who can see the task may; nobody else's
+     * marks change, and the task itself is not touched (no `updated_date`, no history).
+     *
+     * @param array<string, mixed> $marks
+     * @return array<string, mixed> the task as the person now sees it
+     */
+    public function setUserState(TaskActor $actor, string $id, array $marks): array
+    {
+        $marks = self::marks($marks);
+        $task = $this->tasks->transactional(function () use ($actor, $id, $marks): TaskRecord {
+            $task = $this->visibleTask($actor, $id);
+            $this->tasks->saveUserState($actor->userId, $task->id, $marks[0], $marks[1], $marks[2], $this->time->now());
+
+            return $task;
+        });
+
+        return $this->dict($task, $actor);
+    }
+
+    /**
+     * {@see setUserState} for several tasks at once, all or nothing.
+     *
+     * @param array<string, mixed> $marks
+     * @return list<array<string, mixed>>
+     */
+    public function bulkSetUserState(TaskActor $actor, mixed $ids, array $marks): array
+    {
+        $ids = self::bulkIds($ids);
+        $marks = self::marks($marks);
+        $tasks = $this->tasks->transactional(function () use ($actor, $ids, $marks): array {
+            $now = $this->time->now();
+            $out = [];
+            foreach ($ids as $id) {
+                $task = $this->visibleTask($actor, $id);
+                $this->tasks->saveUserState($actor->userId, $task->id, $marks[0], $marks[1], $marks[2], $now);
+                $out[] = $task;
+            }
+
+            return $out;
+        });
+
+        return $this->dicts($tasks, $actor);
+    }
+
+    /**
+     * @param array<string, mixed> $marks
+     * @return array{0: ?bool, 1: ?bool, 2: ?bool} read, flagged, pinned
+     */
+    private static function marks(array $marks): array
+    {
+        $out = [];
+        foreach (['read', 'flagged', 'pinned'] as $key) {
+            $value = $marks[$key] ?? null;
+            if ($value !== null && !is_bool($value)) {
+                throw new TaskInvalid('"' . $key . '" must be true or false');
+            }
+            $out[] = $value;
+        }
+        if ($out === [null, null, null]) {
+            throw new TaskInvalid('Send read, flagged or pinned');
+        }
+
+        return $out;
     }
 
     // ==================================================================================
@@ -904,23 +975,32 @@ final class TaskService
     // ==================================================================================
 
     /** @return array<string, mixed> */
-    private function dict(TaskRecord $task): array
+    private function dict(TaskRecord $task, ?TaskActor $actor = null): array
     {
-        return $this->dicts([$task])[0];
+        return $this->dicts([$task], $actor)[0];
     }
 
     /**
      * @param list<TaskRecord> $rows
+     * @param ?TaskActor $actor whose own Unread, Flag and Pin each row carries
      * @return list<array<string, mixed>>
      */
-    private function dicts(array $rows): array
+    private function dicts(array $rows, ?TaskActor $actor = null): array
     {
+        $states = $actor === null ? [] : $this->tasks->userStates($actor->userId);
+        $cutoff = $actor === null ? null : $this->tasks->unreadCutoff();
         $dependencies = $this->tasks->dependencyMap();
         $projects = $this->setup->projectNames();
         $today = $this->time->today();
         $out = [];
         foreach ($rows as $task) {
-            $out[] = TaskPresenter::task($task, $dependencies, $projects, $today);
+            $out[] = TaskPresenter::task(
+                $task,
+                $dependencies,
+                $projects,
+                $today,
+                $actor === null ? null : TaskPresenter::mine($task, $states[$task->id] ?? null, $actor->userId, $cutoff),
+            );
         }
 
         return $out;

@@ -29,6 +29,7 @@ final class LocalTaskIdentityServer
         'alter-finance-task-project-groups.sql',
         'alter-finance-task-order.sql',
         'alter-finance-task-history-fields.sql',
+        'alter-finance-task-user-state.sql',
         'seed-finance-permissions.sql',
         'seed-finance-roles.sql',
         'seed-finance-task-permissions.sql',

@@ -802,6 +802,11 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
         $app->post($task . '/tasks/bulk-restore', \TriCab\Api\Http\Action\Finance\Task\BulkRestoreTasksAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
+        // Unread, Flag and Pin: each person's own, so the weakest permission, and only on tasks they may see (23 Oct 2026).
+        $app->post($task . '/tasks/bulk-user-state', \TriCab\Api\Http\Action\Finance\Task\BulkSetTaskUserStateAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/tasks/{id}/user-state', \TriCab\Api\Http\Action\Finance\Task\SetTaskUserStateAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
         $app->delete($task . '/tasks/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
         $app->post($task . '/tasks/{id}/restore', \TriCab\Api\Http\Action\Finance\Task\RestoreTaskAction::class)

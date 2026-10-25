@@ -15,6 +15,7 @@ use TriCab\Core\Finance\Task\Domain\TaskProjectGroup;
 use TriCab\Core\Finance\Task\Domain\TaskRecord;
 use TriCab\Core\Finance\Task\Domain\TaskStatementArea;
 use TriCab\Core\Finance\Task\Domain\TaskTemplate;
+use TriCab\Core\Finance\Task\Domain\TaskUserState;
 
 /**
  * Every record as the source's `*_dict` functions shaped it, which is what the ported pages
@@ -126,9 +127,10 @@ final class TaskPresenter
     /**
      * @param array<string, list<string>> $dependencies task id to the ids it waits for
      * @param array<string, string> $projectNames project id to name
+     * @param ?array{is_unread: bool, is_flagged: bool, pinned_at: ?string} $mine the signed-in person's own marks, when there is one
      * @return array<string, mixed>
      */
-    public static function task(TaskRecord $t, array $dependencies, array $projectNames, string $today): array
+    public static function task(TaskRecord $t, array $dependencies, array $projectNames, string $today, ?array $mine = null): array
     {
         $project = $t->projectId !== null ? ($projectNames[$t->projectId] ?? '') : '';
 
@@ -163,6 +165,25 @@ final class TaskPresenter
             'deleted_at' => self::iso($t->deletedAt),
             'created_date' => self::iso($t->createdDate),
             'updated_date' => self::iso($t->updatedDate),
+        ] + ($mine ?? []);
+    }
+
+    /**
+     * The signed-in person's own Unread, Flag and Pin on a task (Nick Han, 23 Oct 2026), the same for a mailbox:
+     * unread until they first open it, or after they mark it unread; a task created before `$cutoff` counts as
+     * read, and a person's own new task is never unread to them.
+     *
+     * @return array{is_unread: bool, is_flagged: bool, pinned_at: ?string}
+     */
+    public static function mine(TaskRecord $t, ?TaskUserState $state, int $userId, ?DateTimeImmutable $cutoff): array
+    {
+        $unread = $state !== null && $state->markedUnread
+            || ($state?->readAt === null && $cutoff !== null && $t->createdDate > $cutoff && $t->createdByUserId !== $userId);
+
+        return [
+            'is_unread' => $unread,
+            'is_flagged' => $state?->flaggedAt !== null,
+            'pinned_at' => self::iso($state?->pinnedAt),
         ];
     }
 
