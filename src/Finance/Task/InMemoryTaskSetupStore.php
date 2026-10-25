@@ -185,7 +185,7 @@ class InMemoryTaskSetupStore implements TaskSetupStore
         }
     }
 
-    public function deleteBinnedProjectTasks(string $projectId): void
+    public function deleteBinnedProjectTasks(string $projectId): array
     {
         $ids = [];
         foreach ($this->taskRows() as $task) {
@@ -194,6 +194,8 @@ class InMemoryTaskSetupStore implements TaskSetupStore
             }
         }
         $this->forgetTasks($ids);
+
+        return $ids;
     }
 
     public function binnedProjectTaskCounts(): array

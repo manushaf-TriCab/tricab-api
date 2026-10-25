@@ -28,6 +28,14 @@ interface FinanceAttachmentStore
     /** @return list<FinanceAttachment> oldest first */
     public function forRecord(string $application, string $recordType, string $recordId): array;
 
+    /**
+     * How many files each record of one type has: one grouped query for a whole list, so a page of records
+     * costs one read however many rows it shows. Records with no file are absent.
+     *
+     * @return array<string, int> record id to count
+     */
+    public function countsByRecordType(string $application, string $recordType): array;
+
     /** Removes the bytes and the row of every file on the record. Returns how many. */
     public function deleteForRecord(string $application, string $recordType, string $recordId): int;
 

@@ -10,6 +10,7 @@ use Slim\App;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Finance\Module;
+use TriCab\Core\Finance\Shared\Attachments\FinanceUnattachedAttachmentsJob;
 use TriCab\Core\Finance\Shared\Jobs\FinanceJobRegistry;
 use TriCab\Core\Identity\Contract\UserRepository;
 
@@ -30,7 +31,8 @@ final class FinanceTaskSummaryWiringTest extends TestCase
 
     public function test_the_job_is_registered_only_when_the_module_and_tri_task_are_on(): void
     {
-        self::assertSame(['task.daily-summary'], $this->jobNames(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_ENABLED' => 'true']));
+        // Tri-Task keeps files (23 Oct 2026), so the shared sweep of unattached uploads runs beside its own jobs.
+        self::assertSame([FinanceUnattachedAttachmentsJob::NAME, 'task.daily-summary'], $this->jobNames(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_ENABLED' => 'true']));
         foreach ([[], ['FINANCE_MODULE_ENABLED' => 'true'], ['FINANCE_TASK_ENABLED' => 'true']] as $env) {
             self::assertSame([], $this->jobNames($env), json_encode($env, JSON_THROW_ON_ERROR));
         }
@@ -39,8 +41,8 @@ final class FinanceTaskSummaryWiringTest extends TestCase
     public function test_the_preparer_email_is_registered_only_with_its_own_switch(): void
     {
         $on = ['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_ENABLED' => 'true'];
-        self::assertSame(['task.daily-summary', 'task.preparer-digest'], $this->jobNames($on + ['FINANCE_TASK_PREPARER_DIGEST_ENABLED' => 'true']));
-        self::assertSame(['task.daily-summary'], $this->jobNames($on + ['FINANCE_TASK_PREPARER_DIGEST_ENABLED' => 'false']));
+        self::assertSame([FinanceUnattachedAttachmentsJob::NAME, 'task.daily-summary', 'task.preparer-digest'], $this->jobNames($on + ['FINANCE_TASK_PREPARER_DIGEST_ENABLED' => 'true']));
+        self::assertSame([FinanceUnattachedAttachmentsJob::NAME, 'task.daily-summary'], $this->jobNames($on + ['FINANCE_TASK_PREPARER_DIGEST_ENABLED' => 'false']));
         self::assertSame([], $this->jobNames(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_PREPARER_DIGEST_ENABLED' => 'true']));
     }
 
@@ -51,7 +53,7 @@ final class FinanceTaskSummaryWiringTest extends TestCase
             'ODOO_URL' => 'https://odoo.example.test', 'ODOO_API_KEY' => 'dummy', 'ODOO_COMPANY_IDS' => '2',
         ]);
 
-        self::assertSame(['odoo.sync', 'task.daily-summary'], $names);
+        self::assertSame([FinanceUnattachedAttachmentsJob::NAME, 'odoo.sync', 'task.daily-summary'], $names);
     }
 
     /** @return App<ContainerInterface> */

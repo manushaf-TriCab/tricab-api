@@ -129,8 +129,15 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
         );
     }
 
-    public function deleteBinnedProjectTasks(string $projectId): void
+    public function deleteBinnedProjectTasks(string $projectId): array
     {
+        $ids = array_map(
+            static fn (array $row): string => self::id($row['id']),
+            $this->connection->fetchAll(
+                'SELECT [id] FROM [finance].[task_tasks] WHERE [project_id] = :project AND [deleted_at] IS NOT NULL',
+                ['project' => $projectId],
+            ),
+        );
         // PDO_SQLSRV binds every occurrence of a named parameter separately, so each one gets its own name.
         $binned = static fn (string $name): string => 'SELECT [id] FROM [finance].[task_tasks] WHERE [project_id] = :' . $name . ' AND [deleted_at] IS NOT NULL';
         $this->connection->execute(
@@ -141,6 +148,8 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
         $this->connection->execute('DELETE FROM [finance].[task_assignees] WHERE [task_id] IN (' . $binned('a') . ')', ['a' => $projectId]);
         $this->connection->execute('DELETE FROM [finance].[task_user_state] WHERE [task_id] IN (' . $binned('a') . ')', ['a' => $projectId]);
         $this->connection->execute('DELETE FROM [finance].[task_tasks] WHERE [project_id] = :project AND [deleted_at] IS NOT NULL', ['project' => $projectId]);
+
+        return $ids;
     }
 
     public function binnedProjectTaskCounts(): array

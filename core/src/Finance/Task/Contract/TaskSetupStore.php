@@ -72,8 +72,12 @@ interface TaskSetupStore extends TaskTransactions
      */
     public function restoreProjectTasks(string $projectId, DateTimeImmutable $now): void;
 
-    /** Deletes for good the project's tasks that are in the Bin, with their dependencies and history. */
-    public function deleteBinnedProjectTasks(string $projectId): void;
+    /**
+     * Deletes for good the project's tasks that are in the Bin, with their dependencies and history.
+     *
+     * @return list<string> the ids of the tasks deleted, so the caller can remove their files (23 Oct 2026)
+     */
+    public function deleteBinnedProjectTasks(string $projectId): array;
 
     /**
      * For projects in the Bin: how many tasks would come back with each (those binned with it).

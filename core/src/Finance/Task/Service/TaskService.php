@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Task\Service;
 
 use DateTimeImmutable;
+use Throwable;
 use TriCab\Core\Finance\Module;
 use TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory;
 use TriCab\Core\Finance\Task\Contract\TaskBoardStore;
@@ -47,6 +48,8 @@ final class TaskService
         private readonly ?TaskBoardStore $board = null,
         // The latest calendar invite per task (23 Oct 2026). Without it no task carries one.
         private readonly ?TaskCalendarInvites $invites = null,
+        // Files on tasks (23 Oct 2026): the paperclip count on every task, and removal of the files when a task is deleted for good.
+        private readonly ?TaskFileService $files = null,
     ) {
     }
 
@@ -263,7 +266,7 @@ final class TaskService
      */
     public function delete(TaskActor $actor, string $id, bool $permanent = false): array
     {
-        return $this->tasks->transactional(function () use ($actor, $id, $permanent): array {
+        $result = $this->tasks->transactional(function () use ($actor, $id, $permanent): array {
             $task = $this->visibleTask($actor, $id);
             if (!$this->canDelete($actor, $task)) {
                 throw new TaskForbidden('You do not have permission to delete this task');
@@ -286,6 +289,19 @@ final class TaskService
 
             return ['deleted' => true, 'permanent' => false];
         });
+
+        // The task is gone for good only now that the transaction has committed: take its files off (bytes, then
+        // rows). A failure here leaves files nothing can reach, so it is reported, never turned into an error.
+        if ($permanent && $this->files !== null) {
+            try {
+                $this->files->purge([$id]);
+            } catch (Throwable $failure) {
+                error_log('Tri-Task: files of deleted task ' . $id . ' were left behind: ' . $failure->getMessage());
+                $result['files_orphaned'] = true;
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -494,7 +510,7 @@ final class TaskService
     private function visibleTask(TaskActor $actor, string $id): TaskRecord
     {
         $task = $this->tasks->findTask($id);
-        if ($task === null || (!$actor->seesAll() && !$task->isOwnedBy($actor->userId))) {
+        if ($task === null || !$actor->maySee($task)) {
             throw new TaskNotFound('Task not found');
         }
 
@@ -510,8 +526,7 @@ final class TaskService
     /** `can_edit_task`. */
     private function canEdit(TaskActor $actor, TaskRecord $task): bool
     {
-        return $actor->can(Module::PERMISSION_TASK_TASKS_UPDATE)
-            || ($actor->can(Module::PERMISSION_TASK_TASKS_UPDATE_OWN) && $task->isOwnedBy($actor->userId));
+        return $actor->mayEdit($task);
     }
 
     /** `can_delete_task`. */
@@ -1069,6 +1084,7 @@ final class TaskService
         $projects = $this->setup->projectNames();
         $invites = $this->invites?->all() ?? [];
         $today = $this->time->today();
+        $fileCounts = $this->files?->counts() ?? [];
         $out = [];
         foreach ($rows as $task) {
             $out[] = TaskPresenter::task(
@@ -1078,7 +1094,7 @@ final class TaskService
                 $today,
                 $actor === null ? null : TaskPresenter::mine($task, $states[$task->id] ?? null, $actor->userId, $cutoff),
                 TaskPresenter::calendarInvite($invites[$task->id] ?? null, $task->dueDate),
-            );
+            ) + ['file_count' => $fileCounts[$task->id] ?? 0];
         }
 
         return $out;

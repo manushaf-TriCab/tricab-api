@@ -42,6 +42,11 @@ final class FailingDeleteAttachmentStore implements FinanceAttachmentStore
         return $this->inner->forRecord($application, $recordType, $recordId);
     }
 
+    public function countsByRecordType(string $application, string $recordType): array
+    {
+        return $this->inner->countsByRecordType($application, $recordType);
+    }
+
     public function deleteForRecord(string $application, string $recordType, string $recordId): int
     {
         throw new RuntimeException('The blob store is down');

@@ -1166,9 +1166,13 @@ final class ContainerFactory
                         }
                     }
 
-                    // Tri-AR and Tri-AP keep files (T5.5, T6.5): uploads never put on a record are swept once a day. One job
-                    // sweeps every app's uploads, so it is registered once, whichever of the two is on.
-                    if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR) || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP)) {
+                    // Tri-AR, Tri-AP and Tri-Task keep files (T5.5, T6.5, 23 Oct 2026): uploads never put on a record are swept once
+                    // a day. One job sweeps every app's uploads, so it is registered once, whichever of them is on.
+                    if (
+                        $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR)
+                        || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP)
+                        || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_TASK)
+                    ) {
                         $jobs[] = new \TriCab\Core\Finance\Shared\Attachments\FinanceUnattachedAttachmentsJob(
                             self::get($container, \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class),
                         );
@@ -1244,9 +1248,15 @@ final class ContainerFactory
             \TriCab\Core\Finance\Task\Service\TaskService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskService::class)
                     ->constructorParameter('board', \DI\get(\TriCab\Core\Finance\Task\Contract\TaskBoardStore::class))
+                    ->constructorParameter('files', \DI\get(\TriCab\Core\Finance\Task\Service\TaskFileService::class))
                     ->constructorParameter('invites', \DI\get(\TriCab\Core\Finance\Task\Contract\TaskCalendarInvites::class)),
             \TriCab\Core\Finance\Task\Service\TaskCalendarInviteService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskCalendarInviteService::class),
+            // Files on tasks (23 Oct 2026): the shared finance file store under app TASK, no new storage.
+            \TriCab\Core\Finance\Task\Service\TaskFileGuard::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskFileGuard::class),
+            \TriCab\Core\Finance\Task\Service\TaskFileService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskFileService::class),
             \TriCab\Core\Finance\Task\Service\TaskBoardService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskBoardService::class),
             // Task mail (T2.6): the links to the shared ledger and the daily-summary recipients.
@@ -1356,7 +1366,8 @@ final class ContainerFactory
                         $settings->financeTaskSendAsUser,
                     ),
             \TriCab\Core\Finance\Task\Service\TaskSetupService::class
-                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskSetupService::class),
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskSetupService::class)
+                    ->constructorParameter('files', \DI\get(\TriCab\Core\Finance\Task\Service\TaskFileService::class)),
             // Tri-AR (Phase 5). Everything is in memory by default; the azure-sql branch below swaps in
             // the `finance.ar_*` tables and the identity-backed assignee directory. The routes are
             // registered only when FINANCE_AR_ENABLED is on (AppBuilder).

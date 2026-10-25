@@ -811,6 +811,19 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
         $app->post($task . '/tasks/{id}/restore', \TriCab\Api\Http\Action\Finance\Task\RestoreTaskAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_DELETE_OWN));
+        // Files on tasks (23 Oct 2026): the shared finance file store, app TASK. Reading follows TASKS.READ; adding and
+        // removing the weaker UPDATE_OWN, then the use case's own-versus-any edit rule. A file for a task not yet saved
+        // goes up as a loose upload (CREATE) and `POST /tasks` takes its id.
+        $app->post($task . '/task-uploads', \TriCab\Api\Http\Action\Finance\Task\UploadTaskLooseFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
+        $app->get($task . '/tasks/{id}/files', \TriCab\Api\Http\Action\Finance\Task\ListTaskFilesAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->post($task . '/tasks/{id}/files', \TriCab\Api\Http\Action\Finance\Task\UploadTaskFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
+        $app->get($task . '/tasks/{id}/files/{fid}/file', \TriCab\Api\Http\Action\Finance\Task\GetTaskFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
+        $app->delete($task . '/tasks/{id}/files/{fid}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskFileAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
         $app->post($task . '/tasks/{id}/request-review', \TriCab\Api\Http\Action\Finance\Task\RequestTaskReviewAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_UPDATE_OWN));
         $app->get($task . '/tasks/{id}/history', \TriCab\Api\Http\Action\Finance\Task\GetTaskHistoryAction::class)

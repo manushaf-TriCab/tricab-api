@@ -35,6 +35,19 @@ final readonly class TaskActor
         return $this->can(Module::PERMISSION_TASK_TASKS_READ_ALL);
     }
 
+    /** D15: without READ_ALL only a task the person prepares or reviews is visible (a 404 otherwise). */
+    public function maySee(TaskRecord $task): bool
+    {
+        return $this->seesAll() || $task->isOwnedBy($this->userId);
+    }
+
+    /** `can_edit_task` (D14): UPDATE, or UPDATE_OWN on a task that is theirs. Files follow the same rule. */
+    public function mayEdit(TaskRecord $task): bool
+    {
+        return $this->can(Module::PERMISSION_TASK_TASKS_UPDATE)
+            || ($this->can(Module::PERMISSION_TASK_TASKS_UPDATE_OWN) && $task->isOwnedBy($this->userId));
+    }
+
     /** What a history row records as the person's name at the time. */
     public function historyName(): string
     {

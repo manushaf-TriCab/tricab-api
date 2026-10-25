@@ -86,6 +86,13 @@ final class FinanceRouteTableTest extends TestCase
         'POST /api/v1/finance/task/tasks/{id}/user-state' => Module::PERMISSION_TASK_TASKS_READ,
         'DELETE /api/v1/finance/task/tasks/{id}' => Module::PERMISSION_TASK_TASKS_DELETE_OWN,
         'POST /api/v1/finance/task/tasks/{id}/restore' => Module::PERMISSION_TASK_TASKS_DELETE_OWN,
+        // Files on tasks (23 Oct 2026): read with TASKS.READ, add and remove with UPDATE_OWN then the edit rule, and a file for a
+        // task not yet saved with CREATE.
+        'POST /api/v1/finance/task/task-uploads' => Module::PERMISSION_TASK_TASKS_CREATE,
+        'GET /api/v1/finance/task/tasks/{id}/files' => Module::PERMISSION_TASK_TASKS_READ,
+        'POST /api/v1/finance/task/tasks/{id}/files' => Module::PERMISSION_TASK_TASKS_UPDATE_OWN,
+        'GET /api/v1/finance/task/tasks/{id}/files/{fid}/file' => Module::PERMISSION_TASK_TASKS_READ,
+        'DELETE /api/v1/finance/task/tasks/{id}/files/{fid}' => Module::PERMISSION_TASK_TASKS_UPDATE_OWN,
         'POST /api/v1/finance/task/tasks/{id}/request-review' => Module::PERMISSION_TASK_TASKS_UPDATE_OWN,
         'GET /api/v1/finance/task/tasks/{id}/history' => Module::PERMISSION_TASK_TASKS_READ,
         'GET /api/v1/finance/task/history' => Module::PERMISSION_TASK_ANALYTICS_READ,
@@ -247,7 +254,7 @@ final class FinanceRouteTableTest extends TestCase
     {
         foreach (self::ROUTES as $route => $permission) {
             [$method, $pattern] = explode(' ', $route, 2);
-            $path = str_replace(['{publicId}', '{list}', '{userId}', '{id}', '{aid}', '{value}'], [self::SAMPLE_ID, 'vendors', '5', self::SAMPLE_ID, self::SAMPLE_ID, 'x'], $pattern);
+            $path = str_replace(['{publicId}', '{list}', '{userId}', '{id}', '{aid}', '{fid}', '{value}'], [self::SAMPLE_ID, 'vendors', '5', self::SAMPLE_ID, self::SAMPLE_ID, self::SAMPLE_ID, 'x'], $pattern);
 
             // A 403 from the app's own rule (`FINANCE_AR_FORBIDDEN` or `FINANCE_AP_FORBIDDEN`: no mailbox grant) is behind the gate, not the gate.
             [$with, $code] = $this->responseFor($method, $path, ['account.login', $permission]);

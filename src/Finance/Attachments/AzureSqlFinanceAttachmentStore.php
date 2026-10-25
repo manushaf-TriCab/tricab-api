@@ -96,6 +96,22 @@ final class AzureSqlFinanceAttachmentStore implements FinanceAttachmentStore
         ));
     }
 
+    public function countsByRecordType(string $application, string $recordType): array
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT [record_id], COUNT(*) AS [n] FROM [finance].[attachments]
+              WHERE [application_key] = :app AND [record_type] = :record_type AND [record_id] IS NOT NULL
+              GROUP BY [record_id]',
+            ['app' => $application, 'record_type' => $recordType],
+        );
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[AzureSqlValueMapper::stringValue($row['record_id'])] = AzureSqlValueMapper::intValue($row['n']);
+        }
+
+        return $counts;
+    }
+
     public function deleteForRecord(string $application, string $recordType, string $recordId): int
     {
         $rows = $this->forRecord($application, $recordType, $recordId);

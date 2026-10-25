@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Task\Service;
 
 use DateTimeImmutable;
+use Throwable;
 use TriCab\Core\Finance\Task\Contract\FinanceTaskMemberDirectory;
 use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
@@ -41,6 +42,8 @@ final class TaskSetupService
         private readonly TaskSetupStore $store,
         private readonly FinanceTaskMemberDirectory $members,
         private readonly TaskTime $time,
+        // Files on tasks (23 Oct 2026): a project deleted for good takes its binned tasks' files with it.
+        private readonly ?TaskFileService $files = null,
     ) {
     }
 
@@ -127,7 +130,8 @@ final class TaskSetupService
      */
     public function deleteProject(TaskActor $actor, string $id, bool $permanent = false): array
     {
-        return $this->store->transactional(function () use ($actor, $id, $permanent): array {
+        $purged = [];
+        $result = $this->store->transactional(function () use ($actor, $id, $permanent, &$purged): array {
             $project = $this->store->findProject($id);
             if ($project === null) {
                 throw new TaskNotFound('Project not found');
@@ -140,7 +144,7 @@ final class TaskSetupService
                 if ($used > 0) {
                     throw new TaskConflict($used . ' task(s) still belong to this project', ['count' => $used]);
                 }
-                $this->store->deleteBinnedProjectTasks($project->id);
+                $purged = $this->store->deleteBinnedProjectTasks($project->id);
                 $this->store->deleteProject($project->id);
 
                 return ['deleted' => true, 'permanent' => true];
@@ -155,6 +159,19 @@ final class TaskSetupService
 
             return ['deleted' => true, 'permanent' => false];
         });
+
+        // After the commit, the files of the tasks that went with the project (bytes, then rows). A failure leaves
+        // files nothing can reach, so it is reported, not turned into an error on a delete that happened.
+        if ($purged !== [] && $this->files !== null) {
+            try {
+                $this->files->purge($purged);
+            } catch (Throwable $failure) {
+                error_log('Tri-Task: files of tasks deleted with project ' . $id . ' were left behind: ' . $failure->getMessage());
+                $result['files_orphaned'] = true;
+            }
+        }
+
+        return $result;
     }
 
     /**

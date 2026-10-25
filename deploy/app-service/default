@@ -86,6 +86,26 @@ server {
         try_files /__tricab_api_front_controller__ @tricab_api;
     }
 
+    # Tri-Task's task files: the app accepts files up to 20 MB (TaskFileService::MAX_BYTES),
+    # which nginx's 1 MB default refused with a 413. Only the two upload routes get 21m (a
+    # file plus multipart overhead); the rest of /api/v1/finance/task/ keeps 1 MB. The loose
+    # upload is an exact match. The per-task upload needs a regex, and a ^~ prefix location
+    # skips regex matching (the NPR note above), so it sits nested in the prefix that
+    # holds the task routes. The exact import location above still wins for its own path.
+    location = /api/v1/finance/task/task-uploads {
+        client_max_body_size 21m;
+        try_files /__tricab_api_front_controller__ @tricab_api;
+    }
+
+    location ^~ /api/v1/finance/task/tasks/ {
+        try_files /__tricab_api_front_controller__ @tricab_api;
+
+        location ~ ^/api/v1/finance/task/tasks/[^/]+/files$ {
+            client_max_body_size 21m;
+            try_files /__tricab_api_front_controller__ @tricab_api;
+        }
+    }
+
     # The product assistant's streamed reply (text/event-stream). nginx buffers
     # FastCGI output by default, which would hold the whole reply back until the
     # turn ends; PHP also sends X-Accel-Buffering: no, and this makes it explicit.
