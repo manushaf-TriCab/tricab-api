@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Finance\Task\Contract;
 
+use DateTimeImmutable;
 use TriCab\Core\Finance\Task\Domain\TaskConflict;
 use TriCab\Core\Finance\Task\Domain\TaskEntity;
 use TriCab\Core\Finance\Task\Domain\TaskProject;
@@ -53,6 +54,33 @@ interface TaskSetupStore extends TaskTransactions
 
     /** Every task, live or binned, that belongs to the project. */
     public function projectTaskCount(string $id): int;
+
+    /** Live tasks (not in the Bin) that belong to the project. */
+    public function projectLiveTaskCount(string $id): int;
+
+    /**
+     * Moves every live task of the project into the Bin, stamped `$at` and `$by`: the same
+     * stamp the project gets, which is how {@see restoreProjectTasks} tells these tasks from
+     * ones binned on their own.
+     */
+    public function binProjectTasks(string $projectId, DateTimeImmutable $at, ?int $by): void;
+
+    /**
+     * Brings back the project's tasks whose `deleted_at` equals the project's own current
+     * `deleted_at` (those that went to the Bin with it). Call it before clearing the project's
+     * stamp. Tasks binned earlier on their own keep their stamp.
+     */
+    public function restoreProjectTasks(string $projectId, DateTimeImmutable $now): void;
+
+    /** Deletes for good the project's tasks that are in the Bin, with their dependencies and history. */
+    public function deleteBinnedProjectTasks(string $projectId): void;
+
+    /**
+     * For projects in the Bin: how many tasks would come back with each (those binned with it).
+     *
+     * @return array<string, int>
+     */
+    public function binnedProjectTaskCounts(): array;
 
     /**
      * Live tasks per project: `[total, completed]`, over the tasks the caller may see

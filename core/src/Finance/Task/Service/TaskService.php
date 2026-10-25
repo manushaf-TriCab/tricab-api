@@ -328,6 +328,7 @@ final class TaskService
                     throw new TaskForbidden('You do not have permission to restore ' . $task->name);
                 }
                 if ($task->deletedAt !== null) {
+                    $this->requireProjectOutOfBin($task);
                     $task->deletedAt = null;
                     $task->deletedBy = null;
                     $task->updatedDate = $now;
@@ -372,12 +373,27 @@ final class TaskService
         if (!$this->canDelete($actor, $task)) {
             throw new TaskForbidden('You do not have permission to restore this task');
         }
+        if ($task->deletedAt !== null) {
+            $this->requireProjectOutOfBin($task);
+        }
         $task->deletedAt = null;
         $task->deletedBy = null;
         $task->updatedDate = $this->time->now();
         $this->tasks->updateTask($task);
 
         return $this->dict($task);
+    }
+
+    /**
+     * A task whose project is in the Bin comes back with the project (Nick Han, 23 Oct 2026), not on
+     * its own: it would otherwise sit live under a project nobody can see.
+     */
+    private function requireProjectOutOfBin(TaskRecord $task): void
+    {
+        $project = $task->projectId === null ? null : $this->setup->findProject($task->projectId);
+        if ($project !== null && $project->deletedAt !== null) {
+            throw new TaskConflict('Its project "' . $project->name . '" is in the Bin. Restore the project from the Bin first.');
+        }
     }
 
     // ==================================================================================

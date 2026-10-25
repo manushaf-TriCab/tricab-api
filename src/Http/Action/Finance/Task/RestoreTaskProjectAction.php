@@ -10,7 +10,7 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Task\Domain\TaskFailure;
 use TriCab\Core\Finance\Task\Service\TaskSetupService;
 
-/** POST /api/v1/finance/task/projects/{id}/restore (route 24): 409 when a live project has the name. Gated on `FINANCE.TASK.SETUP.MANAGE`. */
+/** POST /api/v1/finance/task/projects/{id}/restore (route 24): brings back the tasks that went to the Bin with it; 409 when a live project has the name. Gated on `FINANCE.TASK.SETUP.MANAGE`. */
 final class RestoreTaskProjectAction
 {
     use TaskActionSupport;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Finance\Task;
 
+use DateTimeImmutable;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Domain\TaskEntity;
@@ -100,6 +101,59 @@ final class AzureSqlTaskSetupStore extends AzureSqlTaskSupport implements TaskSe
         $rows = $this->connection->fetchAll('SELECT COUNT(*) AS [n] FROM [finance].[task_tasks] WHERE [project_id] = :id', ['id' => $id]);
 
         return AzureSqlValueMapper::intValue($rows[0]['n'] ?? 0);
+    }
+
+    public function projectLiveTaskCount(string $id): int
+    {
+        $rows = $this->connection->fetchAll('SELECT COUNT(*) AS [n] FROM [finance].[task_tasks] WHERE [project_id] = :id AND [deleted_at] IS NULL', ['id' => $id]);
+
+        return AzureSqlValueMapper::intValue($rows[0]['n'] ?? 0);
+    }
+
+    public function binProjectTasks(string $projectId, DateTimeImmutable $at, ?int $by): void
+    {
+        $this->connection->execute(
+            'UPDATE [finance].[task_tasks] SET [deleted_at] = :at, [deleted_by] = :by, [updated_date] = :updated
+             WHERE [project_id] = :id AND [deleted_at] IS NULL',
+            ['at' => self::at($at), 'by' => $by, 'updated' => self::at($at), 'id' => $projectId],
+        );
+    }
+
+    public function restoreProjectTasks(string $projectId, DateTimeImmutable $now): void
+    {
+        $this->connection->execute(
+            'UPDATE t SET t.[deleted_at] = NULL, t.[deleted_by] = NULL, t.[updated_date] = :now
+             FROM [finance].[task_tasks] t INNER JOIN [finance].[task_projects] p ON p.[id] = t.[project_id]
+             WHERE p.[id] = :id AND p.[deleted_at] IS NOT NULL AND t.[deleted_at] = p.[deleted_at]',
+            ['now' => self::at($now), 'id' => $projectId],
+        );
+    }
+
+    public function deleteBinnedProjectTasks(string $projectId): void
+    {
+        // PDO_SQLSRV binds every occurrence of a named parameter separately, so each one gets its own name.
+        $binned = static fn (string $name): string => 'SELECT [id] FROM [finance].[task_tasks] WHERE [project_id] = :' . $name . ' AND [deleted_at] IS NOT NULL';
+        $this->connection->execute(
+            'DELETE FROM [finance].[task_dependencies] WHERE [task_id] IN (' . $binned('a') . ') OR [depends_on_task_id] IN (' . $binned('b') . ')',
+            ['a' => $projectId, 'b' => $projectId],
+        );
+        $this->connection->execute('DELETE FROM [finance].[task_history] WHERE [task_id] IN (' . $binned('a') . ')', ['a' => $projectId]);
+        $this->connection->execute('DELETE FROM [finance].[task_tasks] WHERE [project_id] = :project AND [deleted_at] IS NOT NULL', ['project' => $projectId]);
+    }
+
+    public function binnedProjectTaskCounts(): array
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT t.[project_id] AS [project_id], COUNT(*) AS [n] FROM [finance].[task_tasks] t
+             INNER JOIN [finance].[task_projects] p ON p.[id] = t.[project_id]
+             WHERE p.[deleted_at] IS NOT NULL AND t.[deleted_at] = p.[deleted_at] GROUP BY t.[project_id]',
+        );
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[self::id($row['project_id'])] = AzureSqlValueMapper::intValue($row['n']);
+        }
+
+        return $counts;
     }
 
     public function projectTaskCounts(?int $visibleToUserId): array

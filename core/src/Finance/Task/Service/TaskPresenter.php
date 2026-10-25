@@ -51,9 +51,10 @@ final class TaskPresenter
 
     /**
      * @param array{0?: int, 1?: int} $counts total and completed live tasks the caller may see
+     * @param int $binnedTaskCount for a project in the Bin: the tasks that went there with it and come back with it
      * @return array<string, mixed>
      */
-    public static function project(TaskProject $p, array $counts): array
+    public static function project(TaskProject $p, array $counts, int $binnedTaskCount = 0): array
     {
         return [
             'id' => $p->id,
@@ -65,6 +66,7 @@ final class TaskPresenter
             'group_id' => $p->groupId,
             'task_count' => $counts[0] ?? 0,
             'completed_count' => $counts[1] ?? 0,
+            'binned_task_count' => $binnedTaskCount,
             'is_deleted' => $p->deletedAt !== null,
             'deleted_at' => self::iso($p->deletedAt),
             'created_date' => self::iso($p->createdDate),

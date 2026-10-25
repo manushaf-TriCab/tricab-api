@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Finance\Task;
 
+use DateTimeImmutable;
 use Throwable;
 use TriCab\Core\Finance\Task\Contract\TaskSetupStore;
 use TriCab\Core\Finance\Task\Domain\TaskConflict;
@@ -46,6 +47,11 @@ class InMemoryTaskSetupStore implements TaskSetupStore
     protected function taskRows(): array
     {
         return [];
+    }
+
+    /** @param list<string> $ids tasks to remove for good, with whatever hangs off them */
+    protected function forgetTasks(array $ids): void
+    {
     }
 
     public function transactional(callable $work): mixed
@@ -141,6 +147,66 @@ class InMemoryTaskSetupStore implements TaskSetupStore
         }
 
         return $n;
+    }
+
+    public function projectLiveTaskCount(string $id): int
+    {
+        $n = 0;
+        foreach ($this->taskRows() as $task) {
+            $n += $task->projectId === $id && $task->deletedAt === null ? 1 : 0;
+        }
+
+        return $n;
+    }
+
+    public function binProjectTasks(string $projectId, DateTimeImmutable $at, ?int $by): void
+    {
+        foreach ($this->taskRows() as $task) {
+            if ($task->projectId === $projectId && $task->deletedAt === null) {
+                $task->deletedAt = $at;
+                $task->deletedBy = $by;
+                $task->updatedDate = $at;
+            }
+        }
+    }
+
+    public function restoreProjectTasks(string $projectId, DateTimeImmutable $now): void
+    {
+        $binnedAt = $this->projects[$projectId]->deletedAt ?? null;
+        if ($binnedAt === null) {
+            return;
+        }
+        foreach ($this->taskRows() as $task) {
+            if ($task->projectId === $projectId && $task->deletedAt !== null && $task->deletedAt == $binnedAt) {
+                $task->deletedAt = null;
+                $task->deletedBy = null;
+                $task->updatedDate = $now;
+            }
+        }
+    }
+
+    public function deleteBinnedProjectTasks(string $projectId): void
+    {
+        $ids = [];
+        foreach ($this->taskRows() as $task) {
+            if ($task->projectId === $projectId && $task->deletedAt !== null) {
+                $ids[] = $task->id;
+            }
+        }
+        $this->forgetTasks($ids);
+    }
+
+    public function binnedProjectTaskCounts(): array
+    {
+        $counts = [];
+        foreach ($this->taskRows() as $task) {
+            $binnedAt = $task->projectId === null ? null : ($this->projects[$task->projectId]->deletedAt ?? null);
+            if ($binnedAt !== null && $task->deletedAt !== null && $task->deletedAt == $binnedAt) {
+                $counts[$task->projectId] = ($counts[$task->projectId] ?? 0) + 1;
+            }
+        }
+
+        return $counts;
     }
 
     public function projectTaskCounts(?int $visibleToUserId): array

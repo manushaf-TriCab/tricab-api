@@ -55,9 +55,10 @@ final class TaskSetupService
     public function listProjects(TaskActor $actor, bool $deleted = false): array
     {
         $counts = $this->store->projectTaskCounts($this->visibleTo($actor));
+        $binned = $deleted ? $this->store->binnedProjectTaskCounts() : [];
 
         return array_map(
-            static fn (TaskProject $p): array => TaskPresenter::project($p, $counts[$p->id] ?? [0, 0]),
+            static fn (TaskProject $p): array => TaskPresenter::project($p, $counts[$p->id] ?? [0, 0], $binned[$p->id] ?? 0),
             $this->store->projects($deleted),
         );
     }
@@ -117,52 +118,71 @@ final class TaskSetupService
     }
 
     /**
-     * Soft delete into the Bin; `$permanent` only from the Bin and only when no task (live or
-     * binned) belongs to it.
+     * Soft delete into the Bin, and every live task of the project goes with it, stamped with the
+     * same time and user, in one transaction (Nick Han, 23 Oct 2026). `$permanent` only from the
+     * Bin: it deletes the project's binned tasks too, and is refused only while a live task (one
+     * restored on its own) still belongs to it.
      *
      * @return array<string, bool>
      */
     public function deleteProject(TaskActor $actor, string $id, bool $permanent = false): array
     {
-        $project = $this->store->findProject($id);
-        if ($project === null) {
-            throw new TaskNotFound('Project not found');
-        }
-        if ($permanent) {
+        return $this->store->transactional(function () use ($actor, $id, $permanent): array {
+            $project = $this->store->findProject($id);
+            if ($project === null) {
+                throw new TaskNotFound('Project not found');
+            }
+            if ($permanent) {
+                if ($project->deletedAt === null) {
+                    throw new TaskConflict('Move the project to the Bin before deleting it permanently');
+                }
+                $used = $this->store->projectLiveTaskCount($project->id);
+                if ($used > 0) {
+                    throw new TaskConflict($used . ' task(s) still belong to this project', ['count' => $used]);
+                }
+                $this->store->deleteBinnedProjectTasks($project->id);
+                $this->store->deleteProject($project->id);
+
+                return ['deleted' => true, 'permanent' => true];
+            }
             if ($project->deletedAt === null) {
-                throw new TaskConflict('Move the project to the Bin before deleting it permanently');
+                $now = $this->time->now();
+                $project->deletedAt = $now;
+                $project->deletedBy = $actor->userId;
+                $this->store->updateProject($project);
+                $this->store->binProjectTasks($project->id, $now, $actor->userId);
             }
-            $used = $this->store->projectTaskCount($project->id);
-            if ($used > 0) {
-                throw new TaskConflict($used . ' task(s) still belong to this project', ['count' => $used]);
-            }
-            $this->store->deleteProject($project->id);
 
-            return ['deleted' => true, 'permanent' => true];
-        }
-        if ($project->deletedAt === null) {
-            $project->deletedAt = $this->time->now();
-            $project->deletedBy = $actor->userId;
-            $this->store->updateProject($project);
-        }
-
-        return ['deleted' => true, 'permanent' => false];
+            return ['deleted' => true, 'permanent' => false];
+        });
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * Out of the Bin, with the tasks that went to the Bin with it (the ones stamped with the
+     * project's own `deleted_at`); tasks binned on their own earlier stay in the Bin.
+     *
+     * @return array<string, mixed>
+     */
     public function restoreProject(TaskActor $actor, string $id): array
     {
         $project = $this->store->findProject($id);
         if ($project === null) {
             throw new TaskNotFound('Project not found');
         }
-        if ($this->store->liveProjectNameTaken($project->name, $project->id)) {
-            throw new TaskConflict('A live project already has that name; rename one first');
-        }
-        $project->deletedAt = null;
-        $project->deletedBy = null;
-        $project->updatedDate = $this->time->now();
-        $this->store->updateProject($project);
+        $this->store->transactional(function () use ($project): void {
+            if ($project->deletedAt === null) {
+                return;
+            }
+            if ($this->store->liveProjectNameTaken($project->name, $project->id)) {
+                throw new TaskConflict('A live project already has that name; rename one first');
+            }
+            $now = $this->time->now();
+            $this->store->restoreProjectTasks($project->id, $now);
+            $project->deletedAt = null;
+            $project->deletedBy = null;
+            $project->updatedDate = $now;
+            $this->store->updateProject($project);
+        });
 
         return $this->projectDict($actor, $project);
     }
@@ -220,7 +240,9 @@ final class TaskSetupService
     {
         $counts = $this->store->projectTaskCounts($this->visibleTo($actor));
 
-        return TaskPresenter::project($project, $counts[$project->id] ?? [0, 0]);
+        $binned = $project->deletedAt === null ? 0 : ($this->store->binnedProjectTaskCounts()[$project->id] ?? 0);
+
+        return TaskPresenter::project($project, $counts[$project->id] ?? [0, 0], $binned);
     }
 
     private function visibleTo(TaskActor $actor): ?int

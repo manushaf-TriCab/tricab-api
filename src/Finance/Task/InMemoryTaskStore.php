@@ -30,6 +30,13 @@ final class InMemoryTaskStore extends InMemoryTaskSetupStore implements TaskStor
         return array_values($this->taskRecords);
     }
 
+    protected function forgetTasks(array $ids): void
+    {
+        foreach ($ids as $id) {
+            $this->deleteTaskPermanently($id);
+        }
+    }
+
     public function tasks(bool $deleted, ?int $visibleToUserId): array
     {
         $out = [];

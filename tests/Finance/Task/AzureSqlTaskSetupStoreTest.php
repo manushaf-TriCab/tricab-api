@@ -160,7 +160,7 @@ final class AzureSqlTaskSetupStoreTest extends TestCase
         self::assertSame(0, $this->scalar('SELECT COUNT(*) FROM [finance].[task_projects]'));
     }
 
-    public function test_project_counts_use_live_tasks_and_the_callers_visibility_and_permanent_delete_sees_binned_ones(): void
+    public function test_project_counts_use_live_tasks_and_the_callers_visibility(): void
     {
         $p = $this->service->createProject($this->manager, ['name' => 'Close']);
         $id = $p['id'];
@@ -174,14 +174,110 @@ final class AzureSqlTaskSetupStoreTest extends TestCase
         self::assertSame([$id => [2, 1]], $this->store->projectTaskCounts(11));
         self::assertSame([], $this->store->projectTaskCounts(99));
         self::assertSame(4, $this->store->projectTaskCount($id));
+        self::assertSame(3, $this->store->projectLiveTaskCount($id));
+    }
+
+    public function test_binning_a_project_bins_its_live_tasks_and_restoring_it_brings_back_only_those(): void
+    {
+        $id = $this->createProject('Close');
+        $other = $this->createProject('Other');
+        $live1 = 'd0000000000000000000000000000001';
+        $live2 = 'd0000000000000000000000000000002';
+        $early = 'd0000000000000000000000000000003';
+        $elsewhere = 'd0000000000000000000000000000004';
+        $this->insertTask($live1, $id, null, '', 11, null);
+        $this->insertTask($live2, $id, null, '', 11, null);
+        $this->insertTask($early, $id, null, '', 11, null, 'in_progress', true);
+        $this->insertTask($elsewhere, $other, null, '', 11, null);
 
         $this->service->deleteProject($this->manager, $id);
+
+        $stamp = '2026-10-07 01:02:03.456789';
+        foreach ([$live1, $live2] as $task) {
+            self::assertSame($stamp, $this->taskColumn($task, 'CONVERT(VARCHAR(30), [deleted_at], 121)'));
+            self::assertSame('7', $this->taskColumn($task, '[deleted_by]'));
+        }
+        self::assertSame('2026-10-07 00:00:00.000000', $this->taskColumn($early, 'CONVERT(VARCHAR(30), [deleted_at], 121)'));
+        self::assertNull($this->taskColumn($elsewhere, '[deleted_at]'));
+        self::assertSame([$id => 2], $this->store->binnedProjectTaskCounts());
+        self::assertSame(2, $this->service->listProjects($this->manager, true)[0]['binned_task_count']);
+
+        $this->service->restoreProject($this->manager, $id);
+
+        self::assertNull($this->taskColumn($live1, '[deleted_at]'));
+        self::assertNull($this->taskColumn($live1, '[deleted_by]'));
+        self::assertNull($this->taskColumn($live2, '[deleted_at]'));
+        self::assertNotNull($this->taskColumn($early, '[deleted_at]'));
+        self::assertSame([], $this->store->binnedProjectTaskCounts());
+        self::assertSame([2, 0], $this->store->projectTaskCounts(null)[$id]);
+    }
+
+    public function test_permanent_delete_removes_binned_tasks_with_dependencies_and_history_but_not_live_ones(): void
+    {
+        $id = $this->createProject('Close');
+        $other = $this->createProject('Other');
+        $a = 'd0000000000000000000000000000001';
+        $b = 'd0000000000000000000000000000002';
+        $outside = 'd0000000000000000000000000000003';
+        $this->insertTask($a, $id, null, '', 11, null);
+        $this->insertTask($b, $id, null, '', 11, null);
+        $this->insertTask($outside, $other, null, '', 11, null);
+        $this->pdo->exec("INSERT INTO [finance].[task_dependencies] ([id], [task_id], [depends_on_task_id]) VALUES ('e0000000000000000000000000000001', '{$b}', '{$a}'), ('e0000000000000000000000000000002', '{$outside}', '{$a}')");
+        $this->pdo->exec("INSERT INTO [finance].[task_history] ([id], [task_id], [to_status], [changed_at]) VALUES ('f0000000000000000000000000000001', '{$a}', N'in_progress', SYSUTCDATETIME()), ('f0000000000000000000000000000002', '{$outside}', N'in_progress', SYSUTCDATETIME())");
+
+        $this->service->deleteProject($this->manager, $id);
+        // One task restored on its own is live: the permanent delete is refused and nothing goes.
+        $this->pdo->exec("UPDATE [finance].[task_tasks] SET [deleted_at] = NULL, [deleted_by] = NULL WHERE [id] = '{$b}'");
         try {
             $this->service->deleteProject($this->manager, $id, true);
             self::fail('Expected a conflict.');
         } catch (TaskConflict $e) {
-            self::assertSame('4 task(s) still belong to this project', $e->getMessage());
+            self::assertSame('1 task(s) still belong to this project', $e->getMessage());
         }
+        self::assertSame(3, $this->scalar('SELECT COUNT(*) FROM [finance].[task_tasks]'));
+
+        $this->pdo->exec("UPDATE [finance].[task_tasks] SET [deleted_at] = SYSUTCDATETIME() WHERE [id] = '{$b}'");
+        self::assertSame(['deleted' => true, 'permanent' => true], $this->service->deleteProject($this->manager, $id, true));
+
+        self::assertSame(1, $this->scalar('SELECT COUNT(*) FROM [finance].[task_tasks]'));
+        self::assertSame(0, $this->scalar('SELECT COUNT(*) FROM [finance].[task_dependencies]'));
+        self::assertSame(1, $this->scalar('SELECT COUNT(*) FROM [finance].[task_history]'));
+        self::assertSame(0, $this->scalar('SELECT COUNT(*) FROM [finance].[task_projects] WHERE [id] = \'' . $id . '\''));
+    }
+
+    public function test_binning_a_project_is_all_or_nothing(): void
+    {
+        $id = $this->createProject('Close');
+        $task = 'd0000000000000000000000000000001';
+        $this->insertTask($task, $id, null, '', 11, null);
+        // Make the task write fail after the project stamp was written.
+        $this->pdo->exec('ALTER TABLE [finance].[task_tasks] ADD CONSTRAINT [CK_tt6_never] CHECK ([deleted_by] IS NULL OR [deleted_by] < 0)');
+        try {
+            $this->service->deleteProject($this->manager, $id);
+            self::fail('Expected the database to refuse.');
+        } catch (\Throwable) {
+            self::assertSame(0, $this->scalar('SELECT COUNT(*) FROM [finance].[task_projects] WHERE [deleted_at] IS NOT NULL'), 'the project stamp rolled back');
+            self::assertNull($this->taskColumn($task, '[deleted_at]'));
+        } finally {
+            $this->pdo->exec('ALTER TABLE [finance].[task_tasks] DROP CONSTRAINT [CK_tt6_never]');
+        }
+    }
+
+    private function createProject(string $name): string
+    {
+        $id = $this->service->createProject($this->manager, ['name' => $name])['id'];
+        self::assertIsString($id);
+
+        return $id;
+    }
+
+    private function taskColumn(string $id, string $expression): ?string
+    {
+        $statement = $this->pdo->query("SELECT {$expression} FROM [finance].[task_tasks] WHERE [id] = '{$id}'");
+        self::assertInstanceOf(PDOStatement::class, $statement);
+        $value = $statement->fetchColumn();
+
+        return $value === false || $value === null ? null : (string) $value;
     }
 
     public function test_areas_and_entities_are_unique_by_name_now_and_guarded_by_their_tasks(): void

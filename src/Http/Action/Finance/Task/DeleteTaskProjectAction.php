@@ -10,7 +10,7 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Task\Domain\TaskFailure;
 use TriCab\Core\Finance\Task\Service\TaskSetupService;
 
-/** DELETE /api/v1/finance/task/projects/{id} (route 23): into the Bin; `?permanent=1` only from the Bin and only if no task uses it. Gated on `FINANCE.TASK.SETUP.MANAGE`. */
+/** DELETE /api/v1/finance/task/projects/{id} (route 23): into the Bin with its live tasks; `?permanent=1` only from the Bin, takes its binned tasks too, and is refused only while a live task belongs to it. Gated on `FINANCE.TASK.SETUP.MANAGE`. */
 final class DeleteTaskProjectAction
 {
     use TaskActionSupport;
