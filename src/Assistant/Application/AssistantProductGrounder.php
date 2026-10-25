@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Assistant\Application;
 
 use Throwable;
+use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
 use TriCab\Core\Product\Application\DTO\ProductCustomerViewDetail;
 use TriCab\Core\Product\Application\DTO\ProductPublicDetail;
 use TriCab\Core\Product\Application\DTO\ProductPublicSpecificationItem;
@@ -22,6 +23,7 @@ final readonly class AssistantProductGrounder
     public function __construct(
         private GetPublicProductService $getPublicProduct,
         private GetAdminProductCustomerViewService $getStaffProduct,
+        private CatalogueNavigationImageSigner $images,
     ) {
     }
 
@@ -58,7 +60,7 @@ final readonly class AssistantProductGrounder
             summary: null,
             applications: [],
             specifications: [],
-            thumbnailUrl: $item->thumbnailImageUrl ?? $item->thumbnailUrl,
+            thumbnailUrl: $this->images->present($item->thumbnailImageUrl ?? $item->thumbnailUrl),
             statusCode: $item->statusCode,
         );
     }
@@ -88,7 +90,7 @@ final readonly class AssistantProductGrounder
             summary: $detail->shortDescription ?? $detail->fullDescription,
             applications: $detail->applicationNames,
             specifications: $this->specifications($detail->specifications),
-            thumbnailUrl: $detail->thumbnailImageUrl ?? $detail->thumbnailUrl,
+            thumbnailUrl: $this->images->present($detail->thumbnailImageUrl ?? $detail->thumbnailUrl),
             statusCode: 'published',
         );
     }
@@ -105,7 +107,7 @@ final readonly class AssistantProductGrounder
             summary: $detail->shortDescription ?? $detail->fullDescription,
             applications: $detail->applicationNames,
             specifications: $this->specifications($detail->specifications),
-            thumbnailUrl: $detail->thumbnailUrl,
+            thumbnailUrl: $this->images->present($detail->thumbnailUrl),
             statusCode: $detail->statusCode,
         );
     }
