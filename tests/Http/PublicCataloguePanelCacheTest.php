@@ -19,17 +19,21 @@ final class PublicCataloguePanelCacheTest extends TestCase
             'APP_CACHE_DRIVER' => 'array',
         ]);
 
-        $first = $app->handle(TestAppFactory::request('GET', '/api/v1/catalogue/panel'));
-        self::assertSame(200, $first->getStatusCode());
+        $first = $app->handle(TestAppFactory::request('GET', '/api/v1/catalogue/panel?regionCode=AU'));
+        self::assertSame(200, $first->getStatusCode(), (string) $first->getBody());
         $etag = $first->getHeaderLine('ETag');
         self::assertNotSame('', $etag);
-        self::assertStringContainsString('max-age=60', $first->getHeaderLine('Cache-Control'));
+        self::assertStringStartsWith('public, max-age=60', $first->getHeaderLine('Cache-Control'));
 
         $second = $app->handle(
-            TestAppFactory::request('GET', '/api/v1/catalogue/panel')
+            TestAppFactory::request('GET', '/api/v1/catalogue/panel?regionCode=AU')
                 ->withHeader('If-None-Match', $etag),
         );
         self::assertSame(304, $second->getStatusCode());
+
+        $implicitRegion = $app->handle(TestAppFactory::request('GET', '/api/v1/catalogue/panel'));
+        self::assertSame(200, $implicitRegion->getStatusCode());
+        self::assertSame('private, no-cache', $implicitRegion->getHeaderLine('Cache-Control'));
     }
 
     public function test_lookups_are_cached_across_http_handles_on_same_container(): void

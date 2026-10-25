@@ -78,6 +78,19 @@ final class CorsMiddleware implements MiddlewareInterface
             ->withHeader('Access-Control-Allow-Headers', $this->allowedHeaders())
             ->withHeader('Access-Control-Expose-Headers', self::EXPOSED_HEADERS)
             ->withHeader('Access-Control-Max-Age', '86400')
-            ->withHeader('Vary', 'Origin');
+            ->withHeader('Vary', self::varyWithOrigin($response->getHeaderLine('Vary')));
+    }
+
+    private static function varyWithOrigin(string $existing): string
+    {
+        $fields = array_values(array_filter(array_map('trim', explode(',', $existing)), static fn (string $f): bool => $f !== ''));
+        foreach ($fields as $field) {
+            if (strcasecmp($field, 'Origin') === 0 || $field === '*') {
+                return implode(', ', $fields);
+            }
+        }
+        $fields[] = 'Origin';
+
+        return implode(', ', $fields);
     }
 }

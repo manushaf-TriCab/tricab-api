@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Product\Persistence;
 
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
+use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Api\Product\Catalogue\CatalogueLeafDescription;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
@@ -27,6 +28,9 @@ use TriCab\Core\Product\Contract\CatalogueNavigationRepository;
  */
 final class AzureSqlCatalogueNavigationRepository implements CatalogueNavigationRepository
 {
+    /** Stays well under SQL Server's 2,100-parameter limit. */
+    private const IN_LIST_CHUNK = 400;
+
     private const PUBLIC_PRODUCT_SQL = <<<'SQL'
   AND p.[DeletedAtUtc] IS NULL
   AND p.[IsActive] = 1
@@ -68,6 +72,7 @@ SQL;
 
     public function __construct(
         private readonly SqlConnection $connection,
+        private readonly ?ReferenceDataCache $cache = null,
     ) {
     }
 
@@ -716,8 +721,89 @@ SQL,
 
     public function listNodeProducts(string $nodePublicId, bool $activeOnly = false): array
     {
+        return array_map(
+            self::hydrateNodeProduct(...),
+            $this->fetchNodeProductRows('n.[PublicId] = :nodePublicId', [':nodePublicId' => $nodePublicId], $activeOnly, ''),
+        );
+    }
+
+    public function listNodeProductsForNodes(array $nodePublicIds, bool $activeOnly = false): array
+    {
+        return $this->groupRowsByNode(
+            $nodePublicIds,
+            fn (string $inList, array $params): array => $this->fetchNodeProductRows(
+                'n.[PublicId] IN (' . $inList . ')',
+                $params,
+                $activeOnly,
+                'n.[CatalogueNodeId], ',
+            ),
+            self::hydrateNodeProduct(...),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function hydrateNodeProduct(array $row): CatalogueNodeProductRecord
+    {
+        return new CatalogueNodeProductRecord(
+            productPublicId: AzureSqlValueMapper::stringValue($row['ProductPublicId'] ?? ''),
+            productName: AzureSqlValueMapper::stringValue($row['ProductName'] ?? ''),
+            productSlug: AzureSqlValueMapper::stringValue($row['ProductSlug'] ?? ''),
+            internalCode: AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null),
+            thumbnailUrl: null,
+            displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+            isFeatured: AzureSqlValueMapper::boolValue($row['IsFeatured'] ?? false),
+            isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
+            publicationStatus: AzureSqlValueMapper::stringValue($row['PublicationStatus'] ?? ''),
+        );
+    }
+
+    /**
+     * Runs a per-node query for many nodes using chunked IN lists and groups the rows by
+     * the caller's node ids (matched case-insensitively). Every requested id gets a list.
+     *
+     * @template T
+     * @param list<string> $nodePublicIds
+     * @param callable(string, array<string, string>): list<array<string, mixed>> $fetch
+     * @param callable(array<string, mixed>): T $hydrate
+     * @return array<string, list<T>>
+     */
+    private function groupRowsByNode(array $nodePublicIds, callable $fetch, callable $hydrate): array
+    {
+        $out = [];
+        $requestedByKey = [];
+        foreach ($nodePublicIds as $nodePublicId) {
+            $out[$nodePublicId] = [];
+            $requestedByKey[strtoupper(trim($nodePublicId))][] = $nodePublicId;
+        }
+        foreach (array_chunk(array_keys($requestedByKey), self::IN_LIST_CHUNK) as $chunk) {
+            $placeholders = [];
+            $params = [];
+            foreach ($chunk as $index => $key) {
+                $placeholders[] = ':node' . $index;
+                $params[':node' . $index] = (string) $key;
+            }
+            foreach ($fetch(implode(', ', $placeholders), $params) as $row) {
+                $key = strtoupper(AzureSqlValueMapper::stringValue($row['NodePublicId'] ?? ''));
+                foreach ($requestedByKey[$key] ?? [] as $requested) {
+                    $out[$requested][] = $hydrate($row);
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param array<string, string> $params
+     * @return list<array<string, mixed>>
+     */
+    private function fetchNodeProductRows(string $nodeCondition, array $params, bool $activeOnly, string $orderPrefix): array
+    {
         $sql = <<<'SQL'
 SELECT
+    CONVERT(NVARCHAR(36), n.[PublicId]) AS [NodePublicId],
     CONVERT(NVARCHAR(36), p.[PublicId]) AS [ProductPublicId],
     p.[ProductName],
     COALESCE(primarySlug.[Slug], CONVERT(NVARCHAR(36), p.[PublicId])) AS [ProductSlug],
@@ -737,33 +823,63 @@ OUTER APPLY (
       AND s.[IsPrimary] = 1
       AND s.[DeletedAtUtc] IS NULL
 ) primarySlug
-WHERE n.[PublicId] = :nodePublicId
 SQL;
+        $sql .= "\nWHERE " . $nodeCondition;
         if ($activeOnly) {
             $sql .= ' AND cnp.[IsActive] = 1';
         }
-        $sql .= ' ORDER BY cnp.[DisplayOrder], p.[ProductName]';
+        $sql .= ' ORDER BY ' . $orderPrefix . 'cnp.[DisplayOrder], p.[ProductName]';
 
-        return array_map(
-            static fn (array $row): CatalogueNodeProductRecord => new CatalogueNodeProductRecord(
-                productPublicId: AzureSqlValueMapper::stringValue($row['ProductPublicId'] ?? ''),
-                productName: AzureSqlValueMapper::stringValue($row['ProductName'] ?? ''),
-                productSlug: AzureSqlValueMapper::stringValue($row['ProductSlug'] ?? ''),
-                internalCode: AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null),
-                thumbnailUrl: null,
-                displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
-                isFeatured: AzureSqlValueMapper::boolValue($row['IsFeatured'] ?? false),
-                isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
-                publicationStatus: AzureSqlValueMapper::stringValue($row['PublicationStatus'] ?? ''),
-            ),
-            $this->connection->fetchAll($sql, [':nodePublicId' => $nodePublicId]),
-        );
+        return $this->connection->fetchAll($sql, $params);
     }
 
     public function listNodeProductStyles(string $nodePublicId, bool $activeOnly = false): array
     {
+        return array_map(
+            self::hydrateNodeProductStyle(...),
+            $this->fetchNodeProductStyleRows('n.[PublicId] = :nodePublicId', [':nodePublicId' => $nodePublicId], $activeOnly, ''),
+        );
+    }
+
+    public function listNodeProductStylesForNodes(array $nodePublicIds, bool $activeOnly = false): array
+    {
+        return $this->groupRowsByNode(
+            $nodePublicIds,
+            fn (string $inList, array $params): array => $this->fetchNodeProductStyleRows(
+                'n.[PublicId] IN (' . $inList . ')',
+                $params,
+                $activeOnly,
+                'n.[CatalogueNodeId], ',
+            ),
+            self::hydrateNodeProductStyle(...),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function hydrateNodeProductStyle(array $row): CatalogueNodeProductStyleRecord
+    {
+        return new CatalogueNodeProductStyleRecord(
+            productStylePublicId: AzureSqlValueMapper::stringValue($row['ProductStylePublicId'] ?? ''),
+            styleCode: AzureSqlValueMapper::stringValue($row['StyleCode'] ?? ''),
+            displayName: AzureSqlValueMapper::stringValue($row['DisplayName'] ?? ''),
+            displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+            isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
+            childStyleCount: AzureSqlValueMapper::intValue($row['ChildStyleCount'] ?? 0),
+            assignedProductCount: AzureSqlValueMapper::intValue($row['AssignedProductCount'] ?? 0),
+        );
+    }
+
+    /**
+     * @param array<string, string> $params
+     * @return list<array<string, mixed>>
+     */
+    private function fetchNodeProductStyleRows(string $nodeCondition, array $params, bool $activeOnly, string $orderPrefix): array
+    {
         $sql = <<<'SQL'
 SELECT
+    CONVERT(NVARCHAR(36), n.[PublicId]) AS [NodePublicId],
     CONVERT(NVARCHAR(36), ps.[PublicId]) AS [ProductStylePublicId],
     ps.[StyleCode],
     ps.[DisplayName],
@@ -786,26 +902,14 @@ SELECT
 FROM [product].[CatalogueNodeProductStyles] cnps
 INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnps.[CatalogueNodeId]
 INNER JOIN [product].[ProductStyles] ps ON ps.[ProductStyleId] = cnps.[ProductStyleId]
-WHERE n.[PublicId] = :nodePublicId
-  AND ps.[DeletedAtUtc] IS NULL
 SQL;
+        $sql .= "\nWHERE " . $nodeCondition . "\n  AND ps.[DeletedAtUtc] IS NULL";
         if ($activeOnly) {
             $sql .= ' AND cnps.[IsActive] = 1 AND ps.[IsActive] = 1';
         }
-        $sql .= ' ORDER BY cnps.[DisplayOrder], ps.[StyleCode]';
+        $sql .= ' ORDER BY ' . $orderPrefix . 'cnps.[DisplayOrder], ps.[StyleCode]';
 
-        return array_map(
-            static fn (array $row): CatalogueNodeProductStyleRecord => new CatalogueNodeProductStyleRecord(
-                productStylePublicId: AzureSqlValueMapper::stringValue($row['ProductStylePublicId'] ?? ''),
-                styleCode: AzureSqlValueMapper::stringValue($row['StyleCode'] ?? ''),
-                displayName: AzureSqlValueMapper::stringValue($row['DisplayName'] ?? ''),
-                displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
-                isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
-                childStyleCount: AzureSqlValueMapper::intValue($row['ChildStyleCount'] ?? 0),
-                assignedProductCount: AzureSqlValueMapper::intValue($row['AssignedProductCount'] ?? 0),
-            ),
-            $this->connection->fetchAll($sql, [':nodePublicId' => $nodePublicId]),
-        );
+        return $this->connection->fetchAll($sql, $params);
     }
 
     public function addNodeProductStyle(
@@ -1083,12 +1187,14 @@ SQL,
             return [];
         }
         $nodes = $this->fetchPublicNodes($tab->publicId, $regionCode);
+        $childrenByParent = self::indexChildren($nodes);
+        $productsByNode = $includeProducts ? $this->listPublicProductsForTab($tab->publicId, $regionCode) : null;
         $forest = [];
         foreach ($nodes as $node) {
             if ($node['parentPublicId'] !== null) {
                 continue;
             }
-            $forest[] = $this->buildPublicTreeNode($node, $nodes, $regionCode, $includeProducts, 0);
+            $forest[] = $this->buildPublicTreeNode($node, $childrenByParent, $productsByNode, 0);
         }
         usort(
             $forest,
@@ -1165,9 +1271,10 @@ SQL;
     public function listPublicChildren(string $nodePublicId, ?string $regionCode = null): array
     {
         $nodes = $this->fetchPublicChildren($nodePublicId, $regionCode);
+        $childrenByParent = self::indexChildren($nodes);
         $out = [];
         foreach ($nodes as $node) {
-            $out[] = $this->buildPublicTreeNode($node, $nodes, $regionCode, false, $this->nodeDepth($node['publicId']));
+            $out[] = $this->buildPublicTreeNode($node, $childrenByParent, null, $this->nodeDepth($node['publicId']));
         }
 
         return $out;
@@ -1175,8 +1282,62 @@ SQL;
 
     public function listPublicNodeProducts(string $nodePublicId, ?string $regionCode = null): array
     {
+        return array_map(
+            self::hydratePublicProductCard(...),
+            $this->fetchPublicProductCardRows(
+                'n.[PublicId] = :nodePublicId',
+                [':nodePublicId' => $nodePublicId],
+                $regionCode,
+                'cnp.[DisplayOrder], p.[ProductName]',
+            ),
+        );
+    }
+
+    /**
+     * Product cards for every node of a tab in one query (instead of one query per node),
+     * keyed by node public id. Each node's list keeps the listPublicNodeProducts order.
+     *
+     * @return array<string, list<PublicCatalogueProductCard>>
+     */
+    private function listPublicProductsForTab(string $tabPublicId, ?string $regionCode): array
+    {
+        $rows = $this->fetchPublicProductCardRows(
+            'n.[CatalogueTabId] = (SELECT tab.[CatalogueTabId] FROM [product].[CatalogueTabs] tab WHERE tab.[PublicId] = :tabPublicId)',
+            [':tabPublicId' => $tabPublicId],
+            $regionCode,
+            'n.[CatalogueNodeId], cnp.[DisplayOrder], p.[ProductName]',
+        );
+        $out = [];
+        foreach ($rows as $row) {
+            $out[AzureSqlValueMapper::stringValue($row['NodePublicId'] ?? '')][] = self::hydratePublicProductCard($row);
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function hydratePublicProductCard(array $row): PublicCatalogueProductCard
+    {
+        return new PublicCatalogueProductCard(
+            publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
+            name: AzureSqlValueMapper::stringValue($row['Name'] ?? ''),
+            slug: AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
+            internalCode: AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null),
+            thumbnailUrl: AzureSqlValueMapper::nullableString($row['ThumbnailUrl'] ?? null),
+            displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
+            isFeatured: AzureSqlValueMapper::boolValue($row['IsFeatured'] ?? false),
+        );
+    }
+
+    /**
+     * @param array<string, string> $params
+     * @return list<array<string, mixed>>
+     */
+    private function fetchPublicProductCardRows(string $nodeCondition, array $params, ?string $regionCode, string $orderBy): array
+    {
         $regionFilter = '';
-        $params = [':nodePublicId' => $nodePublicId];
         if ($regionCode !== null && trim($regionCode) !== '') {
             $regionFilter = <<<'SQL'
 
@@ -1202,7 +1363,8 @@ SELECT
     p.[InternalCode],
     cnp.[DisplayOrder],
     cnp.[IsFeatured],
-    productThumb.[ThumbnailUrl]
+    productThumb.[ThumbnailUrl],
+    CONVERT(NVARCHAR(36), n.[PublicId]) AS [NodePublicId]
 FROM [product].[CatalogueNodeProducts] cnp
 INNER JOIN [product].[CatalogueNodes] n ON n.[CatalogueNodeId] = cnp.[CatalogueNodeId]
 INNER JOIN [product].[Products] p ON p.[ProductId] = cnp.[ProductId]
@@ -1215,25 +1377,10 @@ OUTER APPLY (
       AND s.[DeletedAtUtc] IS NULL
 ) primarySlug
 SQL;
-        $sql .= "\n" . self::PUBLIC_PRODUCT_THUMBNAIL_APPLY . <<<'SQL'
+        $sql .= "\n" . self::PUBLIC_PRODUCT_THUMBNAIL_APPLY . "\nWHERE " . $nodeCondition . "\n  AND cnp.[IsActive] = 1";
+        $sql .= $regionFilter . self::PUBLIC_PRODUCT_SQL . ' ORDER BY ' . $orderBy;
 
-WHERE n.[PublicId] = :nodePublicId
-  AND cnp.[IsActive] = 1
-SQL;
-        $sql .= $regionFilter . self::PUBLIC_PRODUCT_SQL . ' ORDER BY cnp.[DisplayOrder], p.[ProductName]';
-
-        return array_map(
-            static fn (array $row): PublicCatalogueProductCard => new PublicCatalogueProductCard(
-                publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
-                name: AzureSqlValueMapper::stringValue($row['Name'] ?? ''),
-                slug: AzureSqlValueMapper::stringValue($row['Slug'] ?? ''),
-                internalCode: AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null),
-                thumbnailUrl: AzureSqlValueMapper::nullableString($row['ThumbnailUrl'] ?? null),
-                displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
-                isFeatured: AzureSqlValueMapper::boolValue($row['IsFeatured'] ?? false),
-            ),
-            $this->connection->fetchAll($sql, $params),
-        );
+        return $this->connection->fetchAll($sql, $params);
     }
 
     public function listPublicProductThumbnailUrls(array $productPublicIds): array
@@ -1615,6 +1762,43 @@ SQL;
      */
     private function fetchPublicNodes(string $tabPublicId, ?string $regionCode): array
     {
+        if ($this->cache === null) {
+            return $this->queryPublicNodes($tabPublicId, $regionCode);
+        }
+
+        // Every public node request walks its whole tab, so one tab build is shared by the panel,
+        // the tree and each node of that tab instead of repeating this query per node.
+        $key = $this->cache->catalogueKey('tab-nodes', [
+            'tab' => strtolower($tabPublicId),
+            'regionCode' => $regionCode !== null && trim($regionCode) !== '' ? strtoupper(trim($regionCode)) : null,
+        ]);
+        [$entry] = $this->cache->rememberCatalogue(
+            $key,
+            fn (): array => ['nodes' => $this->queryPublicNodes($tabPublicId, $regionCode)],
+        );
+        /** @var list<array{publicId: string, nodeCode: string, nodeName: string, slug: string, description: ?string, nodeTypeCode: string, imageUrl: ?string, imageAltText: ?string, displayOrder: int, parentPublicId: ?string, productCount: int}> $nodes */
+        $nodes = $entry['nodes'] ?? [];
+
+        return $nodes;
+    }
+
+    /**
+      * @return list<array{
+     *   publicId: string,
+     *   nodeCode: string,
+     *   nodeName: string,
+     *   slug: string,
+     *   description: ?string,
+     *   nodeTypeCode: string,
+     *   imageUrl: ?string,
+     *   imageAltText: ?string,
+     *   displayOrder: int,
+     *   parentPublicId: ?string,
+     *   productCount: int
+     * }>
+     */
+    private function queryPublicNodes(string $tabPublicId, ?string $regionCode): array
+    {
         $productCountSelect = $this->publicNodeProductCountSelect($regionCode);
         $leafProductApply = $this->publicLeafProductNameApply($regionCode);
         $params = [':tabPublicId' => $tabPublicId];
@@ -1737,9 +1921,8 @@ SQL,
     ): PublicCatalogueTreeNode {
         $tree = $this->buildPublicTreeNode(
             $node,
-            $nodes,
-            $regionCode,
-            false,
+            self::indexChildren($nodes),
+            null,
             $this->depthInFlatList($nodes, (string) $node['publicId']),
         );
         $products = $this->listPublicNodeProducts($tree->publicId, $regionCode);
@@ -1796,22 +1979,36 @@ SQL,
 
     /**
      * @param list<array<string, mixed>> $nodes
+     * @return array<string, list<array<string, mixed>>>
+     */
+    private static function indexChildren(array $nodes): array
+    {
+        $childrenByParent = [];
+        foreach ($nodes as $node) {
+            $parentId = $node['parentPublicId'] ?? null;
+            if (is_string($parentId)) {
+                $childrenByParent[$parentId][] = $node;
+            }
+        }
+
+        return $childrenByParent;
+    }
+
+    /**
      * @param array<string, mixed> $node
+     * @param array<string, list<array<string, mixed>>> $childrenByParent
+     * @param array<string, list<PublicCatalogueProductCard>>|null $productsByNode null when products are not requested
      */
     private function buildPublicTreeNode(
         array $node,
-        array $nodes,
-        ?string $regionCode,
-        bool $includeProducts,
+        array $childrenByParent,
+        ?array $productsByNode,
         int $depth,
     ): PublicCatalogueTreeNode {
         $publicId = (string) $node['publicId'];
         $children = [];
-        foreach ($nodes as $candidate) {
-            if (($candidate['parentPublicId'] ?? null) !== $publicId) {
-                continue;
-            }
-            $children[] = $this->buildPublicTreeNode($candidate, $nodes, $regionCode, $includeProducts, $depth + 1);
+        foreach ($childrenByParent[$publicId] ?? [] as $candidate) {
+            $children[] = $this->buildPublicTreeNode($candidate, $childrenByParent, $productsByNode, $depth + 1);
         }
         usort(
             $children,
@@ -1833,7 +2030,7 @@ SQL,
             hasChildren: $children !== [],
             hasProducts: ((int) ($node['productCount'] ?? 0)) > 0,
             children: $children,
-            products: $includeProducts ? $this->listPublicNodeProducts($publicId, $regionCode) : [],
+            products: $productsByNode[$publicId] ?? [],
             parentPublicId: $node['parentPublicId'] ?? null,
             productThumbnailUrl: isset($node['productThumbnailUrl']) && is_string($node['productThumbnailUrl'])
                 ? $node['productThumbnailUrl']

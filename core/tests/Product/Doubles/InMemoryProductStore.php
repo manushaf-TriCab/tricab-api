@@ -1540,6 +1540,19 @@ final class InMemoryFakeProductAdminQueryRepository implements ProductAdminQuery
         return new ProductListResult([], \TriCab\Core\Product\Application\DTO\Pagination::fromTotals($criteria->page, $criteria->pageSize, 0));
     }
 
+    public function findDetailsByPublicIds(array $publicIds): array
+    {
+        $out = [];
+        foreach ($publicIds as $publicId) {
+            $detail = $this->findDetailByPublicId($publicId);
+            if ($detail !== null) {
+                $out[$publicId->toString()] = $detail;
+            }
+        }
+
+        return $out;
+    }
+
     public function findDetailByPublicId(ProductPublicId $publicId): ?ProductAdminDetail
     {
         $id = $this->store->findProductIdByPublicId($publicId->toString());

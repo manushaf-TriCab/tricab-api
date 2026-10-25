@@ -510,6 +510,16 @@ final class InMemoryProductStyleRepository implements ProductStyleRepository
         return $ids;
     }
 
+    public function listAssignedProductPublicIdsByStyle(): array
+    {
+        $out = [];
+        foreach ($this->assignments as $productPublicId => $assignedStyle) {
+            $out[$assignedStyle][] = $productPublicId;
+        }
+
+        return $out;
+    }
+
     /**
      * @param array<string, mixed> $data
      */

@@ -24,6 +24,9 @@ use TriCab\Core\Product\Domain\ValueObject\ThumbnailBackgroundColor;
  */
 final class AzureSqlProductAdminQueryRepository implements ProductAdminQueryRepository
 {
+    /** Stays well under SQL Server's 2,100-parameter limit. */
+    private const IN_LIST_CHUNK = 400;
+
     private const LIST_SELECT_SQL = <<<'SQL'
 SELECT
     CONVERT(NVARCHAR(36), p.[PublicId]) AS [PublicId],
@@ -145,7 +148,144 @@ SQL,
     public function findDetailByPublicId(ProductPublicId $publicId): ?ProductAdminDetail
     {
         $rows = $this->connection->fetchAll(
-            <<<'SQL'
+            self::DETAIL_SELECT_SQL . "\nWHERE p.[PublicId] = :publicId\n  AND p.[DeletedAtUtc] IS NULL",
+            [':publicId' => $publicId->toString()],
+        );
+
+        if ($rows === []) {
+            return null;
+        }
+
+        $row = $rows[0];
+        $variants = $this->listVariantSummariesByProduct($publicId, includeArchived: true, includeDeleted: false);
+
+        return $this->hydrateDetail(
+            $row,
+            $variants,
+            $this->scalarCodesForProduct($publicId, 'regions'),
+            $this->scalarCodesForProduct($publicId, 'markets'),
+            $this->scalarCodesForProduct($publicId, 'industries'),
+            $this->scalarCodesForProduct($publicId, 'applications'),
+        );
+    }
+
+    public function findDetailsByPublicIds(array $publicIds): array
+    {
+        $ids = array_values(array_unique(array_map(
+            static fn (ProductPublicId $id): string => $id->toString(),
+            $publicIds,
+        )));
+        $out = [];
+        foreach (array_chunk($ids, self::IN_LIST_CHUNK) as $chunk) {
+            $placeholders = [];
+            $params = [];
+            foreach ($chunk as $index => $id) {
+                $placeholders[] = ':pid' . $index;
+                $params[':pid' . $index] = $id;
+            }
+            $inList = implode(', ', $placeholders);
+            $rows = $this->connection->fetchAll(
+                self::DETAIL_SELECT_SQL . "\nWHERE p.[PublicId] IN ({$inList})\n  AND p.[DeletedAtUtc] IS NULL",
+                $params,
+            );
+            if ($rows === []) {
+                continue;
+            }
+
+            $variantsByProduct = [];
+            foreach ($this->connection->fetchAll(
+                self::variantSummarySql(
+                    " WHERE p.[PublicId] IN ({$inList}) AND v.[DeletedAtUtc] IS NULL",
+                    'p.[PublicId], ',
+                ),
+                $params,
+            ) as $variantRow) {
+                $variantsByProduct[strtolower(AzureSqlValueMapper::stringValue($variantRow['ProductPublicId'] ?? ''))][] =
+                    self::hydrateVariantSummary($variantRow);
+            }
+            $codes = [];
+            foreach (['regions', 'markets', 'industries', 'applications'] as $kind) {
+                foreach ($this->connection->fetchAll(
+                    self::scalarCodesSql($kind, "p.[PublicId] IN ({$inList})", 'p.[PublicId], '),
+                    $params,
+                ) as $codeRow) {
+                    $code = AzureSqlValueMapper::stringValue($codeRow['Code'] ?? '');
+                    if ($code !== '') {
+                        $codes[$kind][strtolower(AzureSqlValueMapper::stringValue($codeRow['ProductPublicId'] ?? ''))][] = $code;
+                    }
+                }
+            }
+
+            foreach ($rows as $row) {
+                $key = strtolower(AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''));
+                $out[$key] = $this->hydrateDetail(
+                    $row,
+                    $variantsByProduct[$key] ?? [],
+                    $codes['regions'][$key] ?? [],
+                    $codes['markets'][$key] ?? [],
+                    $codes['industries'][$key] ?? [],
+                    $codes['applications'][$key] ?? [],
+                );
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @param list<ProductVariantSummary> $variants
+     * @param list<string> $regionCodes
+     * @param list<string> $marketCodes
+     * @param list<string> $industryCodes
+     * @param list<string> $applicationCodes
+     */
+    private function hydrateDetail(
+        array $row,
+        array $variants,
+        array $regionCodes,
+        array $marketCodes,
+        array $industryCodes,
+        array $applicationCodes,
+    ): ProductAdminDetail {
+        return new ProductAdminDetail(
+            publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
+            productName: AzureSqlValueMapper::stringValue($row['ProductName'] ?? ''),
+            internalName: AzureSqlValueMapper::nullableString($row['InternalName'] ?? null),
+            internalCode: AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null),
+            shortDescription: AzureSqlValueMapper::nullableString($row['ShortDescription'] ?? null),
+            fullDescription: AzureSqlValueMapper::nullableString($row['FullDescription'] ?? null),
+            familyPublicId: AzureSqlValueMapper::nullableString($row['FamilyPublicId'] ?? null),
+            categoryPublicId: AzureSqlValueMapper::nullableString($row['CategoryPublicId'] ?? null),
+            seriesPublicId: AzureSqlValueMapper::nullableString($row['SeriesPublicId'] ?? null),
+            statusCode: AzureSqlValueMapper::stringValue($row['StatusCode'] ?? ''),
+            lifecycleStatusCode: AzureSqlValueMapper::stringValue($row['LifecycleStatusCode'] ?? ''),
+            isFeatured: AzureSqlValueMapper::boolValue($row['IsFeatured'] ?? false),
+            publishAtUtc: AzureSqlValueMapper::nullableString($row['PublishAtUtc'] ?? null),
+            unpublishAtUtc: AzureSqlValueMapper::nullableString($row['UnpublishAtUtc'] ?? null),
+            discontinueAtUtc: AzureSqlValueMapper::nullableString($row['DiscontinueAtUtc'] ?? null),
+            erpReference: AzureSqlValueMapper::nullableString($row['ErpReference'] ?? null),
+            legacyProductId: AzureSqlValueMapper::nullableString($row['LegacyProductId'] ?? null),
+            variants: $variants,
+            regionCodes: $regionCodes,
+            marketCodes: $marketCodes,
+            industryCodes: $industryCodes,
+            applicationCodes: $applicationCodes,
+            primarySlug: AzureSqlValueMapper::nullableString($row['PrimarySlug'] ?? null),
+            isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
+            isArchived: AzureSqlValueMapper::boolValue($row['IsArchived'] ?? false),
+            createdAtUtc: AzureSqlValueMapper::stringValue($row['CreatedAtUtc'] ?? ''),
+            updatedAtUtc: AzureSqlValueMapper::stringValue($row['UpdatedAtUtc'] ?? ''),
+            createdByDisplayName: AzureSqlValueMapper::nullableString($row['CreatedByDisplayName'] ?? null),
+            updatedByDisplayName: AzureSqlValueMapper::nullableString($row['UpdatedByDisplayName'] ?? null),
+            rowVersion: ProductRowVersionMapper::toToken($row['RowVersion'] ?? null)->toBase64(),
+            thumbnailBackgroundColor: ThumbnailBackgroundColor::tryFromString(
+                AzureSqlValueMapper::nullableString($row['ThumbnailBackgroundColor'] ?? null),
+            )?->toString(),
+        );
+    }
+
+    private const DETAIL_SELECT_SQL = <<<'SQL'
 SELECT
     CONVERT(NVARCHAR(36), p.[PublicId]) AS [PublicId],
     p.[ProductName],
@@ -188,55 +328,7 @@ LEFT JOIN [product].[ProductCategories] c ON c.[ProductCategoryId] = p.[ProductC
 LEFT JOIN [product].[ProductSeries] s ON s.[ProductSeriesId] = p.[ProductSeriesId]
 LEFT JOIN [identity].[Users] cu ON cu.[UserId] = p.[CreatedByUserId]
 LEFT JOIN [identity].[Users] uu ON uu.[UserId] = p.[UpdatedByUserId]
-WHERE p.[PublicId] = :publicId
-  AND p.[DeletedAtUtc] IS NULL
-SQL,
-            [':publicId' => $publicId->toString()],
-        );
-
-        if ($rows === []) {
-            return null;
-        }
-
-        $row = $rows[0];
-        $variants = $this->listVariantSummariesByProduct($publicId, includeArchived: true, includeDeleted: false);
-
-        return new ProductAdminDetail(
-            publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
-            productName: AzureSqlValueMapper::stringValue($row['ProductName'] ?? ''),
-            internalName: AzureSqlValueMapper::nullableString($row['InternalName'] ?? null),
-            internalCode: AzureSqlValueMapper::nullableString($row['InternalCode'] ?? null),
-            shortDescription: AzureSqlValueMapper::nullableString($row['ShortDescription'] ?? null),
-            fullDescription: AzureSqlValueMapper::nullableString($row['FullDescription'] ?? null),
-            familyPublicId: AzureSqlValueMapper::nullableString($row['FamilyPublicId'] ?? null),
-            categoryPublicId: AzureSqlValueMapper::nullableString($row['CategoryPublicId'] ?? null),
-            seriesPublicId: AzureSqlValueMapper::nullableString($row['SeriesPublicId'] ?? null),
-            statusCode: AzureSqlValueMapper::stringValue($row['StatusCode'] ?? ''),
-            lifecycleStatusCode: AzureSqlValueMapper::stringValue($row['LifecycleStatusCode'] ?? ''),
-            isFeatured: AzureSqlValueMapper::boolValue($row['IsFeatured'] ?? false),
-            publishAtUtc: AzureSqlValueMapper::nullableString($row['PublishAtUtc'] ?? null),
-            unpublishAtUtc: AzureSqlValueMapper::nullableString($row['UnpublishAtUtc'] ?? null),
-            discontinueAtUtc: AzureSqlValueMapper::nullableString($row['DiscontinueAtUtc'] ?? null),
-            erpReference: AzureSqlValueMapper::nullableString($row['ErpReference'] ?? null),
-            legacyProductId: AzureSqlValueMapper::nullableString($row['LegacyProductId'] ?? null),
-            variants: $variants,
-            regionCodes: $this->scalarCodesForProduct($publicId, 'regions'),
-            marketCodes: $this->scalarCodesForProduct($publicId, 'markets'),
-            industryCodes: $this->scalarCodesForProduct($publicId, 'industries'),
-            applicationCodes: $this->scalarCodesForProduct($publicId, 'applications'),
-            primarySlug: AzureSqlValueMapper::nullableString($row['PrimarySlug'] ?? null),
-            isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
-            isArchived: AzureSqlValueMapper::boolValue($row['IsArchived'] ?? false),
-            createdAtUtc: AzureSqlValueMapper::stringValue($row['CreatedAtUtc'] ?? ''),
-            updatedAtUtc: AzureSqlValueMapper::stringValue($row['UpdatedAtUtc'] ?? ''),
-            createdByDisplayName: AzureSqlValueMapper::nullableString($row['CreatedByDisplayName'] ?? null),
-            updatedByDisplayName: AzureSqlValueMapper::nullableString($row['UpdatedByDisplayName'] ?? null),
-            rowVersion: ProductRowVersionMapper::toToken($row['RowVersion'] ?? null)->toBase64(),
-            thumbnailBackgroundColor: ThumbnailBackgroundColor::tryFromString(
-                AzureSqlValueMapper::nullableString($row['ThumbnailBackgroundColor'] ?? null),
-            )?->toString(),
-        );
-    }
+SQL;
 
     public function listVariantSummariesByProduct(
         ProductPublicId $productPublicId,
@@ -252,9 +344,16 @@ SQL,
             $where .= " AND ps.[StatusCode] <> N'archived'";
         }
 
-        $rows = $this->connection->fetchAll(
-            <<<SQL
+        $rows = $this->connection->fetchAll(self::variantSummarySql($where, ''), $params);
+
+        return array_map(self::hydrateVariantSummary(...), $rows);
+    }
+
+    private static function variantSummarySql(string $where, string $orderPrefix): string
+    {
+        return <<<SQL
 SELECT
+    CONVERT(NVARCHAR(36), p.[PublicId]) AS [ProductPublicId],
     CONVERT(NVARCHAR(36), v.[PublicId]) AS [PublicId],
     v.[VariantName],
     v.[Sku],
@@ -266,12 +365,16 @@ FROM [product].[ProductVariants] v
 INNER JOIN [product].[Products] p ON p.[ProductId] = v.[ProductId]
 INNER JOIN [product].[ProductStatuses] ps ON ps.[ProductStatusId] = v.[ProductStatusId]
 {$where}
-ORDER BY v.[DisplayOrder] ASC, v.[ProductVariantId] ASC
-SQL,
-            $params,
-        );
+ORDER BY {$orderPrefix}v.[DisplayOrder] ASC, v.[ProductVariantId] ASC
+SQL;
+    }
 
-        return array_map(fn (array $row): ProductVariantSummary => new ProductVariantSummary(
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function hydrateVariantSummary(array $row): ProductVariantSummary
+    {
+        return new ProductVariantSummary(
             publicId: AzureSqlValueMapper::stringValue($row['PublicId'] ?? ''),
             variantName: AzureSqlValueMapper::stringValue($row['VariantName'] ?? ''),
             sku: AzureSqlValueMapper::nullableString($row['Sku'] ?? null),
@@ -279,7 +382,7 @@ SQL,
             statusCode: AzureSqlValueMapper::stringValue($row['StatusCode'] ?? ''),
             displayOrder: AzureSqlValueMapper::intValue($row['DisplayOrder'] ?? 0),
             isActive: AzureSqlValueMapper::boolValue($row['IsActive'] ?? true),
-        ), $rows);
+        );
     }
 
     public function findVariantSummaryByPublicId(
@@ -563,46 +666,52 @@ SQL;
      */
     private function scalarCodesForProduct(ProductPublicId $publicId, string $kind): array
     {
-        $sql = match ($kind) {
-            'regions' => <<<'SQL'
-SELECT r.[RegionCode] AS [Code]
-FROM [product].[ProductRegions] pr
-INNER JOIN [product].[Regions] r ON r.[RegionId] = pr.[RegionId]
-INNER JOIN [product].[Products] p ON p.[ProductId] = pr.[ProductId]
-WHERE p.[PublicId] = :publicId AND pr.[DeletedAtUtc] IS NULL
-ORDER BY r.[DisplayOrder]
-SQL,
-            'markets' => <<<'SQL'
-SELECT m.[MarketCode] AS [Code]
-FROM [product].[ProductMarkets] pm
-INNER JOIN [product].[Markets] m ON m.[MarketId] = pm.[MarketId]
-INNER JOIN [product].[Products] p ON p.[ProductId] = pm.[ProductId]
-WHERE p.[PublicId] = :publicId AND pm.[DeletedAtUtc] IS NULL
-ORDER BY m.[DisplayOrder]
-SQL,
-            'industries' => <<<'SQL'
-SELECT i.[IndustryCode] AS [Code]
-FROM [product].[ProductIndustries] pi
-INNER JOIN [product].[Industries] i ON i.[IndustryId] = pi.[IndustryId]
-INNER JOIN [product].[Products] p ON p.[ProductId] = pi.[ProductId]
-WHERE p.[PublicId] = :publicId
-ORDER BY pi.[DisplayOrder]
-SQL,
-            default => <<<'SQL'
-SELECT a.[ApplicationCode] AS [Code]
-FROM [product].[ProductApplications] pa
-INNER JOIN [product].[Applications] a ON a.[ApplicationId] = pa.[ApplicationId]
-INNER JOIN [product].[Products] p ON p.[ProductId] = pa.[ProductId]
-WHERE p.[PublicId] = :publicId
-ORDER BY pa.[DisplayOrder]
-SQL,
-        };
-
-        $rows = $this->connection->fetchAll($sql, [':publicId' => $publicId->toString()]);
+        $rows = $this->connection->fetchAll(
+            self::scalarCodesSql($kind, 'p.[PublicId] = :publicId', ''),
+            [':publicId' => $publicId->toString()],
+        );
 
         return array_values(array_filter(array_map(
             static fn (array $row): string => AzureSqlValueMapper::stringValue($row['Code'] ?? ''),
             $rows,
         )));
+    }
+
+    private static function scalarCodesSql(string $kind, string $productCondition, string $orderPrefix): string
+    {
+        return match ($kind) {
+            'regions' => <<<SQL
+SELECT CONVERT(NVARCHAR(36), p.[PublicId]) AS [ProductPublicId], r.[RegionCode] AS [Code]
+FROM [product].[ProductRegions] pr
+INNER JOIN [product].[Regions] r ON r.[RegionId] = pr.[RegionId]
+INNER JOIN [product].[Products] p ON p.[ProductId] = pr.[ProductId]
+WHERE {$productCondition} AND pr.[DeletedAtUtc] IS NULL
+ORDER BY {$orderPrefix}r.[DisplayOrder]
+SQL,
+            'markets' => <<<SQL
+SELECT CONVERT(NVARCHAR(36), p.[PublicId]) AS [ProductPublicId], m.[MarketCode] AS [Code]
+FROM [product].[ProductMarkets] pm
+INNER JOIN [product].[Markets] m ON m.[MarketId] = pm.[MarketId]
+INNER JOIN [product].[Products] p ON p.[ProductId] = pm.[ProductId]
+WHERE {$productCondition} AND pm.[DeletedAtUtc] IS NULL
+ORDER BY {$orderPrefix}m.[DisplayOrder]
+SQL,
+            'industries' => <<<SQL
+SELECT CONVERT(NVARCHAR(36), p.[PublicId]) AS [ProductPublicId], i.[IndustryCode] AS [Code]
+FROM [product].[ProductIndustries] pi
+INNER JOIN [product].[Industries] i ON i.[IndustryId] = pi.[IndustryId]
+INNER JOIN [product].[Products] p ON p.[ProductId] = pi.[ProductId]
+WHERE {$productCondition}
+ORDER BY {$orderPrefix}pi.[DisplayOrder]
+SQL,
+            default => <<<SQL
+SELECT CONVERT(NVARCHAR(36), p.[PublicId]) AS [ProductPublicId], a.[ApplicationCode] AS [Code]
+FROM [product].[ProductApplications] pa
+INNER JOIN [product].[Applications] a ON a.[ApplicationId] = pa.[ApplicationId]
+INNER JOIN [product].[Products] p ON p.[ProductId] = pa.[ProductId]
+WHERE {$productCondition}
+ORDER BY {$orderPrefix}pa.[DisplayOrder]
+SQL,
+        };
     }
 }

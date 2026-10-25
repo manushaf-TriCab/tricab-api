@@ -27,6 +27,21 @@ final class CatalogueNodeEffectiveProductsService
     /** @var array<string, true>|null */
     private ?array $nodePublicIdsWithStyleLinks = null;
 
+    /**
+     * Set only inside summarizePublicNodes(): direct placements per node, read in one query.
+     *
+     * @var array<string, list<CatalogueNodeProductRecord>>|null
+     */
+    private ?array $preloadedDirect = null;
+
+    /**
+     * Set only inside summarizePublicNodes(): product details keyed by ProductPublicId::toString(),
+     * null for products that do not exist.
+     *
+     * @var array<string, ProductAdminDetail|null>|null
+     */
+    private ?array $preloadedDetails = null;
+
     public function __construct(
         private readonly CatalogueNavigationRepository $catalogue,
         private readonly ProductStyleRepository $styles,
@@ -48,22 +63,151 @@ final class CatalogueNodeEffectiveProductsService
      */
     public function listPublicProductCards(string $nodePublicId, ?string $regionCode = null): array
     {
-        $resolved = $this->resolve($nodePublicId, $regionCode, true);
+        $visible = $this->visiblePublicRows($nodePublicId, $regionCode);
+        $thumbnailUrls = $this->catalogue->listPublicProductThumbnailUrls(array_map(
+            static fn (array $pair): string => $pair[0]->productPublicId,
+            $visible,
+        ));
+
+        return $this->buildPublicCards($visible, $thumbnailUrls);
+    }
+
+    /**
+     * Same results as calling listPublicProductCards() and hasPublicVisibleProducts() for each node,
+     * but placements, style links, style assignments, product details and thumbnails are each read
+     * once for all nodes instead of once per node / product.
+     *
+     * @param array<string, bool> $directHasProductsByNode node public id => repository hasProducts flag
+     * @return array{cards: array<string, list<PublicCatalogueProductCard>>, hasProducts: array<string, bool>}
+     */
+    public function summarizePublicNodes(array $directHasProductsByNode, ?string $regionCode, bool $includeCards): array
+    {
+        $nodeIds = array_map(static fn (int|string $id): string => (string) $id, array_keys($directHasProductsByNode));
+        if ($nodeIds === []) {
+            return ['cards' => [], 'hasProducts' => []];
+        }
+
+        $this->preloadNodes($nodeIds);
+        try {
+            $hasProducts = [];
+            $visibleByNode = [];
+            foreach ($nodeIds as $nodeId) {
+                if ($includeCards) {
+                    $visibleByNode[$nodeId] = $this->visiblePublicRows($nodeId, $regionCode);
+                }
+                $hasProducts[$nodeId] = $this->hasPublicVisibleProducts(
+                    $nodeId,
+                    $directHasProductsByNode[$nodeId],
+                    $regionCode,
+                );
+            }
+
+            $cards = [];
+            if ($includeCards) {
+                $productIds = [];
+                foreach ($visibleByNode as $visible) {
+                    foreach ($visible as [$row]) {
+                        $productIds[$row->productPublicId] = true;
+                    }
+                }
+                $thumbnailUrls = $this->catalogue->listPublicProductThumbnailUrls(array_map(
+                    static fn (int|string $id): string => (string) $id,
+                    array_keys($productIds),
+                ));
+                foreach ($visibleByNode as $nodeId => $visible) {
+                    $cards[$nodeId] = $this->buildPublicCards($visible, $thumbnailUrls);
+                }
+            }
+
+            return ['cards' => $cards, 'hasProducts' => $hasProducts];
+        } finally {
+            $this->preloadedDirect = null;
+            $this->preloadedDetails = null;
+        }
+    }
+
+    /**
+     * @param list<string> $nodeIds
+     */
+    private function preloadNodes(array $nodeIds): void
+    {
+        $this->preloadedDetails = [];
+        $hasStyleLinks = false;
+        foreach ($this->catalogue->listNodeProductStylesForNodes($nodeIds, true) as $nodeId => $links) {
+            $this->styleLinksByNode[(string) $nodeId] = $links;
+            $hasStyleLinks = $hasStyleLinks || $links !== [];
+        }
+        $productIds = [];
+        $styleProducts = $hasStyleLinks ? $this->getStyleIndexes()['productsByPublicId'] : [];
+        if (is_array($styleProducts)) {
+            foreach (array_keys($styleProducts) as $id) {
+                $productIds[] = (string) $id;
+            }
+        }
+
+        $this->preloadedDirect = [];
+        foreach ($this->catalogue->listNodeProductsForNodes($nodeIds, true) as $nodeId => $rows) {
+            $this->preloadedDirect[(string) $nodeId] = $rows;
+            foreach ($rows as $row) {
+                $productIds[] = $row->productPublicId;
+            }
+        }
+        $this->primeDetails($productIds);
+    }
+
+    /**
+     * Loads details for ids not already preloaded, in bulk, when a preload is active.
+     *
+     * @param list<string> $productPublicIds
+     */
+    private function primeDetails(array $productPublicIds): void
+    {
+        if ($this->preloadedDetails === null) {
+            return;
+        }
+        $this->loadDetails(array_values(array_filter(
+            $productPublicIds,
+            fn (string $id): bool => !array_key_exists(ProductPublicId::fromString($id)->toString(), $this->preloadedDetails ?? []),
+        )));
+    }
+
+    private function findDetail(string $productPublicId): ?ProductAdminDetail
+    {
+        $publicId = ProductPublicId::fromString($productPublicId);
+        if ($this->preloadedDetails !== null && array_key_exists($publicId->toString(), $this->preloadedDetails)) {
+            return $this->preloadedDetails[$publicId->toString()];
+        }
+
+        return $this->products->findDetailByPublicId($publicId);
+    }
+
+    /**
+     * @return list<array{0: CatalogueNodeResolvedProductRecord, 1: ProductAdminDetail}>
+     */
+    private function visiblePublicRows(string $nodePublicId, ?string $regionCode): array
+    {
         $visible = [];
-        foreach ($resolved as $row) {
+        foreach ($this->resolve($nodePublicId, $regionCode, true) as $row) {
             if (!$row->publicVisible || !$row->regionVisible) {
                 continue;
             }
-            $detail = $this->products->findDetailByPublicId(ProductPublicId::fromString($row->productPublicId));
+            $detail = $this->findDetail($row->productPublicId);
             if ($detail === null) {
                 continue;
             }
             $visible[] = [$row, $detail];
         }
-        $thumbnailUrls = $this->catalogue->listPublicProductThumbnailUrls(array_map(
-            static fn (array $pair): string => $pair[0]->productPublicId,
-            $visible,
-        ));
+
+        return $visible;
+    }
+
+    /**
+     * @param list<array{0: CatalogueNodeResolvedProductRecord, 1: ProductAdminDetail}> $visible
+     * @param array<string, string> $thumbnailUrls
+     * @return list<PublicCatalogueProductCard>
+     */
+    private function buildPublicCards(array $visible, array $thumbnailUrls): array
+    {
         $cards = [];
         foreach ($visible as [$row, $detail]) {
             $cards[] = new PublicCatalogueProductCard(
@@ -158,7 +302,7 @@ final class CatalogueNodeEffectiveProductsService
      */
     private function resolve(string $nodePublicId, ?string $regionCode, bool $publicOnly): array
     {
-        $direct = $this->catalogue->listNodeProducts($nodePublicId, true);
+        $direct = $this->preloadedDirect[$nodePublicId] ?? $this->catalogue->listNodeProducts($nodePublicId, true);
         $styleLinks = $this->listActiveStyleLinks($nodePublicId);
         if ($styleLinks === [] && $direct === []) {
             return [];
@@ -215,7 +359,7 @@ final class CatalogueNodeEffectiveProductsService
         $indexes = $styleLinks !== [] ? $this->getStyleIndexes() : null;
         foreach ($merged['products'] as $row) {
             $productPublicId = (string) $row['productPublicId'];
-            $detail = $this->products->findDetailByPublicId(ProductPublicId::fromString($productPublicId));
+            $detail = $this->findDetail($productPublicId);
             $publicVisible = $this->isPublicVisible($detail, $publicOnly);
             $regionVisible = $this->isRegionVisible($detail, $regionCode);
             $out[] = new CatalogueNodeResolvedProductRecord(
@@ -262,7 +406,16 @@ final class CatalogueNodeEffectiveProductsService
         $stylesByCode = [];
         $childrenByParentPublicId = [];
         $productsByStylePublicId = [];
-        foreach ($this->styles->listAll(false) as $style) {
+        $styles = $this->styles->listAll(false);
+        $assignedByStyle = $this->styles->listAssignedProductPublicIdsByStyle();
+        $assignedIds = [];
+        foreach ($styles as $style) {
+            foreach ($assignedByStyle[$style->publicId] ?? [] as $productPublicId) {
+                $assignedIds[] = $productPublicId;
+            }
+        }
+        $details = $this->loadDetails($assignedIds);
+        foreach ($styles as $style) {
             $stylesByCode[$style->styleCode] = [
                 'publicId' => $style->publicId,
                 'styleCode' => $style->styleCode,
@@ -277,8 +430,8 @@ final class CatalogueNodeEffectiveProductsService
                 $childrenByParentPublicId[$style->parentPublicId][] = $style->publicId;
             }
             $assigned = [];
-            foreach ($this->styles->listAssignedProductPublicIds($style->publicId) as $productPublicId) {
-                $detail = $this->products->findDetailByPublicId(ProductPublicId::fromString($productPublicId));
+            foreach ($assignedByStyle[$style->publicId] ?? [] as $productPublicId) {
+                $detail = $details[ProductPublicId::fromString($productPublicId)->toString()] ?? null;
                 if ($detail === null) {
                     continue;
                 }
@@ -299,7 +452,7 @@ final class CatalogueNodeEffectiveProductsService
                 if (isset($productsByPublicId[$id])) {
                     continue;
                 }
-                $detail = $this->products->findDetailByPublicId(ProductPublicId::fromString($id));
+                $detail = $details[ProductPublicId::fromString($id)->toString()] ?? null;
                 if ($detail === null) {
                     continue;
                 }
@@ -318,6 +471,32 @@ final class CatalogueNodeEffectiveProductsService
             'productsByPublicId' => $productsByPublicId,
             'regionCodesByProductPublicId' => $regionCodesByProductPublicId,
         ];
+    }
+
+    /**
+     * Bulk product details keyed by ProductPublicId::toString(); also feeds an active preload.
+     *
+     * @param list<string> $productPublicIds
+     * @return array<string, ProductAdminDetail>
+     */
+    private function loadDetails(array $productPublicIds): array
+    {
+        $publicIds = [];
+        foreach ($productPublicIds as $id) {
+            $publicId = ProductPublicId::fromString($id);
+            $publicIds[$publicId->toString()] = $publicId;
+        }
+        if ($publicIds === []) {
+            return [];
+        }
+        $details = $this->products->findDetailsByPublicIds(array_values($publicIds));
+        if ($this->preloadedDetails !== null) {
+            foreach (array_keys($publicIds) as $key) {
+                $this->preloadedDetails[$key] = $details[$key] ?? null;
+            }
+        }
+
+        return $details;
     }
 
     /**

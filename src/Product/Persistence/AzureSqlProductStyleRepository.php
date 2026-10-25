@@ -783,6 +783,26 @@ SQL,
         return $ids;
     }
 
+    public function listAssignedProductPublicIdsByStyle(): array
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT
+    CONVERT(NVARCHAR(36), s.[PublicId]) AS [StylePublicId],
+    CONVERT(NVARCHAR(36), p.[PublicId]) AS [PublicId]
+FROM [product].[ProductStyleAssignments] a
+INNER JOIN [product].[ProductStyles] s ON s.[ProductStyleId] = a.[ProductStyleId]
+INNER JOIN [product].[Products] p ON p.[ProductId] = a.[ProductId]
+SQL,
+        );
+        $out = [];
+        foreach ($rows as $row) {
+            $out[AzureSqlValueMapper::stringValue($row['StylePublicId'] ?? '')][] = AzureSqlValueMapper::stringValue($row['PublicId'] ?? '');
+        }
+
+        return $out;
+    }
+
     private function selectSql(bool $includeDeleted): string
     {
         $sql = <<<'SQL'

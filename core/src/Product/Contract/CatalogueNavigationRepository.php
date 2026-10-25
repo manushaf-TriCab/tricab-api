@@ -167,6 +167,23 @@ interface CatalogueNavigationRepository
     /** @return list<CatalogueNodeProductStyleRecord> */
     public function listNodeProductStyles(string $nodePublicId, bool $activeOnly = false): array;
 
+    /**
+     * listNodeProducts for many nodes at once, keyed by the node ids as passed in
+     * (every requested id is present, possibly with an empty list).
+     *
+     * @param list<string> $nodePublicIds
+     * @return array<string, list<CatalogueNodeProductRecord>>
+     */
+    public function listNodeProductsForNodes(array $nodePublicIds, bool $activeOnly = false): array;
+
+    /**
+     * listNodeProductStyles for many nodes at once, keyed like listNodeProductsForNodes.
+     *
+     * @param list<string> $nodePublicIds
+     * @return array<string, list<CatalogueNodeProductStyleRecord>>
+     */
+    public function listNodeProductStylesForNodes(array $nodePublicIds, bool $activeOnly = false): array;
+
     public function addNodeProductStyle(
         string $nodePublicId,
         string $productStylePublicId,

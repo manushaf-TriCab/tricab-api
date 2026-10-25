@@ -12,6 +12,10 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Request\Admin\QueryParams;
 use TriCab\Api\Http\Request\Admin\RouteParams;
 use TriCab\Api\Http\Response\JsonResponder;
+use TriCab\Api\Http\Response\PayloadEtag;
+use TriCab\Api\Http\Response\RegionScopedCacheHeaders;
+use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 use TriCab\Api\Product\Catalogue\CatalogueNavigationImageSigner;
 use TriCab\Api\Product\Media\StableMediaUrlSigner;
 use TriCab\Api\Product\Region\RegionPreferenceResolver;
@@ -26,6 +30,8 @@ final class GetPublicCatalogueNodeAction
         private readonly RegionPreferenceResolver $regions,
         private readonly CatalogueNavigationImageSigner $images,
         private readonly StableMediaUrlSigner $stableUrls,
+        private readonly ReferenceDataCache $cache,
+        private readonly RequestPerformanceMetrics $metrics,
     ) {
     }
 
@@ -36,19 +42,45 @@ final class GetPublicCatalogueNodeAction
             $nodeSlugOrPublicId = RouteParams::require($request, 'nodeSlugOrPublicId');
             $query = QueryParams::normalize($request->getQueryParams());
             $tabSlug = QueryParams::stringOrNull($query, 'tabSlug');
-            $regionCode = $this->regions->resolveCode($request, QueryParams::stringOrNull($query, 'regionCode'));
+            $region = $this->regions->resolve($request, QueryParams::stringOrNull($query, 'regionCode'));
+            $regionCode = $region['region']->code;
+            $isUuid = self::looksLikeUuid($nodeSlugOrPublicId);
+            $cacheKey = $this->cache->catalogueKey('node', [
+                'node' => $nodeSlugOrPublicId,
+                'tabSlug' => $isUuid ? null : $tabSlug,
+                'regionCode' => $regionCode,
+            ]);
 
-            if (self::looksLikeUuid($nodeSlugOrPublicId)) {
-                $node = $this->catalogue->getNodeByPublicId($nodeSlugOrPublicId, $regionCode);
-            } else {
-                $node = $this->catalogue->getNodeBySlug($nodeSlugOrPublicId, $tabSlug, $regionCode);
+            [$entry, $hit] = $this->cache->rememberCatalogue(
+                $cacheKey,
+                function () use ($isUuid, $nodeSlugOrPublicId, $tabSlug, $regionCode): array {
+                    $this->metrics->recordCatalogueCacheHit(false);
+                    $node = $isUuid
+                        ? $this->catalogue->getNodeByPublicId($nodeSlugOrPublicId, $regionCode)
+                        : $this->catalogue->getNodeBySlug($nodeSlugOrPublicId, $tabSlug, $regionCode);
+
+                    return ['data' => CatalogueDtoSerializer::publicTreeNode($node)];
+                },
+            );
+            $this->metrics->recordCatalogueCacheHit($hit);
+            /** @var array<string, mixed> $payload */
+            $payload = is_array($entry['data'] ?? null) ? $entry['data'] : [];
+
+            $cacheHeaders = RegionScopedCacheHeaders::for($region['source'], $request, $this->images);
+            $presented = $this->images->signPublicNode($payload, $this->originFor($request));
+            $etag = RegionScopedCacheHeaders::etag($regionCode, $presented);
+            if (PayloadEtag::matches($request, $etag)) {
+                return $this->responder->notModified(
+                    $etag,
+                    $cacheHeaders['Cache-Control'],
+                    array_diff_key($cacheHeaders, ['Cache-Control' => true]),
+                );
             }
 
-            return $this->responder->success(
-                $this->images->signPublicNode(CatalogueDtoSerializer::publicTreeNode($node), $this->originFor($request)),
-                200,
-                ['Cache-Control' => $this->images->cacheControl(true)],
-            );
+            return $this->responder->success($presented, 200, [
+                'ETag' => $etag,
+                ...$cacheHeaders,
+            ]);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }
