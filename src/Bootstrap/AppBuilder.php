@@ -838,6 +838,9 @@ final class AppBuilder
         // The five AI drafting routes, through finance_ai (T2.7).
         $app->post($task . '/ai/task-details', \TriCab\Api\Http\Action\Finance\Task\TaskAiDetailsAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
+        // "Create with AI": a draft of tasks and a project from a summary; writes nothing (the page creates through the routes above).
+        $app->post($task . '/ai/draft', \TriCab\Api\Http\Action\Finance\Task\TaskAiDraftAction::class)
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
         $app->post($task . '/ai/statement-areas', \TriCab\Api\Http\Action\Finance\Task\TaskAiStatementAreasAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
         $app->post($task . '/ai/task-emails', \TriCab\Api\Http\Action\Finance\Task\TaskAiTaskEmailsAction::class)

@@ -95,6 +95,7 @@ final class FinanceRouteTableTest extends TestCase
         'DELETE /api/v1/finance/task/settings/report-recipients/{id}' => Module::PERMISSION_TASK_SETTINGS_MANAGE,
         'POST /api/v1/finance/task/import' => Module::PERMISSION_TASK_TASKS_CREATE,
         'POST /api/v1/finance/task/ai/task-details' => Module::PERMISSION_TASK_TASKS_CREATE,
+        'POST /api/v1/finance/task/ai/draft' => Module::PERMISSION_TASK_TASKS_CREATE,
         'POST /api/v1/finance/task/ai/statement-areas' => Module::PERMISSION_TASK_SETUP_MANAGE,
         'POST /api/v1/finance/task/ai/task-emails' => Module::PERMISSION_TASK_MAIL_SEND,
         'POST /api/v1/finance/task/ai/reminders' => Module::PERMISSION_TASK_TASKS_READ,

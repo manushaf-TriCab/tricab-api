@@ -1310,6 +1310,30 @@ final class ContainerFactory
             // The five drafting routes over finance_ai (T2.7). The service client is the shared one below.
             \TriCab\Core\Finance\Task\Service\TaskAiService::class
                 => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskAiService::class),
+            // "Create with AI": a summary becomes a draft of a project and tasks, nothing written. Claude on Foundry when
+            // TRI_TASK_AI_ENABLED is true with the Foundry connection; the stand-in locally (APP_ENV=development);
+            // otherwise a plain "not set up" answer.
+            \TriCab\Core\Finance\Task\Contract\TaskDrafter::class => static function () use ($settings): \TriCab\Core\Finance\Task\Contract\TaskDrafter {
+                if ($settings->isTriTaskAiConfigured()) {
+                    $http = new StreamJsonHttpClient((float) $settings->triTaskAiTimeoutSeconds, 10.0);
+
+                    return new \TriCab\Api\Finance\Task\FoundryTaskDrafter(
+                        $http,
+                        new ManagedIdentityFoundryAccessTokenProvider($http),
+                        $settings->foundryEndpoint,
+                        $settings->triTaskAiModel,
+                        $settings->foundryAuthMode,
+                        $settings->foundryApiKey,
+                        (new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS'))->get('tri-task-create-draft', 'v1'),
+                    );
+                }
+
+                return $settings->isDevelopment()
+                    ? new \TriCab\Core\Finance\Task\Infrastructure\HeuristicTaskDrafter()
+                    : new \TriCab\Core\Finance\Task\Infrastructure\UnavailableTaskDrafter();
+            },
+            \TriCab\Core\Finance\Task\Service\TaskDraftService::class
+                => \DI\autowire(\TriCab\Core\Finance\Task\Service\TaskDraftService::class),
             \TriCab\Core\Finance\Task\Service\TaskMailService::class
                 => static fn (Container $container): \TriCab\Core\Finance\Task\Service\TaskMailService
                     => new \TriCab\Core\Finance\Task\Service\TaskMailService(
