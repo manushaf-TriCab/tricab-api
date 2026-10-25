@@ -29,6 +29,7 @@ use TriCab\Core\Product\Application\Service\GetAdminProductCustomerViewService;
 use TriCab\Core\Product\Application\Service\GetPublicProductService;
 use TriCab\Core\Product\Application\Service\SearchProductCodesService;
 use TriCab\Core\Product\Application\Service\SearchProductsService;
+use TriCab\Core\Product\Contract\ProductMediaRepository;
 use TriCab\Core\ProductFinder\Application\Client\NullProductFinderClient;
 use TriCab\Core\ProductFinder\Application\DTO\ProductFinderQuery;
 use TriCab\Core\ProductFinder\Application\DTO\ProductFinderResult;
@@ -597,6 +598,7 @@ final class ProductAssistantToolExecutorTest extends TestCase
                 new GetAdminProductCustomerViewService(
                     new InMemoryProductCustomerViewRepository($store, $threeDModels),
                 ),
+                AssistantProductGrounderTest::imageSigner($this->createStub(ProductMediaRepository::class)),
             ),
             $styles ?? $this->createStub(AssistantStyleOptionsProvider::class),
             $codeProducts ?? new InMemoryAssistantCodeProductLookup(),

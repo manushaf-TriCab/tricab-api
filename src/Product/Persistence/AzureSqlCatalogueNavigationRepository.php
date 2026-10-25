@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Product\Persistence;
 
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
+use TriCab\Api\Infrastructure\Cache\ReferenceDataCache;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
 use TriCab\Api\Product\Catalogue\CatalogueLeafDescription;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
@@ -71,6 +72,7 @@ SQL;
 
     public function __construct(
         private readonly SqlConnection $connection,
+        private readonly ?ReferenceDataCache $cache = null,
     ) {
     }
 
@@ -1759,6 +1761,43 @@ SQL;
      * }>
      */
     private function fetchPublicNodes(string $tabPublicId, ?string $regionCode): array
+    {
+        if ($this->cache === null) {
+            return $this->queryPublicNodes($tabPublicId, $regionCode);
+        }
+
+        // Every public node request walks its whole tab, so one tab build is shared by the panel,
+        // the tree and each node of that tab instead of repeating this query per node.
+        $key = $this->cache->catalogueKey('tab-nodes', [
+            'tab' => strtolower($tabPublicId),
+            'regionCode' => $regionCode !== null && trim($regionCode) !== '' ? strtoupper(trim($regionCode)) : null,
+        ]);
+        [$entry] = $this->cache->rememberCatalogue(
+            $key,
+            fn (): array => ['nodes' => $this->queryPublicNodes($tabPublicId, $regionCode)],
+        );
+        /** @var list<array{publicId: string, nodeCode: string, nodeName: string, slug: string, description: ?string, nodeTypeCode: string, imageUrl: ?string, imageAltText: ?string, displayOrder: int, parentPublicId: ?string, productCount: int}> $nodes */
+        $nodes = $entry['nodes'] ?? [];
+
+        return $nodes;
+    }
+
+    /**
+      * @return list<array{
+     *   publicId: string,
+     *   nodeCode: string,
+     *   nodeName: string,
+     *   slug: string,
+     *   description: ?string,
+     *   nodeTypeCode: string,
+     *   imageUrl: ?string,
+     *   imageAltText: ?string,
+     *   displayOrder: int,
+     *   parentPublicId: ?string,
+     *   productCount: int
+     * }>
+     */
+    private function queryPublicNodes(string $tabPublicId, ?string $regionCode): array
     {
         $productCountSelect = $this->publicNodeProductCountSelect($regionCode);
         $leafProductApply = $this->publicLeafProductNameApply($regionCode);

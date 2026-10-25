@@ -3666,7 +3666,8 @@ final class ContainerFactory
             $definitions[CatalogueProductStyleEvidenceSource::class] = \DI\autowire(AzureSqlCatalogueProductStyleEvidenceSource::class);
             $definitions[PriceListRepository::class] = \DI\autowire(AzureSqlPriceListRepository::class);
             $definitions[VariantLegacyPricingIdentityRepository::class] = \DI\autowire(AzureSqlVariantLegacyPricingIdentityRepository::class);
-            $definitions[CatalogueNavigationRepository::class] = \DI\autowire(AzureSqlCatalogueNavigationRepository::class);
+            $definitions[CatalogueNavigationRepository::class] = \DI\autowire(AzureSqlCatalogueNavigationRepository::class)
+                ->constructorParameter('cache', \DI\get(ReferenceDataCache::class));
             $definitions[ProductSpecificationRepository::class] = \DI\autowire(AzureSqlProductSpecificationRepository::class);
             $definitions[ProductMediaRepository::class] = \DI\autowire(AzureSqlProductMediaRepository::class);
             $definitions[ProductDocumentRepository::class] = \DI\autowire(AzureSqlProductDocumentRepository::class);

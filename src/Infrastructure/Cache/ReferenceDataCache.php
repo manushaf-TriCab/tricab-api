@@ -162,7 +162,7 @@ final class ReferenceDataCache
      * Public catalogue node / tab tree payloads share the catalogue prefix, so every catalogue
      * invalidation drops them together with the panel.
      *
-     * @param 'node'|'tree' $kind
+     * @param 'node'|'tree'|'tab-nodes' $kind
      * @param array<string, scalar|null> $params
      */
     public function catalogueKey(string $kind, array $params): string
