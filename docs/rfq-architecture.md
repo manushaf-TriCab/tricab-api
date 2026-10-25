@@ -4,6 +4,8 @@ Status: **Phase 1** (contracts, permissions and module skeleton), started 28 Sep
 Companion to `platform/RFQ-IMPLEMENTATION-PLAN.md` and the Phase 0 evidence in `platform/rfq-phase0/`.
 Paired branches: `tricab-api@feature/rfq-module`, `tricab-web@feature/rfq-module`.
 
+> **Name (26 Oct 2026):** the module is called **Quotegen**, at `/admin/quotegen` in tricab-web (old `/admin/rfqs` links redirect). Permission and role display names say Quotegen (`alter-rfq-quotegen-names.sql` for existing databases). Code, `RFQ.*` permission codes, role codes and the `/api/v1/rfqs` endpoints keep the `rfq` name; individual requests are still RFQs.
+
 This document says where the boundaries are, who enforces them, and which source behaviours were kept or changed. Code is the authority for exact values; the file for each rule is named beside it.
 
 ---

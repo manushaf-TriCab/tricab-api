@@ -205,7 +205,7 @@ final class MailRoutesTest extends MailAppTestCase
         $detail = $this->reviewed($thread, ['action' => 'create_draft']);
         self::assertSame('drafted', self::at($detail, 'summary', 'reviewState'));
         self::assertSame(['kind', 'publicId', 'reference', 'title', 'href', 'createdAt'], array_keys(Payload::obj(self::at($detail, 'links', 0))));
-        self::assertSame('/admin/rfqs/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', self::at($detail, 'links', 0, 'href'));
+        self::assertSame('/admin/quotegen/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', self::at($detail, 'links', 0, 'href'));
         self::assertSame('RFQ-D-3001', self::at($detail, 'links', 0, 'reference'));
         $last = Payload::objList($detail['activity']);
         $last = end($last);
