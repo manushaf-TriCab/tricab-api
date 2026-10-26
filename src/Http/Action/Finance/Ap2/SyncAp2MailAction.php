@@ -11,7 +11,7 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Ap\Domain\ApFailure;
 use TriCab\Core\Finance\Ap2\Service\Ap2MailSyncService;
 
-/** POST /mail/sync. `FINANCE.AP2.MAIL.READ`. */
+/** POST /mail/sync `{mode: start|process|complete|cancel, ...}`, in bounded batches. `FINANCE.AP2.MAIL.READ`. */
 final class SyncAp2MailAction
 {
     use ApActionSupport;
@@ -34,7 +34,7 @@ final class SyncAp2MailAction
             return $this->unauthenticated($this->responder);
         }
         try {
-            return $this->ok($this->responder, $this->service->sync($actor, $this->bodyOf($request)), 200);
+            return $this->ok($this->responder, $this->service->handle($actor, $this->bodyOf($request)), 200);
         } catch (ApFailure $failure) {
             return $this->failure($this->responder, $failure);
         }

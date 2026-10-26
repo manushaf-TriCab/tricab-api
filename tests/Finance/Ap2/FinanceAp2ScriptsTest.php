@@ -178,6 +178,20 @@ final class FinanceAp2ScriptsTest extends TestCase
         self::assertDoesNotMatchRegularExpression('/\b(UPDATE|DELETE)\b/i', $seed, 'inserts only');
     }
 
+    public function test_the_sync_batches_alter_is_idempotent_and_says_it_is_not_applied(): void
+    {
+        $alter = self::script('alter-finance-ap2-sync-batches.sql');
+        $create = self::script('create-finance-ap2-schema.sql');
+
+        self::assertStringContainsString('NOT APPLIED', $alter);
+        foreach (['processed', 'failed', 'updated_at', 'Cancelled'] as $needle) {
+            self::assertStringContainsString($needle, $alter);
+            self::assertStringContainsString($needle, $create, 'a fresh build has it too');
+        }
+        self::assertStringContainsString('COL_LENGTH', $alter);
+        self::assertStringNotContainsString('DELETE', $alter);
+    }
+
     public function test_the_sample_seed_is_local_only_idempotent_and_has_the_prototype_data(): void
     {
         $sql = self::script('seed-finance-ap2-sample-local.sql');

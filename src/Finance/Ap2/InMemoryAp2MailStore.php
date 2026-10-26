@@ -118,6 +118,31 @@ final class InMemoryAp2MailStore implements Ap2MailStore, Ap2MailDrafts
         $this->runs[$run->id] = $run;
     }
 
+    public function saveProgress(Ap2SyncRun $run): void
+    {
+        $current = $this->runs[$run->id] ?? null;
+        if ($current !== null && $current->isRunning()) {
+            $this->runs[$run->id] = $current->with(fetched: $run->fetched, created: $run->created, skipped: $run->skipped, failed: $run->failed, processed: $run->processed, error: $run->error, updatedAt: $run->updatedAt);
+        }
+    }
+
+    public function findRun(string $id): ?Ap2SyncRun
+    {
+        return $this->runs[$id] ?? null;
+    }
+
+    public function runningRun(string $kind): ?Ap2SyncRun
+    {
+        $best = null;
+        foreach ($this->runs as $run) {
+            if ($run->kind === $kind && $run->isRunning() && ($best === null || $run->startedAt > $best->startedAt)) {
+                $best = $run;
+            }
+        }
+
+        return $best;
+    }
+
     public function lastSucceededRun(string $kind): ?Ap2SyncRun
     {
         $best = null;

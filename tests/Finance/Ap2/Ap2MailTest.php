@@ -24,7 +24,10 @@ use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Shared\Mailbox\InMemoryMailboxReader;
 use TriCab\Api\Tests\Finance\Mail\RecordingMethodHttpClient;
 use TriCab\Api\Tests\Finance\Mail\RecordingReplyMailTransport;
+use TriCab\Api\Tests\Doubles\FixedClock;
 use TriCab\Api\Tests\TestAppFactory;
+use TriCab\Core\Shared\Time\Clock;
+use TriCab\Core\Finance\Ap2\Domain\Ap2SyncRun;
 use TriCab\Core\Finance\Ap2\Ai\Ap2CopilotProposal;
 use TriCab\Core\Finance\Ap2\Ai\Ap2CopilotReply;
 use TriCab\Core\Finance\Ap2\Ai\Ap2AiUnavailable;
@@ -164,7 +167,7 @@ final class Ap2MailTest extends TestCase
 
     /**
      * @param array<string, mixed> $body
-     * @return array{fetched: int, created: int, skipped: int, truncated: bool}
+     * @return array{fetched: int, created: int, skipped: int, failed: int, truncated: bool}
      */
     private function sync(array $body = []): array
     {
@@ -212,8 +215,8 @@ final class Ap2MailTest extends TestCase
         $this->inbox('g1', 'Billing@Acme.test', 'Invoice 100', '<p>Please <b>pay</b></p><script>x()</script><br>Thanks &amp; regards', [['inv.pdf', 'application/pdf', '%PDF-1.4 one']], MailboxMessage::BODY_HTML, 'accounts@acme.test');
         $this->inbox('g2', 'someone@else.test', 'Hello');
 
-        self::assertSame(['fetched' => 2, 'created' => 2, 'skipped' => 0, 'truncated' => false], $this->sync());
-        self::assertSame(['fetched' => 2, 'created' => 0, 'skipped' => 2, 'truncated' => false], $this->sync(), 'the same messages are not stored twice');
+        self::assertSame(['fetched' => 2, 'created' => 2, 'skipped' => 0, 'failed' => 0, 'truncated' => false], $this->sync());
+        self::assertSame(['fetched' => 2, 'created' => 0, 'skipped' => 2, 'failed' => 0, 'truncated' => false], $this->sync(), 'the same messages are not stored twice');
         self::assertCount(2, $this->stored());
 
         $mail = $this->mails()->findMail($this->idOf('Invoice 100'));
@@ -659,7 +662,7 @@ final class Ap2MailTest extends TestCase
         $this->inbox('g1', 'billing@acme.test', 'Invoice 100', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
         $this->inbox('g2', 'billing@acme.test', 'Invoice 200', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
         $fake->failWith = new Ap2AiUnavailable('down');
-        self::assertSame(['fetched' => 2, 'created' => 2, 'skipped' => 0, 'truncated' => false], $this->sync());
+        self::assertSame(['fetched' => 2, 'created' => 2, 'skipped' => 0, 'failed' => 0, 'truncated' => false], $this->sync());
         self::assertCount(2, $fake->calls);
         self::assertNull($this->mails()->findMail($this->idOf('Invoice 100'))?->extraction);
 
@@ -1002,5 +1005,349 @@ final class Ap2MailTest extends TestCase
         $this->inbox('g1', 'a@b.test', 'Statement', 'x');
         $this->sync();
         self::assertSame([], $this->store(\TriCab\Core\Finance\Ap2\Contract\Ap2StatementStore::class, InMemoryAp2StatementStore::class)->all());
+    }
+
+    // ---------------------------------------------------------------- sync in batches (27 Oct)
+
+    private FixedClock $clock;
+
+    /**
+     * @param array<string, mixed> $r
+     * @return list<string>
+     */
+    private static function pending(array $r): array
+    {
+        $out = [];
+        foreach (is_array($r['pending'] ?? null) ? $r['pending'] : [] as $id) {
+            $out[] = is_string($id) ? $id : '';
+        }
+
+        return $out;
+    }
+
+    private static function str(mixed $v): string
+    {
+        return is_string($v) ? $v : '';
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     * @return array<string, mixed>
+     */
+    private function mode(string $mode, array $body = []): array
+    {
+        return $this->get(Ap2MailSyncService::class)->handle(Ap2Fixtures::actor(), ['mode' => $mode] + $body);
+    }
+
+    private function fakeClock(): void
+    {
+        $this->clock = new FixedClock(new DateTimeImmutable('now', new \DateTimeZone('UTC')));
+        $this->c->set(Clock::class, $this->clock);
+    }
+
+    private function many(int $n): void
+    {
+        for ($i = 1; $i <= $n; ++$i) {
+            $this->inbox('m' . $i, 'person' . $i . '@else.test', 'Hello ' . $i);
+        }
+    }
+
+    public function test_start_lists_only_unstored_messages_and_a_batch_respects_the_count(): void
+    {
+        $this->many(25);
+        $start = $this->mode('start');
+        self::assertSame(25, $start['total']);
+        self::assertCount(25, self::pending($start));
+
+        $batch = $this->mode('process', ['runId' => $start['runId'], 'ids' => array_slice(self::pending($start), 0, 25)]);
+        self::assertSame(Ap2MailSyncService::BATCH_MAX, $batch['consumed'], 'at most 10 messages a call');
+        self::assertSame(10, $batch['created']);
+        self::assertSame(15, $batch['remaining']);
+        self::assertFalse($batch['done']);
+
+        $second = $this->mode('process', ['runId' => $start['runId'], 'ids' => array_slice(self::pending($start), 10, 10)]);
+        $third = $this->mode('process', ['runId' => $start['runId'], 'ids' => array_slice(self::pending($start), 20, 10)]);
+        self::assertSame(5, $third['created']);
+        self::assertTrue($third['done']);
+        self::assertSame(0, $third['remaining']);
+        self::assertCount(25, $this->stored());
+        $closed = $this->mode('complete', ['runId' => $start['runId']]);
+        self::assertSame(['Succeeded', 25, 25], [$closed['status'], $closed['processed'], $closed['created']]);
+        self::assertSame(10, $second['created']);
+
+        $again = $this->mode('start');
+        self::assertSame([25, 0], [$again['fetched'], $again['total']], 'stored messages are not listed as pending again');
+    }
+
+    public function test_a_batch_stops_starting_messages_after_the_time_budget(): void
+    {
+        $this->fakeClock();
+        $this->many(8);
+        $this->c->set(Ap2MailClassifier::class, new class ($this->clock) implements Ap2MailClassifier {
+            public function __construct(private readonly FixedClock $clock)
+            {
+            }
+
+            public function classify(string $subject, string $from, string $bodyText, array $attachmentNames, array $suppliers): Ap2MailClassification
+            {
+                $this->clock->advance('+6 seconds');
+
+                return Ap2MailClassification::none();
+            }
+        });
+        $start = $this->mode('start');
+        $batch = $this->mode('process', ['runId' => $start['runId'], 'ids' => array_slice(self::pending($start), 0, 8)]);
+        // 6 s a message: after three the clock stands at 18 s, past the 15 s budget.
+        self::assertSame(3, $batch['consumed']);
+        self::assertSame(5, $batch['remaining']);
+        self::assertFalse($batch['done']);
+    }
+
+    public function test_cancel_stops_further_processing_even_mid_batch(): void
+    {
+        $this->many(6);
+        $mails = $this->mails();
+        $this->c->set(Ap2MailClassifier::class, new class ($mails) implements Ap2MailClassifier {
+            public int $calls = 0;
+
+            public function __construct(private readonly InMemoryAp2MailStore $mails)
+            {
+            }
+
+            public function classify(string $subject, string $from, string $bodyText, array $attachmentNames, array $suppliers): Ap2MailClassification
+            {
+                if (++$this->calls === 2) {
+                    $run = $this->mails->runningRun('mail');
+                    if ($run !== null) {
+                        $this->mails->finishRun($run->with(status: Ap2SyncRun::CANCELLED));
+                    }
+                }
+
+                return Ap2MailClassification::none();
+            }
+        });
+        $start = $this->mode('start');
+        $runId = $start['runId'];
+        $batch = $this->mode('process', ['runId' => $runId, 'ids' => self::pending($start)]);
+        self::assertSame(2, $batch['consumed'], 'the batch notices the cancel before the next message');
+        self::assertTrue($batch['cancelled']);
+        self::assertCount(2, $this->stored());
+
+        $this->refused(fn () => $this->mode('process', ['runId' => $runId, 'ids' => self::pending($start)]), 409);
+        self::assertCount(2, $this->stored());
+        self::assertSame('Cancelled', $this->mode('cancel', ['runId' => $runId])['status'], 'cancelling twice is fine');
+    }
+
+    public function test_cancel_marks_a_running_run_and_refuses_completing_it_afterwards(): void
+    {
+        $this->many(2);
+        $start = $this->mode('start');
+        self::assertSame('Cancelled', $this->mode('cancel', ['runId' => $start['runId']])['status']);
+        $this->refused(fn () => $this->mode('complete', ['runId' => $start['runId']]), 409);
+        $this->refused(fn () => $this->mode('process', ['runId' => 'nope', 'ids' => ['m1']]), 404);
+        // A cancelled run no longer blocks a new one.
+        self::assertSame('Running', $this->mode('start')['status']);
+    }
+
+    public function test_only_one_sync_runs_at_a_time_and_the_409_names_the_run(): void
+    {
+        $this->many(2);
+        $start = $this->mode('start');
+        $failure = $this->refused(fn () => $this->mode('start'), 409);
+        self::assertSame($start['runId'], $failure->extra['runId']);
+        self::assertSame(0, $this->mails()->findRun(self::str($failure->extra['runId']))?->processed);
+
+        [$status, $json] = $this->call('POST', '/mail/sync', ['mode' => 'start']);
+        self::assertSame(409, $status);
+        self::assertSame($start['runId'], is_array($json['error'] ?? null) ? ($json['error']['runId'] ?? null) : null);
+
+        // The scheduled job's tick steps aside instead of failing.
+        $job = $this->get(Ap2MailSyncJob::class);
+        $answer = $job->run(new DateTimeImmutable());
+        self::assertSame($start['runId'], $answer['runId'] ?? null);
+        self::assertSame([], $this->stored());
+    }
+
+    public function test_resume_lists_what_is_still_pending_for_a_running_run(): void
+    {
+        $this->many(12);
+        $start = $this->mode('start');
+        $this->mode('process', ['runId' => $start['runId'], 'ids' => array_slice(self::pending($start), 0, 10)]);
+
+        $resume = $this->mode('resume', ['runId' => $start['runId']]);
+        self::assertCount(2, self::pending($resume));
+        self::assertSame(12, $resume['total']);
+        $done = $this->mode('process', ['runId' => $start['runId'], 'ids' => self::pending($resume)]);
+        self::assertTrue($done['done']);
+        $this->mode('cancel', ['runId' => $start['runId']]);
+        $this->refused(fn () => $this->mode('resume', ['runId' => $start['runId']]), 409);
+    }
+
+    public function test_a_stale_or_old_schema_run_does_not_block_and_refuses_work(): void
+    {
+        $this->fakeClock();
+        $this->many(2);
+        $now = $this->clock->now();
+        // Left by the request that died: no progress column at all (old schema) ...
+        $this->mails()->beginRun(new Ap2SyncRun('old', 'mail', Ap2SyncRun::RUNNING, $now->modify('-1 hour'), startedByUserId: 7));
+        $start = $this->mode('start');
+        self::assertSame(Ap2SyncRun::FAILED, $this->mails()->findRun('old')?->status);
+        self::assertStringContainsString('Abandoned', (string) $this->mails()->findRun('old')->error);
+
+        // ... and one that made progress, but not for 10 minutes.
+        $this->clock->advance('+11 minutes');
+        $this->refused(fn () => $this->mode('process', ['runId' => $start['runId'], 'ids' => self::pending($start)]), 409);
+        self::assertSame(Ap2SyncRun::FAILED, $this->mails()->findRun(self::str($start['runId']))?->status);
+        self::assertSame([], $this->stored());
+        self::assertSame('Running', $this->mode('start')['status']);
+
+        // Recent progress keeps a run alive.
+        $this->clock->advance('+9 minutes');
+        $this->refused(fn () => $this->mode('start'), 409);
+    }
+
+    public function test_a_failing_message_is_counted_and_the_batch_goes_on(): void
+    {
+        $this->inbox('a', 'a@else.test', 'ok one');
+        $this->inbox('b', 'b@else.test', 'boom');
+        $this->inbox('c', 'c@else.test', 'ok two');
+        $this->c->set(Ap2MailClassifier::class, new class implements Ap2MailClassifier {
+            public function classify(string $subject, string $from, string $bodyText, array $attachmentNames, array $suppliers): Ap2MailClassification
+            {
+                if ($subject === 'boom') {
+                    throw new \RuntimeException('classifier exploded');
+                }
+
+                return Ap2MailClassification::none();
+            }
+        });
+        $start = $this->mode('start');
+        $batch = $this->mode('process', ['runId' => $start['runId'], 'ids' => self::pending($start)]);
+        self::assertSame([3, 2, 0, 1], [$batch['consumed'], $batch['created'], $batch['skipped'], $batch['failed']]);
+        self::assertStringContainsString('classifier exploded', json_encode($batch['errors'], JSON_THROW_ON_ERROR));
+        self::assertTrue($batch['done']);
+        self::assertCount(2, $this->stored());
+        $run = $this->mails()->findRun(self::str($start['runId']));
+        self::assertNotNull($run);
+        self::assertSame(1, $run->failed);
+        self::assertSame(3, $run->processed);
+    }
+
+    public function test_a_mail_is_never_committed_before_all_its_attachments_are_stored_and_the_next_sync_retries_it(): void
+    {
+        $inner = $this->c->get(\TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class);
+        self::assertInstanceOf(\TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class, $inner);
+        $flaky = new FlakyAttachmentStore($inner, 'BAD');
+        $this->c->set(\TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class, $flaky);
+        $this->inbox('g1', 'a@else.test', 'two files', 'x', [['one.pdf', 'application/pdf', '%PDF one'], ['two.pdf', 'application/pdf', '%PDF BAD']]);
+        $this->inbox('g2', 'b@else.test', 'plain');
+
+        $first = $this->sync();
+        self::assertSame([1, 1], [$first['created'], $first['failed']]);
+        self::assertSame(['plain'], array_map(static fn (Ap2Mail $m): string => $m->subject, $this->stored()), 'no half-stored mail row');
+        self::assertFalse($this->mails()->hasGraphMessage(self::MAILBOX, 'g1'), 'so it is not a duplicate next time');
+
+        $flaky->failOn = null;
+        $second = $this->sync();
+        self::assertSame([1, 1, 0], [$second['created'], $second['skipped'], $second['failed']]);
+        $mail = $this->mails()->findMail($this->idOf('two files'));
+        self::assertNotNull($mail);
+        self::assertCount(2, $this->mails()->attachmentsOf($mail->id), 'the retry stored every attachment');
+    }
+
+    public function test_the_window_is_validated_and_defaults_to_the_last_seven_days(): void
+    {
+        $this->refused(fn () => $this->mode('start', ['from' => '2026-09-01', 'to' => '2026-10-02']), 422);
+        $this->refused(fn () => $this->mode('start', ['from' => '2026-10-10', 'to' => '2026-10-02']), 422);
+        $this->refused(fn () => $this->mode('start', ['from' => 'last week', 'to' => '2026-10-02']), 422);
+        $this->refused(fn () => $this->mode('nope'), 422);
+        $this->refused(fn () => $this->get(Ap2MailSyncService::class)->handle(Ap2Fixtures::actor(), []), 422);
+        $this->refused(fn () => $this->mode('process', ['runId' => 'x', 'ids' => []]), 404);
+
+        $thirtyOne = $this->mode('start', ['from' => '2026-10-01', 'to' => '2026-10-31']);
+        self::assertSame(['2026-10-01', '2026-10-31'], [$thirtyOne['from'], $thirtyOne['to']], '31 days is allowed');
+        $this->mode('cancel', ['runId' => self::str($this->mails()->runningRun('mail')?->id)]);
+        $default = $this->mode('start');
+        self::assertSame(6, (int) (new DateTimeImmutable(self::str($default['from'])))->diff(new DateTimeImmutable(self::str($default['to'])))->days, 'seven calendar days, today included');
+    }
+
+    public function test_the_job_loops_the_same_service_within_its_own_budget(): void
+    {
+        $this->fakeClock();
+        $this->many(3);
+        $this->c->set(Ap2MailClassifier::class, new class ($this->clock) implements Ap2MailClassifier {
+            public function __construct(private readonly FixedClock $clock)
+            {
+            }
+
+            public function classify(string $subject, string $from, string $bodyText, array $attachmentNames, array $suppliers): Ap2MailClassification
+            {
+                $this->clock->advance('+200 seconds');
+
+                return Ap2MailClassification::none();
+            }
+        });
+        $answer = $this->get(Ap2MailSyncJob::class)->run($this->clock->now());
+        self::assertSame(2, $answer['created'], 'the 240 s job budget stops it after two slow messages');
+        self::assertCount(2, $this->stored());
+        self::assertNull($this->mails()->runningRun('mail'), 'the run is closed, the rest is for the next tick');
+        $next = $this->get(Ap2MailSyncJob::class)->run($this->clock->now());
+        self::assertSame(1, $next['created']);
+    }
+}
+
+/** Fails the upload of any file whose bytes contain a marker (a dying blob write), then delegates. */
+final class FlakyAttachmentStore implements \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore
+{
+    public function __construct(private readonly \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore $inner, public ?string $failOn)
+    {
+    }
+
+    public function put(\TriCab\Core\Finance\Shared\Attachments\FinanceAttachment $attachment, string $bytes): void
+    {
+        if ($this->failOn !== null && str_contains($bytes, $this->failOn)) {
+            throw new \RuntimeException('Maximum execution time exceeded');
+        }
+        $this->inner->put($attachment, $bytes);
+    }
+
+    public function find(string $application, string $id): ?\TriCab\Core\Finance\Shared\Attachments\FinanceAttachment
+    {
+        return $this->inner->find($application, $id);
+    }
+
+    public function bytes(\TriCab\Core\Finance\Shared\Attachments\FinanceAttachment $attachment): ?string
+    {
+        return $this->inner->bytes($attachment);
+    }
+
+    public function attach(string $application, string $id, string $recordType, string $recordId, DateTimeImmutable $at): bool
+    {
+        return $this->inner->attach($application, $id, $recordType, $recordId, $at);
+    }
+
+    public function forRecord(string $application, string $recordType, string $recordId): array
+    {
+        return $this->inner->forRecord($application, $recordType, $recordId);
+    }
+
+    public function countsByRecordType(string $application, string $recordType): array
+    {
+        return $this->inner->countsByRecordType($application, $recordType);
+    }
+
+    public function deleteForRecord(string $application, string $recordType, string $recordId): int
+    {
+        return $this->inner->deleteForRecord($application, $recordType, $recordId);
+    }
+
+    public function delete(string $application, string $id): bool
+    {
+        return $this->inner->delete($application, $id);
+    }
+
+    public function deleteUnattachedBefore(DateTimeImmutable $cutoff, int $limit): int
+    {
+        return $this->inner->deleteUnattachedBefore($cutoff, $limit);
     }
 }

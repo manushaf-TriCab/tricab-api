@@ -705,9 +705,14 @@ BEGIN TRY
             [started_at]          DATETIME2(6)   NOT NULL
                 CONSTRAINT [DF_finance_ap2_sync_runs_started_at] DEFAULT (SYSUTCDATETIME()),
             [finished_at]         DATETIME2(6)   NULL,
+            [processed]           INT            NOT NULL
+                CONSTRAINT [DF_finance_ap2_sync_runs_processed] DEFAULT (0),
+            [failed]              INT            NOT NULL
+                CONSTRAINT [DF_finance_ap2_sync_runs_failed] DEFAULT (0),
+            [updated_at]          DATETIME2(6)   NULL,
             CONSTRAINT [PK_finance_ap2_sync_runs] PRIMARY KEY CLUSTERED ([id]),
             CONSTRAINT [CK_finance_ap2_sync_runs_kind] CHECK ([kind] IN (N'mail', N'odoo-bill-state', N'odoo-po')),
-            CONSTRAINT [CK_finance_ap2_sync_runs_status] CHECK ([status] IN (N'Running', N'Succeeded', N'Failed'))
+            CONSTRAINT [CK_finance_ap2_sync_runs_status] CHECK ([status] IN (N'Running', N'Succeeded', N'Failed', N'Cancelled'))
         );
 
         CREATE INDEX [IX_finance_ap2_sync_runs_kind] ON [finance].[ap2_sync_runs] ([kind], [started_at]);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Ap2\Service;
 
 use DateTimeImmutable;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Conflict;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Shared\Jobs\FinanceJob;
 use TriCab\Core\Finance\Shared\Jobs\FinanceJobSchedule;
@@ -35,6 +36,15 @@ final class Ap2MailSyncJob implements FinanceJob
     {
         try {
             $answer = $this->sync->sync(null, []);
+        } catch (Ap2Conflict $failure) {
+            if (isset($failure->extra['runId'])) {
+                // A person's sync is running: this tick has nothing to do.
+                $running = $failure->extra['runId'];
+
+                return ['skipped' => 'a sync is already running', 'runId' => is_string($running) ? $running : null];
+            }
+
+            throw new \RuntimeException($failure->getMessage(), 0, $failure);
         } catch (Ap2Failure $failure) {
             // The run is already recorded as failed; let the runner record the job's failure too.
             throw new \RuntimeException($failure->getMessage(), 0, $failure);

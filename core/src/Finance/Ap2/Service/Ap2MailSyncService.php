@@ -24,6 +24,7 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2Invalid;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Mail;
 use TriCab\Core\Finance\Ap2\Domain\Ap2MailAttachment;
 use TriCab\Core\Finance\Ap2\Domain\Ap2MailExtraction;
+use TriCab\Core\Finance\Ap2\Domain\Ap2NotFound;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Person;
 use TriCab\Core\Finance\Ap2\Domain\Ap2SyncRun;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Upstream;
@@ -50,8 +51,12 @@ use TriCab\Core\Shared\Mailbox\MailboxReadFailed;
  *  - A 'Supplier invoice' with a supplier and a PDF attachment also gets the invoice extractor run on its first PDF; the
  *    result is stored on the mail (`extraction_json`) as a suggestion for `create-invoice`. An invoice is never created
  *    here, and an extraction that fails or finds nothing is simply not stored.
- *  - A message that cannot be read is counted as skipped and the run goes on; a refused or failed LISTING fails the run.
- *  - Every run is recorded in `ap2_sync_runs`. The answer is `{fetched, created, skipped, truncated}`.
+ *  - A message that fails (blob, classifier, reader) is counted as failed and recorded; the batch goes on, and because
+ *    the mail row is committed only after every attachment is stored (and linked in the same transaction), a failed or
+ *    killed message leaves no row and is retried by the next sync. A refused or failed LISTING fails the run.
+ *  - Every run is recorded in `ap2_sync_runs`. `POST /mail/sync` is client-driven in modes (`start`, `process`,
+ *    `complete`, `cancel`), each request bounded by {@see BATCH_SECONDS} / {@see BATCH_MAX}; {@see sync()} loops the same
+ *    code in-process for the scheduled job. One Running run at a time; stale after {@see STALE_MINUTES}.
  */
 final class Ap2MailSyncService
 {
@@ -62,6 +67,27 @@ final class Ap2MailSyncService
     public const MAX_ATTACHMENTS = 20;
 
     public const MAX_ATTACHMENT_BYTES = 20971520;
+
+    /** The widest window, in calendar days (the shared reader's rule). */
+    public const MAX_DAYS = 31;
+
+    /** The most messages a window lists (the shared reader's ceiling). */
+    public const LIST_MAX = 500;
+
+    /** A `process` call stops starting new messages after this many seconds of wall clock (the web request limit is 30). */
+    public const BATCH_SECONDS = 15;
+
+    /** ... or after this many messages, whichever comes first. */
+    public const BATCH_MAX = 10;
+
+    /** The most ids one `process` call may be sent. */
+    public const MAX_IDS_PER_CALL = 50;
+
+    /** The scheduled job's own budget (it has no browser waiting). */
+    public const JOB_SECONDS = 240;
+
+    /** A Running run with no progress for this long was left by a request that died: it no longer blocks or accepts work. */
+    public const STALE_MINUTES = 10;
 
     public function __construct(
         private readonly Ap2MailStore $mail,
@@ -74,14 +100,199 @@ final class Ap2MailSyncService
         private readonly Ap2Transactions $transactions,
         private readonly ApTime $time,
         private readonly string $mailbox,
+        private readonly int $batchSeconds = self::BATCH_SECONDS,
+        private readonly int $batchMax = self::BATCH_MAX,
+        private readonly int $jobSeconds = self::JOB_SECONDS,
     ) {
     }
 
     /**
+     * The client-driven sync behind `POST /mail/sync`: `{mode: start|process|complete|cancel, ...}`.
+     *
+     * @param array<string, mixed> $body
+     * @return array<string, mixed>
+     */
+    public function handle(?Ap2Actor $actor, array $body): array
+    {
+        $mode = $body['mode'] ?? null;
+
+        return match ($mode) {
+            'start' => $this->start($actor, $body),
+            'resume' => $this->resume($actor, $body),
+            'process' => $this->processBatch($actor, $body),
+            'complete' => $this->close($body, Ap2SyncRun::SUCCEEDED),
+            'cancel' => $this->close($body, Ap2SyncRun::CANCELLED),
+            default => throw new Ap2Invalid('mode must be start, resume, process, complete or cancel', Ap2Failure::details(['mode must be start, resume, process, complete or cancel'])),
+        };
+    }
+
+    /**
+     * `start`: the window's messages not yet stored, and a Running row for them.
+     *
      * @param array<string, mixed> $body `{from?, to?}`
-     * @return array{fetched: int, created: int, skipped: int, truncated: bool}
+     * @return array{runId: string, status: string, from: string, to: string, fetched: int, total: int, pending: list<string>, truncated: bool}
+     */
+    private function start(?Ap2Actor $actor, array $body): array
+    {
+        [$fromDay, $toDay] = $this->days($body);
+        $now = $this->time->now();
+        [$start, $end] = $this->window($fromDay, $toDay, $now);
+        $open = $this->open($actor?->userId, $start, $end, $fromDay, $toDay);
+
+        return [
+            'runId' => $open['run']->id,
+            'status' => 'Running',
+            'from' => $fromDay ?? $start->format('Y-m-d'),
+            'to' => $toDay ?? $end->format('Y-m-d'),
+            'fetched' => $open['fetched'],
+            'total' => count($open['pending']),
+            'pending' => $open['pending'],
+            'truncated' => $open['fetched'] >= self::LIST_MAX,
+        ];
+    }
+
+    /**
+     * `resume`: the pending ids of a Running run again (the page was reloaded and lost its list): the run's window is
+     * listed afresh and what is already stored (by this run or any) is left out.
+     *
+     * @param array<string, mixed> $body `{runId}`
+     * @return array<string, mixed>
+     */
+    private function resume(?Ap2Actor $actor, array $body): array
+    {
+        $run = $this->liveRun($body);
+        $fromDay = $run->fromDate;
+        $toDay = $run->toDate;
+        [$start, $end] = $this->window($fromDay, $toDay, $this->time->now());
+        $listed = $this->listFailing(fn (): array => $this->reader->listMessages(Module::APP_AP2, $this->mailbox, $start, $end, self::LIST_MAX, $actor?->userId, 'inbox'));
+        $pending = [];
+        foreach ($listed as $summary) {
+            if (!$this->mail->hasGraphMessage($this->mailbox, $summary->id)) {
+                $pending[] = $summary->id;
+            }
+        }
+        $run = $run->with(fetched: $run->processed + count($pending), updatedAt: $this->time->now());
+        $this->mail->saveProgress($run);
+
+        return [
+            'runId' => $run->id,
+            'status' => $run->status,
+            'from' => $fromDay,
+            'to' => $toDay,
+            'fetched' => count($listed),
+            'total' => $run->fetched,
+            'pending' => $pending,
+            'truncated' => count($listed) >= self::LIST_MAX,
+            'run' => ['total' => $run->fetched, 'processed' => $run->processed, 'created' => $run->created, 'skipped' => $run->skipped, 'failed' => $run->failed],
+        ];
+    }
+
+    /**
+     * `process`: one bounded batch of `ids` (the leading ones, in order) of a Running run.
+     *
+     * @param array<string, mixed> $body `{runId, ids}`
+     * @return array<string, mixed>
+     */
+    private function processBatch(?Ap2Actor $actor, array $body): array
+    {
+        $run = $this->liveRun($body);
+        $ids = $body['ids'] ?? null;
+        if (!is_array($ids) || $ids === [] || count($ids) > self::MAX_IDS_PER_CALL) {
+            throw new Ap2Invalid('ids must be a list of 1 to ' . self::MAX_IDS_PER_CALL . ' message ids', Ap2Failure::details(['ids must be a list of 1 to ' . self::MAX_IDS_PER_CALL . ' message ids']));
+        }
+        $list = [];
+        foreach ($ids as $id) {
+            if (!is_string($id) || $id === '' || strlen($id) > 500) {
+                throw new Ap2Invalid('ids must be message ids', Ap2Failure::details(['ids must be message ids']));
+            }
+            $list[] = $id;
+        }
+
+        $result = $this->runIds($run, $list, $this->batchMax, $this->batchSeconds, $actor?->userId);
+        $run = $result['run'];
+        $remaining = max(0, $run->fetched - $run->processed);
+
+        return [
+            'runId' => $run->id,
+            'status' => $run->status,
+            'processed' => $result['processed'],
+            'created' => $result['created'],
+            'skipped' => $result['skipped'],
+            'failed' => $result['failed'],
+            'consumed' => $result['consumed'],
+            'errors' => $result['errors'],
+            'remaining' => $remaining,
+            'done' => $remaining === 0 || $run->status !== Ap2SyncRun::RUNNING,
+            'cancelled' => $run->status === Ap2SyncRun::CANCELLED,
+            'run' => ['total' => $run->fetched, 'processed' => $run->processed, 'created' => $run->created, 'skipped' => $run->skipped, 'failed' => $run->failed],
+        ];
+    }
+
+    /**
+     * `complete` / `cancel`: closes a run. Closing a run already closed the same way changes nothing.
+     *
+     * @param array<string, mixed> $body `{runId}`
+     * @return array<string, mixed>
+     */
+    private function close(array $body, string $status): array
+    {
+        $run = $this->findRun($body);
+        if ($run->isRunning()) {
+            $note = $run->failed > 0 ? $run->failed . ' message(s) failed: ' . ($run->error ?? '') : $run->error;
+            $run = $run->with(status: $status, error: $note === null ? null : mb_substr($note, 0, 1000), finishedAt: $this->time->now(), updatedAt: $this->time->now());
+            $this->mail->finishRun($run);
+        } elseif ($run->status !== $status) {
+            throw new Ap2Conflict('This sync is already ' . strtolower($run->status), Ap2Failure::details(['This sync is already ' . strtolower($run->status)]) + ['runId' => $run->id]);
+        }
+
+        return ['runId' => $run->id, 'status' => $run->status, 'total' => $run->fetched, 'processed' => $run->processed, 'created' => $run->created, 'skipped' => $run->skipped, 'failed' => $run->failed];
+    }
+
+    /**
+     * The in-process sync of the scheduled job (and of a caller with no browser): the same service, looped within its own
+     * budget. What the budget leaves is picked up by the next run (dedupe).
+     *
+     * @param array<string, mixed> $body `{from?, to?}`
+     * @return array{fetched: int, created: int, skipped: int, failed: int, truncated: bool}
      */
     public function sync(?Ap2Actor $actor, array $body): array
+    {
+        [$fromDay, $toDay] = $this->days($body, false);
+        $now = $this->time->now();
+        [$start, $end] = $this->window($fromDay, $toDay, $now, true);
+        $userId = $actor?->userId;
+        $open = $this->open($userId, $start, $end, $fromDay, $toDay);
+        $fetched = $open['fetched'];
+        $skipped = $fetched - count($open['pending']);
+        try {
+            $result = $this->runIds($open['run'], $open['pending'], PHP_INT_MAX, $this->jobSeconds, $userId);
+        } catch (Throwable $failure) {
+            $run = $this->mail->findRun($open['run']->id) ?? $open['run'];
+            $this->mail->finishRun($run->with(status: Ap2SyncRun::FAILED, error: mb_substr($failure->getMessage(), 0, 1000), finishedAt: $this->time->now(), updatedAt: $this->time->now()));
+
+            throw $failure;
+        }
+        $run = $result['run'];
+        $left = count($open['pending']) - $result['consumed'];
+        $notes = [];
+        if ($result['failed'] > 0) {
+            $notes[] = $result['failed'] . ' message(s) failed: ' . ($result['errors'][0] ?? '');
+        }
+        if ($left > 0 && $run->isRunning()) {
+            $notes[] = $left . ' message(s) left for the next run';
+        }
+        if ($run->isRunning()) {
+            $this->mail->finishRun($run->with(status: Ap2SyncRun::SUCCEEDED, error: $notes === [] ? null : mb_substr(implode('; ', $notes), 0, 1000), finishedAt: $this->time->now(), updatedAt: $this->time->now()));
+        }
+
+        return ['fetched' => $fetched, 'created' => $result['created'], 'skipped' => $skipped + $result['skipped'], 'failed' => $result['failed'], 'truncated' => $fetched >= self::LIST_MAX];
+    }
+
+    /**
+     * @param array<string, mixed> $body
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function days(array $body, bool $webDefault = true): array
     {
         $input = new Ap2Input($body);
         $input->date('from');
@@ -92,42 +303,72 @@ final class Ap2MailSyncService
         $values = $input->values();
         $fromDay = is_string($values['from'] ?? null) ? $values['from'] : null;
         $toDay = is_string($values['to'] ?? null) ? $values['to'] : null;
-        if ($fromDay !== null && $toDay !== null && $fromDay > $toDay) {
-            throw new Ap2Invalid('The window is invalid', Ap2Failure::details(['from must not be after to']));
+        if ($webDefault && ($fromDay === null || $toDay === null)) {
+            $today = $this->time->today();
+            $toDay ??= $today;
+            $fromDay ??= (new DateTimeImmutable($toDay))->sub(new DateInterval('P' . (self::DEFAULT_DAYS - 1) . 'D'))->format('Y-m-d');
+        }
+        if ($fromDay !== null && $toDay !== null) {
+            if ($fromDay > $toDay) {
+                throw new Ap2Invalid('The window is invalid', Ap2Failure::details(['from must not be after to']));
+            }
+            $span = (int) (new DateTimeImmutable($fromDay))->diff(new DateTimeImmutable($toDay))->days + 1;
+            if ($span > self::MAX_DAYS) {
+                throw new Ap2Invalid('The window is invalid', Ap2Failure::details(['The window must be at most ' . self::MAX_DAYS . ' days']));
+            }
         }
 
+        return [$fromDay, $toDay];
+    }
+
+    /**
+     * Refuses while another sync is running (409 with its id); a running row with no progress for {@see STALE_MINUTES}
+     * (or none recorded, a row from before the column) is marked Failed and does not block. Then lists the window and
+     * records the run with the messages not yet stored.
+     *
+     * @return array{run: Ap2SyncRun, pending: list<string>, fetched: int}
+     */
+    private function open(?int $userId, DateTimeImmutable $start, DateTimeImmutable $end, ?string $fromDay, ?string $toDay): array
+    {
         $now = $this->time->now();
-        [$start, $end] = $this->window($fromDay, $toDay, $now);
-        $userId = $actor?->userId;
-
-        $run = new Ap2SyncRun(bin2hex(random_bytes(16)), self::KIND, Ap2SyncRun::RUNNING, $now, $start->format('Y-m-d'), $end->format('Y-m-d'), startedByUserId: $userId);
-        $this->mail->beginRun($run);
-
-        $fetched = $created = $skipped = 0;
-        $truncated = false;
-        $errors = [];
-        try {
-            $summaries = $this->reader->listMessages(Module::APP_AP2, $this->mailbox, $start, $end, 500, $userId, 'inbox');
-            $fetched = count($summaries);
-            $truncated = $fetched >= 500;
-            $suppliers = $this->suppliers->all();
-            foreach ($summaries as $summary) {
-                try {
-                    if ($this->process($summary, $suppliers, $userId)) {
-                        ++$created;
-                    } else {
-                        ++$skipped;
-                    }
-                } catch (FinanceMailRefused $refused) {
-                    throw $refused;
-                } catch (MailboxReadFailed | FinanceAttachmentException $failure) {
-                    ++$skipped;
-                    $errors[] = $failure->getMessage();
-                }
+        $running = $this->mail->runningRun(self::KIND);
+        if ($running !== null) {
+            if (!$running->isStale($now, self::STALE_MINUTES)) {
+                throw new Ap2Conflict('A sync is already running', Ap2Failure::details(['A sync is already running']) + ['runId' => $running->id, 'run' => ['runId' => $running->id, 'status' => $running->status, 'total' => $running->fetched, 'processed' => $running->processed, 'created' => $running->created, 'skipped' => $running->skipped, 'failed' => $running->failed, 'from' => $running->fromDate, 'to' => $running->toDate]]);
             }
-        } catch (Throwable $failure) {
-            $this->mail->finishRun($run->with(status: Ap2SyncRun::FAILED, fetched: $fetched, created: $created, skipped: $skipped, error: mb_substr($failure->getMessage(), 0, 1000), finishedAt: $this->time->now()));
+            $this->mail->finishRun($running->with(status: Ap2SyncRun::FAILED, error: 'Abandoned: no progress for ' . self::STALE_MINUTES . ' minutes', finishedAt: $now));
+        }
 
+        $run = new Ap2SyncRun(bin2hex(random_bytes(16)), self::KIND, Ap2SyncRun::RUNNING, $now, $fromDay ?? $start->format('Y-m-d'), $toDay ?? $end->format('Y-m-d'), startedByUserId: $userId, updatedAt: $now);
+        $this->mail->beginRun($run);
+        try {
+            $listed = $this->listFailing(fn (): array => $this->reader->listMessages(Module::APP_AP2, $this->mailbox, $start, $end, self::LIST_MAX, $userId, 'inbox'));
+        } catch (Throwable $failure) {
+            $this->mail->finishRun($run->with(status: Ap2SyncRun::FAILED, error: mb_substr($failure->getMessage(), 0, 1000), finishedAt: $this->time->now(), updatedAt: $this->time->now()));
+
+            throw $failure;
+        }
+        $pending = [];
+        foreach ($listed as $summary) {
+            if (!$this->mail->hasGraphMessage($this->mailbox, $summary->id)) {
+                $pending[] = $summary->id;
+            }
+        }
+        $run = $run->with(fetched: count($pending), updatedAt: $this->time->now());
+        $this->mail->finishRun($run);
+
+        return ['run' => $run, 'pending' => $pending, 'fetched' => count($listed)];
+    }
+
+    /**
+     * @param callable(): list<MailboxMessageSummary> $list
+     * @return list<MailboxMessageSummary>
+     */
+    private function listFailing(callable $list): array
+    {
+        try {
+            return $list();
+        } catch (Throwable $failure) {
             throw match (true) {
                 $failure instanceof FinanceMailRefused => new Ap2Conflict('Tri-AP2 may not read ' . $this->mailbox, Ap2Failure::details([$failure->getMessage()]), $failure),
                 $failure instanceof FinanceMailInvalid => new Ap2Invalid($failure->getMessage(), Ap2Failure::details([$failure->getMessage()]), $failure),
@@ -135,28 +376,116 @@ final class Ap2MailSyncService
                 default => $failure,
             };
         }
+    }
 
-        $this->mail->finishRun($run->with(
-            status: Ap2SyncRun::SUCCEEDED,
-            fetched: $fetched,
-            created: $created,
-            skipped: $skipped,
-            error: $errors === [] ? null : mb_substr(count($errors) . ' message(s) could not be read: ' . $errors[0], 0, 1000),
-            finishedAt: $this->time->now(),
-        ));
+    /**
+     * @param array<string, mixed> $body
+     */
+    private function findRun(array $body): Ap2SyncRun
+    {
+        $id = $body['runId'] ?? null;
+        $run = is_string($id) && $id !== '' ? $this->mail->findRun($id) : null;
+        if ($run === null || $run->kind !== self::KIND) {
+            throw new Ap2NotFound('Sync run not found');
+        }
 
-        return ['fetched' => $fetched, 'created' => $created, 'skipped' => $skipped, 'truncated' => $truncated];
+        return $run;
+    }
+
+    /**
+     * A run that may take more work: Running and not stale. A cancelled, finished or stale run refuses (409).
+     *
+     * @param array<string, mixed> $body
+     */
+    private function liveRun(array $body): Ap2SyncRun
+    {
+        $run = $this->findRun($body);
+        $now = $this->time->now();
+        if ($run->isRunning() && $run->isStale($now, self::STALE_MINUTES)) {
+            $run = $run->with(status: Ap2SyncRun::FAILED, error: 'Abandoned: no progress for ' . self::STALE_MINUTES . ' minutes', finishedAt: $now);
+            $this->mail->finishRun($run);
+        }
+        if (!$run->isRunning()) {
+            $why = 'This sync is no longer running (' . strtolower($run->status) . ')';
+
+            throw new Ap2Conflict($why, Ap2Failure::details([$why]) + ['runId' => $run->id, 'status' => $run->status]);
+        }
+
+        return $run;
+    }
+
+    /**
+     * Handles `$ids` in order until `$max` have been handled or `$seconds` of wall clock have passed (no new message is
+     * started after that), counting each in the run and stamping its progress. A message that fails is counted and
+     * recorded and does not stop the batch; the run being cancelled meanwhile does.
+     *
+     * @param list<string> $ids
+     * @return array{run: Ap2SyncRun, processed: int, created: int, skipped: int, failed: int, consumed: int, errors: list<string>}
+     */
+    private function runIds(Ap2SyncRun $run, array $ids, int $max, int $seconds, ?int $userId): array
+    {
+        $began = self::seconds($this->time->now());
+        $suppliers = $this->suppliers->all();
+        $created = $skipped = $failed = $consumed = 0;
+        $errors = [];
+        foreach ($ids as $id) {
+            if ($consumed >= $max || ($consumed > 0 && self::seconds($this->time->now()) - $began >= $seconds)) {
+                break;
+            }
+            $current = $this->mail->findRun($run->id);
+            if ($current === null || !$current->isRunning()) {
+                $run = $current ?? $run;
+                break;
+            }
+            ++$consumed;
+            $outcome = 'created';
+            try {
+                if ($this->mail->hasGraphMessage($this->mailbox, $id)) {
+                    $outcome = 'skipped';
+                } else {
+                    $message = $this->reader->getMessage(Module::APP_AP2, $this->mailbox, $id, $userId);
+                    $this->process($message->summary, $suppliers, $userId, $message);
+                }
+            } catch (FinanceMailRefused $refused) {
+                throw new Ap2Conflict('Tri-AP2 may not read ' . $this->mailbox, Ap2Failure::details([$refused->getMessage()]), $refused);
+            } catch (Throwable $failure) {
+                $outcome = 'failed';
+                $errors[] = mb_substr($failure::class . ': ' . $failure->getMessage(), 0, 300);
+                error_log('Tri-AP2 mail sync: message failed: ' . $failure::class);
+            }
+            match ($outcome) {
+                'created' => ++$created,
+                'skipped' => ++$skipped,
+                default => ++$failed,
+            };
+            $run = $current->with(
+                processed: $current->processed + 1,
+                created: $current->created + ($outcome === 'created' ? 1 : 0),
+                skipped: $current->skipped + ($outcome === 'skipped' ? 1 : 0),
+                failed: $current->failed + ($outcome === 'failed' ? 1 : 0),
+                error: $outcome === 'failed' && $current->error === null ? $errors[array_key_last($errors)] : $current->error,
+                updatedAt: $this->time->now(),
+            );
+            $this->mail->saveProgress($run);
+        }
+
+        return ['run' => $run, 'processed' => $consumed, 'created' => $created, 'skipped' => $skipped, 'failed' => $failed, 'consumed' => $consumed, 'errors' => array_slice($errors, 0, 5)];
+    }
+
+    private static function seconds(DateTimeImmutable $at): float
+    {
+        return (float) $at->format('U.u');
     }
 
     /** @return array{0: DateTimeImmutable, 1: DateTimeImmutable} */
-    private function window(?string $fromDay, ?string $toDay, DateTimeImmutable $now): array
+    private function window(?string $fromDay, ?string $toDay, DateTimeImmutable $now, bool $sinceLast = false): array
     {
         [$dayStart, $dayEnd] = $this->time->dayBounds($fromDay, $toDay);
         $end = $dayEnd === null ? $now : min($now, $dayEnd->sub(new DateInterval('PT1S')));
         if ($dayStart !== null) {
             $start = $dayStart;
         } else {
-            $last = $this->mail->lastSucceededRun(self::KIND);
+            $last = $sinceLast ? $this->mail->lastSucceededRun(self::KIND) : null;
             $start = $last === null ? $end->sub(new DateInterval('P' . self::DEFAULT_DAYS . 'D')) : $last->startedAt->sub(new DateInterval('P1D'));
             // Never ask for more than the reader's 31 days.
             $floor = $end->sub(new DateInterval('P31D'))->add(new DateInterval('PT1H'));
@@ -173,12 +502,8 @@ final class Ap2MailSyncService
      * @param list<\TriCab\Core\Finance\Ap2\Domain\Ap2Supplier> $suppliers
      * @return bool true when a new row was stored, false when the message was already known
      */
-    private function process(MailboxMessageSummary $summary, array $suppliers, ?int $userId): bool
+    private function process(MailboxMessageSummary $summary, array $suppliers, ?int $userId, MailboxMessage $message): bool
     {
-        if ($this->mail->hasGraphMessage($this->mailbox, $summary->id)) {
-            return false;
-        }
-        $message = $this->reader->getMessage(Module::APP_AP2, $this->mailbox, $summary->id, $userId);
         $files = $this->readAttachments($summary, $userId);
 
         $text = self::text($message);
@@ -222,8 +547,12 @@ final class Ap2MailSyncService
 
         $mail = $mail->with(extraction: $this->extract($category, $supplierId, $suppliers, $rows, $bytesOf));
 
-        $this->transactions->run(function () use ($mail, $rows, $now, $supplierId): void {
+        $this->transactions->run(function () use ($mail, $rows, $now, $supplierId, $stored, $mailId, $userId): void {
             $this->mail->insertMail($mail, $rows);
+            // Linked in the same transaction as the row: a mail is never committed with files that are not on it.
+            foreach ($stored as $fileId) {
+                $this->files->attachToMail($fileId, $mailId, $userId);
+            }
             if ($supplierId !== null) {
                 $this->history->append(new Ap2HistoryEntry(
                     bin2hex(random_bytes(16)),
@@ -238,10 +567,6 @@ final class Ap2MailSyncService
                 ));
             }
         });
-        foreach ($stored as $id) {
-            $this->files->attachToMail($id, $mailId, $userId);
-        }
-
         return true;
     }
 

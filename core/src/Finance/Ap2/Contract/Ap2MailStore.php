@@ -42,7 +42,16 @@ interface Ap2MailStore
 
     public function beginRun(Ap2SyncRun $run): void;
 
+    /** Writes the run's mutable columns (status, counters, error, progress time, finish time). */
     public function finishRun(Ap2SyncRun $run): void;
+
+    /** Writes only the counters, the error and the progress time, and only while the run is still Running (a Stop must stick). */
+    public function saveProgress(Ap2SyncRun $run): void;
+
+    public function findRun(string $id): ?Ap2SyncRun;
+
+    /** The newest run of that kind still marked Running (stale or not), or null. */
+    public function runningRun(string $kind): ?Ap2SyncRun;
 
     /** The newest run of that kind that succeeded, or null. */
     public function lastSucceededRun(string $kind): ?Ap2SyncRun;
