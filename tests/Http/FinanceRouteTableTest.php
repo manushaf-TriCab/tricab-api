@@ -34,6 +34,57 @@ final class FinanceRouteTableTest extends TestCase
         'POST /api/v1/finance/reference/sync' => Module::PERMISSION_ADMIN,
         'GET /api/v1/finance/reference/status' => Module::PERMISSION_ADMIN,
         'GET /api/v1/finance/reference/{list}' => Module::PERMISSION_AP_ACCESS,
+        // Tri-AP2, with FINANCE_AP2_ENABLED on. One permission each.
+        'GET /api/v1/finance/ap2/me' => Module::PERMISSION_AP2_ACCESS,
+        'GET /api/v1/finance/ap2/users' => Module::PERMISSION_AP2_ACCESS,
+        'GET /api/v1/finance/ap2/priorities' => Module::PERMISSION_AP2_ACCESS,
+        'PUT /api/v1/finance/ap2/priorities/{kind}/{id}' => Module::PERMISSION_AP2_ACCESS,
+        'GET /api/v1/finance/ap2/dashboard' => Module::PERMISSION_AP2_INVOICES_READ,
+        'GET /api/v1/finance/ap2/suppliers' => Module::PERMISSION_AP2_INVOICES_READ,
+        'POST /api/v1/finance/ap2/suppliers' => Module::PERMISSION_AP2_INVOICES_WRITE,
+        'GET /api/v1/finance/ap2/suppliers/{id}' => Module::PERMISSION_AP2_INVOICES_READ,
+        'PATCH /api/v1/finance/ap2/suppliers/{id}' => Module::PERMISSION_AP2_INVOICES_WRITE,
+        'GET /api/v1/finance/ap2/suppliers/{id}/history' => Module::PERMISSION_AP2_INVOICES_READ,
+        'POST /api/v1/finance/ap2/suppliers/{id}/history' => Module::PERMISSION_AP2_INVOICES_WRITE,
+        'GET /api/v1/finance/ap2/invoices' => Module::PERMISSION_AP2_INVOICES_READ,
+        'POST /api/v1/finance/ap2/invoices' => Module::PERMISSION_AP2_INVOICES_WRITE,
+        'GET /api/v1/finance/ap2/invoices/{id}' => Module::PERMISSION_AP2_INVOICES_READ,
+        'PATCH /api/v1/finance/ap2/invoices/{id}' => Module::PERMISSION_AP2_INVOICES_WRITE,
+        'POST /api/v1/finance/ap2/invoices/{id}/exclude-duplicate' => Module::PERMISSION_AP2_INVOICES_WRITE,
+        'POST /api/v1/finance/ap2/suppliers/{id}/history/share' => Module::PERMISSION_AP2_MAIL_SEND,
+        'POST /api/v1/finance/ap2/suppliers/{id}/bank-verify' => Module::PERMISSION_AP2_BANK_VERIFY,
+        'POST /api/v1/finance/ap2/invoices/{id}/import-result' => Module::PERMISSION_AP2_EXPORT,
+        'POST /api/v1/finance/ap2/invoices/{id}/post-to-odoo' => Module::PERMISSION_AP2_EXPORT,
+        'GET /api/v1/finance/ap2/approvals/approvers' => Module::PERMISSION_AP2_APPROVALS_REQUEST,
+        'GET /api/v1/finance/ap2/approvals' => Module::PERMISSION_AP2_INVOICES_READ,
+        'POST /api/v1/finance/ap2/approvals' => Module::PERMISSION_AP2_APPROVALS_REQUEST,
+        'GET /api/v1/finance/ap2/approvals/{id}' => Module::PERMISSION_AP2_INVOICES_READ,
+        'POST /api/v1/finance/ap2/approvals/{id}/decision' => Module::PERMISSION_AP2_APPROVALS_DECIDE,
+        'GET /api/v1/finance/ap2/payments' => Module::PERMISSION_AP2_INVOICES_READ,
+        'POST /api/v1/finance/ap2/payments' => Module::PERMISSION_AP2_PAYMENTS_PREPARE,
+        'POST /api/v1/finance/ap2/payments/{id}/transition' => Module::PERMISSION_AP2_PAYMENTS_PREPARE,
+        'GET /api/v1/finance/ap2/exports' => Module::PERMISSION_AP2_EXPORT,
+        'POST /api/v1/finance/ap2/exports' => Module::PERMISSION_AP2_EXPORT,
+        'GET /api/v1/finance/ap2/exports/{id}/csv' => Module::PERMISSION_AP2_EXPORT,
+        'POST /api/v1/finance/ap2/mail/sync' => Module::PERMISSION_AP2_MAIL_READ,
+        'GET /api/v1/finance/ap2/mail' => Module::PERMISSION_AP2_MAIL_READ,
+        'GET /api/v1/finance/ap2/mail/{id}' => Module::PERMISSION_AP2_MAIL_READ,
+        'PATCH /api/v1/finance/ap2/mail/{id}' => Module::PERMISSION_AP2_MAIL_READ,
+        'POST /api/v1/finance/ap2/mail/{id}/draft' => Module::PERMISSION_AP2_MAIL_READ,
+        'POST /api/v1/finance/ap2/mail/{id}/send' => Module::PERMISSION_AP2_MAIL_SEND,
+        'POST /api/v1/finance/ap2/mail/{id}/create-invoice' => Module::PERMISSION_AP2_INVOICES_WRITE,
+        'GET /api/v1/finance/ap2/mail/{id}/attachments/{aid}/file' => Module::PERMISSION_AP2_MAIL_READ,
+        'GET /api/v1/finance/ap2/invoices/{id}/file' => Module::PERMISSION_AP2_INVOICES_READ,
+        'POST /api/v1/finance/ap2/copilot' => Module::PERMISSION_AP2_INVOICES_READ,
+        'GET /api/v1/finance/ap2/statements' => Module::PERMISSION_AP2_INVOICES_READ,
+        'POST /api/v1/finance/ap2/statements' => Module::PERMISSION_AP2_INVOICES_WRITE,
+        'POST /api/v1/finance/ap2/statements/{id}/review' => Module::PERMISSION_AP2_INVOICES_WRITE,
+        'GET /api/v1/finance/ap2/reports/aged' => Module::PERMISSION_AP2_INVOICES_READ,
+        'GET /api/v1/finance/ap2/notifications' => Module::PERMISSION_AP2_ACCESS,
+        'POST /api/v1/finance/ap2/notifications/read-all' => Module::PERMISSION_AP2_ACCESS,
+        'GET /api/v1/finance/ap2/settings' => Module::PERMISSION_AP2_SETTINGS_MANAGE,
+        'PATCH /api/v1/finance/ap2/settings' => Module::PERMISSION_AP2_SETTINGS_MANAGE,
+        'GET /api/v1/finance/ap2/odoo/taxes' => Module::PERMISSION_AP2_SETTINGS_MANAGE,
         // Tri-Task (Phase 2), with FINANCE_TASK_ENABLED on. One permission each (decisions D14, D15).
         'GET /api/v1/finance/task/me' => Module::PERMISSION_TASK_ACCESS,
         'GET /api/v1/finance/task/members' => Module::PERMISSION_TASK_TASKS_READ,
@@ -273,7 +324,7 @@ final class FinanceRouteTableTest extends TestCase
      */
     private static function everyFinancePermission(): array
     {
-        $all = [Module::PERMISSION_ACCESS, Module::PERMISSION_ADMIN, ...Module::TASK_PERMISSIONS, ...Module::AR_PERMISSIONS, ...Module::AP_PERMISSIONS];
+        $all = [Module::PERMISSION_ACCESS, Module::PERMISSION_ADMIN, ...Module::TASK_PERMISSIONS, ...Module::AR_PERMISSIONS, ...Module::AP_PERMISSIONS, ...Module::AP2_PERMISSIONS];
         foreach (array_keys(Module::APPS) as $key) {
             $all[] = Module::appAccessPermission($key);
         }
@@ -286,7 +337,7 @@ final class FinanceRouteTableTest extends TestCase
      */
     private function app(): App
     {
-        return TestAppFactory::create(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_ENABLED' => 'true', 'FINANCE_AR_ENABLED' => 'true', 'FINANCE_AP_ENABLED' => 'true']);
+        return TestAppFactory::create(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_ENABLED' => 'true', 'FINANCE_AR_ENABLED' => 'true', 'FINANCE_AP_ENABLED' => 'true', 'FINANCE_AP2_ENABLED' => 'true']);
     }
 
     /**

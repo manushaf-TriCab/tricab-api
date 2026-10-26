@@ -61,6 +61,9 @@ final class Module
     /** Reach Tri-AP. No record. */
     public const PERMISSION_AP_ACCESS = 'FINANCE.AP.ACCESS';
 
+    /** Reach Tri-AP2 (the test app that may replace Tri-AP). No record. */
+    public const PERMISSION_AP2_ACCESS = 'FINANCE.AP2.ACCESS';
+
     /**
      * Finance administration: the mailbox registry, and later the grants and the
      * reference lists. Not a superset of anything, and reads no record.
@@ -72,6 +75,7 @@ final class Module
     public const APP_COLLECT = 'COLLECT';
     public const APP_AR = 'AR';
     public const APP_AP = 'AP';
+    public const APP_AP2 = 'AP2';
 
     /**
      * Each app's key, its business name, its environment switch and its address
@@ -86,6 +90,7 @@ final class Module
         self::APP_COLLECT => ['name' => 'Tri-Collection', 'switch' => 'FINANCE_COLLECT_ENABLED', 'path' => 'collect'],
         self::APP_AR => ['name' => 'Tri-AR', 'switch' => 'FINANCE_AR_ENABLED', 'path' => 'ar'],
         self::APP_AP => ['name' => 'Tri-AP', 'switch' => 'FINANCE_AP_ENABLED', 'path' => 'ap'],
+        self::APP_AP2 => ['name' => 'Tri-AP2', 'switch' => 'FINANCE_AP2_ENABLED', 'path' => 'ap2'],
     ];
 
     /** Every permission a person's role may carry. Seeded by `seed-finance-permissions.sql`. */
@@ -96,6 +101,7 @@ final class Module
         self::PERMISSION_COLLECT_ACCESS,
         self::PERMISSION_AR_ACCESS,
         self::PERMISSION_AP_ACCESS,
+        self::PERMISSION_AP2_ACCESS,
         self::PERMISSION_ADMIN,
     ];
 
@@ -406,6 +412,88 @@ final class Module
         self::PERMISSION_AP_APPROVALS_PREPARE => 'invoice.approvals.prepare',
         self::PERMISSION_AP_APPROVALS_DECIDE => 'invoice.approvals.decide',
         self::PERMISSION_AP_SETTINGS_MANAGE => 'invoice.settings.manage',
+    ];
+
+    // ------------------------------------------------------------------
+    // Tri-AP2 (the test app that may replace Tri-AP; docs in
+    // platform/tri-ap-new/TRI-AP2-API-CONTRACT.md). Twelve permissions under
+    // `FINANCE.AP2.`: the access permission (in PERSON_PERMISSIONS, like every
+    // app's) and eleven of its own. Every route checks exactly one of them.
+    // `FINANCE.AP2.ADMIN` does not exist: the administrator role holds them all.
+    // ------------------------------------------------------------------
+    public const PERMISSION_AP2_INVOICES_READ = 'FINANCE.AP2.INVOICES.READ';
+    public const PERMISSION_AP2_INVOICES_WRITE = 'FINANCE.AP2.INVOICES.WRITE';
+    public const PERMISSION_AP2_MAIL_READ = 'FINANCE.AP2.MAIL.READ';
+    public const PERMISSION_AP2_MAIL_SEND = 'FINANCE.AP2.MAIL.SEND';
+    public const PERMISSION_AP2_APPROVALS_REQUEST = 'FINANCE.AP2.APPROVALS.REQUEST';
+    public const PERMISSION_AP2_APPROVALS_DECIDE = 'FINANCE.AP2.APPROVALS.DECIDE';
+    public const PERMISSION_AP2_PAYMENTS_PREPARE = 'FINANCE.AP2.PAYMENTS.PREPARE';
+    public const PERMISSION_AP2_PAYMENTS_APPROVE = 'FINANCE.AP2.PAYMENTS.APPROVE';
+    public const PERMISSION_AP2_BANK_VERIFY = 'FINANCE.AP2.BANK.VERIFY';
+    public const PERMISSION_AP2_EXPORT = 'FINANCE.AP2.EXPORT';
+    public const PERMISSION_AP2_SETTINGS_MANAGE = 'FINANCE.AP2.SETTINGS.MANAGE';
+
+    /** The eleven Tri-AP2 permissions beyond `FINANCE.AP2.ACCESS`. */
+    public const AP2_PERMISSIONS = [
+        self::PERMISSION_AP2_INVOICES_READ,
+        self::PERMISSION_AP2_INVOICES_WRITE,
+        self::PERMISSION_AP2_MAIL_READ,
+        self::PERMISSION_AP2_MAIL_SEND,
+        self::PERMISSION_AP2_APPROVALS_REQUEST,
+        self::PERMISSION_AP2_APPROVALS_DECIDE,
+        self::PERMISSION_AP2_PAYMENTS_PREPARE,
+        self::PERMISSION_AP2_PAYMENTS_APPROVE,
+        self::PERMISSION_AP2_BANK_VERIFY,
+        self::PERMISSION_AP2_EXPORT,
+        self::PERMISSION_AP2_SETTINGS_MANAGE,
+    ];
+
+    public const ROLE_AP2_OPERATOR = 'FINANCE_AP2_OPERATOR';
+    public const ROLE_AP2_APPROVER = 'FINANCE_AP2_APPROVER';
+    public const ROLE_AP2_BANK_VERIFIER = 'FINANCE_AP2_BANK_VERIFIER';
+    public const ROLE_AP2_ADMIN = 'FINANCE_AP2_ADMIN';
+
+    public const AP2_ROLE_PERMISSIONS = [
+        self::ROLE_AP2_OPERATOR => [
+            self::PERMISSION_ACCESS,
+            self::PERMISSION_AP2_ACCESS,
+            self::PERMISSION_AP2_INVOICES_READ,
+            self::PERMISSION_AP2_INVOICES_WRITE,
+            self::PERMISSION_AP2_MAIL_READ,
+            self::PERMISSION_AP2_MAIL_SEND,
+            self::PERMISSION_AP2_APPROVALS_REQUEST,
+            self::PERMISSION_AP2_EXPORT,
+            self::PERMISSION_AP2_PAYMENTS_PREPARE,
+        ],
+        self::ROLE_AP2_APPROVER => [
+            self::PERMISSION_ACCESS,
+            self::PERMISSION_AP2_ACCESS,
+            self::PERMISSION_AP2_INVOICES_READ,
+            self::PERMISSION_AP2_MAIL_READ,
+            self::PERMISSION_AP2_APPROVALS_DECIDE,
+            self::PERMISSION_AP2_PAYMENTS_APPROVE,
+        ],
+        self::ROLE_AP2_BANK_VERIFIER => [
+            self::PERMISSION_ACCESS,
+            self::PERMISSION_AP2_ACCESS,
+            self::PERMISSION_AP2_INVOICES_READ,
+            self::PERMISSION_AP2_BANK_VERIFY,
+        ],
+        self::ROLE_AP2_ADMIN => [
+            self::PERMISSION_ACCESS,
+            self::PERMISSION_AP2_ACCESS,
+            self::PERMISSION_AP2_INVOICES_READ,
+            self::PERMISSION_AP2_INVOICES_WRITE,
+            self::PERMISSION_AP2_MAIL_READ,
+            self::PERMISSION_AP2_MAIL_SEND,
+            self::PERMISSION_AP2_APPROVALS_REQUEST,
+            self::PERMISSION_AP2_APPROVALS_DECIDE,
+            self::PERMISSION_AP2_PAYMENTS_PREPARE,
+            self::PERMISSION_AP2_PAYMENTS_APPROVE,
+            self::PERMISSION_AP2_BANK_VERIFY,
+            self::PERMISSION_AP2_EXPORT,
+            self::PERMISSION_AP2_SETTINGS_MANAGE,
+        ],
     ];
 
     /** The permission that reaches one app. No record. */

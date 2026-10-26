@@ -65,7 +65,7 @@ BEGIN TRY
             CONSTRAINT [PK_finance_access_scopes]
                 PRIMARY KEY CLUSTERED ([user_id], [application_key], [scope_type], [scope_value]),
             CONSTRAINT [CK_finance_access_scopes_application_key]
-                CHECK ([application_key] IN (N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP')),
+                CHECK ([application_key] IN (N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP', N'AP2')),
             CONSTRAINT [CK_finance_access_scopes_scope_type]
                 CHECK ([scope_type] IN (N'branch', N'mailbox')),
             CONSTRAINT [CK_finance_access_scopes_scope_value]

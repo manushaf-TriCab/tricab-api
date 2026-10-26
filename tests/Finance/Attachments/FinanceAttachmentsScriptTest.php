@@ -42,7 +42,7 @@ final class FinanceAttachmentsScriptTest extends TestCase
         $code = self::code();
         preg_match("/CK_finance_attachments_application_key\\]\\s+CHECK \\(\\[application_key\\] IN \\(([^)]*)\\)\\)/", $code, $match);
         self::assertArrayHasKey(1, $match);
-        preg_match_all("/N'([A-Z]+)'/", $match[1] ?? '', $keys);
+        preg_match_all("/N'([A-Z0-9]+)'/", $match[1] ?? '', $keys);
 
         self::assertSame(array_keys(Module::APPS), $keys[1]);
     }

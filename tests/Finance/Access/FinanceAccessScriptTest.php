@@ -53,7 +53,7 @@ final class FinanceAccessScriptTest extends TestCase
         $sql = file_get_contents(self::root() . '/database/scripts/development/create-finance-access-schema.sql');
         self::assertIsString($sql);
         preg_match("/CK_finance_access_scopes_application_key\\]\\s+CHECK \\(\\[application_key\\] IN \\(([^)]*)\\)\\)/", $sql, $match);
-        preg_match_all("/N'([A-Z]+)'/", $match[1] ?? '', $keys);
+        preg_match_all("/N'([A-Z0-9]+)'/", $match[1] ?? '', $keys);
 
         self::assertSame(array_keys(Module::APPS), $keys[1]);
     }

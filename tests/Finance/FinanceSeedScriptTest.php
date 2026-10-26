@@ -37,7 +37,7 @@ final class FinanceSeedScriptTest extends TestCase
         $expected = Module::PERSON_PERMISSIONS;
         sort($expected);
 
-        self::assertCount(7, $expected);
+        self::assertCount(8, $expected);
         self::assertSame($expected, $seeded);
     }
 

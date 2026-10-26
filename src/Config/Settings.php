@@ -277,6 +277,19 @@ final readonly class Settings
         public bool $financeCollectEnabled = false,
         public bool $financeArEnabled = false,
         public bool $financeApEnabled = false,
+        public bool $financeAp2Enabled = false,
+        public bool $financeAp2SendingEnabled = false,
+        public bool $financeAp2OdooPostingEnabled = false,
+        // The Odoo company id of Tricab Australia, whose exchange rates Tri-AP2 reads (ODOO_COMPANY_IDS is 2,4). Null: rates off.
+        public ?int $financeAp2OdooAudCompanyId = null,
+        public bool $financeAp2MailSyncEnabled = false,
+        // Tri-AP2 AI on Foundry (L1): off unless FINANCE_AP2_AI_ENABLED and the Foundry connection; one deployment per purpose.
+        public bool $financeAp2AiEnabled = false,
+        public string $financeAp2AiClassifyModel = 'claude-haiku-5-5',
+        public string $financeAp2AiExtractModel = 'claude-haiku-5-5',
+        public string $financeAp2AiDraftModel = 'claude-haiku-5-5',
+        public string $financeAp2AiCopilotModel = 'claude-haiku-5-5',
+        public int $financeAp2AiTimeoutSeconds = 60,
         public bool $financeMailEnabled = false,
         public string $financeMailTestRecipient = '',
         public string $financeGraphTenantId = '',
@@ -509,6 +522,18 @@ final readonly class Settings
             && ($this->foundryAuthMode !== self::FOUNDRY_AUTH_MODE_API_KEY || $this->foundryApiKey !== '');
     }
 
+    /**
+     * Tri-AP2's AI (classify, extract, drafts, Copilot) calls Foundry: its own switch `FINANCE_AP2_AI_ENABLED` and the
+     * platform's Foundry connection (switched on, an endpoint, a key in api-key mode). Off, the Null implementations answer.
+     */
+    public function isFinanceAp2AiConfigured(): bool
+    {
+        return $this->financeAp2AiEnabled
+            && $this->foundryEnabled
+            && $this->foundryEndpoint !== ''
+            && ($this->foundryAuthMode !== self::FOUNDRY_AUTH_MODE_API_KEY || $this->foundryApiKey !== '');
+    }
+
     /** The classifier calls Foundry; it needs the platform's Foundry connection and a deployment name. */
     public function isRfqMailClassifierConfigured(): bool
     {
@@ -532,6 +557,7 @@ final readonly class Settings
             'COLLECT' => $this->financeCollectEnabled,
             'AR' => $this->financeArEnabled,
             'AP' => $this->financeApEnabled,
+            'AP2' => $this->financeAp2Enabled,
             default => false,
         };
     }
@@ -1576,6 +1602,17 @@ final readonly class Settings
             financeCollectEnabled: self::bool($env, 'FINANCE_COLLECT_ENABLED', false),
             financeArEnabled: self::bool($env, 'FINANCE_AR_ENABLED', false),
             financeApEnabled: self::bool($env, 'FINANCE_AP_ENABLED', false),
+            financeAp2Enabled: self::bool($env, 'FINANCE_AP2_ENABLED', false),
+            financeAp2SendingEnabled: self::bool($env, 'FINANCE_AP2_SENDING_ENABLED', false),
+            financeAp2OdooPostingEnabled: self::bool($env, 'FINANCE_AP2_ODOO_POSTING_ENABLED', false),
+            financeAp2OdooAudCompanyId: self::positiveIntOrNull($env, 'FINANCE_AP2_ODOO_AUD_COMPANY_ID'),
+            financeAp2MailSyncEnabled: self::bool($env, 'FINANCE_AP2_MAIL_SYNC_ENABLED', false),
+            financeAp2AiEnabled: self::bool($env, 'FINANCE_AP2_AI_ENABLED', false),
+            financeAp2AiClassifyModel: trim(self::string($env, 'FINANCE_AP2_AI_CLASSIFY_MODEL', '')) ?: 'claude-haiku-5-5',
+            financeAp2AiExtractModel: trim(self::string($env, 'FINANCE_AP2_AI_EXTRACT_MODEL', '')) ?: 'claude-haiku-5-5',
+            financeAp2AiDraftModel: trim(self::string($env, 'FINANCE_AP2_AI_DRAFT_MODEL', '')) ?: 'claude-haiku-5-5',
+            financeAp2AiCopilotModel: trim(self::string($env, 'FINANCE_AP2_AI_COPILOT_MODEL', '')) ?: 'claude-haiku-5-5',
+            financeAp2AiTimeoutSeconds: self::boundedInt($env, 'FINANCE_AP2_AI_TIMEOUT_SECONDS', 60, 5, 120),
             financeMailEnabled: self::bool($env, 'FINANCE_MAIL_ENABLED', false),
             financeMailTestRecipient: trim(self::string($env, 'FINANCE_MAIL_TEST_RECIPIENT', '')),
             financeGraphTenantId: trim(self::string($env, 'FINANCE_GRAPH_TENANT_ID', '')),
@@ -1909,6 +1946,18 @@ final readonly class Settings
         }
 
         return (int) $value;
+    }
+
+    /**
+     * A whole number above zero, else null (unset, empty or not a number).
+     *
+     * @param array<string, string|null> $env
+     */
+    private static function positiveIntOrNull(array $env, string $key): ?int
+    {
+        $raw = trim(self::string($env, $key, ''));
+
+        return ctype_digit($raw) && (int) $raw > 0 ? (int) $raw : null;
     }
 
     /**

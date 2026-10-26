@@ -7343,3 +7343,51 @@ parameters:
 			identifier: cast.string
 			count: 5
 			path: core/src/TelDirectory/Application/Service/TelDirectoryMapper.php
+
+		-
+			message: '#^Parameter \#1 \$id of class TriCab\\Core\\Finance\\Ap2\\Domain\\Ap2Mail constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Finance/Ap2/Domain/Ap2Mail.php
+
+		-
+			message: '#^Parameter \#1 \$id of class TriCab\\Core\\Finance\\Ap2\\Domain\\Ap2SyncRun constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Finance/Ap2/Domain/Ap2SyncRun.php
+
+		-
+			message: '#^Parameter \#1 \$id of class TriCab\\Core\\Finance\\Ap2\\Domain\\Ap2Invoice constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Finance/Ap2/Domain/Ap2Invoice.php
+
+		-
+			message: '#^Parameter \#1 \$glDefault of class TriCab\\Core\\Finance\\Ap2\\Domain\\Ap2Settings constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Finance/Ap2/Domain/Ap2Settings.php
+
+		-
+			message: '#^Parameter \#1 \$id of class TriCab\\Core\\Finance\\Ap2\\Domain\\Ap2Supplier constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Finance/Ap2/Domain/Ap2Supplier.php
+
+		-
+			message: '#^Parameter \#1 \$id of class TriCab\\Core\\Finance\\Ap2\\Domain\\Ap2Approval constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Finance/Ap2/Domain/Ap2Approval.php
+
+		-
+			message: '#^Parameter \#1 \$id of class TriCab\\Core\\Finance\\Ap2\\Domain\\Ap2Payment constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Finance/Ap2/Domain/Ap2Payment.php
+
+		-
+			message: '#^Parameter \#1 \$id of class TriCab\\Core\\Finance\\Ap2\\Domain\\Ap2Statement constructor expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: core/src/Finance/Ap2/Domain/Ap2Statement.php

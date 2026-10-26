@@ -62,7 +62,7 @@ BEGIN TRY
             [attached_at]          DATETIME2(6)   NULL,
             CONSTRAINT [PK_finance_attachments] PRIMARY KEY CLUSTERED ([id]),
             CONSTRAINT [CK_finance_attachments_application_key]
-                CHECK ([application_key] IN (N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP')),
+                CHECK ([application_key] IN (N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP', N'AP2')),
             CONSTRAINT [CK_finance_attachments_byte_size]
                 CHECK ([byte_size] >= 0),
             CONSTRAINT [CK_finance_attachments_attached]

@@ -10,7 +10,7 @@
     Manusha's or Jeff's.
   - Run after seed-finance-permissions.sql
 
-    FINANCE_ADMIN      all seven finance permissions: the launcher, every app's
+    FINANCE_ADMIN      all eight finance permissions: the launcher, every app's
                        access permission, and finance administration.
 
   App roles (FINANCE_<APP>_<ROLE>, decision D2) are not seeded here. They come
@@ -78,6 +78,7 @@ BEGIN TRY
         (N'FINANCE_ADMIN', N'FINANCE.COLLECT.ACCESS'),
         (N'FINANCE_ADMIN', N'FINANCE.AR.ACCESS'),
         (N'FINANCE_ADMIN', N'FINANCE.AP.ACCESS'),
+        (N'FINANCE_ADMIN', N'FINANCE.AP2.ACCESS'),
         (N'FINANCE_ADMIN', N'FINANCE.ADMIN');
 
     INSERT INTO [identity].[RolePermissions] ([RoleId], [PermissionId], [IsActive])

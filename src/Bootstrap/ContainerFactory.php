@@ -1125,7 +1125,16 @@ final class ContainerFactory
                     $settings->odooApiKeyExpires,
                 ),
             \TriCab\Core\Finance\Shared\Odoo\OdooSyncService::class
-                => \DI\autowire(\TriCab\Core\Finance\Shared\Odoo\OdooSyncService::class),
+                => static fn (Container $container): \TriCab\Core\Finance\Shared\Odoo\OdooSyncService
+                    => new \TriCab\Core\Finance\Shared\Odoo\OdooSyncService(
+                        self::get($container, \TriCab\Core\Finance\Shared\Odoo\OdooClient::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Odoo\OdooRecordStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Odoo\OdooSyncRuns::class),
+                        self::get($container, \TriCab\Core\Shared\Persistence\ApplicationTransaction::class),
+                        self::get($container, \TriCab\Core\Shared\Time\Clock::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Odoo\OdooSyncConfig::class),
+                        $settings->financeAp2Enabled,
+                    ),
             // Finance files (F1.9). In memory by default; the azure-sql branch below swaps in
             // the table and the private `BLOB_CONTAINER_FINANCE` container. There is no route
             // here: each app serves its own files through the service, in its own phase.
@@ -1177,6 +1186,7 @@ final class ContainerFactory
                         $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR)
                         || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP)
                         || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_TASK)
+                        || $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP2)
                     ) {
                         $jobs[] = new \TriCab\Core\Finance\Shared\Attachments\FinanceUnattachedAttachmentsJob(
                             self::get($container, \TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentStore::class),
@@ -1186,6 +1196,21 @@ final class ContainerFactory
                     // Tri-AR's 08:00 mailbox scan (T5.7, D44): needs the app and mailbox reading, so a half-configured host never fails nightly.
                     if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AR) && $settings->isFinanceMailboxReadingEnabled()) {
                         $jobs[] = self::get($container, \TriCab\Core\Finance\Ar\Service\ArMailboxScanJob::class);
+                    }
+
+                    // Tri-AP2's mail sync: needs the app, its own switch (default off) and mailbox reading.
+                    if (
+                        $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP2)
+                        && $settings->financeAp2MailSyncEnabled
+                        && $settings->isFinanceMailboxReadingEnabled()
+                    ) {
+                        $jobs[] = self::get($container, \TriCab\Core\Finance\Ap2\Service\Ap2MailSyncJob::class);
+                    }
+
+                    // Tri-AP2's Odoo stream (bill states, PO matching, rates): read only, every 15 minutes, so only where the app is
+                    // on and Odoo is configured; an unconfigured run would fail all day.
+                    if ($settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP2) && $settings->isOdooConfigured()) {
+                        $jobs[] = self::get($container, \TriCab\Core\Finance\Ap2\Odoo\Ap2OdooSyncJob::class);
                     }
 
                     // Tri-AR's overdue reminders (T5.11, D44, D61): they are mail, so the app, its own sending switch and a working
@@ -1613,6 +1638,211 @@ final class ContainerFactory
                         self::get($container, \TriCab\Core\Finance\Ap\Service\ApMailService::class),
                         self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
                         $settings->financeApPublicOrigin !== '' ? $settings->financeApPublicOrigin : $settings->passkeyPublicAppBaseUrl,
+                    ),
+            // Tri-AP2 (the test app). In memory by default; the azure-sql branch below swaps in the `finance.ap2_*` tables.
+            // The routes are registered only when FINANCE_AP2_ENABLED is on (AppBuilder).
+            \TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2SupplierStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2InvoiceStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2HistoryStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2ApprovalStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2ApprovalStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2SettingsStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2PriorityStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2PriorityStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2PersonDirectory::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2PersonDirectory::class),
+            'finance.ap2.transactions.inner' => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2Transactions::class),
+            // The Graph outbox holds its messages until the commit, so the transactions tell it when that is.
+            \TriCab\Core\Finance\Ap2\Contract\Ap2Transactions::class
+                => static function (Container $container): \TriCab\Core\Finance\Ap2\Contract\Ap2Transactions {
+                    $inner = $container->get('finance.ap2.transactions.inner');
+                    $outbox = self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2Outbox::class);
+                    \assert($inner instanceof \TriCab\Core\Finance\Ap2\Contract\Ap2Transactions);
+
+                    return $outbox instanceof \TriCab\Core\Finance\Ap2\Contract\Ap2DeferredOutbox
+                        ? new \TriCab\Core\Finance\Ap2\Service\Ap2OutboxFlushingTransactions($inner, $outbox)
+                        : $inner;
+                },
+            \TriCab\Core\Finance\Ap2\Contract\Ap2PaymentStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2PaymentStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2NotificationStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2NotificationStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2ExportStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2ExportStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2StatementStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2StatementStore::class),
+            // Mail intake and drafts (Phase 3 and 4): one store behind both views of `ap2_mail`.
+            \TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2MailStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2MailDrafts::class
+                => \DI\get(\TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class),
+            // AI (L1): Claude on Foundry when FINANCE_AP2_AI_ENABLED and the Foundry connection are set, one deployment per
+            // purpose (FINANCE_AP2_AI_*_MODEL); otherwise the Null implementations ("AI not connected"). `/me` flags.ai follows.
+            // Each call's tokens and USD cost go to the log stream as "Tri-AP2 AI usage {...}".
+            \TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageLog::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\Ai\ErrorLogAp2AiUsageLog::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2CopilotTools::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\Ai\StoreAp2CopilotTools::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2MailClassifier::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Contract\Ap2MailClassifier => $settings->isFinanceAp2AiConfigured()
+                    ? new \TriCab\Api\Finance\Ap2\Ai\FoundryAp2MailClassifier(
+                        self::ap2Foundry($container, $settings, $settings->financeAp2AiClassifyModel),
+                        (new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS'))->get('tri-ap2-mail-classify', 'v1'),
+                    )
+                    : new \TriCab\Api\Finance\Ap2\Ai\NullAp2MailClassifier(),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceExtractor::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceExtractor => $settings->isFinanceAp2AiConfigured()
+                    ? new \TriCab\Api\Finance\Ap2\Ai\FoundryAp2InvoiceExtractor(
+                        self::ap2Foundry($container, $settings, $settings->financeAp2AiExtractModel),
+                        (new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS'))->get('tri-ap2-invoice-extract', 'v1'),
+                    )
+                    : new \TriCab\Api\Finance\Ap2\Ai\NullAp2InvoiceExtractor(),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2DraftWriter::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Contract\Ap2DraftWriter => $settings->isFinanceAp2AiConfigured()
+                    ? new \TriCab\Api\Finance\Ap2\Ai\FoundryAp2DraftWriter(
+                        self::ap2Foundry($container, $settings, $settings->financeAp2AiDraftModel),
+                        (new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS'))->get('tri-ap2-reply-draft', 'v1'),
+                    )
+                    : new \TriCab\Api\Finance\Ap2\Ai\NullAp2DraftWriter(),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2Copilot::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Contract\Ap2Copilot => $settings->isFinanceAp2AiConfigured()
+                    ? new \TriCab\Api\Finance\Ap2\Ai\FoundryAp2Copilot(
+                        self::ap2Foundry($container, $settings, $settings->financeAp2AiCopilotModel),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2CopilotTools::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
+                        (new MarkdownPromptRepository(dirname(__DIR__, 2) . '/PROMPTS'))->get('tri-ap2-copilot', 'v1'),
+                    )
+                    : new \TriCab\Api\Finance\Ap2\Ai\NullAp2Copilot(),
+            // Email: nothing is sent unless FINANCE_AP2_SENDING_ENABLED; then the Graph outbox, held until the commit.
+            \TriCab\Core\Finance\Ap2\Contract\Ap2Outbox::class
+                => static function (Container $container) use ($settings): \TriCab\Core\Finance\Ap2\Contract\Ap2Outbox {
+                    if (!$settings->financeAp2SendingEnabled) {
+                        return new \TriCab\Api\Finance\Ap2\HistoryOnlyAp2Outbox(
+                            self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore::class),
+                            self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
+                        );
+                    }
+
+                    return self::get($container, \TriCab\Core\Finance\Ap2\Service\Ap2MailOutbox::class);
+                },
+            \TriCab\Core\Finance\Ap2\Service\Ap2MailOutbox::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2MailOutbox
+                    => new \TriCab\Core\Finance\Ap2\Service\Ap2MailOutbox(
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
+                        $settings->financeApMailbox,
+                    ),
+            \TriCab\Core\Finance\Ap2\Service\Ap2FileService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2FileService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2MailSyncService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2MailSyncService
+                    => new \TriCab\Core\Finance\Ap2\Service\Ap2MailSyncService(
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mailbox\FinanceMailboxReader::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Service\Ap2FileService::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2MailClassifier::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2Transactions::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
+                        $settings->financeApMailbox,
+                    ),
+            \TriCab\Core\Finance\Ap2\Service\Ap2MailSyncJob::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2MailSyncJob::class),
+            // Tri-AP2 and Odoo (Phases 6, 9): the one write (a draft bill, behind FINANCE_AP2_ODOO_POSTING_ENABLED) and the
+            // reads. Without a configured Odoo (https ODOO_URL, key, company ids) the writer is switched off and the
+            // gateway is the in-memory fake with posting off, so nothing is ever sent and no sync job is registered.
+            \TriCab\Core\Finance\Ap2\Contract\Ap2OdooRecordWriter::class
+                => static fn (): \TriCab\Core\Finance\Ap2\Contract\Ap2OdooRecordWriter => new \TriCab\Api\Finance\Ap2\Odoo\HttpAp2OdooRecordWriter(
+                    new StreamJsonHttpClient(60.0, 5.0),
+                    $settings->odooBaseUrlOrNull() ?? '',
+                    $settings->odooApiKey,
+                    $settings->odooCompanyIdList(),
+                    $settings->isOdooConfigured() && $settings->financeAp2OdooPostingEnabled,
+                ),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2OdooGateway::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Contract\Ap2OdooGateway => $settings->isOdooConfigured()
+                    ? new \TriCab\Api\Finance\Ap2\Odoo\HttpAp2OdooGateway(
+                        self::get($container, \TriCab\Core\Finance\Shared\Odoo\OdooClient::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2OdooRecordWriter::class),
+                        $settings->financeAp2OdooAudCompanyId,
+                        $settings->financeAp2OdooPostingEnabled,
+                    )
+                    : new \TriCab\Api\Finance\Ap2\Odoo\FakeAp2OdooGateway(false),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2OdooSyncTarget::class
+                => \DI\autowire(\TriCab\Core\Finance\Ap2\Odoo\ServiceAp2OdooSyncTarget::class),
+            \TriCab\Core\Finance\Ap2\Odoo\Ap2OdooSyncJob::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Odoo\Ap2OdooSyncJob::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2OdooPostingService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2OdooPostingService
+                    => new \TriCab\Core\Finance\Ap2\Service\Ap2OdooPostingService(
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2OdooGateway::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Odoo\OdooRecordStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Service\Ap2Assessor::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2Transactions::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
+                        $settings->isOdooConfigured() && $settings->financeAp2OdooPostingEnabled,
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class),
+                    ),
+            \TriCab\Core\Finance\Ap2\Service\Ap2MailService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2MailService
+                    => new \TriCab\Core\Finance\Ap2\Service\Ap2MailService(
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2StatementStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2ApprovalStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Service\Ap2Snapshots::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2PersonDirectory::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Service\Ap2InvoiceService::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Service\Ap2FileService::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2DraftWriter::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceExtractor::class),
+                        self::get($container, \TriCab\Core\Finance\Shared\Mail\FinanceMailSender::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2Transactions::class),
+                        self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
+                        $settings->financeApMailbox,
+                        $settings->financeAp2SendingEnabled,
+                    ),
+            \TriCab\Core\Finance\Ap2\Service\Ap2CopilotService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2CopilotService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2Snapshots::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2Snapshots::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2ApprovalService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2ApprovalService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2PaymentService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2PaymentService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2ExportService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2ExportService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2StatementService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2StatementService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2NotificationService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2NotificationService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2ReportService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2ReportService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2SettingsService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2SettingsService
+                    => new \TriCab\Core\Finance\Ap2\Service\Ap2SettingsService(
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class),
+                        $settings->financeAp2OdooPostingEnabled,
+                        $settings->financeApMailbox,
+                        self::get($container, \TriCab\Core\Finance\Shared\Odoo\OdooRecordStore::class),
+                    ),
+            \TriCab\Core\Finance\Ap2\Service\Ap2Assessor::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2Assessor::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2InvoiceService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2InvoiceService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2SupplierService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2SupplierService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2DashboardService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2DashboardService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2PriorityService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2PriorityService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2UserService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2UserService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2MeService::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2MeService
+                    => new \TriCab\Core\Finance\Ap2\Service\Ap2MeService(
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class),
+                        $settings->financeAp2SendingEnabled,
+                        $settings->financeAp2OdooPostingEnabled,
+                        $settings->financeApMailbox,
+                        !(self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2MailClassifier::class) instanceof \TriCab\Api\Finance\Ap2\Ai\NullAp2MailClassifier)
+                            || !(self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceExtractor::class) instanceof \TriCab\Api\Finance\Ap2\Ai\NullAp2InvoiceExtractor)
+                            || !(self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2DraftWriter::class) instanceof \TriCab\Api\Finance\Ap2\Ai\NullAp2DraftWriter)
+                            || !(self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2Copilot::class) instanceof \TriCab\Api\Finance\Ap2\Ai\NullAp2Copilot),
                     ),
             // Parity plan E5.5: correction memory and the review log (azure-sql below).
             \TriCab\Core\Rfq\Contract\RfqCorrectionMemory::class
@@ -3575,6 +3805,33 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskCalendarInvites::class);
             $definitions[\TriCab\Core\Finance\Task\Contract\TaskReportRecipientStore::class]
                 = \DI\autowire(\TriCab\Api\Finance\Task\AzureSqlTaskReportRecipientStore::class);
+            // Tri-AP2: the `finance.ap2_*` tables, and the platform people it may name.
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2SupplierStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2InvoiceStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2HistoryStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2ApprovalStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2ApprovalStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2SettingsStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2PriorityStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2PriorityStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2PersonDirectory::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2PersonDirectory::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2PaymentStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2PaymentStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2NotificationStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2NotificationStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2ExportStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2ExportStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2StatementStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2StatementStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2MailStore::class);
+            $definitions['finance.ap2.transactions.inner']
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2Transactions::class);
             // Tri-AR (Phase 5): the assignee directory reads `[identity]`; the option lists are `finance.ar_option_lists`.
             $definitions[\TriCab\Core\Finance\Ar\Contract\ArAssigneeDirectory::class]
                 = \DI\autowire(\TriCab\Api\Finance\Ar\AzureSqlArAssigneeDirectory::class);
@@ -4328,6 +4585,23 @@ SQL,
         }
 
         return $service;
+    }
+
+    /** Tri-AP2's Foundry connection for one purpose: the platform's endpoint and auth, that purpose's deployment. */
+    private static function ap2Foundry(Container $container, Settings $settings, string $deployment): \TriCab\Api\Finance\Ap2\Ai\Ap2Foundry
+    {
+        $http = new StreamJsonHttpClient((float) $settings->financeAp2AiTimeoutSeconds, 10.0);
+
+        return new \TriCab\Api\Finance\Ap2\Ai\Ap2Foundry(
+            $http,
+            new ManagedIdentityFoundryAccessTokenProvider($http),
+            $settings->foundryEndpoint,
+            $deployment,
+            $settings->foundryAuthMode,
+            $settings->foundryApiKey,
+            \TriCab\Core\Finance\Ap2\Ai\Ap2AiPricing::forModel($deployment),
+            self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageLog::class),
+        );
     }
 
     private static function createGuestOtpEmailSender(Settings $settings, Container $container): GuestOtpEmailSender

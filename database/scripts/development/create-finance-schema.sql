@@ -118,7 +118,7 @@ BEGIN TRY
                 REFERENCES [finance].[mailboxes] ([id]) ON DELETE CASCADE,
             CONSTRAINT [UQ_finance_mailbox_grants_app_mailbox] UNIQUE ([application_key], [mailbox_id]),
             CONSTRAINT [CK_finance_mailbox_grants_application_key]
-                CHECK ([application_key] IN (N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP'))
+                CHECK ([application_key] IN (N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP', N'AP2'))
         );
     END;
 
@@ -142,7 +142,7 @@ BEGIN TRY
             [sent_at]                DATETIME2(6)   NULL,
             CONSTRAINT [PK_finance_mail_deliveries] PRIMARY KEY CLUSTERED ([id]),
             CONSTRAINT [CK_finance_mail_deliveries_application_key]
-                CHECK ([application_key] IN (N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP')),
+                CHECK ([application_key] IN (N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP', N'AP2')),
             CONSTRAINT [CK_finance_mail_deliveries_status]
                 CHECK ([status] IN (N'pending', N'sent', N'failed', N'suppressed'))
         );
@@ -176,7 +176,7 @@ BEGIN TRY
                 CONSTRAINT [DF_finance_audit_events_created_at] DEFAULT (SYSUTCDATETIME()),
             CONSTRAINT [PK_finance_audit_events] PRIMARY KEY CLUSTERED ([id]),
             CONSTRAINT [CK_finance_audit_events_application_key]
-                CHECK ([application_key] IN (N'FINANCE', N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP'))
+                CHECK ([application_key] IN (N'FINANCE', N'TASK', N'CREDIT', N'COLLECT', N'AR', N'AP', N'AP2'))
         );
 
         CREATE INDEX [IX_finance_audit_events_action]

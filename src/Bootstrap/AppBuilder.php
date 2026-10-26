@@ -584,6 +584,77 @@ final class AppBuilder
         if ($settings instanceof Settings && $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP)) {
             self::registerFinanceApRoutes($app, $container);
         }
+        if ($settings instanceof Settings && $settings->financeAppEnabled(\TriCab\Core\Finance\Module::APP_AP2)) {
+            self::registerFinanceAp2Routes($app, $container);
+        }
+    }
+
+    /**
+     * Tri-AP2 (the test app), under `/api/v1/finance/ap2`. Registered only when FINANCE_MODULE_ENABLED and
+     * FINANCE_AP2_ENABLED are both true. Every route carries exactly one `FINANCE.AP2.*` permission, pinned by
+     * `FinanceRouteTableTest`. Contract: platform/tri-ap-new/TRI-AP2-API-CONTRACT.md. Later phases add their routes here.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerFinanceAp2Routes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $ap2 = '/api/v1/finance/ap2';
+        $a = '\\TriCab\\Api\\Http\\Action\\Finance\\Ap2\\';
+
+        $app->get($ap2 . '/me', $a . 'GetAp2MeAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_ACCESS));
+        $app->get($ap2 . '/users', $a . 'ListAp2UsersAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_ACCESS));
+        $app->get($ap2 . '/priorities', $a . 'GetAp2PrioritiesAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_ACCESS));
+        $app->put($ap2 . '/priorities/{kind}/{id}', $a . 'PutAp2PriorityAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_ACCESS));
+        $app->get($ap2 . '/dashboard', $a . 'GetAp2DashboardAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+
+        $app->get($ap2 . '/suppliers', $a . 'ListAp2SuppliersAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->post($ap2 . '/suppliers', $a . 'CreateAp2SupplierAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
+        $app->get($ap2 . '/suppliers/{id}', $a . 'GetAp2SupplierAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->patch($ap2 . '/suppliers/{id}', $a . 'UpdateAp2SupplierAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
+        $app->get($ap2 . '/suppliers/{id}/history', $a . 'ListAp2SupplierHistoryAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->post($ap2 . '/suppliers/{id}/history', $a . 'RecordAp2SupplierActionAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
+
+        $app->get($ap2 . '/invoices', $a . 'ListAp2InvoicesAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->post($ap2 . '/invoices', $a . 'CreateAp2InvoiceAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
+        $app->get($ap2 . '/invoices/{id}', $a . 'GetAp2InvoiceAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->patch($ap2 . '/invoices/{id}', $a . 'UpdateAp2InvoiceAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
+        $app->post($ap2 . '/invoices/{id}/exclude-duplicate', $a . 'ExcludeAp2DuplicateAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
+
+        $app->post($ap2 . '/suppliers/{id}/history/share', $a . 'ShareAp2HistoryAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_MAIL_SEND));
+        $app->post($ap2 . '/suppliers/{id}/bank-verify', $a . 'VerifyAp2BankAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_BANK_VERIFY));
+        $app->post($ap2 . '/invoices/{id}/import-result', $a . 'RecordAp2ImportResultAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_EXPORT));
+        $app->post($ap2 . '/invoices/{id}/post-to-odoo', $a . 'PostAp2InvoiceToOdooAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_EXPORT));
+        $app->get($ap2 . '/approvals/approvers', $a . 'ListAp2ApproversAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_APPROVALS_REQUEST));
+        $app->get($ap2 . '/approvals', $a . 'ListAp2ApprovalsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->post($ap2 . '/approvals', $a . 'RequestAp2ApprovalAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_APPROVALS_REQUEST));
+        $app->get($ap2 . '/approvals/{id}', $a . 'GetAp2ApprovalAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->post($ap2 . '/approvals/{id}/decision', $a . 'DecideAp2ApprovalAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_APPROVALS_DECIDE));
+        $app->get($ap2 . '/payments', $a . 'ListAp2PaymentsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->post($ap2 . '/payments', $a . 'CreateAp2PaymentAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_PAYMENTS_PREPARE));
+        $app->post($ap2 . '/payments/{id}/transition', $a . 'TransitionAp2PaymentAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_PAYMENTS_PREPARE));
+        $app->get($ap2 . '/exports', $a . 'ListAp2ExportsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_EXPORT));
+        $app->post($ap2 . '/exports', $a . 'CreateAp2ExportAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_EXPORT));
+        $app->get($ap2 . '/exports/{id}/csv', $a . 'DownloadAp2ExportCsvAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_EXPORT));
+        $app->post($ap2 . '/mail/sync', $a . 'SyncAp2MailAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_MAIL_READ));
+        $app->get($ap2 . '/mail', $a . 'ListAp2MailAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_MAIL_READ));
+        $app->get($ap2 . '/mail/{id}', $a . 'GetAp2MailAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_MAIL_READ));
+        $app->patch($ap2 . '/mail/{id}', $a . 'UpdateAp2MailAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_MAIL_READ));
+        $app->post($ap2 . '/mail/{id}/draft', $a . 'DraftAp2MailAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_MAIL_READ));
+        $app->post($ap2 . '/mail/{id}/send', $a . 'SendAp2MailAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_MAIL_SEND));
+        $app->post($ap2 . '/mail/{id}/create-invoice', $a . 'CreateAp2InvoiceFromMailAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
+        $app->get($ap2 . '/mail/{id}/attachments/{aid}/file', $a . 'GetAp2MailAttachmentFileAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_MAIL_READ));
+        $app->get($ap2 . '/invoices/{id}/file', $a . 'GetAp2InvoiceFileAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->post($ap2 . '/copilot', $a . 'AskAp2CopilotAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->get($ap2 . '/statements', $a . 'ListAp2StatementsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->post($ap2 . '/statements', $a . 'CreateAp2StatementAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
+        $app->post($ap2 . '/statements/{id}/review', $a . 'ReviewAp2StatementAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
+        $app->get($ap2 . '/reports/aged', $a . 'GetAp2AgedReportAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->get($ap2 . '/notifications', $a . 'ListAp2NotificationsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_ACCESS));
+        $app->post($ap2 . '/notifications/read-all', $a . 'ReadAllAp2NotificationsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_ACCESS));
+        $app->get($ap2 . '/settings', $a . 'GetAp2SettingsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_SETTINGS_MANAGE));
+        $app->patch($ap2 . '/settings', $a . 'UpdateAp2SettingsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_SETTINGS_MANAGE));
+        $app->get($ap2 . '/odoo/taxes', $a . 'ListAp2OdooTaxesAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_SETTINGS_MANAGE));
     }
 
     /**

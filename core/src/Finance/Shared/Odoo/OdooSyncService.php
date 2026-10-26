@@ -48,6 +48,8 @@ final class OdooSyncService
         private readonly ApplicationTransaction $transaction,
         private readonly Clock $clock,
         private readonly OdooSyncConfig $config,
+        /** Also copy `account.tax` (Tri-AP2 only: the live Tri-AP's Odoo user may lack accounting read rights). */
+        private readonly bool $includeTaxes = false,
     ) {
     }
 
@@ -76,17 +78,26 @@ final class OdooSyncService
 
         $counts = [];
         $error = null;
+        $warning = null;
         try {
             /** @var array<string, array{fetched: int, added: int, updated: int, removed: int}> $counts */
-            $counts = $this->transaction->run(function () use ($mode, $now): array {
+            $counts = $this->transaction->run(function () use ($mode, $now, &$warning): array {
                 $counts = [];
                 foreach (OdooLists::all() as $spec) {
                     $counts[$spec->key] = $this->syncList($spec, $mode === OdooSyncRun::MODE_FULL, $now);
+                }
+                if ($this->includeTaxes) {
+                    // A refusal here (no accounting rights) is a warning: the other lists still land.
+                    $taxes = $this->syncList(OdooLists::taxes(), $mode === OdooSyncRun::MODE_FULL, $now, $warning);
+                    if ($taxes !== null) {
+                        $counts[OdooLists::TAXES] = $taxes;
+                    }
                 }
 
                 return $counts;
             });
             $status = OdooSyncRun::STATUS_SUCCEEDED;
+            $error = $warning;
         } catch (Throwable $failure) {
             $status = OdooSyncRun::STATUS_FAILED;
             $error = mb_substr($failure instanceof OdooError ? $failure->getMessage() : $failure::class . ': ' . $failure->getMessage(), 0, 1000);
@@ -97,10 +108,12 @@ final class OdooSyncService
     }
 
     /**
-     * @return array{fetched: int, added: int, updated: int, removed: int}
+     * @param string|null $warning when given, a failed read is recorded here and the list is skipped (null returned)
+     * @return array{fetched: int, added: int, updated: int, removed: int}|null
      */
-    private function syncList(OdooListSpec $spec, bool $full, DateTimeImmutable $now): array
+    private function syncList(OdooListSpec $spec, bool $full, DateTimeImmutable $now, ?string &$warning = null): ?array
     {
+        $soft = func_num_args() > 3;
         $domain = $spec->domainFor($this->config->companyIds);
         if (!$full) {
             $cursor = $this->records->maxWriteDate($spec->key);
@@ -112,7 +125,16 @@ final class OdooSyncService
             }
         }
 
-        $rows = $this->client->searchRead($spec->model, $domain, $spec->fields);
+        try {
+            $rows = $this->client->searchRead($spec->model, $domain, $spec->fields);
+        } catch (Throwable $failure) {
+            if (!$soft) {
+                throw $failure;
+            }
+            $warning = mb_substr('Warning: the ' . $spec->key . ' list was not synced: ' . ($failure instanceof OdooError ? $failure->getMessage() : $failure::class . ': ' . $failure->getMessage()), 0, 1000);
+
+            return null;
+        }
         $ids = [];
         foreach ($rows as $row) {
             $ids[] = self::odooId($row);

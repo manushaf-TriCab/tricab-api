@@ -415,4 +415,49 @@ final class OdooSyncServiceTest extends TestCase
             self::assertFalse((new OdooSyncConfig([2], $bad))->keyExpiresSoon($today));
         }
     }
+
+    private function withTaxes(): OdooSyncService
+    {
+        return new OdooSyncService($this->odoo, $this->records, $this->runs, new class () implements ApplicationTransaction {
+            public function run(callable $operation): mixed
+            {
+                return $operation();
+            }
+        }, $this->clock, new OdooSyncConfig([2, 4], '2026-11-01'), true);
+    }
+
+    private function putTax(): void
+    {
+        $this->odoo->put('account.tax', ['id' => 7, 'name' => 'GST10', 'description' => 'GST on purchases', 'amount' => 10, 'amount_type' => 'percent', 'type_tax_use' => 'purchase', 'company_id' => [2, 'Example AU Pty Ltd'], 'active' => true, 'write_date' => '2026-09-07 00:00:00']);
+    }
+
+    public function test_the_taxes_list_is_copied_only_when_ap2_is_on(): void
+    {
+        $this->putTax();
+
+        $off = $this->sync->run(OdooSyncRun::MODE_FULL, OdooSyncRun::TRIGGER_SCHEDULE);
+        self::assertSame([], $this->odoo->callsFor('account.tax'));
+        self::assertArrayNotHasKey('taxes', $off->counts);
+
+        $on = $this->withTaxes()->run(OdooSyncRun::MODE_FULL, OdooSyncRun::TRIGGER_SCHEDULE);
+        self::assertSame(OdooSyncRun::STATUS_SUCCEEDED, $on->status);
+        self::assertNull($on->error);
+        self::assertSame(1, $on->counts['taxes']['added']);
+        $call = $this->odoo->callsFor('account.tax')[0];
+        self::assertSame([['type_tax_use', '=', 'purchase'], ['company_id', 'in', [2, 4]]], $call['domain']);
+        $tax = $this->records->list('taxes', false, null)[0];
+        self::assertEquals(['name' => 'GST10', 'description' => 'GST on purchases', 'amount' => 10.0, 'amount_type' => 'percent', 'type_tax_use' => 'purchase', 'company_id' => 2, 'company_name' => 'Example AU Pty Ltd'], $tax->payload);
+    }
+
+    public function test_a_failing_taxes_read_is_a_warning_and_the_other_lists_still_sync(): void
+    {
+        $this->odoo->failures['account.tax'] = new OdooError('Access denied to account.tax');
+
+        $run = $this->withTaxes()->run(OdooSyncRun::MODE_FULL, OdooSyncRun::TRIGGER_SCHEDULE);
+
+        self::assertSame(OdooSyncRun::STATUS_SUCCEEDED, $run->status);
+        self::assertStringContainsString('Warning: the taxes list was not synced: Access denied', (string) $run->error);
+        self::assertSame(['companies' => 2, 'vendors' => 3, 'cost-centres' => 1, 'accounts' => 1], array_intersect_key($this->records->counts(), array_flip(['companies', 'vendors', 'cost-centres', 'accounts'])));
+        self::assertArrayNotHasKey('taxes', $run->counts);
+    }
 }

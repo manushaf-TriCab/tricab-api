@@ -39,6 +39,10 @@ final class FinanceNoGeneralDownloadRouteTest extends TestCase
         '/api/v1/finance/task/tasks/{id}/files/{fid}',
         '/api/v1/finance/task/tasks/{id}/files/{fid}/file',
         '/api/v1/finance/task/task-uploads',
+        // Tri-AP2 (round 3): an invoice's source document by invoice id, and a mail's attachment by mail id and attachment id, each
+        // under its own AP2 permission and read through Ap2FileService (record type ap2_mail), never by file id alone.
+        '/api/v1/finance/ap2/invoices/{id}/file',
+        '/api/v1/finance/ap2/mail/{id}/attachments/{aid}/file',
     ];
 
     public function test_no_finance_route_serves_files_by_id(): void

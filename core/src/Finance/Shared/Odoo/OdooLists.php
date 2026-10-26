@@ -20,6 +20,12 @@ final class OdooLists
 
     public const ACCOUNTS = 'accounts';
 
+    /** Not in KEYS or all(): synced only for Tri-AP2 (see OdooSyncService), read by Ap2OdooPostingService. */
+    public const TAXES = 'taxes';
+
+    /** Odoo 19 `account.tax` fields the taxes list asks for. */
+    public const TAX_FIELDS = ['name', 'description', 'amount', 'amount_type', 'type_tax_use', 'company_id', 'active', 'write_date'];
+
     public const KEYS = [self::COMPANIES, self::VENDORS, self::COST_CENTRES, self::ACCOUNTS];
 
     /**
@@ -63,9 +69,22 @@ final class OdooLists
         ];
     }
 
+    /** Purchase taxes of the configured companies. */
+    public static function taxes(): OdooListSpec
+    {
+        return new OdooListSpec(
+            self::TAXES,
+            'account.tax',
+            self::TAX_FIELDS,
+            null,
+            static fn (array $companyIds): array => [['type_tax_use', '=', 'purchase'], ['company_id', 'in', $companyIds]],
+            static fn (array $row): array => self::tax($row),
+        );
+    }
+
     public static function find(string $key): ?OdooListSpec
     {
-        foreach (self::all() as $spec) {
+        foreach ([...self::all(), self::taxes()] as $spec) {
             if ($spec->key === $key) {
                 return $spec;
             }
@@ -174,6 +193,26 @@ final class OdooLists
             'code' => self::text($row['code'] ?? null),
             'account_type' => self::text($row['account_type'] ?? null),
             'company_ids' => $companyIds,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private static function tax(array $row): array
+    {
+        [$companyId, $companyName] = self::many2one($row['company_id'] ?? null);
+        $amount = $row['amount'] ?? 0;
+
+        return [
+            'name' => self::text($row['name'] ?? null),
+            'description' => self::text($row['description'] ?? null),
+            'amount' => is_numeric($amount) ? (float) $amount : 0.0,
+            'amount_type' => self::text($row['amount_type'] ?? null),
+            'type_tax_use' => self::text($row['type_tax_use'] ?? null),
+            'company_id' => $companyId,
+            'company_name' => $companyName,
         ];
     }
 }
