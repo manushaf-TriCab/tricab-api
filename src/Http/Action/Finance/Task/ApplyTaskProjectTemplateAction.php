@@ -10,7 +10,7 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Task\Domain\TaskFailure;
 use TriCab\Core\Finance\Task\Service\TaskBoardService;
 
-/** POST /api/v1/finance/task/project-templates/{id}/apply: 201, a new project with its groups and tasks (13 Oct 2026). Gated on `FINANCE.TASK.SETUP.MANAGE`. */
+/** POST /api/v1/finance/task/project-templates/{id}/apply: 201, a new project with its groups and tasks (13 Oct 2026). Gated on `FINANCE.TASK.TASKS.CREATE` (everyone, Ming 26 Oct 2026). */
 final class ApplyTaskProjectTemplateAction
 {
     use TaskActionSupport;

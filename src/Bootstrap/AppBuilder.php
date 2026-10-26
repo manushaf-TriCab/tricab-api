@@ -775,7 +775,7 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
 
         // The project board (13 Oct 2026): a project's task groups, and project templates (read: TASKS.READ; write: SETUP.MANAGE,
-        // except Save as template, which everyone may use: Nick Han, 26 Oct 2026).
+        // except Save as template and Use template, which everyone may use: Nick Han and Ming, 26 Oct 2026).
         $app->get($task . '/projects/{id}/groups', \TriCab\Api\Http\Action\Finance\Task\ListTaskGroupsAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_READ));
         $app->post($task . '/projects/{id}/groups', \TriCab\Api\Http\Action\Finance\Task\CreateTaskGroupAction::class)
@@ -797,7 +797,7 @@ final class AppBuilder
         $app->delete($task . '/project-templates/{id}', \TriCab\Api\Http\Action\Finance\Task\DeleteTaskProjectTemplateAction::class)
             ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
         $app->post($task . '/project-templates/{id}/apply', \TriCab\Api\Http\Action\Finance\Task\ApplyTaskProjectTemplateAction::class)
-            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_SETUP_MANAGE));
+            ->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_TASK_TASKS_CREATE));
 
         // Project groups on the Projects page (Nick Han, 19 Oct 2026; read: TASKS.READ; write: SETUP.MANAGE).
         $app->get($task . '/project-groups', \TriCab\Api\Http\Action\Finance\Task\ListTaskProjectGroupsAction::class)

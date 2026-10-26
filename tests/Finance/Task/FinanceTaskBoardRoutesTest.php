@@ -132,6 +132,26 @@ final class FinanceTaskBoardRoutesTest extends TestCase
         self::assertSame(403, $this->call('POST', '/project-templates', ['name' => 'Mine'])[0]);
     }
 
+    public function test_a_member_uses_a_project_template(): void
+    {
+        $template = self::data($this->call('POST', '/project-templates', [
+            'name' => 'Weekly tasks',
+            'groups' => [['name' => 'AP', 'tasks' => [['name' => 'Pay run', 'preparer_ids' => ['1']]]]],
+        ])[1]);
+        self::assertIsString($template['id']);
+
+        $this->as(self::MEMBER);
+        [$status, $json] = $this->call('POST', '/project-templates/' . $template['id'] . '/apply', ['name' => 'Weekly tasks W19', 'start_date' => '2026-11-02']);
+        self::assertSame(201, $status);
+        $made = self::data($json);
+        self::assertSame(1, $made['tasks_created']);
+        self::assertIsArray($made['project']);
+        self::assertSame('Weekly tasks W19', $made['project']['name']);
+        // Editing and deleting a template stay a Manager's.
+        self::assertSame(403, $this->call('PATCH', '/project-templates/' . $template['id'], ['name' => 'Mine'])[0]);
+        self::assertSame(403, $this->call('DELETE', '/project-templates/' . $template['id'])[0]);
+    }
+
     public function test_anyone_saves_a_project_as_a_template_with_only_the_tasks_they_see(): void
     {
         $projectId = self::data($this->call('POST', '/projects', ['name' => 'Audit'])[1])['id'];
