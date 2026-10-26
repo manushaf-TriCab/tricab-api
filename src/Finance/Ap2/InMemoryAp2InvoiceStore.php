@@ -53,6 +53,11 @@ final class InMemoryAp2InvoiceStore implements Ap2InvoiceStore
         $this->rows[$invoice->id] = $invoice;
     }
 
+    public function countCreated(\DateTimeImmutable $from, \DateTimeImmutable $toExclusive): int
+    {
+        return count(array_filter($this->rows, static fn (Ap2Invoice $b): bool => $b->createdAt >= $from && $b->createdAt < $toExclusive));
+    }
+
     public function hasActivePayment(string $invoiceId): bool
     {
         return isset($this->invoiceIdsWithActivePayment()[$invoiceId]);

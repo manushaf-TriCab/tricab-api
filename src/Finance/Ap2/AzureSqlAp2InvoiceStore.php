@@ -83,6 +83,16 @@ final class AzureSqlAp2InvoiceStore extends AzureSqlAp2Support implements Ap2Inv
         return $out;
     }
 
+    public function countCreated(\DateTimeImmutable $from, \DateTimeImmutable $toExclusive): int
+    {
+        $rows = $this->connection->fetchAll(
+            'SELECT COUNT(*) AS [n] FROM ' . self::TABLE . ' WHERE [created_at] >= :from AND [created_at] < :to',
+            ['from' => self::at($from), 'to' => self::at($toExclusive)],
+        );
+
+        return self::int($rows[0]['n'] ?? 0);
+    }
+
     public function poForecast(): array
     {
         return array_map(static fn (array $row): Ap2PoForecastRow => new Ap2PoForecastRow(

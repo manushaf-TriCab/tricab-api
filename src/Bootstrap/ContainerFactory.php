@@ -1671,6 +1671,8 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2PaymentStore::class),
             \TriCab\Core\Finance\Ap2\Contract\Ap2NotificationStore::class
                 => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2NotificationStore::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2CopilotHistoryStore::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2CopilotHistoryStore::class),
             \TriCab\Core\Finance\Ap2\Contract\Ap2ExportStore::class
                 => \DI\autowire(\TriCab\Api\Finance\Ap2\InMemoryAp2ExportStore::class),
             \TriCab\Core\Finance\Ap2\Contract\Ap2StatementStore::class
@@ -1685,6 +1687,9 @@ final class ContainerFactory
             // Each call's tokens and USD cost go to the log stream as "Tri-AP2 AI usage {...}".
             \TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageLog::class
                 => \DI\autowire(\TriCab\Api\Finance\Ap2\Ai\ErrorLogAp2AiUsageLog::class),
+            // Without a database nothing is kept to report on: the report is empty. With one, both are the SQL log (below).
+            \TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageReport::class
+                => \DI\autowire(\TriCab\Api\Finance\Ap2\Ai\InMemoryAp2AiUsageLog::class),
             \TriCab\Core\Finance\Ap2\Contract\Ap2CopilotTools::class
                 => \DI\autowire(\TriCab\Api\Finance\Ap2\Ai\StoreAp2CopilotTools::class),
             \TriCab\Core\Finance\Ap2\Contract\Ap2MailClassifier::class
@@ -1748,6 +1753,7 @@ final class ContainerFactory
                         self::get($container, \TriCab\Core\Finance\Shared\Mailbox\FinanceMailboxReader::class),
                         self::get($container, \TriCab\Core\Finance\Ap2\Service\Ap2FileService::class),
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2MailClassifier::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceExtractor::class),
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2Transactions::class),
                         self::get($container, \TriCab\Core\Finance\Ap\Service\ApTime::class),
                         $settings->financeApMailbox,
@@ -1818,6 +1824,7 @@ final class ContainerFactory
             \TriCab\Core\Finance\Ap2\Service\Ap2StatementService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2StatementService::class),
             \TriCab\Core\Finance\Ap2\Service\Ap2NotificationService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2NotificationService::class),
             \TriCab\Core\Finance\Ap2\Service\Ap2ReportService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2ReportService::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2AiUsageService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2AiUsageService::class),
             \TriCab\Core\Finance\Ap2\Service\Ap2SettingsService::class
                 => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2SettingsService
                     => new \TriCab\Core\Finance\Ap2\Service\Ap2SettingsService(
@@ -3824,12 +3831,19 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2PaymentStore::class);
             $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2NotificationStore::class]
                 = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2NotificationStore::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2CopilotHistoryStore::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2CopilotHistoryStore::class);
             $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2ExportStore::class]
                 = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2ExportStore::class);
             $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2StatementStore::class]
                 = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2StatementStore::class);
             $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class]
                 = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2MailStore::class);
+            // AI usage (L3): one `finance.ap2_ai_usage` row per call, and the report over it; the log line stays.
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageLog::class]
+                = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2AiUsageLog::class);
+            $definitions[\TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageReport::class]
+                = \DI\get(\TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageLog::class);
             $definitions['finance.ap2.transactions.inner']
                 = \DI\autowire(\TriCab\Api\Finance\Ap2\AzureSqlAp2Transactions::class);
             // Tri-AR (Phase 5): the assignee directory reads `[identity]`; the option lists are `finance.ar_option_lists`.

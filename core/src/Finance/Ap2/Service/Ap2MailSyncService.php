@@ -11,6 +11,7 @@ use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Ai\Ap2AiUnavailable;
 use TriCab\Core\Finance\Ap2\Ai\Ap2MailClassification;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
+use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceExtractor;
 use TriCab\Core\Finance\Ap2\Contract\Ap2MailClassifier;
 use TriCab\Core\Finance\Ap2\Contract\Ap2MailStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore;
@@ -22,6 +23,7 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2HistoryEntry;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invalid;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Mail;
 use TriCab\Core\Finance\Ap2\Domain\Ap2MailAttachment;
+use TriCab\Core\Finance\Ap2\Domain\Ap2MailExtraction;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Person;
 use TriCab\Core\Finance\Ap2\Domain\Ap2SyncRun;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Upstream;
@@ -45,6 +47,9 @@ use TriCab\Core\Shared\Mailbox\MailboxReadFailed;
  *  - Per new message: the body as plain text; attachments (not inline images) into `finance.attachments`; the
  *    supplier by sender address or domain ({@see Ap2SupplierMatcher}), then the classifier for the category, a
  *    summary and (only if the address matched nobody) a supplier; one history line when a supplier is known.
+ *  - A 'Supplier invoice' with a supplier and a PDF attachment also gets the invoice extractor run on its first PDF; the
+ *    result is stored on the mail (`extraction_json`) as a suggestion for `create-invoice`. An invoice is never created
+ *    here, and an extraction that fails or finds nothing is simply not stored.
  *  - A message that cannot be read is counted as skipped and the run goes on; a refused or failed LISTING fails the run.
  *  - Every run is recorded in `ap2_sync_runs`. The answer is `{fetched, created, skipped, truncated}`.
  */
@@ -65,6 +70,7 @@ final class Ap2MailSyncService
         private readonly FinanceMailboxReader $reader,
         private readonly Ap2FileService $files,
         private readonly Ap2MailClassifier $classifier,
+        private readonly Ap2InvoiceExtractor $extractor,
         private readonly Ap2Transactions $transactions,
         private readonly ApTime $time,
         private readonly string $mailbox,
@@ -188,10 +194,12 @@ final class Ap2MailSyncService
         $from = strtolower(trim($summary->fromAddress));
         $stored = [];
         $rows = [];
+        $bytesOf = [];
         foreach ($files as $f) {
             $file = $this->files->store($f['name'], $f['type'], $f['bytes'], $userId);
             $stored[] = $file->id;
             $rows[] = new Ap2MailAttachment(bin2hex(random_bytes(16)), $mailId, $file->id, $f['name'], strlen($f['bytes']), $file->contentType, $now, $f['graphId']);
+            $bytesOf[$rows[array_key_last($rows)]->id] = $f['bytes'];
         }
         $mail = new Ap2Mail(
             $mailId,
@@ -211,6 +219,8 @@ final class Ap2MailSyncService
             aiSummary: $classification->summary === null ? null : mb_substr($classification->summary, 0, 1000),
             aiConfidence: $classification->confidence > 0.0 ? max(0.0, min(1.0, $classification->confidence)) : null,
         );
+
+        $mail = $mail->with(extraction: $this->extract($category, $supplierId, $suppliers, $rows, $bytesOf));
 
         $this->transactions->run(function () use ($mail, $rows, $now, $supplierId): void {
             $this->mail->insertMail($mail, $rows);
@@ -233,6 +243,53 @@ final class Ap2MailSyncService
         }
 
         return true;
+    }
+
+    /**
+     * The extractor's reading of the first PDF, only for a 'Supplier invoice' with a supplier. Never throws: the sync
+     * must not fail because of extraction, and "AI not connected" (nothing read) stores nothing.
+     *
+     * @param list<\TriCab\Core\Finance\Ap2\Domain\Ap2Supplier> $suppliers
+     * @param list<Ap2MailAttachment> $rows
+     * @param array<string, string> $bytesOf attachment row id => bytes
+     */
+    private function extract(string $category, ?string $supplierId, array $suppliers, array $rows, array $bytesOf): ?Ap2MailExtraction
+    {
+        if ($category !== 'Supplier invoice' || $supplierId === null) {
+            return null;
+        }
+        $supplier = null;
+        foreach ($suppliers as $candidate) {
+            if ($candidate->id === $supplierId) {
+                $supplier = $candidate;
+            }
+        }
+        if ($supplier === null) {
+            return null;
+        }
+        foreach ($rows as $row) {
+            if (!self::isPdf($row)) {
+                continue;
+            }
+            try {
+                $read = $this->extractor->extract($bytesOf[$row->id], $row->contentType !== '' ? $row->contentType : 'application/pdf', $row->name, $supplier->name);
+            } catch (Ap2AiUnavailable) {
+                return null;
+            } catch (Throwable $e) {
+                error_log('Tri-AP2 mail sync extraction failed: ' . $e::class);
+
+                return null;
+            }
+
+            return $read->isEmpty() ? null : new Ap2MailExtraction($row->id, $row->name, $supplier->id, $supplier->name, $read);
+        }
+
+        return null;
+    }
+
+    private static function isPdf(Ap2MailAttachment $a): bool
+    {
+        return strtolower($a->contentType) === 'application/pdf' || preg_match('/\.pdf$/i', $a->name) === 1;
     }
 
     /** @return list<array{name: string, type: string, bytes: string, graphId: string}> */

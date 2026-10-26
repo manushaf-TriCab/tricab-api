@@ -15,7 +15,7 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2SyncRun;
 
 /**
  * `finance.ap2_mail`, `finance.ap2_mail_attachments` and `finance.ap2_sync_runs`
- * (`create-finance-ap2-schema.sql`, plus `alter-finance-ap2-mail-round3.sql` for `draft_attachment_ids`).
+ * (`create-finance-ap2-schema.sql`, plus `alter-finance-ap2-mail-round3.sql` for `draft_attachment_ids`, `alter-finance-ap2-ai-usage.sql` for `extraction_json`).
  */
 final class AzureSqlAp2MailStore extends AzureSqlAp2Support implements Ap2MailStore, Ap2MailDrafts
 {
@@ -26,7 +26,7 @@ final class AzureSqlAp2MailStore extends AzureSqlAp2Support implements Ap2MailSt
     private const COLUMNS = [
         'id', 'supplier_id', 'invoice_id', 'mailbox', 'graph_message_id', 'received_at', 'subject', 'body_preview', 'body', 'category',
         'owner_user_id', 'owner_name', 'owner_email', 'status', 'is_read', 'due', 'from_address', 'cc', 'reply_to', 'record_history',
-        'draft', 'draft_reviewed', 'draft_attachment_ids', 'sent', 'sent_at', 'approval_id', 'ai_summary', 'ai_confidence', 'created_at', 'updated_at',
+        'draft', 'draft_reviewed', 'draft_attachment_ids', 'sent', 'sent_at', 'approval_id', 'ai_summary', 'ai_confidence', 'extraction_json', 'created_at', 'updated_at',
     ];
 
     public function all(?DateTimeImmutable $from = null, ?DateTimeImmutable $until = null): array
@@ -241,6 +241,7 @@ final class AzureSqlAp2MailStore extends AzureSqlAp2Support implements Ap2MailSt
             'approval_id' => $m->approvalId,
             'ai_summary' => $m->aiSummary,
             'ai_confidence' => $m->aiConfidence === null ? null : number_format($m->aiConfidence, 8, '.', ''),
+            'extraction_json' => $m->extraction?->toJson(),
             'created_at' => self::at($m->createdAt),
             'updated_at' => self::at($m->updatedAt),
         ];
@@ -306,6 +307,7 @@ final class AzureSqlAp2MailStore extends AzureSqlAp2Support implements Ap2MailSt
             self::textOrNull($row['approval_id']),
             self::textOrNull($row['ai_summary']),
             is_scalar($confidence) ? (float) $confidence : null,
+            \TriCab\Core\Finance\Ap2\Domain\Ap2MailExtraction::fromJson(self::textOrNull($row['extraction_json'] ?? null)),
         );
     }
 

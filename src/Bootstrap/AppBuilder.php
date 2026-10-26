@@ -646,6 +646,7 @@ final class AppBuilder
         $app->get($ap2 . '/mail/{id}/attachments/{aid}/file', $a . 'GetAp2MailAttachmentFileAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_MAIL_READ));
         $app->get($ap2 . '/invoices/{id}/file', $a . 'GetAp2InvoiceFileAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
         $app->post($ap2 . '/copilot', $a . 'AskAp2CopilotAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
+        $app->get($ap2 . '/copilot/history', $a . 'GetAp2CopilotHistoryAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
         $app->get($ap2 . '/statements', $a . 'ListAp2StatementsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_READ));
         $app->post($ap2 . '/statements', $a . 'CreateAp2StatementAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
         $app->post($ap2 . '/statements/{id}/review', $a . 'ReviewAp2StatementAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_INVOICES_WRITE));
@@ -654,6 +655,7 @@ final class AppBuilder
         $app->post($ap2 . '/notifications/read-all', $a . 'ReadAllAp2NotificationsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_ACCESS));
         $app->get($ap2 . '/settings', $a . 'GetAp2SettingsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_SETTINGS_MANAGE));
         $app->patch($ap2 . '/settings', $a . 'UpdateAp2SettingsAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_SETTINGS_MANAGE));
+        $app->get($ap2 . '/ai-usage', $a . 'GetAp2AiUsageAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_SETTINGS_MANAGE));
         $app->get($ap2 . '/odoo/taxes', $a . 'ListAp2OdooTaxesAction')->add(($require)(\TriCab\Core\Finance\Module::PERMISSION_AP2_SETTINGS_MANAGE));
     }
 

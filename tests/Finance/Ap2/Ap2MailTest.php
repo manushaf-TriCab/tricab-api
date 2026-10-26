@@ -11,6 +11,7 @@ use Psr\Container\ContainerInterface;
 use Slim\App;
 use TriCab\Api\Finance\Ap2\HistoryOnlyAp2Outbox;
 use TriCab\Api\Finance\Ap2\InMemoryAp2HistoryStore;
+use TriCab\Api\Finance\Ap2\Ai\FakeAp2InvoiceExtractor;
 use TriCab\Api\Finance\Ap2\InMemoryAp2InvoiceStore;
 use TriCab\Api\Finance\Ap2\InMemoryAp2MailStore;
 use TriCab\Api\Finance\Ap2\InMemoryAp2PersonDirectory;
@@ -26,6 +27,7 @@ use TriCab\Api\Tests\Finance\Mail\RecordingReplyMailTransport;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Finance\Ap2\Ai\Ap2CopilotProposal;
 use TriCab\Core\Finance\Ap2\Ai\Ap2CopilotReply;
+use TriCab\Core\Finance\Ap2\Ai\Ap2AiUnavailable;
 use TriCab\Core\Finance\Ap2\Ai\Ap2ExtractedInvoice;
 use TriCab\Core\Finance\Ap2\Ai\Ap2MailClassification;
 use TriCab\Core\Finance\Ap2\Ai\Ap2MailContext;
@@ -37,6 +39,7 @@ use TriCab\Core\Finance\Ap2\Contract\Ap2MailClassifier;
 use TriCab\Core\Finance\Ap2\Contract\Ap2Outbox;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Mail;
+use TriCab\Core\Finance\Ap2\Domain\Ap2MailExtraction;
 use TriCab\Core\Finance\Ap2\Domain\Ap2OutboxMessage;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Person;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Supplier;
@@ -601,6 +604,144 @@ final class Ap2MailTest extends TestCase
         $this->sync();
         $this->refused(fn () => $this->get(Ap2MailService::class)->createInvoice(Ap2Fixtures::actor(), $this->idOf('No file')), 409);
         $this->refused(fn () => $this->get(Ap2MailService::class)->createInvoice(Ap2Fixtures::actor(), md5('missing')), 404);
+    }
+
+    private function fakeExtractor(): FakeAp2InvoiceExtractor
+    {
+        $fake = new FakeAp2InvoiceExtractor();
+        $fake->next = new Ap2ExtractedInvoice(number: 'INV-9', issued: '2026-10-01', currency: 'AUD', net: 100.0, tax: 10.0, total: 110.0, confidence: ['number' => 0.9, 'total' => 0.8], overall: 0.85);
+        $this->c->set(Ap2InvoiceExtractor::class, $fake);
+
+        return $fake;
+    }
+
+    public function test_the_sync_stores_the_extraction_of_the_first_pdf_of_a_supplier_invoice_and_creates_no_invoice(): void
+    {
+        $fake = $this->fakeExtractor();
+        $supplier = $this->supplier();
+        $this->inbox('g1', 'billing@acme.test', 'Invoice 100', 'Please pay', [['pic.png', 'image/png', 'PNG'], ['a.pdf', 'application/pdf', '%PDF a'], ['b.pdf', 'application/pdf', '%PDF b']]);
+        $this->sync();
+
+        $mail = $this->mails()->findMail($this->idOf('Invoice 100'));
+        self::assertNotNull($mail);
+        self::assertSame('Supplier invoice', $mail->category);
+        self::assertCount(1, $fake->calls);
+        self::assertSame(['application/pdf', 'a.pdf', 'Acme Cables'], [$fake->calls[0]['contentType'], $fake->calls[0]['fileName'], $fake->calls[0]['supplierHint']]);
+        $extraction = $mail->extraction;
+        self::assertNotNull($extraction);
+        $files = $this->mails()->attachmentsOf($mail->id);
+        self::assertSame($files[1]->id, $extraction->attachmentId, 'the first PDF');
+        self::assertSame(['a.pdf', $supplier->id, 'Acme Cables'], [$extraction->fileName, $extraction->supplierId, $extraction->supplierName]);
+        self::assertSame('INV-9', $extraction->read->number);
+        self::assertNull($mail->invoiceId);
+        self::assertSame([], $this->store(\TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore::class, InMemoryAp2InvoiceStore::class)->all(), 'a suggestion only');
+    }
+
+    public function test_the_sync_does_not_extract_for_other_categories_no_pdf_or_no_supplier(): void
+    {
+        $fake = $this->fakeExtractor();
+        $this->supplier();
+        $this->inbox('g1', 'billing@acme.test', 'Hello there', 'Hi', [['a.pdf', 'application/pdf', '%PDF a']]);
+        $this->inbox('g2', 'billing@acme.test', 'Invoice 2', 'Please pay', [['a.png', 'image/png', 'PNG']]);
+        $this->inbox('g3', 'stranger@nowhere.test', 'Invoice 3', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
+        $this->sync();
+
+        self::assertSame([], $fake->calls);
+        foreach ($this->stored() as $m) {
+            self::assertNull($m->extraction);
+        }
+    }
+
+    public function test_an_extractor_failure_or_an_empty_reading_never_fails_the_sync(): void
+    {
+        $fake = $this->fakeExtractor();
+        $this->supplier();
+        $this->inbox('g1', 'billing@acme.test', 'Invoice 100', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
+        $this->inbox('g2', 'billing@acme.test', 'Invoice 200', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
+        $fake->failWith = new Ap2AiUnavailable('down');
+        self::assertSame(['fetched' => 2, 'created' => 2, 'skipped' => 0, 'truncated' => false], $this->sync());
+        self::assertCount(2, $fake->calls);
+        self::assertNull($this->mails()->findMail($this->idOf('Invoice 100'))?->extraction);
+
+        $fake->failWith = new \RuntimeException('boom');
+        $this->inbox('g3', 'billing@acme.test', 'Invoice 300', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
+        self::assertSame(1, $this->sync()['created']);
+
+        $fake->failWith = null;
+        $fake->next = null;
+        $this->inbox('g4', 'billing@acme.test', 'Invoice 400', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
+        $this->sync();
+        self::assertNull($this->mails()->findMail($this->idOf('Invoice 400'))?->extraction, 'nothing read, nothing stored');
+    }
+
+    public function test_create_invoice_reuses_the_stored_extraction_without_calling_the_extractor(): void
+    {
+        $fake = $this->fakeExtractor();
+        $this->supplier();
+        $this->inbox('g1', 'billing@acme.test', 'Invoice 100', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
+        $this->sync();
+        self::assertCount(1, $fake->calls);
+
+        $mail = $this->mails()->findMail($this->idOf('Invoice 100'));
+        self::assertNotNull($mail);
+        $invoice = $this->ok($this->call('POST', '/mail/' . $mail->id . '/create-invoice'), 201);
+        self::assertCount(1, $fake->calls, 'no second call');
+        self::assertSame(['INV-9', 0.85], [$invoice['number'], $invoice['confidence']]);
+    }
+
+    public function test_create_invoice_calls_the_extractor_when_nothing_is_stored_or_the_supplier_changed(): void
+    {
+        $fake = $this->fakeExtractor();
+        $this->supplier();
+        $beta = $this->supplier('S002', 'Beta Wires', 'ar@beta.test');
+        $this->inbox('g1', 'billing@acme.test', 'Invoice 100', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
+        $this->sync();
+        $mail = $this->mails()->findMail($this->idOf('Invoice 100'));
+        self::assertNotNull($mail);
+        self::assertNotNull($mail->extraction);
+
+        // The supplier is changed through PATCH: the suggestion is cleared and the extractor is asked again, for Beta.
+        $this->ok($this->call('PATCH', '/mail/' . $mail->id, ['supplierId' => $beta->id]));
+        self::assertNull($this->mails()->findMail($mail->id)?->extraction);
+        $this->ok($this->call('POST', '/mail/' . $mail->id . '/create-invoice'), 201);
+        self::assertCount(2, $fake->calls);
+        self::assertSame('Beta Wires', $fake->calls[1]['supplierHint']);
+
+        // A stale suggestion for another supplier is not used either.
+        $this->inbox('g2', 'billing@acme.test', 'Invoice 200', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
+        $this->sync();
+        $second = $this->mails()->findMail($this->idOf('Invoice 200'));
+        self::assertNotNull($second);
+        $this->mails()->updateMail($second->with(supplierId: $beta->id));
+        $calls = count($fake->calls);
+        $this->ok($this->call('POST', '/mail/' . $second->id . '/create-invoice'), 201);
+        self::assertCount($calls + 1, $fake->calls);
+
+        // Nothing stored at all: the extractor is called as before.
+        $this->inbox('g3', 'billing@acme.test', 'Invoice 300', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
+        $this->sync();
+        $third = $this->mails()->findMail($this->idOf('Invoice 300'));
+        self::assertNotNull($third);
+        $this->mails()->updateMail($third->with(extraction: null));
+        $calls = count($fake->calls);
+        $this->ok($this->call('POST', '/mail/' . $third->id . '/create-invoice'), 201);
+        self::assertCount($calls + 1, $fake->calls);
+    }
+
+    public function test_the_extraction_survives_a_json_round_trip(): void
+    {
+        $read = new Ap2ExtractedInvoice('INV-1', '2026-10-01', '2026-10-31', 'NZD', 100.0, 10.0, 110.0, 'PO-1', 5.0, 20.0, 3.0, 'CN-1', 2.0, 1.0, 'TriCab Pty', ['number' => 0.9, 'total' => 1.0], 0.75);
+        self::assertEquals($read, Ap2ExtractedInvoice::fromArray($read->toArray()));
+        $decoded = json_decode(json_encode($read->toArray(), JSON_THROW_ON_ERROR), true);
+        self::assertIsArray($decoded);
+        self::assertEquals($read, Ap2ExtractedInvoice::fromArray($decoded));
+        self::assertTrue(Ap2ExtractedInvoice::none()->isEmpty());
+        self::assertFalse($read->isEmpty());
+
+        $extraction = new Ap2MailExtraction('att1', 'a.pdf', 'S001', 'Acme Cables', $read);
+        self::assertEquals($extraction, Ap2MailExtraction::fromJson($extraction->toJson()));
+        self::assertNull(Ap2MailExtraction::fromJson('{"nope":1}'));
+        self::assertNull(Ap2MailExtraction::fromJson(null));
     }
 
     public function test_an_invoice_without_a_document_answers_404_for_its_file(): void

@@ -22,6 +22,9 @@ interface Ap2InvoiceStore
 
     public function update(Ap2Invoice $invoice): void;
 
+    /** How many invoices were created in `[$from, $toExclusive)` (UTC instants). */
+    public function countCreated(\DateTimeImmutable $from, \DateTimeImmutable $toExclusive): int;
+
     /** Is a payment proposal for this invoice still live (not Cancelled, Rejected or Paid)? */
     public function hasActivePayment(string $invoiceId): bool;
 

@@ -49,6 +49,8 @@ final readonly class Ap2Mail
         public ?string $approvalId = null,
         public ?string $aiSummary = null,
         public ?float $aiConfidence = null,
+        /** The invoice fields read from an attachment at sync time: a suggestion only, never an invoice. */
+        public ?Ap2MailExtraction $extraction = null,
     ) {
     }
 

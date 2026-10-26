@@ -76,6 +76,7 @@ final class FinanceRouteTableTest extends TestCase
         'GET /api/v1/finance/ap2/mail/{id}/attachments/{aid}/file' => Module::PERMISSION_AP2_MAIL_READ,
         'GET /api/v1/finance/ap2/invoices/{id}/file' => Module::PERMISSION_AP2_INVOICES_READ,
         'POST /api/v1/finance/ap2/copilot' => Module::PERMISSION_AP2_INVOICES_READ,
+        'GET /api/v1/finance/ap2/copilot/history' => Module::PERMISSION_AP2_INVOICES_READ,
         'GET /api/v1/finance/ap2/statements' => Module::PERMISSION_AP2_INVOICES_READ,
         'POST /api/v1/finance/ap2/statements' => Module::PERMISSION_AP2_INVOICES_WRITE,
         'POST /api/v1/finance/ap2/statements/{id}/review' => Module::PERMISSION_AP2_INVOICES_WRITE,
@@ -85,6 +86,7 @@ final class FinanceRouteTableTest extends TestCase
         'GET /api/v1/finance/ap2/settings' => Module::PERMISSION_AP2_SETTINGS_MANAGE,
         'PATCH /api/v1/finance/ap2/settings' => Module::PERMISSION_AP2_SETTINGS_MANAGE,
         'GET /api/v1/finance/ap2/odoo/taxes' => Module::PERMISSION_AP2_SETTINGS_MANAGE,
+        'GET /api/v1/finance/ap2/ai-usage' => Module::PERMISSION_AP2_SETTINGS_MANAGE,
         // Tri-Task (Phase 2), with FINANCE_TASK_ENABLED on. One permission each (decisions D14, D15).
         'GET /api/v1/finance/task/me' => Module::PERMISSION_TASK_ACCESS,
         'GET /api/v1/finance/task/members' => Module::PERMISSION_TASK_TASKS_READ,

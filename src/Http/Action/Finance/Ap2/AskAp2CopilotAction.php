@@ -34,7 +34,7 @@ final class AskAp2CopilotAction
             return $this->unauthenticated($this->responder);
         }
         try {
-            return $this->ok($this->responder, $this->service->respond($this->bodyOf($request)), 200);
+            return $this->ok($this->responder, $this->service->respond($actor, $this->bodyOf($request)), 200);
         } catch (ApFailure $failure) {
             return $this->failure($this->responder, $failure);
         }

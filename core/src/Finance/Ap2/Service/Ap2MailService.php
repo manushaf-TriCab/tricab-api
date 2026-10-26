@@ -205,7 +205,7 @@ final class Ap2MailService
             replyTo: is_string($values['replyTo'] ?? null) ? $values['replyTo'] : $before->replyTo,
         );
         if ($supplierMoved) {
-            $changed = $changed->with(draftAttachmentIds: [], approvalId: null);
+            $changed = $changed->with(draftAttachmentIds: [], approvalId: null, extraction: null);
         }
         if ($draftAttachmentIds !== null) {
             $changed = $changed->with(draftAttachmentIds: $draftAttachmentIds);
@@ -423,10 +423,16 @@ final class Ap2MailService
             throw new Ap2Conflict('The email has no invoice document', Ap2Failure::details(['The email has no PDF or image attachment to read']));
         }
         $file = $this->files->read($document->fileId, $actor->userId);
-        try {
-            $read = $this->extractor->extract($file->bytes, $document->contentType, $document->name, $supplier->name);
-        } catch (Ap2AiUnavailable) {
-            $read = Ap2ExtractedInvoice::none();
+        $stored = $mail->extraction;
+        if ($stored !== null && $stored->attachmentId === $document->id && $stored->supplierId === $supplier->id) {
+            // Read at sync time for this attachment and this supplier: no second call to the model.
+            $read = $stored->read;
+        } else {
+            try {
+                $read = $this->extractor->extract($file->bytes, $document->contentType, $document->name, $supplier->name);
+            } catch (Ap2AiUnavailable) {
+                $read = Ap2ExtractedInvoice::none();
+            }
         }
 
         $invoice = $this->transactions->run(function () use ($actor, $supplier, $read, $mail, $document, $file): Ap2Invoice {
