@@ -443,6 +443,7 @@ final class AppBuilder
         self::registerOnboardingRoutes($app, $container);
         self::registerRfqRoutes($app, $container);
         self::registerNprRoutes($app, $container);
+        self::registerHrEmployeeRoutes($app, $container);
         self::registerCableFitRoutes($app, $container);
         if ($settings->mailModuleEnabled) {
             self::registerMailRoutes($app, $container);
@@ -454,6 +455,26 @@ final class AppBuilder
             self::registerFinanceRoutes($app, $container);
         }
         self::registerAdminRoutes($app, $container);
+    }
+
+    /**
+     * HR Employees (plan HR-EMPLOYEES-PLAN, phase 2): a read-only view of the payroll mirror.
+     * Every route needs `HR.EMPLOYEES.READ`; sync runs need `HR.EMPLOYEES.SYNC`. The restricted
+     * block of the detail route is decided inside the action by `HR.EMPLOYEES.RESTRICTED.READ`.
+     * `sync-runs` is a static segment, so it wins over `{code}` whatever the order.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerHrEmployeeRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+
+        $app->get('/api/v1/hr/employees', \TriCab\Api\Http\Action\Hr\ListHrEmployeesAction::class)
+            ->add(($require)(\TriCab\Api\Hr\Employees\Directory\HrPermissions::EMPLOYEES_READ));
+        $app->get('/api/v1/hr/employees/sync-runs', \TriCab\Api\Http\Action\Hr\ListHrSyncRunsAction::class)
+            ->add(($require)(\TriCab\Api\Hr\Employees\Directory\HrPermissions::EMPLOYEES_SYNC));
+        $app->get('/api/v1/hr/employees/{code}', \TriCab\Api\Http\Action\Hr\GetHrEmployeeAction::class)
+            ->add(($require)(\TriCab\Api\Hr\Employees\Directory\HrPermissions::EMPLOYEES_READ));
     }
 
     /**

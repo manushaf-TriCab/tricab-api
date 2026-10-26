@@ -126,6 +126,8 @@ Invoke-SqlFile (Join-Path $DevScripts 'alter-onboarding-policy-metadata.sql') # 
 Invoke-SqlFile (Join-Path $DevScripts 'alter-onboarding-policy-declarations.sql') # after onboarding: adds DeclarationJson
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-form-contributions.sql') # after onboarding: FKs to Assignments
 Invoke-SqlFile (Join-Path $DevScripts 'create-onboarding-migration-rows.sql')     # after legacy migration: FKs to LegacyMigrationBatches
+Invoke-SqlFile (Join-Path $DevScripts 'create-hr-employees-schema.sql')         # HR employee mirror of tc.employee; after identity: FK to identity.Users
+Invoke-SqlFile (Join-Path $DevScripts 'create-hr-restricted-read-audit.sql')    # who read whose restricted HR details; after identity: FK to identity.Users
 Invoke-SqlFile (Join-Path $DevScripts 'alter-product-file-upload-phase9.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'create-commerce-cart-schema.sql')      # signed-in carts; after identity, customer and product: FKs to all three
 Invoke-SqlFile (Join-Path $DevScripts 'create-rfq-schema.sql')               # the live MySQL RFQ store's shape; no FKs outside [rfq]
@@ -163,6 +165,7 @@ foreach ($s in @(
     'seed-guest-role-and-login-permission.sql',
     'seed-onboarding-permissions.sql',   # after guest role: grants GUEST + EMPLOYEE self-service
     'seed-onboarding-roles.sql',         # after onboarding permissions: ONBOARDING_ADMIN
+    'seed-hr-employees-permissions.sql', # HR.EMPLOYEES.* and the HR role; assigns nobody locally (no login mapping table)
     'seed-rfq-permissions.sql',          # RFQ.* catalogue; ADMINISTRATOR gets RFQ.ADMIN only
     'seed-customer-contact-report-permissions.sql', # report permission catalogue only; no platform-role grants
     'seed-customer-contact-roles.sql',              # three roles, assigned to nobody

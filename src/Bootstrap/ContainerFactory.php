@@ -881,6 +881,11 @@ final class ContainerFactory
             // until the email work, N2.4) and the signing policy (nobody nominated until TSD says).
             \TriCab\Core\Npr\Contract\ManagerRouteRepository::class
                 => \DI\autowire(\TriCab\Core\Npr\Infrastructure\InMemoryManagerRouteRepository::class),
+            // HR Employees: the read-only payroll mirror and its restricted-read audit.
+            \TriCab\Api\Hr\Employees\Directory\EmployeeDirectory::class
+                => \DI\autowire(\TriCab\Api\Hr\Employees\Directory\InMemoryEmployeeDirectory::class),
+            \TriCab\Api\Hr\Employees\Directory\RestrictedReadAudit::class
+                => \DI\autowire(\TriCab\Api\Hr\Employees\Directory\InMemoryRestrictedReadAudit::class),
             // N2.4 email: the sink writes outbox rows inside the repository's transaction; the
             // dispatcher sends after commit (mode off sends nothing); the sweep retries.
             \TriCab\Core\Npr\Mail\NprMailOutbox::class
@@ -3504,6 +3509,10 @@ final class ContainerFactory
                     );
             $definitions[\TriCab\Core\Npr\Contract\ManagerRouteRepository::class]
                 = \DI\autowire(\TriCab\Api\Npr\Persistence\AzureSqlManagerRouteRepository::class);
+            $definitions[\TriCab\Api\Hr\Employees\Directory\EmployeeDirectory::class]
+                = \DI\autowire(\TriCab\Api\Hr\Employees\Directory\AzureSqlEmployeeDirectory::class);
+            $definitions[\TriCab\Api\Hr\Employees\Directory\RestrictedReadAudit::class]
+                = \DI\autowire(\TriCab\Api\Hr\Employees\Directory\AzureSqlRestrictedReadAudit::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqCustomerDirectory::class);
             // Parity plan E5.5: correction memory and Save Review's log.

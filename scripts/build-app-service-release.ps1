@@ -304,6 +304,12 @@ New-Item -ItemType Directory -Path $legacySyncJobRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\sync-rfq-legacy-store.php') -Destination (Join-Path $appRoot 'bin\sync-rfq-legacy-store.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\rfq-legacy-sync\run.sh') -Destination (Join-Path $legacySyncJobRoot 'run.sh') -Force
 
+# The HR employee sync (HR employees plan 1.8) and its continuous WebJob, the same way.
+$hrSyncJobRoot = Join-Path $releaseRoot 'App_Data\jobs\continuous\hr-employee-sync'
+New-Item -ItemType Directory -Path $hrSyncJobRoot -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\sync-hr-employees.php') -Destination (Join-Path $appRoot 'bin\sync-hr-employees.php') -Force
+Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\hr-employee-sync\run.sh') -Destination (Join-Path $hrSyncJobRoot 'run.sh') -Force
+
 # Continuous WebJobs run on every instance by default; each job ships a settings.job with is_singleton.
 foreach ($jobDir in Get-ChildItem -LiteralPath (Join-Path $releaseRoot 'App_Data\jobs\continuous') -Directory) {
     $jobSettings = Join-Path $apiRoot ('deploy\app-service\webjobs\' + $jobDir.Name + '\settings.job')
