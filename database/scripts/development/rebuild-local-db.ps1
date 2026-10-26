@@ -146,6 +146,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-history-fields.sql')  
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-assignees.sql')  # Tri-Task several preparers and reviewers (23 Oct 2026); after alter-finance-task-history-fields.sql
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-user-state.sql')  # Tri-Task unread, flag and pin per person (25 Oct 2026); after alter-finance-task-history-fields.sql
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-calendar-invites.sql')  # Tri-Task calendar invites by due date (25 Oct 2026); after alter-finance-task-user-state.sql
+Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-time-spent.sql')  # Tri-Task Estimated Time free text, column time_spent (26 Oct 2026); after alter-finance-task-order.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-attachments-schema.sql')  # finance file store rows; after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-ar-schema.sql')           # Tri-AR's eight tables (Phase 5); after create-finance-schema.sql and create-finance-attachments-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-invoice-schema.sql')      # Tri-AP's fourteen tables (Phase 6); after create-finance-schema.sql and create-finance-attachments-schema.sql

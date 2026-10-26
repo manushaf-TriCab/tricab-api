@@ -150,6 +150,7 @@ final class TaskService
             null,
             self::ids($fields, 'preparer_user_ids'),
             self::ids($fields, 'reviewer_user_ids'),
+            self::str($fields, 'time_spent'),
         );
 
         $this->tasks->transactional(function () use ($task, $dependencies, $actor, $now): void {
@@ -590,6 +591,7 @@ final class TaskService
                 'description' => $task->description = (string) $value,
                 'requirements' => $task->requirements = (string) $value,
                 'notes' => $task->notes = (string) $value,
+                'time_spent' => $task->timeSpent = is_string($value) ? $value : '',
                 'finance_statement_area' => $task->financeStatementArea = (string) $value,
                 'category' => $task->category = (string) $value,
                 'status' => $task->status = (string) $value,
@@ -843,6 +845,7 @@ final class TaskService
             'due_date' => [$before->dueDate, $after->dueDate],
             'due_date_requested' => [self::flag($before->dueDateRequested), self::flag($after->dueDateRequested)],
             'urgent' => [self::flag($before->urgent), self::flag($after->urgent)],
+            'time_spent' => [self::blankAsNone($before->timeSpent), self::blankAsNone($after->timeSpent)],
         ];
         foreach ($values as $field => [$from, $to]) {
             if (($from ?? '') !== ($to ?? '')) {
@@ -912,6 +915,11 @@ final class TaskService
         return $value ? 'yes' : 'no';
     }
 
+    private static function blankAsNone(string $value): ?string
+    {
+        return $value === '' ? null : $value;
+    }
+
     /**
      * `_clean_task`: the validated column values that were sent (all the required ones when not
      * partial), and the dependency list if one was sent.
@@ -932,6 +940,9 @@ final class TaskService
         }
         if (array_key_exists('finance_statement_area', $data)) {
             $out['finance_statement_area'] = TaskRules::text($data, 'finance_statement_area', 300) ?? '';
+        }
+        if (array_key_exists('time_spent', $data)) {
+            $out['time_spent'] = TaskRules::text($data, 'time_spent', TaskRules::TIME_SPENT_LIMIT) ?? '';
         }
         if (array_key_exists('category', $data)) {
             $category = $data['category'];

@@ -42,6 +42,7 @@ final class LocalApSampleServer
         'alter-finance-task-assignees.sql',
         'alter-finance-task-user-state.sql',
         'alter-finance-task-calendar-invites.sql',
+        'alter-finance-task-time-spent.sql',
         'create-finance-ar-schema.sql',
         'create-finance-invoice-schema.sql',
         'alter-finance-mail-status-suppressed.sql',

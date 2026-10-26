@@ -23,6 +23,12 @@ final class ImportFixtures
         'Type', 'Status', 'Priority', 'Preparer', 'Reviewer', 'Progress %', 'Due Date', 'Due Date Requested', 'Mark as Urgent', 'Task ID',
     ];
 
+    /** The export's headings since 26 Oct 2026: Estimated Time was added before Task ID. */
+    public const ESTIMATED_TIME_HEAD = [
+        'Entity', 'Task Name', 'Project', 'Group', 'Description', 'Requirements', 'Notes', 'Finance Statement Area',
+        'Type', 'Status', 'Priority', 'Preparer', 'Reviewer', 'Progress %', 'Due Date', 'Due Date Requested', 'Mark as Urgent', 'Estimated Time', 'Task ID',
+    ];
+
     /**
      * @param array<string, mixed> $cells
      * @param list<string> $head

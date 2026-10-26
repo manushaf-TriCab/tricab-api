@@ -10,7 +10,7 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Task\Domain\TaskFailure;
 use TriCab\Core\Finance\Task\Service\TaskBoardService;
 
-/** POST /api/v1/finance/task/projects/{id}/save-as-template: 201, a project template from the project as it stands (13 Oct 2026). Gated on `FINANCE.TASK.SETUP.MANAGE`. */
+/** POST /api/v1/finance/task/projects/{id}/save-as-template: 201, a project template from the project as it stands (13 Oct 2026). Gated on `FINANCE.TASK.TASKS.READ` (everyone, 26 Oct 2026). */
 final class SaveTaskProjectAsTemplateAction
 {
     use TaskActionSupport;

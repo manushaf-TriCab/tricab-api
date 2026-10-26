@@ -17,6 +17,7 @@ use TriCab\Api\Tests\Doubles\FixedClock;
 use TriCab\Core\Finance\Module;
 use TriCab\Core\Finance\Task\Domain\TaskActor;
 use TriCab\Core\Finance\Task\Domain\TaskImportFailed;
+use TriCab\Core\Finance\Task\Domain\TaskInvalid;
 use TriCab\Core\Finance\Task\Service\TaskBoardService;
 use TriCab\Core\Finance\Task\Service\TaskImportService;
 use TriCab\Core\Finance\Task\Service\TaskService;
@@ -87,21 +88,23 @@ final class TaskImportServiceTest extends TestCase
      * The register as exported, with its Task IDs: the round trip of 16 Oct 2026.
      *
      * @param list<list<mixed>> $tasks
+     * @param list<string> $head
      */
-    private function exported(array $tasks): void
+    private function exported(array $tasks, array $head = ImportFixtures::EXPORT_HEAD): void
     {
         $this->reader->sheets = [];
-        [, $t] = ImportFixtures::sheets(tasks: $tasks, taskHead: ImportFixtures::EXPORT_HEAD);
+        [, $t] = ImportFixtures::sheets(tasks: $tasks, taskHead: $head);
         $this->reader->withSheet('tasks.csv', $t);
     }
 
     /**
      * @param array<string, mixed> $cells
+     * @param list<string> $head
      * @return list<mixed>
      */
-    private static function exportRow(string $name = 'Bank rec', string $project = 'Month End', array $cells = []): array
+    private static function exportRow(string $name = 'Bank rec', string $project = 'Month End', array $cells = [], array $head = ImportFixtures::EXPORT_HEAD): array
     {
-        return ImportFixtures::task($name, $project, $cells, ImportFixtures::EXPORT_HEAD);
+        return ImportFixtures::task($name, $project, $cells, $head);
     }
 
     /**
@@ -605,6 +608,41 @@ final class TaskImportServiceTest extends TestCase
         $patched = $this->tasks->update($this->admin, Typed::string($task['id']), ['notes' => '']);
 
         self::assertSame('', $patched['notes']);
+    }
+
+    public function test_estimated_time_is_free_text_stored_edited_and_capped(): void
+    {
+        $task = $this->tasks->create($this->admin, ['name' => 'Close the books', 'time_spent' => ' about 2 hours ', 'preparer_id' => 11]);
+        self::assertSame('about 2 hours', $task['time_spent']);
+        self::assertSame('', $this->tasks->create($this->admin, ['name' => 'Accruals', 'preparer_id' => 11])['time_spent']);
+
+        self::assertSame('half a day', $this->tasks->update($this->admin, Typed::string($task['id']), ['time_spent' => 'half a day'])['time_spent']);
+        self::assertSame('half a day', $this->tasks->update($this->admin, Typed::string($task['id']), ['notes' => 'x'])['time_spent'], 'kept when not sent');
+
+        $this->expectException(TaskInvalid::class);
+        $this->expectExceptionMessage('Estimated time must be at most 200 characters');
+        $this->tasks->update($this->admin, Typed::string($task['id']), ['time_spent' => str_repeat('a', 201)]);
+    }
+
+    public function test_an_estimated_time_column_loads_and_a_file_without_it_keeps_what_is_there(): void
+    {
+        $head = ImportFixtures::ESTIMATED_TIME_HEAD;
+        $this->exported([self::exportRow(cells: ['Estimated Time' => '3 days'], head: $head)], $head);
+        $this->load($this->admin, false);
+        $task = $this->register()[0];
+        self::assertSame('3 days', $task['time_spent']);
+
+        // An export from before the column: the row is unchanged and the time stays.
+        $this->exported([self::exportRow(cells: ['Task ID' => $task['id'], 'Status' => 'Active'])]);
+        self::assertSame(['unchanged'], array_column($this->lines($this->load($this->admin, false)['tasks']), 'action'));
+        self::assertSame('3 days', $this->register()[0]['time_spent']);
+
+        $this->exported([self::exportRow(cells: ['Task ID' => $task['id'], 'Estimated Time' => str_repeat('a', 201)], head: $head)], $head);
+        self::assertSame(['Estimated Time must be at most 200 characters'], Typed::list($this->lines($this->load($this->admin)['tasks'])[0]['errors']));
+
+        $this->exported([self::exportRow(cells: ['Task ID' => $task['id'], 'Estimated Time' => ''], head: $head)], $head);
+        $this->load($this->admin, false);
+        self::assertSame('', $this->register()[0]['time_spent'], 'a blank cell clears it');
     }
 
     // ---- the export loaded back (Ming and Nick Han, 16 Oct 2026) ------------------------

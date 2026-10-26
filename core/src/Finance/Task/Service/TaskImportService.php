@@ -71,6 +71,7 @@ final class TaskImportService
         'due date' => 'due_date',
         'due date requested' => 'due_date_requested',
         'mark as urgent' => 'urgent', 'urgent' => 'urgent',
+        'estimated time' => 'time_spent',
     ];
 
     private const PROJECT_HEADINGS = [
@@ -332,6 +333,13 @@ final class TaskImportService
                     'urgent' => self::yesNo($row['urgent'] ?? null, 'Mark as Urgent', $errors),
                     'priority' => $priority,
                 ];
+                // Estimated Time (26 Oct 2026) only when the file has the column, so a file exported before it keeps what is there.
+                if (array_key_exists('time_spent', $row)) {
+                    $payload['time_spent'] = self::cellText($row['time_spent']);
+                    if (mb_strlen($payload['time_spent']) > TaskRules::TIME_SPENT_LIMIT) {
+                        $errors[] = 'Estimated Time must be at most ' . TaskRules::TIME_SPENT_LIMIT . ' characters';
+                    }
+                }
                 $line->errors = $errors;
                 $line->groupKey = $groupKey;
 
@@ -508,7 +516,8 @@ final class TaskImportService
             && $payload['due_date'] === $task->dueDate
             && $payload['due_date_requested'] === $task->dueDateRequested
             && $payload['urgent'] === $task->urgent
-            && $payload['priority'] === $task->priority;
+            && $payload['priority'] === $task->priority
+            && ($payload['time_spent'] ?? $task->timeSpent) === $task->timeSpent;
     }
 
     /** @return list<int> */
@@ -660,8 +669,9 @@ final class TaskImportService
             }
             $cells = [];
             foreach ($fields as $index => $field) {
-                if ($field !== null && $index < count($row)) {
-                    $cells[$field] = $row[$index];
+                // A column the sheet has is in every row, as null past a short row's end, so a field can tell "empty" from "no column".
+                if ($field !== null) {
+                    $cells[$field] = $row[$index] ?? null;
                 }
             }
             $out[] = [$i + 1, $cells];   // the file's own row number: the first row is 1

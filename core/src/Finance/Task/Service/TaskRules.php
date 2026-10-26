@@ -35,6 +35,9 @@ final class TaskRules
     /** Moving into one of these is refused while a dependency is unfinished. */
     public const BLOCKED_STATUSES = ['completed'];
     public const PRIORITIES = ['critical', 'high', 'medium', 'low'];
+
+    /** Estimated Time is free text ("2 hours", "half a day"), stored as `time_spent`; 200 characters is the column. */
+    public const TIME_SPENT_LIMIT = 200;
     public const CATEGORIES = ['routine', 'ad_hoc'];
     /** Where a task given no project goes (item 3, 13 Oct 2026). */
     public const GENERAL_PROJECT = 'General';
@@ -59,6 +62,10 @@ final class TaskRules
     /** `key` as the source's messages say it: `due_date` is "Due date". */
     private static function label(string $key): string
     {
+        // `time_spent` holds the estimate: the screens call it Estimated Time (Nick Han, 26 Oct 2026).
+        if ($key === 'time_spent') {
+            return 'Estimated time';
+        }
         $words = str_replace('_', ' ', $key);
 
         return mb_strtoupper(mb_substr($words, 0, 1)) . mb_strtolower(mb_substr($words, 1));

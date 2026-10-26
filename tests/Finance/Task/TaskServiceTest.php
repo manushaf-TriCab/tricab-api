@@ -466,7 +466,7 @@ final class TaskServiceTest extends TestCase
 
         $this->tasks->update($this->max, $id, [
             'preparer_id' => 13, 'reviewer_id' => null, 'progress' => 25, 'notes' => 'new words', 'project_id' => $close,
-            'priority' => 'high', 'due_date' => '2026-10-31', 'urgent' => true, 'category' => 'ad_hoc',
+            'priority' => 'high', 'due_date' => '2026-10-31', 'urgent' => true, 'category' => 'ad_hoc', 'time_spent' => '2 hours',
         ]);
 
         $rows = $this->tasks->history($this->max, $id);
@@ -480,9 +480,10 @@ final class TaskServiceTest extends TestCase
             'progress: 0 → 25',
             'project: General → Close',
             'reviewer: Max Manager → -',
+            'time_spent: - → 2 hours',
             'urgent: no → yes',
         ], self::changes($latest));
-        self::assertSame(array_fill(0, 9, 'Max Manager'), array_column($latest, 'changed_by'));
+        self::assertSame(array_fill(0, 10, 'Max Manager'), array_column($latest, 'changed_by'));
         self::assertCount(1, $this->tasks->historyByStatus(null), 'the status feed has only status changes');
     }
 

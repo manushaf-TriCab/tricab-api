@@ -130,7 +130,31 @@ final class FinanceTaskBoardRoutesTest extends TestCase
         self::assertSame(403, $this->call('PATCH', '/groups/' . $group['id'], ['name' => 'Mine'])[0]);
         self::assertSame(403, $this->call('DELETE', '/groups/' . $group['id'])[0]);
         self::assertSame(403, $this->call('POST', '/project-templates', ['name' => 'Mine'])[0]);
-        self::assertSame(403, $this->call('POST', '/projects/' . $projectId . '/save-as-template', ['name' => 'Mine'])[0]);
+    }
+
+    public function test_anyone_saves_a_project_as_a_template_with_only_the_tasks_they_see(): void
+    {
+        $projectId = self::data($this->call('POST', '/projects', ['name' => 'Audit'])[1])['id'];
+        self::assertIsString($projectId);
+        self::assertSame(201, $this->call('POST', '/tasks', ['name' => 'Mine', 'project_id' => $projectId, 'preparer_ids' => ['1']])[0]);
+        self::assertSame(201, $this->call('POST', '/tasks', ['name' => 'Theirs', 'project_id' => $projectId, 'preparer_ids' => ['9'], 'reviewer_ids' => ['9']])[0]);
+
+        $this->as(self::MEMBER);
+        [$status, $json] = $this->call('POST', '/projects/' . $projectId . '/save-as-template', ['name' => 'Audit template']);
+        self::assertSame(201, $status);
+        $template = self::data($json);
+        self::assertSame('Audit template', $template['name']);
+        self::assertIsArray($template['groups']);
+        $names = [];
+        foreach ($template['groups'] as $group) {
+            self::assertIsArray($group);
+            self::assertIsArray($group['tasks']);
+            foreach ($group['tasks'] as $task) {
+                self::assertIsArray($task);
+                $names[] = $task['name'];
+            }
+        }
+        self::assertSame(['Mine'], $names, 'a task the member neither prepares nor reviews stays out (decision D15)');
     }
 
     public function test_unknown_rows_are_404_and_a_bad_template_is_422(): void

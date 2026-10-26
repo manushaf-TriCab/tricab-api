@@ -364,7 +364,8 @@ final class TaskBoardService
     /**
      * A template from a project as it stands: its groups in order with their live tasks, and the project's ungrouped
      * tasks in a last group, "Other tasks". Due dates become offsets from `start_date` (default: the earliest due date
-     * among those tasks).
+     * among those tasks). Anyone may save one (Nick Han, 26 Oct 2026); it holds only the tasks the caller sees, so
+     * someone without `READ_ALL` saves the tasks they prepare or review (decision D15).
      *
      * @param array<string, mixed> $data `name`, optional `description`, `start_date`
      * @return array<string, mixed>
@@ -372,7 +373,7 @@ final class TaskBoardService
     public function saveProjectAsTemplate(TaskActor $actor, string $projectId, array $data): array
     {
         $project = $this->liveProject($projectId);
-        $tasks = array_values(array_filter($this->tasks->tasks(false, null), static fn (TaskRecord $t): bool => $t->projectId === $projectId));
+        $tasks = array_values(array_filter($this->tasks->tasks(false, $actor->seesAll() ? null : $actor->userId), static fn (TaskRecord $t): bool => $t->projectId === $projectId));
         usort($tasks, static fn (TaskRecord $a, TaskRecord $b): int => [$a->createdDate, $a->id] <=> [$b->createdDate, $b->id]);
         $dues = array_values(array_filter(array_map(static fn (TaskRecord $t): ?string => $t->dueDate, $tasks)));
         $start = TaskRules::date($data['start_date'] ?? null) ?? ($dues === [] ? null : min($dues));

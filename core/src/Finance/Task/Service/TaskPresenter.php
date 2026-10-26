@@ -195,6 +195,7 @@ final class TaskPresenter
             'group_id' => $t->groupId,
             'sort_order' => $t->sortOrder,
             'progress' => $t->progress,
+            'time_spent' => $t->timeSpent,
             'due_date' => $t->dueDate ?? '',
             'due_date_requested' => $t->dueDateRequested,
             'urgent' => $t->urgent,

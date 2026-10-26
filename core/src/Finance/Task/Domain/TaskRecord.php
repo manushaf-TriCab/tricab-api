@@ -11,7 +11,9 @@ use DateTimeImmutable;
  * `overdue` is derived from the due date, never stored (decision D17). `priority` and `groupId`
  * came with the board (13 Oct 2026) and default to none, so older callers need not pass them. `sortOrder` is the
  * task's place in its group on the board (Nick Han, 20 Oct 2026: "can we move the task around by dragging"); none
- * until someone drags, and such tasks follow the ordered ones, oldest first.
+ * until someone drags, and such tasks follow the ordered ones, oldest first. `timeSpent` is the Estimated Time, free
+ * text as the person writes it (Nick Han, 26 Oct 2026: how long a task would take); empty for none. The column kept its
+ * first name, `time_spent`, after the label changed.
  */
 final class TaskRecord
 {
@@ -49,6 +51,7 @@ final class TaskRecord
         public ?int $sortOrder = null,
         ?array $preparerUserIds = null,
         ?array $reviewerUserIds = null,
+        public string $timeSpent = '',
     ) {
         $this->setPreparers($preparerUserIds ?? ($preparerUserId === null ? [] : [$preparerUserId]));
         $this->setReviewers($reviewerUserIds ?? ($reviewerUserId === null ? [] : [$reviewerUserId]));
