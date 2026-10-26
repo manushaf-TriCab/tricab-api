@@ -46,6 +46,7 @@ final class Ap2SettingsService
         $input->money('batchCashLimit');
         $input->whole('approvalExpiryDays', 90);
         $input->flag('paymentProposalsEnabled');
+        $input->date('mailCutoffDate');
         $issues = $input->issues();
         $values = $input->values();
         if (isset($values['batchCashLimit']) && $values['batchCashLimit'] <= 0) {

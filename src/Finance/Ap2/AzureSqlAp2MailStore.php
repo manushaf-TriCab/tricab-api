@@ -145,8 +145,8 @@ final class AzureSqlAp2MailStore extends AzureSqlAp2Support implements Ap2MailSt
     public function beginRun(Ap2SyncRun $r): void
     {
         $this->connection->execute(
-            'INSERT INTO [finance].[ap2_sync_runs] ([id], [kind], [status], [from_date], [to_date], [fetched], [created], [skipped], [error], [started_by_user_id], [started_at], [finished_at], [processed], [failed], [updated_at])
-             VALUES (:id, :kind, :status, :from_date, :to_date, :fetched, :created, :skipped, :error, :user, :started_at, :finished_at, :processed, :failed, :updated_at)',
+            'INSERT INTO [finance].[ap2_sync_runs] ([id], [kind], [status], [from_date], [to_date], [fetched], [created], [skipped], [error], [started_by_user_id], [started_at], [finished_at], [processed], [failed], [updated_at], [high_water_at], [window_start_at], [window_end_at], [target_at])
+             VALUES (:id, :kind, :status, :from_date, :to_date, :fetched, :created, :skipped, :error, :user, :started_at, :finished_at, :processed, :failed, :updated_at, :high_water_at, :window_start_at, :window_end_at, :target_at)',
             self::runParams($r),
         );
     }
@@ -154,16 +154,16 @@ final class AzureSqlAp2MailStore extends AzureSqlAp2Support implements Ap2MailSt
     public function finishRun(Ap2SyncRun $r): void
     {
         $this->connection->execute(
-            'UPDATE [finance].[ap2_sync_runs] SET [status] = :status, [fetched] = :fetched, [created] = :created, [skipped] = :skipped, [error] = :error, [finished_at] = :finished_at, [processed] = :processed, [failed] = :failed, [updated_at] = :updated_at WHERE [id] = :id',
-            array_intersect_key(self::runParams($r), array_flip(['id', 'status', 'fetched', 'created', 'skipped', 'error', 'finished_at', 'processed', 'failed', 'updated_at'])),
+            'UPDATE [finance].[ap2_sync_runs] SET [status] = :status, [fetched] = :fetched, [created] = :created, [skipped] = :skipped, [error] = :error, [finished_at] = :finished_at, [processed] = :processed, [failed] = :failed, [updated_at] = :updated_at, [high_water_at] = :high_water_at, [window_start_at] = :window_start_at, [window_end_at] = :window_end_at, [target_at] = :target_at WHERE [id] = :id',
+            array_intersect_key(self::runParams($r), array_flip(['id', 'status', 'fetched', 'created', 'skipped', 'error', 'finished_at', 'processed', 'failed', 'updated_at', 'high_water_at', 'window_start_at', 'window_end_at', 'target_at'])),
         );
     }
 
     public function saveProgress(Ap2SyncRun $r): void
     {
         $this->connection->execute(
-            'UPDATE [finance].[ap2_sync_runs] SET [fetched] = :fetched, [created] = :created, [skipped] = :skipped, [error] = :error, [processed] = :processed, [failed] = :failed, [updated_at] = :updated_at WHERE [id] = :id AND [status] = N\'Running\'',
-            array_intersect_key(self::runParams($r), array_flip(['id', 'fetched', 'created', 'skipped', 'error', 'processed', 'failed', 'updated_at'])),
+            'UPDATE [finance].[ap2_sync_runs] SET [fetched] = :fetched, [created] = :created, [skipped] = :skipped, [error] = :error, [processed] = :processed, [failed] = :failed, [updated_at] = :updated_at, [high_water_at] = :high_water_at, [window_start_at] = :window_start_at, [window_end_at] = :window_end_at, [target_at] = :target_at WHERE [id] = :id AND [status] = N\'Running\'',
+            array_intersect_key(self::runParams($r), array_flip(['id', 'fetched', 'created', 'skipped', 'error', 'processed', 'failed', 'updated_at', 'high_water_at', 'window_start_at', 'window_end_at', 'target_at'])),
         );
     }
 
@@ -186,7 +186,7 @@ final class AzureSqlAp2MailStore extends AzureSqlAp2Support implements Ap2MailSt
     private function oneRun(string $where, array $params): ?Ap2SyncRun
     {
         $rows = $this->connection->fetchAll(
-            'SELECT TOP (1) [id], [kind], [status], [from_date], [to_date], [fetched], [created], [skipped], [error], [started_by_user_id], [started_at], [finished_at], [processed], [failed], [updated_at]
+            'SELECT TOP (1) [id], [kind], [status], [from_date], [to_date], [fetched], [created], [skipped], [error], [started_by_user_id], [started_at], [finished_at], [processed], [failed], [updated_at], [high_water_at], [window_start_at], [window_end_at], [target_at]
              FROM [finance].[ap2_sync_runs] ' . $where,
             $params,
         );
@@ -211,6 +211,10 @@ final class AzureSqlAp2MailStore extends AzureSqlAp2Support implements Ap2MailSt
             self::int($row['processed'] ?? 0),
             self::int($row['failed'] ?? 0),
             self::whenOrNull($row['updated_at'] ?? null),
+            self::whenOrNull($row['high_water_at'] ?? null),
+            self::whenOrNull($row['window_start_at'] ?? null),
+            self::whenOrNull($row['window_end_at'] ?? null),
+            self::whenOrNull($row['target_at'] ?? null),
         );
     }
 
@@ -293,6 +297,10 @@ final class AzureSqlAp2MailStore extends AzureSqlAp2Support implements Ap2MailSt
             'processed' => $r->processed,
             'failed' => $r->failed,
             'updated_at' => self::atOrNull($r->updatedAt),
+            'high_water_at' => self::atOrNull($r->highWaterAt),
+            'window_start_at' => self::atOrNull($r->windowStartAt),
+            'window_end_at' => self::atOrNull($r->windowEndAt),
+            'target_at' => self::atOrNull($r->targetAt),
         ];
     }
 

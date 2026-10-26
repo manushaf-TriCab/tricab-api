@@ -31,7 +31,12 @@ final class AzureSqlAp2SettingsStore extends AzureSqlAp2Support implements Ap2Se
             'payment_proposals_enabled' => $s->paymentProposalsEnabled ? '1' : '0',
             'tax_code_map' => json_encode((object) $s->taxCodeMap, JSON_THROW_ON_ERROR),
         ];
-        $this->transactional(function () use ($values, $userId): null {
+        $this->transactional(function () use ($values, $userId, $s): null {
+            if ($s->mailCutoffDate === null) {
+                $this->connection->execute('DELETE FROM [finance].[ap2_settings] WHERE [setting_key] = :key', ['key' => 'mail_cutoff_date']);
+            } else {
+                $values['mail_cutoff_date'] = $s->mailCutoffDate;
+            }
             foreach ($values as $key => $value) {
                 $this->connection->execute('DELETE FROM [finance].[ap2_settings] WHERE [setting_key] = :key', ['key' => $key]);
                 $this->connection->execute(
@@ -77,6 +82,9 @@ final class AzureSqlAp2SettingsStore extends AzureSqlAp2Support implements Ap2Se
         }
         if (isset($stored['payment_proposals_enabled'])) {
             $changes['paymentProposalsEnabled'] = $stored['payment_proposals_enabled'] === '1';
+        }
+        if (isset($stored['mail_cutoff_date']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $stored['mail_cutoff_date']) === 1) {
+            $changes['mailCutoffDate'] = $stored['mail_cutoff_date'];
         }
         if (isset($stored['batch_cash_limit']) && is_numeric($stored['batch_cash_limit'])) {
             $changes['batchCashLimit'] = (float) $stored['batch_cash_limit'];

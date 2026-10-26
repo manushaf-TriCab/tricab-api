@@ -23,6 +23,8 @@ final readonly class Ap2Settings
         public bool $paymentProposalsEnabled = true,
         public array $fxRates = ['AUD' => 1.0],
         public array $taxCodeMap = [],
+        /** Sydney calendar day (yyyy-mm-dd): only mail received on or after it is synced or shown. Null until set (sync refuses). */
+        public ?string $mailCutoffDate = null,
     ) {
     }
 

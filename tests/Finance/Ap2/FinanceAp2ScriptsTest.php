@@ -226,4 +226,20 @@ final class FinanceAp2ScriptsTest extends TestCase
         // Blobs are never copied: no blob_path is written anywhere.
         self::assertStringNotContainsString('blob_path', $sql);
     }
+
+    public function test_the_sync_cutoff_alter_is_idempotent_standalone_and_says_it_is_not_applied(): void
+    {
+        $alter = self::script('alter-finance-ap2-sync-cutoff.sql');
+        $create = self::script('create-finance-ap2-schema.sql');
+
+        self::assertStringContainsString('NOT APPLIED', $alter);
+        self::assertStringContainsString('SET QUOTED_IDENTIFIER ON', $alter);
+        self::assertStringContainsString('SET ANSI_NULLS ON', $alter);
+        foreach (['high_water_at', 'window_start_at', 'window_end_at', 'target_at', 'processed', 'Cancelled'] as $needle) {
+            self::assertStringContainsString($needle, $alter);
+            self::assertStringContainsString($needle, $create, 'a fresh build has it too');
+        }
+        self::assertStringNotContainsString('DELETE', $alter);
+        self::assertStringNotContainsString('DROP TABLE', $alter);
+    }
 }

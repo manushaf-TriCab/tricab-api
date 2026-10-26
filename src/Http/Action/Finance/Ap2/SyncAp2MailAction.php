@@ -11,7 +11,7 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Ap\Domain\ApFailure;
 use TriCab\Core\Finance\Ap2\Service\Ap2MailSyncService;
 
-/** POST /mail/sync `{mode: start|process|complete|cancel, ...}`, in bounded batches. `FINANCE.AP2.MAIL.READ`. */
+/** POST /mail/sync `{mode: start|resume|process|next|complete|cancel, ...}`, in bounded batches; no dates. `FINANCE.AP2.MAIL.READ`. */
 final class SyncAp2MailAction
 {
     use ApActionSupport;

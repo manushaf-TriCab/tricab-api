@@ -249,6 +249,7 @@ final class Ap2Presenter
             'approvalExpiryDays' => $s->approvalExpiryDays,
             'paymentProposalsEnabled' => $s->paymentProposalsEnabled,
             'taxCodeMap' => (object) $s->taxCodeMap,
+            'mailCutoffDate' => $s->mailCutoffDate,
             'currencies' => Ap2Invoice::CURRENCIES,
             'odooPostingEnabled' => $odooPostingEnabled,
             'mailbox' => $mailbox,

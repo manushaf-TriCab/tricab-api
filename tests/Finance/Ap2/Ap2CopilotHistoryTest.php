@@ -83,7 +83,10 @@ final class Ap2CopilotHistoryTest extends TestCase
         $reader->add(self::MAILBOX, new MailboxMessage($summary, MailboxMessage::BODY_TEXT, 'Hello', [new MailboxRecipient(self::MAILBOX)], []), []);
         $sync = $this->c->get(Ap2MailSyncService::class);
         self::assertInstanceOf(Ap2MailSyncService::class, $sync);
-        $sync->sync(Ap2Fixtures::actor(), []);
+        $settings = $this->c->get(\TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class);
+        self::assertInstanceOf(\TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class, $settings);
+        $settings->save($settings->get()->with(mailCutoffDate: (new DateTimeImmutable('-5 days', new \DateTimeZone('UTC')))->format('Y-m-d')), 1);
+        $sync->sync(Ap2Fixtures::actor());
         $mails = $this->c->get(Ap2MailStore::class);
         self::assertInstanceOf(InMemoryAp2MailStore::class, $mails);
         $all = $mails->all();

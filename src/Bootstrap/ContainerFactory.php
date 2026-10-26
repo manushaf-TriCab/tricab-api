@@ -1748,6 +1748,7 @@ final class ContainerFactory
                 => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2MailSyncService
                     => new \TriCab\Core\Finance\Ap2\Service\Ap2MailSyncService(
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class),
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore::class),
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore::class),
                         self::get($container, \TriCab\Core\Finance\Shared\Mailbox\FinanceMailboxReader::class),
@@ -1800,6 +1801,7 @@ final class ContainerFactory
                 => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2MailService
                     => new \TriCab\Core\Finance\Ap2\Service\Ap2MailService(
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class),
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore::class),
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2StatementStore::class),
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore::class),
@@ -1843,6 +1845,7 @@ final class ContainerFactory
                 => static fn (Container $container): \TriCab\Core\Finance\Ap2\Service\Ap2MeService
                     => new \TriCab\Core\Finance\Ap2\Service\Ap2MeService(
                         self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class),
+                        self::get($container, \TriCab\Core\Finance\Ap2\Contract\Ap2MailStore::class),
                         $settings->financeAp2SendingEnabled,
                         $settings->financeAp2OdooPostingEnabled,
                         $settings->financeApMailbox,

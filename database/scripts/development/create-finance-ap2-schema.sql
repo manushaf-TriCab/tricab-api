@@ -710,6 +710,10 @@ BEGIN TRY
             [failed]              INT            NOT NULL
                 CONSTRAINT [DF_finance_ap2_sync_runs_failed] DEFAULT (0),
             [updated_at]          DATETIME2(6)   NULL,
+            [high_water_at]       DATETIME2(6)   NULL,
+            [window_start_at]     DATETIME2(6)   NULL,
+            [window_end_at]       DATETIME2(6)   NULL,
+            [target_at]           DATETIME2(6)   NULL,
             CONSTRAINT [PK_finance_ap2_sync_runs] PRIMARY KEY CLUSTERED ([id]),
             CONSTRAINT [CK_finance_ap2_sync_runs_kind] CHECK ([kind] IN (N'mail', N'odoo-bill-state', N'odoo-po')),
             CONSTRAINT [CK_finance_ap2_sync_runs_status] CHECK ([status] IN (N'Running', N'Succeeded', N'Failed', N'Cancelled'))

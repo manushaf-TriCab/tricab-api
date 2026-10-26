@@ -108,6 +108,7 @@ final class Ap2MailTest extends TestCase
         $this->c->set(FinanceMailTransport::class, $this->transport);
         $users = $this->c->get(UserRepository::class);
         self::assertInstanceOf(InMemoryApiUserRepository::class, $users);
+        $this->cutoff((new DateTimeImmutable('-5 days', new \DateTimeZone('UTC')))->format('Y-m-d'));
         $users->replacePermissions(1, ['account.login', Module::PERMISSION_ACCESS, Module::PERMISSION_AP2_ACCESS, ...Module::AP2_PERMISSIONS], ['EMPLOYEE']);
     }
 
@@ -155,7 +156,7 @@ final class Ap2MailTest extends TestCase
      * @param list<array{0: string, 1: string, 2: string}> $files name, type, bytes
      * @param 'html'|'text' $type
      */
-    private function inbox(string $id, string $from, string $subject, string $body = 'Hello', array $files = [], string $type = MailboxMessage::BODY_TEXT, string $cc = '', string $when = '-2 hours'): void
+    private function inbox(string $id, string $from, string $subject, string $body = 'Hello', array $files = [], string $type = MailboxMessage::BODY_TEXT, string $cc = '', string $when = '-2 minutes'): void
     {
         $summary = new MailboxMessageSummary($id, $subject, $from, 'Sender', new DateTimeImmutable($when, new \DateTimeZone('UTC')), $files !== [], mb_substr($body, 0, 50));
         $attachments = [];
@@ -167,11 +168,11 @@ final class Ap2MailTest extends TestCase
 
     /**
      * @param array<string, mixed> $body
-     * @return array{fetched: int, created: int, skipped: int, failed: int, truncated: bool}
+     * @return array{fetched: int, created: int, skipped: int, failed: int, windows: int, complete: bool}
      */
     private function sync(array $body = []): array
     {
-        return $this->get(Ap2MailSyncService::class)->sync(Ap2Fixtures::actor(), $body);
+        return $this->get(Ap2MailSyncService::class)->sync(Ap2Fixtures::actor());
     }
 
     /** @return list<Ap2Mail> */
@@ -215,8 +216,8 @@ final class Ap2MailTest extends TestCase
         $this->inbox('g1', 'Billing@Acme.test', 'Invoice 100', '<p>Please <b>pay</b></p><script>x()</script><br>Thanks &amp; regards', [['inv.pdf', 'application/pdf', '%PDF-1.4 one']], MailboxMessage::BODY_HTML, 'accounts@acme.test');
         $this->inbox('g2', 'someone@else.test', 'Hello');
 
-        self::assertSame(['fetched' => 2, 'created' => 2, 'skipped' => 0, 'failed' => 0, 'truncated' => false], $this->sync());
-        self::assertSame(['fetched' => 2, 'created' => 0, 'skipped' => 2, 'failed' => 0, 'truncated' => false], $this->sync(), 'the same messages are not stored twice');
+        self::assertSame(['fetched' => 2, 'created' => 2, 'skipped' => 0, 'failed' => 0, 'windows' => 1, 'complete' => true], $this->sync());
+        self::assertSame(['fetched' => 2, 'created' => 0, 'skipped' => 2, 'failed' => 0, 'windows' => 1, 'complete' => true], $this->sync(), 'the same messages are not stored twice');
         self::assertCount(2, $this->stored());
 
         $mail = $this->mails()->findMail($this->idOf('Invoice 100'));
@@ -327,7 +328,7 @@ final class Ap2MailTest extends TestCase
         self::assertSame([], $this->stored());
     }
 
-    public function test_a_successful_run_is_recorded_and_the_window_is_checked(): void
+    public function test_a_successful_run_is_recorded(): void
     {
         $this->inbox('g1', 'a@b.test', 'One');
         $this->sync();
@@ -336,9 +337,6 @@ final class Ap2MailTest extends TestCase
         self::assertSame([1, 1, 0], [$runs[0]->fetched, $runs[0]->created, $runs[0]->skipped]);
         self::assertSame(1, $runs[0]->startedByUserId === null ? 0 : 1);
 
-        $this->refused(fn () => $this->sync(['from' => '2026-01-01', 'to' => '2026-06-01']), 422);
-        $this->refused(fn () => $this->sync(['from' => '2026-10-02', 'to' => '2026-10-01']), 422);
-        $this->refused(fn () => $this->sync(['from' => 'yesterday']), 422);
     }
 
     public function test_sync_never_touches_the_mailbox_beyond_reading(): void
@@ -662,7 +660,7 @@ final class Ap2MailTest extends TestCase
         $this->inbox('g1', 'billing@acme.test', 'Invoice 100', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
         $this->inbox('g2', 'billing@acme.test', 'Invoice 200', 'Please pay', [['a.pdf', 'application/pdf', '%PDF a']]);
         $fake->failWith = new Ap2AiUnavailable('down');
-        self::assertSame(['fetched' => 2, 'created' => 2, 'skipped' => 0, 'failed' => 0, 'truncated' => false], $this->sync());
+        self::assertSame(['fetched' => 2, 'created' => 2, 'skipped' => 0, 'failed' => 0, 'windows' => 1, 'complete' => true], $this->sync());
         self::assertCount(2, $fake->calls);
         self::assertNull($this->mails()->findMail($this->idOf('Invoice 100'))?->extraction);
 
@@ -1255,20 +1253,283 @@ final class Ap2MailTest extends TestCase
         self::assertCount(2, $this->mails()->attachmentsOf($mail->id), 'the retry stored every attachment');
     }
 
-    public function test_the_window_is_validated_and_defaults_to_the_last_seven_days(): void
+    public function test_modes_are_validated_and_a_start_takes_no_dates(): void
     {
         $this->refused(fn () => $this->mode('start', ['from' => '2026-09-01', 'to' => '2026-10-02']), 422);
-        $this->refused(fn () => $this->mode('start', ['from' => '2026-10-10', 'to' => '2026-10-02']), 422);
-        $this->refused(fn () => $this->mode('start', ['from' => 'last week', 'to' => '2026-10-02']), 422);
+        $this->refused(fn () => $this->mode('start', ['from' => '2026-10-10']), 422);
+        $this->refused(fn () => $this->mode('start', ['to' => null]), 422);
+        [$status] = $this->call('POST', '/mail/sync', ['mode' => 'start', 'from' => '2026-10-01']);
+        self::assertSame(422, $status);
+        self::assertSame([], $this->mails()->runs, 'a refused start records nothing');
         $this->refused(fn () => $this->mode('nope'), 422);
         $this->refused(fn () => $this->get(Ap2MailSyncService::class)->handle(Ap2Fixtures::actor(), []), 422);
         $this->refused(fn () => $this->mode('process', ['runId' => 'x', 'ids' => []]), 404);
+        self::assertSame('Running', $this->mode('start')['status']);
+    }
 
-        $thirtyOne = $this->mode('start', ['from' => '2026-10-01', 'to' => '2026-10-31']);
-        self::assertSame(['2026-10-01', '2026-10-31'], [$thirtyOne['from'], $thirtyOne['to']], '31 days is allowed');
-        $this->mode('cancel', ['runId' => self::str($this->mails()->runningRun('mail')?->id)]);
-        $default = $this->mode('start');
-        self::assertSame(6, (int) (new DateTimeImmutable(self::str($default['from'])))->diff(new DateTimeImmutable(self::str($default['to'])))->days, 'seven calendar days, today included');
+    // ---------------------------------------------------------------- the cutoff model (27 Oct)
+
+    private function cutoff(?string $day): void
+    {
+        $settings = $this->c->get(\TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class);
+        self::assertInstanceOf(\TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore::class, $settings);
+        $settings->save($settings->get()->with(mailCutoffDate: $day), 1);
+    }
+
+    private function at(string $utc): DateTimeImmutable
+    {
+        return new DateTimeImmutable($utc, new \DateTimeZone('UTC'));
+    }
+
+    private function clockAt(string $utc): void
+    {
+        $this->clock = new FixedClock($this->at($utc));
+        $this->c->set(Clock::class, $this->clock);
+    }
+
+    public function test_a_sync_refuses_until_the_cutoff_is_set_and_the_job_does_nothing(): void
+    {
+        $this->cutoff(null);
+        $this->inbox('g1', 'a@b.test', 'One');
+        $failure = $this->refused(fn () => $this->mode('start'), 409);
+        self::assertSame('FINANCE_AP2_MAIL_CUTOFF_UNSET', $failure->errorCode());
+        self::assertSame('Set the mail cutoff date in Settings first', $failure->getMessage());
+        [$status, $json] = $this->call('POST', '/mail/sync', ['mode' => 'start']);
+        self::assertSame(409, $status);
+        self::assertSame('FINANCE_AP2_MAIL_CUTOFF_UNSET', is_array($json['error'] ?? null) ? ($json['error']['code'] ?? null) : null);
+        $this->refused(fn () => $this->sync(), 409);
+
+        $answer = $this->get(Ap2MailSyncJob::class)->run(new DateTimeImmutable());
+        self::assertArrayHasKey('skipped', $answer);
+        self::assertSame([], $this->mails()->runs, 'nothing is even recorded');
+        self::assertSame([], $this->stored());
+    }
+
+    public function test_the_first_run_reads_from_the_start_of_the_cutoff_day_in_sydney_and_never_earlier(): void
+    {
+        $this->clockAt('2026-10-27 03:00:00');
+        $this->cutoff('2026-10-20');   // Melbourne is UTC+11 then: the day starts 2026-10-19 13:00 UTC
+        $this->inbox('before', 'a@b.test', 'Before', when: '2026-10-19 12:59:00');
+        $this->inbox('first', 'a@b.test', 'First', when: '2026-10-19 13:01:00');
+        $this->inbox('recent', 'a@b.test', 'Recent', when: '2026-10-27 01:00:00');
+
+        $start = $this->mode('start');
+        self::assertSame(['first', 'recent'], self::sorted(self::pending($start)));
+        $run = $this->mails()->findRun(self::str($start['runId']));
+        self::assertNotNull($run);
+        self::assertEquals($this->at('2026-10-19 13:00:00'), $run->windowStartAt);
+        self::assertEquals($this->at('2026-10-27 03:00:00'), $run->windowEndAt);
+        self::assertFalse($start['more']);
+    }
+
+    /**
+     * @param list<string> $ids
+     * @return list<string>
+     */
+    private static function sorted(array $ids): array
+    {
+        sort($ids);
+
+        return $ids;
+    }
+
+    public function test_later_runs_start_an_hour_before_the_high_water_mark(): void
+    {
+        $this->clockAt('2026-10-27 03:00:00');
+        $this->cutoff('2026-10-20');
+        $this->inbox('a', 'a@b.test', 'A', when: '2026-10-27 02:00:00');
+        $this->sync();
+        $first = $this->mails()->lastSucceededRun('mail');
+        self::assertEquals($this->at('2026-10-27 03:00:00'), $first?->highWaterAt);
+
+        $this->clock->advance('+3 hours');
+        $this->inbox('b', 'a@b.test', 'B', when: '2026-10-27 04:30:00');
+        $start = $this->mode('start');
+        $run = $this->mails()->findRun(self::str($start['runId']));
+        self::assertEquals($this->at('2026-10-27 02:00:00'), $run?->windowStartAt, 'mark 03:00 minus the one-hour overlap');
+        self::assertSame(['b'], self::pending($start), 'a is listed again by the overlap but is already stored');
+        self::assertSame(2, $start['fetched'], 'both were listed');
+        $this->mode('cancel', ['runId' => self::str($start['runId'])]);
+        self::assertEquals($this->at('2026-10-27 03:00:00'), $this->mails()->lastSucceededRun('mail')?->highWaterAt, 'a cancelled run moves no mark');
+
+        // Moving the cutoff forward past the mark wins over the mark.
+        $this->cutoff('2026-10-28');
+        $this->clock->advance('+1 day');
+        $again = $this->mails()->findRun(self::str($this->mode('start')['runId']));
+        self::assertEquals($this->at('2026-10-27 13:00:00'), $again?->windowStartAt, 'the cutoff day starts 2026-10-27 13:00 UTC');
+    }
+
+    public function test_a_gap_beyond_31_days_is_caught_up_in_successive_windows_without_skipping(): void
+    {
+        $this->clockAt('2026-10-27 03:00:00');
+        $this->cutoff('2026-07-01');
+        $this->inbox('old', 'a@b.test', 'Old', when: '2026-07-10 05:00:00');
+        $this->inbox('mid', 'a@b.test', 'Mid', when: '2026-08-20 05:00:00');
+        $this->inbox('mid2', 'a@b.test', 'Mid two', when: '2026-09-25 05:00:00');
+        $this->inbox('new', 'a@b.test', 'New', when: '2026-10-26 05:00:00');
+
+        // Client-driven: windows of at most 31 days, the mark moves over each finished one.
+        $start = $this->mode('start');
+        $runId = self::str($start['runId']);
+        $windows = 1;
+        $ids = self::pending($start);
+        while (true) {
+            if ($ids !== []) {
+                $batch = $this->mode('process', ['runId' => $runId, 'ids' => $ids]);
+                self::assertSame(0, $batch['remaining']);
+            }
+            $run = $this->mails()->findRun($runId);
+            self::assertNotNull($run);
+            if ($run->windowEndAt >= $run->targetAt) {
+                break;
+            }
+            $next = $this->mode('next', ['runId' => $runId]);
+            self::assertLessThanOrEqual(31 * 86400, (int) $this->at(self::str($next['to']))->format('U') - (int) $this->at(self::str($next['from']))->format('U'));
+            $ids = self::pending($next);
+            ++$windows;
+        }
+        $closed = $this->mode('complete', ['runId' => $runId]);
+        self::assertGreaterThanOrEqual(4, $windows);
+        self::assertCount(4, $this->stored());
+        self::assertSame('2026-10-27T03:00:00+00:00', $closed['highWaterAt']);
+    }
+
+    public function test_the_job_catches_up_across_windows_and_a_window_over_500_messages_is_narrowed(): void
+    {
+        $this->clockAt('2026-10-27 03:00:00');
+        $this->cutoff('2026-10-26');
+        // 520 messages, one a minute, newest at 02:00: the reader would return only the newest 500 of one window.
+        for ($i = 0; $i < 520; ++$i) {
+            $this->inbox('b' . $i, 'a@b.test', 'Bulk ' . $i, 'x', when: $this->at('2026-10-27 02:00:00')->modify('-' . $i . ' minutes')->format('Y-m-d H:i:s'));
+        }
+        $answer = $this->sync();
+        self::assertSame(520, $answer['created'], 'nothing is skipped by the 500 ceiling');
+        self::assertGreaterThanOrEqual(2, $answer['windows']);
+        self::assertTrue($answer['complete']);
+        self::assertCount(520, $this->stored());
+        self::assertSame([], array_values(array_filter($this->mails()->runs, static fn (Ap2SyncRun $r): bool => $r->status !== 'Succeeded')));
+    }
+
+    public function test_a_failed_message_keeps_the_mark_back_so_the_next_run_retries_it(): void
+    {
+        $this->clockAt('2026-10-27 03:00:00');
+        $this->cutoff('2026-10-20');
+        $this->inbox('good', 'a@b.test', 'good', when: '2026-10-27 02:00:00');
+        $this->inbox('bad', 'a@b.test', 'boom', when: '2026-10-27 02:10:00');
+        $classifier = new class implements Ap2MailClassifier {
+            public bool $broken = true;
+
+            public function classify(string $subject, string $from, string $bodyText, array $attachmentNames, array $suppliers): Ap2MailClassification
+            {
+                if ($this->broken && $subject === 'boom') {
+                    throw new \RuntimeException('no');
+                }
+
+                return Ap2MailClassification::none();
+            }
+        };
+        $this->c->set(Ap2MailClassifier::class, $classifier);
+        $answer = $this->sync();
+        self::assertSame(1, $answer['failed']);
+        $run = $this->mails()->lastSucceededRun('mail');
+        self::assertEquals($this->at('2026-10-19 13:00:00'), $run?->highWaterAt, 'the mark did not move over the failed window');
+        $this->clock->advance('+1 hour');
+        $classifier->broken = false;
+        self::assertSame(1, $this->sync()['created']);
+    }
+
+    public function test_a_run_owned_by_the_job_is_never_processed_by_a_person(): void
+    {
+        $this->many(2);
+        $now = new DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $this->mails()->beginRun(new Ap2SyncRun('jobrun', 'mail', Ap2SyncRun::RUNNING, $now, fetched: 2, processed: 1, updatedAt: $now, windowStartAt: $now->modify('-1 hour'), windowEndAt: $now, targetAt: $now));
+        $failure = $this->refused(fn () => $this->mode('start'), 409);
+        $run = $failure->extra['run'];
+        self::assertIsArray($run);
+        self::assertSame('job', $run['startedBy']);
+        $this->refused(fn () => $this->mode('process', ['runId' => 'jobrun', 'ids' => ['m1']]), 409);
+        $this->refused(fn () => $this->mode('next', ['runId' => 'jobrun']), 409);
+        self::assertSame([], $this->stored());
+        $resume = $this->mode('resume', ['runId' => 'jobrun']);
+        self::assertSame([[], 'job', 2], [$resume['pending'], $resume['startedBy'], $resume['total']], 'counts only, no ids');
+        self::assertSame(1, $this->mails()->findRun('jobrun')?->processed);
+        // A person's run says it is theirs.
+        $this->mails()->finishRun($this->mails()->findRun('jobrun')->with(status: 'Failed'));
+        $mine = $this->mode('start');
+        $again = $this->refused(fn () => $this->mode('start'), 409)->extra['run'];
+        self::assertIsArray($again);
+        self::assertSame('user', $again['startedBy']);
+        self::assertNotSame('', self::str($mine['runId']));
+    }
+
+    public function test_with_no_cutoff_the_inbox_is_empty_and_me_says_so(): void
+    {
+        $this->mailWith('Visible');
+        self::assertCount(1, $this->ok($this->call('GET', '/mail')));
+        $this->cutoff(null);
+        self::assertSame([], $this->ok($this->call('GET', '/mail')));
+        $me = $this->ok($this->call('GET', '/me'));
+        self::assertIsArray($me['mailSync']);
+        self::assertTrue($me['mailSync']['cutoffUnset']);
+        self::assertCount(1, $this->stored(), 'nothing is deleted');
+        $this->cutoff('2026-01-01');
+        $me = $this->ok($this->call('GET', '/me'));
+        self::assertIsArray($me['mailSync']);
+        self::assertFalse($me['mailSync']['cutoffUnset']);
+    }
+
+    public function test_the_job_is_hourly(): void
+    {
+        $schedule = $this->get(Ap2MailSyncJob::class)->schedule();
+        $slot = $schedule->dueSlot($this->at('2026-10-27 03:10:00'));
+        self::assertSame($slot, $schedule->dueSlot($this->at('2026-10-27 03:59:00')), 'one slot a whole hour');
+        self::assertNotSame($slot, $schedule->dueSlot($this->at('2026-10-27 04:00:00')));
+        $before = $schedule->dueSlot($this->at('2026-10-27 02:59:59'));
+        self::assertNotSame($before, $slot);
+    }
+
+    public function test_mail_received_before_the_cutoff_is_hidden_but_not_deleted(): void
+    {
+        $this->cutoff('2026-10-20');
+        $old = $this->mailWith('Old one');
+        $new = $this->mailWith('New one', 'billing@acme.test', false);
+        $this->mails()->updateMail($old->with(receivedAt: $this->at('2026-10-19 12:00:00')));
+        $this->mails()->updateMail($new->with(receivedAt: $this->at('2026-10-19 14:00:00')));
+
+        $list = $this->ok($this->call('GET', '/mail'));
+        self::assertSame(['New one'], array_map(static fn ($m): string => is_array($m) ? self::str($m['subject'] ?? '') : '', $list));
+        self::assertCount(0, $this->ok($this->call('GET', '/mail?from=2026-10-01&to=2026-10-19')), 'a custom display range cannot reach before the cutoff');
+        self::assertCount(1, $this->ok($this->call('GET', '/mail?from=2026-10-01&to=2026-10-30')));
+        [$status] = $this->call('GET', '/mail/' . $old->id);
+        self::assertSame(404, $status);
+        self::assertCount(2, $this->stored(), 'the row is still stored');
+
+        $this->cutoff('2026-10-01');
+        self::assertCount(2, $this->ok($this->call('GET', '/mail')), 'moving the cutoff back shows it again');
+    }
+
+    public function test_the_cutoff_is_a_setting_and_me_carries_the_last_sync_time(): void
+    {
+        $this->clockAt('2026-10-27 03:00:00');
+        $this->cutoff(null);
+        self::assertNull($this->ok($this->call('GET', '/settings'))['mailCutoffDate']);
+        $saved = $this->ok($this->call('PATCH', '/settings', ['mailCutoffDate' => '2026-10-20']));
+        self::assertSame('2026-10-20', $saved['mailCutoffDate']);
+        [$status] = $this->call('PATCH', '/settings', ['mailCutoffDate' => 'last week']);
+        self::assertSame(422, $status);
+        $me = $this->ok($this->call('GET', '/me'));
+        self::assertIsArray($me['settings']);
+        self::assertSame('2026-10-20', $me['settings']['mailCutoffDate']);
+        self::assertIsArray($me['mailSync']);
+        self::assertNull($me['mailSync']['lastSyncedAt']);
+
+        $this->inbox('a', 'a@b.test', 'A', when: '2026-10-27 02:00:00');
+        $this->sync();
+        $after = $this->ok($this->call('GET', '/me'));
+        self::assertIsArray($after['mailSync']);
+        self::assertSame('2026-10-27T03:00:00+00:00', $after['mailSync']['lastSyncedAt']);
+        $this->ok($this->call('PATCH', '/settings', ['mailCutoffDate' => null]));
+        self::assertNull($this->ok($this->call('GET', '/settings'))['mailCutoffDate']);
     }
 
     public function test_the_job_loops_the_same_service_within_its_own_budget(): void

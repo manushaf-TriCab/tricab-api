@@ -15,6 +15,7 @@ use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceExtractor;
 use TriCab\Core\Finance\Ap2\Contract\Ap2MailStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2PersonDirectory;
+use TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2StatementStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2Transactions;
@@ -58,6 +59,7 @@ final class Ap2MailService
 
     public function __construct(
         private readonly Ap2MailStore $mail,
+        private readonly Ap2SettingsStore $settings,
         private readonly Ap2SupplierStore $suppliers,
         private readonly Ap2StatementStore $statements,
         private readonly Ap2HistoryStore $history,
@@ -96,6 +98,10 @@ final class Ap2MailService
         }
         $v = $input->values();
         [$start, $end] = $this->time->dayBounds(is_string($v['from'] ?? null) ? $v['from'] : null, is_string($v['to'] ?? null) ? $v['to'] : null);
+        $start = $this->visibleFrom($start);
+        if ($this->settings->get()->mailCutoffDate === null) {
+            return [];
+        }
         $status = ['progress' => 'In progress', 'done' => 'Done', 'hold' => 'On hold'][$tab] ?? null;
 
         $rows = array_values(array_filter($this->mail->all($start, $end), static fn (Ap2Mail $m): bool => $status === null || $m->status === $status));
@@ -453,9 +459,28 @@ final class Ap2MailService
         $this->history->append(new Ap2HistoryEntry(bin2hex(random_bytes(16)), $supplierId, $type, $detail, $actor->person(), $at, null, $mailId, $extra));
     }
 
+    /**
+     * Mail received before the cutoff date is never shown (it may still be stored from earlier syncs; nothing is deleted).
+     * With no cutoff set there is nothing to hide.
+     */
+    private function visibleFrom(?DateTimeImmutable $from): ?DateTimeImmutable
+    {
+        $day = $this->settings->get()->mailCutoffDate;
+        if ($day === null) {
+            return $from;
+        }
+        $cutoff = $this->time->dayBounds($day, null)[0];
+
+        return $from === null || $cutoff === null ? ($cutoff ?? $from) : max($from, $cutoff);
+    }
+
     private function found(string $id): Ap2Mail
     {
         $mail = preg_match('/^[0-9a-f]{32}$/', $id) === 1 ? $this->mail->findMail($id) : null;
+        $from = $this->visibleFrom(null);
+        if ($mail !== null && $from !== null && $mail->receivedAt < $from) {
+            $mail = null;
+        }
         if ($mail === null) {
             throw new Ap2NotFound('Email not found');
         }

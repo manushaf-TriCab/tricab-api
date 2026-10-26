@@ -122,7 +122,7 @@ final class InMemoryAp2MailStore implements Ap2MailStore, Ap2MailDrafts
     {
         $current = $this->runs[$run->id] ?? null;
         if ($current !== null && $current->isRunning()) {
-            $this->runs[$run->id] = $current->with(fetched: $run->fetched, created: $run->created, skipped: $run->skipped, failed: $run->failed, processed: $run->processed, error: $run->error, updatedAt: $run->updatedAt);
+            $this->runs[$run->id] = $current->with(fetched: $run->fetched, created: $run->created, skipped: $run->skipped, failed: $run->failed, processed: $run->processed, error: $run->error, updatedAt: $run->updatedAt, highWaterAt: $run->highWaterAt, windowStartAt: $run->windowStartAt, windowEndAt: $run->windowEndAt, targetAt: $run->targetAt);
         }
     }
 
