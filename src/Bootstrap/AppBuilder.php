@@ -445,6 +445,7 @@ final class AppBuilder
         self::registerNprRoutes($app, $container);
         self::registerHrEmployeeRoutes($app, $container);
         self::registerCableFitRoutes($app, $container);
+        self::registerCableRoutesRoutes($app, $container);
         if ($settings->mailModuleEnabled) {
             self::registerMailRoutes($app, $container);
         }
@@ -1726,6 +1727,25 @@ final class AppBuilder
         $require = new RequirePermission($container);
         $app->get('/api/v1/tel-directory', \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class)
             ->add(($require)(\TriCab\Core\TelDirectory\Module::PERMISSION_ACCESS));
+    }
+
+    /**
+     * Cable routes: read-only view of how each finished cable is made, from the SQLite store built by core/python/cable_routes.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerCableRoutesRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $gate = \TriCab\Core\CableRoutes\Module::PERMISSION_READ;
+        $base = '/api/v1/cable-routes';
+        $app->get($base . '/run', \TriCab\Api\Http\Action\CableRoutes\GetRunAction::class)->add(($require)($gate));
+        $app->get($base . '/codes', \TriCab\Api\Http\Action\CableRoutes\ListCodesAction::class)->add(($require)($gate));
+        $app->get($base . '/items', \TriCab\Api\Http\Action\CableRoutes\ListItemsAction::class)->add(($require)($gate));
+        $app->get($base . '/item', \TriCab\Api\Http\Action\CableRoutes\GetItemAction::class)->add(($require)($gate));
+        $app->get($base . '/machines', \TriCab\Api\Http\Action\CableRoutes\ListMachinesAction::class)->add(($require)($gate));
+        $app->get($base . '/machine', \TriCab\Api\Http\Action\CableRoutes\GetMachineAction::class)->add(($require)($gate));
+        $app->get($base . '/checks', \TriCab\Api\Http\Action\CableRoutes\ListChecksAction::class)->add(($require)($gate));
     }
 
     /**

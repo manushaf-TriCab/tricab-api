@@ -367,6 +367,8 @@ final readonly class Settings
         public int $cablefitResearchTimeoutSeconds = 300,
         public int $cablefitResearchIdleCheckMinutes = 1440,
         public string $cablefitResearchWakePath = 'var/cablefit-research',
+        // Cable routes: the read-only SQLite store built by core/python/cable_routes. Relative paths resolve against the API root.
+        public string $cableRoutesDbPath = 'var/cable-routes/cable-routes.sqlite',
         // Tri-Task "Create with AI": turns a pasted or dictated summary into a draft of tasks and a project. Off by default.
         public bool $triTaskAiEnabled = false,
         // '' reads as FOUNDRY_MODEL_DEPLOYMENT, a deployment known to exist in each environment.
@@ -1689,6 +1691,7 @@ final readonly class Settings
             cablefitResearchTimeoutSeconds: self::boundedInt($env, 'CABLEFIT_RESEARCH_TIMEOUT_SECONDS', 300, 30, 900),
             cablefitResearchIdleCheckMinutes: self::boundedInt($env, 'CABLEFIT_RESEARCH_IDLE_CHECK_MINUTES', 1440, 1, 10080),
             cablefitResearchWakePath: trim(self::string($env, 'CABLEFIT_RESEARCH_WAKE_PATH', 'var/cablefit-research')) ?: 'var/cablefit-research',
+            cableRoutesDbPath: trim(self::string($env, 'CABLE_ROUTES_DB_PATH', 'var/cable-routes/cable-routes.sqlite')) ?: 'var/cable-routes/cable-routes.sqlite',
             triTaskAiEnabled: self::bool($env, 'TRI_TASK_AI_ENABLED', false),
             triTaskAiModel: trim(self::string($env, 'TRI_TASK_AI_MODEL', '')) ?: $foundryModelDeployment,
             triTaskAiTimeoutSeconds: self::boundedInt($env, 'TRI_TASK_AI_TIMEOUT_SECONDS', 45, 5, 120),

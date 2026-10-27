@@ -1,0 +1,23 @@
+from_stage,from_machines,to_stage,to_machines,flow,line_colour
+1 Rod Breaking,RB2,2 Drawing & Tinning,WD3 WD4 TN1,1.614 mm hard drawn Cu wire,orange
+2 Drawing & Tinning,TN1,2 Drawing & Tinning,WD5,tinned 1.614 mm wire,orange
+2 Drawing & Tinning,WD3 WD4 WD5,3 Bunching,BU1 BU2 BU4 BU5 BU6 BU7,0.29 mm plain/tinned annealed wire (via QC),orange
+3 Bunching,BU1 BU2 BU4 BU5 BU6 BU7,4 Stranding & Mica Taping,TP1 TP2 TP3,0.5-50 mm2 bunched conductors to mica taping (fire rated),orange
+3 Bunching,BU1 BU2 BU4 BU5 BU6 BU7,4 Stranding & Mica Taping,ST1,bunched conductors or members for rope stranding (70-630 mm2) / mica taping >=70 mm2,orange
+3 Bunching,BU1 BU2 BU4 BU5 BU6 BU7,5 Extrusion,EX1 EX3 EX4 EX5 EX6,Cu bunched conductors for insulation/jacketing (<=50 mm2; non-fire-rated) - NX DX,orange
+4 Stranding & Mica Taping,TP1 TP2 TP3 ST1,5 Extrusion,EX1 EX3 EX4 EX5 EX6,NX DX DM conductors,orange
+purchased,Aluminium conductors,5 Extrusion,EX4,purchased Al conductors (planned),grey
+5 Extrusion,EX1 EX3 EX4 EX5 EX6,6 Printing,RWP1 RWP2 RWP3 PS1 RW1,insulated cores (via QC),orange
+5 Extrusion,EX1 EX3 EX4 EX5 EX6,7 Lay-up,LU3 LU5 LU8 LU9,cores without print (multi-core power),orange
+6 Printing,RWP1 RWP2 RWP3 PS1 RW1,7 Lay-up,LU3 LU5 LU8 LU9,printed multi-cores,orange
+6 Printing,PS1 RW1,finished,,finished cable (SSI / SDI / flat),orange
+5 Extrusion,EX1 EX3 EX4 EX5 EX6,8 Braiding,BR1-BR6,to braiding (single cores),orange
+5 Extrusion,EX3 EX4 EX5,8 Braiding,BR1-BR6,to braiding after bedding,green
+5 Extrusion,EX3 EX4 EX5,7 Armouring,LU3,to armouring after bedding,maroon
+7 Lay-up,LU3 LU5 LU8 LU9,8 Braiding,BR1-BR6,to braiding (multi-core; without bedding),orange
+7 Lay-up,LU3 LU5 LU8 LU9,5 Extrusion,EX3 EX4 EX5,to bedding,green
+7 Lay-up,LU3 LU5 LU8 LU9,5 Extrusion,EX3 EX4 EX5,to final sheathing (multi-core cables),blue
+7 Lay-up,LU3 LU5 LU8 LU9,5 Extrusion,EX4,to nylon sheathing,steel blue
+7 Armouring,LU3,5 Extrusion,EX3 EX4 EX5,armoured cable for final sheathing,maroon
+8 Braiding,BR1-BR6,5 Extrusion,EX3 EX4 EX5,braided cable for final sheathing,pink
+8 Braiding,BR1-BR6,5 Extrusion,EX3 EX4 EX5,braided cable (with bedding) for final sheathing,green

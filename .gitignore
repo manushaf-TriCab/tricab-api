@@ -21,3 +21,6 @@
 
 # Local Azure CLI profile (AZURE_CONFIG_DIR); never commit
 .azure-cli-local/
+
+# Cable routes store built by core/python/cable_routes (and any temp or journal files)
+/var/cable-routes/

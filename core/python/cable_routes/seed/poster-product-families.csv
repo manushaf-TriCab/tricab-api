@@ -1,0 +1,13 @@
+family,line_colour,codes,poster_route,expected_ops_after_insulation,notes
+Braided cables with bedding,green,OD KG KE KI KH FC FE FK FZ PJ RB,Extrusion -> Printing -> Lay-up -> Extrusion (bedding) -> Braiding (after bedding) -> Extrusion (final sheathing),LAYUP BEDDING BRAIDING SHEATHING,line label 'Braided Cable (with Bedding) for Final Sheathing'
+Braided cables,pink,XU KU DF HT EU FH DV BH DP C2 C5 EG,Extrusion -> Printing -> Lay-up -> Braiding (multi-core) -> Extrusion (final sheathing),LAYUP BRAIDING SHEATHING,line label 'Braided Cable for Final Sheathing'; single cores can go straight to braiding ('To braiding (single cores)')
+Multi-core,blue,XL KL CC FR EZ BV RR,Extrusion -> Printing (or cores without print for multi-core power) -> Lay-up -> Extrusion (final sheathing),LAYUP SHEATHING,line label 'To Final Sheathing (Multi-core Cables)'; XL KL CC FR EZ also appear in the SDI list as single-core variants
+Flat configuration,black,SD HP FD,Extrusion -> Printing -> (end of line on poster),,SD & HP are Figure 8; FD is flat. Poster draws the line from the printers straight to the product list - no lay-up shown
+Nylon jacket,steel blue,LN XN KN CN XDT KDT CDT,Extrusion (insulation) -> Extrusion (nylon sheathing; EX4 'nylon protection all sizes'),NYLON SHEATHING,line label 'To Nylon Sheathing'; KN XN are multi-core in the range tables so lay-up likely precedes nylon for those
+Work in progress,orange,LB LM LJ GB GP LK,Extrusion -> Printing,,"insulated cores held as WIP; matches D365 35_WIP / 40_SFG item prefixes"
+Single-core single insulated (SSI),orange,UP LP LS,Extrusion (insulation) -> Printing -> finished,,
+Single-core double insulated (SDI),orange,EH CC XL KL FR EZ SF SX SK FP DC RL RW DL FW,Extrusion (SDI: insulation + sheath in tandem) -> Printing -> finished,,EX5 does SDI up to 35 mm2; EX3 does SDI >=50 mm2
+Armoured cables,maroon,XA KA EA CA FA R2 R4 R6 R8 RA IA C3 C6,Extrusion -> Printing -> Lay-up -> Extrusion (bedding) -> LU3 armouring -> Extrusion (final sheathing),LAYUP BEDDING ARMOURING SHEATHING,line labels 'To Armouring or Braiding (after bedding)' and 'Armoured cable for Final Sheathing'; LU3 is the only armouring machine on the poster
+Fire-rated conductors (DM),n/a,DM,Bunching -> Mica taping (TP1/TP2/TP3; ST1 for >=70 mm2) -> Extrusion,TAPING,conductor code not a cable family: DM = mica-wrapped conductor
+Plain / tinned conductors (NX / DX),n/a,NX DX,Bunching (<=50 mm2) or rope stranding on ST1 (70-630 mm2) -> Extrusion,,conductor codes: NX plain Cu; DX tinned Cu (per conductor/SCOPE.md)
+Aluminium conductors,grey,AL (purchased),Purchased -> EX4,,grey line = under planning to purchase (2023)

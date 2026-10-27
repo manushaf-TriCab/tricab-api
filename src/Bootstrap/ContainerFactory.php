@@ -3082,6 +3082,18 @@ final class ContainerFactory
                 \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class,
             ),
 
+            // Cable routes: the repository is lazy, it opens the SQLite store on the first request that needs it.
+            \TriCab\Core\CableRoutes\Contract\CableRoutesRepository::class => static fn (): \TriCab\Api\CableRoutes\Persistence\SqliteCableRoutesRepository => \TriCab\Api\CableRoutes\Persistence\SqliteCableRoutesRepository::fromSettings($settings),
+            \TriCab\Core\CableRoutes\Application\Service\CableRoutesQueryService::class => \DI\autowire(\TriCab\Core\CableRoutes\Application\Service\CableRoutesQueryService::class),
+            \TriCab\Api\Http\Auth\CableRoutesErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\CableRoutesErrorMapper::class),
+            \TriCab\Api\Http\Action\CableRoutes\GetRunAction::class => \DI\autowire(\TriCab\Api\Http\Action\CableRoutes\GetRunAction::class),
+            \TriCab\Api\Http\Action\CableRoutes\ListCodesAction::class => \DI\autowire(\TriCab\Api\Http\Action\CableRoutes\ListCodesAction::class),
+            \TriCab\Api\Http\Action\CableRoutes\ListItemsAction::class => \DI\autowire(\TriCab\Api\Http\Action\CableRoutes\ListItemsAction::class),
+            \TriCab\Api\Http\Action\CableRoutes\GetItemAction::class => \DI\autowire(\TriCab\Api\Http\Action\CableRoutes\GetItemAction::class),
+            \TriCab\Api\Http\Action\CableRoutes\ListMachinesAction::class => \DI\autowire(\TriCab\Api\Http\Action\CableRoutes\ListMachinesAction::class),
+            \TriCab\Api\Http\Action\CableRoutes\GetMachineAction::class => \DI\autowire(\TriCab\Api\Http\Action\CableRoutes\GetMachineAction::class),
+            \TriCab\Api\Http\Action\CableRoutes\ListChecksAction::class => \DI\autowire(\TriCab\Api\Http\Action\CableRoutes\ListChecksAction::class),
+
             \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository::class => static function (Container $container): \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository {
                 $config = self::get($container, \TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig::class);
                 if (!$config->tcConfigured()) {

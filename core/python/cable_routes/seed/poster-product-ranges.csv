@@ -1,0 +1,114 @@
+range,code,description,voltage,insulation_jacket,conductor,max_temp_c,legibility
+Aliflex,XL,90°C flexible power cables suitable for mains & submains in fixed applications,0.6/1kV,X-90/PVC,AL,90,clear
+Aliflex,KL,110°C flexible power cables suitable for mains & submains in fixed applications,0.6/1kV,X-HF-110/PVC,AL,110,clear
+Aliflex,LP,Flexible building wire for earthing,0.6/1kV,V90-HT,AL,105,clear
+Aliflex,LS,Flexible building wire for earthing in low smoke zero halogen,0.6/1kV,X-HF-110,AL,110,clear
+Aliflex,XU,90°C flexible VSD cable for fixed application,0.6/1kV,X-90/BRAID/PVC,AL,90,clear
+Aliflex,KU,110°C flexible VSD cable for fixed application,0.6/1kV,X-HF-110/BRAID/PVC,AL,110,clear
+Aliflex,XN,90°C flexible nylon extruded power cable (termite resistant),0.6/1kV,X-90/PVC/NYLON/PVC,AL,90,temp under glare; 90 confirmed by Manusha 2026-10-26
+Aliflex,KN,110°C flexible nylon extruded power cable (termite resistant),0.6/1kV,X-HF-110/PVC/NYLON/PVC,AL,110,clear
+Aliflex,XA,90°C power cable with steel wire armour,0.6/1kV,X-90/PVC/SWA/PVC,AL,90,clear
+Aliflex,KA,110°C power cable with steel wire armour,0.6/1kV,X-HF-110/PVC/SWA/PVC,AL,110,clear
+Aliflex,EA,VSD cable with steel wire armour,0.6/1kV,X-HF-110/BRAID/PVC/SWA/PVC,AL,110,clear
+Aliflex,SX,90°C flexible cable for solar,1.5/1.5kV,X-90/PVC,AL,90,clear
+Aliflex,SK,110°C flexible cable for solar,1.5/1.5kV,X-HF-110/PVC,AL,110,clear
+Industrial,XU,90°C flexible VSD cable for fixed application,0.6/1kV,X-90/BRAID/PVC,CU/AL,90,clear
+Industrial,KU,110°C flexible VSD cable for fixed application,0.6/1kV,X-HF-110/BRAID/PVC,CU/AL,110,clear
+Industrial,EU,Flexible VSD cable in low smoke zero halogen,0.6/1kV,X-HF-110/BRAID/HFS-110-TP,CU,125,clear
+Industrial,FH,"Fire rated VSD cables for motor applications, WS52W rated to AS/NZS 3013, LSZH",0.6/1kV,X-HF-110/BRAID/HFS-110-TP,CU,125,clear
+Industrial,EA,110°C flexible VSD cable with SWA for fixed application,0.6/1kV,X-HF-110/BRAID/PVC/SWA/PVC,CU/AL,110,clear
+Industrial,KG,110°C heavy duty flexible braided cable for EMC protection,0.6/1kV,X-HF-110/BRAID/PVC/BRAID/PVC,CU,110,clear
+Industrial,FP,Flexible rubber battery/DC cable,0.9/1.5kV DC,X-90/HFS-110-TP,CU,90,clear
+Industrial,KB,Flexible rubber figure 8 battery/DC cable,0.9/1.5kV DC,X-HF-110/PVC,CU,110,conductor under glare; CU confirmed by Manusha 2026-10-26
+Industrial,DC,Flexible LSZH rubber battery/DC cable,0.9/1.5kV DC,X-HF-110/HFS-110-TP,CU,125,clear
+Industrial,DP,Flexible rubber braided for EMC protection,0.6/1kV,X-90/BRAID/PVC,CU/AL,90,clear
+Industrial,RL,Flexible rubber battery/DC cable,0.9/1.5kV DC,X-90/PVC,CU,90,clear
+Industrial,RW,Flexible rubber welding/battery,0.6/1kV,X-90/PVC,CU,90,clear
+Industrial,HB,Flexible LSZH rubber figure 8 battery/DC cable,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Industrial,DL,Flexible rubber battery/DC cable,0.9/1.5kV DC,X-HF-110/PVC,CU,110,clear
+Industrial,FW,Flexible LSZH rubber welding cable,0.6/1kV,X-HF-110/HFS-110-TP,CU,110,clear
+Switchboard Wire,KL,110°C flexible power cables suitable for mains & submains in fixed applications,0.6/1kV,X-HF-110/PVC,CU/AL,110,clear
+Switchboard Wire,LP,Flexible building wire for earthing,0.6/1kV,V90-HT,CU/AL,105,clear
+Switchboard Wire,EH,Flexible LSZH power cables suitable for mains & submains in fixed applications,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Switchboard Wire,LS,Flexible building wire for earthing in low smoke zero halogen,0.6/1kV,X-HF-110,CU,125,clear
+Switchboard Wire,CC,Flexible LSZH power cables suitable for mains & submains in fixed applications,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Renewable,SF,Flexible LSZH SDI tinned copper for DC,0.9/1.5kV DC,X-HF-110/HFS-110TP,CU,120,clear
+Renewable,SD,Flexible LSZH fig 8 tinned copper for DC,0.9/1.5kV DC,X-HF-110/HFS-110TP,CU,120,clear
+Renewable,SK,Flexible AL SDI for solar,1.5/1.5kV DC,X-HF-110/PVC,AL,110,clear
+Renewable,SX,Flexible AL SDI for solar,1.5/1.5kV DC,X-90/PVC,AL,90,clear
+Building Wire,XL,Flexible power cables suitable for mains & submains in fixed applications,0.6/1kV,X-90/PVC,CU/AL,90,poster prints 110; corrected to 90 per Manusha 2026-10-26
+Building Wire,XA,90°C power cable with steel wire armour,0.6/1kV,X-90/PVC/SWA/PVC,CU/AL,90,clear
+Building Wire,XN,90°C flexible nylon extruded power cable (termite resistant),0.6/1kV,X-90/PVC/NYLON/PVC,AL,90,clear
+Building Wire,LP,Flexible building wire for earthing,0.6/1kV,V90-HT,CU/AL,105,clear
+Building Wire,KL,110°C flexible power cables suitable for mains & submains in fixed applications,0.6/1kV,X-HF-110/PVC,CU/AL,110,clear
+Building Wire,KA,110°C power cable with steel wire armour,0.6/1kV,X-HF-110/PVC/SWA/PVC,CU/AL,110,clear
+Building Wire,KN,110°C flexible nylon extruded power cable (termite resistant),0.6/1kV,X-HF-110/PVC/NYLON/PVC,CU/AL,110,clear
+Building Wire,LS,Flexible building wire for earthing in low smoke zero halogen,0.6/1kV,X-HF-110,CU,125,clear
+Building Wire,CC,Flexible LSZH power cables suitable for mains & submains in fixed applications,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Building Wire,FR,Flexible LSZH fire rated cable,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Building Wire,FD,Flexible LSZH rubber flat cable,450/750V,X-HF-110/HFS-110-TP,CU,125,clear
+Building Wire,EZ,Flexible rubber heavy duty cable for flexible application,0.6/1kV,X-HF-110/PVC,CU,110,clear
+Building Wire,LN,Flexible nylon extruded termite resistant earth cable,0.6/1kV,X-HF-110/NYLON/PVC,CU,110,clear
+Building Wire,XDT,Flexible nylon extruded termite resistant SDI cable,0.6/1kV,X-90/NYLON/PVC,CU,90,clear
+Building Wire,KDT,Flexible nylon extruded termite resistant SDI cable,0.6/1kV,X-HF-110/NYLON/PVC,CU,110,clear
+Building Wire,CDT,Flexible LSZH nylon extruded termite resistant SDI cable,0.6/1kV,X-HF-110/NYLON/HFS-110-TP,CU,125,clear
+Building Wire,CN,Flexible LSZH nylon extruded power cable (termite resistant),0.6/1kV,X-HF-110/HFS-110-TP/NYLON/HFS-110-TP,CU,125,clear
+Instrumentation,R1,Collective screen instrumentation for fixed application,110V,R-E-110/PVC,CU,110,clear
+Instrumentation,R2,Collective screen instrumentation with SWA,110V,R-E-110/PVC/SWA/PVC,CU,110,clear
+Instrumentation,R3,Individual & collective screen for fixed application,110V,R-E-110/PVC,CU,110,clear
+Instrumentation,R4,Individual & collective screen with SWA,110V,R-E-110/PVC/SWA/PVC,CU,110,clear
+Instrumentation,R5,Collective screen in low smoke zero halogen,110V,X-HF-110/HFS-110-TP,CU,125,clear
+Instrumentation,R6,Collective screen in SWA and low smoke zero halogen,110V,X-HF-110/PVC/SWA/HFS-110-TP,CU,125,clear
+Instrumentation,R7,Individual & collective screen in low smoke zero halogen,110V,X-HF-110/HFS-110-TP,CU,125,clear
+Instrumentation,R8,Individual & collective screen in SWA and low smoke zero halogen,110V,X-HF-110/PVC/SWA/HFS-110-TP,CU,125,clear
+Instrumentation,R9,Fire rated collective screened instrumentation LSZH,110V,X-HF-110/HFS-110-TP,CU,125,clear
+Instrumentation,RE,Collective screened instrumentation,450/750V,X-HF-110/PVC,CU,110,clear
+Instrumentation,RH,Individual and collective screened instrumentation,450/750V,X-HF-110/PVC,CU,110,clear
+Instrumentation,KE,Collective screened with braid,450/750V,X-HF-110/PVC/BRAID/PVC,CU,110,clear
+Instrumentation,KH,Individual and collective screened with braid,450/750V,X-HF-110/PVC/BRAID/PVC,CU,110,clear
+Instrumentation,RA,Same as RE with SWA,450/750V,X-HF-110/PVC/SWA/PVC,CU,110,clear
+Instrumentation,IA,Same as RH with SWA,450/750V,X-HF-110/PVC/SWA/PVC,CU,110,clear
+Instrumentation,WH,Screened fire rated instrumentation LSZH 450/750V,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Instrumentation,RD,RE with low smoke zero halogen,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Instrumentation,RF,Collective screen with low smoke zero halogen,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Instrumentation,RG,Individual & collective screen with low smoke zero halogen,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Instrumentation,WG,Flexible alarm/signal fire resistant cable,450/750V,X-HF-110/HFS-110-TP,CU,125,clear
+Control Wire,C1,"Flexible control cables suitable for wiring of monitoring, control and measuring equipment in fixed installation",110V,R-E-110/PVC,CU,110,clear
+Control Wire,C2,"Flexible braided control cables suitable for wiring of monitoring, control and measuring equipment in fixed installation",110V,R-E-110/BR/PVC,CU,110,clear
+Control Wire,C3,"Flexible control cables with steel wire armour suitable for wiring of monitoring, control and measuring equipment in fixed installation",110V,R-E-110/SWA/PVC,CU,110,clear
+Control Wire,C4,"Flexible LSZH control cables suitable for wiring of monitoring, control and measuring equipment in fixed installation",110V,X-HF-110/HFS-110-TP,CU,125,clear
+Control Wire,C5,"Flexible LSZH braided control cables suitable for wiring of monitoring, control and measuring equipment in fixed installation",110V,X-HF-110/BR/HFS-110-TP,CU,125,clear
+Control Wire,C6,"Flexible LSZH control cables with steel wire armour suitable for wiring of monitoring, control and measuring equipment in fixed installation",110V,X-HF-110/SWA/HFS-110-TP,CU,125,clear
+Control Wire,KC,"Flexible control cables suitable for indoor/outdoor, buried, enclosed in conduit or underground duct",450/750V,X-HF-110/PVC,CU,110,clear
+Control Wire,WG,Flexible LSZH fire rated control cables suitable for applications where continuity is critical in the event of fire,450/750V,X-HF-110/HFS-110-TP,CU,125,clear
+Control Wire,XL,"Flexible control cables suitable for indoor/outdoor, buried, enclosed in conduit or underground duct",0.6/1kV,X-90/PVC,CU,90,clear
+Control Wire,KL,"Flexible control cables suitable for indoor/outdoor, buried, enclosed in conduit or underground duct",0.6/1kV,X-HF-110/PVC,CU,110,clear
+Control Wire,CC,"Flexible LSZH control cables suitable for indoor/outdoor, buried, enclosed in conduit or underground duct",0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Control Wire,EZ,Flexible rubber heavy duty control cable for flexible application,0.6/1kV,X-HF-110/PVC,CU,110,clear
+Control Wire,KA,Flexible control cables with steel wire armour suitable for control wiring applications where mechanical protection is required,0.6/1kV,X-HF-110/PVC/SWA/PVC,CU,110,clear
+Control Wire,XA,Flexible control cables with steel wire armour suitable for control wiring applications where mechanical protection is required,0.6/1kV,X-90/PVC/SWA/PVC,CU,90,clear
+Control Wire,CA,Flexible LSZH control cables with steel wire armour suitable for control wiring applications where mechanical protection is required,0.6/1kV,X-HF-110/HFS-110-TP/SWA/HFS-110-TP,CU,125,clear
+Control Wire,FR,Flexible LSZH fire rated control cable,0.6/1kV,X-HF-110/HFS-110-TP,CU,125,clear
+Control Wire,XN,90°C flexible nylon extruded control cable (termite resistant),0.6/1kV,X-90/PVC/NYLON/PVC,CU,90,clear
+Control Wire,KN,110°C flexible nylon extruded control cable (termite resistant),0.6/1kV,X-HF-110/PVC/NYLON/PVC,CU,110,clear
+Control Wire,CN,Flexible LSZH nylon extruded control cable (termite resistant),0.6/1kV,X-HF-110/HFS-110-TP/NYLON/HFS-110-TP,CU,125,clear
+Marine & Offshore,BV,Flexible power and control,0.6/1kV,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,DV,Flexible braided power and control,0.6/1kV,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,RR,Fire rated flexible power and control,0.6/1kV,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,BH,Fire rated braided flexible power and control,0.6/1kV,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,RC,Collective screen for marine application,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,RS,Collective screen braided cable,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,ES,Collective screen fire rated LSZH,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,FJ,Collective screen braided fire rated LSZH,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,EW,Individual & collective screen,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,EG,Individual & collective screen with braid,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,FC,Individual & collective screen fire rated LSZH,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,FL,Individual & collective screen fire rated LSZH with braid,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,UP,Single insulated for switchboards in marine,0.6/1kV,HF 90,CU,110,clear
+Marine & Offshore,DF,VSD/VFD cable for marine application,0.6/1kV,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,PJ,Braided power & control marine flame retardant,0.6/1kV,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,HT,Fire rated braided power & control LSZH,0.6/1kV,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,RB,Collective screen braided instrumentation,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,FK,Collective screen braided instrumentation fire rated LSZH,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,FZ,Individual & collective screen braided instrumentation,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear
+Marine & Offshore,FE,Individual & collective screen braided instrumentation fire rated LSZH,150/250V,HEPR/SHF1 or SHF2 or SHF MUD,CU,110,clear

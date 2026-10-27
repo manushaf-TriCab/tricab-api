@@ -113,3 +113,28 @@ copied on every `composer install` and again into the release zip.
 
 Deployment, App Service layout and the sizing-data caveat:
 [`docs/product-finder/DEPLOYMENT.md`](../../docs/product-finder/DEPLOYMENT.md).
+
+## `cable_routes`
+
+The engine behind the Cable routes module (`docs/cable-routes/CONTRACT.md` is the contract). It reads the six D365
+extract CSVs, works out how each finished cable is made (machine steps, BOM tree, material per unit), and writes a
+SQLite store that the API serves read-only. Standard library only, Python 3.11+.
+
+```bash
+cd core/python
+CABLE_ROUTES_SOURCE_DIR=/path/to/d365-extract python3 -m cable_routes build
+python3 -m cable_routes status
+```
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `CABLE_ROUTES_SOURCE_DIR` | none | Folder with the extract. Required (or `--source DIR`). `~` is expanded |
+| `CABLE_ROUTES_DB_PATH` | `var/cable-routes/cable-routes.sqlite` | The store; relative paths resolve against the API root. Gitignored |
+
+Precedence: flag, process environment, `<API root>/.env`, default. The store is rebuilt in full into a temp file and
+swapped in atomically, so a failed build leaves the old one. Exit codes: 0 ok, 2 bad usage or configuration, 3 a
+required file or column is missing (the message names it), 1 anything else.
+
+`schema.sql` is the one definition of the store; the PHP tests build their fixture from it. `seed/` holds copies of the
+poster CSVs from `planning/workflow/` plus `machine-limits.csv`. Tests: `tests/cable_routes/`; the real-data module
+runs only when `CABLE_ROUTES_SOURCE_DIR` points at an extract.
