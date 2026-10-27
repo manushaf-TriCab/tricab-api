@@ -26,6 +26,49 @@ final class CustomerContactReportDtoSerializer
     }
 
     /**
+     * A create or update response: the report plus warnings the screen should show.
+     * A warning never means the save failed.
+     *
+     * @return array<string, mixed>
+     */
+    public static function saved(\TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportSaveResult $result): array
+    {
+        $payload = self::intake($result->report);
+        $payload['lines'] = array_map(self::line(...), $result->report->lines);
+        $payload += self::creditFigures($result->report);
+        $payload['warnings'] = $result->warnings;
+        $payload['creditReset'] = $result->creditReset;
+
+        return $payload;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function line(\TriCab\Core\CustomerContactReport\Domain\Credit\CustomerContactReportLine $line): array
+    {
+        return [
+            'orderNo' => $line->orderNo,
+            'invoiceNo' => $line->invoiceNo,
+            'lineNo' => $line->lineNo,
+            'productCode' => $line->productCode,
+            'description' => $line->description,
+            'qty' => $line->qty,
+            'unit' => $line->unit,
+            'packs' => $line->packs,
+            'packSize' => $line->packSize,
+            'unitPrice' => $line->unitPrice,
+            'net' => $line->net,
+            'creditQty' => $line->creditQty,
+            'creditRate' => $line->creditRate,
+            'creditNet' => $line->creditNet,
+            'gstRate' => $line->gstRate,
+            'warehouse' => $line->warehouse,
+            'comment' => $line->comment,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public static function listResult(CustomerContactReportListResult $result): array
@@ -69,7 +112,9 @@ final class CustomerContactReportDtoSerializer
         if ($includeIcar || $includeRestricted) {
             $payload += self::icar($report);
         }
-        if ($includeRestricted || self::viewsCreditFigures($approvals, $viewerUserId ?? 0, $viewerEmail)) {
+        $payload['lines'] = array_map(self::line(...), $report->lines);
+        $originator = $viewerEmail !== '' && strtolower(trim($report->createdByEmail)) === strtolower(trim($viewerEmail));
+        if ($includeRestricted || $originator || self::viewsCreditFigures($approvals, $viewerUserId ?? 0, $viewerEmail)) {
             $payload += self::creditFigures($report);
         }
         if (!$includeRestricted) {
@@ -79,7 +124,6 @@ final class CustomerContactReportDtoSerializer
         return $payload + [
             'investigationDueDate' => $report->investigationDueDate,
             'ccAssessedBy' => $report->ccAssessedBy,
-            'creditRequired' => $report->creditRequired,
             'restockingFeeApplies' => $report->restockingFeeApplies,
             'actionsTaken' => $report->actionsTaken,
             'schedulingInformed' => $report->schedulingInformed,
@@ -125,6 +169,14 @@ final class CustomerContactReportDtoSerializer
             'tricabContact' => $report->tricabContact,
             'productCode' => $report->productCode,
             'description' => $report->description,
+            'orderNo' => $report->orderNo,
+            'invoiceNo' => $report->invoiceNo,
+            'creditRequired' => $report->creditRequired,
+            'creditType' => $report->creditType,
+            'quotedAmount' => $report->quotedAmount,
+            'invoicedAmount' => $report->invoicedAmount,
+            'addGst' => $report->addGst,
+            'requestedActions' => $report->requestedActions,
             'status' => $report->status,
             'route' => $report->route,
             'ccNumber' => $report->ccNumber,

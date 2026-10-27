@@ -115,6 +115,40 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
         self::assertFalse($data['legacyReadEnabled']);
     }
 
+    public function test_audit_endpoint_filters_by_date_action_and_actor_and_rejects_bad_input(): void
+    {
+        $app = $this->appWithWorld();
+        $world = $this->worldUsers($app);
+        $container = $app->getContainer();
+        self::assertInstanceOf(ContainerInterface::class, $container);
+        $audit = $container->get(\TriCab\Core\Expense\Contract\ExpenseAuditRecorder::class);
+        self::assertInstanceOf(\TriCab\Api\Expense\Persistence\InMemoryExpenseAuditRecorder::class, $audit);
+        $audit->record(UserId::fromInt(7), 'receipt_submitted', null, 'one');
+        $audit->record(UserId::fromInt(9), 'period_closed', null, 'two');
+
+        $get = fn (string $qs) => $app->handle(
+            TestAppFactory::request('GET', '/api/v1/tri-expense/audit' . $qs)
+                ->withHeader('X-Dev-Entra-Subject', $world['finance']['subject'])
+                ->withHeader('X-Dev-Entra-Email', $world['finance']['email']),
+        );
+        $items = static fn ($r): array => Payload::list(Payload::obj(TestAppFactory::json($r)['data'])['items']);
+
+        self::assertCount(2, $items($get('')));
+        self::assertCount(1, $items($get('?action=period_closed')));
+        self::assertCount(1, $items($get('?actorUserId=7')));
+        self::assertCount(0, $items($get('?actorUserId=7&action=period_closed')));
+
+        $today = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d');
+        $yesterday = (new \DateTimeImmutable('yesterday', new \DateTimeZone('UTC')))->format('Y-m-d');
+        self::assertCount(2, $items($get('?from=' . $today . '&to=' . $today)));
+        self::assertCount(0, $items($get('?to=' . $yesterday)));
+        self::assertCount(0, $items($get('?from=2999-01-01')));
+
+        self::assertSame(422, $get('?from=not-a-date')->getStatusCode());
+        self::assertSame(422, $get('?from=2026-10-02&to=2026-10-01')->getStatusCode());
+        self::assertSame(422, $get('?actorUserId=0')->getStatusCode());
+    }
+
     public function test_finance_config_flags_enabled(): void
     {
         $app = $this->appWithWorld();

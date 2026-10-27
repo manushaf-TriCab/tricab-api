@@ -19,6 +19,8 @@ use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportListC
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportListResult;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportReopen;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportSignature;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportUpdate;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportUpdateOutcome;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportStoredAttachment;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportVisibility;
 use TriCab\Core\CustomerContactReport\Application\DTO\NewCustomerContactReport;
@@ -69,6 +71,11 @@ final class DevelopmentFileCustomerContactReportRepository implements CustomerCo
     public function close(CustomerContactReportClosure $closure): CustomerContactReportDetails
     {
         return $this->write(static fn (InMemoryCustomerContactReportRepository $inner): CustomerContactReportDetails => $inner->close($closure));
+    }
+
+    public function updateReport(CustomerContactReportUpdate $update): CustomerContactReportUpdateOutcome
+    {
+        return $this->write(static fn (InMemoryCustomerContactReportRepository $inner): CustomerContactReportUpdateOutcome => $inner->updateReport($update));
     }
 
     public function reopen(CustomerContactReportReopen $reopen): CustomerContactReportDetails

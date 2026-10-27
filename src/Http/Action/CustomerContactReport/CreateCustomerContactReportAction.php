@@ -12,7 +12,7 @@ use TriCab\Api\Http\Auth\CustomerContactReportActor;
 use TriCab\Api\Http\Auth\CustomerContactReportErrorMapper;
 use TriCab\Api\Http\Request\JsonRequestBody;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportDetails;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportSaveResult;
 use TriCab\Core\CustomerContactReport\Application\Service\CreateCustomerContactReportService;
 
 final class CreateCustomerContactReportAction
@@ -34,12 +34,12 @@ final class CreateCustomerContactReportAction
             CustomerContactReportActor::assertAccess($actor);
             $body = JsonRequestBody::requireObject($request);
 
-            /** @var CustomerContactReportDetails $created */
+            /** @var CustomerContactReportSaveResult $created */
             $created = $this->transaction->run(
-                fn (): CustomerContactReportDetails => $this->createReport->execute($actor, $body),
+                fn (): CustomerContactReportSaveResult => $this->createReport->executeWithWarnings($actor, $body),
             );
 
-            return $this->responder->success(CustomerContactReportDtoSerializer::created($created), 201);
+            return $this->responder->success(CustomerContactReportDtoSerializer::saved($created), 201);
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }

@@ -43,6 +43,8 @@ use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 
 final class CustomerContactReportNotificationTest extends TestCase
 {
+    use AssignsCustomerContactReports;
+
     public function test_workflow_mail_follows_the_legacy_recipients_and_skips_reopen(): void
     {
         $mail = new InMemoryCustomerContactReportNotifier();
@@ -60,6 +62,8 @@ final class CustomerContactReportNotificationTest extends TestCase
             'customerCode' => 'CUST1',
             'customerContact' => 'Ada',
             'productCode' => 'CAB-1',
+            'orderNo' => '639952',
+            'creditRequired' => 'No',
             'description' => 'Cable <failed>',
         ]);
         self::assertSame(['submitted_receipt', 'submitted_coordinator'], $this->events($mail));
@@ -147,15 +151,7 @@ final class CustomerContactReportNotificationTest extends TestCase
         self::assertGreaterThan(0, $mail->attempts);
         self::assertSame(1, $reports->numberSequenceRows());
 
-        $line = new FixedCustomerContactReportReportingLine([
-            'thilanh@tricab.com' => new \TriCab\Core\CustomerContactReport\Application\DTO\ResolvedCustomerContactAssignee(
-                2,
-                'alex@tricab.com',
-                'Alex Assignee',
-                'alex@tricab.com',
-            ),
-        ]);
-        $request = new RequestCustomerContactReportApprovalService($reports, $staff, $line, $clock, $notifications);
+        $request = new RequestCustomerContactReportApprovalService($reports, $clock, $notifications);
         $decide = new DecideCustomerContactReportApprovalService(
             $reports,
             $staff,
@@ -186,15 +182,7 @@ final class CustomerContactReportNotificationTest extends TestCase
         $mail = new InMemoryCustomerContactReportNotifier();
         [$reports, $notifications, $staff] = $this->notifications($mail);
         $clock = FixedClock::utc('2026-09-30 01:00:00');
-        $line = new FixedCustomerContactReportReportingLine([
-            'thilanh@tricab.com' => new \TriCab\Core\CustomerContactReport\Application\DTO\ResolvedCustomerContactAssignee(
-                2,
-                'alex@tricab.com',
-                'Alex Assignee',
-                'alex@tricab.com',
-            ),
-        ]);
-        $request = new RequestCustomerContactReportApprovalService($reports, $staff, $line, $clock, $notifications);
+        $request = new RequestCustomerContactReportApprovalService($reports, $clock, $notifications);
         $decide = new DecideCustomerContactReportApprovalService(
             $reports,
             $staff,
@@ -202,7 +190,7 @@ final class CustomerContactReportNotificationTest extends TestCase
             new CustomerContactReportAccountsLogin('accounts@tricab.com'),
             $notifications,
         );
-        $report = $this->insert($reports);
+        $report = $this->assignTo($reports, $this->insert($reports));
         $pending = $request->execute($this->person(1, 'thilanh@tricab.com', 'Thilan'), $report->publicId, 'credit', [
             'creditTotal' => '40.00',
             'rowVersion' => $report->rowVersion,
@@ -222,7 +210,7 @@ final class CustomerContactReportNotificationTest extends TestCase
         self::assertNotContains('accounts@tricab.com', $decline->recipients);
         self::assertNull($decided->settlement);
 
-        $second = $this->insert($reports);
+        $second = $this->assignTo($reports, $this->insert($reports));
         $credit = $request->execute($this->person(1, 'thilanh@tricab.com', 'Thilan'), $second->publicId, 'credit', [
             'creditTotal' => '40.00',
             'rowVersion' => $second->rowVersion,
@@ -258,7 +246,7 @@ final class CustomerContactReportNotificationTest extends TestCase
         self::assertGreaterThan($before, $mail->attempts);
         $rows = $reports->approvalsFor($second->publicId);
         self::assertSame('approved', $rows[1]->status);
-        self::assertSame('submitted', $reports->findVisible(
+        self::assertSame('closed', $reports->findVisible(
             CustomerContactReportPublicId::fromString($second->publicId),
             new \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportVisibility(true, 1, 'thilanh@tricab.com'),
         )?->status);
@@ -267,29 +255,26 @@ final class CustomerContactReportNotificationTest extends TestCase
     public function test_a_failed_credit_request_sends_nothing(): void
     {
         $mail = new InMemoryCustomerContactReportNotifier();
-        [$reports, $notifications, $staff] = $this->notifications($mail);
+        [$reports, $notifications] = $this->notifications($mail);
         $request = new RequestCustomerContactReportApprovalService(
             $reports,
-            $staff,
-            new \TriCab\Api\CustomerContactReport\Identity\UnavailableCustomerContactReportReportingLine(),
             FixedClock::utc('2026-09-30 01:00:00'),
             $notifications,
         );
         $report = $this->insert($reports);
         try {
             $request->execute($this->person(1, 'thilanh@tricab.com', 'Thilan'), $report->publicId, 'credit', [
-                'approver' => 'alex@tricab.com',
                 'creditTotal' => '10.00',
                 'rowVersion' => $report->rowVersion,
             ]);
-            self::fail('An unavailable reporting line accepted a credit.');
+            self::fail('A credit on an unassigned report was accepted.');
         } catch (CustomerContactReportApprovalFailure $failure) {
             self::assertSame(CustomerContactReportApprovalFailure::CONFIGURATION, $failure->errorCode);
             self::assertSame(0, $mail->attempts);
         }
     }
 
-    public function test_graph_manager_lookup_normalises_to_active_staff_and_keeps_the_threshold(): void
+    public function test_graph_reporting_line_still_resolves_active_staff_and_fails_closed(): void
     {
         $http = new FakeJsonHttpClient();
         $http->queue = [
@@ -297,82 +282,20 @@ final class CustomerContactReportNotificationTest extends TestCase
             $this->json(200, ['value' => [['id' => 'raiser', 'accountEnabled' => true]]]),
             $this->json(200, ['mail' => 'alex@tricab.com', 'accountEnabled' => true]),
         ];
-        [$reports, , $staff] = $this->notifications(new InMemoryCustomerContactReportNotifier());
+        [, , $staff] = $this->notifications(new InMemoryCustomerContactReportNotifier());
         $line = new GraphCustomerContactReportReportingLine($http, 'tenant', 'client', 'secret', $staff);
-        $request = new RequestCustomerContactReportApprovalService(
-            $reports,
-            $staff,
-            $line,
-            FixedClock::utc('2026-09-30 01:00:00'),
-        );
-        $exactReport = $this->insert($reports);
-        $exact = $request->execute($this->person(1, 'thilanh@tricab.com', 'Thilan'), $exactReport->publicId, 'credit', [
-            'creditTotal' => '1000.00',
-            'rowVersion' => $exactReport->rowVersion,
-        ]);
-        self::assertSame('alex@tricab.com', $exact->approval->approver);
-        self::assertCount(1, array_filter(
-            $http->calls,
-            static fn (array $call): bool => str_contains($call['url'], '/manager'),
-        ));
+        self::assertTrue($line->isAvailable());
+        self::assertSame('alex@tricab.com', $line->managerOf('thilanh@tricab.com')?->login);
 
         $http->queue = [
-            $this->json(200, ['value' => [['id' => 'raiser', 'accountEnabled' => true]]]),
-            $this->json(200, ['mail' => 'alex@tricab.com', 'userPrincipalName' => 'alex@tricab.com', 'accountEnabled' => true]),
-            $this->json(200, ['value' => [['id' => 'alex', 'accountEnabled' => true]]]),
-            $this->json(200, ['mail' => 'sam@tricab.com', 'accountEnabled' => true]),
-        ];
-        $aboveReport = $this->insert($reports);
-        $above = $request->execute($this->person(1, 'thilanh@tricab.com', 'Thilan'), $aboveReport->publicId, 'credit', [
-            'creditTotal' => '1000.01',
-            'rowVersion' => $aboveReport->rowVersion,
-        ]);
-        self::assertSame('sam@tricab.com', $above->approval->approver);
-    }
-
-    public function test_a_missing_or_unresolved_manager_uses_only_an_explicit_fallback(): void
-    {
-        $http = new FakeJsonHttpClient();
-        $http->queue = [
-            $this->json(200, ['access_token' => 'token', 'expires_in' => 3600]),
             $this->json(200, ['value' => [['id' => 'raiser', 'accountEnabled' => true]]]),
             $this->json(404, ['error' => 'not found']),
         ];
-        [$reports, , $staff] = $this->notifications(new InMemoryCustomerContactReportNotifier());
-        $line = new GraphCustomerContactReportReportingLine($http, 'tenant', 'client', 'secret', $staff);
-        self::assertTrue($line->isAvailable());
-        $request = new RequestCustomerContactReportApprovalService(
-            $reports,
-            $staff,
-            $line,
-            FixedClock::utc('2026-09-30 01:00:00'),
-        );
-        $pickedReport = $this->insert($reports);
-        $picked = $request->execute($this->person(1, 'thilanh@tricab.com', 'Thilan'), $pickedReport->publicId, 'credit', [
-            'approver' => 'pat@tricab.com',
-            'creditTotal' => '12.00',
-            'rowVersion' => $pickedReport->rowVersion,
-        ]);
-        self::assertSame('pat@tricab.com', $picked->approval->approver);
-
-        $http->queue = [
-            $this->json(200, ['value' => []]),
-        ];
-        $unrouted = $this->insert($reports);
-        try {
-            $request->execute($this->person(1, 'thilanh@tricab.com', 'Thilan'), $unrouted->publicId, 'credit', [
-                'creditTotal' => '12.00',
-                'rowVersion' => $unrouted->rowVersion,
-            ]);
-            self::fail('A missing manager was invented.');
-        } catch (CustomerContactReportApprovalFailure $failure) {
-            self::assertSame(CustomerContactReportApprovalFailure::CONFIGURATION, $failure->errorCode);
-        }
+        self::assertNull($line->managerOf('thilanh@tricab.com'));
 
         $disabled = new GraphCustomerContactReportReportingLine(new FakeJsonHttpClient(), '', '', '', $staff);
         self::assertFalse($disabled->isAvailable());
         self::assertNull($disabled->managerOf('thilanh@tricab.com'));
-        self::assertSame([], (new FakeJsonHttpClient())->calls);
     }
 
     public function test_html_escapes_report_text_and_graph_mail_retries_without_sending_when_disabled(): void

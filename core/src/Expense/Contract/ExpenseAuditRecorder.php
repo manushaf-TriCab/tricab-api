@@ -19,5 +19,5 @@ interface ExpenseAuditRecorder
     /**
      * @return list<array{actorUserId: int, action: string, receiptPublicId: ?string, detail: ?string, createdAtUtc?: string}>
      */
-    public function listRecent(int $limit = 200): array;
+    public function listRecent(int $limit = 200, ?ExpenseAuditFilter $filter = null): array;
 }

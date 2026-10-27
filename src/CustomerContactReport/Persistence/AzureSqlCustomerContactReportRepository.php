@@ -16,6 +16,9 @@ use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAppro
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportCreditNote;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportEvidence;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportSignature;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportUpdate;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportUpdateOutcome;
+use TriCab\Core\CustomerContactReport\Domain\Credit\CustomerContactReportLine;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApprovalDecision;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApprovalOutcome;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApprovalRequest;
@@ -120,8 +123,72 @@ final class AzureSqlCustomerContactReportRepository implements CustomerContactRe
     CONVERT(VARCHAR(10), r.[CreditReviewedDate], 23) AS [CreditReviewedDate],
     r.[IcarOperatorName],
     CONVERT(VARCHAR(10), r.[IcarSignedAt], 23) AS [IcarSignedAt],
-    r.[IcarSignatureUrl]
+    r.[IcarSignatureUrl],
+    r.[OrderNo],
+    r.[InvoiceNo],
+    r.[CreditType],
+    r.[QuotedAmount],
+    r.[InvoicedAmount],
+    r.[AddGst],
+    r.[RequestedActions]
 SQL;
+
+    /**
+     * Details property => column for updateReport. Column names come only from
+     * here, never from the request.
+     *
+     * @var array<string, array{0: string, 1: string}> property => [column, kind]
+     */
+    private const UPDATE_COLUMNS = [
+        'reportDate' => ['ReportDate', 'date'],
+        'location' => ['Location', 'text'],
+        'customerCode' => ['CustomerCode', 'text'],
+        'customerContact' => ['CustomerContact', 'text'],
+        'tricabRefTrace' => ['TricabRefTrace', 'text'],
+        'traceNum' => ['TraceNum', 'text'],
+        'conNoteNo' => ['ConNoteNo', 'text'],
+        'tricabContact' => ['TricabContact', 'text'],
+        'productCode' => ['ProductCode', 'blankNull'],
+        'description' => ['Description', 'text'],
+        'requestedActions' => ['RequestedActions', 'text'],
+        'orderNo' => ['OrderNo', 'text'],
+        'invoiceNo' => ['InvoiceNo', 'text'],
+        'creditType' => ['CreditType', 'text'],
+        'quotedAmount' => ['QuotedAmount', 'text'],
+        'invoicedAmount' => ['InvoicedAmount', 'text'],
+        'addGst' => ['AddGst', 'text'],
+        'creditRequired' => ['CreditRequired', 'text'],
+        'restockingFeeApplies' => ['RestockingFeeApplies', 'text'],
+        'valueExGst' => ['ValueExGst', 'text'],
+        'restockingAmount' => ['RestockingAmount', 'text'],
+        'subTotal' => ['SubTotal', 'text'],
+        'gst' => ['Gst', 'text'],
+        'creditTotal' => ['CreditTotal', 'text'],
+        'schedulingInformed' => ['SchedulingInformed', 'text'],
+        'returnArrangedBy' => ['ReturnArrangedBy', 'text'],
+        'expectedReturnDate' => ['ExpectedReturnDate', 'text'],
+        'goodsReturned' => ['GoodsReturned', 'text'],
+        'goodsReturnedDate' => ['GoodsReturnedDate', 'text'],
+        'carrierBooked' => ['CarrierBooked', 'text'],
+        'carrierBookedDate' => ['CarrierBookedDate', 'text'],
+        'creditRaised' => ['CreditRaised', 'text'],
+        'creditRaisedDate' => ['CreditRaisedDate', 'text'],
+        'goodsReplaced' => ['GoodsReplaced', 'text'],
+        'goodsReplacedDate' => ['GoodsReplacedDate', 'text'],
+        'carRaised' => ['CarRaised', 'text'],
+        'carRaisedDate' => ['CarRaisedDate', 'text'],
+        'actionsTaken' => ['ActionsTaken', 'text'],
+        'rootCause' => ['RootCause', 'text'],
+        'correctiveAction' => ['CorrectiveAction', 'text'],
+        'notes' => ['Notes', 'text'],
+        'errorCode' => ['ErrorCode', 'text'],
+        'investigationDueDate' => ['InvestigationDueDate', 'text'],
+        'ccAssessedBy' => ['CcAssessedBy', 'text'],
+        'assigneeActionTaken' => ['AssigneeActionTaken', 'text'],
+        'assigneeFindings' => ['AssigneeFindings', 'text'],
+        'creditReviewedBy' => ['CreditReviewedBy', 'text'],
+        'creditReviewedDate' => ['CreditReviewedDate', 'text'],
+    ];
 
     private const APPROVAL_COLUMNS = <<<'SQL'
     a.[ApprovalId],
@@ -167,7 +234,21 @@ INSERT INTO [cc_report].[Reports] (
     [ConNoteNo],
     [TricabContact],
     [ProductCode],
-    [Description]
+    [Description],
+    [OrderNo],
+    [InvoiceNo],
+    [CreditRequired],
+    [CreditType],
+    [RestockingFeeApplies],
+    [QuotedAmount],
+    [InvoicedAmount],
+    [AddGst],
+    [RequestedActions],
+    [ValueExGst],
+    [RestockingAmount],
+    [SubTotal],
+    [Gst],
+    [CreditTotal]
 )
 VALUES (
     :publicId,
@@ -185,7 +266,21 @@ VALUES (
     :conNoteNo,
     :tricabContact,
     :productCode,
-    :description
+    :description,
+    :orderNo,
+    :invoiceNo,
+    :creditRequired,
+    :creditType,
+    :restockingFeeApplies,
+    :quotedAmount,
+    :invoicedAmount,
+    :addGst,
+    :requestedActions,
+    :valueExGst,
+    :restockingAmount,
+    :subTotal,
+    :gst,
+    :creditTotal
 )
 SQL,
                 [
@@ -203,10 +298,31 @@ SQL,
                     ':traceNum' => $report->traceNum,
                     ':conNoteNo' => $report->conNoteNo,
                     ':tricabContact' => $report->tricabContact,
-                    ':productCode' => $report->productCode,
+                    ':productCode' => $report->productCode === '' ? null : $report->productCode,
                     ':description' => $report->description,
+                    ':orderNo' => $report->orderNo,
+                    ':invoiceNo' => $report->invoiceNo,
+                    ':creditRequired' => $report->creditRequired,
+                    ':creditType' => $report->creditType,
+                    ':restockingFeeApplies' => $report->restockingFeeApplies,
+                    ':quotedAmount' => $report->quotedAmount,
+                    ':invoicedAmount' => $report->invoicedAmount,
+                    ':addGst' => $report->addGst,
+                    ':requestedActions' => $report->requestedActions,
+                    ':valueExGst' => $report->figures?->valueExGst,
+                    ':restockingAmount' => $report->figures?->restockingAmount,
+                    ':subTotal' => $report->figures?->subTotal,
+                    ':gst' => $report->figures?->gst,
+                    ':creditTotal' => $report->figures?->creditTotal,
                 ],
             );
+            if ($report->lines !== []) {
+                $reportId = AzureSqlValueMapper::intValue($this->connection->fetchAll(
+                    'SELECT [ReportId] FROM [cc_report].[Reports] WHERE [PublicId] = :publicId',
+                    [':publicId' => $report->publicId],
+                )[0]['ReportId'] ?? 0);
+                $this->insertLines($reportId, $report->lines);
+            }
         });
 
         $rows = $this->connection->fetchAll(
@@ -219,7 +335,7 @@ WHERE r.[PublicId] = :publicId',
             throw new \RuntimeException('Customer Contact report was inserted but could not be reloaded.');
         }
 
-        return $this->hydrate($rows[0]);
+        return $this->withLines($this->hydrate($rows[0]));
     }
 
     public function findVisible(
@@ -236,7 +352,7 @@ WHERE r.[PublicId] = :publicId
             $params,
         );
 
-        return $rows === [] ? null : $this->hydrate($rows[0]);
+        return $rows === [] ? null : $this->withLines($this->hydrate($rows[0]));
     }
 
     public function list(
@@ -380,6 +496,25 @@ SQL,
             if ($updated === []) {
                 throw CustomerContactReportConflict::stale();
             }
+            // A pending credit follows the reassignment: the assignee owns it.
+            $this->connection->execute(
+                <<<'SQL'
+UPDATE a
+SET a.[Approver] = :approver, a.[ApproverUserId] = :approverUserId, a.[ApproverName] = :approverName,
+    a.[ApproverEmail] = :approverEmail, a.[UpdatedAtUtc] = :updatedAtUtc
+FROM [cc_report].[Approvals] a
+JOIN [cc_report].[Reports] r ON r.[ReportId] = a.[ReportId]
+WHERE r.[PublicId] = :publicId AND a.[Kind] = N'credit' AND a.[Status] = N'pending'
+SQL,
+                [
+                    ':approver' => strtolower($assignment->assigneeLogin),
+                    ':approverUserId' => $assignment->assigneeUserId,
+                    ':approverName' => $assignment->assigneeName,
+                    ':approverEmail' => $assignment->assigneeEmail,
+                    ':updatedAtUtc' => AzureSqlValueMapper::formatDateTime($assignment->assignedAtUtc),
+                    ':publicId' => $assignment->publicId,
+                ],
+            );
 
             $rows = $this->connection->fetchAll(
                 'SELECT ' . self::COLUMNS . '
@@ -949,6 +1084,7 @@ SELECT
     s.[Approver],
     s.[ApproverUserId],
     s.[ApproverEmail],
+    s.[ApproverName],
     c.[Status] AS [CreditStatus]
 FROM [cc_report].[Approvals] s WITH (UPDLOCK, HOLDLOCK)
 JOIN [cc_report].[Reports] r WITH (UPDLOCK, HOLDLOCK) ON r.[ReportId] = s.[ReportId]
@@ -1024,6 +1160,25 @@ SQL,
                     ':approvalId' => AzureSqlValueMapper::intValue($row['ApprovalId'] ?? 0),
                 ],
             );
+            // Finance approval closes the report, from assigned or completed.
+            $closedBy = AzureSqlValueMapper::nullableString($row['ApproverName'] ?? null)
+                ?? AzureSqlValueMapper::stringValue($row['Approver'] ?? '');
+            $this->connection->execute(
+                <<<'SQL'
+UPDATE [cc_report].[Reports]
+SET [Status] = N'closed', [ClosedBy] = :closedBy, [ClosedByUserId] = :closedByUserId,
+    [ClosedDate] = :closedDate, [ClosedAtUtc] = :closedAtUtc, [UpdatedAtUtc] = :updatedAtUtc
+WHERE [ReportId] = :reportId AND [Status] IN (N'assigned', N'completed')
+SQL,
+                [
+                    ':closedBy' => $closedBy,
+                    ':closedByUserId' => $creditNote->actorUserId,
+                    ':closedDate' => $creditNote->decidedAtUtc->format('Y-m-d'),
+                    ':closedAtUtc' => $stamp,
+                    ':updatedAtUtc' => $stamp,
+                    ':reportId' => AzureSqlValueMapper::intValue($row['ReportId'] ?? 0),
+                ],
+            );
 
             return new CustomerContactReportStoredAttachment(
                 reportId: AzureSqlValueMapper::intValue($row['ReportId'] ?? 0),
@@ -1084,6 +1239,183 @@ SQL,
 
             return $this->reload($signature->publicId);
         });
+    }
+
+    public function updateReport(CustomerContactReportUpdate $update): CustomerContactReportUpdateOutcome
+    {
+        return $this->runInTransaction($this->connection, function () use ($update): CustomerContactReportUpdateOutcome {
+            $row = $this->lockReport($update->publicId, $update->expectedRowVersion);
+            $reportId = AzureSqlValueMapper::intValue($row['ReportId'] ?? 0);
+            $stamp = AzureSqlValueMapper::formatDateTime($update->updatedAtUtc);
+
+            $changes = $update->changes;
+            unset($changes['lines']);
+            $reset = false;
+            if ($update->creditChanged) {
+                $state = $this->connection->fetchAll(
+                    <<<'SQL'
+SELECT
+    (SELECT [Status] FROM [cc_report].[Approvals] WITH (UPDLOCK, HOLDLOCK) WHERE [ReportId] = :reportId AND [Kind] = N'credit') AS [CreditStatus],
+    (SELECT COUNT(1) FROM [cc_report].[Approvals] WITH (UPDLOCK, HOLDLOCK) WHERE [ReportId] = :reportId2 AND [Kind] = N'settlement') AS [SettlementRows]
+SQL,
+                    [':reportId' => $reportId, ':reportId2' => $reportId],
+                )[0] ?? [];
+                $creditStatus = AzureSqlValueMapper::nullableString($state['CreditStatus'] ?? null);
+                $settlementRows = AzureSqlValueMapper::intValue($state['SettlementRows'] ?? 0);
+                if (($creditStatus !== null && $creditStatus !== 'pending') || $settlementRows > 0) {
+                    $reset = true;
+                    $changes['creditReviewedBy'] = null;
+                    $changes['creditReviewedDate'] = null;
+                }
+            }
+
+            $sets = ['[UpdatedAtUtc] = :updatedAtUtc'];
+            $params = [':updatedAtUtc' => $stamp];
+            $n = 0;
+            foreach ($changes as $property => $value) {
+                $map = self::UPDATE_COLUMNS[$property] ?? null;
+                if ($map === null) {
+                    throw new \InvalidArgumentException('Unsupported Customer Contact column: ' . $property);
+                }
+                [$column, $kind] = $map;
+                $name = ':v' . $n++;
+                $sets[] = '[' . $column . '] = ' . $name;
+                if ($value instanceof DateTimeImmutable) {
+                    $params[$name] = $value->format('Y-m-d');
+                } elseif ($kind === 'blankNull' && $value === '') {
+                    $params[$name] = null;
+                } else {
+                    $params[$name] = $value === null ? null : (string) $value;
+                }
+            }
+            $this->updateWorkflow($update->publicId, $update->expectedRowVersion, $params, 'UPDATE [cc_report].[Reports]
+SET ' . implode(', ', $sets) . '
+OUTPUT CONVERT(NVARCHAR(36), inserted.[PublicId]) AS [PublicId]
+WHERE [PublicId] = :publicId
+  AND [RowVersion] = :expectedRowVersion');
+
+            if ($update->lines !== null) {
+                $this->connection->execute('DELETE FROM [cc_report].[ReportLines] WHERE [ReportId] = :reportId', [':reportId' => $reportId]);
+                $this->insertLines($reportId, $update->lines);
+            }
+
+            $creditApproval = null;
+            if ($reset) {
+                $this->connection->execute(
+                    <<<'SQL'
+UPDATE [cc_report].[Approvals]
+SET [Status] = N'pending', [Note] = NULL, [DecidedAtUtc] = NULL, [RequestedAtUtc] = :now, [UpdatedAtUtc] = :now2
+WHERE [ReportId] = :reportId AND [Kind] = N'credit' AND [Status] <> N'pending'
+SQL,
+                    [':now' => $stamp, ':now2' => $stamp, ':reportId' => $reportId],
+                );
+                $this->connection->execute(
+                    'DELETE FROM [cc_report].[Approvals] WHERE [ReportId] = :reportId AND [Kind] = N\'settlement\'',
+                    [':reportId' => $reportId],
+                );
+                $creditApproval = $this->approvalOrNull($update->publicId, 'credit');
+            }
+
+            return new CustomerContactReportUpdateOutcome($this->reload($update->publicId), $reset, $creditApproval);
+        });
+    }
+
+    /**
+     * @param list<CustomerContactReportLine> $lines
+     */
+    private function insertLines(int $reportId, array $lines): void
+    {
+        foreach ($lines as $line) {
+            $this->connection->execute(
+                <<<'SQL'
+INSERT INTO [cc_report].[ReportLines] (
+    [ReportId], [OrderNo], [InvoiceNo], [LineNumber], [ProductCode], [Description], [Qty], [Unit], [Packs],
+    [PackSize], [UnitPrice], [Net], [CreditQty], [CreditRate], [CreditNet], [GstRate], [Warehouse], [Comment]
+) VALUES (
+    :reportId, :orderNo, :invoiceNo, :lineNumber, :productCode, :description, :qty, :unit, :packs,
+    :packSize, :unitPrice, :net, :creditQty, :creditRate, :creditNet, :gstRate, :warehouse, :comment
+)
+SQL,
+                [
+                    ':reportId' => $reportId,
+                    ':orderNo' => $line->orderNo,
+                    ':invoiceNo' => $line->invoiceNo,
+                    ':lineNumber' => $line->lineNo,
+                    ':productCode' => $line->productCode,
+                    ':description' => $line->description,
+                    ':qty' => $line->qty,
+                    ':unit' => $line->unit,
+                    ':packs' => $line->packs,
+                    ':packSize' => $line->packSize,
+                    ':unitPrice' => $line->unitPrice,
+                    ':net' => $line->net,
+                    ':creditQty' => $line->creditQty,
+                    ':creditRate' => $line->creditRate,
+                    ':creditNet' => $line->creditNet,
+                    ':gstRate' => $line->gstRate,
+                    ':warehouse' => $line->warehouse,
+                    ':comment' => $line->comment,
+                ],
+            );
+        }
+    }
+
+    private function withLines(CustomerContactReportDetails $report): CustomerContactReportDetails
+    {
+        $rows = $this->connection->fetchAll(
+            <<<'SQL'
+SELECT
+    l.[OrderNo], l.[InvoiceNo], l.[LineNumber], l.[ProductCode], l.[Description],
+    CONVERT(VARCHAR(32), l.[Qty]) AS [Qty], l.[Unit], l.[Packs],
+    CONVERT(VARCHAR(32), l.[PackSize]) AS [PackSize],
+    CONVERT(VARCHAR(32), l.[UnitPrice]) AS [UnitPrice],
+    CONVERT(VARCHAR(32), l.[Net]) AS [Net],
+    CONVERT(VARCHAR(32), l.[CreditQty]) AS [CreditQty],
+    CONVERT(VARCHAR(32), l.[CreditRate]) AS [CreditRate],
+    CONVERT(VARCHAR(32), l.[CreditNet]) AS [CreditNet],
+    CONVERT(VARCHAR(32), l.[GstRate]) AS [GstRate],
+    l.[Warehouse], l.[Comment]
+FROM [cc_report].[ReportLines] l
+WHERE l.[ReportId] = :reportId
+ORDER BY l.[OrderNo], l.[LineNumber]
+SQL,
+            [':reportId' => $report->reportId],
+        );
+        $lines = [];
+        foreach ($rows as $row) {
+            $lines[] = new CustomerContactReportLine(
+                orderNo: AzureSqlValueMapper::stringValue($row['OrderNo'] ?? ''),
+                invoiceNo: AzureSqlValueMapper::stringValue($row['InvoiceNo'] ?? ''),
+                lineNo: AzureSqlValueMapper::intValue($row['LineNumber'] ?? 0),
+                productCode: AzureSqlValueMapper::stringValue($row['ProductCode'] ?? ''),
+                description: AzureSqlValueMapper::stringValue($row['Description'] ?? ''),
+                qty: AzureSqlValueMapper::stringValue($row['Qty'] ?? '0'),
+                unit: AzureSqlValueMapper::stringValue($row['Unit'] ?? ''),
+                packs: AzureSqlValueMapper::intValue($row['Packs'] ?? 0),
+                packSize: AzureSqlValueMapper::stringValue($row['PackSize'] ?? '0'),
+                unitPrice: AzureSqlValueMapper::stringValue($row['UnitPrice'] ?? '0'),
+                net: AzureSqlValueMapper::stringValue($row['Net'] ?? '0'),
+                creditQty: AzureSqlValueMapper::stringValue($row['CreditQty'] ?? '0'),
+                creditRate: AzureSqlValueMapper::stringValue($row['CreditRate'] ?? '0'),
+                creditNet: AzureSqlValueMapper::stringValue($row['CreditNet'] ?? '0'),
+                warehouse: AzureSqlValueMapper::stringValue($row['Warehouse'] ?? ''),
+                comment: AzureSqlValueMapper::stringValue($row['Comment'] ?? ''),
+                gstRate: AzureSqlValueMapper::nullableString($row['GstRate'] ?? null),
+            );
+        }
+
+        return $lines === [] ? $report : $report->withChanges($report->rowVersion, $report->updatedAtUtc, ['lines' => $lines]);
+    }
+
+    private function approvalOrNull(string $publicId, string $kind): ?CustomerContactReportApproval
+    {
+        foreach ($this->approvalsFor($publicId) as $approval) {
+            if ($approval->kind === $kind) {
+                return $approval;
+            }
+        }
+
+        return null;
     }
 
     public function numberSequenceRows(): int
@@ -1325,6 +1657,13 @@ SQL,
             icarOperatorName: AzureSqlValueMapper::nullableString($row['IcarOperatorName'] ?? null),
             icarSignedAt: AzureSqlValueMapper::nullableString($row['IcarSignedAt'] ?? null),
             icarSignatureUrl: AzureSqlValueMapper::nullableString($row['IcarSignatureUrl'] ?? null),
+            orderNo: AzureSqlValueMapper::nullableString($row['OrderNo'] ?? null),
+            invoiceNo: AzureSqlValueMapper::nullableString($row['InvoiceNo'] ?? null),
+            creditType: AzureSqlValueMapper::nullableString($row['CreditType'] ?? null),
+            quotedAmount: AzureSqlValueMapper::nullableString($row['QuotedAmount'] ?? null),
+            invoicedAmount: AzureSqlValueMapper::nullableString($row['InvoicedAmount'] ?? null),
+            addGst: AzureSqlValueMapper::nullableString($row['AddGst'] ?? null),
+            requestedActions: AzureSqlValueMapper::nullableString($row['RequestedActions'] ?? null),
         );
     }
 
@@ -1394,7 +1733,7 @@ WHERE r.[PublicId] = :publicId',
             throw CustomerContactReportNotFound::forPublicId($publicId);
         }
 
-        return $this->hydrate($row);
+        return $this->withLines($this->hydrate($row));
     }
 
     private function approvalByKind(string $publicId, string $kind): CustomerContactReportApproval

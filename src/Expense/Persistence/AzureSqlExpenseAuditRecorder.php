@@ -6,6 +6,7 @@ namespace TriCab\Api\Expense\Persistence;
 
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
+use TriCab\Core\Expense\Contract\ExpenseAuditFilter;
 use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
@@ -49,9 +50,30 @@ SQL,
         );
     }
 
-    public function listRecent(int $limit = 200): array
+    public function listRecent(int $limit = 200, ?ExpenseAuditFilter $filter = null): array
     {
         $limit = max(1, min(1000, $limit));
+        $where = [];
+        $params = [];
+        if ($filter !== null) {
+            if (($from = $filter->fromBoundary()) !== null) {
+                $where[] = 'e.[CreatedAtUtc] >= :fromUtc';
+                $params[':fromUtc'] = AzureSqlValueMapper::formatDateTime($from);
+            }
+            if (($to = $filter->toExclusiveBoundary()) !== null) {
+                $where[] = 'e.[CreatedAtUtc] < :toUtc';
+                $params[':toUtc'] = AzureSqlValueMapper::formatDateTime($to);
+            }
+            if ($filter->action !== null) {
+                $where[] = 'e.[ActionCode] = :actionCode';
+                $params[':actionCode'] = $filter->action;
+            }
+            if ($filter->actorUserId !== null) {
+                $where[] = 'e.[ActorUserId] = :actorUserId';
+                $params[':actorUserId'] = $filter->actorUserId;
+            }
+        }
+        $whereSql = $where === [] ? '' : 'WHERE ' . implode(' AND ', $where);
         $rows = $this->connection->fetchAll(
             <<<SQL
 SELECT TOP ({$limit})
@@ -61,8 +83,10 @@ SELECT TOP ({$limit})
     e.[Detail],
     CONVERT(VARCHAR(33), e.[CreatedAtUtc], 127) AS [CreatedAtUtc]
 FROM [expense].[ExpenseAuditEvents] e
+{$whereSql}
 ORDER BY e.[ExpenseAuditEventId] DESC
 SQL,
+            $params,
         );
 
         return array_map(static function (array $row): array {

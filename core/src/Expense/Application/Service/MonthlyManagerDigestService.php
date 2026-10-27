@@ -41,6 +41,10 @@ final class MonthlyManagerDigestService
 
     /**
      * @param bool $force run outside day 1 (operator override for a missed cron)
+     * @param int $catchUpDays run on any Melbourne day-of-month <= this (default 1 = legacy
+     *        "day 1 only"). With N > 1 a missed day-1 run is caught up on days 2..N; the
+     *        manager+month idempotency key still guarantees one digest per manager per month,
+     *        and a cutover after day N does not mail a surprise digest mid-month.
      * @param ?UserId $auditActor scheduler runs have no human actor; when the
      *        operator supplies their own id the run is written to the audit log
      * @return array{
@@ -52,16 +56,17 @@ final class MonthlyManagerDigestService
      *     sent: int,
      *     alreadySent: int,
      *     skipped: int,
+     *     failed: int,
      *     recipients: list<array{email: string, pending: int, action: string}>
      * }
      */
-    public function execute(bool $force = false, ?UserId $auditActor = null): array
+    public function execute(bool $force = false, ?UserId $auditActor = null, int $catchUpDays = 1): array
     {
         $nowUtc = $this->clock->now();
         $local = $nowUtc->setTimezone(new DateTimeZone(Module::SCHEDULER_TIMEZONE));
         $periodKey = $local->format('Y-m');
 
-        if (!$force && (int) $local->format('j') !== 1) {
+        if (!$force && (int) $local->format('j') > max(1, $catchUpDays)) {
             return [
                 'ran' => false,
                 'skippedReason' => 'not_first_of_month',
@@ -71,6 +76,7 @@ final class MonthlyManagerDigestService
                 'sent' => 0,
                 'alreadySent' => 0,
                 'skipped' => 0,
+                'failed' => 0,
                 'recipients' => [],
             ];
         }
@@ -80,6 +86,7 @@ final class MonthlyManagerDigestService
         $sent = 0;
         $alreadySent = 0;
         $skipped = 0;
+        $failed = 0;
         $recipients = [];
 
         foreach ($byManager as $managerUserId => $pending) {
@@ -97,19 +104,28 @@ final class MonthlyManagerDigestService
                 continue;
             }
 
-            $this->notifications->notifyManagerPendingDigest(
-                [$email],
-                self::summary($pending, $periodKey),
-            );
-            $this->reminderLog->record(
-                $email,
-                $managerProfile->userId(),
-                null,
-                $nowUtc,
-                'scheduler:monthly-manager-digest',
-                Module::REMINDER_TYPE_MANAGER_MONTHLY_DIGEST,
-                $key,
-            );
+            // Failure isolation: one manager's mail failing must not stop the others.
+            // Nothing is logged on failure, so the next run retries that manager.
+            // (Residual risk: mail sent but the log write failed => a retry re-sends once.)
+            try {
+                $this->notifications->notifyManagerPendingDigest(
+                    [$email],
+                    self::summary($pending, $periodKey),
+                );
+                $this->reminderLog->record(
+                    $email,
+                    $managerProfile->userId(),
+                    null,
+                    $nowUtc,
+                    'scheduler:monthly-manager-digest',
+                    Module::REMINDER_TYPE_MANAGER_MONTHLY_DIGEST,
+                    $key,
+                );
+            } catch (\Throwable) {
+                $failed++;
+                $recipients[] = ['email' => $email, 'pending' => count($pending), 'action' => 'failed'];
+                continue;
+            }
             $sent++;
             $recipients[] = ['email' => $email, 'pending' => count($pending), 'action' => 'sent'];
         }
@@ -119,7 +135,7 @@ final class MonthlyManagerDigestService
                 $auditActor,
                 'manager_monthly_digest_run',
                 null,
-                sprintf('%s sent=%d alreadySent=%d skipped=%d', $periodKey, $sent, $alreadySent, $skipped),
+                sprintf('%s sent=%d alreadySent=%d skipped=%d failed=%d', $periodKey, $sent, $alreadySent, $skipped, $failed),
             );
         }
 
@@ -132,6 +148,7 @@ final class MonthlyManagerDigestService
             'sent' => $sent,
             'alreadySent' => $alreadySent,
             'skipped' => $skipped,
+            'failed' => $failed,
             'recipients' => $recipients,
         ];
     }

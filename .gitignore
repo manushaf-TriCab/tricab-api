@@ -9,6 +9,7 @@
 /var/cache/
 /var/rfq-reader/
 /var/rfq-mail/
+/var/expense-scheduler/
 /var/catalogue-pdf-migration/
 /tmp/
 /output/

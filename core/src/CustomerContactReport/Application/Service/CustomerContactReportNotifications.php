@@ -164,6 +164,27 @@ final class CustomerContactReportNotifications
         ));
     }
 
+    /**
+     * The credit changed after someone acted on it. It is back with its approver,
+     * and any Finance step was removed. Live: cc_credit_amended.
+     */
+    public function creditAmended(CustomerContactReportDetails $report, CustomerContactReportApproval $approval, string $by): void
+    {
+        $reference = self::reference($report);
+        $heading = 'Credit amended, approval needed again';
+        $this->deliver(new CustomerContactReportNotice(
+            event: 'credit_amended',
+            publicId: $report->publicId,
+            recipients: self::addresses([$approval->approverEmail]),
+            subject: 'Customer Contact ' . $reference . ' — credit amended',
+            heading: $heading,
+            intro: 'The orders, lines or credit on this Customer Contact were amended by ' . $by . ' after they were reviewed. The credit is waiting for your approval again.',
+            fields: $this->approvalFields($report, $approval, false),
+            linkUrl: $this->reportUrl($report->publicId),
+            linkLabel: 'Approve or decline',
+        ));
+    }
+
     public function approvalDecided(CustomerContactReportDetails $report, CustomerContactReportApproval $approval): void
     {
         $reference = self::reference($report);

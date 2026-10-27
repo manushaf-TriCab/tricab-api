@@ -15,7 +15,7 @@ final readonly class CustomerContactReportApprovalKind
     public const SETTLEMENT = 'settlement';
 
     /** @var list<string> */
-    public const REQUESTABLE = [self::CREDIT, self::REWORK];
+    public const REQUESTABLE = [self::CREDIT];
 
     /** @var list<string> */
     public const DECIDABLE = [self::CREDIT, self::REWORK];
@@ -31,8 +31,11 @@ final readonly class CustomerContactReportApprovalKind
         if ($kind === self::SETTLEMENT) {
             throw InvalidCustomerContactReportValue::for('kind', 'is raised when a credit is approved, not requested directly.');
         }
+        if ($kind === self::REWORK) {
+            throw InvalidCustomerContactReportValue::for('kind', 'rework is retired and can no longer be requested.');
+        }
         if (!in_array($kind, self::REQUESTABLE, true)) {
-            throw InvalidCustomerContactReportValue::for('kind', 'must be credit or rework.');
+            throw InvalidCustomerContactReportValue::for('kind', 'must be credit.');
         }
 
         return new self($kind);

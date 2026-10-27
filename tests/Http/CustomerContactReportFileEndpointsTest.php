@@ -21,6 +21,8 @@ final class CustomerContactReportFileEndpointsTest extends TestCase
             'location' => 'M',
             'customerCode' => 'CUST1',
             'productCode' => 'CAB-1',
+            'orderNo' => '639952',
+            'creditRequired' => 'No',
             'description' => 'Cable failed',
         ])), 201));
         $publicId = $this->text($created, 'publicId');

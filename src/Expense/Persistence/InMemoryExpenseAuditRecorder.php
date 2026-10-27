@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Expense\Persistence;
 
+use TriCab\Core\Expense\Contract\ExpenseAuditFilter;
 use TriCab\Core\Expense\Contract\ExpenseAuditRecorder;
 use TriCab\Core\Expense\Domain\ValueObject\ExpenseReceiptPublicId;
 use TriCab\Core\Identity\Domain\ValueObject\UserId;
@@ -28,10 +29,13 @@ final class InMemoryExpenseAuditRecorder implements ExpenseAuditRecorder
         ];
     }
 
-    public function listRecent(int $limit = 200): array
+    public function listRecent(int $limit = 200, ?ExpenseAuditFilter $filter = null): array
     {
         $limit = max(1, min(1000, $limit));
         $events = array_reverse($this->events);
+        if ($filter !== null) {
+            $events = array_values(array_filter($events, static fn (array $e): bool => $filter->matches($e)));
+        }
 
         return array_slice($events, 0, $limit);
     }
