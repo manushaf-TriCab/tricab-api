@@ -3094,6 +3094,16 @@ final class ContainerFactory
             \TriCab\Api\Http\Action\CableRoutes\GetMachineAction::class => \DI\autowire(\TriCab\Api\Http\Action\CableRoutes\GetMachineAction::class),
             \TriCab\Api\Http\Action\CableRoutes\ListChecksAction::class => \DI\autowire(\TriCab\Api\Http\Action\CableRoutes\ListChecksAction::class),
 
+            // Conductor process: the repository is lazy, it opens the SQLite store on the first request that needs it.
+            \TriCab\Core\Conductor\Process\Contract\ConductorProcessRepository::class => static fn (): \TriCab\Api\Conductor\Process\Persistence\SqliteConductorProcessRepository => \TriCab\Api\Conductor\Process\Persistence\SqliteConductorProcessRepository::fromSettings($settings),
+            \TriCab\Core\Conductor\Process\Application\Service\ConductorProcessQueryService::class => \DI\autowire(\TriCab\Core\Conductor\Process\Application\Service\ConductorProcessQueryService::class),
+            \TriCab\Api\Http\Auth\ConductorProcessErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\ConductorProcessErrorMapper::class),
+            \TriCab\Api\Http\Action\Conductor\Process\GetRunAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Process\GetRunAction::class),
+            \TriCab\Api\Http\Action\Conductor\Process\ListMachinesAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Process\ListMachinesAction::class),
+            \TriCab\Api\Http\Action\Conductor\Process\GetMachineAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Process\GetMachineAction::class),
+            \TriCab\Api\Http\Action\Conductor\Process\ListItemsAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Process\ListItemsAction::class),
+            \TriCab\Api\Http\Action\Conductor\Process\GetItemAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Process\GetItemAction::class),
+
             \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository::class => static function (Container $container): \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository {
                 $config = self::get($container, \TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig::class);
                 if (!$config->tcConfigured()) {

@@ -24,3 +24,6 @@
 
 # Cable routes store built by core/python/cable_routes (and any temp or journal files)
 /var/cable-routes/
+
+# Conductor process store built by core/python/conductor_process (and any temp or journal files)
+/var/conductor/

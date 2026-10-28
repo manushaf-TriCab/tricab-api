@@ -1,0 +1,16 @@
+machine,d365_id,seq,stage_no,note
+RB2,RB1,1,1,D365 calls it RB1
+WD3,WD3,2,2,no orders in D365
+WD4,WD4,3,2,
+TN1,TL1,4,2,running · D365 TL1
+WD5,WD5,5,2,running in D365
+BU1,BU1,6,3,
+BU2,BU2,7,3,
+BU6,BU6,8,3,
+BU7,BU7,9,3,no orders in D365
+BU5,BU5,10,3,
+BU4,BU4,11,3,
+TP3,,12,4,not in D365
+TP1,TP1,13,4,
+TP2,TP2,14,4,
+ST1,ST1,15,4,

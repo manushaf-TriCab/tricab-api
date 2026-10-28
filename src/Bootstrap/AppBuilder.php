@@ -446,6 +446,7 @@ final class AppBuilder
         self::registerHrEmployeeRoutes($app, $container);
         self::registerCableFitRoutes($app, $container);
         self::registerCableRoutesRoutes($app, $container);
+        self::registerConductorRoutes($app, $container);
         if ($settings->mailModuleEnabled) {
             self::registerMailRoutes($app, $container);
         }
@@ -1746,6 +1747,24 @@ final class AppBuilder
         $app->get($base . '/machines', \TriCab\Api\Http\Action\CableRoutes\ListMachinesAction::class)->add(($require)($gate));
         $app->get($base . '/machine', \TriCab\Api\Http\Action\CableRoutes\GetMachineAction::class)->add(($require)($gate));
         $app->get($base . '/checks', \TriCab\Api\Http\Action\CableRoutes\ListChecksAction::class)->add(($require)($gate));
+    }
+
+    /**
+     * Conductor: read-only view of how copper conductor is made on the conductor map, from the SQLite store built by
+     * core/python/conductor_process.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerConductorRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $gate = \TriCab\Core\Conductor\Module::PERMISSION_READ;
+        $base = '/api/v1/conductor/process';
+        $app->get($base . '/run', \TriCab\Api\Http\Action\Conductor\Process\GetRunAction::class)->add(($require)($gate));
+        $app->get($base . '/machines', \TriCab\Api\Http\Action\Conductor\Process\ListMachinesAction::class)->add(($require)($gate));
+        $app->get($base . '/machine', \TriCab\Api\Http\Action\Conductor\Process\GetMachineAction::class)->add(($require)($gate));
+        $app->get($base . '/items', \TriCab\Api\Http\Action\Conductor\Process\ListItemsAction::class)->add(($require)($gate));
+        $app->get($base . '/item', \TriCab\Api\Http\Action\Conductor\Process\GetItemAction::class)->add(($require)($gate));
     }
 
     /**
