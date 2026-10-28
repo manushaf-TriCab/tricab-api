@@ -9,7 +9,6 @@ use TriCab\Core\Commerce\Contract\VariantAvailabilityRepository;
 use TriCab\Core\Commerce\Domain\ValueObject\CartPricingMode;
 use TriCab\Core\Commerce\Domain\ValueObject\MarginSource;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
-use TriCab\Core\Product\Application\Pricing\CustomerPricingContext;
 use TriCab\Core\Product\Application\Pricing\CustomerSellPriceStatus;
 use TriCab\Core\Product\Application\Pricing\CustomerVariantSellPriceDiagnostic;
 use TriCab\Core\Product\Application\Pricing\PricingActorContextResolver;
@@ -195,13 +194,7 @@ final class RepriceCartService
             });
         }
 
-        $includeStaff = $context->pricingMode === CustomerPricingContext::MODE_STAFF_SELECTED
-            && (
-                in_array(ResolvePricingActorContextService::PERM_PRICE_AS, $user->permissions, true)
-                || in_array(ResolvePricingActorContextService::PERM_CUSTOMER_READ, $user->permissions, true)
-                || in_array(ResolvePricingActorContextService::PERM_MARGIN_OVERRIDE, $user->permissions, true)
-                || in_array(ResolvePricingActorContextService::PERM_PRICING_MANAGE, $user->permissions, true)
-            );
+        $includeStaff = ResolvePricingActorContextService::isStaffPricingActor($user, $context);
 
         $changes = array_map(static function (array $row): array {
             unset($row['apply']);

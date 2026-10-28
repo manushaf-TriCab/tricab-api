@@ -373,7 +373,7 @@ final class Phase137aDurableCartTest extends TestCase
             emailAddress: 'cart@example.com',
             displayName: 'Cart Tester',
             status: 'ACTIVE',
-            roles: $staff ? ['STAFF'] : ['CUSTOMER'],
+            roles: $staff ? ['EMPLOYEE'] : ['CUSTOMER'],
             permissions: $staff
                 ? ['CUSTOMER.PRICE_AS', 'PRODUCT.PRICING.OVERRIDE']
                 : [],

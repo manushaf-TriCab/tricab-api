@@ -9,6 +9,7 @@ use TriCab\Core\Customer\Contract\CustomerRepository;
 use TriCab\Core\Customer\Domain\ValueObject\CustomerContactPublicId;
 use TriCab\Core\Customer\Domain\ValueObject\CustomerPublicId;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
+use TriCab\Core\Identity\Domain\Service\StaffEligibilityPolicy;
 
 /**
  * Resolves effective pricing context for SELF customer or authorized staff PRICE-AS.
@@ -16,7 +17,6 @@ use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
 final class ResolvePricingActorContextService implements PricingActorContextResolver
 {
     public const PERM_PRICE_AS = 'CUSTOMER.PRICE_AS';
-    public const PERM_CUSTOMER_READ = 'CUSTOMER.READ';
     public const PERM_MARGIN_OVERRIDE = 'PRODUCT.PRICING.OVERRIDE';
     public const PERM_PRICING_MANAGE = 'PRODUCT.PRICING.MANAGE';
 
@@ -204,6 +204,9 @@ final class ResolvePricingActorContextService implements PricingActorContextReso
 
     public function applyMarginOverride(AuthenticatedUser $user, string $pricingContextToken, string|int $margin): array
     {
+        if (!$this->canPriceAs($user)) {
+            throw new PricingActorAuthorizationException('Staff price-as-customer permission required.');
+        }
         if (!$this->canOverrideMargin($user)) {
             throw new PricingActorAuthorizationException('Margin override permission required.');
         }
@@ -230,12 +233,12 @@ final class ResolvePricingActorContextService implements PricingActorContextReso
 
     public function clearOverride(AuthenticatedUser $user, string $pricingContextToken): array
     {
+        if (!$this->canPriceAs($user)) {
+            throw new PricingActorAuthorizationException('Staff price-as-customer permission required.');
+        }
         $payload = $this->tokens->decode($pricingContextToken);
         if (strcasecmp($payload['actorUserPublicId'], $user->publicId) !== 0) {
             throw new PricingActorAuthorizationException('Pricing context token actor mismatch.');
-        }
-        if (!$this->canPriceAs($user)) {
-            throw new PricingActorAuthorizationException('Staff price-as-customer permission required.');
         }
 
         $contactPublicId = isset($payload['contactPublicId']) && is_string($payload['contactPublicId'])
@@ -247,13 +250,42 @@ final class ResolvePricingActorContextService implements PricingActorContextReso
 
     public function canPriceAs(AuthenticatedUser $user): bool
     {
-        return in_array(self::PERM_PRICE_AS, $user->permissions, true)
-            || in_array(self::PERM_CUSTOMER_READ, $user->permissions, true);
+        return self::actorMayPriceAs($user);
     }
 
     public function canOverrideMargin(AuthenticatedUser $user): bool
     {
-        return in_array(self::PERM_MARGIN_OVERRIDE, $user->permissions, true)
-            || in_array(self::PERM_PRICING_MANAGE, $user->permissions, true);
+        return self::actorMayOverrideMargin($user);
+    }
+
+    /**
+     * Staff price-as needs an eligible staff identity and the dedicated
+     * permission. CUSTOMER.READ is a customer-portal permission and never
+     * grants it. Callers on HTTP routes pass a user already scoped to the
+     * session's sign-in assurance, so a weak sign-in arrives without it.
+     */
+    public static function actorMayPriceAs(AuthenticatedUser $user): bool
+    {
+        return StaffEligibilityPolicy::isEligible($user->roles)
+            && in_array(self::PERM_PRICE_AS, $user->permissions, true);
+    }
+
+    public static function actorMayOverrideMargin(AuthenticatedUser $user): bool
+    {
+        return StaffEligibilityPolicy::isEligible($user->roles)
+            && (
+                in_array(self::PERM_MARGIN_OVERRIDE, $user->permissions, true)
+                || in_array(self::PERM_PRICING_MANAGE, $user->permissions, true)
+            );
+    }
+
+    /**
+     * Whether a cart or pricing response for a staff-selected context may carry
+     * staff-only fields (cost, margin source).
+     */
+    public static function isStaffPricingActor(AuthenticatedUser $user, CustomerPricingContext $context): bool
+    {
+        return $context->pricingMode === CustomerPricingContext::MODE_STAFF_SELECTED
+            && self::actorMayPriceAs($user);
     }
 }

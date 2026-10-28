@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Config\Settings;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Api\Http\Auth\IdentityResolutionErrorMapper;
+use TriCab\Api\Http\Auth\ResolveRequestAuthenticatedUser;
 use TriCab\Api\Identity\Authentication\ActingAdminAttribute;
 use TriCab\Api\Identity\Authentication\AuthenticatedUserAttribute;
 use TriCab\Api\Identity\Authentication\EntraJwtValidationDebugLogger;
@@ -22,6 +23,8 @@ use TriCab\Core\Identity\Application\Exception\IdentityConflict;
 use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
+use TriCab\Core\Identity\Domain\Service\StaffEligibilityPolicy;
+use TriCab\Core\Product\Application\Pricing\ResolvePricingActorContextService;
 
 final class GetAuthenticatedUserAction
 {
@@ -45,6 +48,7 @@ final class GetAuthenticatedUserAction
             $actingAdmin = $request->getAttribute(ActingAdminAttribute::KEY);
 
             return $this->successfulResponse(
+                $request,
                 $attachedUser,
                 $actingAdmin instanceof ActingAdmin ? $actingAdmin : null,
             );
@@ -76,12 +80,15 @@ final class GetAuthenticatedUserAction
             return $this->identityErrors->map($exception);
         }
 
-        return $this->successfulResponse($user);
+        return $this->successfulResponse($request, $user);
     }
 
-    private function successfulResponse(AuthenticatedUser $user, ?ActingAdmin $actingAdmin = null): ResponseInterface
-    {
-        $response = $this->responder->success($this->serialize($user, $actingAdmin));
+    private function successfulResponse(
+        ServerRequestInterface $request,
+        AuthenticatedUser $user,
+        ?ActingAdmin $actingAdmin = null,
+    ): ResponseInterface {
+        $response = $this->responder->success($this->serialize($request, $user, $actingAdmin));
 
         // A switched request is the administrator working, not the target signing in.
         if ($actingAdmin === null) {
@@ -94,7 +101,7 @@ final class GetAuthenticatedUserAction
     /**
      * @return array<string, mixed>
      */
-    private function serialize(AuthenticatedUser $user, ?ActingAdmin $actingAdmin): array
+    private function serialize(ServerRequestInterface $request, AuthenticatedUser $user, ?ActingAdmin $actingAdmin): array
     {
         $customerContext = $this->resolveCustomerContext->execute(
             $user->publicId,
@@ -128,6 +135,7 @@ final class GetAuthenticatedUserAction
                 'isCustomerAdmin' => $customerContext->isCustomerAdmin,
                 'marketCodes' => $customerContext->marketCodes,
             ],
+            'staffAccess' => $this->staffAccess($request, $user),
             // Set only while an administrator is acting as this user.
             'actingAs' => $actingAdmin === null ? null : [
                 'sessionId' => $actingAdmin->sessionId,
@@ -142,6 +150,27 @@ final class GetAuthenticatedUserAction
                     ->setTimezone(new \DateTimeZone('Australia/Melbourne'))
                     ->format(DATE_ATOM),
             ],
+        ];
+    }
+
+    /**
+     * The server's own staff decisions for this session, so clients show staff
+     * controls from the same rules the API enforces instead of re-deriving
+     * them from raw roles and permissions.
+     *
+     * @return array{eligibility: string, authenticationAssurance: string, canPriceAs: bool, canOverrideMargin: bool, priceAsRequiresStrongerSignIn: bool}
+     */
+    private function staffAccess(ServerRequestInterface $request, AuthenticatedUser $user): array
+    {
+        $scoped = ResolveRequestAuthenticatedUser::scopeToSessionAssurance($user, $request);
+        $canPriceAs = ResolvePricingActorContextService::actorMayPriceAs($scoped);
+
+        return [
+            'eligibility' => StaffEligibilityPolicy::evaluate($user->roles),
+            'authenticationAssurance' => ResolveRequestAuthenticatedUser::sessionAssurance($request)->toString(),
+            'canPriceAs' => $canPriceAs,
+            'canOverrideMargin' => $canPriceAs && ResolvePricingActorContextService::actorMayOverrideMargin($scoped),
+            'priceAsRequiresStrongerSignIn' => !$canPriceAs && ResolvePricingActorContextService::actorMayPriceAs($user),
         ];
     }
 }

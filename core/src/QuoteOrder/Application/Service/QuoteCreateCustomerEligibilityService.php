@@ -19,7 +19,9 @@ use TriCab\Core\QuoteOrder\Module;
  *
  * Portal: linked CustomerContactUsers only.
  * Staff: QUOTE.CREATE + same commercial capability as price-as
- *        (CUSTOMER.PRICE_AS or CUSTOMER.READ) — not QUOTE.READ / staffSearchAll.
+ *        (CUSTOMER.PRICE_AS, eligible staff identity per StaffEligibilityPolicy)
+ *        — not CUSTOMER.READ, QUOTE.READ or staffSearchAll. An HTTP caller must pass
+ *        the assurance-scoped user from ResolveRequestAuthenticatedUser.
  *
  * Territory scoping from legacy picker UI is NOT re-enforced server-side today
  * (legacy switch also did not re-check territory) — future hardening.
@@ -89,19 +91,11 @@ final class QuoteCreateCustomerEligibilityService
     }
 
     /**
-     * Same permission codes as ResolvePricingActorContextService::canPriceAs.
+     * Same rule as ResolvePricingActorContextService::actorMayPriceAs.
      */
     public function staffMaySelectCustomer(AuthenticatedUser $actor): bool
     {
-        foreach ($actor->permissions as $permission) {
-            if (strcasecmp($permission, ResolvePricingActorContextService::PERM_PRICE_AS) === 0
-                || strcasecmp($permission, ResolvePricingActorContextService::PERM_CUSTOMER_READ) === 0
-            ) {
-                return true;
-            }
-        }
-
-        return false;
+        return ResolvePricingActorContextService::actorMayPriceAs($actor);
     }
 
     private function isPortalActor(AuthenticatedUser $actor): bool

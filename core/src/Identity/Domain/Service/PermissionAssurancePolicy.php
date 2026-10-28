@@ -69,6 +69,14 @@ final class PermissionAssurancePolicy
         'RFQ.REVIEWLOG.READ' => AuthenticationAssurance::SUBSTANTIAL,
         'RFQ.ADMIN' => AuthenticationAssurance::SUBSTANTIAL,
         'RFQ.MAIL.INGEST' => AuthenticationAssurance::SUBSTANTIAL,
+
+        // Staff price-as reveals any customer's negotiated prices and puts
+        // staff-only cost fields in responses; overriding the margin changes
+        // what a customer is offered. Neither opens to an emailed code. They
+        // gate no route, so they are enforced by scoping the user that the
+        // commerce and pricing services see (ResolveRequestAuthenticatedUser).
+        'CUSTOMER.PRICE_AS' => AuthenticationAssurance::SUBSTANTIAL,
+        'PRODUCT.PRICING.OVERRIDE' => AuthenticationAssurance::SUBSTANTIAL,
     ];
 
     public static function requiredFor(PermissionCode $permission): AuthenticationAssurance
