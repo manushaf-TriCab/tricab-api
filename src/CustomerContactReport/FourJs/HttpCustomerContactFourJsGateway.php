@@ -28,6 +28,8 @@ final class HttpCustomerContactFourJsGateway implements CustomerContactFourJsGat
         if (!in_array($scheme, ['http', 'https'], true)) {
             throw new FourJsUnavailable('4JS is not configured.');
         }
+        // Runtime guard for callers passing arbitrary strings; the interface types $type as a string.
+        // @phpstan-ignore function.alreadyNarrowedType
         if (!in_array($type, ['ORDOCR', 'INVOCR'], true) || preg_match('/^\d{1,12}$/', $ref) !== 1) {
             throw new FourJsUnavailable('Invalid 4JS request.');
         }

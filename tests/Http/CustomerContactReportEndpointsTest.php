@@ -324,6 +324,7 @@ final class CustomerContactReportEndpointsTest extends TestCase
             'valueExGst' => '100.00',
         ]));
         $id = $created['publicId'];
+        self::assertIsString($id);
         self::assertSame('110.00', $created['creditTotal']);
 
         $saved = $app->handle($this->json('PATCH', '/api/v1/customer-contacts/' . $id, [

@@ -217,6 +217,8 @@ final class CustomerContactReportApprovalEndpointsTest extends TestCase
     /**
      * Seeds an old-style pending rework row ("alex" or "thilanh" as approver, the other as requester).
      * Returns its row version.
+     *
+     * @param App<ContainerInterface> $app
      */
     private function seedRework(
         App $app,

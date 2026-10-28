@@ -14,9 +14,9 @@ final class CustomerContactReportDecimal
     {
         $half = '0.' . str_repeat('0', $scale) . '5';
 
-        return bccomp($value, '0', 12) >= 0
-            ? bcadd($value, $half, $scale)
-            : bcsub($value, $half, $scale);
+        return self::cmp($value, '0', 12) >= 0
+            ? self::add($value, $half, $scale)
+            : self::sub($value, $half, $scale);
     }
 
     public static function money(string $value): string
@@ -26,7 +26,7 @@ final class CustomerContactReportDecimal
 
     public static function min(string $a, string $b): string
     {
-        return bccomp($a, $b, 6) <= 0 ? $a : $b;
+        return self::cmp($a, $b, 6) <= 0 ? $a : $b;
     }
 
     public static function isNumeric(mixed $value): bool
@@ -40,8 +40,42 @@ final class CustomerContactReportDecimal
 
     public static function normalise(mixed $value): string
     {
-        $text = is_string($value) ? trim($value) : (string) $value;
+        $text = is_string($value) ? trim($value) : (is_scalar($value) ? (string) $value : '');
 
         return str_replace(',', '', $text);
+    }
+
+    public static function add(string $a, string $b, int $scale): string
+    {
+        return bcadd(self::num($a), self::num($b), $scale);
+    }
+
+    public static function sub(string $a, string $b, int $scale): string
+    {
+        return bcsub(self::num($a), self::num($b), $scale);
+    }
+
+    public static function mul(string $a, string $b, int $scale): string
+    {
+        return bcmul(self::num($a), self::num($b), $scale);
+    }
+
+    public static function cmp(string $a, string $b, int $scale): int
+    {
+        return bccomp(self::num($a), self::num($b), $scale);
+    }
+
+    /**
+     * Same acceptance as bcmath (it throws ValueError on anything else).
+     *
+     * @return numeric-string
+     */
+    private static function num(string $value): string
+    {
+        if (!is_numeric($value) || preg_match('/^[+-]?(\d+(\.\d*)?|\.\d+)$/', $value) !== 1) {
+            throw new \ValueError('Value is not a well-formed numeric string: ' . $value);
+        }
+
+        return $value;
     }
 }

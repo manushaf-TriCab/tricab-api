@@ -21,6 +21,7 @@ final class FileExpenseSchedulerRunStore implements ExpenseSchedulerRunStore
         rename($tmp, $path);
     }
 
+    /** @return array<string, mixed>|null */
     public function last(string $job): ?array
     {
         $path = $this->directory . '/last-run-' . $job . '.json';
@@ -29,6 +30,7 @@ final class FileExpenseSchedulerRunStore implements ExpenseSchedulerRunStore
         }
         $decoded = json_decode((string) file_get_contents($path), true);
 
+        /** @var array<string, mixed>|null $decoded */
         return is_array($decoded) ? $decoded : null;
     }
 }

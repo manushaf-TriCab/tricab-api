@@ -121,7 +121,8 @@ final class CustomerContactReportCreditRoutingTest extends TestCase
         } catch (CustomerContactReportApprovalFailure $failure) {
             self::assertSame(CustomerContactReportApprovalFailure::CONFIGURATION, $failure->errorCode);
         }
-        self::assertSame([], $this->reports->approvalsFor($report->publicId));
+        $none = $this->reports->approvalsFor($report->publicId);
+        self::assertSame([], $none);
     }
 
     public function test_a_credit_request_without_any_total_is_accepted(): void
@@ -182,6 +183,7 @@ final class CustomerContactReportCreditRoutingTest extends TestCase
             gst: null,
             creditTotal: null,
         ));
+        /** @var list<\TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApproval> $loaded */
         $loaded = $this->reports->approvalsFor($report->publicId);
         self::assertCount(1, $loaded);
         self::assertSame('rework', $loaded[0]->kind);

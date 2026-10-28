@@ -50,7 +50,10 @@ final class ExpenseSchedulerRunner
         foreach ($jobs as $job) {
             $result = $this->runOne($job, $purgeApply, $catchUpDays);
             $results[$job] = $result;
-            $exit = max($exit, $result['exitCode']);
+            $code = $result['exitCode'];
+            if (is_int($code)) {
+                $exit = max($exit, $code);
+            }
         }
 
         return ['exitCode' => $exit, 'results' => $results];

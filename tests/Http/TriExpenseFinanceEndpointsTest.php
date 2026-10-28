@@ -131,7 +131,7 @@ final class TriExpenseFinanceEndpointsTest extends TestCase
                 ->withHeader('X-Dev-Entra-Subject', $world['finance']['subject'])
                 ->withHeader('X-Dev-Entra-Email', $world['finance']['email']),
         );
-        $items = static fn ($r): array => Payload::list(Payload::obj(TestAppFactory::json($r)['data'])['items']);
+        $items = static fn (\Psr\Http\Message\ResponseInterface $r): array => Payload::list(Payload::obj(TestAppFactory::json($r)['data'])['items']);
 
         self::assertCount(2, $items($get('')));
         self::assertCount(1, $items($get('?action=period_closed')));

@@ -118,7 +118,7 @@ final class CustomerContactReportOrdersAndAmendTest extends TestCase
                     Calc::calculate($type, [], $typed, false, true, 'M');
                     self::fail($type . ' accepted no amount.');
                 } catch (InvalidCustomerContactReportValue) {
-                    self::assertTrue(true);
+                    $this->addToAssertionCount(1);
                 }
             }
         }
@@ -223,7 +223,7 @@ final class CustomerContactReportOrdersAndAmendTest extends TestCase
                 $this->create->execute($this->raiser(), $this->body([$field => '1.00']));
                 self::fail($field . ' accepted.');
             } catch (CustomerContactReportClientFieldRejected) {
-                self::assertTrue(true);
+                $this->addToAssertionCount(1);
             }
         }
     }
@@ -279,7 +279,7 @@ final class CustomerContactReportOrdersAndAmendTest extends TestCase
                 $this->update->execute($this->raiser(), $report->publicId, ['rowVersion' => $report->rowVersion, $field => $value]);
                 self::fail($field . ' accepted.');
             } catch (CustomerContactReportClientFieldRejected) {
-                self::assertTrue(true);
+                $this->addToAssertionCount(1);
             }
         }
     }
@@ -292,7 +292,7 @@ final class CustomerContactReportOrdersAndAmendTest extends TestCase
             $this->update->execute($this->raiser(), $report->publicId, ['rowVersion' => $report->rowVersion, 'description' => 'Second']);
             self::fail('Stale write accepted.');
         } catch (CustomerContactReportConflict) {
-            self::assertTrue(true);
+            $this->addToAssertionCount(1);
         }
         $after = $this->reports->findVisible(
             \TriCab\Core\CustomerContactReport\Domain\ValueObject\CustomerContactReportPublicId::fromString($report->publicId),
@@ -449,12 +449,13 @@ final class CustomerContactReportOrdersAndAmendTest extends TestCase
             $action();
             self::fail('Expected access to be denied.');
         } catch (CustomerContactReportAccessDenied) {
-            self::assertTrue(true);
+            $this->addToAssertionCount(1);
         } catch (\TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportNotFound $e) {
             self::assertTrue($notFoundToo);
         }
     }
 
+    /** @param list<string> $fields */
     private static function rec(string $tag, array $fields): string
     {
         return ".RER.$tag\n" . count($fields) . "\n" . implode("\n", $fields) . "\n";
@@ -508,7 +509,7 @@ final class FakeFourJs implements CustomerContactFourJsGateway
 {
     public string $order = 'error not found';
 
-    /** @var array<string, string> */
+    /** @var array<array-key, string> */
     public array $invoices = [];
 
     public bool $down = false;

@@ -1285,7 +1285,7 @@ SQL,
                 } elseif ($kind === 'blankNull' && $value === '') {
                     $params[$name] = null;
                 } else {
-                    $params[$name] = $value === null ? null : (string) $value;
+                    $params[$name] = is_scalar($value) || $value instanceof \Stringable ? (string) $value : null;
                 }
             }
             $this->updateWorkflow($update->publicId, $update->expectedRowVersion, $params, 'UPDATE [cc_report].[Reports]

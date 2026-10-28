@@ -31,9 +31,4 @@ final class CustomerContactReportMoneyTest extends TestCase
             self::assertInstanceOf(InvalidCustomerContactReportValue::class, $rejected, $raw . ' was accepted.');
         }
     }
-
-    private function money(string $raw): CustomerContactReportMoney
-    {
-        return CustomerContactReportMoney::fromDecimal($raw, 'creditTotal');
-    }
 }

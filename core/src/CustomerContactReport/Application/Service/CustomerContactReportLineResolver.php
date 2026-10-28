@@ -95,7 +95,7 @@ final class CustomerContactReportLineResolver
         $qty = $line->qty;
         if (array_key_exists('creditQty', $ask) && Dec::isNumeric($ask['creditQty'])) {
             $want = Dec::normalise($ask['creditQty']);
-            if (bccomp($want, '0', 6) <= 0 || bccomp($want, $line->qty, 6) > 0) {
+            if (Dec::cmp($want, '0', 6) <= 0 || Dec::cmp($want, $line->qty, 6) > 0) {
                 $capped = true;
             } else {
                 $qty = $want;
@@ -105,17 +105,17 @@ final class CustomerContactReportLineResolver
         $rate = $line->unitPrice;
         if (array_key_exists('creditRate', $ask) && Dec::isNumeric($ask['creditRate'])) {
             $want = Dec::normalise($ask['creditRate']);
-            if (bccomp($want, '0', 6) < 0 || bccomp($want, bcadd($line->unitPrice, '0.00005', 6), 6) > 0) {
+            if (Dec::cmp($want, '0', 6) < 0 || Dec::cmp($want, Dec::add($line->unitPrice, '0.00005', 6), 6) > 0) {
                 $capped = true;
             } else {
                 $rate = $want;
             }
         }
 
-        $net = Dec::money(bcmul($qty, $rate, 8));
+        $net = Dec::money(Dec::mul($qty, $rate, 8));
         if (array_key_exists('creditNet', $ask) && Dec::isNumeric($ask['creditNet'])) {
             $want = Dec::normalise($ask['creditNet']);
-            if (bccomp($want, '0', 6) >= 0 && bccomp($want, bcadd($line->net, '0.005', 6), 6) <= 0) {
+            if (Dec::cmp($want, '0', 6) >= 0 && Dec::cmp($want, Dec::add($line->net, '0.005', 6), 6) <= 0) {
                 $net = Dec::money($want);
             } else {
                 $capped = true;

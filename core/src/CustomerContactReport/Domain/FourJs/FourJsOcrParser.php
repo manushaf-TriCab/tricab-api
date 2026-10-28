@@ -28,7 +28,7 @@ final class FourJsOcrParser
             }
             $n = (int) trim($lines[$i + 1] ?? '0');
             $values = array_map(self::text(...), array_slice($lines, $i + 2, max(0, $n)));
-            $out[] = ['tag' => $match[1], 'f' => array_values($values)];
+            $out[] = ['tag' => $match[1], 'f' => $values];
             $i += 2 + max(0, $n);
         }
 
@@ -42,7 +42,7 @@ final class FourJsOcrParser
         if ($header === []) {
             return null;
         }
-        $orderNo = self::digits($header[0] ?? '');
+        $orderNo = self::digits($header[0]);
 
         return new FourJsDocument(
             type: 'order',
@@ -66,7 +66,7 @@ final class FourJsOcrParser
         if ($header === []) {
             return null;
         }
-        $invoiceNo = self::digits($header[0] ?? '');
+        $invoiceNo = self::digits($header[0]);
         $orderNo = strlen($invoiceNo) > 2 ? substr($invoiceNo, 0, -2) : $invoiceNo;
         $tax = self::one($recs, 'S019');
         $contact = self::one($recs, 'S020')[1] ?? '';
@@ -132,7 +132,7 @@ final class FourJsOcrParser
         foreach ($recs as $record) {
             $f = $record['f'];
             if ($record['tag'] === 'V4204' && ($f[3] ?? '') !== '') {
-                $clean[(int) ($f[1] ?? 0)] = $f[3];
+                $clean[(int) ($f[1])] = $f[3];
             }
             if ($record['tag'] === 'V4203') {
                 $parts = array_filter(

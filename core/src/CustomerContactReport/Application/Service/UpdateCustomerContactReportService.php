@@ -274,13 +274,23 @@ final class UpdateCustomerContactReportService
         return new CustomerContactReportSaveResult($outcome->report, $warnings, $outcome->creditReset);
     }
 
+    private static function scalarText(mixed $value): string
+    {
+        return is_scalar($value) ? (string) $value : '';
+    }
+
+    private static function scalarFloat(mixed $value): float
+    {
+        return is_numeric($value) ? (float) $value : 0.0;
+    }
+
     /**
      * @param array<string, mixed> $changes
      */
     private static function creditDiffers(\TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportDetails $report, array $changes): bool
     {
         foreach (['creditRequired', 'creditType', 'restockingFeeApplies', 'addGst'] as $field) {
-            if (trim((string) ($report->{$field} ?? '')) !== trim((string) ($changes[$field] ?? ''))) {
+            if (trim(self::scalarText($report->{$field} ?? '')) !== trim(self::scalarText($changes[$field] ?? ''))) {
                 return true;
             }
         }
@@ -293,7 +303,7 @@ final class UpdateCustomerContactReportService
                 }
                 continue;
             }
-            if (abs((float) $old - (float) $new) > 0.004) {
+            if (abs(self::scalarFloat($old) - self::scalarFloat($new)) > 0.004) {
                 return true;
             }
         }

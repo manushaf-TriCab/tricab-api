@@ -70,7 +70,9 @@ final class ExpenseSchedulerRunnerTest extends TestCase
             self::assertSame(0, $out['exitCode']);
         }
         self::assertCount(2, $this->notifier->sent, 'two managers, one mail each, despite four runs');
-        self::assertSame(2, $this->store->last('digest')['alreadySent']);
+        $lastDigest = $this->store->last('digest');
+        self::assertIsArray($lastDigest);
+        self::assertSame(2, $lastDigest['alreadySent'] ?? null);
     }
 
     public function test_dayOneIsMelbourneNotUtc(): void
@@ -148,7 +150,8 @@ final class ExpenseSchedulerRunnerTest extends TestCase
         $b = new FileExpenseSchedulerLock($dir);
         $release = $a->acquire('digest');
         self::assertNotNull($release);
-        self::assertNull($b->acquire('digest'));
+        $blocked = $b->acquire('digest');
+        self::assertNull($blocked);
         self::assertNotNull($b->acquire('purge'), 'locks are per job');
         $release();
         $again = $b->acquire('digest');
@@ -190,13 +193,15 @@ final class ExpenseSchedulerRunnerTest extends TestCase
     {
         $this->runner('2026-09-01T00:00:00Z')->run(['digest']);
         self::assertCount(1, $this->logs);
+        /** @var array<string, mixed> $line */
         $line = json_decode(json_encode($this->logs[0], JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
         self::assertSame('expense_scheduler', $line['event']);
         self::assertSame('digest', $line['job']);
         self::assertSame('ok', $line['status']);
         self::assertSame('2026-09', $line['periodKey']);
         $last = $this->store->last('digest');
-        self::assertSame('ok', $last['status']);
+        self::assertIsArray($last);
+        self::assertSame('ok', $last['status'] ?? null);
         self::assertStringNotContainsString('tricab.com', json_encode([$line, $last], JSON_THROW_ON_ERROR));
     }
 

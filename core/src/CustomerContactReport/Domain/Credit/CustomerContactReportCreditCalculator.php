@@ -49,11 +49,11 @@ final class CustomerContactReportCreditCalculator
         $defaultRate = (strtoupper($currency) === 'NZD' || $location === 'C') ? self::RATE_NZ : self::RATE_AU;
 
         if ($creditType === CustomerContactReportCreditType::OVERCHARGED) {
-            if ($typed === null || bccomp($typed, '0', 2) <= 0) {
+            if ($typed === null || Dec::cmp($typed, '0', 2) <= 0) {
                 throw InvalidCustomerContactReportValue::for('valueExGst', 'must be greater than zero for an overcharge credit.');
             }
             $rate = self::linesRate($lines) ?? $defaultRate;
-            $gst = $addGst ? Dec::money(bcmul($typed, $rate, 8)) : '0.00';
+            $gst = $addGst ? Dec::money(Dec::mul($typed, $rate, 8)) : '0.00';
 
             return self::figures($typed, '0.00', $gst);
         }
@@ -63,17 +63,17 @@ final class CustomerContactReportCreditCalculator
         $gstRaw = '0';
         if ($hasLines) {
             foreach ($lines as $line) {
-                $value = bcadd($value, $line->creditNet, 2);
-                $gstRaw = bcadd($gstRaw, bcmul($line->creditNet, $line->gstRate ?? $defaultRate, 8), 8);
+                $value = Dec::add($value, $line->creditNet, 2);
+                $gstRaw = Dec::add($gstRaw, Dec::mul($line->creditNet, $line->gstRate ?? $defaultRate, 8), 8);
             }
         } elseif ($typed !== null) {
             $value = $typed;
-            $gstRaw = bcmul($typed, $defaultRate, 8);
+            $gstRaw = Dec::mul($typed, $defaultRate, 8);
         }
-        if (bccomp($value, '0', 2) <= 0) {
+        if (Dec::cmp($value, '0', 2) <= 0) {
             throw InvalidCustomerContactReportValue::for('valueExGst', 'must be greater than zero for a returned goods credit.');
         }
-        $restocking = $restockingFeeApplies ? Dec::money(bcmul($value, self::RESTOCKING_RATE, 8)) : '0.00';
+        $restocking = $restockingFeeApplies ? Dec::money(Dec::mul($value, self::RESTOCKING_RATE, 8)) : '0.00';
 
         return self::figures($value, $restocking, Dec::money($gstRaw));
     }
@@ -88,7 +88,7 @@ final class CustomerContactReportCreditCalculator
             throw InvalidCustomerContactReportValue::for($field, 'exceeds DECIMAL(18,2).');
         }
 
-        return bcadd($value, '0', 2);
+        return Dec::add($value, '0', 2);
     }
 
     /**
@@ -99,7 +99,7 @@ final class CustomerContactReportCreditCalculator
     private static function linesRate(array $lines): ?string
     {
         foreach ($lines as $line) {
-            if ($line->gstRate !== null && bccomp($line->gstRate, '0', 4) > 0) {
+            if ($line->gstRate !== null && Dec::cmp($line->gstRate, '0', 4) > 0) {
                 return $line->gstRate;
             }
         }
@@ -109,14 +109,14 @@ final class CustomerContactReportCreditCalculator
 
     private static function figures(string $value, string $restocking, string $gst): CustomerContactReportCreditFigures
     {
-        $sub = bcsub($value, $restocking, 2);
+        $sub = Dec::sub($value, $restocking, 2);
 
         return new CustomerContactReportCreditFigures(
-            valueExGst: bcadd($value, '0', 2),
+            valueExGst: Dec::add($value, '0', 2),
             restockingAmount: $restocking,
             subTotal: $sub,
             gst: $gst,
-            creditTotal: bcadd($sub, $gst, 2),
+            creditTotal: Dec::add($sub, $gst, 2),
         );
     }
 }

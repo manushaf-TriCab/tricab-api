@@ -97,6 +97,9 @@ final readonly class CustomerContactReportDetails
      */
     public function withChanges(string $rowVersion, DateTimeImmutable $updatedAtUtc, array $changes): self
     {
+        // Keys are constructor property names; the spread of a string-keyed array of mixed
+        // cannot be typed statically (values come from get_object_vars of this same class).
+        // @phpstan-ignore argument.type
         return new self(...array_merge(get_object_vars($this), $changes, [
             'rowVersion' => $rowVersion,
             'updatedAtUtc' => $updatedAtUtc,

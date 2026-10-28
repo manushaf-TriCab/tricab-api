@@ -20,7 +20,6 @@ final class ExportCustomerContactReportsAction
     public function __construct(
         private readonly ExportCustomerContactReportsService $export,
         private readonly CustomerContactReportErrorMapper $errors,
-        private readonly \TriCab\Api\Http\Response\JsonResponder $responder,
     ) {
     }
 
