@@ -26,8 +26,18 @@ final readonly class QuoteOrderVisibilityScope
     ) {
     }
 
+    /**
+     * The only scope that sees every customer. Anything else is limited to
+     * allowedCustomerCodes, so a scope built without a positive staff decision
+     * fails closed.
+     */
+    public function isUnrestricted(): bool
+    {
+        return $this->staffSearchAll && !$this->isCustomerPortalScoped;
+    }
+
     public function forcesEmptyResults(): bool
     {
-        return $this->isCustomerPortalScoped && $this->allowedCustomerCodes === [];
+        return !$this->isUnrestricted() && $this->allowedCustomerCodes === [];
     }
 }

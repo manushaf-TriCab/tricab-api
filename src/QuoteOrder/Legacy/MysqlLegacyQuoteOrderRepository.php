@@ -149,7 +149,7 @@ final class MysqlLegacyQuoteOrderRepository implements QuoteOrderRepository
 
         $quoteId = LegacyRowValue::string($rows[0]['quote_id'] ?? null);
         $quote = $quoteId !== '' ? $this->findQuoteById($quoteId, $scope) : null;
-        if ($quote === null && $scope->isCustomerPortalScoped) {
+        if ($quote === null && !$scope->isUnrestricted()) {
             return null;
         }
 
@@ -434,7 +434,7 @@ final class MysqlLegacyQuoteOrderRepository implements QuoteOrderRepository
      */
     private function visibilitySql(QuoteOrderVisibilityScope $scope, string $custAlias): array
     {
-        if (!$scope->isCustomerPortalScoped) {
+        if ($scope->isUnrestricted()) {
             return ['', []];
         }
 

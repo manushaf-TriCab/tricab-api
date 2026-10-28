@@ -218,11 +218,7 @@ final class InMemoryQuoteOrderRepository implements QuoteOrderRepository
 
     private function visibleCustomer(QuoteOrderVisibilityScope $scope, ?string $customerCode): bool
     {
-        if ($scope->staffSearchAll && !$scope->isCustomerPortalScoped) {
-            return true;
-        }
-
-        if (!$scope->isCustomerPortalScoped) {
+        if ($scope->isUnrestricted()) {
             return true;
         }
 

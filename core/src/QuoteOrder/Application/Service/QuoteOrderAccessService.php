@@ -17,9 +17,11 @@ use TriCab\Core\QuoteOrder\Module;
  * - Requires QUOTE.READ (never trust client filters alone).
  * - Customer/portal: only mapped CustomerCode values (Azure Customers.CustomerCode
  *   = legacy tc.cust.code). Empty mapping → empty results / not found.
- * - ADMINISTRATOR + QUOTE.READ: staffSearchAll (management-equivalent).
- * - EMPLOYEE + QUOTE.READ: staffSearchAll until trusted staff region/territory
- *   assignment exists in the new identity model (documented PARTIAL parity).
+ * - Staff (StaffEligibilityPolicy) + QUOTE.READ: staffSearchAll until trusted
+ *   staff region/territory assignment exists in the new identity model
+ *   (documented PARTIAL parity). A customer-oriented role disqualifies staff.
+ * - Every other actor is portal scoped, even with no customer links, so a
+ *   missing or empty customer context yields nothing rather than everything.
  * - Client region/territory/representative filters never expand authorization.
  */
 final class QuoteOrderAccessService
@@ -35,9 +37,9 @@ final class QuoteOrderAccessService
     {
         $this->requireRead($actor);
 
-        $isAdmin = $actor->isPlatformAdministrator();
         $isStaff = $actor->isStaff();
-        $isCustomerPortal = $actor->isCustomerPortalScoped();
+        $isAdmin = $actor->isPlatformAdministrator();
+        $isCustomerPortal = !$isStaff;
 
         $codes = [];
         foreach ($actor->allowedCustomerCodes as $code) {
@@ -49,7 +51,7 @@ final class QuoteOrderAccessService
 
         // No QUOTE.READ_ALL in catalog. Broader staff scope uses role + QUOTE.READ.
         // Territory/region staff assignment is not on identity.Users — cannot invent.
-        $staffSearchAll = !$isCustomerPortal && ($isAdmin || $isStaff);
+        $staffSearchAll = $isStaff;
 
         return new QuoteOrderVisibilityScope(
             canSearch: true,
@@ -69,7 +71,7 @@ final class QuoteOrderAccessService
         QuoteOrderSearchCriteria $criteria,
         QuoteOrderVisibilityScope $scope,
     ): QuoteOrderSearchCriteria {
-        if (!$scope->isCustomerPortalScoped) {
+        if ($scope->isUnrestricted()) {
             return $criteria;
         }
 
@@ -79,7 +81,7 @@ final class QuoteOrderAccessService
         }
 
         if ($allowed === []) {
-            return $criteria;
+            return $this->unauthorizedCriteria($criteria);
         }
 
         $requested = $criteria->customerCode;
@@ -101,17 +103,7 @@ final class QuoteOrderAccessService
 
         if ($matched === []) {
             // Requested customerCode outside authorized set → empty via impossible code.
-            return new QuoteOrderSearchCriteria(
-                page: $criteria->page,
-                pageSize: $criteria->pageSize,
-                reference: $criteria->reference,
-                customerCode: '__UNAUTHORIZED__',
-                representative: $criteria->representative,
-                from: $criteria->from,
-                to: $criteria->to,
-                type: $criteria->type,
-                statusCode: $criteria->statusCode,
-            );
+            return $this->unauthorizedCriteria($criteria);
         }
 
         // Keep the requested prefix only if it still sits inside authorized codes.
@@ -120,11 +112,7 @@ final class QuoteOrderAccessService
 
     public function assertCanViewCustomerCode(QuoteOrderVisibilityScope $scope, ?string $customerCode): void
     {
-        if ($scope->staffSearchAll && !$scope->isCustomerPortalScoped) {
-            return;
-        }
-
-        if (!$scope->isCustomerPortalScoped) {
+        if ($scope->isUnrestricted()) {
             return;
         }
 
@@ -155,5 +143,20 @@ final class QuoteOrderAccessService
         } catch (QuoteOrderAccessDenied) {
             return false;
         }
+    }
+
+    private function unauthorizedCriteria(QuoteOrderSearchCriteria $criteria): QuoteOrderSearchCriteria
+    {
+        return new QuoteOrderSearchCriteria(
+            page: $criteria->page,
+            pageSize: $criteria->pageSize,
+            reference: $criteria->reference,
+            customerCode: '__UNAUTHORIZED__',
+            representative: $criteria->representative,
+            from: $criteria->from,
+            to: $criteria->to,
+            type: $criteria->type,
+            statusCode: $criteria->statusCode,
+        );
     }
 }
