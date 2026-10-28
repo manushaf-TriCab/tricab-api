@@ -22,7 +22,7 @@ final class CacheLivePresenceStore implements LivePresenceStore
     public function touch(int $userId, bool $isStaff, string $platform, string $module, DateTimeImmutable $atUtc): void
     {
         $users = $this->users();
-        $users[(string) $userId] = [
+        $users[$userId] = [
             'isStaff' => $isStaff,
             'platform' => $platform,
             'module' => $module,
@@ -34,7 +34,7 @@ final class CacheLivePresenceStore implements LivePresenceStore
     public function forget(int $userId): void
     {
         $users = $this->users();
-        unset($users[(string) $userId]);
+        unset($users[$userId]);
         $this->cache->set(self::KEY, $users, ActivityAnalyticsService::LIVE_WINDOW_SECONDS);
     }
 
@@ -55,13 +55,35 @@ final class CacheLivePresenceStore implements LivePresenceStore
     }
 
     /**
-     * @return array<string, array{isStaff: bool, platform: string, module: string, at: string}>
+     * @return array<int, array{isStaff: bool, platform: string, module: string, at: string}>
      */
     private function users(): array
     {
         $stored = $this->cache->get(self::KEY);
+        if (!is_array($stored)) {
+            return [];
+        }
 
-        return is_array($stored) ? $stored : [];
+        $users = [];
+        foreach ($stored as $userId => $row) {
+            if (!is_numeric($userId) || !is_array($row)) {
+                continue;
+            }
+            $at = $row['at'] ?? null;
+            $platform = $row['platform'] ?? null;
+            $module = $row['module'] ?? null;
+            if (!is_string($at) || !is_string($platform) || !is_string($module)) {
+                continue;
+            }
+            $users[(int) $userId] = [
+                'isStaff' => (bool) ($row['isStaff'] ?? false),
+                'platform' => $platform,
+                'module' => $module,
+                'at' => $at,
+            ];
+        }
+
+        return $users;
     }
 
     /**
@@ -72,17 +94,9 @@ final class CacheLivePresenceStore implements LivePresenceStore
         $cutoff = $since->getTimestamp();
         $rows = [];
         foreach ($this->users() as $row) {
-            if (!is_array($row) || !isset($row['at'], $row['platform'], $row['module'])) {
-                continue;
-            }
-            $at = strtotime((string) $row['at']);
+            $at = strtotime($row['at']);
             if ($at !== false && $at >= $cutoff) {
-                $rows[] = [
-                    'isStaff' => (bool) ($row['isStaff'] ?? false),
-                    'platform' => (string) $row['platform'],
-                    'module' => (string) $row['module'],
-                    'at' => (string) $row['at'],
-                ];
+                $rows[] = $row;
             }
         }
 

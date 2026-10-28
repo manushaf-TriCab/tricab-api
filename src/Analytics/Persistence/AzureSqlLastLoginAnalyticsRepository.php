@@ -119,9 +119,10 @@ SQL;
     private static function row(array $row): array
     {
         $totals = self::totals($row);
+        $bucket = $row['bucket'] ?? '';
 
         return [
-            'bucket' => trim((string) ($row['bucket'] ?? '')),
+            'bucket' => trim(is_string($bucket) ? $bucket : ''),
             'web' => null,
             'mobile' => null,
             'total' => $totals['total'],

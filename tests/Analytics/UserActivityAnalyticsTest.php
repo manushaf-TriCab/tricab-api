@@ -323,7 +323,9 @@ final class UserActivityAnalyticsTest extends TestCase
         $live = $analytics->liveUsers()['live'];
         self::assertIsArray($live);
         self::assertSame(['total' => 1, 'web' => 1, 'mobile' => 0, 'staff' => 1, 'customer' => 0], $live);
-        self::assertSame(1, $analytics->activeUsers('30d')['summary']['liveNow']);
+        $summary = $analytics->activeUsers('30d')['summary'];
+        self::assertIsArray($summary);
+        self::assertSame(1, $summary['liveNow']);
     }
 
     public function test_history_survives_session_expiry_and_retention_removes_only_old_rows(): void
