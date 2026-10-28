@@ -28,6 +28,8 @@ final class FakeSqlConnection implements SqlConnection
 
     public ?Throwable $failNextWrite = null;
 
+    public ?Throwable $failNextFetch = null;
+
     /**
      * @param list<array<string, mixed>> $rows
      */
@@ -47,6 +49,11 @@ final class FakeSqlConnection implements SqlConnection
     public function fetchAll(string $sql, array $params = []): array
     {
         $this->calls[] = ['sql' => $sql, 'params' => $params];
+        if ($this->failNextFetch !== null) {
+            $error = $this->failNextFetch;
+            $this->failNextFetch = null;
+            throw $error;
+        }
         $this->maybeFailWrite($sql);
 
         if ($this->fetchQueue !== []) {

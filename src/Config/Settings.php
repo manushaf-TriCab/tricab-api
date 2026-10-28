@@ -378,6 +378,8 @@ final readonly class Settings
         public int $triTaskAiTimeoutSeconds = 45,
         /** @var array<string, string> */
         public array $platformAiModels = [],
+        // Web/mobile activity signals for the admin analytics panels. Off by default: nothing is written until approved.
+        public bool $userActivityCollectionEnabled = false,
     ) {
     }
 
@@ -1698,6 +1700,7 @@ final readonly class Settings
             triTaskAiEnabled: self::bool($env, 'TRI_TASK_AI_ENABLED', false),
             triTaskAiModel: trim(self::string($env, 'TRI_TASK_AI_MODEL', '')) ?: $foundryModelDeployment,
             triTaskAiTimeoutSeconds: self::boundedInt($env, 'TRI_TASK_AI_TIMEOUT_SECONDS', 45, 5, 120),
+            userActivityCollectionEnabled: self::bool($env, 'USER_ACTIVITY_COLLECTION_ENABLED', false),
         );
     }
 

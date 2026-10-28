@@ -2413,6 +2413,39 @@ final class ContainerFactory
                         : self::get($container, InMemoryUserManagementStore::class),
                 );
             },
+            \TriCab\Core\Analytics\Infrastructure\InMemoryUserActivityRepository::class => \DI\create(
+                \TriCab\Core\Analytics\Infrastructure\InMemoryUserActivityRepository::class,
+            ),
+            \TriCab\Core\Analytics\Contract\UserActivityRepository::class => static function (Container $container) use ($settings): \TriCab\Core\Analytics\Contract\UserActivityRepository {
+                $store = $settings->usesAzureSqlUserRepository()
+                    ? new \TriCab\Api\Analytics\Persistence\AzureSqlUserActivityRepository(self::get($container, SqlConnection::class))
+                    : self::get($container, \TriCab\Core\Analytics\Infrastructure\InMemoryUserActivityRepository::class);
+
+                return new \TriCab\Api\Analytics\Persistence\CachingUserActivityRepository(
+                    $store,
+                    self::get($container, ApplicationCache::class),
+                    self::get($container, Clock::class),
+                );
+            },
+            \TriCab\Core\Analytics\Contract\ActivityThrottle::class => \DI\autowire(\TriCab\Api\Analytics\CacheActivityThrottle::class),
+            \TriCab\Core\Analytics\Contract\LivePresenceStore::class => \DI\autowire(\TriCab\Api\Analytics\CacheLivePresenceStore::class),
+            \TriCab\Core\Analytics\Application\Service\RecordActivityService::class => \DI\autowire(
+                \TriCab\Core\Analytics\Application\Service\RecordActivityService::class,
+            )->constructorParameter('collectionEnabled', $settings->userActivityCollectionEnabled)
+                ->constructorParameter('presence', \DI\get(\TriCab\Core\Analytics\Contract\LivePresenceStore::class)),
+            \TriCab\Core\Analytics\Contract\LastLoginAnalyticsRepository::class => static function (Container $container) use ($settings): \TriCab\Core\Analytics\Contract\LastLoginAnalyticsRepository {
+                return $settings->usesAzureSqlUserRepository()
+                    ? new \TriCab\Api\Analytics\Persistence\AzureSqlLastLoginAnalyticsRepository(self::get($container, SqlConnection::class))
+                    : new \TriCab\Core\Analytics\Infrastructure\InMemoryLastLoginAnalyticsRepository();
+            },
+            \TriCab\Core\Analytics\Application\Service\ActivityAnalyticsService::class => \DI\autowire(
+                \TriCab\Core\Analytics\Application\Service\ActivityAnalyticsService::class,
+            )->constructorParameter('collectionEnabled', $settings->userActivityCollectionEnabled)
+                ->constructorParameter('lastLogin', \DI\get(\TriCab\Core\Analytics\Contract\LastLoginAnalyticsRepository::class))
+                ->constructorParameter('presence', \DI\get(\TriCab\Core\Analytics\Contract\LivePresenceStore::class)),
+            \TriCab\Core\Analytics\Application\Service\PurgeUserActivityService::class => \DI\autowire(
+                \TriCab\Core\Analytics\Application\Service\PurgeUserActivityService::class,
+            ),
             ResolveAuthenticatedUserHandler::class => \DI\autowire(ResolveAuthenticatedUserHandler::class),
             IdentityResolutionService::class => \DI\autowire(IdentityResolutionService::class),
             // tricab/docgen renders with the theme shipped in the package.
