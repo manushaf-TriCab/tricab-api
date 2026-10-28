@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TriCab\Core\QuoteOrder\Application\DTO;
 
+use TriCab\Core\Identity\Domain\Service\StaffEligibilityPolicy;
+
 /**
  * Authenticated actor for Quotes & Orders operations.
  */
@@ -39,6 +41,10 @@ final readonly class QuoteOrderActor
 
     public function isPlatformAdministrator(): bool
     {
+        if (!$this->isStaff()) {
+            return false;
+        }
+
         foreach ($this->roles as $role) {
             if (strcasecmp($role, 'ADMINISTRATOR') === 0) {
                 return true;
@@ -48,28 +54,22 @@ final readonly class QuoteOrderActor
         return false;
     }
 
+    /**
+     * Staff by role under {@see StaffEligibilityPolicy}: a customer-oriented
+     * role disqualifies the actor whatever staff role it also holds.
+     */
     public function isStaff(): bool
     {
-        if ($this->isPlatformAdministrator()) {
-            return true;
-        }
-
-        foreach ($this->roles as $role) {
-            $upper = strtoupper($role);
-            if ($upper === 'EMPLOYEE') {
-                return true;
-            }
-        }
-
-        return false;
+        return StaffEligibilityPolicy::isEligible($this->roles);
     }
 
+    /**
+     * Everyone who is not eligible staff is limited to their own linked
+     * customers, including actors with no links at all: missing, disabled or
+     * unresolvable customer context must never read as "not a customer".
+     */
     public function isCustomerPortalScoped(): bool
     {
-        if ($this->isStaff() || $this->isPlatformAdministrator()) {
-            return false;
-        }
-
-        return $this->customerPublicIds !== [];
+        return !$this->isStaff();
     }
 }
