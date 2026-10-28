@@ -9,7 +9,6 @@ use TriCab\Core\Commerce\Domain\Exception\CartNotFound;
 use TriCab\Core\Commerce\Domain\ValueObject\CartLinePublicId;
 use TriCab\Core\Commerce\Domain\ValueObject\CartPricingMode;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
-use TriCab\Core\Product\Application\Pricing\CustomerPricingContext;
 use TriCab\Core\Product\Application\Pricing\CustomerSellPriceStatus;
 use TriCab\Core\Product\Application\Pricing\PricingActorContextResolver;
 use TriCab\Core\Product\Application\Pricing\ResolvePricingActorContextService;
@@ -70,13 +69,7 @@ final class RemoveCartItemService
             throw CartNotFound::forLinePublicId($linePublicId);
         }
 
-        $includeStaff = $context->pricingMode === CustomerPricingContext::MODE_STAFF_SELECTED
-            && (
-                in_array(ResolvePricingActorContextService::PERM_PRICE_AS, $user->permissions, true)
-                || in_array(ResolvePricingActorContextService::PERM_CUSTOMER_READ, $user->permissions, true)
-                || in_array(ResolvePricingActorContextService::PERM_MARGIN_OVERRIDE, $user->permissions, true)
-                || in_array(ResolvePricingActorContextService::PERM_PRICING_MANAGE, $user->permissions, true)
-            );
+        $includeStaff = ResolvePricingActorContextService::isStaffPricingActor($user, $context);
 
         return $this->assembler->toArray($cart, $context, $user, $includeStaff);
     }
