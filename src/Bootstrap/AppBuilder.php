@@ -1770,6 +1770,19 @@ final class AppBuilder
         $app->get($base . '/machine', \TriCab\Api\Http\Action\Conductor\Process\GetMachineAction::class)->add(($require)($gate));
         $app->get($base . '/items', \TriCab\Api\Http\Action\Conductor\Process\ListItemsAction::class)->add(($require)($gate));
         $app->get($base . '/item', \TriCab\Api\Http\Action\Conductor\Process\GetItemAction::class)->add(($require)($gate));
+
+        // Conductor schedule: restock and finite-capacity schedule, from the store built by core/python/conductor_schedule.
+        $schedule = '/api/v1/conductor/schedule';
+        $app->get($schedule . '/run', \TriCab\Api\Http\Action\Conductor\Schedule\GetRunAction::class)->add(($require)($gate));
+        $app->get($schedule . '/restock', \TriCab\Api\Http\Action\Conductor\Schedule\GetRestockAction::class)->add(($require)($gate));
+        $app->get($schedule . '/jobs', \TriCab\Api\Http\Action\Conductor\Schedule\ListJobsAction::class)->add(($require)($gate));
+        $app->get($schedule . '/ops', \TriCab\Api\Http\Action\Conductor\Schedule\ListOpsAction::class)->add(($require)($gate));
+        $app->get($schedule . '/op', \TriCab\Api\Http\Action\Conductor\Schedule\GetOpAction::class)->add(($require)($gate));
+        $app->get($schedule . '/batches', \TriCab\Api\Http\Action\Conductor\Schedule\ListBatchesAction::class)->add(($require)($gate));
+        $app->get($schedule . '/batch', \TriCab\Api\Http\Action\Conductor\Schedule\GetBatchAction::class)->add(($require)($gate));
+        $app->get($schedule . '/machines/load', \TriCab\Api\Http\Action\Conductor\Schedule\GetMachineLoadAction::class)->add(($require)($gate));
+        $app->get($schedule . '/stock', \TriCab\Api\Http\Action\Conductor\Schedule\GetStockAction::class)->add(($require)($gate));
+        $app->get($schedule . '/issues', \TriCab\Api\Http\Action\Conductor\Schedule\ListIssuesAction::class)->add(($require)($gate));
     }
 
     /**

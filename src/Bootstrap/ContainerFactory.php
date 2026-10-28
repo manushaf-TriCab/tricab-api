@@ -3104,6 +3104,21 @@ final class ContainerFactory
             \TriCab\Api\Http\Action\Conductor\Process\ListItemsAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Process\ListItemsAction::class),
             \TriCab\Api\Http\Action\Conductor\Process\GetItemAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Process\GetItemAction::class),
 
+            // Conductor schedule: same pattern, its own lazy repository.
+            \TriCab\Core\Conductor\Schedule\Contract\ConductorScheduleRepository::class => static fn (): \TriCab\Api\Conductor\Schedule\Persistence\SqliteConductorScheduleRepository => \TriCab\Api\Conductor\Schedule\Persistence\SqliteConductorScheduleRepository::fromSettings($settings),
+            \TriCab\Core\Conductor\Schedule\Application\Service\ConductorScheduleQueryService::class => \DI\autowire(\TriCab\Core\Conductor\Schedule\Application\Service\ConductorScheduleQueryService::class),
+            \TriCab\Api\Http\Auth\ConductorScheduleErrorMapper::class => \DI\autowire(\TriCab\Api\Http\Auth\ConductorScheduleErrorMapper::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\GetRunAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\GetRunAction::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\GetRestockAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\GetRestockAction::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\ListJobsAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\ListJobsAction::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\ListOpsAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\ListOpsAction::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\GetOpAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\GetOpAction::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\ListBatchesAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\ListBatchesAction::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\GetBatchAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\GetBatchAction::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\GetMachineLoadAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\GetMachineLoadAction::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\GetStockAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\GetStockAction::class),
+            \TriCab\Api\Http\Action\Conductor\Schedule\ListIssuesAction::class => \DI\autowire(\TriCab\Api\Http\Action\Conductor\Schedule\ListIssuesAction::class),
+
             \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository::class => static function (Container $container): \TriCab\Core\PriceLookup\Contract\PriceLookupPriceRepository {
                 $config = self::get($container, \TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig::class);
                 if (!$config->tcConfigured()) {

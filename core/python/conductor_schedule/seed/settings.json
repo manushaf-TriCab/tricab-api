@@ -1,0 +1,29 @@
+{
+  "refill_weeks": 3,
+  "safety_weeks": 1,
+  "rate_window": "13w",
+  "demand": "r86-order",
+  "r86_min_weeks": 2,
+  "rod_warn_weeks": 8,
+  "yields": { "rod_break": 1.0, "tinning": 1.0, "wire_draw": 1.0, "bunching": 1.0, "conductor": 1.0 },
+  "batch_sizes": {},
+  "min_levels": {},
+  "shifts": {},
+  "efficiency": {},
+  "shutdown": [
+    { "from": "2026-12-19", "to": "2027-01-02", "note": "Christmas shutdown (finding 11, unconfirmed)" }
+  ],
+  "_example_shifts": {
+    "note": "NOT ACTIVE. Inferred from Dynamics job start and finish times for the drawing line; not confirmed by Vineeth. Copy into 'shifts' only when confirmed.",
+    "RB1": { "days": [0, 1, 2, 3], "intervals": [["14:00", "22:00"], ["22:00", "06:00"]] },
+    "TL1": { "days": [0, 1, 2, 3], "intervals": [["14:00", "22:00"], ["22:00", "06:00"]] },
+    "WD3": { "days": [0, 1, 2, 3], "intervals": [["14:00", "22:00"], ["22:00", "06:00"]] },
+    "WD4": { "days": [0, 1, 2, 3], "intervals": [["14:00", "22:00"], ["22:00", "06:00"]] },
+    "WD5": { "days": [0, 1, 2, 3], "intervals": [["14:00", "22:00"], ["22:00", "06:00"]] }
+  },
+  "_efficiency_reference": {
+    "note": "NOT ACTIVE. CableBuilder lists these; Manusha decides whether to apply them.",
+    "RB1": 0.8, "TL1": 0.8, "WD3": 0.8, "WD4": 0.8, "WD5": 0.8, "ST1": 0.8,
+    "BU1": 0.85, "BU2": 0.85, "BU4": 0.85, "BU5": 0.85, "BU6": 0.85, "BU7": 0.85
+  }
+}

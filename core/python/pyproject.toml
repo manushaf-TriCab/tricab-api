@@ -14,13 +14,14 @@ requires-python = ">=3.11"
 # package can be published.
 
 [tool.setuptools]
-packages = ["tricab_cable_rules", "product_finder", "rfq_parser", "cable_routes", "conductor_process"]
+packages = ["tricab_cable_rules", "product_finder", "rfq_parser", "cable_routes", "conductor_process", "conductor_schedule"]
 
 [tool.setuptools.package-data]
 tricab_cable_rules = ["data/cable_rules/*.json", "data/catalog/*"]
 rfq_parser = ["data/*.json"]
 cable_routes = ["schema.sql", "seed/*.csv"]
 conductor_process = ["schema.sql", "seed/*.csv"]
+conductor_schedule = ["schema.sql", "seed/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -371,6 +371,8 @@ final readonly class Settings
         public string $cableRoutesDbPath = 'var/cable-routes/cable-routes.sqlite',
         // Conductor process: the read-only SQLite store built by core/python/conductor_process. Relative paths resolve against the API root.
         public string $conductorProcessDbPath = 'var/conductor/conductor-process.sqlite',
+        // Conductor schedule: the read-only SQLite store built by core/python/conductor_schedule. Relative paths resolve against the API root.
+        public string $conductorScheduleDbPath = 'var/conductor/conductor-schedule.sqlite',
         // Tri-Task "Create with AI": turns a pasted or dictated summary into a draft of tasks and a project. Off by default.
         public bool $triTaskAiEnabled = false,
         // '' reads as FOUNDRY_MODEL_DEPLOYMENT, a deployment known to exist in each environment.
@@ -1695,6 +1697,7 @@ final readonly class Settings
             cablefitResearchWakePath: trim(self::string($env, 'CABLEFIT_RESEARCH_WAKE_PATH', 'var/cablefit-research')) ?: 'var/cablefit-research',
             cableRoutesDbPath: trim(self::string($env, 'CABLE_ROUTES_DB_PATH', 'var/cable-routes/cable-routes.sqlite')) ?: 'var/cable-routes/cable-routes.sqlite',
             conductorProcessDbPath: trim(self::string($env, 'CONDUCTOR_PROCESS_DB_PATH', 'var/conductor/conductor-process.sqlite')) ?: 'var/conductor/conductor-process.sqlite',
+            conductorScheduleDbPath: trim(self::string($env, 'CONDUCTOR_SCHEDULE_DB_PATH', 'var/conductor/conductor-schedule.sqlite')) ?: 'var/conductor/conductor-schedule.sqlite',
             triTaskAiEnabled: self::bool($env, 'TRI_TASK_AI_ENABLED', false),
             triTaskAiModel: trim(self::string($env, 'TRI_TASK_AI_MODEL', '')) ?: $foundryModelDeployment,
             triTaskAiTimeoutSeconds: self::boundedInt($env, 'TRI_TASK_AI_TIMEOUT_SECONDS', 45, 5, 120),
