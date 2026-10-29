@@ -437,6 +437,7 @@ final class AppBuilder
         self::registerQuoteOrderRoutes($app, $container);
         self::registerLogNoteRoutes($app, $container);
         self::registerTelDirectoryRoutes($app, $container);
+        self::registerActivitySignalRoutes($app, $container);
         self::registerPdfCatalogueRoutes($app, $container);
         self::registerPriceLookupRoutes($app, $container);
         self::registerTechnicalRoutes($app, $container);
@@ -1519,6 +1520,10 @@ final class AppBuilder
             ->add(($require)('ACCOUNT.LOGIN'));
         $app->get('/api/v1/admin/dashboard/product-activity', GetAdminDashboardProductActivityAction::class)
             ->add(($require)('PRODUCT.READ'));
+        foreach (['active-users', 'live-users', 'module-activity'] as $analyticsView) {
+            $app->get('/api/v1/admin/analytics/' . $analyticsView, \TriCab\Api\Http\Action\Admin\ActivityAnalyticsAction::class)
+                ->add(($require)(\TriCab\Core\Analytics\Module::PERMISSION_READ));
+        }
 
         $app->get('/api/v1/admin/users', ListUsersAction::class)->add(($require)('USER.READ'));
         $app->get('/api/v1/admin/users/{publicId}', GetUserAction::class)->add(($require)('USER.READ'));
@@ -1733,6 +1738,18 @@ final class AppBuilder
         $require = new RequirePermission($container);
         $app->get('/api/v1/tel-directory', \TriCab\Api\Http\Action\TelDirectory\ListTelDirectoryAction::class)
             ->add(($require)(\TriCab\Core\TelDirectory\Module::PERMISSION_ACCESS));
+    }
+
+    /**
+     * Web and mobile activity signals. Any signed-in user, customers included; the user is taken from authentication.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private static function registerActivitySignalRoutes(App $app, Container $container): void
+    {
+        $require = new RequirePermission($container);
+        $app->post('/api/v1/activity/signals', \TriCab\Api\Http\Action\Analytics\RecordActivitySignalAction::class)
+            ->add(($require)('ACCOUNT.LOGIN'));
     }
 
     /**
