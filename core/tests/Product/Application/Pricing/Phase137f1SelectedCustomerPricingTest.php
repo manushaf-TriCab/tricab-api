@@ -275,7 +275,7 @@ final class Phase137f1SelectedCustomerPricingTest extends TestCase
             emailAddress: 'staff@test.local',
             displayName: 'Staff',
             status: 'active',
-            roles: [],
+            roles: ['EMPLOYEE'],
             permissions: [ResolvePricingActorContextService::PERM_PRICE_AS],
         );
 

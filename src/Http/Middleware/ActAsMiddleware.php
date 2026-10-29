@@ -31,6 +31,7 @@ use TriCab\Core\Identity\Application\Handler\ResolveActAsSessionHandler;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Contract\ActAsSessionRepository;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
+use TriCab\Core\Identity\Domain\Service\StaffEligibilityPolicy;
 use TriCab\Core\Shared\Time\Clock;
 
 /**
@@ -72,8 +73,15 @@ final class ActAsMiddleware implements MiddlewareInterface
             return $handler->handle($request);
         }
 
+        // The caller is judged here and the target by the staff route guard, so
+        // a session opened before the administrator gained a customer role
+        // stops working on the next request.
         $caller = $this->resolveCaller($request);
-        if ($caller === null || !RequirePlatformAdministratorMiddleware::permits($caller, $request)) {
+        if (
+            $caller === null
+            || !StaffEligibilityPolicy::isEligible($caller->roles)
+            || !RequirePlatformAdministratorMiddleware::permits($caller, $request)
+        ) {
             return $this->invalid();
         }
 

@@ -15,6 +15,7 @@ use TriCab\Core\Identity\Application\Exception\IdentityConflict;
 use TriCab\Core\Identity\Application\Exception\UserNotRegistered;
 use TriCab\Core\Identity\Application\Handler\ResolveAuthenticatedUserHandler;
 use TriCab\Core\Identity\Domain\Exception\AuthenticationNotAllowed;
+use TriCab\Core\Identity\Domain\Service\StaffEligibilityPolicy;
 use TriCab\Core\Identity\Domain\ValueObject\ExternalProvider;
 
 /**
@@ -49,6 +50,10 @@ final readonly class AssistantCatalogueVisibilityResolver
             } catch (UserNotRegistered|IdentityConflict|IdentityAmbiguous|AuthenticationNotAllowed) {
                 return AssistantCatalogueVisibility::PUBLIC;
             }
+        }
+
+        if (!StaffEligibilityPolicy::isEligible($user->roles)) {
+            return AssistantCatalogueVisibility::PUBLIC;
         }
 
         foreach ($user->permissions as $permission) {

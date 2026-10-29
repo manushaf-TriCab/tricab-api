@@ -236,13 +236,6 @@ final class AddCartItemService
 
     private function isStaffPricingActor(AuthenticatedUser $user, CustomerPricingContext $context): bool
     {
-        if ($context->pricingMode !== CustomerPricingContext::MODE_STAFF_SELECTED) {
-            return false;
-        }
-
-        return in_array(ResolvePricingActorContextService::PERM_PRICE_AS, $user->permissions, true)
-            || in_array(ResolvePricingActorContextService::PERM_CUSTOMER_READ, $user->permissions, true)
-            || in_array(ResolvePricingActorContextService::PERM_MARGIN_OVERRIDE, $user->permissions, true)
-            || in_array(ResolvePricingActorContextService::PERM_PRICING_MANAGE, $user->permissions, true);
+        return ResolvePricingActorContextService::isStaffPricingActor($user, $context);
     }
 }

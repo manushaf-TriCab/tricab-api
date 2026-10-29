@@ -11,6 +11,7 @@ use TriCab\Api\Http\Auth\ProductManagementErrorMapper;
 use TriCab\Api\Http\Auth\ResolveRequestAuthenticatedUser;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Identity\Application\DTO\AuthenticatedUser;
+use TriCab\Core\Identity\Domain\Service\StaffEligibilityPolicy;
 use TriCab\Core\Product\Application\Pricing\CustomerSellPriceStatus;
 use TriCab\Core\Product\Application\Pricing\CustomerVariantSellPriceDiagnostic;
 use TriCab\Core\Product\Application\Pricing\PricingActorAuthorizationException;
@@ -85,10 +86,7 @@ final class PostCustomerVariantPricingBatchAction
                 $requestedLength = $rawLength;
             }
 
-            $staffDiag = false;
-            if ($user instanceof AuthenticatedUser && in_array('PRODUCT.PRICING.VIEW', $user->permissions, true)) {
-                $staffDiag = ($body['includeDiagnostic'] ?? false) === true;
-            }
+            $staffDiag = self::allowsStaffDiagnostics($user) && ($body['includeDiagnostic'] ?? false) === true;
 
             $items = [];
             foreach ($variantIds as $variantId) {
@@ -139,5 +137,15 @@ final class PostCustomerVariantPricingBatchAction
         } catch (Throwable $exception) {
             return $this->errors->map($exception);
         }
+    }
+
+    /**
+     * Cost diagnostics are for eligible staff holding PRODUCT.PRICING.VIEW only.
+     */
+    public static function allowsStaffDiagnostics(?AuthenticatedUser $user): bool
+    {
+        return $user instanceof AuthenticatedUser
+            && StaffEligibilityPolicy::isEligible($user->roles)
+            && in_array('PRODUCT.PRICING.VIEW', $user->permissions, true);
     }
 }

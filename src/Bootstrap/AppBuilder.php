@@ -77,6 +77,7 @@ use TriCab\Api\Http\Action\Admin\GetProductAuditAction;
 use TriCab\Api\Http\Action\Admin\GetCustomerViewThemeAction;
 use TriCab\Api\Http\Action\Admin\PlatformSettingsAction;
 use TriCab\Api\Http\Middleware\ActAsMiddleware;
+use TriCab\Api\Http\Middleware\CustomerActorStaffRouteGuardMiddleware;
 use TriCab\Api\Http\Middleware\RequirePlatformAdministratorMiddleware;
 use TriCab\Api\Http\Action\Admin\EndActAsAction;
 use TriCab\Api\Http\Action\Admin\ListActAsSessionActionsAction;
@@ -326,6 +327,10 @@ final class AppBuilder
         AppFactory::setContainer($container);
         /** @var App<ContainerInterface> $app */
         $app = AppFactory::create();
+
+        // Innermost global middleware: runs after act-as has attached the effective user,
+        // so customer-facing actors are kept off /api/v1/admin/* before any route permission check.
+        $app->add(new CustomerActorStaffRouteGuardMiddleware($container));
 
         // Added first, so it sits closest to the route: it runs after Bearer/Development
         // authentication and after routing (it needs the matched route), but before any
