@@ -30,7 +30,7 @@ from datetime import date, datetime
 from typing import Any
 
 from .. import registry
-from ..registry import InvalidData, Purpose
+from ..registry import FoundrySpec, InvalidData, Purpose, nullable, strict_object
 
 # `INVOICE_LLM_MODEL`'s default and the payload's `"temperature": 0` in the source.
 MODEL = "google/gemini-2.5-flash"
@@ -555,26 +555,58 @@ def parse_reply_suggest(raw: Any, data: dict[str, Any]) -> dict[str, Any]:
     return {"body": str(fields.get("body") or "").strip()}
 
 
+# --------------------------------------------------------------------------
+# The Claude-on-Foundry setup (plan O4): the same prompts and parsers, the answer constrained by a strict schema
+# --------------------------------------------------------------------------
+
+_TEXT, _NUMBER = nullable({"type": "string"}), nullable({"type": "number"})
+_FOUNDRY_INVOICE_FIELDS = {
+    "invoice_no": _TEXT, "vendor": _TEXT, "company": _TEXT, "vendor_email": _TEXT, "tax_id": _TEXT,
+    "invoice_date": _TEXT, "due_date": _TEXT, "po_number": _TEXT, "currency": _TEXT,
+    "net_amount": _NUMBER, "tax_amount": _NUMBER, "total_amount": _NUMBER,
+}
+FOUNDRY_EXTRACT_SCHEMA = strict_object({
+    **_FOUNDRY_INVOICE_FIELDS, "extraction_confidence": {"type": "number"}, "notes": _TEXT,
+})
+FOUNDRY_CLASSIFY_EXTRACT_SCHEMA = strict_object({
+    "is_invoice": {"type": "boolean"},
+    "classification_reason": {"type": "string"},
+    "classification_confidence": {"type": "number"},
+    **_FOUNDRY_INVOICE_FIELDS,
+    # The source's classification prompt asks for no extraction confidence; the parser reads it as 0.0 when absent.
+    "notes": _TEXT,
+})
+FOUNDRY_DRAFT_SCHEMA = strict_object({"subject": {"type": "string"}, "body": {"type": "string"}})
+FOUNDRY_SUGGEST_SCHEMA = strict_object({"body": {"type": "string"}})
+
+# Reading a document is extraction (low effort); a draft someone may send is worth more thought (medium).
+_FOUNDRY_READ = FoundrySpec(FOUNDRY_EXTRACT_SCHEMA, effort="low", max_tokens=16000)
+_FOUNDRY_CLASSIFY_READ = FoundrySpec(FOUNDRY_CLASSIFY_EXTRACT_SCHEMA, effort="low", max_tokens=16000)
+_FOUNDRY_DRAFT = FoundrySpec(FOUNDRY_DRAFT_SCHEMA, effort="medium")
+_FOUNDRY_SUGGEST = FoundrySpec(FOUNDRY_SUGGEST_SCHEMA, effort="medium")
+
+
 PURPOSES = (
     Purpose(
         "ap_classify_extract", _build_classify_extract, CLASSIFY_EXTRACT_SCHEMA, model=MODEL, temperature=TEMPERATURE,
         response_format="json_object", build_parts=_file_parts, parse=parse_classify_extract,
+        foundry=_FOUNDRY_CLASSIFY_READ,
     ),
     Purpose(
         "ap_extract", _build_extract, EXTRACT_SCHEMA, model=MODEL, temperature=TEMPERATURE,
-        response_format="json_object", build_parts=_file_parts, parse=parse_extract,
+        response_format="json_object", build_parts=_file_parts, parse=parse_extract, foundry=_FOUNDRY_READ,
     ),
     Purpose(
         "ap_vendor_email_draft", _build_vendor_email_draft, DRAFT_SCHEMA, model=MODEL, temperature=TEMPERATURE,
-        response_format="json_object", parse=parse_vendor_email_draft,
+        response_format="json_object", parse=parse_vendor_email_draft, foundry=_FOUNDRY_DRAFT,
     ),
     Purpose(
         "ap_reply_draft", _build_reply_draft, DRAFT_SCHEMA, model=MODEL, temperature=TEMPERATURE,
-        response_format="json_object", parse=parse_reply_draft,
+        response_format="json_object", parse=parse_reply_draft, foundry=_FOUNDRY_DRAFT,
     ),
     Purpose(
         "ap_reply_suggest", _build_reply_suggest, SUGGEST_SCHEMA, model=MODEL, temperature=TEMPERATURE,
-        response_format="json_object", parse=parse_reply_suggest,
+        response_format="json_object", parse=parse_reply_suggest, foundry=_FOUNDRY_SUGGEST,
     ),
 )
 

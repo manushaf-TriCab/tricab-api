@@ -14,6 +14,12 @@ is told it is data (decision D10); the source did not, and this is a deliberate 
 | `ar_reply_draft`  | chat completions              | `google/gemini-2.5-flash`    | `customer_name`, `sender_name`, `sender_email`, `subject`, `body`, `instruction`, `previous_draft` | subject, body |
 | `ar_remittance`   | chat completions + one file   | `google/gemini-2.5-flash`    | `subject`, `sender`, `file{name, content_type, data}`        | the payment header and `line_items` |
 
+Each purpose also has a Claude-on-Foundry setup (plan O4), used only when the provider setting switches it (see
+`provider.provider_for`). The prose, draft and remittance purposes keep their prompts and parsers and gain a strict
+answer schema. `ar_classify` cannot keep its call: Foundry has no Decisions API, so on Foundry it is a chat call
+(`CLASSIFY_PROMPT`) whose answer is read into the Decisions reply shape and handed to the same
+`parse_classification`, so the fallbacks and the 0.80 / 0.50 thresholds are the ones Jev's answers meet.
+
 `categories[]` and `methods[]` are `{value, label, description}`: the Settings lists, which the source read from its
 own database on every call. The decisions criteria are `description` (or `label` when it is empty), as the source's
 `_criteria` did.
@@ -27,7 +33,7 @@ import re
 from typing import Any
 
 from .. import registry
-from ..registry import InvalidData, Purpose
+from ..registry import FoundrySpec, InvalidData, Purpose, nullable, strict_object
 
 JEV_MODEL = "typesafe/jev-1.13"
 PROSE_MODEL = "google/gemini-2.5-flash"
@@ -244,6 +250,70 @@ def parse_classification(response: Any, data: dict[str, Any]) -> dict[str, Any]:
         "classification_confidence": confidence,
         "follow_up_status": status,
     }
+
+
+# The Foundry form of ar_classify: the Decisions API's three questions asked in one prompt, with the options as enums.
+CLASSIFY_PROMPT = """You sort emails that arrive in TriCab's accounts-receivable mailbox.
+
+{data_note}
+
+Email:
+<email>
+{email_state}
+</email>
+
+Answer three questions about this email.
+
+1. category: which accounts-receivable follow-up category it belongs to. The categories, each with what it covers:
+{categories}
+
+2. response_type: which way of responding to it is most appropriate. The options:
+{methods}
+
+3. needs_review_probability: the probability, from 0 to 1, that a human needs to review this email before any
+response is sent.
+
+Choose the category by what accounts receivable is being asked to do, not by who sent the email. When TriCab staff
+write or forward an email that asks accounts receivable to act on something another category covers (a credit, an
+invoice or statement, an order on hold, a payment), use that category. A category for internal threads applies only
+when nothing in the email asks accounts receivable to act.
+
+Also give category_confidence: how sure you are of the category, from 0 to 1.
+"""
+
+
+def _option_lines(options: list[dict[str, str]]) -> str:
+    return "\n".join(f"- {value}: {criteria}" for value, criteria in _criteria(options).items())
+
+
+def _build_classify_prompt(data: dict[str, Any]) -> str:
+    return CLASSIFY_PROMPT.format(
+        data_note=_DATA_NOTE,
+        email_state=_email_state(data),
+        categories=_option_lines(_options(data.get("categories"), "categories")),
+        methods=_option_lines(_options(data.get("methods"), "methods")),
+    )
+
+
+def _classify_foundry_schema(data: dict[str, Any]) -> dict[str, Any]:
+    return strict_object({
+        "category": {"type": "string", "enum": [o["value"] for o in _options(data.get("categories"), "categories")]},
+        "category_confidence": {"type": "number"},
+        "response_type": {"type": "string", "enum": [o["value"] for o in _options(data.get("methods"), "methods")]},
+        "needs_review_probability": {"type": "number"},
+    })
+
+
+def parse_foundry_classification(raw: Any, data: dict[str, Any]) -> dict[str, Any]:
+    """Claude's answer as the Decisions reply `parse_classification` reads, so both providers meet the same rules."""
+    answer = parse_json_reply(raw)
+    return parse_classification({
+        "answers": {
+            "category": {"choice": answer.get("category"), "confidence": answer.get("category_confidence")},
+            "response_type": {"choice": answer.get("response_type")},
+            "needs_review": {"noul": answer.get("needs_review_probability")},
+        },
+    }, data)
 
 
 # --------------------------------------------------------------------------
@@ -484,22 +554,52 @@ def parse_remittance(raw: Any, data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# --------------------------------------------------------------------------
+# The Claude-on-Foundry answer schemas
+# --------------------------------------------------------------------------
+
+_TEXT, _NUMBER = nullable({"type": "string"}), nullable({"type": "number"})
+FOUNDRY_PROSE_SCHEMA = strict_object({
+    "customer_name": {"type": "string"}, "ai_summary": {"type": "string"}, "proposed_response": {"type": "string"},
+})
+FOUNDRY_DRAFT_SCHEMA = strict_object({"subject": {"type": "string"}, "body": {"type": "string"}})
+FOUNDRY_REMITTANCE_SCHEMA = strict_object({
+    "is_remittance": {"type": "boolean"},
+    "payer_name": _TEXT,
+    "payment_date": _TEXT,
+    "payment_reference": _TEXT,
+    "currency": _TEXT,
+    "total_amount": _NUMBER,
+    "line_items": {"type": "array", "items": strict_object({
+        "invoice_number": _TEXT, "invoice_date": _TEXT, "gross_amount": _NUMBER, "discount_amount": _NUMBER,
+        "paid_amount": _NUMBER,
+    })},
+    "extraction_confidence": {"type": "number"},
+    "notes": _TEXT,
+})
+
+
 PURPOSES = (
     Purpose(
         "ar_classify", _build_classify_state, CLASSIFY_SCHEMA, model=JEV_MODEL, temperature=None,
         call="decisions", build_request=_build_classify_request, parse=parse_classification,
+        foundry=FoundrySpec(
+            _classify_foundry_schema, effort="low", build_prompt=_build_classify_prompt,
+            parse=parse_foundry_classification,
+        ),
     ),
     Purpose(
         "ar_prose", _build_prose, PROSE_SCHEMA, model=PROSE_MODEL, temperature=None,
-        response_format="json_object", parse=parse_prose,
+        response_format="json_object", parse=parse_prose, foundry=FoundrySpec(FOUNDRY_PROSE_SCHEMA, effort="medium"),
     ),
     Purpose(
         "ar_reply_draft", _build_reply_draft, DRAFT_SCHEMA, model=PROSE_MODEL, temperature=0.2,
-        response_format="json_object", parse=parse_reply_draft,
+        response_format="json_object", parse=parse_reply_draft, foundry=FoundrySpec(FOUNDRY_DRAFT_SCHEMA, effort="medium"),
     ),
     Purpose(
         "ar_remittance", _build_remittance, REMITTANCE_SCHEMA, model=PROSE_MODEL, temperature=None, timeout_seconds=120,
         response_format="json_object", build_parts=_remittance_parts, parse=parse_remittance,
+        foundry=FoundrySpec(FOUNDRY_REMITTANCE_SCHEMA, effort="low", max_tokens=16000),
     ),
 )
 

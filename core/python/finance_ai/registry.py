@@ -17,9 +17,57 @@ DEFAULT_MODEL = "google/gemini-2.5-flash"
 DEFAULT_TIMEOUT_SECONDS = 60
 MAX_TIMEOUT_SECONDS = 300
 
+# The Foundry deployment a purpose's Claude path uses unless its spec names another (tricab-ai2, managed identity).
+FOUNDRY_DEFAULT_MODEL = "claude-haiku-5-5"
+FOUNDRY_EFFORTS = ("low", "medium", "high", "xhigh", "max")
+
 
 class InvalidData(ValueError):
     """The caller's `data` is not what the purpose takes. The message is safe to show a person."""
+
+
+@dataclass(frozen=True)
+class FoundrySpec:
+    """How a purpose runs on Claude through Microsoft Foundry, beside its OpenRouter setup (plan O4).
+
+    Which provider a call uses is a setting (`provider.provider_for`), and OpenRouter stays the default, so a spec
+    changes nothing until a purpose is switched. Claude takes no temperature (Haiku 5.5 refuses a non-default one);
+    `effort` is how hard it thinks. The answer is constrained by `schema` (`output_config.format`), which follows the
+    structured-output rules (every object `additionalProperties: false`, every property required, nullable as anyOf)
+    and is stricter than the purpose's own `schema`, which `provider.validate` still checks after `parse`.
+    """
+
+    # A JSON Schema, or a builder of one from the caller's data (ar_classify's enums come from the Settings lists).
+    schema: dict[str, Any] | Callable[[dict[str, Any]], dict[str, Any]]
+    effort: str = "low"
+    model: str = FOUNDRY_DEFAULT_MODEL
+    # Room for adaptive thinking as well as the answer: a cut-off answer is a `bad_model_answer`, never a partial one.
+    max_tokens: int = 8000
+    # Overrides for a purpose whose OpenRouter call cannot carry over (ar_classify's Decisions API). None uses the
+    # purpose's own `build_prompt` and `parse`.
+    build_prompt: Callable[[dict[str, Any]], str] | None = None
+    parse: Callable[[Any, dict[str, Any]], dict[str, Any]] | None = None
+    # The Claude-on-Foundry path (plan O4). None means the purpose has none and always runs on OpenRouter.
+    foundry: FoundrySpec | None = None
+
+    def __post_init__(self) -> None:
+        if self.effort not in FOUNDRY_EFFORTS:
+            raise ValueError(f"effort is one of {', '.join(FOUNDRY_EFFORTS)}")
+        if not 1 <= self.max_tokens <= 64_000:
+            raise ValueError("max_tokens must be 1 to 64000")
+
+    def schema_for(self, data: dict[str, Any]) -> dict[str, Any]:
+        return self.schema(data) if callable(self.schema) else self.schema
+
+
+def nullable(schema: dict[str, Any]) -> dict[str, Any]:
+    """A structured-output schema that also allows null."""
+    return {"anyOf": [schema, {"type": "null"}]}
+
+
+def strict_object(properties: dict[str, Any]) -> dict[str, Any]:
+    """A structured-output object: every property required, nothing else allowed."""
+    return {"type": "object", "properties": properties, "required": list(properties), "additionalProperties": False}
 
 
 @dataclass(frozen=True)
@@ -48,6 +96,8 @@ class Purpose:
     # Reads the model reply (chat: the message text; decisions: the decoded response) into the result. Raising
     # ValueError, KeyError, TypeError or IndexError is a `bad_model_answer`. Default: the fenced-JSON reader.
     parse: Callable[[Any, dict[str, Any]], dict[str, Any]] | None = None
+    # The Claude-on-Foundry path (plan O4). None means the purpose has none and always runs on OpenRouter.
+    foundry: FoundrySpec | None = None
 
     def __post_init__(self) -> None:
         if not self.name or not all(ch.islower() or ch.isdigit() or ch in "-_." for ch in self.name):

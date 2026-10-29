@@ -7,6 +7,7 @@ openpyxl        # tricab_cable_rules.data reads the style workbooks
 pdfplumber      # rfq_parser.file_parser: PDF text layer (no OCR)
 python-docx     # rfq_parser.file_parser: .docx
 xlrd            # rfq_parser.xls_convert: legacy .xls
+anthropic>=1.15,<2  # finance_ai: Claude on Foundry (AnthropicFoundry), only for purposes switched to it
 
 # Not here on purpose:
 #   pyodbc / azure-identity — the finder no longer opens Azure SQL at all. It
