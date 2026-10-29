@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\CustomerContactReport\Application\DTO;
 
 use DateTimeImmutable;
+use TriCab\Core\CustomerContactReport\Domain\Credit\CustomerContactReportLine;
 
 final readonly class CustomerContactReportDetails
 {
@@ -75,7 +76,34 @@ final readonly class CustomerContactReportDetails
         public ?string $icarOperatorName,
         public ?string $icarSignedAt,
         public ?string $icarSignatureUrl,
+        public ?string $orderNo = null,
+        public ?string $invoiceNo = null,
+        public ?string $creditType = null,
+        public ?string $quotedAmount = null,
+        public ?string $invoicedAmount = null,
+        public ?string $addGst = null,
+        public ?string $requestedActions = null,
+        /** @var list<CustomerContactReportLine> */
+        public array $lines = [],
     ) {
+    }
+
+    /**
+     * A copy with some properties replaced. Keys are constructor property names,
+     * so every field not named here is carried over, including the order and
+     * line fields added after the workflow methods below were written.
+     *
+     * @param array<string, mixed> $changes
+     */
+    public function withChanges(string $rowVersion, DateTimeImmutable $updatedAtUtc, array $changes): self
+    {
+        // Keys are constructor property names; the spread of a string-keyed array of mixed
+        // cannot be typed statically (values come from get_object_vars of this same class).
+        // @phpstan-ignore argument.type
+        return new self(...array_merge(get_object_vars($this), $changes, [
+            'rowVersion' => $rowVersion,
+            'updatedAtUtc' => $updatedAtUtc,
+        ]));
     }
 
     public function withAssignment(
@@ -158,6 +186,14 @@ final readonly class CustomerContactReportDetails
             icarOperatorName: $this->icarOperatorName,
             icarSignedAt: $this->icarSignedAt,
             icarSignatureUrl: $this->icarSignatureUrl,
+            orderNo: $this->orderNo,
+            invoiceNo: $this->invoiceNo,
+            creditType: $this->creditType,
+            quotedAmount: $this->quotedAmount,
+            invoicedAmount: $this->invoicedAmount,
+            addGst: $this->addGst,
+            requestedActions: $this->requestedActions,
+            lines: $this->lines,
         );
     }
 
@@ -235,6 +271,14 @@ final readonly class CustomerContactReportDetails
             icarOperatorName: $this->icarOperatorName,
             icarSignedAt: $this->icarSignedAt,
             icarSignatureUrl: $this->icarSignatureUrl,
+            orderNo: $this->orderNo,
+            invoiceNo: $this->invoiceNo,
+            creditType: $this->creditType,
+            quotedAmount: $this->quotedAmount,
+            invoicedAmount: $this->invoicedAmount,
+            addGst: $this->addGst,
+            requestedActions: $this->requestedActions,
+            lines: $this->lines,
         );
     }
 
@@ -313,6 +357,14 @@ final readonly class CustomerContactReportDetails
             icarOperatorName: $this->icarOperatorName,
             icarSignedAt: $this->icarSignedAt,
             icarSignatureUrl: $this->icarSignatureUrl,
+            orderNo: $this->orderNo,
+            invoiceNo: $this->invoiceNo,
+            creditType: $this->creditType,
+            quotedAmount: $this->quotedAmount,
+            invoicedAmount: $this->invoicedAmount,
+            addGst: $this->addGst,
+            requestedActions: $this->requestedActions,
+            lines: $this->lines,
         );
     }
 
@@ -388,6 +440,14 @@ final readonly class CustomerContactReportDetails
             icarOperatorName: $clearSignature ? null : $this->icarOperatorName,
             icarSignedAt: $clearSignature ? null : $this->icarSignedAt,
             icarSignatureUrl: $clearSignature ? null : $this->icarSignatureUrl,
+            orderNo: $this->orderNo,
+            invoiceNo: $this->invoiceNo,
+            creditType: $this->creditType,
+            quotedAmount: $this->quotedAmount,
+            invoicedAmount: $this->invoicedAmount,
+            addGst: $this->addGst,
+            requestedActions: $this->requestedActions,
+            lines: $this->lines,
         );
     }
 
@@ -467,6 +527,14 @@ final readonly class CustomerContactReportDetails
             icarOperatorName: $this->icarOperatorName,
             icarSignedAt: $this->icarSignedAt,
             icarSignatureUrl: $this->icarSignatureUrl,
+            orderNo: $this->orderNo,
+            invoiceNo: $this->invoiceNo,
+            creditType: $this->creditType,
+            quotedAmount: $this->quotedAmount,
+            invoicedAmount: $this->invoicedAmount,
+            addGst: $this->addGst,
+            requestedActions: $this->requestedActions,
+            lines: $this->lines,
         );
     }
 
@@ -545,6 +613,14 @@ final readonly class CustomerContactReportDetails
             icarOperatorName: $updated->icarOperatorName,
             icarSignedAt: $updated->icarSignedAt,
             icarSignatureUrl: $updated->icarSignatureUrl,
+            orderNo: $updated->orderNo,
+            invoiceNo: $updated->invoiceNo,
+            creditType: $updated->creditType,
+            quotedAmount: $updated->quotedAmount,
+            invoicedAmount: $updated->invoicedAmount,
+            addGst: $updated->addGst,
+            requestedActions: $updated->requestedActions,
+            lines: $updated->lines,
         );
     }
 
@@ -624,6 +700,14 @@ final readonly class CustomerContactReportDetails
             icarOperatorName: $operatorName,
             icarSignedAt: $signedAt,
             icarSignatureUrl: $signatureUrl,
+            orderNo: $updated->orderNo,
+            invoiceNo: $updated->invoiceNo,
+            creditType: $updated->creditType,
+            quotedAmount: $updated->quotedAmount,
+            invoicedAmount: $updated->invoicedAmount,
+            addGst: $updated->addGst,
+            requestedActions: $updated->requestedActions,
+            lines: $updated->lines,
         );
     }
 }

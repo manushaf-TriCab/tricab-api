@@ -7,14 +7,12 @@ namespace TriCab\Core\CustomerContactReport\Application\Service;
 use DateTimeZone;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApprovalOutcome;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApprovalRequest;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportDetails;
 use TriCab\Core\CustomerContactReport\Application\DTO\ResolvedCustomerContactAssignee;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportApprovalFailure;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportClientFieldRejected;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportNotFound;
-use TriCab\Core\CustomerContactReport\Contract\CustomerContactReportAssigneeDirectory;
-use TriCab\Core\CustomerContactReport\Contract\CustomerContactReportReportingLine;
 use TriCab\Core\CustomerContactReport\Contract\CustomerContactReportRepository;
-use TriCab\Core\CustomerContactReport\Domain\CustomerContactCreditEscalation;
 use TriCab\Core\CustomerContactReport\Domain\CustomerContactReportApprovalSeparation;
 use TriCab\Core\CustomerContactReport\Domain\CustomerContactReportMoney;
 use TriCab\Core\CustomerContactReport\Domain\Exception\InvalidCustomerContactReportValue;
@@ -39,12 +37,11 @@ final class RequestCustomerContactReportApprovalService
         'decidedAt',
         'decidedAtUtc',
         'note',
+        'approver',
     ];
 
     public function __construct(
         private readonly CustomerContactReportRepository $reports,
-        private readonly CustomerContactReportAssigneeDirectory $staff,
-        private readonly CustomerContactReportReportingLine $reportingLine,
         private readonly Clock $clock,
         private readonly ?CustomerContactReportNotifications $notifications = null,
     ) {
@@ -81,7 +78,7 @@ final class RequestCustomerContactReportApprovalService
         $creditTotal = null;
         if ($approvalKind->isCredit()) {
             $figures = $this->creditFigures($payload, $report->creditTotal);
-            $approver = $this->creditApprover($report->createdByEmail, $figures['total'], $payload);
+            $approver = $this->creditApprover($report);
             $writeCreditFigures = $figures['write'];
             $valueExGst = $figures['valueExGst'];
             $restockingAmount = $figures['restockingAmount'];
@@ -89,7 +86,7 @@ final class RequestCustomerContactReportApprovalService
             $gst = $figures['gst'];
             $creditTotal = $figures['creditTotal'];
         } else {
-            $approver = $this->pickedApprover($payload);
+            throw InvalidCustomerContactReportValue::for('kind', 'must be credit.');
         }
         $this->rejectSelfApproval($actor, $approver);
 
@@ -118,7 +115,7 @@ final class RequestCustomerContactReportApprovalService
 
     /**
      * @param array<string, mixed> $payload
-     * @return array{total: CustomerContactReportMoney, write: bool, valueExGst: ?string, restockingAmount: ?string, subTotal: ?string, gst: ?string, creditTotal: ?string}
+     * @return array{total: ?CustomerContactReportMoney, write: bool, valueExGst: ?string, restockingAmount: ?string, subTotal: ?string, gst: ?string, creditTotal: ?string}
      */
     private function creditFigures(array $payload, ?string $storedTotal): array
     {
@@ -138,13 +135,9 @@ final class RequestCustomerContactReportApprovalService
         }
 
         $totalSource = $parsed['creditTotal'] ?? $storedTotal;
-        if ($totalSource === null || trim($totalSource) === '') {
-            throw InvalidCustomerContactReportValue::for('creditTotal', 'is required before a credit can be sent for approval.');
-        }
-        $total = CustomerContactReportMoney::fromDecimal($totalSource, 'creditTotal');
-        if (!$total->isPositive()) {
-            throw InvalidCustomerContactReportValue::for('creditTotal', 'must be greater than zero.');
-        }
+        $total = $totalSource === null || trim($totalSource) === ''
+            ? null
+            : CustomerContactReportMoney::fromDecimal($totalSource, 'creditTotal');
 
         return [
             'total' => $total,
@@ -153,54 +146,32 @@ final class RequestCustomerContactReportApprovalService
             'restockingAmount' => $parsed['restockingAmount'],
             'subTotal' => $parsed['subTotal'],
             'gst' => $parsed['gst'],
-            'creditTotal' => $parsed['creditTotal'] ?? $total->toDecimal(),
+            'creditTotal' => $parsed['creditTotal'] ?? $total?->toDecimal(),
         ];
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * Credit is owned by whoever is assigned the report. Finance (settlement)
+     * is raised when the credit is approved. There is no manager hop and no
+     * amount threshold, matching the live rule since 2026-10-15.
      */
-    private function creditApprover(string $createdByEmail, CustomerContactReportMoney $total, array $payload): ResolvedCustomerContactAssignee
+    private function creditApprover(CustomerContactReportDetails $report): ResolvedCustomerContactAssignee
     {
-        if (!$this->reportingLine->isAvailable()) {
+        if (!in_array($report->status, ['assigned', 'completed'], true)
+            || $report->assignedTo === null
+            || $report->assignedToUserId === null
+        ) {
             throw CustomerContactReportApprovalFailure::configuration(
-                'Credit approval cannot be routed because staff reporting lines are not available.',
+                'A credit can be requested only after the Customer Contact is assigned. The assignee owns the credit.',
             );
         }
 
-        $raiser = strtolower(trim($createdByEmail));
-        $manager = $raiser === '' ? null : $this->reportingLine->managerOf($raiser);
-        if ($manager !== null && CustomerContactCreditEscalation::climbsOneLevel($total)) {
-            $above = $this->reportingLine->managerOf($manager->login);
-            if ($above !== null) {
-                $manager = $above;
-            }
-        }
-        if ($manager !== null) {
-            return $manager;
-        }
-
-        if (!array_key_exists('approver', $payload)) {
-            throw CustomerContactReportApprovalFailure::configuration(
-                'No manager is on file for whoever raised this Customer Contact, so there is nobody to send the credit to.',
-            );
-        }
-
-        return $this->pickedApprover($payload);
-    }
-
-    /**
-     * @param array<string, mixed> $payload
-     */
-    private function pickedApprover(array $payload): ResolvedCustomerContactAssignee
-    {
-        $login = self::requiredString($payload, 'approver');
-        $person = $this->staff->findActiveStaffByLogin($login);
-        if ($person === null) {
-            throw CustomerContactReportApprovalFailure::approverNotFound($login);
-        }
-
-        return $person;
+        return new ResolvedCustomerContactAssignee(
+            $report->assignedToUserId,
+            $report->assignedTo,
+            $report->assignedToName ?? $report->assignedTo,
+            $report->assignedToEmail ?? $report->assignedTo,
+        );
     }
 
     private function rejectSelfApproval(AuthenticatedUser $actor, ResolvedCustomerContactAssignee $approver): void

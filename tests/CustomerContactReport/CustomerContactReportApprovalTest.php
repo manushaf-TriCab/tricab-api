@@ -8,7 +8,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use PHPUnit\Framework\TestCase;
 use TriCab\Api\CustomerContactReport\Identity\IdentityCustomerContactReportAssigneeDirectory;
-use TriCab\Api\CustomerContactReport\Identity\UnavailableCustomerContactReportReportingLine;
 use TriCab\Api\CustomerContactReport\Persistence\InMemoryCustomerContactReportRepository;
 use TriCab\Api\Http\Action\CustomerContactReport\CustomerContactReportDtoSerializer;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
@@ -20,11 +19,9 @@ use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAppro
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportDetails;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportVisibility;
 use TriCab\Core\CustomerContactReport\Application\DTO\NewCustomerContactReport;
-use TriCab\Core\CustomerContactReport\Application\DTO\ResolvedCustomerContactAssignee;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportApprovalFailure;
 use TriCab\Core\CustomerContactReport\Application\Service\DecideCustomerContactReportApprovalService;
 use TriCab\Core\CustomerContactReport\Application\Service\RequestCustomerContactReportApprovalService;
-use TriCab\Core\CustomerContactReport\Contract\CustomerContactReportReportingLine;
 use TriCab\Core\CustomerContactReport\Domain\Exception\InvalidCustomerContactReportValue;
 use TriCab\Core\CustomerContactReport\Module;
 use TriCab\Core\CustomerContactReport\Domain\ValueObject\CustomerContactReportPublicId;
@@ -37,21 +34,23 @@ use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 
 final class CustomerContactReportApprovalTest extends TestCase
 {
-    public function test_rework_request_records_the_caller_and_the_resolved_approver(): void
-    {
-        [$request, $reports] = $this->requestService(new UnavailableCustomerContactReportReportingLine());
-        $report = $this->insert($reports);
+    use AssignsCustomerContactReports;
 
-        $outcome = $request->execute($this->caller(), $report->publicId, 'rework', [
-            'approver' => 'alex@tricab.com',
+    public function test_credit_request_records_the_caller_and_the_assignee_as_approver(): void
+    {
+        [$request, $reports] = $this->services();
+        $report = $this->assigned($reports);
+
+        $outcome = $request->execute($this->caller(), $report->publicId, 'credit', [
+            'creditTotal' => '80.00',
             'rowVersion' => $report->rowVersion,
         ]);
 
-        self::assertSame('submitted', $outcome->report->status);
+        self::assertSame('assigned', $outcome->report->status);
         self::assertSame($report->ccNumber, $outcome->report->ccNumber);
-        self::assertSame(0, $reports->numberSequenceRows());
+        self::assertSame(1, $reports->numberSequenceRows());
         self::assertSame('pending', $outcome->approval->status);
-        self::assertSame('rework', $outcome->approval->kind);
+        self::assertSame('credit', $outcome->approval->kind);
         self::assertSame('alex@tricab.com', $outcome->approval->approver);
         self::assertSame(2, $outcome->approval->approverUserId);
         self::assertSame('Alex Assignee', $outcome->approval->approverName);
@@ -61,19 +60,19 @@ final class CustomerContactReportApprovalTest extends TestCase
         self::assertSame('2026-09-30T01:00:00+00:00', $outcome->approval->requestedAtUtc->format('c'));
         self::assertNull($outcome->approval->decidedAtUtc);
         self::assertNotSame('', $outcome->approval->rowVersion);
+        self::assertSame('80.00', $outcome->report->creditTotal);
     }
 
-    public function test_a_pending_request_can_be_sent_again_and_a_decided_one_cannot(): void
+    public function test_a_pending_credit_can_be_sent_again_and_a_decided_one_cannot(): void
     {
-        [$request, $reports, $decide] = $this->services(new UnavailableCustomerContactReportReportingLine());
-        $report = $this->insert($reports);
-        $first = $request->execute($this->caller(), $report->publicId, 'rework', [
-            'approver' => 'alex@tricab.com',
-            'rowVersion' => $report->rowVersion,
-        ]);
-        $again = $request->execute($this->caller(), $report->publicId, 'rework', [
-            'approver' => 'sam@tricab.com',
-            'rowVersion' => $first->report->rowVersion,
+        [$request, $reports, $decide] = $this->services('accounts@tricab.com');
+        $report = $this->assigned($reports);
+        $first = $this->credit($request, $report, '80.00');
+        // Reassigning does not touch the pending row; a re-send re-points it at the new assignee.
+        $reassigned = $this->assignTo($reports, $first->report, 3, 'sam@tricab.com', 'Sam Reviewer');
+        $again = $request->execute($this->caller(), $report->publicId, 'credit', [
+            'creditTotal' => '90.00',
+            'rowVersion' => $reassigned->rowVersion,
         ]);
 
         self::assertSame($first->approval->approvalId, $again->approval->approvalId);
@@ -83,32 +82,31 @@ final class CustomerContactReportApprovalTest extends TestCase
         self::assertNotSame($first->approval->rowVersion, $again->approval->rowVersion);
         self::assertCount(1, $reports->approvalsFor($report->publicId));
 
-        $decided = $decide->execute($this->person(3, 'sam@tricab.com', 'Sam Reviewer'), $report->publicId, 'rework', [
+        $decided = $decide->execute($this->person(3, 'sam@tricab.com', 'Sam Reviewer'), $report->publicId, 'credit', [
             'decision' => 'approved',
             'rowVersion' => $again->approval->rowVersion,
         ]);
         $this->assertFailure(
             CustomerContactReportApprovalFailure::NOT_PENDING,
-            fn () => $request->execute($this->caller(), $report->publicId, 'rework', [
-                'approver' => 'alex@tricab.com',
+            fn () => $request->execute($this->caller(), $report->publicId, 'credit', [
+                'creditTotal' => '90.00',
                 'rowVersion' => $decided->report->rowVersion,
             ]),
         );
         $stored = $reports->approvalsFor($report->publicId)[0];
         self::assertSame('approved', $stored->status);
         self::assertSame('sam@tricab.com', $stored->approver);
-        self::assertSame('submitted', $decided->report->status);
+        self::assertSame('assigned', $decided->report->status);
     }
 
-    public function test_credit_request_fails_closed_when_reporting_lines_are_unavailable(): void
+    public function test_a_credit_on_an_unassigned_report_is_refused_and_writes_nothing(): void
     {
-        [$request, $reports] = $this->requestService(new UnavailableCustomerContactReportReportingLine());
+        [$request, $reports] = $this->services();
         $report = $this->insert($reports);
 
         $this->assertFailure(
             CustomerContactReportApprovalFailure::CONFIGURATION,
             fn () => $request->execute($this->caller(), $report->publicId, 'credit', [
-                'approver' => 'alex@tricab.com',
                 'creditTotal' => '1000.01',
                 'rowVersion' => $report->rowVersion,
             ]),
@@ -120,107 +118,47 @@ final class CustomerContactReportApprovalTest extends TestCase
         )?->creditTotal);
     }
 
-    public function test_credit_escalation_uses_the_raisers_manager_and_climbs_only_above_1000(): void
+    public function test_the_assignee_is_the_approver_and_the_raiser_assigned_to_self_is_rejected(): void
     {
-        $alex = new ResolvedCustomerContactAssignee(2, 'alex@tricab.com', 'Alex Assignee', 'alex@tricab.com');
-        $sam = new ResolvedCustomerContactAssignee(3, 'sam@tricab.com', 'Sam Reviewer', 'sam@tricab.com');
-        $line = new FixedCustomerContactReportReportingLine([
-            'thilanh@tricab.com' => $alex,
-            'alex@tricab.com' => $sam,
-        ]);
-        [$request, $reports] = $this->requestService($line);
-
-        $below = $this->credit($request, $this->insert($reports), '999.99');
-        $exact = $this->credit($request, $this->insert($reports), '1000.00');
-        $above = $this->credit($request, $this->insert($reports), '1000.01', '944.14');
-
-        self::assertSame('alex@tricab.com', $below->approval->approver);
-        self::assertSame('alex@tricab.com', $exact->approval->approver);
-        self::assertSame('sam@tricab.com', $above->approval->approver);
-        self::assertSame('1000.01', $above->report->creditTotal);
-        self::assertSame('944.14', $above->report->valueExGst);
-        self::assertSame('submitted', $above->report->status);
-        self::assertSame(0, $reports->numberSequenceRows());
-
-        $directOnly = new FixedCustomerContactReportReportingLine([
-            'thilanh@tricab.com' => $alex,
-        ]);
-        [$limited, $limitedReports] = $this->requestService($directOnly);
-        $stays = $this->credit($limited, $this->insert($limitedReports), '1000.01');
-        self::assertSame('alex@tricab.com', $stays->approval->approver);
-    }
-
-    public function test_rework_for_another_approver_is_allowed_and_self_selection_is_rejected(): void
-    {
-        [$request, $reports] = $this->requestService(new UnavailableCustomerContactReportReportingLine());
-        $report = $this->insert($reports);
-
-        $allowed = $request->execute($this->caller(), $report->publicId, 'rework', [
-            'approver' => 'alex@tricab.com',
-            'rowVersion' => $report->rowVersion,
-        ]);
+        [$request, $reports] = $this->services();
+        $allowed = $this->credit($request, $this->assigned($reports), '10.00');
         self::assertSame('alex@tricab.com', $allowed->approval->approver);
         self::assertSame('thilanh@tricab.com', $allowed->approval->requestedBy);
 
-        $own = $this->insert($reports);
+        $own = $this->assignTo($reports, $this->insert($reports), 1, 'thilanh@tricab.com', 'Thilan Lakshitha');
         $this->assertFailure(
             CustomerContactReportApprovalFailure::SELF,
-            fn () => $request->execute($this->caller(), $own->publicId, 'rework', [
-                'approver' => 'thilanh@tricab.com',
+            fn () => $request->execute($this->caller(), $own->publicId, 'credit', [
+                'creditTotal' => '100.00',
                 'rowVersion' => $own->rowVersion,
             ]),
         );
         self::assertSame([], $reports->approvalsFor($own->publicId));
-    }
-
-    public function test_credit_that_resolves_to_the_requester_is_rejected_without_a_further_climb(): void
-    {
-        $requester = new ResolvedCustomerContactAssignee(1, 'thilanh@tricab.com', 'Thilan Lakshitha', 'thilanh@tricab.com');
-        $sam = new ResolvedCustomerContactAssignee(3, 'sam@tricab.com', 'Sam Reviewer', 'sam@tricab.com');
-        $line = new FixedCustomerContactReportReportingLine([
-            'alex@tricab.com' => $requester,
-            'thilanh@tricab.com' => $sam,
-        ]);
-        [$request, $reports] = $this->requestService($line);
-        $report = $this->insert($reports, 'alex@tricab.com', 2);
-
-        $this->assertFailure(
-            CustomerContactReportApprovalFailure::SELF,
-            fn () => $request->execute($this->caller(), $report->publicId, 'credit', [
-                'creditTotal' => '100.00',
-                'rowVersion' => $report->rowVersion,
-            ]),
-        );
-        self::assertSame([], $reports->approvalsFor($report->publicId));
         self::assertNull($reports->findVisible(
-            CustomerContactReportPublicId::fromString($report->publicId),
+            CustomerContactReportPublicId::fromString($own->publicId),
             new CustomerContactReportVisibility(true, 1, 'thilanh@tricab.com'),
         )?->creditTotal);
 
-        $climbedOntoRequester = new FixedCustomerContactReportReportingLine([
-            'thilanh@tricab.com' => new ResolvedCustomerContactAssignee(2, 'alex@tricab.com', 'Alex Assignee', 'alex@tricab.com'),
-            'alex@tricab.com' => $requester,
-        ]);
-        [$climbed, $climbedReports] = $this->requestService($climbedOntoRequester);
-        $above = $this->insert($climbedReports);
+        // Raised by alex, assigned to the requester: still the requester's own credit.
+        $fromAlex = $this->assignTo($reports, $this->insert($reports, 'alex@tricab.com', 2), 1, 'thilanh@tricab.com', 'Thilan Lakshitha');
         $this->assertFailure(
             CustomerContactReportApprovalFailure::SELF,
-            fn () => $climbed->execute($this->caller(), $above->publicId, 'credit', [
-                'creditTotal' => '1000.01',
-                'rowVersion' => $above->rowVersion,
+            fn () => $request->execute($this->caller(), $fromAlex->publicId, 'credit', [
+                'creditTotal' => '100.00',
+                'rowVersion' => $fromAlex->rowVersion,
             ]),
         );
-        self::assertSame([], $climbedReports->approvalsFor($above->publicId));
+        self::assertSame([], $reports->approvalsFor($fromAlex->publicId));
     }
 
     public function test_a_requester_with_approve_cannot_decide_their_own_request(): void
     {
-        [, $reports, $decide] = $this->services(new UnavailableCustomerContactReportReportingLine());
+        [, $reports, $decide] = $this->services();
         $report = $this->insert($reports);
         $seeded = $reports->requestApproval(new CustomerContactReportApprovalRequest(
             publicId: $report->publicId,
             expectedReportRowVersion: $report->rowVersion,
-            kind: 'rework',
+            kind: 'credit',
             approverLogin: 'thilanh@tricab.com',
             approverUserId: 1,
             approverName: 'Thilan Lakshitha',
@@ -238,7 +176,7 @@ final class CustomerContactReportApprovalTest extends TestCase
 
         $this->assertFailure(
             CustomerContactReportApprovalFailure::SELF,
-            fn () => $decide->execute($this->caller(), $report->publicId, 'rework', [
+            fn () => $decide->execute($this->caller(), $report->publicId, 'credit', [
                 'decision' => 'approved',
                 'rowVersion' => $seeded->approval->rowVersion,
             ]),
@@ -249,7 +187,7 @@ final class CustomerContactReportApprovalTest extends TestCase
             CustomerContactReportApprovalFailure::SELF,
             fn () => $reports->decideApproval(new CustomerContactReportApprovalDecision(
                 publicId: $report->publicId,
-                kind: 'rework',
+                kind: 'credit',
                 expectedRowVersion: $seeded->approval->rowVersion,
                 decision: 'approved',
                 note: null,
@@ -267,76 +205,47 @@ final class CustomerContactReportApprovalTest extends TestCase
 
     public function test_a_recorded_approver_without_approve_is_rejected(): void
     {
-        [$request, $reports, $decide] = $this->services(new UnavailableCustomerContactReportReportingLine());
-        $report = $this->insert($reports);
-        $pending = $request->execute($this->caller(), $report->publicId, 'rework', [
-            'approver' => 'alex@tricab.com',
-            'rowVersion' => $report->rowVersion,
-        ]);
+        [$request, $reports, $decide] = $this->services();
+        $pending = $this->credit($request, $this->assigned($reports), '40.00');
 
         $this->assertFailure(
             CustomerContactReportApprovalFailure::PERMISSION,
             fn () => $decide->execute(
                 $this->person(2, 'alex@tricab.com', 'Alex Assignee', ['ACCOUNT.LOGIN']),
-                $report->publicId,
-                'rework',
+                $pending->report->publicId,
+                'credit',
                 [
                     'decision' => 'approved',
                     'rowVersion' => $pending->approval->rowVersion,
                 ],
             ),
         );
-        self::assertSame('pending', $reports->approvalsFor($report->publicId)[0]->status);
-    }
-
-    public function test_a_broken_reporting_chain_can_fall_back_to_a_picked_approver(): void
-    {
-        [$request, $reports] = $this->requestService(new FixedCustomerContactReportReportingLine([]));
-        $report = $this->insert($reports);
-        $picked = $request->execute($this->caller(), $report->publicId, 'credit', [
-            'approver' => 'pat@tricab.com',
-            'creditTotal' => '50.00',
-            'rowVersion' => $report->rowVersion,
-        ]);
-        self::assertSame('pat@tricab.com', $picked->approval->approver);
-        self::assertSame(4, $picked->approval->approverUserId);
-
-        $unrouted = $this->insert($reports);
-        $this->assertFailure(
-            CustomerContactReportApprovalFailure::CONFIGURATION,
-            fn () => $request->execute($this->caller(), $unrouted->publicId, 'credit', [
-                'creditTotal' => '50.00',
-                'rowVersion' => $unrouted->rowVersion,
-            ]),
-        );
+        self::assertSame('pending', $reports->approvalsFor($pending->report->publicId)[0]->status);
     }
 
     public function test_only_the_recorded_approver_can_move_a_pending_approval(): void
     {
-        [$request, $reports, $decide] = $this->services(new UnavailableCustomerContactReportReportingLine());
-        $report = $this->insert($reports);
-        $pending = $request->execute($this->caller(), $report->publicId, 'rework', [
-            'approver' => 'alex@tricab.com',
-            'rowVersion' => $report->rowVersion,
-        ]);
+        [$request, $reports, $decide] = $this->services('accounts@tricab.com');
+        $report = $this->assigned($reports);
+        $pending = $this->credit($request, $report, '40.00');
 
         $this->assertFailure(
             CustomerContactReportApprovalFailure::NOT_APPROVER,
-            fn () => $decide->execute($this->caller(), $report->publicId, 'rework', [
+            fn () => $decide->execute($this->caller(), $report->publicId, 'credit', [
                 'decision' => 'approved',
                 'rowVersion' => $pending->approval->rowVersion,
             ]),
         );
         $this->assertFailure(
             CustomerContactReportApprovalFailure::NOT_APPROVER,
-            fn () => $decide->execute($this->person(9, 'reader@tricab.com', 'Reader'), $report->publicId, 'rework', [
+            fn () => $decide->execute($this->person(9, 'reader@tricab.com', 'Reader'), $report->publicId, 'credit', [
                 'decision' => 'declined',
                 'note' => 'Not my approval.',
                 'rowVersion' => $pending->approval->rowVersion,
             ]),
         );
 
-        $declined = $decide->execute($this->person(2, 'alex@tricab.com', 'Alex Assignee'), $report->publicId, 'rework', [
+        $declined = $decide->execute($this->person(2, 'alex@tricab.com', 'Alex Assignee'), $report->publicId, 'credit', [
             'decision' => 'declined',
             'note' => 'Send it back.',
             'rowVersion' => $pending->approval->rowVersion,
@@ -345,33 +254,47 @@ final class CustomerContactReportApprovalTest extends TestCase
         self::assertSame('Send it back.', $declined->approval->note);
         self::assertNotNull($declined->approval->decidedAtUtc);
         self::assertNotSame($pending->approval->rowVersion, $declined->approval->rowVersion);
-        self::assertSame('submitted', $declined->report->status);
+        self::assertSame('assigned', $declined->report->status);
+        self::assertNull($declined->settlement);
 
         $this->assertFailure(
             CustomerContactReportApprovalFailure::NOT_PENDING,
-            fn () => $decide->execute($this->person(2, 'alex@tricab.com', 'Alex Assignee'), $report->publicId, 'rework', [
+            fn () => $decide->execute($this->person(2, 'alex@tricab.com', 'Alex Assignee'), $report->publicId, 'credit', [
                 'decision' => 'approved',
                 'rowVersion' => $declined->approval->rowVersion,
             ]),
         );
     }
 
-    public function test_a_stale_approval_row_version_conflicts_and_zero_credit_is_rejected(): void
+    public function test_a_declined_credit_needs_a_note(): void
     {
-        [$request, $reports, $decide] = $this->services(new UnavailableCustomerContactReportReportingLine());
-        $report = $this->insert($reports);
-        $pending = $request->execute($this->caller(), $report->publicId, 'rework', [
-            'approver' => 'alex@tricab.com',
-            'rowVersion' => $report->rowVersion,
-        ]);
-        $moved = $request->execute($this->caller(), $report->publicId, 'rework', [
-            'approver' => 'sam@tricab.com',
+        [$request, $reports, $decide] = $this->services();
+        $report = $this->assigned($reports);
+        $pending = $this->credit($request, $report, '40.00');
+
+        $this->assertFailure(
+            InvalidCustomerContactReportValue::class,
+            fn () => $decide->execute($this->person(2, 'alex@tricab.com', 'Alex Assignee'), $report->publicId, 'credit', [
+                'decision' => 'declined',
+                'rowVersion' => $pending->approval->rowVersion,
+            ]),
+        );
+        self::assertSame('pending', $reports->approvalsFor($report->publicId)[0]->status);
+    }
+
+    public function test_a_stale_approval_row_version_conflicts_and_a_zero_credit_is_accepted(): void
+    {
+        [$request, $reports, $decide] = $this->services('accounts@tricab.com');
+        $report = $this->assigned($reports);
+        $pending = $this->credit($request, $report, '40.00');
+        $moved = $request->execute($this->caller(), $report->publicId, 'credit', [
+            'creditTotal' => '45.00',
             'rowVersion' => $pending->report->rowVersion,
         ]);
 
         $this->assertFailure(
             CustomerContactReportApprovalFailure::CONFLICT,
-            fn () => $decide->execute($this->person(3, 'sam@tricab.com', 'Sam Reviewer'), $report->publicId, 'rework', [
+            fn () => $decide->execute($this->person(2, 'alex@tricab.com', 'Alex Assignee'), $report->publicId, 'credit', [
                 'decision' => 'approved',
                 'rowVersion' => $pending->approval->rowVersion,
             ]),
@@ -379,27 +302,19 @@ final class CustomerContactReportApprovalTest extends TestCase
         self::assertSame('pending', $reports->approvalsFor($report->publicId)[0]->status);
         self::assertSame($moved->approval->rowVersion, $reports->approvalsFor($report->publicId)[0]->rowVersion);
 
-        try {
-            $request->execute($this->caller(), $report->publicId, 'credit', [
-                'creditTotal' => '0.00',
-                'rowVersion' => $moved->report->rowVersion,
-            ]);
-            self::fail('A zero credit was accepted.');
-        } catch (InvalidCustomerContactReportValue) {
-            self::assertSame([], array_values(array_filter(
-                $reports->approvalsFor($report->publicId),
-                static fn ($approval): bool => $approval->kind === 'credit',
-            )));
-        }
+        // A zero total no longer blocks the request.
+        $zero = $request->execute($this->caller(), $report->publicId, 'credit', [
+            'creditTotal' => '0.00',
+            'rowVersion' => $moved->report->rowVersion,
+        ]);
+        self::assertSame('0.00', $zero->report->creditTotal);
+        self::assertSame('pending', $zero->approval->status);
     }
 
     public function test_approving_a_credit_raises_a_pending_settlement_without_changing_status(): void
     {
-        $alex = new ResolvedCustomerContactAssignee(2, 'alex@tricab.com', 'Alex Assignee', 'alex@tricab.com');
-        [$request, $reports, $decide] = $this->services(new FixedCustomerContactReportReportingLine([
-            'thilanh@tricab.com' => $alex,
-        ]), 'accounts@tricab.com');
-        $report = $this->insert($reports);
+        [$request, $reports, $decide] = $this->services('accounts@tricab.com');
+        $report = $this->assigned($reports);
         $pending = $this->credit($request, $report, '80.00');
 
         $approved = $decide->execute($this->person(2, 'alex@tricab.com', 'Alex Assignee'), $report->publicId, 'credit', [
@@ -409,7 +324,7 @@ final class CustomerContactReportApprovalTest extends TestCase
         ]);
 
         self::assertSame('approved', $approved->approval->status);
-        self::assertSame('submitted', $approved->report->status);
+        self::assertSame('assigned', $approved->report->status);
         self::assertSame('Alex Assignee', $approved->report->creditReviewedBy);
         self::assertSame('2026-09-30', $approved->report->creditReviewedDate);
         self::assertNotNull($approved->settlement);
@@ -418,7 +333,6 @@ final class CustomerContactReportApprovalTest extends TestCase
         self::assertSame('accounts@tricab.com', $approved->settlement->approver);
         self::assertSame(5, $approved->settlement->approverUserId);
         self::assertSame('alex@tricab.com', $approved->settlement->requestedBy);
-        self::assertSame('submitted', $approved->report->status);
 
         $this->assertFailure(
             InvalidCustomerContactReportValue::class,
@@ -432,11 +346,8 @@ final class CustomerContactReportApprovalTest extends TestCase
 
     public function test_credit_approval_is_refused_when_accounts_is_not_configured(): void
     {
-        $alex = new ResolvedCustomerContactAssignee(2, 'alex@tricab.com', 'Alex Assignee', 'alex@tricab.com');
-        [$request, $reports, $decide] = $this->services(new FixedCustomerContactReportReportingLine([
-            'thilanh@tricab.com' => $alex,
-        ]), '');
-        $report = $this->insert($reports);
+        [$request, $reports, $decide] = $this->services('');
+        $report = $this->assigned($reports);
         $pending = $this->credit($request, $report, '80.00');
 
         $this->assertFailure(
@@ -454,13 +365,10 @@ final class CustomerContactReportApprovalTest extends TestCase
 
     public function test_approver_visibility_remains_after_the_decision(): void
     {
-        [$request, $reports, $decide] = $this->services(new UnavailableCustomerContactReportReportingLine());
-        $report = $this->insert($reports);
-        $pending = $request->execute($this->caller(), $report->publicId, 'rework', [
-            'approver' => 'alex@tricab.com',
-            'rowVersion' => $report->rowVersion,
-        ]);
-        $decide->execute($this->person(2, 'alex@tricab.com', 'Alex Assignee'), $report->publicId, 'rework', [
+        [$request, $reports, $decide] = $this->services('accounts@tricab.com');
+        $report = $this->assigned($reports);
+        $pending = $this->credit($request, $report, '40.00');
+        $decide->execute($this->person(2, 'alex@tricab.com', 'Alex Assignee'), $report->publicId, 'credit', [
             'decision' => 'approved',
             'rowVersion' => $pending->approval->rowVersion,
         ]);
@@ -476,53 +384,34 @@ final class CustomerContactReportApprovalTest extends TestCase
         self::assertNotNull($reports->findVisible($assignedId, new CustomerContactReportVisibility(false, 3, 'sam@tricab.com')));
         self::assertNull($reports->findVisible($assignedId, new CustomerContactReportVisibility(false, 9, 'reader@tricab.com')));
 
-        $hidden = CustomerContactReportDtoSerializer::detail($pending->report, false, [$pending->approval], 2, 'alex@tricab.com');
+        $asApprover = CustomerContactReportDtoSerializer::detail($pending->report, false, [$pending->approval], 2, 'alex@tricab.com');
+        self::assertArrayHasKey('creditTotal', $asApprover);
+        self::assertSame('credit', $this->record($asApprover['approvals'] ?? null)[0]['kind'] ?? null);
+        $hidden = CustomerContactReportDtoSerializer::detail($pending->report, false, [$pending->approval], 9, 'reader@tricab.com');
         self::assertArrayNotHasKey('creditTotal', $hidden);
         self::assertArrayNotHasKey('actionsTaken', $hidden);
-        self::assertSame('rework', $this->record($hidden['approvals'] ?? null)[0]['kind'] ?? null);
     }
 
-    public function test_unknown_approver_and_settlement_request_are_rejected(): void
+    public function test_settlement_unknown_kinds_and_rework_are_rejected_on_request(): void
     {
-        [$request, $reports] = $this->requestService(new UnavailableCustomerContactReportReportingLine());
-        $report = $this->insert($reports);
+        [$request, $reports] = $this->services();
+        $report = $this->assigned($reports);
 
-        $this->assertFailure(
-            CustomerContactReportApprovalFailure::APPROVER_NOT_FOUND,
-            fn () => $request->execute($this->caller(), $report->publicId, 'rework', [
-                'approver' => 'missing@tricab.com',
-                'rowVersion' => $report->rowVersion,
-            ]),
-        );
-        $this->assertFailure(
-            InvalidCustomerContactReportValue::class,
-            fn () => $request->execute($this->caller(), $report->publicId, 'settlement', [
-                'rowVersion' => $report->rowVersion,
-            ]),
-        );
-        $this->assertFailure(
-            InvalidCustomerContactReportValue::class,
-            fn () => $request->execute($this->caller(), $report->publicId, 'nope', [
-                'approver' => 'alex@tricab.com',
-                'rowVersion' => $report->rowVersion,
-            ]),
-        );
-    }
-
-    /**
-     * @return array{0: RequestCustomerContactReportApprovalService, 1: InMemoryCustomerContactReportRepository}
-     */
-    private function requestService(CustomerContactReportReportingLine $line): array
-    {
-        [$request, $reports] = $this->services($line);
-
-        return [$request, $reports];
+        foreach (['settlement', 'rework', 'nope'] as $kind) {
+            $this->assertFailure(
+                InvalidCustomerContactReportValue::class,
+                fn () => $request->execute($this->caller(), $report->publicId, $kind, [
+                    'rowVersion' => $report->rowVersion,
+                ]),
+            );
+        }
+        self::assertSame([], $reports->approvalsFor($report->publicId));
     }
 
     /**
      * @return array{0: RequestCustomerContactReportApprovalService, 1: InMemoryCustomerContactReportRepository, 2: DecideCustomerContactReportApprovalService}
      */
-    private function services(CustomerContactReportReportingLine $line, string $accountsLogin = ''): array
+    private function services(string $accountsLogin = ''): array
     {
         $users = new InMemoryApiUserRepository();
         $this->register($users, 'alex@tricab.com', 'Alex Assignee');
@@ -534,7 +423,7 @@ final class CustomerContactReportApprovalTest extends TestCase
         $clock = FixedClock::utc('2026-09-30 01:00:00');
 
         return [
-            new RequestCustomerContactReportApprovalService($reports, $staff, $line, $clock),
+            new RequestCustomerContactReportApprovalService($reports, $clock),
             $reports,
             new DecideCustomerContactReportApprovalService(
                 $reports,
@@ -545,6 +434,11 @@ final class CustomerContactReportApprovalTest extends TestCase
         ];
     }
 
+    private function assigned(InMemoryCustomerContactReportRepository $reports): CustomerContactReportDetails
+    {
+        return $this->assignTo($reports, $this->insert($reports));
+    }
+
     private function credit(
         RequestCustomerContactReportApprovalService $request,
         CustomerContactReportDetails $report,
@@ -552,7 +446,6 @@ final class CustomerContactReportApprovalTest extends TestCase
         ?string $valueExGst = null,
     ): CustomerContactReportApprovalOutcome {
         $body = [
-            'approver' => 'pat@tricab.com',
             'creditTotal' => $total,
             'rowVersion' => $report->rowVersion,
         ];

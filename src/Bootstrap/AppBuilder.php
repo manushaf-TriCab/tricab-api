@@ -1683,6 +1683,10 @@ final class AppBuilder
 
         $app->get('/api/v1/customer-contacts', \TriCab\Api\Http\Action\CustomerContactReport\ListCustomerContactReportsAction::class)
             ->add(($require)($module::PERMISSION_READ));
+        $app->get('/api/v1/customer-contacts/export', \TriCab\Api\Http\Action\CustomerContactReport\ExportCustomerContactReportsAction::class)
+            ->add(($require)($module::PERMISSION_READ));
+        $app->get('/api/v1/customer-contacts/lookup/{kind}/{number}', \TriCab\Api\Http\Action\CustomerContactReport\LookupCustomerContactFourJsAction::class)
+            ->add(($require)($module::PERMISSION_CREATE));
         $app->post('/api/v1/customer-contacts', \TriCab\Api\Http\Action\CustomerContactReport\CreateCustomerContactReportAction::class)
             ->add(($require)($module::PERMISSION_CREATE));
         $app->post('/api/v1/customer-contacts/{publicId}/assign', \TriCab\Api\Http\Action\CustomerContactReport\AssignCustomerContactReportAction::class)
@@ -1706,6 +1710,8 @@ final class AppBuilder
         $app->post('/api/v1/customer-contacts/{publicId}/icar-signature', \TriCab\Api\Http\Action\CustomerContactReport\SaveCustomerContactReportSignatureAction::class)
             ->add(($require)($module::PERMISSION_ICAR_SIGN));
         $app->get('/api/v1/customer-contacts/{publicId}', \TriCab\Api\Http\Action\CustomerContactReport\GetCustomerContactReportAction::class)
+            ->add(($require)($module::PERMISSION_READ));
+        $app->patch('/api/v1/customer-contacts/{publicId}', \TriCab\Api\Http\Action\CustomerContactReport\UpdateCustomerContactReportAction::class)
             ->add(($require)($module::PERMISSION_READ));
     }
 

@@ -8,6 +8,8 @@ use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAppro
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportCreditNote;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportEvidence;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportSignature;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportUpdate;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportUpdateOutcome;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApprovalDecision;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApprovalOutcome;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApprovalRequest;
@@ -102,4 +104,13 @@ interface CustomerContactReportRepository
     public function completeSettlement(CustomerContactReportCreditNote $creditNote): CustomerContactReportStoredAttachment;
 
     public function saveSignature(CustomerContactReportSignature $signature): CustomerContactReportDetails;
+
+    /**
+     * Apply an update guarded by the report row version (CustomerContactReportConflict
+     * when stale). Lines are replaced in the same transaction, as live does with
+     * DELETE then INSERT. When $update->creditChanged and a credit has been decided,
+     * the credit goes back to pending, the settlement row is deleted and the credit
+     * review stamp is cleared. A credit that is still pending is left alone.
+     */
+    public function updateReport(CustomerContactReportUpdate $update): CustomerContactReportUpdateOutcome;
 }

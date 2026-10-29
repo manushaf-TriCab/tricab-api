@@ -18,7 +18,6 @@ use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportAccou
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportDetails;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportVisibility;
 use TriCab\Core\CustomerContactReport\Application\DTO\NewCustomerContactReport;
-use TriCab\Core\CustomerContactReport\Application\DTO\ResolvedCustomerContactAssignee;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportApprovalFailure;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportClientFieldRejected;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportFileFailure;
@@ -43,6 +42,8 @@ use TriCab\Core\Identity\Domain\ValueObject\UserStatus;
 
 final class CustomerContactReportFileTest extends TestCase
 {
+    use AssignsCustomerContactReports;
+
     public function test_evidence_accepts_the_legacy_types_and_rejects_the_rest(): void
     {
         [$service, $reports, $files] = $this->evidence();
@@ -158,7 +159,7 @@ final class CustomerContactReportFileTest extends TestCase
     public function test_the_accounts_assignee_completes_settlement_by_attaching_the_credit_note(): void
     {
         [$request, $decide, $reports, $files, $settlement] = $this->settlement();
-        $report = $this->insert($reports);
+        $report = $this->assignTo($reports, $this->insert($reports));
         $pending = $request->execute($this->caller(), $report->publicId, 'credit', [
             'creditTotal' => '80.00',
             'rowVersion' => $report->rowVersion,
@@ -180,8 +181,10 @@ final class CustomerContactReportFileTest extends TestCase
         );
 
         self::assertSame('credit_note', $stored->kind);
-        self::assertSame('submitted', $this->reload($reports, $report->publicId)->status);
-        self::assertSame(0, $reports->numberSequenceRows());
+        $closed = $this->reload($reports, $report->publicId);
+        self::assertSame('closed', $closed->status);
+        self::assertSame('Accounts', $closed->closedBy);
+        self::assertSame(1, $reports->numberSequenceRows());
         $rows = $reports->approvalsFor($report->publicId);
         $done = null;
         foreach ($rows as $row) {
@@ -221,7 +224,7 @@ final class CustomerContactReportFileTest extends TestCase
     public function test_credit_note_is_refused_unless_the_settlement_step_is_pending_for_that_person(): void
     {
         [$request, $decide, $reports, $files, $settlement] = $this->settlement();
-        $report = $this->insert($reports);
+        $report = $this->assignTo($reports, $this->insert($reports));
         $owner = new CustomerContactReportVisibility(false, 1, 'thilanh@tricab.com');
         $this->assertFileCode(CustomerContactReportFileFailure::CREDIT_NOTE_NOT_ALLOWED, fn () => $settlement->execute(
             $this->caller(), $report->publicId, 'note.pdf', '%PDF-1.4', null, ['rowVersion' => $report->rowVersion], $owner,
@@ -243,7 +246,7 @@ final class CustomerContactReportFileTest extends TestCase
             $this->caller(), $report->publicId, 'note.gif', 'GIF89a', null, ['rowVersion' => $pending->approval->rowVersion], $owner,
         ));
 
-        $second = $this->insert($reports);
+        $second = $this->assignTo($reports, $this->insert($reports));
         $raised = $request->execute($this->caller(), $second->publicId, 'credit', [
             'creditTotal' => '10.00',
             'rowVersion' => $second->rowVersion,
@@ -282,7 +285,7 @@ final class CustomerContactReportFileTest extends TestCase
     public function test_credit_note_blob_and_metadata_failures_leave_settlement_pending(): void
     {
         [$request, $decide, $reports, $files, $settlement] = $this->settlement();
-        $report = $this->insert($reports);
+        $report = $this->assignTo($reports, $this->insert($reports));
         $raised = $request->execute($this->caller(), $report->publicId, 'credit', [
             'creditTotal' => '10.00',
             'rowVersion' => $report->rowVersion,
@@ -453,12 +456,9 @@ final class CustomerContactReportFileTest extends TestCase
         $files = new InMemoryCustomerContactReportFileStore();
         $staff = new IdentityCustomerContactReportAssigneeDirectory($users);
         $clock = FixedClock::utc('2026-09-30 01:00:00');
-        $line = new FixedCustomerContactReportReportingLine([
-            'thilanh@tricab.com' => new ResolvedCustomerContactAssignee(2, 'alex@tricab.com', 'Alex Assignee', 'alex@tricab.com'),
-        ]);
 
         return [
-            new RequestCustomerContactReportApprovalService($reports, $staff, $line, $clock),
+            new RequestCustomerContactReportApprovalService($reports, $clock),
             new DecideCustomerContactReportApprovalService($reports, $staff, $clock, new CustomerContactReportAccountsLogin('accounts@tricab.com')),
             $reports,
             $files,

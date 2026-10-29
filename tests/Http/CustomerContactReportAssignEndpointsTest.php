@@ -218,6 +218,8 @@ final class CustomerContactReportAssignEndpointsTest extends TestCase
             'location' => 'M',
             'customerCode' => 'CUST1',
             'productCode' => 'CAB-1',
+            'orderNo' => '639952',
+            'creditRequired' => 'No',
             'description' => 'Cable failed',
         ]);
         $response = $app->handle($request);

@@ -46,41 +46,54 @@ final class CustomerContactReportApprovalEndpointsTest extends TestCase
         self::assertNotContains(Module::PERMISSION_APPROVE, DevelopmentUserManagementCatalog::managementPermissionCodes());
     }
 
-    public function test_rework_request_and_decision_keep_the_report_status(): void
+    public function test_credit_request_goes_to_the_assignee_and_rejects_client_routing_and_rework(): void
     {
         $app = $this->app();
         $this->register($app, 'alex@tricab.com', 'Alex Assignee');
         $created = $this->created($app);
         $publicId = $this->text($created, 'publicId');
 
-        $denied = $app->handle($this->json('POST', $this->requestPath($publicId, 'rework'), [
+        $denied = $app->handle($this->json('POST', $this->requestPath($publicId, 'credit'), [
             'approver' => 'alex@tricab.com',
-            'note' => 'not stored on request',
+            'creditTotal' => '10.00',
             'rowVersion' => $this->text($created, 'rowVersion'),
         ]));
         self::assertSame(422, $denied->getStatusCode());
         self::assertSame('CLIENT_FIELD_REJECTED', $this->errorCode($denied));
 
         $this->replacePermissions($app, array_values(array_diff(self::STAFF, [Module::PERMISSION_REMEDY])));
-        $forbidden = $app->handle($this->json('POST', $this->requestPath($publicId, 'rework'), [
-            'approver' => 'alex@tricab.com',
+        $forbidden = $app->handle($this->json('POST', $this->requestPath($publicId, 'credit'), [
+            'creditTotal' => '10.00',
             'rowVersion' => $this->text($created, 'rowVersion'),
         ]));
         self::assertSame(403, $forbidden->getStatusCode());
 
         $this->replacePermissions($app, self::STAFF);
-        self::assertSame(422, $app->handle($this->json('POST', $this->requestPath($publicId, 'rework'), [
-            'approver' => 'alex@tricab.com',
+        self::assertSame(422, $app->handle($this->json('POST', $this->requestPath($publicId, 'credit'), [
             'approverEmail' => 'forged@tricab.com',
             'rowVersion' => $this->text($created, 'rowVersion'),
         ]))->getStatusCode());
 
-        $requested = $this->record($this->data($app->handle($this->json('POST', $this->requestPath($publicId, 'rework'), [
-            'approver' => 'alex@tricab.com',
+        // rework is retired for requests.
+        self::assertSame(422, $app->handle($this->json('POST', $this->requestPath($publicId, 'rework'), [
             'rowVersion' => $this->text($created, 'rowVersion'),
+        ]))->getStatusCode());
+
+        // An unassigned (submitted) report has no credit owner yet.
+        $unassigned = $app->handle($this->json('POST', $this->requestPath($publicId, 'credit'), [
+            'creditTotal' => '1000.01',
+            'rowVersion' => $this->text($created, 'rowVersion'),
+        ]));
+        self::assertSame(503, $unassigned->getStatusCode());
+        self::assertSame('CUSTOMER_CONTACT_APPROVAL_CONFIGURATION_ERROR', $this->errorCode($unassigned));
+
+        $assigned = $this->assign($app, $created, 'alex@tricab.com');
+        $requested = $this->record($this->data($app->handle($this->json('POST', $this->requestPath($publicId, 'credit'), [
+            'creditTotal' => '5000.00',
+            'rowVersion' => $this->text($assigned, 'rowVersion'),
         ]))));
-        self::assertSame('submitted', $requested['status'] ?? null);
-        $approval = $this->approval($requested, 'rework');
+        self::assertSame('assigned', $requested['status'] ?? null);
+        $approval = $this->approval($requested, 'credit');
         self::assertSame('pending', $approval['status'] ?? null);
         self::assertSame('alex@tricab.com', $approval['approver'] ?? null);
         self::assertSame('Alex Assignee', $approval['approverName'] ?? null);
@@ -93,62 +106,59 @@ final class CustomerContactReportApprovalEndpointsTest extends TestCase
         self::assertIsArray($items);
         $first = $this->record($items[0] ?? null);
         $summary = $this->record($this->recordList($first['approvals'] ?? null)[0] ?? null);
-        self::assertSame(['kind' => 'rework', 'status' => 'pending'], $summary);
+        self::assertSame(['kind' => 'credit', 'status' => 'pending'], $summary);
 
-        $wrong = $app->handle($this->json('POST', $this->decisionPath($publicId, 'rework'), [
+        $wrong = $app->handle($this->json('POST', $this->decisionPath($publicId, 'credit'), [
             'decision' => 'approved',
             'rowVersion' => $this->text($approval, 'rowVersion'),
         ]));
         self::assertSame(403, $wrong->getStatusCode());
         self::assertSame('CUSTOMER_CONTACT_APPROVAL_NOT_APPROVER', $this->errorCode($wrong));
-
-        $credit = $app->handle($this->json('POST', $this->requestPath($publicId, 'credit'), [
-            'approver' => 'alex@tricab.com',
-            'creditTotal' => '1000.01',
-            'rowVersion' => $this->text($requested, 'rowVersion'),
-        ]));
-        self::assertSame(503, $credit->getStatusCode());
-        self::assertSame('CUSTOMER_CONTACT_APPROVAL_CONFIGURATION_ERROR', $this->errorCode($credit));
     }
 
-    public function test_the_recorded_approver_can_decide_and_still_read_the_report(): void
+    public function test_the_assignee_can_decide_a_credit_and_a_legacy_rework_row_still_decides(): void
     {
-        $app = $this->app();
+        $app = $this->app(['CUSTOMER_CONTACT_ACCOUNTS_LOGIN' => 'accounts@tricab.com']);
         $alex = ['subject' => 'development-cc-alex', 'email' => 'alex@tricab.com'];
         $this->registerActor($app, 'alex@tricab.com', 'Alex Assignee', $alex['subject'], self::STAFF);
+        $this->register($app, 'accounts@tricab.com', 'Accounts');
         $created = $this->created($app);
         $publicId = $this->text($created, 'publicId');
 
-        $self = $app->handle($this->json('POST', $this->requestPath($publicId, 'rework'), [
-            'approver' => 'thilanh@tricab.com',
-            'rowVersion' => $this->text($created, 'rowVersion'),
+        // The raiser cannot be their own credit approver.
+        $own = $this->created($app);
+        $ownAssigned = $this->assign($app, $own, 'thilanh@tricab.com');
+        $self = $app->handle($this->json('POST', $this->requestPath($this->text($own, 'publicId'), 'credit'), [
+            'creditTotal' => '10.00',
+            'rowVersion' => $this->text($ownAssigned, 'rowVersion'),
         ]));
         self::assertSame(403, $self->getStatusCode());
         self::assertSame('CUSTOMER_CONTACT_APPROVAL_SELF', $this->errorCode($self));
 
-        $requested = $this->record($this->data($app->handle($this->json('POST', $this->requestPath($publicId, 'rework'), [
-            'approver' => 'alex@tricab.com',
-            'rowVersion' => $this->text($created, 'rowVersion'),
+        $assigned = $this->assign($app, $created, 'alex@tricab.com');
+        $requested = $this->record($this->data($app->handle($this->json('POST', $this->requestPath($publicId, 'credit'), [
+            'creditTotal' => '80.00',
+            'rowVersion' => $this->text($assigned, 'rowVersion'),
         ]))));
-        $approval = $this->approval($requested, 'rework');
+        $approval = $this->approval($requested, 'credit');
 
-        $declined = $app->handle($this->json('POST', $this->decisionPath($publicId, 'rework'), [
+        $declined = $app->handle($this->json('POST', $this->decisionPath($publicId, 'credit'), [
             'decision' => 'declined',
             'rowVersion' => $this->text($approval, 'rowVersion'),
         ], $alex));
         self::assertSame(422, $declined->getStatusCode());
-
-        $approved = $this->record($this->data($app->handle($this->json('POST', $this->decisionPath($publicId, 'rework'), [
+        $approved = $this->record($this->data($app->handle($this->json('POST', $this->decisionPath($publicId, 'credit'), [
             'decision' => 'approved',
             'rowVersion' => $this->text($approval, 'rowVersion'),
         ], $alex))));
-        $decided = $this->approval($approved, 'rework');
+        $decided = $this->approval($approved, 'credit');
         self::assertSame('approved', $decided['status'] ?? null);
-        self::assertSame('submitted', $approved['status'] ?? null);
+        self::assertSame('assigned', $approved['status'] ?? null);
         self::assertNotNull($decided['decidedAtUtc'] ?? null);
         self::assertNotSame($approval['rowVersion'] ?? null, $decided['rowVersion'] ?? null);
+        self::assertSame('pending', $this->approval($approved, 'settlement')['status'] ?? null);
 
-        $again = $app->handle($this->json('POST', $this->decisionPath($publicId, 'rework'), [
+        $again = $app->handle($this->json('POST', $this->decisionPath($publicId, 'credit'), [
             'decision' => 'declined',
             'note' => 'Too late.',
             'rowVersion' => $this->text($decided, 'rowVersion'),
@@ -156,7 +166,7 @@ final class CustomerContactReportApprovalEndpointsTest extends TestCase
         self::assertSame(409, $again->getStatusCode());
         self::assertSame('CUSTOMER_CONTACT_APPROVAL_NOT_PENDING', $this->errorCode($again));
 
-        $stale = $app->handle($this->json('POST', $this->decisionPath($publicId, 'rework'), [
+        $stale = $app->handle($this->json('POST', $this->decisionPath($publicId, 'credit'), [
             'decision' => 'declined',
             'note' => 'Stale.',
             'rowVersion' => $this->text($approval, 'rowVersion'),
@@ -167,14 +177,19 @@ final class CustomerContactReportApprovalEndpointsTest extends TestCase
         $repo = $this->container($app)->get(CustomerContactReportRepository::class);
         self::assertInstanceOf(InMemoryCustomerContactReportRepository::class, $repo);
         $source = $this->stored($repo, $publicId);
+
+        // Legacy rework rows (requested before the retirement) stay readable and decidable by their approver.
         $hidden = $repo->seedCopy($source, 90, 'other@tricab.com', 'assigned', '2609-009M-SLS', 'branch', 'SLS', 'alex@tricab.com');
-        $routed = $this->record($this->data($app->handle($this->json('POST', $this->requestPath($hidden->publicId, 'rework'), [
-            'approver' => 'thilanh@tricab.com',
-            'rowVersion' => $hidden->rowVersion,
-        ], $alex))));
+        $legacy = $this->seedRework($app, $repo, $hidden, false);
         $this->replacePermissions($app, ['ACCOUNT.LOGIN', Module::PERMISSION_ACCESS, Module::PERMISSION_READ]);
-        self::assertSame(200, $app->handle(TestAppFactory::request('GET', '/api/v1/customer-contacts/' . $hidden->publicId))->getStatusCode());
-        self::assertSame('rework', $this->approval($routed, 'rework')['kind'] ?? null);
+        $read = $this->record($this->data($app->handle(TestAppFactory::request('GET', '/api/v1/customer-contacts/' . $hidden->publicId))));
+        self::assertSame('rework', $this->approval($read, 'rework')['kind'] ?? null);
+        $this->replacePermissions($app, self::STAFF);
+        $decidedLegacy = $this->record($this->data($app->handle($this->json('POST', $this->decisionPath($hidden->publicId, 'rework'), [
+            'decision' => 'approved',
+            'rowVersion' => $legacy,
+        ]))));
+        self::assertSame('approved', $this->approval($decidedLegacy, 'rework')['status'] ?? null);
 
         $stranger = $repo->seedCopy($hidden, 91, 'stranger@tricab.com');
         self::assertSame(404, $app->handle(TestAppFactory::request('GET', '/api/v1/customer-contacts/' . $stranger->publicId))->getStatusCode());
@@ -189,17 +204,73 @@ final class CustomerContactReportApprovalEndpointsTest extends TestCase
         self::assertSame(200, $app->handle(TestAppFactory::request('GET', '/api/v1/customer-contacts/' . $stranger->publicId))->getStatusCode());
 
         $someoneElses = $repo->seedCopy($source, 92, 'owner@tricab.com', 'assigned', '2609-010M-SLS', 'branch', 'SLS', 'alex@tricab.com');
-        $theirs = $this->record($this->data($app->handle($this->json('POST', $this->requestPath($someoneElses->publicId, 'rework'), [
-            'approver' => 'alex@tricab.com',
-            'rowVersion' => $someoneElses->rowVersion,
-        ]))));
+        $theirs = $this->seedRework($app, $repo, $someoneElses, true);
         $notMine = $app->handle($this->json('POST', $this->decisionPath($someoneElses->publicId, 'rework'), [
             'decision' => 'declined',
             'note' => 'I can see everything.',
-            'rowVersion' => $this->text($this->approval($theirs, 'rework'), 'rowVersion'),
+            'rowVersion' => $theirs,
         ]));
         self::assertSame(403, $notMine->getStatusCode());
         self::assertSame('CUSTOMER_CONTACT_APPROVAL_NOT_APPROVER', $this->errorCode($notMine));
+    }
+
+    /**
+     * Seeds an old-style pending rework row ("alex" or "thilanh" as approver, the other as requester).
+     * Returns its row version.
+     *
+     * @param App<ContainerInterface> $app
+     */
+    private function seedRework(
+        App $app,
+        InMemoryCustomerContactReportRepository $repo,
+        \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportDetails $report,
+        bool $alexApproves,
+    ): string {
+        $users = $this->container($app)->get(UserRepository::class);
+        self::assertInstanceOf(InMemoryApiUserRepository::class, $users);
+        $alexUser = $users->findByEmail(EmailAddress::fromString('alex@tricab.com'));
+        self::assertNotNull($alexUser);
+        $alex = [$alexUser->id()->toInt(), 'alex@tricab.com', 'Alex Assignee'];
+        $thilan = [1, 'thilanh@tricab.com', 'Thilan Lakshitha'];
+        [$approver, $requester] = $alexApproves ? [$alex, $thilan] : [$thilan, $alex];
+        $outcome = $repo->requestApproval(new \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportApprovalRequest(
+            publicId: $report->publicId,
+            expectedReportRowVersion: $report->rowVersion,
+            kind: 'rework',
+            approverLogin: $approver[1],
+            approverUserId: $approver[0],
+            approverName: $approver[2],
+            approverEmail: $approver[1],
+            requestedBy: $requester[1],
+            requestedByUserId: $requester[0],
+            requestedAtUtc: new \DateTimeImmutable('2026-09-30 01:00:00', new \DateTimeZone('UTC')),
+            writeCreditFigures: false,
+            valueExGst: null,
+            restockingAmount: null,
+            subTotal: null,
+            gst: null,
+            creditTotal: null,
+        ));
+
+        return $outcome->approval->rowVersion;
+    }
+
+    /**
+     * @param App<ContainerInterface> $app
+     * @param array<string, mixed> $created
+     * @return array<string, mixed>
+     */
+    private function assign(App $app, array $created, string $assignee): array
+    {
+        $this->replacePermissions($app, [...self::STAFF, Module::PERMISSION_ASSIGN]);
+        $response = $app->handle($this->json('POST', '/api/v1/customer-contacts/' . $this->text($created, 'publicId') . '/assign', [
+            'route' => 'branch',
+            'errorCode' => 'SLS',
+            'assignedTo' => $assignee,
+            'rowVersion' => $this->text($created, 'rowVersion'),
+        ]));
+
+        return $this->data($response);
     }
 
     /**
@@ -281,6 +352,8 @@ final class CustomerContactReportApprovalEndpointsTest extends TestCase
             'location' => 'M',
             'customerCode' => 'CUST1',
             'productCode' => 'CAB-1',
+            'orderNo' => '639952',
+            'creditRequired' => 'No',
             'description' => 'Cable failed',
         ]));
         self::assertSame(201, $response->getStatusCode());

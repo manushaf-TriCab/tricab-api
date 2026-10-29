@@ -80,7 +80,7 @@ final class CustomerContactReportEndpointsTest extends TestCase
     {
         $app = $this->app();
 
-        foreach (['reportDate', 'location', 'customerCode', 'productCode', 'description'] as $field) {
+        foreach (['reportDate', 'location', 'customerCode', 'description', 'creditRequired'] as $field) {
             $missing = $this->validBody();
             unset($missing[$field]);
             self::assertSame(422, $this->create($app, $missing)->getStatusCode(), $field);
@@ -90,11 +90,27 @@ final class CustomerContactReportEndpointsTest extends TestCase
             self::assertSame(422, $this->create($app, $blank)->getStatusCode(), $field . ' blank');
         }
 
+        $noOrder = $this->validBody();
+        unset($noOrder['orderNo']);
+        self::assertSame(422, $this->create($app, $noOrder)->getStatusCode(), 'no order and no invoice');
+        $invoiceOnly = $noOrder;
+        $invoiceOnly['invoiceNo'] = '63995202';
+        self::assertSame(201, $this->create($app, $invoiceOnly)->getStatusCode(), 'invoice only');
+        $noProduct = $this->validBody();
+        unset($noProduct['productCode']);
+        self::assertSame(201, $this->create($app, $noProduct)->getStatusCode(), 'product code is optional');
+
+        $yesNoType = $this->validBody();
+        $yesNoType['creditRequired'] = 'Yes';
+        self::assertSame(422, $this->create($app, $yesNoType)->getStatusCode(), 'credit type required');
+        $yesNoType['creditType'] = 'Overcharged';
+        self::assertSame(422, $this->create($app, $yesNoType)->getStatusCode(), 'amount required');
+
         $invalid = $this->validBody();
         $invalid['location'] = 'Z';
         self::assertSame(422, $this->create($app, $invalid)->getStatusCode());
         self::assertSame(0, $this->reports($app)->numberSequenceRows());
-        self::assertSame(0, $this->page($this->list($app))['totalItems'] ?? null);
+        self::assertSame(2, $this->page($this->list($app))['totalItems'] ?? null);
     }
 
     public function test_create_rejects_server_owned_fields_and_does_not_insert(): void
@@ -120,6 +136,8 @@ final class CustomerContactReportEndpointsTest extends TestCase
         $response = $this->create($app, $this->validBody([
             'customerContact' => ' Ada ',
             'productCode' => ' ABC,DEF ',
+            'orderNo' => '639952',
+            'creditRequired' => 'No',
             'tricabRefTrace' => 'T-1',
             'traceNum' => '99',
             'conNoteNo' => 'CN1',
@@ -217,6 +235,8 @@ final class CustomerContactReportEndpointsTest extends TestCase
             'customerCode' => 'OLD',
             'customerContact' => 'Pat',
             'productCode' => 'OLD-1',
+            'orderNo' => '639952',
+            'creditRequired' => 'No',
             'description' => 'older submitted',
             'location' => 'S',
         ]));
@@ -295,6 +315,62 @@ final class CustomerContactReportEndpointsTest extends TestCase
         self::assertNotContains($firstId, $this->column($this->list($app, ['year' => '2025']), 'publicId'));
     }
 
+    public function test_patch_amends_with_a_row_version_and_conflicts_when_stale(): void
+    {
+        $app = $this->app();
+        $created = $this->created($app, $this->validBody([
+            'creditRequired' => 'Yes',
+            'creditType' => 'Overcharged',
+            'valueExGst' => '100.00',
+        ]));
+        $id = $created['publicId'];
+        self::assertIsString($id);
+        self::assertSame('110.00', $created['creditTotal']);
+
+        $saved = $app->handle($this->json('PATCH', '/api/v1/customer-contacts/' . $id, [
+            'rowVersion' => $created['rowVersion'],
+            'valueExGst' => '200.00',
+        ]));
+        self::assertSame(200, $saved->getStatusCode(), (string) $saved->getBody());
+        $data = $this->record(TestAppFactory::json($saved)['data'] ?? null);
+        self::assertSame('220.00', $data['creditTotal']);
+        self::assertSame([], $data['warnings']);
+        self::assertNotSame($created['rowVersion'], $data['rowVersion']);
+
+        $stale = $app->handle($this->json('PATCH', '/api/v1/customer-contacts/' . $id, [
+            'rowVersion' => $created['rowVersion'],
+            'description' => 'late',
+        ]));
+        self::assertSame(409, $stale->getStatusCode());
+
+        $forbidden = $app->handle($this->json('PATCH', '/api/v1/customer-contacts/' . $id, [
+            'rowVersion' => $data['rowVersion'],
+            'creditTotal' => '1.00',
+        ]));
+        self::assertSame(422, $forbidden->getStatusCode());
+    }
+
+    public function test_export_returns_csv_for_the_callers_rows_and_lookup_fails_closed_without_4js(): void
+    {
+        $app = $this->app();
+        $this->created($app, $this->validBody(['description' => '=cmd']));
+
+        $csv = $app->handle(TestAppFactory::request('GET', '/api/v1/customer-contacts/export'));
+        self::assertSame(200, $csv->getStatusCode());
+        self::assertStringContainsString('text/csv', $csv->getHeaderLine('Content-Type'));
+        self::assertStringContainsString('attachment; filename="customer-contacts-', $csv->getHeaderLine('Content-Disposition'));
+        self::assertStringContainsString("'=cmd", (string) $csv->getBody());
+
+        $lookup = $app->handle(TestAppFactory::request('GET', '/api/v1/customer-contacts/lookup/order/639952'));
+        self::assertSame(200, $lookup->getStatusCode());
+        $payload = $this->record(TestAppFactory::json($lookup)['data'] ?? null);
+        self::assertSame('unavailable', $payload['status']);
+
+        $bad = $app->handle(TestAppFactory::request('GET', '/api/v1/customer-contacts/lookup/order/abc'));
+        self::assertSame('invalid', $this->record(TestAppFactory::json($bad)['data'] ?? null)['status']);
+        self::assertSame(404, $app->handle(TestAppFactory::request('GET', '/api/v1/customer-contacts/lookup/widget/1'))->getStatusCode());
+    }
+
     /**
      * @param array<string, string> $env
      * @return App<ContainerInterface>
@@ -329,6 +405,8 @@ final class CustomerContactReportEndpointsTest extends TestCase
             'location' => 'M',
             'customerCode' => 'CUST1',
             'productCode' => 'CAB-1',
+            'orderNo' => '639952',
+            'creditRequired' => 'No',
             'description' => 'Cable failed',
         ];
     }

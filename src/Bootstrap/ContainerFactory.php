@@ -2284,6 +2284,17 @@ final class ContainerFactory
                     $staff,
                 );
             },
+            \TriCab\Core\CustomerContactReport\Contract\CustomerContactFourJsGateway::class => static function (): \TriCab\Core\CustomerContactReport\Contract\CustomerContactFourJsGateway {
+                $url = trim((string) getenv('CUSTOMER_CONTACT_FOURJS_URL'));
+                if ($url === '') {
+                    return new \TriCab\Core\CustomerContactReport\Application\Service\UnavailableCustomerContactFourJsGateway();
+                }
+
+                return new \TriCab\Api\CustomerContactReport\FourJs\HttpCustomerContactFourJsGateway(
+                    $url,
+                    getenv('CUSTOMER_CONTACT_FOURJS_LIVE') !== '0',
+                );
+            },
             \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportNotificationSettings::class => \DI\factory(static function () use ($settings): \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportNotificationSettings {
                 return new \TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportNotificationSettings(
                     webBaseUrl: $settings->customerContactWebBaseUrl,

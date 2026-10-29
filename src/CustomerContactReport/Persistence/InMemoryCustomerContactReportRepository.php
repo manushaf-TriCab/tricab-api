@@ -26,6 +26,8 @@ use DateTimeImmutable;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportCreditNote;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportEvidence;
 use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportSignature;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportUpdate;
+use TriCab\Core\CustomerContactReport\Application\DTO\CustomerContactReportUpdateOutcome;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportApprovalFailure;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportFileFailure;
 use TriCab\Core\CustomerContactReport\Application\Exception\CustomerContactReportConflict;
@@ -110,8 +112,8 @@ final class InMemoryCustomerContactReportRepository implements CustomerContactRe
             updatedAtUtc: $report->createdAtUtc,
             investigationDueDate: null,
             ccAssessedBy: null,
-            creditRequired: null,
-            restockingFeeApplies: null,
+            creditRequired: $report->creditRequired,
+            restockingFeeApplies: $report->restockingFeeApplies,
             actionsTaken: null,
             schedulingInformed: null,
             returnArrangedBy: null,
@@ -126,11 +128,11 @@ final class InMemoryCustomerContactReportRepository implements CustomerContactRe
             goodsReplacedDate: null,
             carRaised: null,
             carRaisedDate: null,
-            valueExGst: null,
-            restockingAmount: null,
-            subTotal: null,
-            gst: null,
-            creditTotal: null,
+            valueExGst: $report->figures?->valueExGst,
+            restockingAmount: $report->figures?->restockingAmount,
+            subTotal: $report->figures?->subTotal,
+            gst: $report->figures?->gst,
+            creditTotal: $report->figures?->creditTotal,
             rootCause: null,
             correctiveAction: null,
             notes: null,
@@ -139,6 +141,14 @@ final class InMemoryCustomerContactReportRepository implements CustomerContactRe
             icarOperatorName: null,
             icarSignedAt: null,
             icarSignatureUrl: null,
+            orderNo: $report->orderNo,
+            invoiceNo: $report->invoiceNo,
+            creditType: $report->creditType,
+            quotedAmount: $report->quotedAmount,
+            invoicedAmount: $report->invoicedAmount,
+            addGst: $report->addGst,
+            requestedActions: $report->requestedActions,
+            lines: $report->lines,
         );
         $this->reports[] = $details;
 
@@ -245,6 +255,27 @@ final class InMemoryCustomerContactReportRepository implements CustomerContactRe
             );
             $this->replace($index, $updated);
             $this->sequences->commit($transactionId);
+            // A pending credit follows the reassignment: the assignee owns it.
+            $credit = $this->approvalFor($updated->reportId, 'credit');
+            if ($credit !== null && $credit->status === 'pending') {
+                $this->storeApproval(new CustomerContactReportApproval(
+                    approvalId: $credit->approvalId,
+                    reportId: $credit->reportId,
+                    publicId: $credit->publicId,
+                    rowVersion: $this->nextRowVersion(),
+                    kind: 'credit',
+                    status: 'pending',
+                    approver: $assignment->assigneeLogin,
+                    approverUserId: $assignment->assigneeUserId,
+                    approverName: $assignment->assigneeName,
+                    approverEmail: $assignment->assigneeEmail,
+                    requestedBy: $credit->requestedBy,
+                    requestedByUserId: $credit->requestedByUserId,
+                    requestedAtUtc: $credit->requestedAtUtc,
+                    note: $credit->note,
+                    decidedAtUtc: null,
+                ));
+            }
 
             return $updated;
         } catch (\Throwable $exception) {
@@ -593,6 +624,58 @@ final class InMemoryCustomerContactReportRepository implements CustomerContactRe
         return new CustomerContactReportApprovalOutcome($report, $updated, $settlement);
     }
 
+    public function updateReport(CustomerContactReportUpdate $update): CustomerContactReportUpdateOutcome
+    {
+        $index = $this->indexOf($update->publicId);
+        if ($index === null) {
+            throw CustomerContactReportNotFound::forPublicId($update->publicId);
+        }
+        $current = $this->reports[$index];
+        $this->assertRowVersion($current, $update->expectedRowVersion);
+
+        $changes = $update->changes;
+        $creditApproval = null;
+        $reset = false;
+        if ($update->creditChanged) {
+            $credit = $this->approvalFor($current->reportId, 'credit');
+            $settlement = $this->approvalFor($current->reportId, 'settlement');
+            if (($credit !== null && $credit->status !== 'pending') || $settlement !== null) {
+                $reset = true;
+                if ($credit !== null) {
+                    $creditApproval = new CustomerContactReportApproval(
+                        approvalId: $credit->approvalId,
+                        reportId: $credit->reportId,
+                        publicId: $credit->publicId,
+                        rowVersion: $this->nextRowVersion(),
+                        kind: 'credit',
+                        status: 'pending',
+                        approver: $credit->approver,
+                        approverUserId: $credit->approverUserId,
+                        approverName: $credit->approverName,
+                        approverEmail: $credit->approverEmail,
+                        requestedBy: $credit->requestedBy,
+                        requestedByUserId: $credit->requestedByUserId,
+                        requestedAtUtc: $update->updatedAtUtc,
+                        note: null,
+                        decidedAtUtc: null,
+                    );
+                    $this->storeApproval($creditApproval);
+                }
+                $this->approvals = array_values(array_filter(
+                    $this->approvals,
+                    static fn (CustomerContactReportApproval $a): bool => !($a->reportId === $current->reportId && $a->kind === 'settlement'),
+                ));
+                $changes['creditReviewedBy'] = null;
+                $changes['creditReviewedDate'] = null;
+            }
+        }
+
+        $updated = $current->withChanges($this->nextRowVersion(), $update->updatedAtUtc, $changes);
+        $this->replace($index, $updated);
+
+        return new CustomerContactReportUpdateOutcome($updated, $reset, $creditApproval);
+    }
+
     public function approvalsFor(string $publicId): array
     {
         $index = $this->indexOf($publicId);
@@ -741,6 +824,16 @@ final class InMemoryCustomerContactReportRepository implements CustomerContactRe
             note: $creditNote->note,
             decidedAtUtc: $creditNote->decidedAtUtc,
         ));
+        if (in_array($report->status, [CustomerContactReportStatus::ASSIGNED, CustomerContactReportStatus::COMPLETED], true)) {
+            $this->replace($index, $report->withClosure(
+                rowVersion: $this->nextRowVersion(),
+                closedBy: $settlement->approverName !== '' ? $settlement->approverName : $settlement->approver,
+                closedByUserId: $creditNote->actorUserId,
+                closedDate: $creditNote->decidedAtUtc,
+                closedAtUtc: $creditNote->decidedAtUtc,
+                updatedAtUtc: $creditNote->decidedAtUtc,
+            ));
+        }
 
         return $stored;
     }
