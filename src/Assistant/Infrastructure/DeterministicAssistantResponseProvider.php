@@ -12,11 +12,12 @@ use TriCab\Api\Assistant\Application\GroundedProduct;
 /**
  * Safe fallback used until Azure Foundry is configured or whenever the model
  * provider is unavailable. It only describes the server-authorized catalogue
- * data supplied in the grounding payload.
+ * data supplied in the grounding payload, in TriCab's own voice ("we", "our
+ * range") rather than as an assistant reporting a search.
  */
 final class DeterministicAssistantResponseProvider implements AssistantResponseProvider
 {
-    private const INSTRUCTION_VERSION = 'product-assistant-fallback-v3';
+    private const INSTRUCTION_VERSION = 'product-assistant-fallback-v4';
 
     public function generate(AssistantGrounding $grounding): AssistantProviderResult
     {
@@ -27,7 +28,7 @@ final class DeterministicAssistantResponseProvider implements AssistantResponseP
 
                 return new AssistantProviderResult(
                     text: sprintf(
-                        'I understood your request as %s, but I could not find a matching product in the %s. %s',
+                        'We don\'t currently carry any %s cable in our %s that matches that, but our sales team can help with anything outside it. %s',
                         $grounding->canonicalIntent,
                         $this->catalogueLabel($grounding),
                         $clarification,
@@ -39,7 +40,7 @@ final class DeterministicAssistantResponseProvider implements AssistantResponseP
 
             return new AssistantProviderResult(
                 text: sprintf(
-                    'I could not find a TriCab product matching "%s" in the %s. Try a product name, category, series or code.',
+                    'We don\'t currently carry a product matching "%s" in our %s. Tell us the product name, series, code or application and we\'ll point you to the closest match, or contact our sales team for anything outside our range.',
                     $grounding->searchQuery,
                     $this->catalogueLabel($grounding),
                 ),
@@ -63,11 +64,11 @@ final class DeterministicAssistantResponseProvider implements AssistantResponseP
 
         return new AssistantProviderResult(
             text: sprintf(
-                'I found %d %s related to "%s". The closest matches are %s. Open a product card for its verified details, or tell me the voltage, application, standard, or construction you need.',
+                'We have %d %s related to "%s". The closest are %s. Open a product card for its verified details, or tell us the voltage, application, standard or construction you need and we\'ll narrow it down.',
                 count($grounding->products),
                 $grounding->catalogueVisibility === 'staff'
-                    ? 'TriCab products visible to staff'
-                    : 'published TriCab products',
+                    ? 'products in our range, including drafts visible to staff,'
+                    : 'products in our published range',
                 $grounding->searchQuery,
                 $this->naturalList($names),
             ),
@@ -78,7 +79,10 @@ final class DeterministicAssistantResponseProvider implements AssistantResponseP
 
     private function describeProduct(GroundedProduct $product): string
     {
-        $parts = [sprintf('I found %s.', $product->productName)];
+        $parts = [sprintf(
+            strcasecmp($product->statusCode, 'published') === 0 ? 'We carry %s.' : 'We have %s on file.',
+            $product->productName,
+        )];
 
         if (strcasecmp($product->statusCode, 'published') !== 0) {
             $parts[] = sprintf(
@@ -104,7 +108,7 @@ final class DeterministicAssistantResponseProvider implements AssistantResponseP
         }
 
         $parts[] = strcasecmp($product->statusCode, 'published') === 0
-            ? 'Use the product card for the full published details. Critical cable selection should be verified against the applicable datasheet and engineering requirements.'
+            ? 'The product card has the full published details, and our sales team can help with a quote. Please verify critical cable selection against the applicable datasheet and your engineering requirements.'
             : 'Use the staff product preview for its current catalogue details. Draft information must not be presented to customers as published, and critical cable selection should be verified against the applicable datasheet and engineering requirements.';
 
         return implode(' ', $parts);
@@ -125,7 +129,7 @@ final class DeterministicAssistantResponseProvider implements AssistantResponseP
     private function catalogueLabel(AssistantGrounding $grounding): string
     {
         return $grounding->catalogueVisibility === 'staff'
-            ? 'staff TriCab catalogue, including drafts'
-            : 'currently published TriCab catalogue';
+            ? 'range, including drafts visible to staff,'
+            : 'published range';
     }
 }

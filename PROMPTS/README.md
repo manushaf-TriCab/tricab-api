@@ -43,7 +43,7 @@ Current prompts:
   question is answered, adding only a property the customer would otherwise wrongly assume. It also
   requires an application's qualifying condition to travel in the same sentence as the verdict.
 - `product-assistant-response-v8.md` shortens replies so they do not repeat the product card.
-- `product-assistant-response-v9.md` is current. It adds `offer_size_picker`, which shows the
+- `product-assistant-response-v9.md` adds `offer_size_picker`, which shows the
   customer a core-count box and a size dropdown instead of asking for both in prose, and the style
   cards: a style the answer names as a bare `` `CODE` `` span is shown as a thumbnail card, so the
   agent writes only the styles it suggests that way. It also answers every question in a message
@@ -52,3 +52,8 @@ Current prompts:
   and keeps internal names (TSD, Cost API, tool names) out of customer replies. Stock status is
   live from the Cost API, so availability is "in stock" or "made to order" and never "not a
   catalogue line".
+- `product-assistant-response-v10.md` is current. It keeps every v9 rule and changes only the
+  voice: the agent speaks as TriCab's sales team ("we don't currently carry…", "our range", "our
+  technical team") instead of an assistant reporting a search ("I couldn't find…"), ends on a real
+  next step, and uses stock words ("in stock", "not in stock", "made to order") only when a tool
+  result carries a stock status — an empty match is "we don't carry that", never "out of stock".
