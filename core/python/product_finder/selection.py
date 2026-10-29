@@ -32,6 +32,7 @@ from .constants import (
 )
 from .sizer import SIZER, SizingRequest, SizingResult
 from .specs import SPECS, describe_source
+from .validation import normalise_style
 
 log = logging.getLogger(__name__)
 
@@ -132,7 +133,7 @@ class FinderRequest:
 
         return cls(
             text=str(payload.get("text") or "").strip(),
-            style=str(payload.get("style") or "").strip().upper(),
+            style=normalise_style(payload.get("style")),
             cable_type=integer("cableType"),
             cores=integer("cores"),
             cross_section=num("crossSection"),
@@ -174,6 +175,7 @@ class FinderResult:
     warnings: list[str] = field(default_factory=list)
     alternatives: list[dict[str, Any]] = field(default_factory=list)
     detail: str = ""
+    errors: list[dict[str, str]] = field(default_factory=list)
 
     def public(self) -> dict[str, Any]:
         return {
@@ -190,6 +192,7 @@ class FinderResult:
             "warnings": self.warnings,
             "alternatives": self.alternatives,
             "detail": self.detail,
+            "errors": self.errors,
         }
 
 
@@ -252,7 +255,11 @@ class ProductFinder:
         if cores:
             overrides["count"] = cores
         if request.style:
-            overrides["style_hint"] = request.style
+            # `explicit_style_hint`, not `style_hint`: the rules only read the
+            # former from overrides (`style_hint` is not in LLM_OVERRIDE_KEYS),
+            # so the stated style used to be dropped and every request came
+            # back in the house-default style.
+            overrides["explicit_style_hint"] = request.style
 
         # Which line to hand the matcher. Real construction wording goes through
         # verbatim, so the parser sees exactly what the customer wrote. But prose
@@ -322,6 +329,11 @@ class ProductFinder:
         # The parser may have landed on a different style than the one we sized
         # against; report the one that actually produced the code.
         final_style = rules.style_by_code(product_code[:2]) or style_obj
+        if request.style and product_code[:2].upper() != request.style:
+            warnings.append(
+                f"Style {request.style} was asked for but the code resolved to "
+                f"{product_code[:2]}. Confirm before quoting."
+            )
         segments, description = self._describe(product_code, final_style)
 
         confidence = min(

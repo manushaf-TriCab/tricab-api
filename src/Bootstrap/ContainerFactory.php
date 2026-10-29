@@ -476,6 +476,7 @@ use TriCab\Core\CableCalculator\Application\ProductResolution\NullCableCalculato
 use TriCab\Core\CableCalculator\Contract\CableCalculatorProductResolver;
 use TriCab\Api\CableCalculator\AzureSqlCableCalculatorProductResolver;
 use TriCab\Api\Http\Action\ProductFinder\FindProductAction;
+use TriCab\Api\Http\Action\ProductFinder\ListProductFinderStylesAction;
 use TriCab\Api\ProductFinder\HttpProductFinderClient;
 use TriCab\Core\ProductFinder\Application\Client\NullProductFinderClient;
 use TriCab\Core\ProductFinder\Contract\ProductFinderClient;
@@ -3620,6 +3621,7 @@ final class ContainerFactory
             GetPublicCatalogueNodeAction::class => \DI\autowire(GetPublicCatalogueNodeAction::class),
             PostCableCalculatorCalculateAction::class => \DI\autowire(PostCableCalculatorCalculateAction::class),
             FindProductAction::class => \DI\autowire(FindProductAction::class),
+            ListProductFinderStylesAction::class => \DI\autowire(ListProductFinderStylesAction::class),
             ProductFinderClient::class => static function () use ($settings): ProductFinderClient {
                 // Off unless a Python service is actually running. Locally that
                 // is the usual case, and a null client answers the same shape

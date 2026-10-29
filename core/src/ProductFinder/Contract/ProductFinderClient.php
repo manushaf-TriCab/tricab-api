@@ -35,4 +35,13 @@ interface ProductFinderClient
      * request; implementations cache.
      */
     public function isAvailable(): bool;
+
+    /**
+     * The styles the finder accepts, in code order. The Style field offers
+     * exactly these and the finder rejects anything else, so both sides read
+     * one register. Empty when the finder is down — callers must cope.
+     *
+     * @return list<array{code: string, title: string}>
+     */
+    public function styles(): array;
 }

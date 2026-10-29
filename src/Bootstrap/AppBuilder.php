@@ -182,6 +182,7 @@ use TriCab\Api\Http\Action\PriceLookup\SearchPriceLookupAction;
 use TriCab\Api\Http\Action\AssistantMessageAction;
 use TriCab\Api\Http\Action\CableCalculator\PostCableCalculatorCalculateAction;
 use TriCab\Api\Http\Action\ProductFinder\FindProductAction;
+use TriCab\Api\Http\Action\ProductFinder\ListProductFinderStylesAction;
 use TriCab\Api\Http\Action\Admin\UpdateRoleAction;
 use TriCab\Api\Http\Action\Admin\UpdateUserAction;
 use TriCab\Api\Http\Action\Admin\GetAdminDashboardAction;
@@ -1926,6 +1927,7 @@ final class AppBuilder
         $app->get('/api/v1/media/images/{token}[/{name}]', GetStableMediaImageAction::class);
         $app->post('/api/v1/cable-calculator/calculate', PostCableCalculatorCalculateAction::class);
         $app->post('/api/v1/product-finder', FindProductAction::class);
+        $app->get('/api/v1/product-finder/styles', ListProductFinderStylesAction::class);
     }
 
     /**

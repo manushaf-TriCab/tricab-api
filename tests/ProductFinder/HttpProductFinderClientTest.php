@@ -181,4 +181,31 @@ final class HttpProductFinderClientTest extends TestCase
         self::assertTrue($client->isAvailable());
         self::assertCount(1, $http->calls, 'isAvailable() must not re-probe after a successful find');
     }
+
+    public function test_styles_are_read_from_the_finder_register(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->body = json_encode(['success' => true, 'data' => ['styles' => [
+            ['code' => 'KL', 'title' => 'Flexible Power Cable', 'voltage' => '0.6/1kV'],
+            ['code' => '', 'title' => 'blank code is dropped'],
+            'not a row',
+            ['code' => 'LP', 'title' => null],
+        ]]], JSON_THROW_ON_ERROR);
+
+        $styles = (new HttpProductFinderClient($http, 'http://127.0.0.1:8001'))->styles();
+
+        self::assertSame('http://127.0.0.1:8001/api/vocab', $http->calls[0]['url']);
+        self::assertSame([
+            ['code' => 'KL', 'title' => 'Flexible Power Cable'],
+            ['code' => 'LP', 'title' => ''],
+        ], $styles);
+    }
+
+    public function test_styles_are_empty_rather_than_thrown_when_the_finder_is_down(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->transportError = new RuntimeException('Connection refused');
+
+        self::assertSame([], (new HttpProductFinderClient($http, 'http://127.0.0.1:8001'))->styles());
+    }
 }

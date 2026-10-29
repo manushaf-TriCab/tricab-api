@@ -282,6 +282,11 @@ final class ProductAssistantToolExecutorTest extends TestCase
             {
                 return true;
             }
+
+            public function styles(): array
+            {
+                return [];
+            }
         };
 
         $this->executor($client)->execute(
@@ -570,6 +575,11 @@ final class ProductAssistantToolExecutorTest extends TestCase
             public function isAvailable(): bool
             {
                 return true;
+            }
+
+            public function styles(): array
+            {
+                return [];
             }
         };
     }

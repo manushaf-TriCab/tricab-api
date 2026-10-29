@@ -103,6 +103,37 @@ final class HttpProductFinderClient implements ProductFinderClient
         return $this->available;
     }
 
+    public function styles(): array
+    {
+        try {
+            $response = $this->http->getJson($this->url('/api/vocab'));
+        } catch (Throwable $exception) {
+            error_log('Product finder style list failed: ' . $exception->getMessage());
+
+            return [];
+        }
+        if ($response['status'] < 200 || $response['status'] >= 300) {
+            return [];
+        }
+
+        $data = $this->decode($response['body'])['data'] ?? null;
+        $rows = is_array($data) ? ($data['styles'] ?? null) : null;
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        $styles = [];
+        foreach ($rows as $row) {
+            if (!is_array($row) || !is_string($row['code'] ?? null) || $row['code'] === '') {
+                continue;
+            }
+            $title = $row['title'] ?? '';
+            $styles[] = ['code' => $row['code'], 'title' => is_string($title) ? $title : ''];
+        }
+
+        return $styles;
+    }
+
     private function url(string $path): string
     {
         return rtrim($this->baseUrl, '/') . $path;

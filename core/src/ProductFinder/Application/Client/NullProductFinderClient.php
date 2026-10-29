@@ -36,4 +36,9 @@ final readonly class NullProductFinderClient implements ProductFinderClient
     {
         return false;
     }
+
+    public function styles(): array
+    {
+        return [];
+    }
 }

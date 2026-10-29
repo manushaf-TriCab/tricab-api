@@ -21,7 +21,8 @@ from flask import Flask, jsonify, request, send_from_directory
 
 from .config import CONFIG
 from .nl import model_snapshot
-from .selection import FINDER, FinderRequest, health, vocabularies
+from .selection import FINDER, FinderRequest, FinderResult, health, vocabularies
+from .validation import validate_payload
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("product-finder")
@@ -77,12 +78,26 @@ def api_find():
     if not isinstance(payload, dict):
         return failure("VALIDATION_FAILED", "A JSON object body is required.", 422)
 
-    if not payload.get("text") and payload.get("cableType") in (None, ""):
+    if (
+        not payload.get("text")
+        and payload.get("cableType") in (None, "")
+        and not payload.get("style")
+    ):
         return failure(
             "VALIDATION_FAILED",
-            "Give either a free-text requirement or a cable type.",
+            "Give a free-text requirement, a cable type or a style.",
             422,
         )
+
+    # A 200 with `status: invalid`, not a 4xx: `HttpProductFinderClient` turns
+    # a 4xx into `unavailable`, which would lose the per-field messages.
+    errors = validate_payload(payload)
+    if errors:
+        return success(FinderResult(
+            status="invalid",
+            errors=[error.public() for error in errors],
+            detail=" ".join(error.message for error in errors),
+        ).public())
 
     model = payload.get("runtimeModel")
     if model is not None and (
