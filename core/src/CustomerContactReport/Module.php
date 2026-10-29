@@ -24,7 +24,7 @@ namespace TriCab\Core\CustomerContactReport;
  */
 final class Module
 {
-    public const NAME = 'Customer Contact';
+    public const NAME = 'Complaint Register';
 
     public const MODULE_CODE = 'customer_contact';
 
