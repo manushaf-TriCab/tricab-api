@@ -58,8 +58,12 @@ final class DrawCableServiceTest extends TestCase
             'LP-PAXD/1C16EA' => [CableDrawingException::SPEC_NOT_FOUND, 404],
             'CA-PAXN/9C16BK' => [CableDrawingException::SPEC_NOT_FOUND, 404],
             'ZZ-PAXN/4C16BK' => [CableDrawingException::SPEC_NOT_FOUND, 404],
-            'BB-XXXD/1C1/0OR' => [CableDrawingException::UNAVAILABLE, 422],
-            'BB-XXXN/1C10OR' => [CableDrawingException::UNAVAILABLE, 422],
+            'LS-XXXD/1A1/0OR' => [CableDrawingException::UNAVAILABLE, 422],
+            'BB-XXXN/1C10OR' => [CableDrawingException::INVALID_CODE, 400],
+            'R1-DEXN/2P2.5BK' => [CableDrawingException::SPEC_NOT_FOUND, 404],
+            'LS-XXXN/1A18BL' => [CableDrawingException::UNAVAILABLE, 422],
+            'CA-PAXN/5C16G1' => [CableDrawingException::UNAVAILABLE, 422],
+            'LS-XXXN/1C16G/Y' => [CableDrawingException::UNAVAILABLE, 422],
         ] as $code => [$error, $status]) {
             try {
                 self::service()->draw($code);

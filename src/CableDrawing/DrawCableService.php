@@ -39,6 +39,9 @@ final class DrawCableService
         if ($code->isAwg()) {
             throw CableDrawingException::unavailable($code->code, 'AWG sizes have their diameters in inches, which aren\'t drawn yet.');
         }
+        if ($code->colour !== null && Colour::parseList($code->colour) === []) {
+            throw CableDrawingException::unavailable($code->code, 'The drawing renderer does not support this colour code yet.');
+        }
         $rows = $this->specs->forStyle($code->style);
         $matches = array_values(array_filter($rows, $code->matches(...)));
         if ($matches === []) {

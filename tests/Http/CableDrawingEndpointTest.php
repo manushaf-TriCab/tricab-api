@@ -44,6 +44,26 @@ final class CableDrawingEndpointTest extends TestCase
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
     }
 
+    public function test_instrumentation_code_passes_validation_even_without_a_matching_drawing(): void
+    {
+        $response = TestAppFactory::create()->handle(
+            TestAppFactory::request('GET', '/api/v1/cable-drawings')->withQueryParams(['code' => 'R1-DEXN/2P2.5BK']),
+        );
+
+        self::assertSame(404, $response->getStatusCode());
+        self::assertSame('CABLE_SPEC_NOT_FOUND', self::errorCode($response));
+    }
+
+    public function test_rejects_price_lookup_mask_codes(): void
+    {
+        $response = TestAppFactory::create()->handle(
+            TestAppFactory::request('GET', '/api/v1/cable-drawings')->withQueryParams(['code' => 'LS-XXXN/1C16']),
+        );
+
+        self::assertSame(400, $response->getStatusCode());
+        self::assertSame('CABLE_CODE_INVALID', self::errorCode($response));
+    }
+
     private static function errorCode(ResponseInterface $response): mixed
     {
         $error = TestAppFactory::json($response)['error'] ?? null;

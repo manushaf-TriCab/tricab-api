@@ -47,6 +47,21 @@ final class PriceLookupColourMask
     public const SQL_MASK_PATTERN = '^[A-Z0-9]{2,4}-XX[A-Z0-9]{2,3}/[0-9]{1,2}[CPTQA]([0-9]+([.][0-9]+)?|[.][0-9]+)(/0)?$';
 
     /**
+     * Shared cable syntax used by Price Lookup and cable drawings. A successful parse
+     * describes the code; catalogue existence and drawing support are separate checks.
+     *
+     * @return array{style: string, block: string, coreSize: string, colour: ?string}|null
+     */
+    public function parseCode(string $productCode): ?array
+    {
+        if (preg_match(self::CODE_PATTERN, strtoupper(trim($productCode)), $m) !== 1) {
+            return null;
+        }
+
+        return ['style' => $m[1], 'block' => $m[2] . $m[3], 'coreSize' => $m[4], 'colour' => $m[5] ?? null];
+    }
+
+    /**
      * The code's own mask, or null when the code isn't a full cable code (partials, wildcards).
      */
     public function maskForLookup(string $productCode): ?string
@@ -62,12 +77,14 @@ final class PriceLookupColourMask
      */
     public function masksForLookup(string $productCode): array
     {
-        $code = strtoupper(trim($productCode));
-        if (preg_match(self::CODE_PATTERN, $code, $m) !== 1) {
+        $parts = $this->parseCode($productCode);
+        if ($parts === null) {
             return [];
         }
 
-        [, $style, , $armourConductor, $size] = $m;
+        $style = $parts['style'];
+        $armourConductor = substr($parts['block'], 2);
+        $size = $parts['coreSize'];
         $tail = '-XX' . $armourConductor . '/' . $size;
         $masks = [$style . $tail];
 
@@ -93,9 +110,9 @@ final class PriceLookupColourMask
      */
     public function isColourless(string $code): bool
     {
-        $code = strtoupper(trim($code));
+        $parts = $this->parseCode($code);
 
-        return preg_match(self::CODE_PATTERN, $code, $m) === 1 && ($m[5] ?? '') === '';
+        return $parts !== null && $parts['colour'] === null;
     }
 
     /**

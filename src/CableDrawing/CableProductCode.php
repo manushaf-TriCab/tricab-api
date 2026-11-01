@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace TriCab\Api\CableDrawing;
 
 use TriCab\Core\CableCalculator\Engine\CableProductCodeGenerator;
+use TriCab\Core\PriceLookup\Domain\PriceLookupColourMask;
 
 /**
- * A cable product code as CableProductCodeGenerator writes it:
- * STYLE-BLOCK/{count}{C|P|T}{size}{colour}, e.g. CA-PAXN/5C16BK.
+ * A cable code using Price Lookup syntax and mask/style restrictions.
+ * Drawing-spec matching remains separate from code validation.
  *
  * The count includes one for the earth when the cable has earths (except OD),
  * a block ending in A marks aluminium conductors, and the suffix is the sheath
@@ -17,9 +18,6 @@ use TriCab\Core\CableCalculator\Engine\CableProductCodeGenerator;
  */
 final readonly class CableProductCode
 {
-    /** Size is mm² ("16", ".5") or an AWG gauge ("1/0"). */
-    private const PATTERN = '~^([A-Z0-9]+)-([A-Z0-9]{4})/(\d+)([CPT])(\d+/0|\d*\.?\d+)([A-Z]{2})?$~';
-
     private function __construct(
         public string $code,
         public string $style,
@@ -34,26 +32,25 @@ final readonly class CableProductCode
     public static function parse(string $code): ?self
     {
         $code = strtoupper(trim($code));
-        if (preg_match(self::PATTERN, $code, $m) !== 1) {
+        $rules = new PriceLookupColourMask();
+        $parts = $rules->parseCode($code);
+        if ($parts === null || $rules->isMask($code) || $rules->isXxCodeOfOtherStyle($code)) {
             return null;
         }
 
-        // Supported construction blocks from the product-code generator.
-        // Syntactically valid arbitrary blocks must not invent catalogue products.
-        if (!in_array($m[2], ['XXXN', 'XXXD', 'XXXA', 'PAXN', 'PAXD', 'PAXA', 'P9XA', 'PDTN', 'PDXN', 'PAZN'], true)) {
-            return null;
-        }
-        if (isset($m[6]) && \TriCab\CableGen\Model\Colour::parseList($m[6]) === []) {
+        // Syntax and style restrictions belong to Price Lookup, not to the renderer.
+        // The shared parser already validated coreSize, including Q/A and AWG aughts.
+        if (preg_match('/^(\d+)([CPTQA])(.+)$/', $parts['coreSize'], $core) !== 1) {
             return null;
         }
 
-        return new self($code, $m[1], $m[2], (int) $m[3], $m[4], $m[5], ($m[6] ?? '') !== '' ? $m[6] : null);
+        return new self($code, $parts['style'], $parts['block'], (int) $core[1], $core[2], $core[3], $parts['colour']);
     }
 
     /** AWG gauges ("1/0") come with diameters in inches, which the drawings don't take. */
     public function isAwg(): bool
     {
-        return !is_numeric($this->size);
+        return $this->config === 'A' || !is_numeric($this->size);
     }
 
     public function isAluminium(): bool
