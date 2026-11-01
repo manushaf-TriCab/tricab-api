@@ -24,7 +24,7 @@ from pathlib import Path
 
 from rfq_parser.quote_readiness import (
     SALES_CHECK_CODES,
-    SALES_SILENT_CODES,
+    SALES_PRICING_DISPLAY,
     quote_readiness,
     sales_display,
     sales_severity,
@@ -106,33 +106,46 @@ class Red(unittest.TestCase):
         self.assertEqual(sales_display('blocked_other', 'fix_required'), 'fix_required')
 
 
-class PricingNeverColoursASalesRow(unittest.TestCase):
-    """The view hides cost, margin and sell price by decision (SIMPLE_VIEW_HANDOFF §2),
-    so the rep has no control that clears either of these. Flagging one queues work
-    nobody in that view can do."""
+class PricingIsVisibleButNotRed(unittest.TestCase):
+    """S13 (docs/SALES_ERROR_AND_NOTIFICATION_REVIEW_20261009.md). The view hides cost,
+    margin and sell price by decision, so the rep cannot clear a missing price -- but
+    the line must still be identifiable. It used to read "Ready" while blocking the sync,
+    with only a quote-level count to go on. Each pricing state now has its own name,
+    distinct from "Fix required" (which the rep can act on) and from "Ready"."""
 
-    def test_a_row_waiting_on_pricing_reads_ready(self):
+    def test_a_row_waiting_on_pricing_reads_price_pending(self):
         state = state_for(pricing={'status': 'pending'})
-        self.assertEqual(state['severity'], 'ready')
+        self.assertEqual(state['severity'], 'price_pending')
         self.assertIn('pricing_pending', {entry['code'] for entry in state['codes']})
 
-    def test_a_row_with_no_price_reads_ready(self):
+    def test_a_row_with_no_price_reads_price_unavailable(self):
         state = state_for(final_unit_price=0, pricing={})
-        self.assertEqual(state['severity'], 'ready')
+        self.assertEqual(state['severity'], 'price_unavailable')
         self.assertIn('price_invalid', {entry['code'] for entry in state['codes']})
 
-    def test_the_sync_is_still_blocked__only_the_colour_changed(self):
-        # The whole point is that the rep is not asked to do anything about it. The
-        # preflight must go on refusing the quote.
+    def test_a_blocked_line_never_reads_ready(self):
         report = quote_readiness([row(pricing={'status': 'pending'})], QUOTE_DETAILS, reviewed=True)
         self.assertFalse(report['ready'])
         self.assertEqual(report['row_states'][0]['state'], 'fix_required')
-        self.assertEqual(report['row_states'][0]['severity'], 'ready')
+        self.assertNotEqual(report['row_states'][0]['severity'], 'ready')
 
-    def test_every_silent_code_is_a_note(self):
-        for code in SALES_SILENT_CODES:
+    def test_pricing_codes_are_not_fix_required_or_notes(self):
+        for code, display in SALES_PRICING_DISPLAY.items():
             with self.subTest(code=code):
-                self.assertEqual(sales_display(code, 'fix_required'), 'note')
+                self.assertEqual(sales_display(code, 'fix_required'), display)
+                self.assertNotIn(display, {'fix_required', 'note', 'check'})
+
+    def test_a_product_to_fix_outranks_a_missing_price(self):
+        self.assertEqual(sales_severity([
+            {'code': 'price_invalid', 'severity': 'fix_required'},
+            {'code': 'product_unresolved', 'severity': 'fix_required'},
+        ]), 'fix_required')
+
+    def test_a_missing_price_outranks_an_amber_check(self):
+        self.assertEqual(sales_severity([
+            {'code': 'quantity_count_inferred', 'severity': 'fix_required'},
+            {'code': 'price_invalid', 'severity': 'fix_required'},
+        ]), 'price_unavailable')
 
 
 class WorstReasonWins(unittest.TestCase):
@@ -150,15 +163,18 @@ class WorstReasonWins(unittest.TestCase):
         )
         self.assertEqual(state['severity'], 'check')
 
-    def test_the_reason_the_rep_must_act_on_sorts_first(self):
-        # An amber reason is rendered inline and a note is collapsed, so an amber one
-        # must not sort below a silent price code.
+    def test_reasons_sort_in_the_order_the_row_is_painted(self):
+        # A missing price blocks the sync and paints the row (S13), so it leads; the
+        # amber check still sorts above every collapsed note.
         state = state_for(
             inferred_fields=['voltage'],
             final_unit_price=0, pricing={},
             warnings=['Prepack cable quoted as whole spools: RQ 342m -> 400m'],
         )
-        self.assertEqual(state['codes'][0]['display'], 'check')
+        displays = [entry['display'] for entry in state['codes']]
+        self.assertEqual(displays[:2], ['price_unavailable', 'check'])
+        self.assertEqual(set(displays[2:]), {'note'})
+        self.assertEqual(state['severity'], 'price_unavailable')
 
     def test_no_codes_is_ready(self):
         self.assertEqual(sales_severity([]), 'ready')
@@ -203,7 +219,7 @@ class TheBrowserSpeaksTheSameVocabulary(unittest.TestCase):
     """
 
     #: every value `sales_severity` can return, plus the browser's own "no answer yet"
-    SEVERITIES = {'fix_required', 'check', 'ready', 'excluded'}
+    SEVERITIES = {'fix_required', 'price_unavailable', 'price_pending', 'check', 'ready', 'excluded'}
 
     def app_js(self, which):
         if which == 'deploy':
@@ -249,7 +265,7 @@ class TheBrowserSpeaksTheSameVocabulary(unittest.TestCase):
         """The browser must not carry its own list of which codes are price-only.
 
         That judgement -- "the rep has no control in this view that clears it" -- is
-        `SALES_SILENT_CODES`, and a second copy of it in the editor is how the pill and
+        `SALES_PRICING_DISPLAY`, and a second copy of it in the editor is how the pill and
         the tint came to disagree in the first place. Prose may discuss them; code may
         not switch on them.
         """

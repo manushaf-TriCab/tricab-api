@@ -16,6 +16,7 @@ from .extractor import (
     LS_R125_STYLE_RE,
     SINGLE_INSULATED_RE,
     extract_entities,
+    apply_instrument_core_rule,
     mentions_high_temp,
 )
 from .normalize import canonical_number
@@ -890,6 +891,9 @@ def _resolve_line(
         if fields.get("cross_section"):
             warnings = [w for w in warnings if w != "Conductor cross-section was not found."]
 
+    # Reapply after AI overrides so the instrument label cannot override C+E.
+    apply_instrument_core_rule(fields)
+
     if (
         fields.get("parallel_single_core")
         or (fields.get("trefoil") and not fields.get("schedule_formation"))
@@ -1073,6 +1077,21 @@ def _resolve_line(
         # the gap the line left open.
         result["accessory_reading"] = reading.as_dict()
         return result
+
+    if fields.get("conduit_only"):
+        # Conduit itself (extractor.is_conduit_only). Not an accessory -- that routing
+        # mis-flagged too many cable lines -- and never a cable: its bore is not a CSA.
+        return build_result(
+            raw_text,
+            source,
+            extracted,
+            status="unresolved",
+            item_type="unknown",
+            selected=None,
+            candidates=[],
+            confidence=0.2,
+            warnings=["Line asks for conduit, not cable -- no product code; review."],
+        )
 
     if fields.get("admin_hint") and not looks_like_cable(fields):
         return build_result(
@@ -1914,9 +1933,14 @@ def style_violates_construction(style: Style, fields: dict[str, Any]) -> bool:
     # deliberate outer-sheath requirement. There, LSZH is the sheath intent and
     # must not be gated out, or a termite/nylon "XLPE/PVC HF110 LSZH" cable loses
     # its CN family and falls through to the generic LS/LP earth style.
+    # "Fire rated" takes the same priority (Manusha, 12 October 2026): every fire-rated
+    # style is LSZH-sheathed, so "XLPE/PVC fire rated" means FR. Gating FR out left the
+    # line with no default bonus at all, and a "submains cable" heading then matched LP's
+    # "earthing of mains and sub mains" text and quoted the mains as earth wire.
     if (
         fields.get("pvc")
         and not fields.get("lszh")
+        and not fields.get("fire")
         and style.sheath_lszh
         and not style.sheath_pvc
         and fields.get("style_hint") != style.code
@@ -1953,6 +1977,10 @@ def rank_styles(
 ) -> list[tuple[Style, float]]:
     haystack = " ".join([normalized_text] + (context or [])).lower()
     requested_type = fields.get("cable_type_hint")
+    if requested_type == "Control" and fields.get("core_type") == "C" and fields.get("earth"):
+        # Once C+E is classified as control, the original instrument label must
+        # not boost instrumentation styles through catalogue keyword matching.
+        haystack = re.sub(r"\binstrument(?:ation)?\b", "control", haystack)
     solar_requested = bool(SOLAR_RE.search(haystack))
     marine_requested = bool(fields.get("marine"))
     # Standard control = XL/KL in the CA config (Technical default), NOT the dedicated
@@ -2012,26 +2040,31 @@ def rank_styles(
     # Unlike the earth and single-insulated branches below it does NOT lean on
     # is_small_ls_conductor: a stock order of LSFLEX R-125 panel wire runs to 70 mm2, and
     # those sizes are as unsheathed as the 1 mm2 ones.
-    # Building wire explicitly requests LS, including section headings and larger
-    # earth conductors that would otherwise default to LP.
-    ls_style_requested = (
-        ls_flex_requested
-        or bool(LS_R125_STYLE_RE.search(haystack))
-        or (not style_hint and bool(re.search(r"\bBUILDING[\s-]+WIRE\b", haystack, re.I)))
+    # Building wire, written out or as "B/W", including section headings, is the
+    # single-insulated LP/LS family chosen by size -- see the building-wire branch below.
+    # On an earth it promotes only the small range: a building-wire earth above 10 mm2
+    # stays LP. "B/W" is matched here as well as expanded by normalize_text: a section
+    # heading arrives in `context` unnormalised.
+    building_wire_requested = not style_hint and bool(
+        re.search(r"\bBUILDING[\s-]+WIRE\b|\bB\s*/\s*W\b", haystack, re.I)
     )
+    ls_style_requested = ls_flex_requested or bool(LS_R125_STYLE_RE.search(haystack))
     if fields.get("earth_only"):
         # Up to 10 mm2 a standalone earth is LS, matching the small switchboard /
         # single-insulated range. A split-off earth beside an ordinary mains cable is
         # the exception and stays LP; pipeline/file_parser put the private PAIRED MAINS
         # CABLE marker in its context so a visually identical standalone earth can be
         # told apart. Explicit LS construction always wins, including fire/high-temp
-        # markers inherited from a sibling mains cable.
+        # markers inherited from a sibling mains cable. "Building wire" is weaker: it
+        # promotes a paired earth in the small range, but a larger earth stays LP.
         explicit_ls = bool(
             fields.get("lszh")
             or fields.get("switchboard")
             or fields.get("single_insulated")
             or fields.get("fire")
-            or ls_style_requested
+            or ls_flex_requested
+            or LS_R125_STYLE_RE.search(haystack)
+            or (building_wire_requested and is_small_ls_conductor(fields))
             or SINGLE_INSULATED_RE.search(haystack)
             or mentions_high_temp(haystack)
             or FIRE_RATED_RE.search(haystack)
@@ -2052,6 +2085,20 @@ def rank_styles(
     if ls_style_requested and canonical_number(fields.get("count")) == "1":
         ls_flex_style = catalog.styles.get(MARINE_EARTH_STYLE if marine_requested else "LS")
         return [(ls_flex_style, 0.6)] if ls_flex_style else []
+    # Building wire that is not an earth (Manusha, 9 October 2026): LS up to 10 mm2 and LP
+    # above, by the same size rule as an earth, and LS at any size when LSZH is asked
+    # for. It used to be LS at every size. Marine keeps its own substitute, as everywhere
+    # else. A "B/W" with no colour never reaches here -- the extractor made it an earth.
+    if building_wire_requested and canonical_number(fields.get("count")) == "1":
+        if marine_requested:
+            building_wire_code = MARINE_EARTH_STYLE
+        elif fields.get("lszh") or is_small_ls_conductor(fields):
+            building_wire_code = "LS"
+        else:
+            building_wire_code = "LP"
+        building_wire_style = catalog.styles.get(building_wire_code)
+        if building_wire_style:
+            return [(building_wire_style, 0.6)]
     # An explicit "single insulated" names the unsheathed building-wire family outright:
     # LP/LS/UP are the ONLY styles in the catalog with no sheath, so the phrase rules out
     # every sheathed style rather than merely favouring these three. Which one follows the

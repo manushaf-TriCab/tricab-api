@@ -106,6 +106,7 @@ def warning_code(note):
 #: to a browser reading codes instead of silently absent from it.
 ACCOUNTED_ISSUES = frozenset({
     'missing_product', 'unresolved_line', 'invalid_quantity_or_price', 'pricing_pending',
+    'source_check_unreviewed',
 })
 
 
@@ -131,19 +132,26 @@ SALES_CHECK_CODES = frozenset({
     'source_ungrounded',
 })
 
-#: `fix_required` here, never a colour on a sales row. The sales view hides cost, margin
-#: and sell price by decision (docs/SIMPLE_VIEW_HANDOFF.md §2), so the rep has no control
-#: that clears either of these -- flagging one queues work nobody in that view can do.
-#: The same reasoning already keeps price-only warnings out of the browser's `needsYou`.
-SALES_SILENT_CODES = frozenset({'pricing_pending', 'price_invalid'})
+#: Blocking, but not the rep's to clear: the sales view hides cost, margin and sell price
+#: by decision (docs/SIMPLE_VIEW_HANDOFF.md §2), so no control there fixes a price. They
+#: used to be classified out of the colour altogether, which let a line that blocks the
+#: sync read "Ready" while a quote-level banner counted it with no way to find it (S13 in
+#: docs/SALES_ERROR_AND_NOTIFICATION_REVIEW_20261009.md). Who resolves it decides the
+#: wording, not whether the rep can see which line it is -- so each gets its own state,
+#: distinct from both "Fix required" and "Ready".
+SALES_PRICING_DISPLAY = {'pricing_pending': 'price_pending', 'price_invalid': 'price_unavailable'}
 
-#: Worst-first, so a row takes the strongest colour any one of its reasons earns.
-SALES_DISPLAY_RANK = {'fix_required': 2, 'check': 1, 'note': 0}
+#: Worst-first, so a row takes the strongest colour any one of its reasons earns. A
+#: missing price outranks an amber check because it blocks the sync and a check does
+#: not; a product the rep must fix outranks both, since its price follows from the code.
+SALES_DISPLAY_RANK = {'fix_required': 4, 'price_unavailable': 3, 'price_pending': 2,
+                      'check': 1, 'note': 0}
 
 
 def sales_display(code, severity):
-    """How one reason paints in the sales view: `fix_required`, `check` or `note`.
+    """How one reason paints in the sales view.
 
+    One of `fix_required`, `price_unavailable`, `price_pending`, `check` or `note`.
     Ordered deliberately. A code in `SALES_CHECK_CODES` is amber whatever its blocking
     severity says -- the two reader flags are `fix_required` because a wrong quantity is
     the most expensive error this system makes, and they are still amber on screen
@@ -151,13 +159,14 @@ def sales_display(code, severity):
     """
     if code in SALES_CHECK_CODES:
         return 'check'
-    if code in SALES_SILENT_CODES:
-        return 'note'
+    if code in SALES_PRICING_DISPLAY:
+        return SALES_PRICING_DISPLAY[code]
     return 'fix_required' if severity == 'fix_required' else 'note'
 
 
 def sales_severity(codes):
-    """One row's colour: `fix_required`, `check` or `ready`.
+    """One row's colour: `fix_required`, `price_unavailable`, `price_pending`,
+    `check` or `ready`.
 
     `ready` rather than `note`, because at row level the absence of anything to act on
     is the whole statement -- and any number of assumed fields leaves a row there.
@@ -211,9 +220,13 @@ def row_contradictions(row, issues):
                       'detail': 'This line needs a length greater than 0.'})
     if reviewed_price(row) is None:
         codes.append({'code': 'price_invalid', 'severity': 'fix_required',
-                      'detail': 'This line needs a price greater than 0.'})
+                      'detail': 'No usable price for this line yet (it must be greater than 0).'})
 
-    source_type = (row.get('source') or {}).get('input_type')
+    if any(str(issue.get('issue') or '') == 'source_check_unreviewed' for issue in issues):
+        codes.append({'code': 'source_check_unreviewed', 'severity': 'fix_required',
+                      'detail': source_check_message(row)})
+
+    source_type = _row_source(row).get('input_type')
     if source_type in {'vision_ocr', 'reader_ungrounded'}:
         codes.append({'code': 'source_ungrounded', 'severity': 'note',
                       'detail': 'Read from an image or scan; nothing re-checked it '
@@ -239,8 +252,7 @@ def row_contradictions(row, issues):
     # make that cut on the same rule that decided the row's colour.
     for entry in codes:
         entry['display'] = sales_display(entry['code'], entry['severity'])
-    # Worst first, by how it reads on screen rather than by blocking severity -- an amber
-    # reason the rep must act on should not sort below a silent `price_invalid`.
+    # Worst first, by how it reads on screen rather than by blocking severity.
     codes.sort(key=lambda entry: -SALES_DISPLAY_RANK.get(entry['display'], 0))
     # One entry per (code, detail): the same warning can arrive twice on a re-priced row.
     seen, unique = set(), []
@@ -326,7 +338,7 @@ def row_push_block_reason(row, *, reviewed=False):
     if excluded:
         return excluded
     status = str(row.get('final_status') or row.get('status') or '').strip().lower()
-    source = row.get('source') or {}
+    source = _row_source(row)
     if not reviewed and source.get('input_type') == 'vision_ocr' and status != 'approved':
         return 'vision OCR row needs approval before syncing'
     if not reviewed and source.get('input_type') == 'reader_ungrounded' and status != 'approved':
@@ -336,9 +348,91 @@ def row_push_block_reason(row, *, reviewed=False):
     return None
 
 
+# --- Terra source-check warnings (TERRA_VALIDATION_WARNINGS_PLAN) ----------------
+#
+# A row the reader extracted but whose source check failed or could not run is KEPT
+# and carries `source.source_check`. A file whose coverage check found missing content
+# carries `source.reader_coverage_review` on each of its rows. Both block auto-send
+# (`mail_ingest._flag_reason`) and both need an explicit, server-recorded review before
+# a manual sync: opening the draft is not reviewing the warning. The review lives under
+# `review` on the same object, is stamped only by `draft_store.review_source_warning`,
+# and `_replace_rows` refuses to take it from a client save.
+
+SOURCE_CHECK_KEY = 'source_check'
+COVERAGE_REVIEW_KEY = 'reader_coverage_review'
+
+
+def _quantity_fingerprint(row):
+    quantity = quote_quantity(row)
+    return None if quantity is None else round(quantity, 5)
+
+
+def _row_source(row):
+    """A row's source dict; configurator-added accessories store `source` as a string."""
+    source = row.get('source')
+    return source if isinstance(source, dict) else {}
+
+
+def source_check_review_current(row):
+    """True when this row's source-check warning was reviewed at its current quantity."""
+    check = _row_source(row).get(SOURCE_CHECK_KEY) or {}
+    if not check:
+        return True
+    review = check.get('review') or {}
+    if not review.get('reviewed_by'):
+        return False
+    # A quantity changed after the review is not the value that was reviewed.
+    return review.get('quantity') == _quantity_fingerprint(row)
+
+
+def source_check_message(row):
+    source = _row_source(row)
+    check = source.get(SOURCE_CHECK_KEY) or {}
+    where = str(source.get('file_name') or 'the source')
+    if check.get('sheet') and check.get('row'):
+        where += f" {check['sheet']}!row {check['row']}"
+    detail = str(check.get('detail') or '').strip().rstrip('.')
+    proposed = check.get('proposed_quantity')
+    if check.get('status') == 'unavailable':
+        return (f'Terra extracted this line but its source check could not run'
+                + (f' ({detail})' if detail else '')
+                + f'. Compare it with {where}, then keep it after review or correct it.')
+    return ('Terra extracted this line'
+            + (f' with quantity {proposed}' if proposed is not None else '')
+            + ' but the source check disagreed'
+            + (f' ({detail})' if detail else '')
+            + f'. Compare it with {where}, then keep it after review or correct it.')
+
+
+def coverage_review_current(row):
+    coverage = _row_source(row).get(COVERAGE_REVIEW_KEY) or {}
+    return not coverage or bool((coverage.get('review') or {}).get('reviewed_by'))
+
+
 def row_reference(row, index):
     return {'row_number': index + 1, 'row_id': row.get('_id') or row.get('line_uid') or row.get('_draft_row_id'),
             'code': product_code(row)}
+
+
+def failed_read_message(file_name, note, existing_lines):
+    """The one sentence for a failed read, shared by the editor and the sync guard.
+
+    What a rep can do depends on whether the quote still holds lines from that file, and
+    the old wording ("its lines are not on this quote") was wrong whenever it did: the
+    background re-read had failed but the first parse's lines were sitting on the draft.
+    """
+    name = str(file_name or 'a document')
+    reason = str(note or '').strip().rstrip('.')
+    existing = int(existing_lines or 0)
+    if existing > 0:
+        return (f'The background re-read of {name} failed'
+                + (f' ({reason})' if reason else '')
+                + f'. Your {existing} existing line(s) from it are still on this quote. '
+                  'Review them and resolve the failed read before syncing.')
+    return (f'No usable lines could be extracted from {name}'
+            + (f' ({reason})' if reason else '')
+            + '. Re-upload the file to retry, enter the lines manually, or dismiss the '
+              'attachment after checking whether it contains anything to quote.')
 
 
 def reader_state_issues(reader_state):
@@ -376,21 +470,30 @@ def reader_state_issues(reader_state):
         })
     for failed in reader_state.get('failed') or []:
         name = str(failed.get('file_name') or 'a document')
-        note = str(failed.get('note') or '').strip()
         issues.append({
             'issue': 'read_failed',
             'file_name': name,
-            'reason': (f'{name} could not be read'
-                       + (f': {note}' if note else '')
-                       + '. Add its lines by hand, or remove the file, before syncing.'),
+            'job_id': failed.get('job_id') or '',
+            'existing_lines': int(failed.get('existing_lines') or 0),
+            'reason': failed_read_message(name, failed.get('note'), failed.get('existing_lines')),
         })
     for pending in reader_state.get('proposals') or []:
         name = str(pending.get('file_name') or 'a document')
         issues.append({
             'issue': 'read_proposal_pending',
             'file_name': name,
-            'reason': (f'A re-read of {name} is offering replacement lines. Accept or '
-                       'dismiss it before syncing.'),
+            'job_id': pending.get('job_id') or '',
+            'recovered': bool(pending.get('recovered')),
+            'reason': ((f'The AI reader could not complete {name}; an alternative parser extracted '
+                        'lines instead. Review their specifications and quantities, then use '
+                        'or dismiss them before syncing.')
+                       if pending.get('recovered') else
+                       (f"Terra extracted {int(pending.get('line_count') or 0)} line(s) from {name}; "
+                        f"review the source checks on {int(pending.get('warned') or 0)} of them. "
+                        'Preview and accept or dismiss them before syncing.')
+                       if pending.get('warned') else
+                       (f'A re-read of {name} is offering replacement lines. Accept or '
+                        'dismiss it before syncing.')),
         })
     return issues
 
@@ -402,6 +505,7 @@ def quote_readiness(rows, quote_details, *, reviewed=False, reader_state=None):
     # Reader state first: it is about the whole quote, not a row, and it is the reason a
     # quote that looks complete may not be.
     issues.extend(reader_state_issues(reader_state))
+    unreviewed_files = {}
     for field in REQUIRED_HEADER_FIELDS:
         if not str(details.get(field) or '').strip():
             issues.append({'issue': 'missing_header', 'field': field, 'reason': f'Missing required field: {field}'})
@@ -429,6 +533,20 @@ def quote_readiness(rows, quote_details, *, reviewed=False, reader_state=None):
                            'reason': 'quantity and price must both be greater than 0 (check length and pricing)'})
         if (row.get('pricing') or {}).get('status') in {'pending', 'loading'}:
             issues.append({**ref, 'issue': 'pricing_pending', 'reason': 'Wait for pricing to finish before syncing.'})
+        if not source_check_review_current(row):
+            issues.append({**ref, 'issue': 'source_check_unreviewed',
+                           'reason': source_check_message(row)})
+        coverage = _row_source(row).get(COVERAGE_REVIEW_KEY) or {}
+        if coverage and not coverage_review_current(row):
+            name = str(coverage.get('file_name') or _row_source(row).get('file_name') or 'a document')
+            unreviewed_files.setdefault(name, str(coverage.get('detail') or ''))
+    # Attachment-level, once per file: reviewing one row cannot clear it, and reviewing
+    # one file cannot clear another.
+    for name, detail in unreviewed_files.items():
+        issues.append({'issue': 'attachment_review_required', 'file_name': name,
+                       'reason': (f'Terra may not have extracted everything in {name}'
+                                  + (f' ({detail})' if detail else '')
+                                  + '. Check the attachment for missing lines, then confirm it was reviewed.')})
     if not included_count:
         issues.append({'issue': 'empty_quote', 'reason': 'No included line items to sync.'})
     states = []
@@ -438,7 +556,7 @@ def quote_readiness(rows, quote_details, *, reviewed=False, reader_state=None):
         blockers = [issue['reason'] for issue in row_issues]
         notes = list(dict.fromkeys(str(note) for note in row.get('warnings', []) if note))
         notes += [f"Assumed {field}" for field in row.get('inferred_fields', [])]
-        if (row.get('source') or {}).get('input_type') in {'vision_ocr', 'reader_ungrounded'}:
+        if _row_source(row).get('input_type') in {'vision_ocr', 'reader_ungrounded'}:
             notes.append('Read from an image or scan; compare this line with the source.')
         excluded_reason = exclusion_reason(row)
         state = 'excluded' if excluded_reason else 'fix_required' if blockers else 'note' if notes else 'ready'

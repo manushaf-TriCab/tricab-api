@@ -158,6 +158,7 @@ READER_INTAKE_PRELUDE = (
     "from __future__ import annotations\n"
     "\n"
     "import os\n"
+    "import re\n"
     "from pathlib import Path\n"
     "from tempfile import TemporaryDirectory\n"
     "from typing import Any, Callable\n"

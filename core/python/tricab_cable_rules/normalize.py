@@ -31,6 +31,9 @@ COLOUR_ALIASES = {
 }
 
 
+BUILDING_WIRE_SHORTHAND_RE = re.compile(r"\bB\s*/\s*W\b", re.I)
+
+
 def normalize_text(text: str) -> str:
     value = str(text or "")
     value = value.replace("\u00a0", " ")
@@ -64,6 +67,13 @@ def normalize_text(text: str) -> str:
     # sees it without each having to learn the abbreviation. Runs before the "/E"
     # rule below so "4C/E/W" collapses the same way "4C/E" does.
     value = re.sub(r"\bE\s*/\s*W\b", "EARTH", value, flags=re.I)
+    # "B/W" is trade shorthand for building wire -- single-insulated LP or LS (Sales, 9
+    # October 2026). Expanded for the same reason as E/W: the building-wire style rules
+    # and the bare-"E" earth reading both look for the words, and "6mm B/W E" otherwise
+    # quoted as a sheathed orange power cable. What the expansion loses -- that the
+    # customer wrote B/W, which with no colour means an earth -- is read off the raw text
+    # by the extractor with BUILDING_WIRE_SHORTHAND_RE.
+    value = BUILDING_WIRE_SHORTHAND_RE.sub("BUILDING WIRE", value)
     value = re.sub(r"(?<=C)\s*&\s*EARTH\b", "+E", value, flags=re.I)
     value = re.sub(r"(?<=C)\s*&\s*(?=(?:\d+\s*)?E\b)", "+", value, flags=re.I)
     # "<n> core and earth" -> "<n>C+E". Glue the count to the C: the separator varies
@@ -79,6 +89,9 @@ def normalize_text(text: str) -> str:
     # the cable silently quoted as a 4C. The leading digit + C is required so a
     # slash-separated construction string ("XLPE/PVC") can never match.
     value = re.sub(r"\b(\d+)\s*C\s*/\s*(?:E|EARTH)\b", r"\1C+E", value, flags=re.I)
+    # And with no separator at all: "2.5 2CE OC" (estimate 7562). The count must touch
+    # the CE, or sit one space from it, so a "CE" approval mark is never read as cores.
+    value = re.sub(r"\b(\d{1,2}) ?CE\b", r"\1C+E", value, flags=re.I)
     value = re.sub(r"\b(\d+)[\s\-]*CORE\b", r"\1C", value, flags=re.I)
     value = re.sub(r"\b(\d+)\s*PAIR\b", r"\1P", value, flags=re.I)
     value = re.sub(r"\b(\d+)\s*TRIAD\b", r"\1T", value, flags=re.I)

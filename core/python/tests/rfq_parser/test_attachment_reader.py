@@ -18,6 +18,7 @@ import pytest
 
 from rfq_parser import attachment_reader as reader
 from rfq_parser.attachment_reader import ReaderError, read_attachment, read_attachment_items
+from rfq_parser.attachment_validate import EXTRACTION_INDEX_KEY, SOURCE_CHECK_KEY
 
 
 @pytest.fixture(autouse=True)
@@ -147,20 +148,27 @@ def test_the_file_is_framed_as_data_not_instructions(stub, workbook_bytes):
 
 # --- validation is not optional ----------------------------------------------------
 
-def test_an_item_contradicting_its_cell_is_degraded_not_returned(stub, workbook_bytes):
+def test_an_item_contradicting_its_cell_is_kept_with_a_warning(stub, workbook_bytes):
+    """TERRA_VALIDATION_WARNINGS_PLAN: a failed check warns; it never deletes the row,
+    and it never replaces the reader's quantity with the checker's."""
     stub["response"] = _response([_item(quantity=9999)])
     result = read_attachment(workbook_bytes, "order.xlsx")
     assert result.ok
-    assert result.items == []
-    assert result.degraded[0]["rule"] == "3_mismatch"
-    assert result.failure_share == 1.0
+    assert [i["quantity"] for i in result.items] == [9999]
+    check = result.items[0][SOURCE_CHECK_KEY]
+    assert check["code"] == "3_mismatch" and check["status"] == "failed"
+    assert check["proposed_quantity"] == 9999
+    assert result.degraded == []
+    assert result.failure_share == 0.0
+    assert result.warned == 1
+    assert result.check_status == "warnings"
 
 
-def test_a_hallucinated_sheet_is_degraded(stub, workbook_bytes):
+def test_a_hallucinated_sheet_is_kept_with_a_warning(stub, workbook_bytes):
     stub["response"] = _response([_item(sheet="Nope")])
     result = read_attachment(workbook_bytes, "order.xlsx")
-    assert result.items == []
-    assert result.degraded[0]["rule"] == "1_sheet"
+    assert len(result.items) == 1
+    assert result.items[0][SOURCE_CHECK_KEY]["code"] == "1_sheet"
 
 
 def test_mixed_results_split_correctly(stub, workbook_bytes):
@@ -170,8 +178,10 @@ def test_mixed_results_split_correctly(stub, workbook_bytes):
         _item(quantity=5),
     ])
     result = read_attachment(workbook_bytes, "order.xlsx")
-    assert len(result.items) == 2
-    assert len(result.degraded) == 1
+    assert len(result.items) == 3
+    assert [bool(i.get(SOURCE_CHECK_KEY)) for i in result.items] == [False, False, True]
+    assert [i[EXTRACTION_INDEX_KEY] for i in result.items] == [0, 1, 2]
+    assert result.degraded == []
 
 
 def test_skipped_rows_are_recorded(stub, workbook_bytes):
@@ -434,6 +444,62 @@ def test_other_http_errors_are_not_retried(stub, monkeypatch, workbook_bytes):
         raise error
 
     monkeypatch.setattr(reader, "_post", server_error)
+    result = read_attachment(workbook_bytes, "order.xlsx")
+    assert result.ok is False
+    assert calls["n"] == 1
+
+
+# --- Azure's content filter cutting the output off ---------------------------------
+
+def _filtered(*categories):
+    """Shaped like the real one from "Cable Schedule Revision 3.xlsx", 2026-09-29: the
+    prompt passes, the completion is blocked, and the verdicts say which filter did it."""
+    response = _response([], status="incomplete")
+    response["incomplete_details"] = {"reason": "content_filter"}
+    response["content_filters"] = [
+        {"blocked": False, "source_type": "prompt",
+         "content_filter_results": {"hate": {"filtered": False, "severity": "safe"}}},
+        {"blocked": True, "source_type": "completion",
+         "content_filter_results": {
+             "protected_material_code": {"detected": False, "filtered": False},
+             **{name: {"detected": True, "filtered": True} for name in categories},
+         }},
+    ]
+    return response
+
+
+def _sequence(monkeypatch, *responses):
+    calls = {"n": 0}
+
+    def post(path, payload, timeout):
+        calls["n"] += 1
+        return responses[min(calls["n"], len(responses)) - 1]
+
+    monkeypatch.setattr(reader, "_post", post)
+    return calls
+
+
+def test_a_protected_material_cutoff_is_retried_once(stub, monkeypatch, workbook_bytes):
+    """1 read in 4 on the same bytes -- a false positive, not a property of the file."""
+    calls = _sequence(monkeypatch, _filtered("protected_material_text"), _response([_item()]))
+    result = read_attachment(workbook_bytes, "order.xlsx")
+    assert result.ok, result.error
+    assert calls["n"] == 2
+    assert result.retries == 1
+    assert result.retry_reasons == [reader.RETRY_PROTECTED_MATERIAL]
+
+
+def test_a_second_protected_material_cutoff_still_fails(stub, monkeypatch, workbook_bytes):
+    calls = _sequence(monkeypatch, _filtered("protected_material_text"))
+    result = read_attachment(workbook_bytes, "order.xlsx")
+    assert result.ok is False
+    assert "content_filter" in result.error
+    assert calls["n"] == 2
+
+
+@pytest.mark.parametrize("categories", [("violence",), ("protected_material_text", "hate")])
+def test_other_content_filter_verdicts_are_not_retried(stub, monkeypatch, workbook_bytes, categories):
+    calls = _sequence(monkeypatch, _filtered(*categories), _response([_item()]))
     result = read_attachment(workbook_bytes, "order.xlsx")
     assert result.ok is False
     assert calls["n"] == 1

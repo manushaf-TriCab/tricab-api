@@ -5,7 +5,7 @@ from typing import Any
 
 from .accessories import accessory_quantity_from_text, find_accessory_code
 from .cable_code import parse_code
-from .normalize import canonical_colour, canonical_number, normalize_text
+from .normalize import BUILDING_WIRE_SHORTHAND_RE, canonical_colour, canonical_number, normalize_text
 
 
 # Who put a value into the fields dict. `explicit_fields` used to be `set(fields)` --
@@ -33,12 +33,12 @@ ACCESSORY_RE = re.compile(
     # corpus it fires on 13 lines, 11 already covered by the barrel/crimp/copper spellings
     # above and one of the rest a Modern Slavery questionnaire asking for "a link".
     r"|reducing\s+links?|bi-?\s?metallic\s+links?"
-    # "Conduit wire" names the CABLE -- green/yellow conduit wire is an earth wire, and
-    # `73-Sohil` asks for 300 m of it. Conduit itself is an accessory. "wiring" is covered
-    # as well as "wire"/"cable": the spelling should not decide whether a 6mm2 earth is
-    # quoted as a cable or routed to the accessory panel with no product code.
-    # Other fitting nouns (e.g. glands) still match independently.
-    r"|terminals?|insulators?|split\s*loom|loom\s*tube|conduits?(?![\s-]+(?:wir(?:e|es|ing)|cables?)\b)|saddles?|reducers?|enlargers?"
+    # No "conduit". On a cable line it is almost always where the cable runs -- "Cable 1C
+    # 120mm2 Cu Flex - In Conduit" sent 13 of estimate 7562's 19 rows to the accessory panel
+    # (Oct 2026) -- or "conduit wire", which is earth cable. It mis-flagged many RFQs, and
+    # was removed by decision on 2026-10-26; a line that really asks for conduit goes to
+    # review like any other line with nothing to match.
+    r"|terminals?|insulators?|split\s*loom|loom\s*tube|saddles?|reducers?|enlargers?"
     r"|end\s*caps?|breakouts?|plugs?|sockets?|isolators?|switches?|cable\s*mounts?|stockings?"
     # Crimp-termination vocabulary (docs/EMAIL_CORPUS_AUDIT.md 4.6). Without these
     # the bore size on the line reads as a conductor size and the row resolves to a
@@ -75,6 +75,53 @@ _CABLE_EVIDENCE_RE = re.compile(
     r"|\b(?:x-hf|xlpe|pvc|swa|awa|lszh|hffr|flex|sdi|tps|screened|armoured|armored|sheath)\b",
     re.I,
 )
+# A cable that arrives already terminated: "Set 1 3 phase 4C+E cable: Active 4mm2 ...
+# fully assembled with heat shrink, male/female Clipsal IP56 32A 5-pin plugs, test and
+# tag" (Haymans draft fca38b24, 25 Oct 2026). The plug and heat shrink are work done to
+# the cable, not items of their own, but ACCESSORY_RE read them as the line's noun and
+# all 47 rows of that tender came back as heat shrink with no code -- 50 m of cable
+# became 50 packs. A line is an assembled lead when it names the cable BEFORE any
+# fitting noun and says the fitting is assembled onto it. Both halves are needed:
+# "4C 25mm2 SWA glands" and "glands to suit 4C cable" name a cable too, but as the
+# thing the gland fits, and they carry no assembly wording.
+ASSEMBLY_RE = re.compile(
+    r"\b(?:assembled|fitted|terminated|made[\s-]+up|test(?:ed)?\s*(?:and|&|n)\s*tag(?:ged)?)\b",
+    re.I,
+)
+# The bare noun, so "Powerlock cable" counts without a core count -- but not where
+# "cable" is itself the first word of an accessory name ("cable ties", "cable glands").
+_CABLE_NOUN_RE = re.compile(
+    r"\bcables?\b(?!\s*(?:ties?|glands?|lugs?|mounts?|saddles?|clips?|cleats?|markers?|stockings?))",
+    re.I,
+)
+
+
+# Conduit is off ACCESSORY_RE, but a line that asks for conduit itself must not fall
+# through to the cable matcher: "25mm PVC conduit 20 lengths" read its bore as 25mm2 and
+# came back XL-PAXN/1C25OR, `matched`, with nothing to say it was wrong. Only when nothing
+# on the line says cable -- _CABLE_EVIDENCE_RE is no use here, because "PVC" is in it.
+_CONDUIT_RE = re.compile(r"\bconduits?\b", re.I)
+_CABLE_WORDS_RE = re.compile(
+    r"\b(?:cables?|wires?|wiring|earth)\b|\d\s*(?:mm2|mm²|sq\.?\s*mm)"
+    r"|\b\d+\s*C(?:\s*\+\s*\d*\s*E)?\b|\b\d+\s*C\s*(?=x\s*\d)|\bcores?\b",
+    re.I,
+)
+
+
+def is_conduit_only(text: str) -> bool:
+    """The line asks for conduit, not for a cable to run in it."""
+    return bool(_CONDUIT_RE.search(text)) and not _CABLE_WORDS_RE.search(text)
+
+
+def is_assembled_lead(text: str) -> bool:
+    """A cable line whose fitting words describe its terminations, not a separate item."""
+    fitting = ACCESSORY_RE.search(text)
+    if not fitting or not ASSEMBLY_RE.search(text):
+        return False
+    cable = [m.start() for m in (_CABLE_EVIDENCE_RE.search(text), _CABLE_NOUN_RE.search(text)) if m]
+    return bool(cable) and min(cable) < fitting.start()
+
+
 ADMIN_RE = re.compile(
     r"\b(project|supplier|quote number|purchase order|date:|company:|unit price|total price|terms|compliance|delivery)\b",
     re.I,
@@ -144,6 +191,16 @@ VOLTAGE_RE = re.compile(
 # it is attached to a size, so an address's country code cannot be read as a material.
 SIZE_ATTACHED_AU_RE = re.compile(r"\b\d+(?:\.\d+)?\s*(?:MM2?|SQ\.?\s*MM)\s*AU\b", re.I)
 BARE_SIZE_RE = re.compile(r"\b(\d+(?:\.\d+)?)\s+(?=(?:CU|AL|XLPE|PVC|FIRE|VSD|VFD|SCREEN|SCR)\b)", re.I)
+# Size first, then the cores, no unit: "2.5 2CE OC", "4.0 4CE OC" (estimate 7562). A
+# number ahead of a core count can just as well be a quantity ("10 4C cables" quoted
+# XL-PAXN/4C10OR), so it is read as a size only at the start of the line, only when it
+# is written with a decimal point -- "4.0" is a size, nobody counts cables that way --
+# and only when it is a nominal CSA.
+LEADING_SIZE_BEFORE_CORES_RE = re.compile(r"^\s*(\d+\.\d+)\s+(?=\d+\s*C(?:\s*\+\s*\d*\s*E)?\b)", re.I)
+NOMINAL_CSA = frozenset({
+    "1", "1.5", "2.5", "4", "6", "10", "16", "25", "35", "50", "70", "95", "120", "150",
+    "185", "240", "300", "400", "500", "630",
+})
 CORE_PLUS_E_RE = re.compile(r"\b(\d+)\s*C\s*\+\s*(\d+)?\s*E\b", re.I)
 # A "+ EARTH" / "+ E" that is NOT adjacent to the core count (e.g. "4C 70mm Al + EARTH")
 # is still an earth conductor added to this one cable. Any earth quoted as its own
@@ -173,7 +230,7 @@ EARTH_SUFFIX_RE = re.compile(r"\(\s*(?:E|EARTH|ECC|G/?Y|GN\s*/\s*YE|GREEN\s*/?\s
 # shorthand, which changes the CORE COUNT (TriCab counts the earth as a core, so 4C+E is a
 # 5C cable), not the colour of a 4C. Reading it here would quote the wrong cable, so that
 # form still needs its explicit "+" (CORE_PLUS_E_RE / ADDED_EARTH_RE).
-_EARTH_CONDUCTOR_WORD = r"(?:CU|AL|TC|TACW|TINNED|FLEX|WIRE)"
+_EARTH_CONDUCTOR_WORD = r"(?:CU|AL|TC|TACW|TINNED|FLEX|BUILDING|WIRE)"
 BARE_EARTH_SIZE_RE = re.compile(
     r"\b\d+(?:\.\d+)?\s*(?:MM2?|SQ\.?\s*MM)"
     rf"(?:\s*{_EARTH_CONDUCTOR_WORD})*"
@@ -506,6 +563,17 @@ def spec_search(pattern: str, text: str):
     return re.search(NOT_TAG_SEGMENT + r"(?:" + pattern + r")", text)
 
 
+def apply_instrument_core_rule(fields: dict[str, Any]) -> None:
+    """An instrument label with numbered cores plus earth means control cable."""
+    if (
+        fields.get("cable_type_hint") == "Instrumentation"
+        and fields.get("core_type") == "C"
+        and fields.get("earth")
+        and (fields.get("count") or 0) > 1
+    ):
+        fields["cable_type_hint"] = "Control"
+
+
 def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
     text = normalize_text(raw_text)
     upper = text.upper()
@@ -539,7 +607,11 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
         if pattern.search(text):
             fields["not_sold_hint"] = label
             break
-    if ACCESSORY_RE.search(text):
+    if is_assembled_lead(text):
+        # Quoted as the cable it is. The plugs and assembly are not on the quote, so
+        # say so rather than let a cable-only price read as the whole answer.
+        warnings.append("Assembled lead requested (plugs/terminations fitted) -- only the cable is quoted; the plugs and assembly must be added by hand.")
+    elif ACCESSORY_RE.search(text):
         fields["accessory_hint"] = True
     elif CUT_SERVICE_RE.search(text) and not _CABLE_EVIDENCE_RE.search(text):
         # A bare "cutting charge" / "cuts" line with no cable construction on it.
@@ -551,6 +623,8 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
         # a human; leaving it unhinted quoted it as cable, which the ties did --
         # "10 bags x 7.6 x 300mm" came back XL-PAXN/1C300OR, `matched`.
         fields["accessory_hint"] = True
+    if is_conduit_only(text):
+        fields["conduit_only"] = True
     if ADMIN_RE.search(text):
         fields["admin_hint"] = True
 
@@ -970,6 +1044,10 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
         sizes = [canonical_number(value) for value in SIZE_RE.findall(upper)]
         if not sizes:
             sizes = [canonical_number(value) for value in BARE_SIZE_RE.findall(upper)]
+        if not sizes:
+            leading = LEADING_SIZE_BEFORE_CORES_RE.match(upper)
+            if leading and canonical_number(leading.group(1)) in NOMINAL_CSA:
+                sizes = [canonical_number(leading.group(1))]
         if sizes:
             # Prefer a size adjacent to cable descriptors, not accessory bolt diameters later in the row.
             fields["cross_section"] = sizes[0]
@@ -1030,6 +1108,17 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
         and BARE_EARTH_SIZE_RE.search(upper)
     ):
         fields["earth"] = True
+    # Sales, 9 October 2026: B/W is single-insulated building wire, in the colour the
+    # line names -- and with no colour named it is an earth. Only the shorthand: a line
+    # that spells out "building wire" with no colour keeps the building-wire rule.
+    if (
+        not fields.get("earth")
+        and not fields.get("colour")
+        and not fields.get("exact_product_code")
+        and fields.get("count") in (None, 1)
+        and BUILDING_WIRE_SHORTHAND_RE.search(str(raw_text or ""))
+    ):
+        fields["earth"] = True
 
     if fields.get("parallel_single_core") or PARALLEL_SINGLE_CORE_RE.search(upper):
         fields["parallel_single_core"] = True
@@ -1050,6 +1139,8 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
         warnings.append("Core count was not found.")
     if not fields.get("cross_section") and not fields.get("exact_product_code") and not fields.get("accessory_hint"):
         warnings.append("Conductor cross-section was not found.")
+
+    apply_instrument_core_rule(fields)
 
     # extract_entities only ever reads the row's own literal text, so everything it set is
     # a customer statement as far as this layer can tell. What this does NOT yet separate

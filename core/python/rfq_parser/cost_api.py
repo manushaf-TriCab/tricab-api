@@ -7,6 +7,7 @@ import http.client
 import json
 import os
 import random
+import subprocess
 import tempfile
 import threading
 import time
@@ -37,6 +38,13 @@ NOT_FOUND_CACHE_SECONDS = 60
 # politeness toward tricab.com rather than local throughput.
 MAX_LOOKUP_WORKERS = 8
 
+# Where prices come from. `http` asks the Cost API over the network; `library` runs
+# tc-web's do_lookup() on this server through `do_lookup.php` -- same costing, same
+# answer, and no API to keep reachable. Anything else means `http`.
+COST_SOURCE_HTTP = "http"
+COST_SOURCE_LIBRARY = "library"
+DO_LOOKUP_SCRIPT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "do_lookup.php")
+
 
 class CostApiClient:
     def __init__(
@@ -45,8 +53,13 @@ class CostApiClient:
         timeout: float | None = None,
         cache_seconds: int | None = None,
         cache_dir: str | None = None,
+        api_key: str | None = None,
+        source: str | None = None,
     ):
         self.base_url = base_url or os.environ.get("TRICAB_COST_API_URL", "https://www.tricab.com/cost-api/")
+        # The Cost API answers only server-to-server calls carrying its key; without one
+        # every lookup comes back as an `error` (HTTP 403), never as a price.
+        self._api_key = api_key if api_key is not None else os.environ.get("TRICAB_COST_API_KEY", "")
         self.timeout = timeout if timeout is not None else float(os.environ.get("TRICAB_COST_API_TIMEOUT_SECONDS", "12"))
         self.cache_seconds = (
             cache_seconds if cache_seconds is not None else int(os.environ.get("TRICAB_COST_API_CACHE_SECONDS", "300"))
@@ -58,7 +71,18 @@ class CostApiClient:
             cache_dir if cache_dir is not None else os.environ.get("TRICAB_COST_API_CACHE_DIR"),
             self.base_url,
         )
-        self._pool = ConnectionPool(self.base_url, self.timeout)
+        self._pool = ConnectionPool(self.base_url, self.timeout, self._api_key)
+        requested = str(source if source is not None else os.environ.get("TRICAB_COST_SOURCE", "")).strip().lower()
+        self.source = COST_SOURCE_LIBRARY if requested == COST_SOURCE_LIBRARY else COST_SOURCE_HTTP
+        self._library = (
+            LibraryLookup(
+                os.environ.get("TRICAB_PHP_BINARY") or "php",
+                os.environ.get("TRICAB_DO_LOOKUP_SCRIPT") or DO_LOOKUP_SCRIPT,
+                self.timeout,
+            )
+            if self.source == COST_SOURCE_LIBRARY
+            else None
+        )
 
     def lookup(self, product_code: str, length: Any, region: str | None = None) -> dict[str, Any]:
         code = str(product_code or "").strip().upper()
@@ -76,18 +100,8 @@ class CostApiClient:
         if cached:
             return {**cached, "cached": True}
 
-        query = urllib.parse.urlencode(
-            {
-                "userInputLength": canonical_length(normalized_length),
-                "productCode": code,
-                "DBCO": dbco,
-            }
-        )
-        separator = "&" if "?" in self.base_url else "?"
-        url = f"{self.base_url}{separator}{query}"
-
         try:
-            payload = json.loads(self._http_get(url).decode("utf-8"))
+            payload = self._fetch(code, normalized_length, dbco)
         except urllib.error.HTTPError as exc:
             payload = read_error_payload(exc)
             is_not_found = exc.code == 404 or payload.get("error") == "Product not found"
@@ -101,7 +115,42 @@ class CostApiClient:
         except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as exc:
             return self._result("error", code, normalized_length, selected_region, dbco, error=str(exc))
 
+        return self._settle(payload, cache_key, code, normalized_length, selected_region, dbco)
+
+    def _fetch(self, code: str, length: float | int, dbco: str) -> dict[str, Any]:
+        """One Cost API answer, from the library or over HTTP."""
+        if self._library is not None:
+            return self._library.lookup_many([{"code": code, "length": canonical_length(length), "dbco": dbco}])[0]
+        query = urllib.parse.urlencode(
+            {
+                "userInputLength": canonical_length(length),
+                "productCode": code,
+                "DBCO": dbco,
+            }
+        )
+        separator = "&" if "?" in self.base_url else "?"
+        return json.loads(self._http_get(f"{self.base_url}{separator}{query}").decode("utf-8"))
+
+    def _settle(
+        self,
+        payload: dict[str, Any],
+        cache_key: tuple[str, str, str],
+        code: str,
+        normalized_length: float | int,
+        selected_region: str,
+        dbco: str,
+    ) -> dict[str, Any]:
+        """A Cost API answer as a lookup result, cached unless it is an error."""
         data = payload.get("data") or {}
+        # www2 answers every refusal with HTTP 200, so "not found" has to be read off the
+        # body too; otherwise it reads as an outage and the default-colour retry never runs.
+        if not payload.get("success") and payload.get("error") == "Product not found":
+            result = self._result(
+                "not_found", code, normalized_length, selected_region, dbco,
+                error=payload.get("message") or payload["error"],
+            )
+            self._store(cache_key, result, ttl=NOT_FOUND_CACHE_SECONDS)
+            return result
         if not payload.get("success") or data.get("calculatedCostPerMeter") in (None, ""):
             return self._result(
                 "error",
@@ -159,6 +208,10 @@ class CostApiClient:
             seen.add(key)
             pending.append((code, normalized_length, region))
 
+        if self._library is not None and pending:
+            self._warm_from_library(pending)
+            return
+
         if len(pending) < 2:
             for spec in pending:
                 self.lookup(*spec)
@@ -168,9 +221,28 @@ class CostApiClient:
         with ThreadPoolExecutor(max_workers=workers) as executor:
             list(executor.map(lambda spec: self.lookup(*spec), pending))
 
+    def _warm_from_library(self, pending) -> None:
+        """Price the whole batch in one PHP run. A batch that fails leaves nothing cached,
+        so the serial pass asks again line by line and reports each failure itself."""
+        lines = []
+        for code, normalized_length, region in pending:
+            selected_region = normalize_region(region or self.default_region)
+            lines.append((code, normalized_length, selected_region, REGION_DBCO[selected_region]))
+        try:
+            payloads = self._library.lookup_many(
+                [{"code": code, "length": canonical_length(length), "dbco": dbco} for code, length, _, dbco in lines]
+            )
+        except (TimeoutError, OSError, json.JSONDecodeError):
+            return
+        for (code, length, region, dbco), payload in zip(lines, payloads):
+            self._settle(payload, (code, canonical_length(length), dbco), code, length, region, dbco)
+
     def health(self) -> dict[str, Any]:
         return {
             "source": "tricab_cost_api",
+            # `library` prices through do_lookup.php on this server; `http` asks `endpoint`.
+            "cost_source": self.source,
+            "do_lookup_script": self._library.script if self._library is not None else None,
             "endpoint": self.base_url,
             "default_region": self.default_region,
             "regions": [{"region": region, "dbco": dbco} for region, dbco in REGION_DBCO.items()],
@@ -178,6 +250,8 @@ class CostApiClient:
             "cache_seconds": self.cache_seconds,
             "cache_dir": self._disk_cache.directory,
             "keep_alive": self._pool.enabled,
+            # Whether a key is configured, never the key itself.
+            "api_key_set": bool(self._api_key),
         }
 
     def _http_get(self, url: str) -> bytes:
@@ -240,6 +314,44 @@ class CostApiClient:
         self._disk_cache.set(key, result, ttl if ttl is not None else self.cache_seconds)
 
 
+class LibraryLookup:
+    """Prices through tc-web's do_lookup() library instead of the HTTP Cost API.
+
+    `do_lookup.php` includes the theme's `functions/do-lookup.php` and answers a JSON
+    batch on stdin. It runs under the PHP already on this server with this process's
+    TRICAB_DB_* settings, so nothing goes over the network but the database query, and
+    each answer has exactly the shape the Cost API sends.
+    """
+
+    def __init__(self, php: str, script: str, timeout: float):
+        self.php = php
+        self.script = script
+        self.timeout = timeout
+
+    def lookup_many(self, requests: list[dict[str, str]]) -> list[dict[str, Any]]:
+        # A batch is given the time the threaded HTTP warm-up had: `timeout` per
+        # MAX_LOOKUP_WORKERS lines.
+        budget = self.timeout * max(1.0, len(requests) / MAX_LOOKUP_WORKERS)
+        try:
+            completed = subprocess.run(
+                [self.php, self.script],
+                input=json.dumps(requests),
+                capture_output=True,
+                text=True,
+                timeout=budget,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise TimeoutError(f"do_lookup took longer than {budget:.0f}s") from exc
+        if completed.returncode != 0:
+            raise OSError(f"do_lookup failed (exit {completed.returncode}): {completed.stderr.strip()[-300:]}")
+        answers = json.loads(completed.stdout)
+        if (not isinstance(answers, list) or len(answers) != len(requests)
+                or not all(isinstance(answer, dict) for answer in answers)):
+            raise OSError("do_lookup did not answer every line it was asked")
+        return answers
+
+
 class ConnectionPool:
     """One kept-alive HTTP connection per thread.
 
@@ -249,12 +361,15 @@ class ConnectionPool:
     ``http.client`` connections are not safe to share.
     """
 
-    def __init__(self, base_url: str, timeout: float):
+    def __init__(self, base_url: str, timeout: float, api_key: str = ""):
         parsed = urllib.parse.urlsplit(base_url)
         self.host = parsed.hostname or ""
         self.port = parsed.port
         self.secure = parsed.scheme != "http"
         self.timeout = timeout
+        # Sent on both paths. urlopen keeps it across a redirect, so a www -> www2
+        # hop still arrives with the key.
+        self._key_headers = {"X-Cost-Api-Key": api_key} if api_key else {}
         # A redirect (or anything else http.client can't transparently handle)
         # turns pooling off for the process and we fall back to urlopen, which
         # follows redirects for us.
@@ -289,7 +404,8 @@ class ConnectionPool:
         connection.request(
             "GET",
             target,
-            headers={"Accept": "application/json", "Connection": "keep-alive", "Host": parsed.netloc},
+            headers={"Accept": "application/json", "Connection": "keep-alive", "Host": parsed.netloc,
+                     **self._key_headers},
         )
         response = connection.getresponse()
         body = response.read()
@@ -326,7 +442,7 @@ class ConnectionPool:
         return parsed.hostname == self.host and parsed.port == self.port
 
     def _urlopen(self, url: str) -> bytes:
-        request = urllib.request.Request(url, headers={"Accept": "application/json"}, method="GET")
+        request = urllib.request.Request(url, headers={"Accept": "application/json", **self._key_headers}, method="GET")
         with urllib.request.urlopen(request, timeout=self.timeout) as response:
             return response.read()
 

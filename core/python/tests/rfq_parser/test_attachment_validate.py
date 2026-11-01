@@ -415,3 +415,31 @@ def test_a_cited_text_cell_is_offered_as_where_the_count_came_from(workbook):
         workbook,
     )
     assert outcome.accepted[0]["inferred_multiplier"]["provenance_cells"] == ["90% Design!G13"]
+
+
+@pytest.mark.parametrize("cell_value", ["8400", " 8400.0 ", "8.4e3", "+8400"])
+def test_numeric_text_source_cells_are_validated(workbook, cell_value):
+    workbook["Sheet1"]["C2"] = cell_value
+    result = validate_items([item()], workbook)
+    assert len(result.accepted) == 1
+    assert not result.degraded
+
+
+@pytest.mark.parametrize("cell_value", ["", " ", "8400m", "8,400", "=8400", "NaN", "inf", "1e999", True])
+def test_ambiguous_or_nonfinite_text_is_not_a_source_quantity(workbook, cell_value):
+    workbook["Sheet1"]["C2"] = cell_value
+    result = validate_items([item()], workbook)
+    assert not result.accepted
+    assert result.degraded
+
+
+def test_numeric_text_derivation_checks_arithmetic_without_repairing_claim(workbook):
+    sheet = workbook["Sheet1"]
+    sheet["C2"], sheet["D2"], sheet["E2"] = "70", "3", "3"
+    claim = item(quantity=840, quantity_source={
+        "cells": ["Sheet1!C2", "Sheet1!D2", "Sheet1!E2"],
+        "derivation": "C2 * (D2 * 3 + E2)",
+    })
+    assert len(validate_items([claim], workbook).accepted) == 1
+    claim["quantity"] = 841
+    assert validate_items([claim], workbook).degraded[0]["rule"] == "4_mismatch"

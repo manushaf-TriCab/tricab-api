@@ -2,6 +2,8 @@
 # Change the source or the tool's declared patches, never this file.
 import unittest
 
+from tricab_cable_rules.normalize import normalize_text
+
 from tricab_cable_rules.extractor import (
     CABLE_SIGNAL_RE,
     extract_entities,
@@ -41,6 +43,28 @@ class ExtractQuantityTests(unittest.TestCase):
             self.assertEqual(fields["core_type"], "C", text)
             self.assertTrue(fields["earth"], text)
 
+    def test_unseparated_ce_counts_the_earth(self):
+        # "2.5 2CE OC" (estimate 7562): no "+" at all.
+        for text, count in (("2.5 2CE OC", 3), ("4.0 4CE OC", 5), ("16mm2 4 CE", 5)):
+            fields = extract_entities(text, set())["fields"]
+            self.assertEqual(fields["count"], count, text)
+            self.assertTrue(fields["earth"], text)
+
+    def test_ce_mark_is_not_a_core_count(self):
+        fields = extract_entities("CE approved 4C 16mm2", set())["fields"]
+
+        self.assertEqual(fields["count"], 4)
+        self.assertIsNone(fields.get("earth"))
+
+    def test_leading_decimal_size_before_cores_is_the_csa(self):
+        for text, size in (("2.5 2CE OC", "2.5"), ("4.0 4CE OC", "4"), ("10.0 4CE OC", "10")):
+            self.assertEqual(extract_entities(text, set())["fields"].get("cross_section"), size, text)
+
+    def test_leading_count_before_cores_is_not_a_csa(self):
+        # A whole number there can be a quantity; an odd size is not a conductor.
+        for text in ("10 4C cables", "3.5 2CE OC"):
+            self.assertIsNone(extract_entities(text, set())["fields"].get("cross_section"), text)
+
     def test_slash_earth_does_not_match_a_construction_string(self):
         # The "/E" rule must not fire on slash-separated construction ("XLPE/PVC")
         # -- the digit before the C is what keeps them apart.
@@ -63,6 +87,14 @@ class ExtractQuantityTests(unittest.TestCase):
         fields = extract_entities("4C/E/W 16mm2", set())["fields"]
         self.assertEqual(fields["count"], 5)
         self.assertTrue(fields["earth"])
+
+    def test_building_wire_abbreviation_keeps_a_bare_e_an_earth(self):
+        # "B/W" is building wire; between the size and a bare E it must not hide the E.
+        self.assertEqual(normalize_text("6mm B/W E"), "6mm BUILDING WIRE E")
+        for text in ("6mm B/W E", "25mm2 Cu B/W E", "25mm building wire E"):
+            with self.subTest(text=text):
+                fields = extract_entities(text, set())["fields"]
+                self.assertTrue(fields.get("earth_only"))
 
     def test_bare_trailing_e_after_a_size_is_an_earth(self):
         # An earth-size column / earth summary row writes the earth as a bare "E"
@@ -285,6 +317,94 @@ class PackQuantityAccessoryTests(unittest.TestCase):
         # accessories.
         self.assertIsNone(self._fields("2 rolls x 100m 4C 6mm2").get("accessory_hint"))
         self.assertIsNone(self._fields("1 drum x 500m 1C 95mm2").get("accessory_hint"))
+
+
+class AssembledLeadTests(unittest.TestCase):
+    """A cable with plugs fitted is a cable, not a plug (Haymans draft fca38b24).
+
+    The reader wrote the tender's general notes onto every row, so all 47 rows carried
+    "heat shrink" and "plugs" and every one was quoted as heat shrink with no code.
+    """
+
+    # Verbatim reader output from that draft.
+    THREE_PHASE = (
+        "Set 1 3 phase 4C+E cable: Active 4mm2, Earth 2.5mm2; rated at least 90°C, shielded "
+        "preferred, flexible and UV-rated for outdoor use; Government branding and individual "
+        "designation where required; labelled at both ends; fully assembled with heat shrink, "
+        "male/female Clipsal IP56 32A 5-pin plugs, test and tag"
+    )
+    POWERLOCK = (
+        "Set 1 Powerlock cable, minimum 660A plug rating: 120mm Active and 120mm Earth; rated "
+        "at least 90°C, shielded preferred, flexible and UV-rated for outdoor use; Government "
+        "branding and individual designation where required; labelled at both ends; fully "
+        "assembled with heat shrink, source and drain plug at either end, test and tag"
+    )
+
+    def test_assembled_leads_are_cables(self):
+        for text in (
+            self.THREE_PHASE,
+            self.POWERLOCK,
+            "2C+E 10mm2 flex lead, 15A 3-pin plug fitted each end",
+            "1C 120mm2 XLPE cable terminated with lugs both ends",
+        ):
+            with self.subTest(text=text):
+                extracted = extract_entities(text, set())
+                self.assertIsNone(extracted["fields"].get("accessory_hint"))
+                self.assertTrue(any("Assembled lead" in w for w in extracted["warnings"]))
+
+    def test_assembled_lead_keeps_its_construction(self):
+        fields = extract_entities(self.THREE_PHASE, set())["fields"]
+
+        self.assertEqual(fields.get("raw_core_expression"), "4C+E")
+        self.assertEqual(fields.get("cross_section"), "4")
+
+    def test_fittings_named_for_a_cable_stay_accessories(self):
+        # The cable is what the fitting suits, or nothing says it is assembled.
+        for text in (
+            "Glands to suit 4C 16mm2 cable, fitted on site",
+            "4C 25mm2 SWA glands",
+            "Clipsal 56P432 plug 32A 5 pin",
+            "4C+E 6mm2 cable c/w heat shrink",
+            "Cable ties fitted, 300mm x 4.8mm",
+            "Heat shrink end caps for 4C 16mm2 cable, test and tag",
+        ):
+            with self.subTest(text=text):
+                self.assertTrue(extract_entities(text, set())["fields"].get("accessory_hint"))
+
+
+class ConduitTests(unittest.TestCase):
+    """"Conduit" is not accessory vocabulary (decision 2026-10-26). "- In Conduit" says
+    where a cable runs, and estimate 7562 lost 13 of 19 rows to the accessory panel on it."""
+
+    def test_cable_in_conduit_is_a_cable(self):
+        for text in (
+            "Cable 1C 120mm2 Cu Flex - In Conduit",
+            "Cable 1C 16mm2 Cu Rigid XLPE/PVC - In Conduit",
+            "Earth Cable Green/Yellow 10mm2 - In Conduit",
+            "Cable 1C 35mm2 in 32mm PVC conduit",
+            "4x 1Cx 120mm X-HF-110 through conduit",
+            "green/yellow conduit wire 6mm2 300m",
+        ):
+            with self.subTest(text=text):
+                fields = extract_entities(text, set())["fields"]
+                self.assertIsNone(fields.get("accessory_hint"))
+                self.assertIsNone(fields.get("conduit_only"))
+
+    def test_conduit_itself_is_marked_but_not_an_accessory(self):
+        for text in (
+            "25mm PVC conduit 20 lengths",
+            "Conduit 32mm grey x 4m",
+            "20mm corrugated conduit 50m roll",
+        ):
+            with self.subTest(text=text):
+                fields = extract_entities(text, set())["fields"]
+                self.assertTrue(fields.get("conduit_only"))
+                self.assertIsNone(fields.get("accessory_hint"))
+
+    def test_other_fittings_on_a_conduit_line_still_count(self):
+        fields = extract_entities("20 x 32mm conduit saddles", set())["fields"]
+
+        self.assertTrue(fields.get("accessory_hint"))
 
 
 class CircuitTagKeywordTests(unittest.TestCase):
@@ -1257,3 +1377,15 @@ class PerCutLineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class InstrumentCoreConfigurationTests(unittest.TestCase):
+    def test_instrument_cores_plus_earth_are_control(self):
+        fields = extract_entities("8C+E 1.5mm2 Instrumentation", set())["fields"]
+        self.assertEqual(fields["cable_type_hint"], "Control")
+        self.assertEqual(fields["count"], 9)
+
+    def test_pairs_with_earth_remain_instrumentation(self):
+        fields = extract_entities("4PR 1.5mm2 Instrument + earth", set())["fields"]
+        self.assertEqual(fields["cable_type_hint"], "Instrumentation")
+        self.assertEqual(fields["core_type"], "P")

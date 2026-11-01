@@ -47,6 +47,24 @@ class HouseDefaultStyleTests(unittest.TestCase):
     def test_fire_defaults_to_fr(self):
         self.assertEqual(self._style("4C+E 120mm Cu fire rated"), "FR")
 
+    def test_fire_rated_beats_a_stated_pvc_sheath(self):
+        # Draft 8d7f76e8 (12 October 2026): "XLPE/PVC fire rated" gated FR out on the PVC
+        # sheath, and the email's "submains cable" heading then matched LP's earthing text,
+        # so seven mains rows were quoted as LP-XXXN/...EA earth wire.
+        for text in (
+            "1c 240mm2 Cu XLPE/PVC fire rated",
+            "1c 240mm2 Cu XLPE/PVC fire rated submains cable",
+            "1c 185mm2 Cu XLPE/PVC fire rated submains cable",
+            "1c 95mm2 Cu XLPE/PVC fire rated submains cable",
+        ):
+            with self.subTest(text=text):
+                result = match_line(text, catalog)
+                self.assertEqual(result["fields"]["style"], "FR")
+                self.assertFalse(result["selected_product_code"].endswith("EA"))
+
+    def test_pvc_without_fire_still_gates_out_lszh(self):
+        self.assertEqual(self._style("1c 240mm2 Cu XLPE/PVC submains cable"), "XL")
+
     def test_requested_special_application_overrides_default(self):
         # Submersible/termite explicitly requested -> do NOT impose the XL default.
         self.assertNotEqual(self._style("4C 70mm Cu submersible pump"), "XL")
@@ -1046,21 +1064,116 @@ class RadoxFireRatedTests(unittest.TestCase):
 
 
 class BuildingWireStyleTests(unittest.TestCase):
-    def test_building_wire_selects_ls(self):
-        for text in (
-            "1C 16mm2 building wire",
-            "2.5mm building wire red",
-            "1C 25mm2 building wire earth",
-            "1C 16mm2 BUILDING-WIRE",
+    def test_building_wire_follows_the_size_rule(self):
+        # Manusha, 9 October 2026: building wire is LS up to 10 mm2 and LP above, and LS
+        # at any size when LSZH is asked for. It used to be LS at every size.
+        for text, code in (
+            ("2.5mm building wire red", "LS-XXXD/1C2.5RE"),
+            ("10mm building wire black", "LS-XXXN/1C10BK"),
+            ("16mm2 building wire black", "LP-XXXN/1C16BK"),
+            ("50mm2 building wire red", "LP-XXXN/1C50RE"),
+            ("1C 16mm2 building wire", "LP-XXXN/1C16EA"),
+            ("1C 16mm2 BUILDING-WIRE", "LP-XXXN/1C16EA"),
+            ("16mm2 building wire LSZH black", "LS-XXXN/1C16BK"),
+            ("1C 16mm2 building wire R-125 black", "LS-XXXN/1C16BK"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(match_line(text, catalog)["selected_product_code"], code)
+
+    def test_building_wire_earth_above_10mm2_stays_lp(self):
+        for text, code in (
+            ("Earth 6MM 7/1.04 CU BUILDING WIRE", "LS-XXXD/1C6EA"),
+            ("Earth 16MM 7/1.70 CU BUILDING WIRE", "LP-XXXN/1C16EA"),
+            ("Earth 25MM 19/1.35 CU BUILDING WIRE", "LP-XXXN/1C25EA"),
+            ("1C 25mm2 building wire earth", "LP-XXXN/1C25EA"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(match_line(text, catalog)["selected_product_code"], code)
+
+    def test_section_heading_follows_the_size_rule(self):
+        self.assertEqual(match_line("1C 6mm2 red", catalog, context=["BUILDING WIRE"])["fields"]["style"], "LS")
+        self.assertEqual(match_line("1C 16mm2 black", catalog, context=["BUILDING WIRE"])["fields"]["style"], "LP")
+
+    def test_b_w_is_building_wire(self):
+        # "B/W" is trade shorthand for building wire (9 October 2026). Before it was
+        # read, "6mm B/W E" quoted as XL-PAXN/1C6OR: the B/W hid the bare E from the
+        # earth reading and named no style. Up to 10 mm2, and on any earth, the shorthand
+        # and the words agree; above 10 mm2 a coloured B/W goes to LP (see below).
+        for text, code in (
+            ("6mm B/W E", "LS-XXXD/1C6EA"),
+            ("25mm2 B/W E", "LP-XXXN/1C25EA"),
+            ("25mm B/W earth", "LP-XXXN/1C25EA"),
+            ("10mm B/W yellow", "LS-XXXN/1C10YE"),
+            ("2.5mm B / W red", "LS-XXXD/1C2.5RE"),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(match_line(text, catalog)["selected_product_code"], code)
+                self.assertEqual(
+                    match_line(text.replace("B / W", "B/W").replace("B/W", "building wire"),
+                               catalog)["selected_product_code"],
+                    code, "B/W and building wire disagree")
+
+    def test_b_w_with_no_colour_is_an_earth(self):
+        # Sales, 9 October 2026: with no colour named, B/W is an earth -- and takes the
+        # building-wire earth rule, LS up to 10 mm2 and LP above.
+        for text, code in (
+            ("2.5mm2 B/W", "LS-XXXD/1C2.5EA"),
+            ("10mm B/W", "LS-XXXN/1C10EA"),
+            ("16mm2 B/W", "LP-XXXN/1C16EA"),
+            ("1C 16mm2 B/W", "LP-XXXN/1C16EA"),
+            ("25mm2 Cu B/W", "LP-XXXN/1C25EA"),
+            ("50mm2 Al B/W", "LP-XXXA/1C50EA"),
         ):
             with self.subTest(text=text):
                 result = match_line(text, catalog)
-                self.assertEqual(result["fields"]["style"], "LS")
-                self.assertTrue(result["selected_product_code"].startswith("LS-"))
+                self.assertTrue(result["fields"].get("earth_only"))
+                self.assertEqual(result["selected_product_code"], code)
 
-    def test_section_heading_selects_ls(self):
-        result = match_line("1C 16mm2 black", catalog, context=["BUILDING WIRE"])
-        self.assertEqual(result["fields"]["style"], "LS")
+    def test_b_w_with_a_colour_is_that_colour_chosen_by_size(self):
+        # Manusha, 9 October 2026: a coloured B/W follows the size rule -- LS up to
+        # 10 mm2, LP above -- and LSZH makes it LS at any size.
+        for text, code in (
+            ("6mm B/W red", "LS-XXXD/1C6RE"),
+            ("10mm B/W black", "LS-XXXN/1C10BK"),
+            ("16mm2 B/W black", "LP-XXXN/1C16BK"),
+            ("50mm2 B/W red", "LP-XXXN/1C50RE"),
+            ("70mm2 Al B/W black", "LP-XXXA/1C70BK"),
+            ("16mm2 B/W LSZH black", "LS-XXXN/1C16BK"),
+            ("50mm2 B/W LSZH red", "LS-XXXN/1C50RE"),
+        ):
+            with self.subTest(text=text):
+                result = match_line(text, catalog)
+                self.assertFalse(result["fields"].get("earth_only"))
+                self.assertEqual(result["selected_product_code"], code)
+
+    def test_b_w_with_lszh_and_no_colour_is_an_ls_earth(self):
+        self.assertEqual(match_line("16mm2 B/W LSZH", catalog)["selected_product_code"], "LS-XXXN/1C16EA")
+
+    def test_b_w_and_building_wire_in_a_colour_agree_at_every_size(self):
+        for size in ("2.5", "10", "16", "50"):
+            with self.subTest(size=size):
+                self.assertEqual(
+                    match_line(f"{size}mm2 B/W black", catalog)["selected_product_code"],
+                    match_line(f"{size}mm2 building wire black", catalog)["selected_product_code"],
+                )
+
+    def test_spelled_out_building_wire_with_no_colour_is_not_made_an_earth(self):
+        # The no-colour earth default is the shorthand's, per Sales. The code comes out
+        # the same either way: the size rule and the earth rule agree.
+        result = match_line("16mm2 building wire", catalog)
+        self.assertFalse(result["fields"].get("earth_only"))
+        self.assertEqual(result["selected_product_code"], "LP-XXXN/1C16EA")
+
+    def test_b_w_section_heading_follows_the_size_rule(self):
+        self.assertEqual(match_line("1C 6mm2 red", catalog, context=["B/W"])["fields"]["style"], "LS")
+        self.assertEqual(match_line("1C 16mm2 black", catalog, context=["B/W"])["fields"]["style"], "LP")
+
+    def test_b_w_on_a_marine_line_keeps_the_marine_substitute(self):
+        self.assertEqual(match_line("16mm2 marine B/W black", catalog)["fields"]["style"], "UP")
+
+    def test_b_w_on_a_multicore_is_not_forced_to_single_core_ls(self):
+        result = match_line("2C 1.5mm2 flex B/W", catalog)
+        self.assertNotEqual(result["fields"]["style"], "LS")
 
     def test_explicit_series_keeps_precedence(self):
         result = match_line("1C 16mm2 building wire KL Series", catalog)
@@ -1398,3 +1511,108 @@ class ControlCoreBoundaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class InstrumentCoreConfigurationTests(unittest.TestCase):
+    def test_instrument_cores_plus_earth_follow_normal_control_tree(self):
+        specifications = (
+            "V75 PVC 75°C 24VDC",
+            "PVC 110V",
+            "PVC 450/750V",
+            "PVC 0.6/1kV",
+            "PVC 110°C",
+            "LSZH",
+            "PVC flexible",
+            "PVC SWA",
+            "PVC overall screen",
+        )
+        styles = set()
+        for spec in specifications:
+            expected = match_line(f"1.5mm2 8C+E {spec} Control 105m", catalog)
+            styles.add(expected["fields"].get("style"))
+            for label in ("Instrument", "Instrumentation"):
+                for config in ("8C+E", "8C + E"):
+                    for overrides in (None, {"cable_type_hint": "Instrumentation"}):
+                        with self.subTest(spec=spec, label=label, config=config, overrides=overrides):
+                            result = match_line(
+                                f"1.5mm2 {config} {spec} {label} 105m",
+                                catalog, field_overrides=overrides,
+                            )
+                            self.assertEqual(result["fields"]["cable_type_hint"], "Control")
+                            self.assertEqual(result["fields"]["count"], 9)
+                            self.assertEqual(result["fields"].get("style"), expected["fields"].get("style"))
+                            self.assertEqual(result["selected_product_code"], expected["selected_product_code"])
+                            self.assertEqual(result["status"], expected["status"])
+        self.assertGreater(len(styles - {None}), 1)
+
+    def test_instrument_pairs_remain_instrumentation(self):
+        result = match_line("1.5mm2 50PR V-75 ID/OA 75°C 24VDC/4-20mA Instrument 180m", catalog)
+        self.assertEqual(result["fields"]["cable_type_hint"], "Instrumentation")
+        self.assertEqual(result["fields"]["core_type"], "P")
+        self.assertEqual(result["fields"]["count"], 50)
+        self.assertNotEqual(result["fields"]["style"], "C1")
+
+
+class AssembledLeadResolverTests(unittest.TestCase):
+    """Haymans draft fca38b24: a 4C+E cable with plugs fitted was quoted as G01 heat
+    shrink with no code. With the AI's fields applied it must resolve as the cable."""
+
+    def test_assembled_lead_resolves_as_cable(self):
+        text = (
+            "Set 1 3 phase 4C+E cable: Active 4mm2, Earth 2.5mm2; rated at least 90°C, shielded "
+            "preferred, flexible and UV-rated for outdoor use; Government branding and individual "
+            "designation where required; labelled at both ends; fully assembled with heat shrink, "
+            "male/female Clipsal IP56 32A 5-pin plugs, test and tag"
+        )
+        overrides = {
+            "earth": True, "raw_core_expression": "4C+E", "count": 5, "earth_count": 1,
+            "core_type": "C", "cross_section": "4", "alternate_sizes": ["2.5"],
+        }
+
+        result = match_line(text, catalog, field_overrides=overrides)
+
+        self.assertEqual(result["item_type"], "cable")
+        self.assertNotEqual(result.get("line_kind"), "accessory")
+        self.assertEqual(result["selected_product_code"], "XL-PAXN/5C4OR")
+
+
+class ConduitResolverTests(unittest.TestCase):
+    """Conduit is off the accessory list; a conduit line must still never be quoted as
+    a cable at its bore size ("25mm PVC conduit" was XL-PAXN/1C25OR, `matched`)."""
+
+    def test_conduit_itself_needs_review_with_no_code(self):
+        result = match_line("25mm PVC conduit 20 lengths", catalog)
+
+        self.assertEqual(result["status"], "unresolved")
+        self.assertEqual(result["selected_product_code"], "")
+        self.assertNotEqual(result.get("line_kind"), "accessory")
+        self.assertIn("conduit", " ".join(result["warnings"]).lower())
+
+    def test_cable_in_conduit_is_quoted(self):
+        result = match_line("Cable 1C 120mm2 Cu Rigid XLPE/PVC - In Conduit", catalog)
+
+        self.assertEqual(result["item_type"], "cable")
+        self.assertEqual(result["selected_product_code"], "XL-PAXN/1C120OR")
+
+
+class OrangeCircularShorthandTests(unittest.TestCase):
+    """"OC" is orange circular: plain power, so XL/KL/CC by the house defaults unless a
+    feature such as armour is stated (Sales, 2026-10-26; estimate 7562)."""
+
+    def test_oc_lines_take_the_house_default_style(self):
+        cases = (
+            ("2.5 2CE OC", "XL-PAXN/3C2.5OR"),
+            ("4.0 4CE OC", "XL-PAXN/5C4OR"),
+            ("2.5 2CE OC 110C", "KL-PAXN/3C2.5OR"),
+            ("6.0 4CE OC LSZH", "CC-PAXN/5C6OR"),
+        )
+        for text, code in cases:
+            with self.subTest(text=text):
+                result = match_line(text, catalog)
+                self.assertEqual(result["selected_product_code"], code)
+                self.assertEqual(result["status"], "matched")
+
+    def test_armour_on_an_oc_line_leaves_the_plain_styles(self):
+        result = match_line("6.0 4CE OC SWA", catalog)
+
+        self.assertNotIn(result["fields"]["style"], {"XL", "KL", "CC"})

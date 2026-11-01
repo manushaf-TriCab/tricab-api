@@ -19,7 +19,8 @@ import os
 import re
 import urllib.parse
 import urllib.request
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from math import ceil
 from pathlib import Path
 
@@ -993,6 +994,30 @@ READER_INPUT_TYPES = frozenset({"attachment_reader", "text_reader", "reader_ungr
 
 def _reader_sourced(source: dict) -> bool:
     return source.get("input_type") in READER_INPUT_TYPES
+
+
+#: The most rows or items one pricing request accepts. Above it the request is refused
+#: whole instead of priced in part. The old cap sliced to 500 and still answered
+#: `ok: true`, so row 501 of a quote came back with no price, no error and no name (C32
+#: in docs/SYSTEM_TEST_RESULTS_20261009.md). Real quotes exceed 500 lines (a 735-line
+#: one was synced in September), and the editor prices the whole quote in one request
+#: because MAKE MOQ is evaluated across same-product lines -- so splitting it would
+#: price those lines wrongly. Not measured against the real Cost API above 500 rows.
+PRICES_MAX_ROWS = 2000
+
+
+def pricing_request_refusal(count):
+    """The error body for a pricing request that is too large, or None if it fits."""
+    if count <= PRICES_MAX_ROWS:
+        return None
+    return {
+        "ok": False,
+        "error_type": "too_many_rows",
+        "limit": PRICES_MAX_ROWS,
+        "received": count,
+        "error": (f"This quote has {count} lines; pricing takes at most {PRICES_MAX_ROWS} "
+                  "at a time. No line was priced. Split the quote, then retry pricing."),
+    }
 
 
 def apply_price(result, region=None):

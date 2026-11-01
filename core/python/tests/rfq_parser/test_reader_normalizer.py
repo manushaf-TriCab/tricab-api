@@ -414,3 +414,21 @@ def test_a_code_the_customer_stated_survives_the_bypass(stub):
         [_reader_item(f"{code} 250m")], message_context={"subject": "RFQ"}
     )
     assert results[0]["selected_product_code"] == code
+
+
+def test_schedule_evidence_reaches_translator_without_rewriting_route(stub):
+    schedule = {
+        'source_description': 'A2-E | 120mm2 | CU | 2 | 45',
+        'conductor_spec': {'active_size': '120mm2', 'conductor_material': 'CU', 'cores': '2'},
+        'component': 'separate_earth', 'cuts': 2, 'total_m': 90,
+        'source_cells': [{'field': 'active_size', 'cell': 'Sheet1!F5'}],
+    }
+    item = _reader_item('Earth', schedule=schedule)
+    item['metadata'] = {'table_quantity': 90, 'table_unit': 'm',
+                        'quantity_basis': 'total', 'number_of_lengths': 2}
+    rn.normalize_items([item])
+    sent = chunk_rows(stub['payload'])[0]
+    assert sent['text'] == 'Earth'
+    assert sent['schedule'] == schedule
+    assert sent['quantity_metadata'] == item['metadata']
+    assert item['source']['schedule'] == schedule

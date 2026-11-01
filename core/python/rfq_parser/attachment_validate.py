@@ -29,6 +29,7 @@ care which model made them, and it survives a change of reader.
 from __future__ import annotations
 
 import ast
+import math
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -70,6 +71,20 @@ _TOLERANCE = 1e-6
 # carrying either is never eligible for auto-push, whatever its confidence.
 INFERRED_MULTIPLIER_KEY = "inferred_multiplier"
 DOUBLE_COUNT_KEY = "double_counted"
+# A source check that failed or could not run. The row is KEPT and carries this key --
+# see `preserve_with_warnings`. Same seam as the two keys above: it rides on `source`,
+# and an item carrying it is never eligible for auto-push and needs explicit review.
+SOURCE_CHECK_KEY = "source_check"
+# Stamped on every item before validation so the order and identity of the extraction
+# survive the accepted/degraded split. Several components share one source row
+# (Chirnside: mains/neutral and earth on each circuit), so sheet/row is not an identity.
+EXTRACTION_INDEX_KEY = "extraction_index"
+
+# Rules whose failure means the item cannot be turned into a row at all.
+_MALFORMED_RULES = frozenset({"shape"})
+# Rules whose failure means the stated quantity is not a usable number. The row is kept
+# with its quantity unset -- never zero -- so the valid-quantity requirement blocks sync.
+_INVALID_QUANTITY_RULES = frozenset({"5_type", "5_negative", "5_nonfinite"})
 
 
 @dataclass
@@ -89,6 +104,69 @@ class ValidationOutcome:
 
 def _drop(item: Any, rule: str, detail: str) -> dict[str, Any]:
     return {"item": item, "rule": rule, "detail": detail}
+
+
+def stamp_extraction_index(items: list[Any]) -> list[Any]:
+    """Copies of `items`, each dict carrying its position in the model's answer."""
+    stamped: list[Any] = []
+    for index, item in enumerate(items):
+        if isinstance(item, dict):
+            item = dict(item)
+            item.setdefault(EXTRACTION_INDEX_KEY, index)
+        stamped.append(item)
+    return stamped
+
+
+def preserve_with_warnings(outcome: ValidationOutcome, *, status: str = "failed") -> ValidationOutcome:
+    """Turn source-check failures into review warnings instead of deletions.
+
+    TERRA_VALIDATION_WARNINGS_PLAN: a checker defect must not erase a usable extraction.
+    Chirnside lost all six rows because numeric-text cells were read as blank. So every
+    degraded item that is still an object comes back as an accepted item carrying
+    `SOURCE_CHECK_KEY`, with the model's proposed quantity untouched -- never replaced by
+    the checker's arithmetic. An unusable quantity (not a number, negative, non-finite)
+    is kept as a reviewable row with `quantity: None`, never zero.
+
+    Only malformed entries (not an object) and model-reported skips stay in `degraded`.
+    `status` is "failed" for a check that ran and disagreed, "unavailable" for one that
+    could not run. Order follows `EXTRACTION_INDEX_KEY` when present.
+    """
+    kept: list[dict[str, Any]] = list(outcome.accepted)
+    remaining: list[dict[str, Any]] = []
+    for entry in outcome.degraded:
+        item = entry.get("item")
+        rule = str(entry.get("rule") or "")
+        if rule in _MALFORMED_RULES or rule == "skipped" or not isinstance(item, dict):
+            remaining.append(entry)
+            continue
+        flagged = dict(item)
+        proposed = item.get("quantity")
+        if rule in _INVALID_QUANTITY_RULES:
+            flagged["quantity"] = None
+        flagged[SOURCE_CHECK_KEY] = {
+            "code": rule,
+            "status": "unavailable" if rule.startswith("0_") else status,
+            "detail": str(entry.get("detail") or ""),
+            "proposed_quantity": proposed,
+            "sheet": item.get("sheet"),
+            "row": item.get("row"),
+            EXTRACTION_INDEX_KEY: item.get(EXTRACTION_INDEX_KEY),
+        }
+        kept.append(flagged)
+    kept.sort(key=lambda i: (i.get(EXTRACTION_INDEX_KEY) is None, i.get(EXTRACTION_INDEX_KEY) or 0))
+    return ValidationOutcome(accepted=kept, degraded=remaining)
+
+
+def checks_unavailable(items: list[Any], detail: str, *,
+                       rule: str = "0_checker_unavailable") -> ValidationOutcome:
+    """Every usable item kept, marked unchecked: the checker itself could not run."""
+    outcome = ValidationOutcome()
+    for item in items:
+        if not isinstance(item, dict):
+            outcome.degraded.append(_drop(item, "shape", "item is not an object"))
+        else:
+            outcome.degraded.append(_drop(item, rule, detail))
+    return preserve_with_warnings(outcome, status="unavailable")
 
 
 def _parse_ref(ref: Any) -> tuple[str, str] | None:
@@ -125,6 +203,21 @@ def _as_number(value: Any) -> float | None:
     if isinstance(value, (int, float)):
         return float(value)
     return None
+
+
+# Spreadsheet exports may store all numeric cells as text. Accept only an entire,
+# finite decimal literal; do not extract numbers from units, formulas or descriptions.
+_NUMERIC_CELL_TEXT = re.compile(r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?")
+
+
+def _cell_number(value: Any) -> float | None:
+    if isinstance(value, str):
+        value = value.strip()
+        if not _NUMERIC_CELL_TEXT.fullmatch(value):
+            return None
+        value = float(value)
+    number = _as_number(value)
+    return number if number is not None and math.isfinite(number) else None
 
 
 def _evaluate(expression: str, values: dict[str, float]) -> float | None:
@@ -340,6 +433,9 @@ def validate_items(items: list[dict[str, Any]], workbook: Any) -> ValidationOutc
         if number is None:
             outcome.degraded.append(_drop(item, "5_type", f"quantity {quantity!r} is not a number"))
             continue
+        if not math.isfinite(number):
+            outcome.degraded.append(_drop(item, "5_nonfinite", f"quantity {quantity!r} is not finite"))
+            continue
         if number < 0:
             outcome.degraded.append(_drop(item, "5_negative", f"quantity {number} is negative"))
             continue
@@ -372,7 +468,7 @@ def validate_items(items: list[dict[str, Any]], workbook: Any) -> ValidationOutc
             if not exists:
                 failed = _drop(item, "2_cell", f"cell {ref} does not exist")
                 break
-            number_value = _as_number(value)
+            number_value = _cell_number(value)
             if number_value is None:
                 blanks.append(str(ref))
                 if isinstance(value, str) and value.strip():
@@ -542,6 +638,9 @@ def validate_text_items(items: list[dict[str, Any]], source_text: str) -> Valida
         if number is None:
             outcome.degraded.append(_drop(item, "5_type", f"quantity {quantity!r} is not a number"))
             continue
+        if not math.isfinite(number):
+            outcome.degraded.append(_drop(item, "5_nonfinite", f"quantity {quantity!r} is not finite"))
+            continue
         if number < 0:
             outcome.degraded.append(_drop(item, "5_negative", f"quantity {number} is negative"))
             continue
@@ -662,3 +761,106 @@ def _flag_double_counted_text(accepted: list[dict[str, Any]]) -> None:
                 ),
             }
             accepted[index] = flagged
+
+
+# --- customer notes ----------------------------------------------------------------
+#
+# `customer_note` reaches the 4js line comment verbatim. The reader is told to copy the
+# words the customer wrote about *that* line, but it also copies sentences about the
+# whole request -- "Length/s tbc (mtr rate please)" onto all seven cable lines of quote
+# 751005, "Can you please provide a price for this..." onto 116 lines -- and Sales
+# delete them by hand. Since 2026-09-15 about 155 of 956 drafts carried one. A plain
+# "is it in the source" check cannot catch it: the sentence IS in the source, once.
+#
+# So a note has to be tied to its own line, and anything that is not is dropped outright
+# (Sales' call, 2026-10-31: those remarks go nowhere). Both checks only ever clear a
+# note; neither touches the item.
+
+
+def _note_anchor(item: dict[str, Any]) -> str:
+    """Which source line an item came from, as best the item says.
+
+    Items split from one line (an active and its earth) share a description, so they
+    count as one carrier of a note rather than two.
+    """
+    source = item.get("quantity_source") or {}
+    quote = _flatten(source.get("quote") if isinstance(source, dict) else "")
+    return quote or _flatten(item.get("description"))
+
+
+def drop_unanchored_customer_notes(text_items: list[Any], picture_items: list[Any],
+                                   source_text: str) -> int:
+    """Clear notes on text-read items that are not tied to their own line. Returns how many.
+
+    A note may sit on at most as many source lines as the times it appears in the text.
+    A sentence written once and attached to seven lines is about the request, not about
+    any one line. A Notes column in an HTML table repeats its text on every row, so it
+    survives -- which is why this counts rather than looking for the note on the item's
+    own line: the evidence text puts each table cell on a line of its own.
+
+    A text item's note that is not in the text at all was composed and is cleared. A
+    picture row's note that is not in the text was read off the picture and is kept; it
+    cannot be checked, and the row is already held for review as ungrounded.
+    """
+    haystack = _flatten(source_text)
+    items = [(item, False) for item in text_items if isinstance(item, dict)]
+    items += [(item, True) for item in picture_items if isinstance(item, dict)]
+
+    carriers: dict[str, set[str]] = {}
+    for item, picture in items:
+        note = _flatten(item.get("customer_note"))
+        if note:
+            anchor = _note_anchor(item) or f"item-{id(item)}"
+            carriers.setdefault(note, set()).add(("picture:" if picture else "") + anchor)
+
+    dropped = 0
+    for item, picture in items:
+        note = _flatten(item.get("customer_note"))
+        if not note:
+            continue
+        occurrences = haystack.count(note)
+        if picture and occurrences == 0:
+            continue
+        if occurrences == 0 or len(carriers[note]) > occurrences:
+            item["customer_note"] = None
+            dropped += 1
+    return dropped
+
+
+def _cell_texts(value: Any) -> list[str]:
+    """How a cell may have been read: its text, and a date the ways a sheet shows one."""
+    if value is None:
+        return []
+    if hasattr(value, "strftime"):
+        return [value.strftime(fmt) for fmt in ("%d/%m/%Y", "%d/%m/%y", "%Y-%m-%d", "%d-%m-%Y")]
+    return [str(value)]
+
+
+def drop_off_row_customer_notes(items: list[Any], workbook: Any) -> int:
+    """Clear notes on workbook items that are not in their own row's cells. Returns how many.
+
+    A Lead Time / Notes cell on the row is the case the field exists for, and is kept. A
+    merged cell that spans the row counts as on it. Text from anywhere else on the sheet,
+    or composed by the model, is not this row's note.
+    """
+    dropped = 0
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        note = _flatten(item.get("customer_note"))
+        if not note:
+            continue
+        sheet = str(item.get("sheet") or "")
+        row = item.get("row")
+        texts: list[str] = []
+        if sheet in getattr(workbook, "sheetnames", []) and isinstance(row, int) and row > 0:
+            worksheet = workbook[sheet]
+            for cell in worksheet[row]:
+                texts += _cell_texts(cell.value)
+            for merged in getattr(getattr(worksheet, "merged_cells", None), "ranges", ()):
+                if merged.min_row <= row <= merged.max_row:
+                    texts += _cell_texts(worksheet.cell(merged.min_row, merged.min_col).value)
+        if note not in _flatten(" ".join(texts)):
+            item["customer_note"] = None
+            dropped += 1
+    return dropped

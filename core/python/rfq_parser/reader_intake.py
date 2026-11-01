@@ -10,6 +10,7 @@ three entry points read one file one way. See `tools/sync_rfq_parser.py`.
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Callable
@@ -159,12 +160,7 @@ def read_one_file(
             notes.append(f"Attachment '{name}' could not be read: {result.error}")
             return items, notes
         items.extend(attachment_reader.to_text_work_items(result, name))
-        dropped = [d for d in result.degraded if d.get("rule") != "skipped"]
-        if dropped:
-            notes.append(
-                f"Attachment '{name}': {len(dropped)} line(s) failed grounding and were "
-                f"dropped ({dropped[0].get('rule')}: {dropped[0].get('detail')})."
-            )
+        notes.extend(_reader_check_notes(name, result))
         if not result.validated:
             notes.append(
                 f"Attachment '{name}' has no text layer; its rows were read from the "
@@ -175,16 +171,9 @@ def read_one_file(
     if suffix in attachment_reader.READER_SUFFIXES and attachment_reader.reader_enabled():
         result = attachment_reader.read_attachment(data, name, ctype)
         if not result.ok:
-            notes.append(f"Attachment '{name}' could not be read: {result.error}")
-            return items, notes
+            return _recover_after_reader_failure(data, name, result.error, items, notes)
         items.extend(attachment_reader.to_work_items(result, name))
-        if result.degraded:
-            dropped = [d for d in result.degraded if d.get("rule") != "skipped"]
-            if dropped:
-                notes.append(
-                    f"Attachment '{name}': {len(dropped)} row(s) failed validation and were "
-                    f"dropped ({dropped[0].get('rule')}: {dropped[0].get('detail')})."
-                )
+        notes.extend(_reader_check_notes(name, result))
         if not result.validated:
             notes.append(
                 f"Attachment '{name}' could not be re-opened for checking; its rows are "
@@ -201,10 +190,8 @@ def read_one_file(
             # mid-read and the read was made again -- twice in six attempts on the
             # 194 KB file, which is the one that takes five minutes. Silence here is
             # how a reliability problem becomes invisible until it stops recovering.
-            notes.append(
-                f"Attachment '{name}' was read on attempt {result.retries + 1}: the "
-                "sandbox container expired mid-read."
-            )
+            why = "; ".join(result.retry_reasons) or "the sandbox container expired mid-read"
+            notes.append(f"Attachment '{name}' was read on attempt {result.retries + 1}: {why}.")
         return items, notes
 
     # .docx / .csv / .txt: no cells to open, so these take the body's route --
@@ -219,30 +206,177 @@ def read_one_file(
             notes.append(f"Attachment '{name}' could not be read: {result.error}")
             return items, notes
         items.extend(attachment_reader.to_text_work_items(result, name))
-        dropped = [d for d in result.degraded if d.get("rule") != "skipped"]
-        if dropped:
-            notes.append(
-                f"Attachment '{name}': {len(dropped)} line(s) failed grounding and were "
-                f"dropped ({dropped[0].get('rule')}: {dropped[0].get('detail')})."
-            )
+        notes.extend(_reader_check_notes(name, result))
         return items, notes
 
+    standard, error = _standard_parse(data, name)
+    items.extend(standard)
+    if error:
+        notes.append(f"Attachment '{name}' could not be parsed: {error}")
+    return items, notes
+
+
+def _reader_check_notes(name: str, result, *, label: str = "") -> list[str]:
+    """What the source checks found, in the words TERRA_VALIDATION_WARNINGS_PLAN asks for.
+
+    Rows that failed a check are kept and warned, so the sentence counts them as
+    extracted, never as dropped. Only malformed entries are actually left out.
+    """
+    label = label or f"Attachment '{name}'"
+    notes: list[str] = []
+    extracted = len(result.items)
+    warned = [i for i in result.items if i.get(SOURCE_CHECK_KEY)]
+    if warned:
+        first = warned[0][SOURCE_CHECK_KEY]
+        verb = ("could not be checked" if first.get("status") == "unavailable"
+                else "need their quantity checked")
+        notes.append(
+            f"{label}: Terra extracted {extracted} line(s); {len(warned)} "
+            f"{verb} against the source ({first.get('code')}: {first.get('detail')})."
+        )
+    malformed = [d for d in result.degraded if d.get("rule") != "skipped"]
+    if malformed:
+        notes.append(
+            f"{label}: {len(malformed)} extracted item(s) were malformed and "
+            f"could not become lines ({malformed[0].get('rule')}: {malformed[0].get('detail')}). "
+            "Check the attachment for them before syncing."
+        )
+    if getattr(result, "coverage_review", ""):
+        notes.append(
+            f"{label} may hold lines Terra did not extract: {result.coverage_review}. "
+            "Review the attachment before syncing."
+        )
+    return notes
+
+
+def _name_list(names, limit: int = 5) -> str:
+    names = [str(n) for n in names]
+    shown = ", ".join(f"'{n}'" for n in names[:limit])
+    return shown + (f" and {len(names) - limit} more" if len(names) > limit else "")
+
+
+def _body_image_notes(result) -> list[str]:
+    """What a body read that carried pasted pictures has to say about them.
+
+    Silent when no row came off a picture: a signature logo that got past the filter is the
+    ordinary reason, and saying so on every email would bury the notes that matter.
+    """
+    notes: list[str] = []
+    from_pictures = [i for i in result.items if i.get(attachment_reader.BODY_IMAGE_KEY)]
+    if from_pictures:
+        names = dict.fromkeys(i[attachment_reader.BODY_IMAGE_KEY] for i in from_pictures)
+        notes.append(
+            f"Email body: {len(from_pictures)} line(s) were read from image(s) pasted into "
+            f"the email ({_name_list(names)}), under the email's own headings. Nothing can "
+            "check a number read from a picture, so every quantity needs confirming."
+        )
+    if result.note:
+        notes.append(f"Email body: {result.note}.")
+    return notes
+
+
+def _standard_parse(data: bytes, name: str) -> tuple[list[dict], str]:
+    """The deterministic spreadsheet/text parse of one file: (work items, error text)."""
+    items: list[dict] = []
     with TemporaryDirectory() as tmp:
         target = Path(tmp) / os.path.basename(name)
         target.write_bytes(data)
         try:
             for idx, parsed in enumerate(parse_file(target)):
+                source = {"file_name": name, "row_number": parsed.get("row_number") or idx + 1}
+                if parsed.get("sheet"):
+                    source["sheet"] = parsed["sheet"]
                 items.append(
                     {
                         "text": parsed["text"],
                         "context": parsed.get("context") or [],
                         "metadata": parsed.get("metadata") or {},
-                        "source": {"file_name": name, "row_number": parsed.get("row_number") or idx + 1},
+                        "source": source,
                     }
                 )
         except Exception as exc:  # noqa: BLE001 - one bad file must not stop the batch
-            notes.append(f"Attachment '{name}' could not be parsed: {exc}")
+            return [], str(exc)
+    return items, ""
+
+
+def _recover_after_reader_failure(
+    data: bytes, name: str, reader_error: str, items: list[dict], notes: list[str]
+) -> tuple[list[dict], list[str]]:
+    """One recovery policy for an AI spreadsheet-reader failure, for email and portal alike.
+
+    `read_one_file` is the only door both entry points use, so the policy lives here and
+    cannot drift. The standard parser is consulted only when the failure says nothing
+    about the workbook (a filter, a service fault, unusable output). Its rows are not the
+    reader's answer: each carries `source.reader_recovery`, which keeps it out of the
+    auto-send (`_flag_reason`) and which the portal turns into a proposal the rep must
+    accept. The previous no-fallback rule existed to stop silent omissions and lost
+    quantities; marking and holding the rows is what makes this not silent.
+    """
+    from rfq_parser import reader_failure
+
+    category = reader_failure.classify_reader_error(reader_error)
+    if Path(name).suffix.lower() not in {".xlsx", ".xlsm", ".xls"} or not reader_failure.is_recoverable(category):
+        notes.append(f"Attachment '{name}' could not be read: {reader_error}")
+        return items, notes
+    standard, parse_error = _standard_parse(data, name)
+    if parse_error:
+        notes.append(
+            f"Attachment '{name}': {reader_failure.reason_text(category)} and the standard "
+            f"parser could not open the workbook either ({parse_error}). "
+            f"Reader error: {reader_error}"
+        )
+        return items, notes
+    if not standard:
+        notes.append(
+            f"Attachment '{name}': {reader_failure.reason_text(category)}, and the standard "
+            f"parser found no cable lines in the workbook. Reader error: {reader_error}"
+        )
+        return items, notes
+    # A summary row ("TOTALS 44420") is not a cable line. The AI reader reports these as
+    # skipped; the standard parser has no such concept and would hand the grand total on as
+    # a line to quote. Left out here, and said so, so the omission is visible not silent.
+    summary_rows = [item for item in standard if _is_summary_row(item)]
+    standard = [item for item in standard if not _is_summary_row(item)]
+    if not standard:
+        notes.append(
+            f"Attachment '{name}': {reader_failure.reason_text(category)}, and the standard "
+            f"parser found no cable lines in the workbook. Reader error: {reader_error}"
+        )
+        return items, notes
+    for item in standard:
+        item["source"]["reader_recovery"] = {
+            "method": "standard_parser",
+            "category": category,
+            "reader_error": str(reader_error)[:300],
+        }
+    from rfq_parser.reader_recovery import audit_recovery
+    try:
+        coverage_issues = audit_recovery(data, name, standard, summary_rows)
+    except Exception as exc:
+        # A failed audit cannot turn an unchecked extraction into a usable proposal.
+        notes.append(f"Attachment '{name}': recovery source validation failed ({exc}). "
+                     f"Reader error: {reader_error}")
+        return items, notes
+    left_out = ""
+    if summary_rows:
+        rows = ", ".join(str(item["source"].get("row_number")) for item in summary_rows)
+        left_out = f" {len(summary_rows)} summary row(s) (row {rows}) were left out."
+    notes.append(
+        f"Attachment '{name}': {reader_failure.reason_text(category)}. The standard parser "
+        f"extracted {len(standard)} line(s) instead.{left_out} Review their specifications "
+        "and quantities before syncing."
+    )
+    notes.extend(coverage_issues)
+    items.extend(standard)
     return items, notes
+
+
+_SUMMARY_ROW = re.compile(r"^\s*(grand\s+|sub[\s-]?)?totals?\b[\s:.\d,]*$", re.IGNORECASE)
+
+
+def _is_summary_row(item: dict) -> bool:
+    """A row whose text is only a totals label (and its number): TOTALS, Grand total 44,420."""
+    return bool(_SUMMARY_ROW.match(str(item.get("text") or "")))
 
 
 def _default_vision_ocr():

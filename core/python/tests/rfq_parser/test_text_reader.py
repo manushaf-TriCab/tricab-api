@@ -19,6 +19,7 @@ import pytest
 
 from rfq_parser import attachment_reader as reader
 from rfq_parser.attachment_reader import read_text
+from rfq_parser.attachment_validate import SOURCE_CHECK_KEY
 
 BODY = """Please quote:
 1  4x1C 185mm2 Cu XLPE/PVC orange   270 m   4 sets
@@ -133,7 +134,7 @@ def test_a_grounded_quantity_is_returned(stub):
     assert result.validated is True
 
 
-def test_a_quantity_whose_span_is_not_in_the_body_is_degraded(stub):
+def test_a_quantity_whose_span_is_not_in_the_body_is_kept_with_a_warning(stub):
     """The model quoting text that does not exist is the failure this path must catch."""
     stub["response"] = _response([_item(
         quantity=5000,
@@ -141,18 +142,18 @@ def test_a_quantity_whose_span_is_not_in_the_body_is_degraded(stub):
     )])
     result = read_text(BODY)
     assert result.ok
-    assert result.items == []
-    assert result.degraded[0]["rule"] == "1_quote"
+    assert [i["quantity"] for i in result.items] == [5000]
+    assert result.items[0][SOURCE_CHECK_KEY]["code"] == "1_quote"
 
 
-def test_a_quantity_not_present_in_its_own_span_is_degraded(stub):
+def test_a_quantity_not_present_in_its_own_span_is_kept_with_a_warning(stub):
     stub["response"] = _response([_item(
         quantity=2150,
         quantity_source={"quote": "1C 95mm2 earth                   1,080 m", "derivation": None},
     )])
     result = read_text(BODY)
-    assert result.items == []
-    assert result.degraded[0]["rule"] == "3_absent"
+    assert [i["quantity"] for i in result.items] == [2150]
+    assert result.items[0][SOURCE_CHECK_KEY]["code"] == "3_absent"
 
 
 def test_a_route_times_sets_derivation_is_accepted(stub):
@@ -270,15 +271,14 @@ def test_a_pdf_with_a_text_layer_is_grounded_against_that_text(stub, monkeypatch
     assert [i["quantity"] for i in result.items] == [1080]
 
 
-def test_a_pdf_quantity_with_no_supporting_text_is_dropped(stub):
+def test_a_pdf_quantity_with_no_supporting_text_is_warned(stub):
     pdf = _pdf_bytes(PDF_SCHEDULE)
     stub["response"] = _response([_item(
         quantity=9999,
         quantity_source={"quote": "3  1C 400mm2 earth   9999 m", "derivation": None},
     )])
     result = reader.read_pdf(pdf, "schedule.pdf")
-    assert result.items == []
-    assert result.degraded[0]["rule"] == "1_quote"
+    assert result.items[0][SOURCE_CHECK_KEY]["code"] == "1_quote"
 
 
 def test_a_scanned_pdf_comes_back_ungrounded(stub, monkeypatch):
@@ -366,7 +366,7 @@ def test_a_docx_attachment_reaches_terra_and_is_grounded(stub):
     assert result.validated is True
 
 
-def test_a_docx_quote_that_is_not_in_the_document_is_dropped(stub):
+def test_a_docx_quote_that_is_not_in_the_document_is_warned(stub):
     """The grounding contract has to survive the new route, or the route is worthless."""
     data = _docx_bytes(DOCX_PARAGRAPHS)
     stub["response"] = _response([_item(
@@ -374,8 +374,7 @@ def test_a_docx_quote_that_is_not_in_the_document_is_dropped(stub):
         quantity_source={"quote": "8 drums x 400mm Alu flex ( 900m )", "derivation": None},
     )])
     result = reader.read_document(data, "x.docx")
-    assert result.items == []
-    assert result.degraded
+    assert result.items[0][SOURCE_CHECK_KEY]["status"] == "failed"
 
 
 def test_a_csv_is_sent_verbatim_not_re_rendered(stub):
@@ -538,13 +537,12 @@ def test_original_html_and_subject_reach_reader_with_grounded_earth_description(
 
 
 @pytest.mark.parametrize("quote,quantity", [("6mm V-90 51", 51), ("999", 999)])
-def test_html_evidence_rejects_invented_quantity_and_style_numbers(stub, quote, quantity):
+def test_html_evidence_warns_on_invented_quantity_and_style_numbers(stub, quote, quantity):
     stub["response"] = _response([_item(quantity=quantity,
         quantity_source={"quote": quote, "derivation": None})])
     result = read_text(EARTH_EMAIL, is_html=True)
     assert result.ok
-    assert not result.items
-    assert result.degraded[0]["rule"] == "1_quote"
+    assert result.items[0][SOURCE_CHECK_KEY]["code"] == "1_quote"
 
 
 def test_html_evidence_preserves_inline_text_and_decodes_entities():
@@ -552,3 +550,169 @@ def test_html_evidence_preserves_inline_text_and_decodes_entities():
         '<p>Cu &amp; Al</p><table><tr><td>V-<b>90</b></td><td>50&nbsp;m</td></tr></table>'
     )
     assert " ".join(evidence.split()) == "Cu & Al V-90 50 m"
+
+
+# --- pictures pasted into the body (Ref 42387) -----------------------------------------
+#
+# The customer typed the cable type as a heading and pasted the rows under it as a
+# screenshot. Read apart, the rows lose the heading; these pin that the body read carries
+# each picture in its place, and that a row read off a picture is never passed off as one
+# checked against the text.
+
+PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 64
+
+PASTED_BODY = (
+    "<p>Power Cable - Orange Sheath 110deg</p>"
+    '<p><img width="311" height="100" src="cid:image001.png@01DD57E5.927C2640"></p>'
+    "<p>Control Cable - Black Sheath</p>"
+    '<p><img src="cid:image002.png@01DD57E5.927C2640"></p>'
+    "<p>Also 4C 10mm2 Cu XLPE 2000m</p>"
+    '<img src="cid:tc_logo.png" alt="TriCab">'
+)
+
+
+def _pictures():
+    return [
+        reader.BodyImage("image001.png", PNG, "image/png", "image001.png@01DD57E5.927C2640"),
+        reader.BodyImage("image002.png", PNG, "image/png", "<image002.png@01DD57E5.927C2640>"),
+    ]
+
+
+def _picture_row(number, **kwargs):
+    base = _item(
+        description="2.5mm2 2C+E orange sheath 110deg power cable",
+        quantity=217,
+        quantity_source={"quote": "217 2.5 2C+E", "derivation": None},
+    )
+    base["source_image"] = number
+    base.update(kwargs)
+    return base
+
+
+def _typed_row(**kwargs):
+    base = _item(
+        description="4C 10mm2 Cu XLPE",
+        quantity=2000,
+        quantity_source={"quote": "4C 10mm2 Cu XLPE 2000m", "derivation": None},
+    )
+    base["source_image"] = None
+    base.update(kwargs)
+    return base
+
+
+def test_pasted_pictures_are_sent_in_place_under_their_headings(stub):
+    read_text(PASTED_BODY, is_html=True, images=_pictures())
+
+    content = stub["payload"]["input"][0]["content"]
+    document = content[0]["text"]
+    assert "Orange Sheath 110deg</p><p>[IMAGE 1]</p>" in document
+    assert "Black Sheath</p><p>[IMAGE 2]</p>" in document
+    assert "cid:image001" not in document.split("<<<EVIDENCE_TEXT")[0]
+    # A tag for a picture that was not sent is left alone, not numbered.
+    assert 'src="cid:tc_logo.png"' in document
+    # The markers are for reading only; quotes are never checked against them.
+    evidence = document.split("<<<EVIDENCE_TEXT")[1]
+    assert "[IMAGE" not in evidence
+
+    images = [block for block in content if block["type"] == "input_image"]
+    assert len(images) == 2
+    assert images[0]["image_url"].startswith("data:image/png;base64,")
+    labels = [block["text"] for block in content if block["type"] == "input_text"]
+    assert "[IMAGE 1] 'image001.png':" in labels
+    assert "[IMAGE 2] 'image002.png':" in labels
+
+    item_schema = stub["payload"]["text"]["format"]["schema"]["properties"]["items"]["items"]
+    assert "source_image" in item_schema["required"]
+
+
+def test_without_pictures_the_request_is_exactly_as_before(stub):
+    read_text(PASTED_BODY, is_html=True)
+
+    content = stub["payload"]["input"][0]["content"]
+    assert len(content) == 1
+    assert "[IMAGE" not in content[0]["text"]
+    item_schema = stub["payload"]["text"]["format"]["schema"]["properties"]["items"]["items"]
+    assert "source_image" not in item_schema["properties"]
+
+
+def test_pictures_are_only_placed_in_html(stub):
+    read_text("Power Cable - Orange Sheath", images=_pictures())
+
+    assert len(stub["payload"]["input"][0]["content"]) == 1
+
+
+def test_a_row_read_off_a_picture_is_kept_unchecked_and_ungrounded(stub):
+    stub["response"] = _response([_picture_row(1), _typed_row()])
+
+    result = read_text(PASTED_BODY, is_html=True, images=_pictures())
+
+    assert result.ok and result.validated
+    picture, typed = result.items
+    assert picture[reader.BODY_IMAGE_KEY] == "image001.png"
+    assert "source_image" not in picture
+    # Not "failed": nothing was there to check it against, and the row says so by its
+    # provenance rather than by a check that never ran.
+    assert SOURCE_CHECK_KEY not in picture
+    assert reader.BODY_IMAGE_KEY not in typed and SOURCE_CHECK_KEY not in typed
+    assert result.check_status == "unavailable"
+
+    picture_row, typed_row = reader.to_text_work_items(result, "email body")
+    assert picture_row["source"]["input_type"] == "reader_ungrounded"
+    assert picture_row["source"]["image_name"] == "image001.png"
+    assert picture_row["metadata"]["quantity_cells"] == ["217 2.5 2C+E"]
+    assert typed_row["source"]["input_type"] == "text_reader"
+    assert "image_name" not in typed_row["source"]
+
+
+def test_picture_rows_keep_their_place_among_the_typed_rows(stub):
+    stub["response"] = _response([_typed_row(), _picture_row(2), _typed_row(quantity=None)])
+
+    result = read_text(PASTED_BODY, is_html=True, images=_pictures())
+
+    assert [bool(i.get(reader.BODY_IMAGE_KEY)) for i in result.items] == [False, True, False]
+
+
+def test_a_typed_row_cannot_escape_its_check_by_claiming_no_picture(stub):
+    stub["response"] = _response([_typed_row(quantity_source={"quote": "217 2.5 2C+E", "derivation": None},
+                                             quantity=217)])
+
+    result = read_text(PASTED_BODY, is_html=True, images=_pictures())
+
+    assert result.items[0][SOURCE_CHECK_KEY]["code"] == "1_quote"
+
+
+def test_a_picture_number_that_was_never_sent_is_still_held(stub):
+    stub["response"] = _response([_picture_row(7)])
+
+    result = read_text(PASTED_BODY, is_html=True, images=_pictures())
+
+    assert result.items[0][reader.BODY_IMAGE_KEY] == "image 7"
+    row = reader.to_text_work_items(result, "email body")[0]
+    assert row["source"]["input_type"] == "reader_ungrounded"
+
+
+def test_a_picture_that_cannot_be_sent_is_named_not_dropped_silently(stub):
+    gif = reader.BodyImage("banner.gif", b"GIF89a" + b"0" * 32, "image/gif", "image001.png@01DD57E5.927C2640")
+
+    result = read_text(PASTED_BODY, is_html=True, images=[gif, _pictures()[1]])
+
+    content = stub["payload"]["input"][0]["content"]
+    assert len([b for b in content if b["type"] == "input_image"]) == 1
+    # The one picture that was sent is numbered 1, wherever it sits.
+    assert "Black Sheath</p><p>[IMAGE 1]</p>" in content[0]["text"]
+    assert "pasted image 'banner.gif' was not read: unsupported image type" in result.note
+
+
+def test_a_picture_with_no_tag_in_the_body_is_read_and_says_it_lost_its_heading(stub):
+    loose = reader.BodyImage("image009.png", PNG, "image/png", "image009.png@01DD57E5.927C2640")
+
+    result = read_text(PASTED_BODY, is_html=True, images=[loose])
+
+    assert len([b for b in stub["payload"]["input"][0]["content"] if b["type"] == "input_image"]) == 1
+    assert "'image009.png' could not be placed in the text" in result.note
+
+
+def test_body_image_content_ids_reads_every_cid_reference():
+    assert reader.body_image_content_ids(PASTED_BODY) == {
+        "image001.png@01dd57e5.927c2640", "image002.png@01dd57e5.927c2640", "tc_logo.png",
+    }
