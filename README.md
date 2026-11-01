@@ -27,6 +27,8 @@ composer dump-autoload
 php -S localhost:8080 -t public public/router.php
 ```
 
+`composer install` also fetches two private TriCab packages from GitHub: `tricab/docgen` (PDF documents) and `tricab/cablegen` (cable cross-section drawings, served by `GET /api/v1/cable-drawings`; see [docs/cable-drawing.md](docs/cable-drawing.md)). Give Composer your GitHub access once with `composer config --global github-oauth.github.com "$(gh auth token)"`. CI uses a read-only deploy key per package instead.
+
 A separate `tricab-core` checkout is not required. Domain and application code is at `core/`.
 
 Use `public/router.php` with `php -S`. Without it, paths such as `PRODUCT.READ` are treated as missing files and CORS preflight returns 404.
