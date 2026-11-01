@@ -47,19 +47,16 @@
                 attachment -> source_doc, file_id -> source_file_id, content_hash
                 -> source_fingerprint, extraction_confidence -> confidence,
                 email_record_id -> mail_id.
-                status -> stage / import_state:
-                  Needs Review            -> Needs verification
-                  In Progress             -> Approved when the approval was
-                                             Approved, else Awaiting matching
-                                             (a pending approval is not carried,
-                                             see below)
-                  Completed               -> Approved when the approval was
-                                             Approved, else Awaiting matching
-                  Exported                -> Approved, import_state 'Exported CSV'
-                  in the Bin (deleted_at) -> Excluded, excluded = 1, reason says
-                                             who put it in the Bin
-                The stage is recomputed by the rules at the next edit; this only
-                has to land somewhere true and visible.
+                status -> stage / import_state: every invoice lands as Needs
+                verification (verified = 0, so no checks have passed in Tri-AP2
+                yet; the stage is one of Needs verification / Confirmed /
+                Posted since the 1 Nov update):
+                  Exported                -> import_state 'Exported CSV'
+                  in the Bin (deleted_at) -> excluded = 1, reason says who put
+                                             it in the Bin
+                The stage is recomputed by the rules at the next edit.
+                approval_required = 1 for an invoice whose Tri-AP approval
+                status was anything but 'Not requested'.
     approvals   approval_status other than 'Not requested' -> one ap2_approvals
                 row (kind Invoice) from the invoice's latest Tri-AP batch: the
                 requester is the batch's preparer, the approver the decision's
@@ -246,7 +243,7 @@ BEGIN TRY
     INSERT INTO [finance].[ap2_invoices]
         ([id], [supplier_id], [number], [entity], [currency], [net], [tax], [total], [issued], [due], [kind], [po],
          [gl], [tax_code], [cost_centre], [stage], [verified], [import_state], [excluded], [excluded_reason],
-         [source_doc], [source_file_id], [confidence], [source_fingerprint], [mail_id], [created_at], [updated_at])
+         [source_doc], [source_file_id], [confidence], [source_fingerprint], [mail_id], [approval_required], [created_at], [updated_at])
     SELECT mi.[target_id], ms.[target_id],
            LEFT(i.[invoice_no], 200), LEFT(i.[company], 400),
            CASE WHEN LTRIM(RTRIM(COALESCE(i.[currency], N''))) = N'' THEN 'AUD' ELSE UPPER(LTRIM(RTRIM(i.[currency]))) END,
@@ -255,19 +252,14 @@ BEGIN TRY
            i.[invoice_date], i.[due_date],
            CASE WHEN i.[po_number] <> N'' THEN N'Goods PO' ELSE N'No PO' END, LEFT(i.[po_number], 200),
            LEFT(i.[account_category], 100), N'', LEFT(i.[cost_centre], 200),
-           CASE
-               WHEN i.[deleted_at] IS NOT NULL THEN N'Excluded'
-               WHEN i.[status] = N'Needs Review' THEN N'Needs verification'
-               WHEN i.[status] = N'Exported' THEN N'Approved'
-               WHEN i.[approval_status] = N'Approved' THEN N'Approved'
-               ELSE N'Awaiting matching'
-           END,
+           N'Needs verification',
            0,
            CASE WHEN i.[status] = N'Exported' THEN N'Exported CSV' ELSE N'Not exported' END,
            CASE WHEN i.[deleted_at] IS NULL THEN 0 ELSE 1 END,
            CASE WHEN i.[deleted_at] IS NULL THEN N'' ELSE LEFT(N'Put in the Bin in Tri-AP' + CASE WHEN i.[deleted_by] <> N'' THEN N' by ' + i.[deleted_by] ELSE N'' END, 1000) END,
            LEFT(i.[attachment], 255), i.[file_id], i.[extraction_confidence], COALESCE(i.[content_hash], N''),
            CASE WHEN me.[target_id] IS NULL THEN NULL ELSE me.[target_id] END,
+           CASE WHEN COALESCE(i.[approval_status], N'Not requested') = N'Not requested' THEN 0 ELSE 1 END,
            i.[created_date], i.[updated_date]
     FROM [finance].[invoice_invoices] i
     JOIN #inv s ON s.[id] = i.[id]

@@ -6,6 +6,7 @@ namespace TriCab\Core\Finance\Ap2\Service;
 
 use TriCab\Core\Finance\Ap2\Contract\Ap2ApprovalStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
+use TriCab\Core\Finance\Ap2\Domain\Ap2ApprovalRef;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Assessment;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invoice;
 use TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceRules;
@@ -18,6 +19,12 @@ final class Ap2Assessor
         private readonly Ap2ApprovalStore $approvals,
         private readonly Ap2InvoiceStore $invoices,
     ) {
+    }
+
+    /** The approval the invoice links to, if any. */
+    public function approvalOf(Ap2Invoice $invoice): ?Ap2ApprovalRef
+    {
+        return $invoice->approvalId === null ? null : $this->approvals->find($invoice->approvalId);
     }
 
     /** One invoice, comparing it with its supplier's others. */

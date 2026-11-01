@@ -259,7 +259,7 @@ final class Ap2OdooWiringTest extends TestCase
         self::assertSame('PAY/1', $paid->odooPaymentRef);
         $inv = $this->invoice($b->id);
         self::assertSame(500.0, $inv->paid, 'the 500 is in Odoo\'s figure already: not 1000');
-        self::assertSame('Settled', $inv->stage);
+        self::assertSame('Posted', $inv->stage, 'settled, and still Posted');
         self::assertSame(0.0, $inv->balance());
     }
 
@@ -307,7 +307,8 @@ final class Ap2OdooWiringTest extends TestCase
         $pay->recordOdooState($pid, 'Paid', '');
 
         self::assertSame(500.0, $this->invoice($b->id)->paid);
-        self::assertSame('Settled', $this->invoice($b->id)->stage);
+        self::assertSame('Posted', $this->invoice($b->id)->stage, 'settled, and still Posted');
+        self::assertSame(0.0, $this->invoice($b->id)->balance());
     }
 
     public function test_marking_a_payment_paid_before_the_sync_still_adds_it_once_and_the_sync_then_agrees(): void
@@ -371,7 +372,8 @@ final class Ap2OdooWiringTest extends TestCase
         $this->postedInvoice(500.0, 'B032');
         $this->postedInvoice(500.0, 'B033');
         $store = $this->get(InMemoryAp2InvoiceStore::class);
-        $store->update($this->invoice(md5('B032'))->with(stage: 'Settled'));
+        $settled = $this->invoice(md5('B032'));
+        $store->update($settled->with(paid: round($settled->total - $settled->credit, 2)));
         $store->update($this->invoice(md5('B033'))->with(excluded: true));
         $store->insert(Ap2Fixtures::invoice($this->supplier(), 'B034', 'NO-MOVE'));
 

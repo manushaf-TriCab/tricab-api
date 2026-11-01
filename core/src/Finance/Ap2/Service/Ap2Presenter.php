@@ -16,6 +16,7 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2Settings;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Statement;
 use TriCab\Core\Finance\Ap2\Domain\Ap2HistoryEntry;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invoice;
+use TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceLine;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Mail;
 use TriCab\Core\Finance\Ap2\Domain\Ap2MailAttachment;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Person;
@@ -113,6 +114,10 @@ final class Ap2Presenter
             'sourceFingerprint' => $b->sourceFingerprint,
             'mailId' => $b->mailId,
             'owner' => self::person($b->owner),
+            'approvalRequired' => $b->approvalRequired,
+            'externalId' => $b->odooExternalId(),
+            'journal' => $b->journal,
+            'invoiceLines' => array_map(static fn (Ap2InvoiceLine $l): array => $l->toArray(), $b->odooLines()),
             'validation' => $a->validation,
             // The prototype's matching() answers one string; the contract types it string[], so it is a one-item list
             // ('Matched' or the reason). `matchStatus` is the same text for a page that wants a string.
@@ -121,8 +126,9 @@ final class Ap2Presenter
             'duplicateOf' => $a->duplicateOf,
             'queue' => $a->queue,
             'approvalCurrent' => $a->approvalCurrent,
-            'csvEligible' => $a->csvEligible,
-            'exportIssues' => $a->exportIssues,
+            'businessApproval' => $a->businessStatus,
+            'postable' => $a->postable,
+            'postingIssues' => $a->postingIssues,
             'paymentIssues' => $a->paymentIssues,
             'balance' => round($a->balance, 2),
             'locked' => $a->locked,

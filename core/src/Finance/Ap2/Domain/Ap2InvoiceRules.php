@@ -17,6 +17,9 @@ use DateTimeZone;
  *  - duplicates: two invoices with an empty source fingerprint, or a number with no letters or digits, are not
  *    duplicates of each other (the prototype compared '' to '');
  *  - the fingerprint is a SHA-256 of the same 27 values, so it fits a column and an approval can store it.
+ *
+ * The 1 Nov update (`Tri-AP-complete-updated`): three invoice states, business approval only where it is required,
+ * and an Odoo CSV open to any saved invoice. Posting through the Odoo API keeps its gate ({@see self::postingIssues()}).
  */
 final class Ap2InvoiceRules
 {
@@ -39,7 +42,7 @@ final class Ap2InvoiceRules
         $duplicates = self::duplicates($b, $others);
         $validation = self::validation($b, $supplier, $duplicates);
         $current = self::approvalCurrent($b, $supplier, $approval);
-        $exportIssues = self::exportIssues($b, $validation, $current);
+        $postingIssues = self::postingIssues($b, $validation, $current);
 
         return new Ap2Assessment(
             $validation,
@@ -48,8 +51,9 @@ final class Ap2InvoiceRules
             self::queue($b, $validation, $duplicates, $current),
             self::fingerprint($b, $supplier),
             $current,
-            $exportIssues === [],
-            $exportIssues,
+            self::businessStatus($b, $supplier, $approval),
+            $postingIssues === [],
+            $postingIssues,
             self::paymentIssues($b, $supplier, $validation, $duplicates, $current, $activePayment),
             $b->balance(),
             $b->isPosted(),
@@ -176,8 +180,13 @@ final class Ap2InvoiceRules
 
     /**
      * What an approval is bound to: the 27 values the prototype hashed (25 invoice fields and the supplier's two bank
-     * flags). Change any of them and an approval made on the old values no longer matches. Not in it: `paymentHold`,
-     * the owner, the stage, and the Odoo-sourced `orderedQty` / `poUnitPrice`.
+     * flags), plus the Odoo CSV fields the 1 Nov update added (External ID, Journal, bill lines). Change any of them
+     * and an approval made on the old values no longer matches. Not in it: `paymentHold`, the owner, the stage,
+     * `approvalRequired` and the Odoo-sourced `orderedQty` / `poUnitPrice`.
+     *
+     * The CSV fields are hashed only once one is set: an invoice still on the defaults (no saved External ID, no
+     * journal, no saved lines; the default line is made of fields already hashed) keeps the fingerprint it had before
+     * the update, so approvals given before it stay current.
      */
     public static function fingerprint(Ap2Invoice $b, ?Ap2Supplier $supplier): string
     {
@@ -190,18 +199,50 @@ final class Ap2InvoiceRules
             $b->verified, $b->creditResolved, $b->issued, $b->due,
             $supplier !== null && $supplier->bankVerified, $supplier !== null && $supplier->bankChange,
         ];
+        if ($b->externalId !== null || $b->journal !== '' || $b->lines !== []) {
+            $values[] = $b->externalId;
+            $values[] = $b->journal;
+            $values[] = array_map(static fn (Ap2InvoiceLine $l): array => [$l->label, $l->account, self::qty($l->quantity), self::qty($l->unitPrice), $l->taxes], $b->lines);
+        }
 
         return hash('sha256', json_encode($values, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
 
-    /** The prototype's `invoiceApproved()`: an Approved invoice approval whose snapshot is still the invoice's fingerprint. */
+    /**
+     * The prototype's `invoiceApproved()`: true when business approval is not required, else an Approved invoice
+     * approval whose snapshot is still the invoice's fingerprint.
+     */
     public static function approvalCurrent(Ap2Invoice $b, ?Ap2Supplier $supplier, ?Ap2ApprovalRef $approval): bool
     {
+        if (!$b->approvalRequired) {
+            return true;
+        }
+
         return $approval !== null
             && $approval->kind === 'Invoice'
             && $approval->status === 'Approved'
             && $approval->snapshot !== null
             && hash_equals($approval->snapshot, self::fingerprint($b, $supplier));
+    }
+
+    /**
+     * The workbench's Business approval (the prototype's `businessStatus()`): OK when not required; else Required
+     * (no request yet), the linked request's Pending / Approved / Rejected, or Required / stale when the invoice
+     * changed after the request or the request was superseded, cancelled or expired.
+     */
+    public static function businessStatus(Ap2Invoice $b, ?Ap2Supplier $supplier, ?Ap2ApprovalRef $approval): string
+    {
+        if (!$b->approvalRequired) {
+            return 'OK';
+        }
+        if ($approval === null || $approval->kind !== 'Invoice') {
+            return 'Required';
+        }
+        if ($approval->snapshot === null || !hash_equals($approval->snapshot, self::fingerprint($b, $supplier))) {
+            return 'Required / stale';
+        }
+
+        return in_array($approval->status, ['Pending', 'Approved', 'Rejected'], true) ? $approval->status : 'Required / stale';
     }
 
     /**
@@ -232,40 +273,30 @@ final class Ap2InvoiceRules
     }
 
     /**
-     * The stored stage a save leaves the invoice in. The prototype set it on every review save (Needs verification, or
-     * Pending approval when clean); Tri-AP2 derives it so it cannot be dragged around by hand.
+     * The stored invoice state (the prototype's `normaliseInvoiceState()`): Posted when Odoo has posted it (and it
+     * stays Posted once paid), Confirmed when every check passes (which includes the human verification), else Needs
+     * verification. Derived on every write, so it cannot be dragged around by hand; business approval does not move it.
      *
      * @param list<string> $validation
      */
-    public static function stage(Ap2Invoice $b, array $validation, bool $approvalCurrent): string
+    public static function stage(Ap2Invoice $b, array $validation): string
     {
-        if ($b->excluded) {
-            return 'Excluded';
-        }
         if ($b->isPosted()) {
-            if ($b->balance() <= 0) {
-                return 'Settled';
-            }
-
-            return $b->paid > 0 ? 'Partially settled' : 'Posted';
-        }
-        if ($validation !== []) {
-            $matching = self::matching($b);
-
-            return $matching !== 'Matched' && $validation === [$matching] ? 'Awaiting matching' : 'Needs verification';
+            return 'Posted';
         }
 
-        return $approvalCurrent ? 'Approved' : 'Pending approval';
+        return $validation === [] ? 'Confirmed' : 'Needs verification';
     }
 
     /**
-     * The prototype's `csvEligible()` as reasons: valid, currently approved, not posted, not already exported or
-     * imported as a draft. Empty means the invoice may go in an Odoo CSV.
+     * Why the invoice may not be posted to Odoo through the API: it must be valid, currently approved (when approval is
+     * required), not posted, and not already exported to CSV or imported as a draft (that bill would then exist twice).
+     * The CSV export itself has no gate since the 1 Nov update. Empty means it may be posted.
      *
      * @param list<string> $validation
      * @return list<string>
      */
-    public static function exportIssues(Ap2Invoice $b, array $validation, bool $approvalCurrent): array
+    public static function postingIssues(Ap2Invoice $b, array $validation, bool $approvalCurrent): array
     {
         $issues = [];
         if ($validation !== []) {

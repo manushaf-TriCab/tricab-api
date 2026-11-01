@@ -23,17 +23,22 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2NotFound;
 /**
  * The Odoo CSV (Phase 6) and recording what happened to it in Odoo.
  *
- * Export: the server re-checks `csvEligible` for every invoice (valid, currently approved, not posted, not already
- * exported); one that fails refuses the whole batch with its reasons. The file is the prototype's: 15 headers, one
- * `in_invoice` row per invoice and a separate `in_refund` row for a credit. Each batch is saved (`CSV-0001`...) and can
- * be downloaded again unchanged. Exported is not imported and not posted: the import state becomes Exported CSV only.
+ * Export (Nick's 1 Nov update): any saved invoice, with no verification, matching, approval, duplicate, prior-export
+ * or posting gate, and a repeat export keeps the same External ID. The file follows the supplied Odoo vendor-bill
+ * template (`odoo_vendor_bills_template.csv`): its 12 columns in its order, dates as d/m/yyyy, one row per bill line,
+ * and the bill-level columns left blank on the continuation lines. A credit note is its own document and is not
+ * netted into the bill lines. Each batch is saved (`CSV-0001`...) and can be downloaded again unchanged. Exported is
+ * not imported and not posted: Not exported / Import failed become Exported CSV; Imported draft and Posted stay.
  *
  * Import result: only an exported (or already imported / failed) invoice; Imported draft and Posted need a current
  * approval and clean checks; the person must confirm the outcome; Posted moves the stage to Posted.
  */
 final class Ap2ExportService
 {
-    public const HEADERS = ['External ID', 'Move Type', 'Vendor', 'Bill Reference', 'Bill Date', 'Due Date', 'Currency', 'Account Code', 'Tax Code', 'Cost Centre', 'Net Amount', 'Tax Amount', 'Gross Amount', 'Source Document', 'Original Bill Reference'];
+    public const HEADERS = ['External ID', 'Vendor', 'Bill Date', 'Due Date', 'Bill Reference', 'Journal', 'Currency', 'Invoice Lines/Label', 'Invoice Lines/Account', 'Invoice Lines/Quantity', 'Invoice Lines/Unit Price', 'Invoice Lines/Taxes'];
+
+    /** The bill-level columns (External ID to Currency) a continuation line leaves blank. */
+    private const BILL_COLUMNS = 7;
 
     public const RESULTS = ['Imported draft', 'Posted', 'Import failed'];
 
@@ -92,9 +97,7 @@ final class Ap2ExportService
         }
         $ids = array_values($ids);
 
-        $today = $this->time->today();
         $rows = [];
-        $refusals = [];
         $missing = [];
         foreach ($ids as $id) {
             $invoice = $this->invoices->find($id);
@@ -102,21 +105,12 @@ final class Ap2ExportService
                 $missing[] = $id . ' is not an invoice';
                 continue;
             }
-            $supplier = $this->suppliers->find($invoice->supplierId);
-            $a = $this->assessor->one($invoice, $supplier, $today);
-            if (!$a->csvEligible) {
-                $refusals[] = ($invoice->number === '' ? $invoice->id : $invoice->number) . ': ' . implode('; ', $a->exportIssues);
-                continue;
-            }
-            foreach (self::rowsFor($invoice, $supplier->name ?? '') as $row) {
+            foreach (self::rowsFor($invoice, $this->suppliers->find($invoice->supplierId)->name ?? '') as $row) {
                 $rows[] = $row;
             }
         }
         if ($missing !== []) {
             throw new Ap2Invalid('Some invoices do not exist', Ap2Failure::details($missing));
-        }
-        if ($refusals !== []) {
-            throw new Ap2Conflict('Export blocked: every invoice must pass validation and current approval, and must not already be exported, imported or posted', Ap2Failure::details($refusals));
         }
 
         $now = $this->time->now();
@@ -136,7 +130,7 @@ final class Ap2ExportService
                     bin2hex(random_bytes(16)),
                     $invoice->supplierId,
                     'Odoo CSV exported',
-                    $invoice->number . ' · ' . $export->id . ' · not imported or posted',
+                    $invoice->number . ' · ' . $export->id . ' · exported without validation gate; not imported or posted',
                     $actor->person(),
                     $now,
                     $invoice->id,
@@ -194,7 +188,7 @@ final class Ap2ExportService
 
         $now = $this->time->now();
         $changed = $invoice->with(importState: $result, odooRef: $reference, updatedAt: $now);
-        $changed = $changed->with(stage: Ap2InvoiceRules::stage($changed, $a->validation, $a->approvalCurrent));
+        $changed = $changed->with(stage: Ap2InvoiceRules::stage($changed, $a->validation));
 
         $this->transactions->run(function () use ($changed, $actor, $now, $result, $reference): void {
             $this->invoices->update($changed);
@@ -213,22 +207,44 @@ final class Ap2ExportService
     }
 
     /**
+     * The template rows of one invoice (the prototype's `odooVendorRows`): the first line carries the bill columns,
+     * the others leave them blank.
+     *
      * @return list<list<string|float|null>>
      */
     private static function rowsFor(Ap2Invoice $b, string $vendor): array
     {
-        $rows = [[
-            'triap_' . $b->id, 'in_invoice', $vendor, $b->number, $b->issued, $b->due, $b->currency, $b->gl, $b->taxCode, $b->costCentre,
-            round($b->net, 2), round($b->tax, 2), round($b->total, 2), $b->sourceDoc, '',
-        ]];
-        if ($b->credit > 0) {
+        $bill = [$b->odooExternalId(), $vendor, self::odooDate($b->issued), self::odooDate($b->due), $b->number, $b->journal, $b->currency];
+        $rows = [];
+        foreach ($b->odooLines() as $i => $line) {
             $rows[] = [
-                'triap_' . $b->id . '_credit', 'in_refund', $vendor, $b->creditRef, $b->issued, $b->due, $b->currency, $b->gl, $b->taxCode, $b->costCentre,
-                round($b->creditNet, 2), round($b->creditTax, 2), round($b->credit, 2), $b->creditRef . '.pdf', $b->number,
+                ...($i === 0 ? $bill : array_fill(0, self::BILL_COLUMNS, '')),
+                $line->label, $line->account, self::number($line->quantity), self::number($line->unitPrice), $line->taxes,
             ];
         }
 
         return $rows;
+    }
+
+    /** `yyyy-MM-dd` as the template's d/m/yyyy (`2026-10-01` → `1/10/2026`); empty when unknown. */
+    private static function odooDate(?string $day): string
+    {
+        if ($day === null || preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $day, $m) !== 1) {
+            return $day ?? '';
+        }
+
+        return (int) $m[3] . '/' . (int) $m[2] . '/' . $m[1];
+    }
+
+    /**
+     * A quantity or unit price as the template writes it: `1`, `25`, `12.5`, `333.3333` (up to four places, no
+     * trailing zeros). An int or a float keeps {@see Ap2Csv} from treating a negative as a formula.
+     */
+    private static function number(float $value): int|float
+    {
+        $rounded = round($value, 4);
+
+        return floor($rounded) === $rounded && abs($rounded) < PHP_INT_MAX ? (int) $rounded : $rounded;
     }
 
     /** @return array<string, mixed> */

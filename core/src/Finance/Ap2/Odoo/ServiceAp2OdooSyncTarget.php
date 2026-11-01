@@ -52,7 +52,7 @@ final class ServiceAp2OdooSyncTarget implements Ap2OdooSyncTarget
     {
         $out = [];
         foreach ($this->invoices->all() as $b) {
-            if ($b->odooMoveId !== null && !$b->excluded && $b->stage !== 'Settled') {
+            if ($b->odooMoveId !== null && !$b->excluded && !($b->isPosted() && $b->balance() <= 0)) {
                 $out[] = new Ap2OdooTrackedBill($b->id, $b->odooMoveId, $b->number, $b->currency, $b->total, $b->credit, $b->paid, $b->importState, $b->odooRef);
             }
         }
@@ -71,7 +71,7 @@ final class ServiceAp2OdooSyncTarget implements Ap2OdooSyncTarget
         $next = $invoice->with(importState: $update->importState, odooRef: $ref, paid: round($update->paid, 2), updatedAt: $now);
         $supplier = $this->suppliers->find($invoice->supplierId);
         $a = $this->assessor->one($next, $supplier, $this->time->today());
-        $next = $next->with(stage: Ap2InvoiceRules::stage($next, $a->validation, $a->approvalCurrent));
+        $next = $next->with(stage: Ap2InvoiceRules::stage($next, $a->validation));
 
         $differs = $next->importState !== $invoice->importState
             || $next->odooRef !== $invoice->odooRef
@@ -145,7 +145,7 @@ final class ServiceAp2OdooSyncTarget implements Ap2OdooSyncTarget
             || $next->receiptRef !== $invoice->receiptRef;
         if ($differs) {
             $a = $this->assessor->one($next, $this->suppliers->find($invoice->supplierId), $this->time->today());
-            $next = $next->with(stage: Ap2InvoiceRules::stage($next, $a->validation, $a->approvalCurrent), updatedAt: $now);
+            $next = $next->with(stage: Ap2InvoiceRules::stage($next, $a->validation), updatedAt: $now);
         }
 
         $this->transactions->run(function () use ($differs, $next, $invoice, $facts, $now): void {

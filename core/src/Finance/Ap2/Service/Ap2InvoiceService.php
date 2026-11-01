@@ -17,6 +17,7 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Domain\Ap2HistoryEntry;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invalid;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invoice;
+use TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceLine;
 use TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceRules;
 use TriCab\Core\Finance\Ap2\Domain\Ap2NotFound;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Person;
@@ -30,6 +31,8 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2Supplier;
  * Rules a write follows:
  *  - A posted invoice (import state Posted) is locked: only `paymentHold` may change, anything else is a 409.
  *  - A save that changes the fingerprint clears `approvalId`: an approval made on other values is not carried over.
+ *  - Saved bill lines (`invoiceLines`) set the GL and tax code from the first line, as the prototype's review does.
+ *  - `approvalRequired` cannot be turned off while the invoice's approval request is still Pending.
  *  - The stage is derived, never taken from the body; `importState`, `approvalId`, `paid`, `excluded` and the Odoo
  *    references are not editable here either (their own routes and phases own them).
  */
@@ -94,7 +97,7 @@ final class Ap2InvoiceService
     {
         $input = new Ap2Input($body);
         $this->read($input);
-        $values = $input->values();
+        $values = self::lineCoding($input->values());
         $issues = $input->issues();
         if (!isset($values['supplierId']) && !in_array('supplierId must be an id', $issues, true)) {
             $issues[] = 'supplierId is required';
@@ -124,7 +127,7 @@ final class Ap2InvoiceService
         $draft = new Ap2Invoice(bin2hex(random_bytes(16)), $this->str($values, 'supplierId'), $now, $now, owner: $owner);
         $invoice = $draft->with(...$values);
         $assessment = $this->assessor->one($invoice, $supplier, $this->time->today());
-        $invoice = $invoice->with(stage: Ap2InvoiceRules::stage($invoice, $assessment->validation, $assessment->approvalCurrent));
+        $invoice = $invoice->with(stage: Ap2InvoiceRules::stage($invoice, $assessment->validation));
 
         $this->transactions->run(function () use ($invoice, $actor, $now, $assessment): void {
             $this->invoices->insert($invoice);
@@ -181,7 +184,7 @@ final class Ap2InvoiceService
         $draft = new Ap2Invoice(bin2hex(random_bytes(16)), $supplier->id, $now, $now);
         $invoice = $draft->with(...$values)->with(sourceDoc: mb_substr($sourceDoc, 0, 255), sourceFileId: $fileId, sourceFingerprint: $fingerprint, confidence: $confidence, mailId: $mailId);
         $assessment = $this->assessor->one($invoice, $supplier, $this->time->today());
-        $invoice = $invoice->with(stage: Ap2InvoiceRules::stage($invoice, $assessment->validation, $assessment->approvalCurrent));
+        $invoice = $invoice->with(stage: Ap2InvoiceRules::stage($invoice, $assessment->validation));
 
         $this->transactions->run(function () use ($invoice, $actor, $now, $assessment): void {
             $this->invoices->insert($invoice);
@@ -211,7 +214,7 @@ final class Ap2InvoiceService
         $before = $this->found($id);
         $input = new Ap2Input($body);
         $this->read($input);
-        $values = $input->values();
+        $values = self::lineCoding($input->values());
         if ($input->issues() !== []) {
             throw new Ap2Invalid('The invoice has invalid fields', Ap2Failure::details($input->issues()));
         }
@@ -224,6 +227,10 @@ final class Ap2InvoiceService
                     Ap2Failure::details(array_map(static fn (string $key): string => $key . ' cannot change on a posted invoice; adjustments need a controlled accounting process', $locked)),
                 );
             }
+        }
+
+        if (($values['approvalRequired'] ?? true) === false && $before->approvalRequired && $this->assessor->approvalOf($before)?->status === 'Pending') {
+            throw new Ap2Conflict('Resolve the pending request in Approvals before removing the requirement', Ap2Failure::details(['The invoice has a Pending approval request']));
         }
 
         $owner = array_key_exists('ownerUserId', $values) ? $this->owner($values) : $before->owner;
@@ -242,7 +249,7 @@ final class Ap2InvoiceService
             $changed = $changed->with(approvalId: null);
         }
         $assessment = $this->assessor->one($changed, $supplier, $this->time->today());
-        $changed = $changed->with(stage: Ap2InvoiceRules::stage($changed, $assessment->validation, $assessment->approvalCurrent));
+        $changed = $changed->with(stage: Ap2InvoiceRules::stage($changed, $assessment->validation));
 
         if ($changed == $before) {
             return $this->present($before);
@@ -308,7 +315,7 @@ final class Ap2InvoiceService
         }
 
         $now = $this->time->now();
-        $excluded = $invoice->with(excluded: true, excludedReason: $reason, stage: 'Excluded', approvalId: null, updatedAt: $now);
+        $excluded = $invoice->with(excluded: true, excludedReason: $reason, stage: 'Needs verification', approvalId: null, updatedAt: $now);
         $this->transactions->run(function () use ($excluded, $actor, $now, $reason, $duplicates, $invoice): void {
             $this->invoices->update($excluded);
             $this->record($actor, $now, $excluded, 'Duplicate excluded', $excluded->number . ' retained for traceability · ' . $reason, [
@@ -343,10 +350,34 @@ final class Ap2InvoiceService
         $input->text('costCentre', 100);
         $input->text('creditRef', 100);
         $input->text('sourceDoc', 255);
-        foreach (['serviceAccepted', 'creditResolved', 'verified', 'paymentHold'] as $key) {
+        foreach (['serviceAccepted', 'creditResolved', 'verified', 'paymentHold', 'approvalRequired'] as $key) {
             $input->flag($key);
         }
         $input->userId('ownerUserId');
+        $input->text('externalId', 100);
+        $input->text('journal', 100);
+        $input->lines('invoiceLines', 'lines', Ap2Invoice::MAX_LINES);
+    }
+
+    /**
+     * An empty External ID goes back to the default (`triap_<id>`), and saved lines set the GL and tax code from the
+     * first line (the prototype's review save).
+     *
+     * @param array<string, mixed> $values
+     * @return array<string, mixed>
+     */
+    private static function lineCoding(array $values): array
+    {
+        if (($values['externalId'] ?? null) === '') {
+            $values['externalId'] = null;
+        }
+        $first = isset($values['lines']) && is_array($values['lines']) ? ($values['lines'][0] ?? null) : null;
+        if ($first instanceof Ap2InvoiceLine) {
+            $values['gl'] = $first->account;
+            $values['taxCode'] = $first->taxes;
+        }
+
+        return $values;
     }
 
     /**

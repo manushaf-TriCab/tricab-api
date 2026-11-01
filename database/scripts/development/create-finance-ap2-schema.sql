@@ -255,7 +255,7 @@ BEGIN TRY
             [paid]                DECIMAL(18,2)   NOT NULL
                 CONSTRAINT [DF_finance_ap2_invoices_paid] DEFAULT (0),
             [stage]               NVARCHAR(20)    NOT NULL
-                CONSTRAINT [DF_finance_ap2_invoices_stage] DEFAULT (N'Received'),
+                CONSTRAINT [DF_finance_ap2_invoices_stage] DEFAULT (N'Needs verification'),
             [verified]            BIT             NOT NULL
                 CONSTRAINT [DF_finance_ap2_invoices_verified] DEFAULT (0),
             [import_state]        NVARCHAR(20)    NOT NULL
@@ -284,6 +284,15 @@ BEGIN TRY
                 CONSTRAINT [DF_finance_ap2_invoices_owner_name] DEFAULT (N''),
             [owner_email]         NVARCHAR(320)   NOT NULL
                 CONSTRAINT [DF_finance_ap2_invoices_owner_email] DEFAULT (N''),
+            /* Business approval and the Odoo vendor-bill template (1 Nov update).
+               [external_id] NULL = triap_<id>; [invoice_lines] NULL = one line
+               made from the invoice's own coding. */
+            [approval_required]   BIT             NOT NULL
+                CONSTRAINT [DF_finance_ap2_invoices_approval_required] DEFAULT (0),
+            [external_id]         NVARCHAR(100)   NULL,
+            [journal]             NVARCHAR(100)   NOT NULL
+                CONSTRAINT [DF_finance_ap2_invoices_journal] DEFAULT (N''),
+            [invoice_lines]       NVARCHAR(MAX)   NULL,
             [created_at]          DATETIME2(6)    NOT NULL
                 CONSTRAINT [DF_finance_ap2_invoices_created_at] DEFAULT (SYSUTCDATETIME()),
             [updated_at]          DATETIME2(6)    NOT NULL
@@ -299,8 +308,9 @@ BEGIN TRY
             CONSTRAINT [CK_finance_ap2_invoices_kind]
                 CHECK ([kind] IN (N'Goods PO', N'Service PO', N'No PO', N'Recurring')),
             CONSTRAINT [CK_finance_ap2_invoices_stage]
-                CHECK ([stage] IN (N'Received', N'Needs verification', N'Awaiting matching', N'Pending approval',
-                                   N'Approved', N'Posted', N'Partially settled', N'Settled', N'Excluded')),
+                CHECK ([stage] IN (N'Needs verification', N'Confirmed', N'Posted')),
+            CONSTRAINT [CK_finance_ap2_invoices_lines]
+                CHECK ([invoice_lines] IS NULL OR ISJSON([invoice_lines]) = 1),
             CONSTRAINT [CK_finance_ap2_invoices_import_state]
                 CHECK ([import_state] IN (N'Not exported', N'Exported CSV', N'Imported draft', N'Posted', N'Import failed')),
             CONSTRAINT [CK_finance_ap2_invoices_confidence]

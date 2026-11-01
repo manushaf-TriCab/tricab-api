@@ -242,7 +242,7 @@ final class Ap2PaymentService
             if ($to === 'Paid') {
                 $paid = $invoice->with(paid: round(max($invoice->paid, $otherPaid + $changed->amount), 2));
                 $a = $this->assessor->one($paid, $supplier, $this->time->today());
-                $this->invoices->update($paid->with(stage: Ap2InvoiceRules::stage($paid, $a->validation, $a->approvalCurrent), updatedAt: $now));
+                $this->invoices->update($paid->with(stage: Ap2InvoiceRules::stage($paid, $a->validation), updatedAt: $now));
             }
             $this->record($invoice, 'Payment state recorded', $invoice->number . ' · ' . $to . ' · ' . $changed->currency . ' ' . number_format($changed->amount, 2) . ' · from Odoo', $system, $now, $changed);
         });

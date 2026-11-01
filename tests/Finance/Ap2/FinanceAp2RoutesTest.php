@@ -226,10 +226,15 @@ final class FinanceAp2RoutesTest extends TestCase
         self::assertSame('Tricab Australia', $b['entity'], 'the supplier entity');
         self::assertSame(['Quantity shortfall / credit mismatch'], $b['validation']);
         self::assertSame(['Quantity shortfall / credit mismatch'], $b['matching']);
-        self::assertSame('Awaiting matching', $b['stage']);
+        self::assertSame('Needs verification', $b['stage']);
         self::assertSame('Needs review', $b['queue']);
-        self::assertFalse($b['csvEligible']);
-        self::assertFalse($b['approvalCurrent']);
+        self::assertFalse($b['postable']);
+        self::assertFalse($b['approvalRequired']);
+        self::assertTrue($b['approvalCurrent'], 'no business approval required');
+        self::assertSame('OK', $b['businessApproval']);
+        self::assertSame('triap_' . Ap2Json::str($b, 'id'), $b['externalId']);
+        self::assertSame('', $b['journal']);
+        self::assertEquals([['label' => 'CM-2200', 'account' => '6000', 'quantity' => 1000, 'unitPrice' => 20, 'taxes' => 'GST10']], $b['invoiceLines'], 'the default line from the invoice coding');
         self::assertFalse($b['locked']);
         self::assertSame('Cable Materials Pty Ltd', $b['supplierName']);
 
@@ -237,8 +242,8 @@ final class FinanceAp2RoutesTest extends TestCase
         [$status, $json] = $this->call('PATCH', '/invoices/' . Ap2Json::str($b, 'id'), ['credit' => 2200, 'creditRef' => 'CN-2200', 'creditNet' => 2000, 'creditTax' => 200, 'creditResolved' => true]);
         $fixed = $this->data($status, $json);
         self::assertSame([], $fixed['validation']);
-        self::assertSame('Approval', $fixed['queue']);
-        self::assertSame('Pending approval', $fixed['stage']);
+        self::assertSame('Ready to import', $fixed['queue'], 'no business approval required');
+        self::assertSame('Confirmed', $fixed['stage']);
         self::assertEquals(19800, $fixed['balance']);
 
         $history = array_map(static fn ($e) => $e->type, $this->store(Ap2HistoryStore::class, InMemoryAp2HistoryStore::class)->all());
@@ -266,15 +271,16 @@ final class FinanceAp2RoutesTest extends TestCase
     public function test_a_save_that_changes_the_fingerprint_clears_the_approval_and_one_that_does_not_keeps_it(): void
     {
         $s = $this->supplier();
-        $b = $this->invoice(Ap2Fixtures::invoice($s));
+        $b = $this->invoice(Ap2Fixtures::invoice($s)->with(approvalRequired: true));
         $this->store(Ap2ApprovalStore::class, InMemoryAp2ApprovalStore::class)->addRef(Ap2Fixtures::approved($b, $s));
         $this->store(Ap2InvoiceStore::class, InMemoryAp2InvoiceStore::class)->update($b->with(approvalId: 'a1'));
 
         [$status, $json] = $this->call('GET', '/invoices/' . $b->id);
         $current = $this->data($status, $json);
         self::assertTrue($current['approvalCurrent']);
+        self::assertSame('Approved', $current['businessApproval']);
         self::assertSame('Ready to import', $current['queue']);
-        self::assertTrue($current['csvEligible']);
+        self::assertTrue($current['postable']);
 
         [$status, $json] = $this->call('PATCH', '/invoices/' . $b->id, ['paymentHold' => true]);
         $held = $this->data($status, $json);
@@ -285,8 +291,9 @@ final class FinanceAp2RoutesTest extends TestCase
         $edited = $this->data($status, $json);
         self::assertNull($edited['approvalId']);
         self::assertFalse($edited['approvalCurrent']);
-        self::assertFalse($edited['csvEligible']);
-        self::assertSame('Pending approval', $edited['stage']);
+        self::assertSame('Required', $edited['businessApproval']);
+        self::assertFalse($edited['postable']);
+        self::assertSame('Confirmed', $edited['stage']);
 
         $types = array_map(static fn ($e) => $e->type, $this->store(Ap2HistoryStore::class, InMemoryAp2HistoryStore::class)->all());
         self::assertSame(['Payment hold set', 'Invoice review saved', 'Approval superseded by edit'], $types);
@@ -331,13 +338,13 @@ final class FinanceAp2RoutesTest extends TestCase
         $excluded = $this->data($status, $json);
         self::assertTrue($excluded['excluded']);
         self::assertSame('Excluded', $excluded['queue']);
-        self::assertSame('Excluded', $excluded['stage']);
+        self::assertSame('Needs verification', $excluded['stage'], 'exclusion is its own flag, not an invoice state');
         self::assertSame('Resent copy of OH-004', $excluded['excludedReason']);
 
         [$status, $json] = $this->call('GET', '/invoices/' . $b003->id);
         $survivor = $this->data($status, $json);
         self::assertSame([], $survivor['duplicateOf']);
-        self::assertSame('Approval', $survivor['queue']);
+        self::assertSame('Ready to import', $survivor['queue'], 'clean and needing no approval');
 
         [$status] = $this->call('POST', '/invoices/' . $b005->id . '/exclude-duplicate', ['reason' => 'again']);
         self::assertSame(409, $status);
@@ -366,10 +373,15 @@ final class FinanceAp2RoutesTest extends TestCase
         $this->invoice(Ap2Fixtures::invoice($s, 'B001', 'A-1', issued: '2000-01-01', due: $this->day(2), importState: 'Posted', odooRef: 'x'));
         $this->invoice(Ap2Fixtures::invoice($s, 'B002', 'A-2', verified: false));
         $this->invoice(Ap2Fixtures::invoice($s, 'B003', 'A-3', importState: 'Import failed'));
+        foreach (['B001', 'B003'] as $id) {
+            $one = $this->store(Ap2InvoiceStore::class, InMemoryAp2InvoiceStore::class)->find(md5($id));
+            self::assertNotNull($one);
+            $this->store(Ap2InvoiceStore::class, InMemoryAp2InvoiceStore::class)->update($one->with(approvalRequired: true));
+        }
 
         $count = fn (string $queue): int => count($this->listOf(...$this->call('GET', '/invoices?queue=' . rawurlencode($queue))));
         self::assertSame(1, $count('Due in 5 days'));
-        self::assertSame(0, $count('Open AP'), 'unposted-approval makes it Approval until approved');
+        self::assertSame(0, $count('Open AP'), 'a required, unapproved approval makes it Approval until approved');
         self::assertSame(1, $count('Needs review'));
         self::assertSame(1, $count('Sync failed'));
         self::assertSame(0, $count('Awaiting matching'));
@@ -443,13 +455,12 @@ final class FinanceAp2RoutesTest extends TestCase
     public function test_the_export_routes_make_and_download_the_csv(): void
     {
         $s = $this->supplier();
-        $b = $this->invoice(Ap2Fixtures::invoice($s, 'B070', 'R-1')->with(approvalId: 'a1'));
-        $this->store(Ap2ApprovalStore::class, InMemoryAp2ApprovalStore::class)->addRef(Ap2Fixtures::approved($b, $s));
+        $b = $this->invoice(Ap2Fixtures::invoice($s, 'B070', 'R-1', verified: false));
 
         [$status, $json] = $this->call('POST', '/exports', ['invoiceIds' => [$b->id]]);
         $data = $this->data($status, $json, 201);
         self::assertSame('CSV-0001', $data['id']);
-        self::assertStringContainsString('"in_invoice"', Ap2Json::str($data, 'csv'));
+        self::assertStringContainsString('"triap_' . $b->id . '","Cable Materials Pty Ltd","1/10/2026"', Ap2Json::str($data, 'csv'), 'unverified still exports');
 
         $response = $this->app->handle(TestAppFactory::request('GET', self::BASE . '/exports/CSV-0001/csv'));
         self::assertSame(200, $response->getStatusCode());

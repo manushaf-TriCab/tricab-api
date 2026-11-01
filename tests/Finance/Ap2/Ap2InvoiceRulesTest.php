@@ -6,6 +6,8 @@ namespace TriCab\Api\Tests\Finance\Ap2;
 
 use PHPUnit\Framework\TestCase;
 use TriCab\Core\Finance\Ap2\Domain\Ap2ApprovalRef;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Invoice;
+use TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceLine;
 use TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceRules;
 
 /** The ported prototype rules, one by one, on the prototype's own seed scenarios. */
@@ -193,13 +195,33 @@ final class Ap2InvoiceRulesTest extends TestCase
         $b = Ap2Fixtures::cm2200WithCredit($s);
         $base = Ap2InvoiceRules::fingerprint($b, $s);
 
-        self::assertSame($base, Ap2InvoiceRules::fingerprint($b->with(paymentHold: true, stage: 'Approved', orderedQty: 5.0, poUnitPrice: 9.0, sourceDoc: 'z.pdf'), $s->with(hold: true)));
+        self::assertSame($base, Ap2InvoiceRules::fingerprint($b->with(paymentHold: true, stage: 'Confirmed', orderedQty: 5.0, poUnitPrice: 9.0, sourceDoc: 'z.pdf', approvalRequired: true), $s->with(hold: true)));
+    }
+
+    public function test_the_odoo_template_fields_join_the_fingerprint_only_once_one_is_set(): void
+    {
+        $s = Ap2Fixtures::supplier();
+        $b = Ap2Fixtures::invoice($s);
+        $base = Ap2InvoiceRules::fingerprint($b, $s);
+
+        // Still on the defaults: the same hash as before the update, so earlier approvals stay current.
+        self::assertSame($base, Ap2InvoiceRules::fingerprint($b->with(externalId: null, journal: '', lines: []), $s));
+        self::assertNotSame($base, Ap2InvoiceRules::fingerprint($b->with(externalId: 'bill_import_0001'), $s), 'externalId');
+        self::assertNotSame($base, Ap2InvoiceRules::fingerprint($b->with(journal: 'BILL'), $s), 'journal');
+        $line = new Ap2InvoiceLine('Cleaning services', '6000', 1.0, 200.0, 'GST10');
+        $withLine = $b->with(lines: [$line]);
+        self::assertNotSame($base, Ap2InvoiceRules::fingerprint($withLine, $s), 'lines');
+        self::assertNotSame(
+            Ap2InvoiceRules::fingerprint($withLine, $s),
+            Ap2InvoiceRules::fingerprint($b->with(lines: [new Ap2InvoiceLine('Cleaning services', '6000', 2.0, 200.0, 'GST10')]), $s),
+            'a line quantity',
+        );
     }
 
     public function test_an_approval_is_current_only_while_the_invoice_still_hashes_to_its_snapshot(): void
     {
         $s = Ap2Fixtures::supplier();
-        $b = Ap2Fixtures::invoice($s);
+        $b = Ap2Fixtures::invoice($s)->with(approvalRequired: true);
         $approval = Ap2Fixtures::approved($b, $s);
 
         self::assertTrue(Ap2InvoiceRules::approvalCurrent($b, $s, $approval));
@@ -212,16 +234,46 @@ final class Ap2InvoiceRulesTest extends TestCase
         self::assertFalse(Ap2InvoiceRules::approvalCurrent($b, $s, new Ap2ApprovalRef('a', 'Invoice', 'Approved', null)));
     }
 
+    public function test_an_invoice_that_needs_no_business_approval_is_always_current_and_reads_ok(): void
+    {
+        $s = Ap2Fixtures::supplier();
+        $b = Ap2Fixtures::invoice($s);
+
+        self::assertFalse($b->approvalRequired);
+        self::assertTrue(Ap2InvoiceRules::approvalCurrent($b, $s, null));
+        self::assertSame('OK', Ap2InvoiceRules::businessStatus($b, $s, null));
+        self::assertSame('OK', Ap2InvoiceRules::businessStatus($b, $s, new Ap2ApprovalRef('a', 'Invoice', 'Rejected', 'x')));
+    }
+
+    public function test_business_status_follows_the_linked_request(): void
+    {
+        $s = Ap2Fixtures::supplier();
+        $b = Ap2Fixtures::invoice($s)->with(approvalRequired: true);
+        $snapshot = Ap2InvoiceRules::fingerprint($b, $s);
+
+        self::assertSame('Required', Ap2InvoiceRules::businessStatus($b, $s, null), 'no request yet');
+        foreach (['Pending', 'Approved', 'Rejected'] as $status) {
+            self::assertSame($status, Ap2InvoiceRules::businessStatus($b, $s, new Ap2ApprovalRef('a', 'Invoice', $status, $snapshot)));
+        }
+        foreach (['Superseded', 'Cancelled', 'Expired'] as $status) {
+            self::assertSame('Required / stale', Ap2InvoiceRules::businessStatus($b, $s, new Ap2ApprovalRef('a', 'Invoice', $status, $snapshot)), $status);
+        }
+        self::assertSame('Required / stale', Ap2InvoiceRules::businessStatus($b->with(gl: '7000'), $s, new Ap2ApprovalRef('a', 'Invoice', 'Approved', $snapshot)), 'edited after the request');
+        self::assertSame('Required', Ap2InvoiceRules::businessStatus($b, $s, new Ap2ApprovalRef('a', 'Email', 'Approved', $snapshot)), 'not an invoice approval');
+        self::assertSame('Approved', Ap2Fixtures::assess($b, $s, [], Ap2Fixtures::approved($b, $s))->businessStatus);
+    }
+
     public function test_s007_a_supplier_bank_change_makes_an_existing_approval_stale(): void
     {
         $verified = Ap2Fixtures::supplier('S007', 'CleanWorks', true, false, false);
-        $b = Ap2Fixtures::invoice($verified, 'B008', 'CW-3002', kind: 'Recurring', receiptRef: 'ACC', noPoReason: '', importState: 'Posted');
+        $b = Ap2Fixtures::invoice($verified, 'B008', 'CW-3002', kind: 'Recurring', receiptRef: 'ACC', noPoReason: '', importState: 'Posted')->with(approvalRequired: true);
         $approval = Ap2Fixtures::approved($b, $verified);
         self::assertTrue(Ap2Fixtures::assess($b, $verified, [], $approval)->approvalCurrent);
 
         $changed = Ap2Fixtures::cleanWorks();
         $after = Ap2Fixtures::assess($b, $changed, [], $approval);
         self::assertFalse($after->approvalCurrent, 'the supplier asked to change bank details');
+        self::assertSame('Required / stale', $after->businessStatus);
         self::assertContains('Invoice approval required / stale', $after->paymentIssues);
     }
 
@@ -230,10 +282,11 @@ final class Ap2InvoiceRulesTest extends TestCase
     public function test_queue_derivation_walks_the_prototypes_order(): void
     {
         $s = Ap2Fixtures::supplier();
-        $b = Ap2Fixtures::invoice($s);
+        $b = Ap2Fixtures::invoice($s)->with(approvalRequired: true);
 
         self::assertSame('Needs review', Ap2Fixtures::assess($b->with(verified: false), $s)->queue);
         self::assertSame('Approval', Ap2Fixtures::assess($b, $s)->queue);
+        self::assertSame('Ready to import', Ap2Fixtures::assess($b->with(approvalRequired: false), $s)->queue, 'no approval needed');
         self::assertSame('Ready to import', Ap2Fixtures::assess($b, $s, [], Ap2Fixtures::approved($b, $s))->queue);
         $posted = $b->with(importState: 'Posted');
         self::assertSame('Open AP', Ap2Fixtures::assess($posted, $s, [], Ap2Fixtures::approved($posted, $s))->queue);
@@ -241,30 +294,31 @@ final class Ap2InvoiceRulesTest extends TestCase
         self::assertSame('Settled', Ap2Fixtures::assess($settled, $s, [], Ap2Fixtures::approved($settled, $s))->queue);
     }
 
-    public function test_csv_eligibility_and_its_reasons(): void
+    public function test_odoo_api_posting_keeps_its_gate_and_its_reasons(): void
     {
         $s = Ap2Fixtures::supplier();
-        $b = Ap2Fixtures::invoice($s);
+        $b = Ap2Fixtures::invoice($s)->with(approvalRequired: true);
 
         $ok = Ap2Fixtures::assess($b, $s, [], Ap2Fixtures::approved($b, $s));
-        self::assertTrue($ok->csvEligible);
-        self::assertSame([], $ok->exportIssues);
+        self::assertTrue($ok->postable);
+        self::assertSame([], $ok->postingIssues);
+        self::assertTrue(Ap2Fixtures::assess($b->with(approvalRequired: false), $s)->postable, 'no approval needed');
 
         $unapproved = Ap2Fixtures::assess($b, $s);
-        self::assertFalse($unapproved->csvEligible);
-        self::assertSame(['Invoice approval required / stale'], $unapproved->exportIssues);
+        self::assertFalse($unapproved->postable);
+        self::assertSame(['Invoice approval required / stale'], $unapproved->postingIssues);
 
         $invalid = Ap2Fixtures::assess($b->with(verified: false), $s, [], Ap2Fixtures::approved($b->with(verified: false), $s));
-        self::assertSame(['Unresolved invoice checks: Human field verification required'], $invalid->exportIssues);
+        self::assertSame(['Unresolved invoice checks: Human field verification required'], $invalid->postingIssues);
 
         foreach (['Exported CSV', 'Imported draft'] as $state) {
             $exported = $b->with(importState: $state);
             $a = Ap2Fixtures::assess($exported, $s, [], Ap2Fixtures::approved($exported, $s));
-            self::assertFalse($a->csvEligible, $state);
-            self::assertSame(['Already exported to CSV / imported as a draft'], $a->exportIssues);
+            self::assertFalse($a->postable, $state);
+            self::assertSame(['Already exported to CSV / imported as a draft'], $a->postingIssues);
         }
         $posted = $b->with(importState: 'Posted');
-        self::assertSame(['Already posted in Odoo'], Ap2Fixtures::assess($posted, $s, [], Ap2Fixtures::approved($posted, $s))->exportIssues);
+        self::assertSame(['Already posted in Odoo'], Ap2Fixtures::assess($posted, $s, [], Ap2Fixtures::approved($posted, $s))->postingIssues);
     }
 
     public function test_s007_payment_issues_for_a_supplier_with_a_pending_bank_change(): void
@@ -279,7 +333,7 @@ final class Ap2InvoiceRulesTest extends TestCase
     public function test_payment_issues_cover_every_prototype_message(): void
     {
         $s = Ap2Fixtures::supplier();
-        $b = Ap2Fixtures::invoice($s);
+        $b = Ap2Fixtures::invoice($s)->with(approvalRequired: true);
         $issues = Ap2Fixtures::assess($b->with(verified: false, paymentHold: true), $s, [], null, true)->paymentIssues;
 
         self::assertSame([
@@ -308,21 +362,25 @@ final class Ap2InvoiceRulesTest extends TestCase
         self::assertSame(0, Ap2Fixtures::assess($b->with(due: '2026-11-30'), $s)->daysOverdue);
     }
 
-    public function test_the_stage_follows_the_rules(): void
+    public function test_the_invoice_state_is_one_of_three_and_follows_the_checks(): void
     {
         $s = Ap2Fixtures::supplier();
         $b = Ap2Fixtures::cm2200($s);
-        $a = Ap2Fixtures::assess($b, $s);
-        self::assertSame('Awaiting matching', Ap2InvoiceRules::stage($b, $a->validation, false));
-        self::assertSame('Needs verification', Ap2InvoiceRules::stage($b->with(verified: false), Ap2Fixtures::assess($b->with(verified: false), $s)->validation, false));
+        self::assertSame('Needs verification', Ap2InvoiceRules::stage($b, Ap2Fixtures::assess($b, $s)->validation), 'matching outstanding');
+        self::assertSame('Needs verification', Ap2InvoiceRules::stage($b->with(verified: false), Ap2Fixtures::assess($b->with(verified: false), $s)->validation));
 
         $clean = Ap2Fixtures::invoice($s);
-        self::assertSame('Pending approval', Ap2InvoiceRules::stage($clean, [], false));
-        self::assertSame('Approved', Ap2InvoiceRules::stage($clean, [], true));
-        self::assertSame('Excluded', Ap2InvoiceRules::stage($clean->with(excluded: true), [], true));
+        self::assertSame('Confirmed', Ap2InvoiceRules::stage($clean, []));
+        self::assertSame('Confirmed', Ap2InvoiceRules::stage($clean->with(approvalRequired: true), []), 'approval does not move the state');
+        $excluded = $clean->with(excluded: true);
+        self::assertSame('Needs verification', Ap2InvoiceRules::stage($excluded, Ap2Fixtures::assess($excluded, $s)->validation));
         $posted = $clean->with(importState: 'Posted');
-        self::assertSame('Posted', Ap2InvoiceRules::stage($posted, [], true));
-        self::assertSame('Partially settled', Ap2InvoiceRules::stage($posted->with(paid: 100.0), [], true));
-        self::assertSame('Settled', Ap2InvoiceRules::stage($posted->with(paid: 1100.0), [], true));
+        self::assertSame('Posted', Ap2InvoiceRules::stage($posted, []));
+        self::assertSame('Posted', Ap2InvoiceRules::stage($posted->with(paid: 100.0), []), 'part paid stays Posted');
+        self::assertSame('Posted', Ap2InvoiceRules::stage($posted->with(paid: 1100.0), []), 'paid stays Posted');
+        self::assertSame('Posted', Ap2InvoiceRules::stage($posted->with(verified: false), ['Human field verification required']), 'posted whatever the checks');
+        foreach ([$clean, $posted, $excluded] as $one) {
+            self::assertContains(Ap2InvoiceRules::stage($one, Ap2Fixtures::assess($one, $s)->validation), Ap2Invoice::STAGES);
+        }
     }
 }

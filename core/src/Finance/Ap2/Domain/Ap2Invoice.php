@@ -19,7 +19,13 @@ final readonly class Ap2Invoice
 
     public const CURRENCIES = ['AUD', 'USD', 'NZD', 'SGD'];
 
-    public const STAGES = ['Received', 'Needs verification', 'Awaiting matching', 'Pending approval', 'Approved', 'Posted', 'Partially settled', 'Settled', 'Excluded'];
+    /**
+     * The invoice state (Nick's 1 Nov update): exactly these three. Matching, approval, import and settlement are
+     * separate dimensions, so a paid invoice stays Posted and its balance says how far it is settled.
+     */
+    public const STAGES = ['Needs verification', 'Confirmed', 'Posted'];
+
+    public const MAX_LINES = 100;
 
     public const IMPORT_STATES = ['Not exported', 'Exported CSV', 'Imported draft', 'Posted', 'Import failed'];
 
@@ -54,7 +60,7 @@ final readonly class Ap2Invoice
         public float $creditTax = 0.0,
         public bool $creditResolved = false,
         public float $paid = 0.0,
-        public string $stage = 'Received',
+        public string $stage = 'Needs verification',
         public bool $verified = false,
         public string $importState = 'Not exported',
         public string $odooRef = '',
@@ -69,7 +75,34 @@ final readonly class Ap2Invoice
         public string $sourceFingerprint = '',
         public ?string $mailId = null,
         public ?Ap2Person $owner = null,
+        public bool $approvalRequired = false,
+        public ?string $externalId = null,
+        public string $journal = '',
+        /** @var list<Ap2InvoiceLine> */
+        public array $lines = [],
     ) {
+    }
+
+    /** The CSV's External ID: the saved one, else `triap_<id>`, so a repeat export keeps the same ID. */
+    public function odooExternalId(): string
+    {
+        return $this->externalId ?? 'triap_' . $this->id;
+    }
+
+    /**
+     * The bill lines the Odoo CSV carries: the saved ones, else one line from the invoice's own number, GL code,
+     * quantity, net and tax code (the prototype's `initialiseVendorFields`).
+     *
+     * @return list<Ap2InvoiceLine>
+     */
+    public function odooLines(): array
+    {
+        if ($this->lines !== []) {
+            return $this->lines;
+        }
+        $quantity = $this->quantity > 0 ? $this->quantity : 1.0;
+
+        return [new Ap2InvoiceLine($this->number !== '' ? $this->number : 'Invoice line', $this->gl, $quantity, round($this->net / $quantity, 4), $this->taxCode)];
     }
 
     public function with(mixed ...$changes): self

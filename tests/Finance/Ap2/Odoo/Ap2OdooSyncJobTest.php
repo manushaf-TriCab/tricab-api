@@ -71,8 +71,8 @@ final class Ap2OdooSyncJobTest extends TestCase
             'ratesRead' => 2, 'ratesMissing' => 'SGD',
         ], $facts);
         self::assertSame(['inv1', 'inv2'], array_map(static fn (Ap2OdooBillUpdate $u): string => $u->invoiceId, $this->target->applied), 'an unchanged bill is not written');
-        self::assertSame(['Posted', 19800.0, 'Settled'], [$this->target->applied[0]->importState, $this->target->applied[0]->paid, $this->target->applied[0]->stage]);
-        self::assertSame([500.0, 'Partially settled'], [$this->target->applied[1]->paid, $this->target->applied[1]->stage], 'the USD bill reads in USD');
+        self::assertSame(['Posted', 19800.0, 'Posted'], [$this->target->applied[0]->importState, $this->target->applied[0]->paid, $this->target->applied[0]->stage]);
+        self::assertSame([500.0, 'Posted'], [$this->target->applied[1]->paid, $this->target->applied[1]->stage], 'the USD bill reads in USD');
         self::assertSame(['inv3'], $this->target->missing);
         self::assertSame([[1000.0, 900.0, 20.0, 'WH/IN/00042'], [false]], [
             [$this->target->matched[0]->orderedQty, $this->target->matched[0]->receivedQty, $this->target->matched[0]->poUnitPrice, $this->target->matched[0]->receiptRef],

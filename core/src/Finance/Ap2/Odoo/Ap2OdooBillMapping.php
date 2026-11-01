@@ -7,18 +7,18 @@ namespace TriCab\Core\Finance\Ap2\Odoo;
 /**
  * Odoo bill state → AP2 invoice (Phase 9 read-back). Odoo is the source of truth for posting and payment:
  *
- * | Odoo `state` / `payment_state`           | importState     | paid                         | stage             |
- * |------------------------------------------|-----------------|------------------------------|-------------------|
- * | draft                                    | Imported draft  | unchanged                    | (rules: pre-post) |
- * | posted, not_paid                         | Posted          | 0                            | Posted            |
- * | posted, partial                          | Posted          | total − credit − residual    | Partially settled |
- * | posted, in_payment / paid                | Posted          | total − credit − residual    | Settled when 0 owed |
- * | posted, reversed                         | Posted          | total − credit (and an issue) | Settled          |
- * | cancel                                   | Import failed   | unchanged (and an issue)     | (rules)           |
+ * | Odoo `state` / `payment_state`           | importState     | paid                          | settled          |
+ * |------------------------------------------|-----------------|-------------------------------|------------------|
+ * | draft                                    | Imported draft  | unchanged                     | no               |
+ * | posted, not_paid                         | Posted          | 0                             | no               |
+ * | posted, partial                          | Posted          | total − credit − residual     | no               |
+ * | posted, in_payment / paid                | Posted          | total − credit − residual     | when 0 owed      |
+ * | posted, reversed                         | Posted          | total − credit (and an issue) | yes              |
+ * | cancel                                   | Import failed   | unchanged (and an issue)      | no               |
  *
  * The residual is in the bill's currency, as our amounts are; a bill whose currency differs from ours is reported,
- * not converted. The stage is the one {@see \TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceRules::stage()} gives a posted
- * invoice; for a draft or cancelled bill it is left to the rules ('').
+ * not converted. A posted bill's stage is Posted, paid or not (settlement is its balance); for a draft or cancelled
+ * bill the stage is left to the rules ('').
  */
 final class Ap2OdooBillMapping
 {
@@ -77,7 +77,7 @@ final class Ap2OdooBillMapping
         $paid = round($paid, 2);
         $owed = round($ours->total - $ours->credit, 2);
         $settled = $importState === 'Posted' && $owed - $paid < self::CENT;
-        $stage = $importState !== 'Posted' ? '' : ($settled ? 'Settled' : ($paid > 0 ? 'Partially settled' : 'Posted'));
+        $stage = $importState === 'Posted' ? 'Posted' : '';
         $changed = $importState !== $ours->importState
             || abs($paid - round($ours->paid, 2)) >= self::CENT
             || ($odooRef !== '' && $odooRef !== $ours->odooRef)

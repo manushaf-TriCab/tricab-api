@@ -411,7 +411,8 @@ final class Ap2ApprovalService
         $this->approvals->addEvent(new Ap2ApprovalEvent(bin2hex(random_bytes(16)), $approval->id, 'Requested', $actor->person(), $now));
 
         if ($kind === 'Invoice' && $invoice !== null) {
-            $this->invoices->update($invoice->with(approvalId: $approval->id, updatedAt: $now));
+            // Asking for approval makes it required (the prototype's request); a decision never moves the invoice state.
+            $this->invoices->update($invoice->with(approvalId: $approval->id, approvalRequired: true, updatedAt: $now));
             $this->restage($invoice->id, $now);
         } elseif ($kind === 'Payment' && $payment !== null) {
             $this->payments->update($payment->with(approvalId: $approval->id, status: 'Awaiting payment approval', updatedAt: $now));
@@ -434,7 +435,7 @@ final class Ap2ApprovalService
         return $this->present($approval, $now);
     }
 
-    /** Re-derives an invoice's stage after its approval changed (Pending approval, Approved, ...). */
+    /** Re-derives an invoice's stage after its approval changed (the stage no longer depends on it; kept as a safety net). */
     private function restage(string $invoiceId, DateTimeImmutable $now): void
     {
         $invoice = $this->invoices->find($invoiceId);
@@ -442,7 +443,7 @@ final class Ap2ApprovalService
             return;
         }
         $a = $this->assessor->one($invoice, $this->suppliers->find($invoice->supplierId), $this->time->today());
-        $stage = Ap2InvoiceRules::stage($invoice, $a->validation, $a->approvalCurrent);
+        $stage = Ap2InvoiceRules::stage($invoice, $a->validation);
         if ($stage !== $invoice->stage) {
             $this->invoices->update($invoice->with(stage: $stage, updatedAt: $now));
         }

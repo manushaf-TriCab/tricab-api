@@ -75,8 +75,8 @@ final class Ap2OdooPostingService
         }
         $supplier = $this->suppliers->find($invoice->supplierId);
         $a = $this->assessor->one($invoice, $supplier, $this->time->today());
-        if (!$a->csvEligible) {
-            throw new Ap2Conflict('The invoice cannot be posted to Odoo yet', Ap2Failure::details($a->exportIssues));
+        if (!$a->postable) {
+            throw new Ap2Conflict('The invoice cannot be posted to Odoo yet', Ap2Failure::details($a->postingIssues));
         }
 
         $issues = [];
@@ -109,7 +109,7 @@ final class Ap2OdooPostingService
         $now = $this->time->now();
         $ref = $first->name !== '' && $first->name !== '/' ? $first->name : '';
         $changed = $invoice->with(importState: 'Imported draft', odooRef: $ref, odooMoveId: $first->moveId, updatedAt: $now);
-        $changed = $changed->with(stage: Ap2InvoiceRules::stage($changed, $a->validation, $a->approvalCurrent));
+        $changed = $changed->with(stage: Ap2InvoiceRules::stage($changed, $a->validation));
         $moves = array_map(static fn (Ap2OdooPostedBill $p): int => $p->moveId, $posted);
 
         $this->transactions->run(function () use ($changed, $actor, $now, $moves, $first, $failure, $bills): void {

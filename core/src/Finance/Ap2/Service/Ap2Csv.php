@@ -8,7 +8,8 @@ namespace TriCab\Core\Finance\Ap2\Service;
  * The prototype's `csv()`: a UTF-8 BOM, CRLF lines, every cell quoted with quotes doubled, and the formula-injection
  * guard: a TEXT cell that starts (after any spaces) with `=`, `+`, `-` or `@`, or with a tab or carriage return, gets a
  * leading apostrophe so a spreadsheet shows it as text instead of running it. A NUMBER is never altered, so a credit
- * of -5.00 stays -5.00. (The tab and carriage return are an addition to the prototype's list, from OWASP's.)
+ * of -5.00 stays -5.00. (The tab and carriage return are an addition to the prototype's list, from OWASP's.) A float
+ * is written to the cent, or to four places when it has them.
  */
 final class Ap2Csv
 {
@@ -29,7 +30,10 @@ final class Ap2Csv
     public static function cell(string|int|float|null $value): string
     {
         if (is_float($value)) {
-            $text = number_format($value, 2, '.', '');
+            // Money to the cent; a unit price or quantity finer than that (333.3333) keeps up to four places.
+            $text = abs(round($value, 4) - round($value, 2)) > 1e-9
+                ? rtrim(number_format($value, 4, '.', ''), '0')
+                : number_format($value, 2, '.', '');
         } elseif (is_int($value)) {
             $text = (string) $value;
         } else {

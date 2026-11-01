@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Ap2\Service;
 
 use DateTimeImmutable;
+use TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceLine;
 
 /**
  * Typed reading of a JSON body, collecting every problem so a refusal can list them all (`error.details.issues`).
@@ -218,6 +219,63 @@ final class Ap2Input
 
                 return;
             }
+        }
+    }
+
+    /**
+     * Odoo bill lines: a list of `{label, account, quantity, unitPrice, taxes}`, stored under the property `$as`.
+     * An empty list goes back to the default line. Quantity is above zero; a unit price may be negative (a discount
+     * line). Any bad line refuses the whole list, naming the line.
+     */
+    public function lines(string $key, string $as, int $max): void
+    {
+        if (!$this->has($key)) {
+            return;
+        }
+        $raw = $this->body[$key];
+        if (!is_array($raw) || !array_is_list($raw) || count($raw) > $max) {
+            $this->issues[] = $key . ' must be a list of at most ' . $max . ' lines';
+
+            return;
+        }
+        $lines = [];
+        $bad = false;
+        foreach ($raw as $i => $line) {
+            $n = $key . '[' . ($i + 1) . ']';
+            if (!is_array($line)) {
+                $this->issues[] = $n . ' must be an object';
+                $bad = true;
+                continue;
+            }
+            $text = function (string $field, int $limit) use ($line, $n, &$bad): string {
+                $value = $line[$field] ?? '';
+                if (!is_string($value) || mb_strlen(trim($value)) > $limit) {
+                    $this->issues[] = $n . '.' . $field . ' must be text of at most ' . $limit . ' characters';
+                    $bad = true;
+
+                    return '';
+                }
+
+                return trim($value);
+            };
+            $number = function (string $field, bool $positive) use ($line, $n, &$bad): float {
+                $value = $line[$field] ?? null;
+                if (is_string($value) && is_numeric($value)) {
+                    $value = (float) $value;
+                }
+                if ((!is_int($value) && !is_float($value)) || !is_finite((float) $value) || abs((float) $value) > 9999999999999.0 || ($positive && (float) $value <= 0)) {
+                    $this->issues[] = $n . '.' . $field . ($positive ? ' must be a number above zero' : ' must be a number');
+                    $bad = true;
+
+                    return 0.0;
+                }
+
+                return round((float) $value, 4);
+            };
+            $lines[] = new Ap2InvoiceLine($text('label', 200), $text('account', 50), $number('quantity', true), $number('unitPrice', false), $text('taxes', 50));
+        }
+        if (!$bad) {
+            $this->out[$as] = $lines;
         }
     }
 }

@@ -12,7 +12,8 @@ final readonly class Ap2Assessment
     /**
      * @param list<string> $validation   the prototype's `validation()` messages
      * @param list<string> $duplicateOf  ids of the other invoices this one is a suspected duplicate of
-     * @param list<string> $exportIssues why the Odoo CSV export is refused (empty when eligible)
+     * @param string       $businessStatus OK, Required, Pending, Approved, Rejected or Required / stale
+     * @param list<string> $postingIssues why posting to Odoo through the API is refused (empty when it may be posted)
      * @param list<string> $paymentIssues why a payment cannot be proposed (empty when none)
      */
     public function __construct(
@@ -22,8 +23,9 @@ final readonly class Ap2Assessment
         public string $queue,
         public string $fingerprint,
         public bool $approvalCurrent,
-        public bool $csvEligible,
-        public array $exportIssues,
+        public string $businessStatus,
+        public bool $postable,
+        public array $postingIssues,
         public array $paymentIssues,
         public float $balance,
         public bool $locked,

@@ -29,7 +29,7 @@ final class StoreAp2CopilotTools implements Ap2CopilotTools
     private const INVOICE_FIELDS = [
         'id', 'number', 'entity', 'currency', 'net', 'tax', 'total', 'issued', 'due', 'kind', 'po', 'quantity', 'receivedQty',
         'credit', 'creditRef', 'paid', 'stage', 'verified', 'importState', 'odooRef', 'paymentHold', 'excluded', 'mailId',
-        'validation', 'matchStatus', 'duplicateOf', 'queue', 'approvalCurrent', 'exportIssues', 'paymentIssues', 'balance', 'locked', 'daysOverdue',
+        'validation', 'matchStatus', 'duplicateOf', 'queue', 'approvalCurrent', 'businessApproval', 'postingIssues', 'paymentIssues', 'balance', 'locked', 'daysOverdue',
     ];
 
     private const LIST_FIELDS = ['id', 'number', 'currency', 'total', 'balance', 'due', 'stage', 'queue', 'importState', 'daysOverdue'];

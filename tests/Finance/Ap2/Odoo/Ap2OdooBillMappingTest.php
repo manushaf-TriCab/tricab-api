@@ -38,14 +38,14 @@ final class Ap2OdooBillMappingTest extends TestCase
     {
         $u = Ap2OdooBillMapping::map(self::ours(paid: 5000.0, importState: 'Posted'), self::odoo(paymentState: 'partial', residual: 12000.0));
 
-        self::assertSame([10000.0, 'Partially settled', false], [$u->paid, $u->stage, $u->settled], 'paid is what Odoo says, not 5000 + 10000');
+        self::assertSame([10000.0, 'Posted', false], [$u->paid, $u->stage, $u->settled], 'paid is what Odoo says, not 5000 + 10000');
     }
 
     public function testPaidAndInPaymentAreSettled(): void
     {
         foreach (['paid', 'in_payment'] as $paymentState) {
             $u = Ap2OdooBillMapping::map(self::ours(importState: 'Posted'), self::odoo(paymentState: $paymentState, residual: 0.0));
-            self::assertSame([22000.0, 'Settled', true], [$u->paid, $u->stage, $u->settled], $paymentState);
+            self::assertSame([22000.0, 'Posted', true], [$u->paid, $u->stage, $u->settled], $paymentState);
         }
     }
 
@@ -54,9 +54,9 @@ final class Ap2OdooBillMappingTest extends TestCase
         // CM-2200 22,000 with the CN-2200 credit 2,200 reconciled in Odoo: the residual is 0 once 19,800 is paid.
         $u = Ap2OdooBillMapping::map(self::ours(credit: 2200.0, importState: 'Posted'), self::odoo(paymentState: 'paid', residual: 0.0));
 
-        self::assertSame([19800.0, 'Settled', true], [$u->paid, $u->stage, $u->settled]);
+        self::assertSame([19800.0, 'Posted', true], [$u->paid, $u->stage, $u->settled]);
         $invoice = Ap2Fixtures::cm2200WithCredit(Ap2Fixtures::supplier())->with(importState: 'Posted', paid: $u->paid);
-        self::assertSame($u->stage, Ap2InvoiceRules::stage($invoice, [], true), 'the stage the rules give');
+        self::assertSame($u->stage, Ap2InvoiceRules::stage($invoice, []), 'the stage the rules give');
         self::assertSame(0.0, $invoice->balance());
     }
 
@@ -64,7 +64,7 @@ final class Ap2OdooBillMappingTest extends TestCase
     {
         $u = Ap2OdooBillMapping::map(self::ours(total: 1100.0, currency: 'USD', importState: 'Posted'), self::odoo(paymentState: 'partial', total: 1100.0, residual: 600.0, currency: 'USD'));
 
-        self::assertSame([500.0, 'Partially settled', []], [$u->paid, $u->stage, $u->issues]);
+        self::assertSame([500.0, 'Posted', []], [$u->paid, $u->stage, $u->issues]);
     }
 
     public function testACurrencyMismatchIsReportedNotConverted(): void
@@ -85,7 +85,7 @@ final class Ap2OdooBillMappingTest extends TestCase
         self::assertSame(['The bill BILL/2026/10/0012 was cancelled in Odoo'], $cancelled->issues);
 
         $reversed = Ap2OdooBillMapping::map(self::ours(importState: 'Posted'), self::odoo(paymentState: 'reversed', residual: 0.0));
-        self::assertSame([22000.0, 'Settled'], [$reversed->paid, $reversed->stage]);
+        self::assertSame([22000.0, 'Posted'], [$reversed->paid, $reversed->stage]);
         self::assertSame(['The bill was reversed in Odoo (credit note): nothing is owed'], $reversed->issues);
 
         $differs = Ap2OdooBillMapping::map(self::ours(), self::odoo(total: 22100.0, residual: 22100.0));

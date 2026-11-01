@@ -163,7 +163,9 @@ final class Ap2ApprovalsPaymentsExportsTest extends TestCase
         self::assertSame(9, Ap2Json::get($a, 'approver.userId'));
         self::assertSame($a['id'], $this->invoiceView($b->id)['approvalId']);
         self::assertFalse($this->invoiceView($b->id)['approvalCurrent']);
-        self::assertSame('Pending approval', $this->invoiceView($b->id)['stage']);
+        self::assertTrue($this->invoiceView($b->id)['approvalRequired'], 'asking for approval makes it required');
+        self::assertSame('Pending', $this->invoiceView($b->id)['businessApproval']);
+        self::assertSame('Confirmed', $this->invoiceView($b->id)['stage'], 'approval does not move the invoice state');
         self::assertSame(['Requested'], array_column(Ap2Json::arr($a, 'history'), 'action'));
         $expires = new \DateTimeImmutable($this->str($a['expiresAt']));
         $requested = new \DateTimeImmutable($this->str($a['requestedAt']));
@@ -232,7 +234,8 @@ final class Ap2ApprovalsPaymentsExportsTest extends TestCase
         self::assertSame(['Requested', 'Approved'], array_column(Ap2Json::arr($done, 'history'), 'action'));
         $view = $this->invoiceView($b->id);
         self::assertTrue($view['approvalCurrent']);
-        self::assertSame('Approved', $view['stage']);
+        self::assertSame('Approved', $view['businessApproval']);
+        self::assertSame('Confirmed', $view['stage']);
         self::assertSame('Ready to import', $view['queue']);
 
         $bell = $this->get(Ap2NotificationService::class)->list($this->requester);
@@ -309,7 +312,7 @@ final class Ap2ApprovalsPaymentsExportsTest extends TestCase
         $this->refused(fn () => $service->request($this->requester, ['kind' => 'Email', 'mailId' => md5('zz'), 'approverUserId' => 9]), 404);
     }
 
-    public function test_the_csv_has_the_prototypes_headers_a_credit_row_a_bom_quotes_and_the_injection_guard(): void
+    public function test_the_csv_follows_the_odoo_vendor_bill_template_with_a_bom_quotes_and_the_injection_guard(): void
     {
         $s = $this->supplier(true, '=HYPERLINK("x")');
         $b = $this->invoice(
@@ -337,28 +340,90 @@ final class Ap2ApprovalsPaymentsExportsTest extends TestCase
         );
         $exports = $this->get(Ap2ExportService::class);
 
-        $f = $this->refused(fn () => $exports->create($this->requester, ['invoiceIds' => [$b->id]]), 409);
-        self::assertStringContainsString('Invoice approval required', $this->issuesOf($f));
-        $this->decide($this->str($this->request($b)['id']));
-
+        // No gate: an unapproved, unmatched invoice exports (the 1 Nov update).
+        $b = $this->get(InMemoryAp2InvoiceStore::class)->find($b->id)?->with(approvalRequired: true, verified: false) ?? $b;
+        $this->get(InMemoryAp2InvoiceStore::class)->update($b);
         $x = $exports->create($this->requester, ['invoiceIds' => [$b->id, $b->id]]);
         self::assertSame('CSV-0001', $x['id']);
-        self::assertSame(['External ID', 'Move Type', 'Vendor', 'Bill Reference', 'Bill Date', 'Due Date', 'Currency', 'Account Code', 'Tax Code', 'Cost Centre', 'Net Amount', 'Tax Amount', 'Gross Amount', 'Source Document', 'Original Bill Reference'], $x['headers']);
+        self::assertSame(['External ID', 'Vendor', 'Bill Date', 'Due Date', 'Bill Reference', 'Journal', 'Currency', 'Invoice Lines/Label', 'Invoice Lines/Account', 'Invoice Lines/Quantity', 'Invoice Lines/Unit Price', 'Invoice Lines/Taxes'], $x['headers']);
         $csv = $this->str($x['csv']);
-        self::assertStringStartsWith("\xEF\xBB\xBF\"External ID\",\"Move Type\"", $csv);
+        self::assertStringStartsWith("\xEF\xBB\xBF\"External ID\",\"Vendor\",\"Bill Date\"", $csv);
         $lines = explode("\r\n", substr($csv, 3));
-        self::assertCount(3, $lines, 'header, invoice, credit');
-        self::assertStringStartsWith('"triap_' . $b->id . '","in_invoice","\'=HYPERLINK(""x"")","CM-2200","2026-10-01","2026-10-31","AUD","6000","GST10","Operations","20000.00","2000.00","22000.00","\'-evil.pdf",""', $lines[1]);
-        self::assertStringStartsWith('"triap_' . $b->id . '_credit","in_refund"', $lines[2]);
-        self::assertStringEndsWith('"2000.00","200.00","2200.00","CN-2200.pdf","CM-2200"', $lines[2]);
+        self::assertCount(2, $lines, 'header and one bill line; the credit note is not netted in');
+        self::assertSame('"triap_' . $b->id . '","\'=HYPERLINK(""x"")","1/10/2026","31/10/2026","CM-2200","","AUD","CM-2200","6000","1000","20","GST10"', $lines[1]);
         self::assertSame($csv, $exports->csv('CSV-0001'));
-        self::assertCount(1, $exports->list());
-
         self::assertSame('Exported CSV', $this->invoiceView($b->id)['importState']);
-        $again = $this->refused(fn () => $exports->create($this->requester, ['invoiceIds' => [$b->id]]), 409);
-        self::assertStringContainsString('Already exported', $this->issuesOf($again));
+
+        // Saved lines become continuation rows; the first line sets the GL and tax code; a repeat export is allowed.
+        $this->get(Ap2InvoiceService::class)->update($this->requester, $b->id, [
+            'externalId' => 'bill_import_0001',
+            'journal' => 'Vendor Bills',
+            'invoiceLines' => [
+                ['label' => 'Cleaning services', 'account' => '6100', 'quantity' => 1, 'unitPrice' => 200, 'taxes' => 'GST10'],
+                ['label' => 'Cleaning supplies', 'account' => '6110', 'quantity' => 3, 'unitPrice' => '-1000', 'taxes' => 'GST10'],
+                ['label' => 'Part rate', 'account' => '6110', 'quantity' => 3, 'unitPrice' => 333.33333, 'taxes' => ''],
+            ],
+        ]);
+        $view = $this->invoiceView($b->id);
+        self::assertSame(['6100', 'GST10'], [$view['gl'], $view['taxCode']]);
+        self::assertSame('bill_import_0001', $view['externalId']);
+        $again = $exports->create($this->requester, ['invoiceIds' => [$b->id]]);
+        self::assertSame('CSV-0002', $again['id']);
+        $rows = explode("\r\n", substr($this->str($again['csv']), 3));
+        self::assertSame([
+            '"bill_import_0001","\'=HYPERLINK(""x"")","1/10/2026","31/10/2026","CM-2200","Vendor Bills","AUD","Cleaning services","6100","1","200","GST10"',
+            '"","","","","","","","Cleaning supplies","6110","3","-1000","GST10"',
+            '"","","","","","","","Part rate","6110","3","333.3333",""',
+        ], array_slice($rows, 1));
+        self::assertSame('Exported CSV', $this->invoiceView($b->id)['importState']);
+        self::assertCount(2, $exports->list());
+
         $this->refused(fn () => $exports->create($this->requester, ['invoiceIds' => []]), 422);
+        $this->refused(fn () => $exports->create($this->requester, ['invoiceIds' => [md5('nope')]]), 422);
         $this->refused(fn () => $exports->csv('CSV-9999'), 404);
+    }
+
+    public function test_exporting_never_downgrades_an_imported_or_posted_invoice(): void
+    {
+        $exports = $this->get(Ap2ExportService::class);
+        foreach (['Imported draft', 'Posted'] as $i => $state) {
+            $b = $this->invoice($this->supplier(), 'B04' . $i, 'X-' . $i, importState: $state);
+            $exports->create($this->requester, ['invoiceIds' => [$b->id]]);
+            self::assertSame($state, $this->invoiceView($b->id)['importState'], $state);
+        }
+    }
+
+    public function test_bill_lines_are_validated_and_lock_once_posted(): void
+    {
+        $b = $this->invoice($this->supplier());
+        $service = $this->get(Ap2InvoiceService::class);
+
+        $bad = $this->refused(fn () => $service->update($this->requester, $b->id, ['invoiceLines' => [['label' => 'x', 'quantity' => 0, 'unitPrice' => 1]]]), 422);
+        self::assertStringContainsString('invoiceLines[1].quantity must be a number above zero', $this->issuesOf($bad));
+        $this->refused(fn () => $service->update($this->requester, $b->id, ['invoiceLines' => 'nope']), 422);
+        $service->update($this->requester, $b->id, ['invoiceLines' => [], 'externalId' => '']);
+        self::assertSame('triap_' . $b->id, $this->invoiceView($b->id)['externalId'], 'empty goes back to the default');
+        self::assertCount(1, Ap2Json::arr($this->invoiceView($b->id), 'invoiceLines'), 'the default line');
+
+        $this->get(InMemoryAp2InvoiceStore::class)->update($b->with(importState: 'Posted'));
+        $this->refused(fn () => $service->update($this->requester, $b->id, ['journal' => 'BILL']), 409);
+    }
+
+    public function test_approval_required_cannot_be_dropped_while_a_request_is_pending(): void
+    {
+        $b = $this->invoice($this->supplier());
+        $service = $this->get(Ap2InvoiceService::class);
+        self::assertSame('OK', $this->invoiceView($b->id)['businessApproval']);
+
+        $service->update($this->requester, $b->id, ['approvalRequired' => true]);
+        self::assertSame('Required', $this->invoiceView($b->id)['businessApproval']);
+        $a = $this->request($b);
+        $f = $this->refused(fn () => $service->update($this->requester, $b->id, ['approvalRequired' => false]), 409);
+        self::assertStringContainsString('pending request', $f->getMessage());
+
+        $this->decide($this->str($a['id']));
+        $service->update($this->requester, $b->id, ['approvalRequired' => false]);
+        self::assertSame('OK', $this->invoiceView($b->id)['businessApproval']);
     }
 
     public function test_a_number_is_never_altered_by_the_injection_guard(): void
@@ -466,7 +531,7 @@ final class Ap2ApprovalsPaymentsExportsTest extends TestCase
         $this->refused(fn () => $pay->recordOdooState($this->str($p['id']), 'Cancelled', ''), 409);
         self::assertSame('Paid', $pay->recordOdooState($this->str($p['id']), 'Paid', '')['status']);
         $view = $this->invoiceView($b->id);
-        self::assertSame('Settled', $view['stage']);
+        self::assertSame('Posted', $view['stage'], 'a paid invoice stays Posted');
         self::assertSame(0.0, $view['balance']);
     }
 

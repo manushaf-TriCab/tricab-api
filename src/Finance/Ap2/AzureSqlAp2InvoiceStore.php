@@ -7,6 +7,7 @@ namespace TriCab\Api\Finance\Ap2;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invoice;
+use TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceLine;
 use TriCab\Core\Finance\Ap2\Domain\Ap2PoForecastRow;
 
 /** `finance.ap2_invoices` (`create-finance-ap2-schema.sql`), with the live-payment and PO-estimate reads the rules need. */
@@ -20,7 +21,7 @@ final class AzureSqlAp2InvoiceStore extends AzureSqlAp2Support implements Ap2Inv
         'cost_centre', 'credit', 'credit_ref', 'credit_net', 'credit_tax', 'credit_resolved', 'paid', 'stage', 'verified',
         'import_state', 'odoo_ref', 'odoo_move_id', 'approval_id', 'excluded', 'excluded_reason', 'payment_hold', 'source_doc',
         'source_file_id', 'confidence', 'source_fingerprint', 'mail_id', 'owner_user_id', 'owner_name', 'owner_email',
-        'created_at', 'updated_at',
+        'approval_required', 'external_id', 'journal', 'invoice_lines', 'created_at', 'updated_at',
     ];
 
     private const ORDER = ' ORDER BY [due], [number], [id]';
@@ -158,6 +159,10 @@ final class AzureSqlAp2InvoiceStore extends AzureSqlAp2Support implements Ap2Inv
             'owner_user_id' => $b->owner?->userId,
             'owner_name' => $b->owner->name ?? '',
             'owner_email' => $b->owner->email ?? '',
+            'approval_required' => $b->approvalRequired ? 1 : 0,
+            'external_id' => $b->externalId,
+            'journal' => $b->journal,
+            'invoice_lines' => $b->lines === [] ? null : json_encode(array_map(static fn (Ap2InvoiceLine $l): array => $l->toArray(), $b->lines), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'created_at' => self::at($b->createdAt),
             'updated_at' => self::at($b->updatedAt),
         ];
@@ -212,6 +217,37 @@ final class AzureSqlAp2InvoiceStore extends AzureSqlAp2Support implements Ap2Inv
             sourceFingerprint: self::text($row['source_fingerprint']),
             mailId: self::textOrNull($row['mail_id']),
             owner: self::person($row, 'owner'),
+            approvalRequired: self::bool($row['approval_required']),
+            externalId: self::textOrNull($row['external_id']),
+            journal: self::text($row['journal']),
+            lines: self::lines($row['invoice_lines']),
         );
+    }
+
+    /**
+     * `invoice_lines`: the JSON list the invoice saved, NULL for none (the default line).
+     *
+     * @return list<Ap2InvoiceLine>
+     */
+    private static function lines(mixed $json): array
+    {
+        if (!is_string($json) || $json === '') {
+            return [];
+        }
+        $rows = json_decode($json, true, 8, JSON_THROW_ON_ERROR);
+        $out = [];
+        foreach (is_array($rows) ? $rows : [] as $row) {
+            if (is_array($row)) {
+                $out[] = new Ap2InvoiceLine(
+                    self::text($row['label'] ?? ''),
+                    self::text($row['account'] ?? ''),
+                    self::amount($row['quantity'] ?? 0),
+                    self::amount($row['unitPrice'] ?? 0),
+                    self::text($row['taxes'] ?? ''),
+                );
+            }
+        }
+
+        return $out;
     }
 }

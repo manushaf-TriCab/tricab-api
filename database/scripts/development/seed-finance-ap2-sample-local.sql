@@ -81,16 +81,16 @@ BEGIN TRY
                       [issuedOff] INT, [dueOff] INT, [kind] NVARCHAR(20), [po] NVARCHAR(50),
                       [qty] DECIMAL(18,4), [rcv] DECIMAL(18,4), [stage] NVARCHAR(40));
     INSERT INTO @B VALUES
-        (1, 1, N'CM-2200', 20000, 2000, -10, 27, N'Goods PO', N'PO-1001', 1000, 900, N'Awaiting matching'),
-        (2, 2, N'MF-4421', 3000, 300, -5, 5, N'Service PO', N'PO-1002', 1, 0, N'Awaiting matching'),
+        (1, 1, N'CM-2200', 20000, 2000, -10, 27, N'Goods PO', N'PO-1001', 1000, 900, N'Needs verification'),
+        (2, 2, N'MF-4421', 3000, 300, -5, 5, N'Service PO', N'PO-1002', 1, 0, N'Needs verification'),
         (3, 3, N'OH-004', 1000, 100, 0, 14, N'No PO', N'', 1, 0, N'Needs verification'),
-        (4, 4, N'PE-8821', 2000, 200, 0, 3, N'Recurring', N'', 1, 1, N'Approved'),
-        (5, 3, N'OH-004', 1000, 100, 0, 14, N'No PO', N'', 1, 0, N'Received'),
+        (4, 4, N'PE-8821', 2000, 200, 0, 3, N'Recurring', N'', 1, 1, N'Confirmed'),
+        (5, 3, N'OH-004', 1000, 100, 0, 14, N'No PO', N'', 1, 0, N'Needs verification'),
         (6, 5, N'RE-1350', 5000, 500, -45, -15, N'Goods PO', N'PO-0990', 10, 10, N'Posted'),
-        (7, 6, N'DS-9921', 4000, 400, -27, 3, N'Service PO', N'PO-0992', 1, 1, N'Partially settled'),
+        (7, 6, N'DS-9921', 4000, 400, -27, 3, N'Service PO', N'PO-0992', 1, 1, N'Posted'),
         (8, 7, N'CW-3002', 1500, 150, -10, 2, N'Recurring', N'', 1, 1, N'Posted'),
-        (9, 8, N'SS-1108', 800, 80, -3, 7, N'Goods PO', N'PO-1007', 4, 4, N'Pending approval'),
-        (10, 3, N'OH-001', 600, 60, -60, -30, N'No PO', N'', 1, 1, N'Settled');
+        (9, 8, N'SS-1108', 800, 80, -3, 7, N'Goods PO', N'PO-1007', 4, 4, N'Needs verification'),
+        (10, 3, N'OH-001', 600, 60, -60, -30, N'No PO', N'', 1, 1, N'Posted');
 
     INSERT INTO [finance].[ap2_invoices]
         ([id], [supplier_id], [number], [entity], [currency], [net], [tax], [total], [issued], [due], [kind], [po],
