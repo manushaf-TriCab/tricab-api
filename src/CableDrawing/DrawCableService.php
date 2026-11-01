@@ -52,12 +52,12 @@ final class DrawCableService
         $bestRank = self::rank($matches[0], $code);
         $best = array_values(array_filter($matches, static fn (array $row): bool => self::rank($row, $code) === $bestRank));
         $constructions = array_unique(array_map(static fn (array $row): string => json_encode(array_intersect_key($row, array_flip(['nc', 'cc', 'ne', 'xae', 'cdia', 'ins', 'od_ins', 'ode_ins', 'od_bed', 'od_arm', 'od_brd', 'od'])), JSON_THROW_ON_ERROR), $best));
-        if (count($constructions) > 1) {
-            throw CableDrawingException::unavailable($code->code, 'Multiple different constructions match this code; authoritative product metadata is required.');
-        }
+        $warnings = count($constructions) > 1
+            ? ['Multiple constructions match this code; drawing uses the preferred available specification as a schematic.']
+            : [];
 
         try {
-            $cable = $this->mapper->map($matches[0], $this->styleOptions($code, $matches[0]));
+            $cable = $this->mapper->map($matches[0], $this->styleOptions($code, $matches[0], $warnings));
             $section = $this->cableGen->build($cable);
             $svg = (new SvgRenderer())->render($section, new RenderOptions(referenceDiameterMm: $this->referenceDiameter($code->style, $rows)), $cable->name);
         } catch (CableGenException $e) {
@@ -83,8 +83,11 @@ final class DrawCableService
         ];
     }
 
-    /** @param array<string, string> $row */
-    private function styleOptions(CableProductCode $code, array $row): StyleOptions
+    /**
+     * @param array<string, string> $row
+     * @param list<string> $warnings
+     */
+    private function styleOptions(CableProductCode $code, array $row, array $warnings = []): StyleOptions
     {
         $colour = $code->colour;
         $known = $colour !== null && Colour::parseList($colour) !== [];
@@ -93,9 +96,9 @@ final class DrawCableService
             coreColours: $known && ($colour === Colour::EARTH || in_array($code->style, ['LS', 'LP', 'UP'], true)) ? [$colour] : [],
             sheathColour: $known && $colour !== Colour::EARTH ? $colour : 'BK',
             conductorMaterial: $code->isAluminium() ? Colour::ALUMINIUM : Colour::COPPER,
-            warnings: ($row['ct'] === 'a') !== $code->isAluminium()
+            warnings: array_merge($warnings, ($row['ct'] === 'a') !== $code->isAluminium()
                 ? ['Dimensions come from a different conductor material; matching material dimensions are unavailable.']
-                : [],
+                : []),
         );
     }
 

@@ -55,12 +55,10 @@ final class DrawCableServiceTest extends TestCase
     {
         foreach ([
             'not a code' => [CableDrawingException::INVALID_CODE, 400],
-            'LP-PAXD/1C16EA' => [CableDrawingException::SPEC_NOT_FOUND, 404],
             'CA-PAXN/9C16BK' => [CableDrawingException::SPEC_NOT_FOUND, 404],
             'ZZ-PAXN/4C16BK' => [CableDrawingException::SPEC_NOT_FOUND, 404],
             'LS-XXXD/1A1/0OR' => [CableDrawingException::UNAVAILABLE, 422],
             'BB-XXXN/1C10OR' => [CableDrawingException::INVALID_CODE, 400],
-            'R1-DEXN/2P2.5BK' => [CableDrawingException::SPEC_NOT_FOUND, 404],
             'LS-XXXN/1A18BL' => [CableDrawingException::UNAVAILABLE, 422],
             'CA-PAXN/5C16G1' => [CableDrawingException::UNAVAILABLE, 422],
             'LS-XXXN/1C16G/Y' => [CableDrawingException::UNAVAILABLE, 422],
@@ -92,10 +90,10 @@ final class DrawCableServiceTest extends TestCase
         self::assertStringNotContainsString('fill="#2B2B2C"', $drawing->svg);
     }
 
-    public function testRejectsInventedConstructionBlocks(): void
+    public function testDoesNotRequireTheCalculatorBlockForAValidSpec(): void
     {
-        $this->expectException(CableDrawingException::class);
-        self::service()->draw('LP-ZZZZ/1C16EA');
+        $drawing = self::service()->draw('LP-PAXD/1C16EA');
+        self::assertStringStartsWith('<svg', $drawing->svg);
     }
 
     public function testApproximationWarningsAreEmbeddedInTheImage(): void
@@ -106,7 +104,7 @@ final class DrawCableServiceTest extends TestCase
         self::assertStringContainsString('estimated', $drawing->svg);
     }
 
-    public function testRefusesAmbiguousScreenedAndUnscreenedRows(): void
+    public function testDrawsAmbiguousRowsWithAnExplicitWarning(): void
     {
         $path = tempnam(sys_get_temp_dir(), 'drawing-specs-');
         self::assertNotFalse($path);
@@ -116,12 +114,25 @@ final class DrawCableServiceTest extends TestCase
             ['TEST', '2', 'P', '1', '0', 'p', '1301', '1.2', '12'],
         ]], JSON_THROW_ON_ERROR));
         try {
-            $this->expectException(CableDrawingException::class);
-            $this->expectExceptionMessage('Multiple different constructions');
-            (new DrawCableService(new CableDrawingSpecs($path)))->draw('TEST-PAXN/2P1BK');
+            $drawing = (new DrawCableService(new CableDrawingSpecs($path)))->draw('TEST-PAXN/2P1BK');
+            self::assertStringContainsString('Multiple constructions', implode(' ', $drawing->warnings));
+            self::assertStringContainsString('Multiple constructions', $drawing->svg);
         } finally {
             unlink($path);
         }
+    }
+
+    public function testDrawsSupportedCatalogueBlocksWithoutCalculatorRoundTrip(): void
+    {
+        $drawing = self::service()->draw('R1-DEXN/2P2.5BK');
+        self::assertStringStartsWith('<svg', $drawing->svg);
+    }
+
+    public function testDrawsHeavilyAdjustedRealSpecWithWarnings(): void
+    {
+        $drawing = self::service()->draw('C2-PAXN/21C1.5BK');
+        self::assertStringStartsWith('<svg', $drawing->svg);
+        self::assertStringContainsString('Cores drawn at', implode(' ', $drawing->warnings));
     }
 
     private static function sheathRadius(string $svg): float

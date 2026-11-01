@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TriCab\Api\CableDrawing;
 
-use TriCab\Core\CableCalculator\Engine\CableProductCodeGenerator;
 use TriCab\Core\PriceLookup\Domain\PriceLookupColourMask;
 
 /**
@@ -59,7 +58,7 @@ final readonly class CableProductCode
     }
 
     /**
-     * Whether a cable_specs row is the cable this code names, by the generator's own rules.
+     * Whether a cable_specs row is the cable this code names, by size and construction, independently of product-code block conventions.
      *
      * @param array<string, string> $row
      */
@@ -67,19 +66,6 @@ final readonly class CableProductCode
     {
         // AWG rows have sizes like "1/0", which PHP would read as 1.
         if ($this->isAwg() || !is_numeric($row['xa']) || (float) $row['xa'] !== (float) $this->size || strtoupper($row['cc']) !== $this->config) {
-            return false;
-        }
-        $generated = CableProductCodeGenerator::generate(
-            $this->style,
-            $row['xa'],
-            core: $row['nc'] . $row['cc'],
-            earth: (int) $row['ne'],
-            ctAlumin: $this->isAluminium(),
-            colour: $this->colour ?? '',
-            earthSize: $row['xae'] ?? '',
-        );
-        $generatedBlock = explode('/', explode('-', $generated, 2)[1], 2)[0];
-        if ($generatedBlock !== $this->block) {
             return false;
         }
         // Earth-only styles, and KL as an earth, are always written as 1C.
