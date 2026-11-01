@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Tests\Finance\Ap;
 
+use DI\Container;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -14,6 +15,7 @@ use TriCab\Api\Finance\Access\InMemoryFinanceAccessScopeReader;
 use TriCab\Api\Finance\Ap\InMemoryApAuditStore;
 use TriCab\Api\Finance\Ap\InMemoryApInvoiceStore;
 use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
+use TriCab\Api\Tests\Doubles\FixedClock;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Finance\Ap\Contract\ApAuditStore;
 use TriCab\Core\Finance\Ap\Contract\ApInvoiceStore;
@@ -26,6 +28,7 @@ use TriCab\Core\Finance\Shared\Attachments\FinanceAttachmentService;
 use TriCab\Core\Finance\Shared\Attachments\FinanceUnattachedAttachmentsJob;
 use TriCab\Core\Finance\Shared\Jobs\FinanceJobRegistry;
 use TriCab\Core\Identity\Contract\UserRepository;
+use TriCab\Core\Shared\Time\Clock;
 
 /**
  * The register's and the files' routes (T6.4, T6.5) through the real app on the in-memory stores: one permission each, the
@@ -47,6 +50,10 @@ final class FinanceApInvoiceRoutesTest extends TestCase
     protected function setUp(): void
     {
         $this->app = TestAppFactory::create(self::ON);
+        // Overdue is judged against the clock, so pin it before the fixtures' due dates (30 Oct and 1 Nov 2026).
+        $container = $this->app->getContainer();
+        self::assertInstanceOf(Container::class, $container);
+        $container->set(Clock::class, FixedClock::utc('2026-10-20 00:00:00'));
     }
 
     private function invoices(): InMemoryApInvoiceStore

@@ -75,13 +75,13 @@ final class OnboardingPersonLifecycleEndpointsTest extends TestCase
             'rowVersion' => $data['rowVersion'],
             'position' => 'Driver',
             'startDate' => '2026-10-06',
-            'lastDay' => '2027-01-29',
+            'lastDay' => '2099-01-29',
         ]));
         self::assertSame(200, $edited->getStatusCode(), (string) $edited->getBody());
         $person = $this->data($edited)['person'];
         self::assertIsArray($person);
         self::assertSame('Driver', $person['position']);
-        self::assertSame('2027-01-29', $person['lastDay']);
+        self::assertSame('2099-01-29', $person['lastDay']);
 
         $invited = $app->handle($this->json('POST', self::PEOPLE . '/' . $publicId . '/invitation', []));
         self::assertSame(200, $invited->getStatusCode(), (string) $invited->getBody());
