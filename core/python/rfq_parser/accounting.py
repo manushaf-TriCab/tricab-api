@@ -51,6 +51,7 @@ SKIP_DOCX_HEADING = "short heading, carried as context for the paragraphs below 
 SKIP_HIDDEN = "hidden sheet"
 SKIP_OUTSIDE_MAPPING = "outside the column mapping the table-shape model chose"
 SKIP_ZERO = "the customer asked for zero of this line"
+SKIP_NOT_SOLD = "a product TriCab does not sell"
 
 # How many skipped and unaccounted rows an answer lists by name. The counts are always
 # exact; the lists are for a person reading them, and a 5,000-row sheet of notes is not.
@@ -275,17 +276,20 @@ def _result_key(result: dict[str, Any], default_file: str) -> tuple[str, str, in
     return (str(source.get("file_name") or default_file), str(source.get("sheet") or ""), number)
 
 
-def _explicit_zero(items: list[dict[str, Any]]) -> bool:
-    """Whether `match_items` returned nothing for these work items because every entry
-    asked for zero (`pipeline.has_explicit_zero_length`, the one place a matched entry
-    is dropped). Re-run deterministically, with the model off: `match_source_line` then
-    returns an empty list for that reason and no other."""
+def _dropped_reason(items: list[dict[str, Any]]) -> str | None:
+    """Why `match_items` returned nothing for these work items, when the pipeline
+    dropped them on purpose: every entry asked for zero (`pipeline.has_explicit_zero_length`)
+    or every result is a product TriCab does not sell (`NOT_SOLD_PATTERNS`, removed
+    after matching). Re-run deterministically, with the model off: `match_source_line`
+    returns an empty list for a zero and only `not_sold` results for the other, before
+    the pipeline filters them."""
     import copy
 
     from . import pipeline
 
     if not items:
-        return False
+        return None
+    reasons = set()
     for item in items:
         found = pipeline.match_source_line(
             item.get("text") or "",
@@ -294,9 +298,13 @@ def _explicit_zero(items: list[dict[str, Any]]) -> bool:
             metadata=copy.deepcopy(item.get("metadata") or {}),
             allow_llm_fallback=False,
         )
-        if found:
-            return False
-    return True
+        if not found:
+            reasons.add(SKIP_ZERO)
+        elif all(result.get("item_type") == "not_sold" for result in found):
+            reasons.add(SKIP_NOT_SOLD)
+        else:
+            return None
+    return reasons.pop() if len(reasons) == 1 else None
 
 
 def balance(
@@ -309,7 +317,8 @@ def balance(
     """Counts for `rows` against the results `match_items` returned for them.
 
     `items` are the work items that went into `match_items`; a line row with no result
-    is checked against them for an explicit zero before it is called unaccounted.
+    is checked against them for a deliberate drop (an explicit zero, a product TriCab
+    does not sell) before it is called unaccounted.
     """
     if rows is None:
         return unmeasured()
@@ -340,9 +349,10 @@ def balance(
                 outcome = "kept" if "kept" in seen else ("excluded" if seen else None)
         else:
             answered = by_key.get(row.key)
-            if not answered and _explicit_zero(items_by_key.get(row.key) or []):
+            dropped = None if answered else _dropped_reason(items_by_key.get(row.key) or [])
+            if dropped is not None:
                 coverage.skipped += row.count
-                _listed(coverage.skipped_rows, row, SKIP_ZERO)
+                _listed(coverage.skipped_rows, row, dropped)
                 disposition[row.key] = "excluded"
                 continue
             outcome = None if not answered else ("excluded" if all(exclusion_reason(r) for r in answered) else "kept")

@@ -178,7 +178,8 @@ def text_coverage(text: str, items: list[dict[str, Any]], results: list[dict[str
     """Every pasted line kept, excluded or skipped (invariant 3; `rfq_parser.accounting`).
 
     A label folded into the next line is counted with the lines. An item that produced
-    no result at all is in none of the three unless it asked for zero, so the counts do
+    no result at all is in none of the three unless the pipeline dropped it on purpose
+    (a zero, a product TriCab does not sell), so the counts do
     not balance and the RFQ reads `partial`, which is the point: a line that vanished
     must not read as a complete parse.
     """

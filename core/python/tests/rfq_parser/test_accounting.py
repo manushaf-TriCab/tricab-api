@@ -136,6 +136,20 @@ def test_an_explicit_zero_is_skipped_with_that_reason(tmp_path):
     assert {"row": 3, "reason": accounting.SKIP_ZERO}.items() <= cov.skipped_rows[-1].items()
 
 
+def test_a_product_tricab_does_not_sell_is_skipped_with_that_reason(tmp_path):
+    """NOT_SOLD_PATTERNS lines (TPS) are removed from the quote inside the pipeline;
+    the row is still accounted for, so the draft is not left `partial`."""
+    path = _workbook(tmp_path / "tps.xlsx", {"Schedule": [
+        HEADER,
+        [1, "4C 16mm2 Cu XLPE/PVC", 120],
+        [2, "2C+E 2.5mm2 TPS", 150],
+    ]})
+    cov, results = _account(path)
+    assert len(results) == 1
+    assert _balanced(cov), cov
+    assert {"row": 3, "reason": accounting.SKIP_NOT_SOLD}.items() <= cov.skipped_rows[-1].items()
+
+
 def test_a_row_that_vanished_is_unaccounted_and_named():
     rows = [accounting.Row(("f.xlsx", "S", 2), "line"), accounting.Row(("f.xlsx", "S", 3), "line")]
     results = [{"source": {"file_name": "f.xlsx", "sheet": "S", "row_number": 2}, "status": "matched", "selected_product_code": "X"}]
