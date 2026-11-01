@@ -51,6 +51,8 @@ final class GetCableDrawingAction
             ->withHeader('X-Content-Type-Options', 'nosniff')
             // Opened directly, the SVG may not run script or load anything.
             ->withHeader('Content-Security-Policy', "default-src 'none'; style-src 'unsafe-inline'")
-            ->withHeader('X-Cable-Spec', $drawing->specName);
+            ->withHeader('X-Cable-Spec', $drawing->specName)
+            ->withHeader('X-Cable-Drawing-Accuracy', $drawing->warnings === [] ? 'nominal' : 'approximate')
+            ->withHeader('X-Cable-Drawing-Warnings', json_encode($drawing->warnings, JSON_THROW_ON_ERROR));
     }
 }

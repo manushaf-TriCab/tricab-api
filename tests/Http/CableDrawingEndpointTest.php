@@ -21,6 +21,8 @@ final class CableDrawingEndpointTest extends TestCase
         self::assertSame('CA 4C16+1E6', $response->getHeaderLine('X-Cable-Spec'));
         self::assertStringContainsString('public', $response->getHeaderLine('Cache-Control'));
         self::assertStringStartsWith('<svg', (string) $response->getBody());
+        self::assertSame('approximate', $response->getHeaderLine('X-Cable-Drawing-Accuracy'));
+        self::assertNotEmpty(json_decode($response->getHeaderLine('X-Cable-Drawing-Warnings'), true));
     }
 
     public function test_requires_a_code(): void

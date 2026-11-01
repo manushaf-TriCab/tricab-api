@@ -55,6 +55,7 @@ final class DrawCableServiceTest extends TestCase
     {
         foreach ([
             'not a code' => [CableDrawingException::INVALID_CODE, 400],
+            'LP-PAXD/1C16EA' => [CableDrawingException::SPEC_NOT_FOUND, 404],
             'CA-PAXN/9C16BK' => [CableDrawingException::SPEC_NOT_FOUND, 404],
             'ZZ-PAXN/4C16BK' => [CableDrawingException::SPEC_NOT_FOUND, 404],
             'BB-XXXD/1C1/0OR' => [CableDrawingException::UNAVAILABLE, 422],
@@ -67,6 +68,55 @@ final class DrawCableServiceTest extends TestCase
                 self::assertSame($error, $e->errorCode, $code);
                 self::assertSame($status, $e->httpStatus(), $code);
             }
+        }
+    }
+
+    public function testEarthWiresHaveNoBlackSheathOrDistortion(): void
+    {
+        foreach (['LS', 'LP', 'UP'] as $style) {
+            $drawing = self::service()->draw($style . '-XXXN/1C16EA');
+            self::assertSame([], $drawing->warnings, $style);
+            self::assertStringNotContainsString('fill="#2B2B2C"', $drawing->svg, $style);
+            self::assertStringContainsString('fill="#5BAE3C"', $drawing->svg, $style);
+        }
+    }
+
+    public function testPanelWireColourAppliesToInsulation(): void
+    {
+        $drawing = self::service()->draw('UP-XXXN/1C16RE');
+        self::assertStringContainsString('fill="#C0392F"', $drawing->svg);
+        self::assertStringNotContainsString('fill="#2B2B2C"', $drawing->svg);
+    }
+
+    public function testRejectsInventedConstructionBlocks(): void
+    {
+        $this->expectException(CableDrawingException::class);
+        self::service()->draw('LP-ZZZZ/1C16EA');
+    }
+
+    public function testApproximationWarningsAreEmbeddedInTheImage(): void
+    {
+        $drawing = self::service()->draw('CA-PAXN/5C16BK');
+        self::assertNotEmpty($drawing->warnings);
+        self::assertStringContainsString('<desc>', $drawing->svg);
+        self::assertStringContainsString('estimated', $drawing->svg);
+    }
+
+    public function testRefusesAmbiguousScreenedAndUnscreenedRows(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'drawing-specs-');
+        self::assertNotFalse($path);
+        $columns = ['cable_style', 'nc', 'cc', 'xa', 'ne', 'ct', 'mt', 'cdia', 'od'];
+        file_put_contents($path, json_encode(['columns' => $columns, 'rows' => [
+            ['TEST', '2', 'p', '1', '0', 'p', '1301', '1.2', '12'],
+            ['TEST', '2', 'P', '1', '0', 'p', '1301', '1.2', '12'],
+        ]], JSON_THROW_ON_ERROR));
+        try {
+            $this->expectException(CableDrawingException::class);
+            $this->expectExceptionMessage('Multiple different constructions');
+            (new DrawCableService(new CableDrawingSpecs($path)))->draw('TEST-PAXN/2P1BK');
+        } finally {
+            unlink($path);
         }
     }
 

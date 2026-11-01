@@ -3518,16 +3518,16 @@
         },
         {
             "name": "tricab/cablegen",
-            "version": "v0.1.0",
+            "version": "v0.1.1",
             "source": {
                 "type": "git",
                 "url": "git@github.com:tricab/cablegen.git",
-                "reference": "a4e8a6ffaaaf6c5d4ad5c1e159a0e1ce960f5b7f"
+                "reference": "f5e74da9d169eef1e32b5b111e8deda05511126a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tricab/cablegen/zipball/a4e8a6ffaaaf6c5d4ad5c1e159a0e1ce960f5b7f",
-                "reference": "a4e8a6ffaaaf6c5d4ad5c1e159a0e1ce960f5b7f",
+                "url": "https://api.github.com/repos/tricab/cablegen/zipball/f5e74da9d169eef1e32b5b111e8deda05511126a",
+                "reference": "f5e74da9d169eef1e32b5b111e8deda05511126a",
                 "shasum": ""
             },
             "require": {
@@ -3568,10 +3568,10 @@
             ],
             "description": "TriCab cable cross-section drawings: builds the geometry of a cable construction and renders it as a square SVG.",
             "support": {
-                "source": "https://github.com/tricab/cablegen/tree/v0.1.0",
+                "source": "https://github.com/tricab/cablegen/tree/v0.1.1",
                 "issues": "https://github.com/tricab/cablegen/issues"
             },
-            "time": "2026-11-01T11:26:48+00:00"
+            "time": "2026-11-01T20:59:05+00:00"
         },
         {
             "name": "tricab/docgen",

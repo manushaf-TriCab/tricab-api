@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace TriCab\Api\CableDrawing;
 
+use TriCab\Core\CableCalculator\Engine\CableProductCodeGenerator;
+
 /**
  * A cable product code as CableProductCodeGenerator writes it:
  * STYLE-BLOCK/{count}{C|P|T}{size}{colour}, e.g. CA-PAXN/5C16BK.
@@ -36,6 +38,15 @@ final readonly class CableProductCode
             return null;
         }
 
+        // Supported construction blocks from the product-code generator.
+        // Syntactically valid arbitrary blocks must not invent catalogue products.
+        if (!in_array($m[2], ['XXXN', 'XXXD', 'XXXA', 'PAXN', 'PAXD', 'PAXA', 'P9XA', 'PDTN', 'PDXN', 'PAZN'], true)) {
+            return null;
+        }
+        if (isset($m[6]) && \TriCab\CableGen\Model\Colour::parseList($m[6]) === []) {
+            return null;
+        }
+
         return new self($code, $m[1], $m[2], (int) $m[3], $m[4], $m[5], ($m[6] ?? '') !== '' ? $m[6] : null);
     }
 
@@ -61,9 +72,22 @@ final readonly class CableProductCode
         if ($this->isAwg() || !is_numeric($row['xa']) || (float) $row['xa'] !== (float) $this->size || strtoupper($row['cc']) !== $this->config) {
             return false;
         }
+        $generated = CableProductCodeGenerator::generate(
+            $this->style,
+            $row['xa'],
+            core: $row['nc'] . $row['cc'],
+            earth: (int) $row['ne'],
+            ctAlumin: $this->isAluminium(),
+            colour: $this->colour ?? '',
+            earthSize: $row['xae'] ?? '',
+        );
+        $generatedBlock = explode('/', explode('-', $generated, 2)[1], 2)[0];
+        if ($generatedBlock !== $this->block) {
+            return false;
+        }
         // Earth-only styles, and KL as an earth, are always written as 1C.
         if ($this->count === 1 && (in_array($this->style, ['LP', 'LS', 'UP'], true) || ($this->style === 'KL' && $this->colour === 'EA'))) {
-            return true;
+            return (int) $row['nc'] === 1 && (int) $row['ne'] === 0;
         }
         $earths = (int) $row['ne'];
 
