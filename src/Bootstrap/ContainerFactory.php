@@ -467,6 +467,9 @@ use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabsAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueTabTreeAction;
 use TriCab\Api\Http\Action\PublicProduct\GetPublicCatalogueNodeAction;
 use TriCab\Api\Http\Action\CableCalculator\PostCableCalculatorCalculateAction;
+use TriCab\Api\Http\Action\CableDrawing\GetCableDrawingAction;
+use TriCab\Api\CableDrawing\CableDrawingSpecs;
+use TriCab\Api\CableDrawing\DrawCableService;
 use TriCab\Api\CableCalculator\LegacyCliTriCalcEngine;
 use TriCab\Core\CableCalculator\Application\Service\CalculateCableService;
 use TriCab\Core\CableCalculator\Contract\CableCalculatorEngine;
@@ -3620,6 +3623,14 @@ final class ContainerFactory
             GetPublicCatalogueTabTreeAction::class => \DI\autowire(GetPublicCatalogueTabTreeAction::class),
             GetPublicCatalogueNodeAction::class => \DI\autowire(GetPublicCatalogueNodeAction::class),
             PostCableCalculatorCalculateAction::class => \DI\autowire(PostCableCalculatorCalculateAction::class),
+            GetCableDrawingAction::class => \DI\autowire(GetCableDrawingAction::class),
+            DrawCableService::class => \DI\autowire(DrawCableService::class),
+            CableDrawingSpecs::class => static function (): CableDrawingSpecs {
+                $configured = Environment::value('CABLE_DRAWING_DATASET');
+                $default = dirname(__DIR__, 2) . '/resources/cable-drawing/v1/cableSpecs.json';
+
+                return new CableDrawingSpecs($configured !== null && $configured !== '' ? $configured : $default);
+            },
             FindProductAction::class => \DI\autowire(FindProductAction::class),
             ListProductFinderStylesAction::class => \DI\autowire(ListProductFinderStylesAction::class),
             ProductFinderClient::class => static function () use ($settings): ProductFinderClient {

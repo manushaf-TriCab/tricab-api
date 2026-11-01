@@ -8,6 +8,9 @@ on:
       DOCGEN_DEPLOY_KEY:
         description: Read-only deploy key for the private tricab/docgen Composer package
         required: true
+      CABLEGEN_DEPLOY_KEY:
+        description: Read-only deploy key for the private tricab/cablegen Composer package
+        required: true
 
 permissions:
   contents: read
@@ -36,6 +39,7 @@ jobs:
         uses: ./tricab-api/.github/actions/setup-api
         with:
           docgen-deploy-key: ${{ secrets.DOCGEN_DEPLOY_KEY }}
+          cablegen-deploy-key: ${{ secrets.CABLEGEN_DEPLOY_KEY }}
 
       - name: Run PHPStan
         working-directory: tricab-api
@@ -55,6 +59,7 @@ jobs:
         uses: ./tricab-api/.github/actions/setup-api
         with:
           docgen-deploy-key: ${{ secrets.DOCGEN_DEPLOY_KEY }}
+          cablegen-deploy-key: ${{ secrets.CABLEGEN_DEPLOY_KEY }}
 
       - name: Set up Python
         uses: actions/setup-python@v6

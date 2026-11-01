@@ -1,0 +1,56 @@
+name: Private package deploy keys
+description: >-
+  Let Composer install the private tricab/docgen and tricab/cablegen packages over SSH,
+  each with its own read-only deploy key (the DOCGEN_DEPLOY_KEY and CABLEGEN_DEPLOY_KEY
+  secrets). A deploy key belongs to one repository, not a person, never expires and needs
+  no org approval. Composer clones both from git (their lock source URLs are
+  git@github.com:tricab/<package>.git); every other package still installs from dist.
+
+inputs:
+  docgen-deploy-key:
+    description: The private half of the tricab/docgen deploy key (the DOCGEN_DEPLOY_KEY secret)
+    required: true
+  cablegen-deploy-key:
+    description: The private half of the tricab/cablegen deploy key (the CABLEGEN_DEPLOY_KEY secret)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Load the deploy keys
+      shell: bash
+      env:
+        DOCGEN_DEPLOY_KEY: ${{ inputs.docgen-deploy-key }}
+        CABLEGEN_DEPLOY_KEY: ${{ inputs.cablegen-deploy-key }}
+        # Authenticated: anonymous api.github.com calls share a 60/hour limit per runner IP and got 403s.
+        GITHUB_TOKEN: ${{ github.token }}
+      run: |
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        for package in docgen cablegen; do
+          secret="$(echo "$package" | tr '[:lower:]' '[:upper:]')_DEPLOY_KEY"
+          if [ -z "${!secret}" ]; then
+            echo "The $secret secret is not set; Composer cannot install the private tricab/$package package." >&2
+            exit 1
+          fi
+          printf '%s\n' "${!secret}" > ~/.ssh/${package}_deploy_key
+          chmod 600 ~/.ssh/${package}_deploy_key
+          # GitHub hands SSH one key per host and refuses a deploy key for any other
+          # repository, so each package gets its own host alias, and git rewrites the
+          # package's URL onto it.
+          cat >> ~/.ssh/config <<CONFIG
+        Host github-${package}
+          HostName github.com
+          HostKeyAlias github.com
+          IdentityFile ~/.ssh/${package}_deploy_key
+          IdentitiesOnly yes
+        CONFIG
+          git config --global url."git@github-${package}:tricab/${package}".insteadOf "git@github.com:tricab/${package}"
+          # Clone over SSH from source; the dist zipball needs an API token we don't have.
+          composer config --global preferred-install.tricab/${package} source
+        done
+        # GitHub's published host keys, so the first connection is verified rather than trusted blindly.
+        curl -fsSL --retry 3 --retry-all-errors --retry-delay 5 \
+          -H "Authorization: Bearer $GITHUB_TOKEN" \
+          https://api.github.com/meta | jq -r '.ssh_keys[] | "github.com " + .' >> ~/.ssh/known_hosts
+        composer config --global github-protocols ssh

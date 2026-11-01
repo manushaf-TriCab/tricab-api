@@ -28,6 +28,7 @@ jobs:
     uses: ./.github/workflows/api-checks.yml
     secrets:
       DOCGEN_DEPLOY_KEY: ${{ secrets.DOCGEN_DEPLOY_KEY }}
+      CABLEGEN_DEPLOY_KEY: ${{ secrets.CABLEGEN_DEPLOY_KEY }}
 
   website-revision:
     name: Resolve website revision
@@ -92,10 +93,11 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      - name: Load the docgen deploy key
-        uses: ./tricab-api/.github/actions/docgen-ssh
+      - name: Load the private package deploy keys
+        uses: ./tricab-api/.github/actions/private-packages-ssh
         with:
-          deploy-key: ${{ secrets.DOCGEN_DEPLOY_KEY }}
+          docgen-deploy-key: ${{ secrets.DOCGEN_DEPLOY_KEY }}
+          cablegen-deploy-key: ${{ secrets.CABLEGEN_DEPLOY_KEY }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v5

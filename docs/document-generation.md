@@ -68,7 +68,7 @@ Rendering lives in [tricab/docgen](https://github.com/tricab/docgen), a private 
 Installing the package needs read access to `tricab/docgen`:
 
 - **Locally:** your own GitHub access to `tricab/docgen`, given to Composer once with `composer config --global github-oauth.github.com "$(gh auth token)"` (or a personal token).
-- **GitHub Actions:** the `DOCGEN_DEPLOY_KEY` secret, the private half of a read-only deploy key on `tricab/docgen` (Settings → Deploy keys). `.github/actions/docgen-ssh` loads it, and Composer clones docgen over SSH from source; the release build drops its `.git` folder. A deploy key belongs to the repository, so it doesn't expire or depend on any one person. To rotate it: generate a new key pair, add the public key to docgen, replace the secret, then delete the old deploy key.
+- **GitHub Actions:** the `DOCGEN_DEPLOY_KEY` secret, the private half of a read-only deploy key on `tricab/docgen` (Settings → Deploy keys). `.github/actions/private-packages-ssh` loads it (with `CABLEGEN_DEPLOY_KEY` for tricab/cablegen), and Composer clones docgen over SSH from source; the release build drops its `.git` folder. A deploy key belongs to the repository, so it doesn't expire or depend on any one person. To rotate it: generate a new key pair, add the public key to docgen, replace the secret, then delete the old deploy key.
 
 ## Current limitations
 

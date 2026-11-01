@@ -39,6 +39,7 @@ jobs:
     uses: ./.github/workflows/api-checks.yml
     secrets:
       DOCGEN_DEPLOY_KEY: ${{ secrets.DOCGEN_DEPLOY_KEY }}
+      CABLEGEN_DEPLOY_KEY: ${{ secrets.CABLEGEN_DEPLOY_KEY }}
 
   frontend-checks:
     name: Frontend

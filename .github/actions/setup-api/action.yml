@@ -5,6 +5,9 @@ inputs:
   docgen-deploy-key:
     description: The read-only deploy key for the private tricab/docgen repository (the DOCGEN_DEPLOY_KEY secret)
     required: true
+  cablegen-deploy-key:
+    description: The read-only deploy key for the private tricab/cablegen repository (the CABLEGEN_DEPLOY_KEY secret)
+    required: true
 
 runs:
   using: composite
@@ -17,10 +20,11 @@ runs:
         coverage: none
         tools: composer:v2
 
-    - name: Load the docgen deploy key
-      uses: ./tricab-api/.github/actions/docgen-ssh
+    - name: Load the private package deploy keys
+      uses: ./tricab-api/.github/actions/private-packages-ssh
       with:
-        deploy-key: ${{ inputs.docgen-deploy-key }}
+        docgen-deploy-key: ${{ inputs.docgen-deploy-key }}
+        cablegen-deploy-key: ${{ inputs.cablegen-deploy-key }}
 
     - name: Locate Composer download cache
       id: composer-cache
@@ -38,5 +42,5 @@ runs:
     - name: Install API dependencies
       shell: bash
       working-directory: tricab-api
-      # No --prefer-dist: it would override the per-package `source` preference for docgen.
+      # No --prefer-dist: it would override the per-package `source` preference for docgen and cablegen.
       run: composer install --no-interaction --no-progress

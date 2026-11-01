@@ -205,8 +205,8 @@ done
 echo "==> Installing PHP dependencies"
 (
     cd "$app_root"
-    # No --prefer-dist: CI asks for tricab/docgen from source (cloned over SSH
-    # with its deploy key) and --prefer-dist would override that. Tagged
+    # No --prefer-dist: CI asks for tricab/docgen and tricab/cablegen from source
+    # (cloned over SSH with their deploy keys) and --prefer-dist would override that. Tagged
     # packages install from dist by default anyway.
     COMPOSER_MIRROR_PATH_REPOS=1 composer install \
         --no-dev \

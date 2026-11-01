@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0301d14bac29114089bcac29c8d4c1e5",
+    "content-hash": "9b2d8ced7ca798bbb94936211e1e1766",
     "packages": [
         {
             "name": "brick/math",
@@ -3515,6 +3515,63 @@
                 }
             ],
             "time": "2026-10-12T14:32:04+00:00"
+        },
+        {
+            "name": "tricab/cablegen",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "git@github.com:tricab/cablegen.git",
+                "reference": "a4e8a6ffaaaf6c5d4ad5c1e159a0e1ce960f5b7f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tricab/cablegen/zipball/a4e8a6ffaaaf6c5d4ad5c1e159a0e1ce960f5b7f",
+                "reference": "a4e8a6ffaaaf6c5d4ad5c1e159a0e1ce960f5b7f",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.3"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^2.1",
+                "phpunit/phpunit": "^11.5"
+            },
+            "bin": [
+                "bin/cablegen"
+            ],
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "TriCab\\CableGen\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "TriCab\\CableGen\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ],
+                "analyse": [
+                    "phpstan analyse"
+                ],
+                "check": [
+                    "@analyse",
+                    "@test"
+                ]
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "TriCab cable cross-section drawings: builds the geometry of a cable construction and renders it as a square SVG.",
+            "support": {
+                "source": "https://github.com/tricab/cablegen/tree/v0.1.0",
+                "issues": "https://github.com/tricab/cablegen/issues"
+            },
+            "time": "2026-11-01T11:26:48+00:00"
         },
         {
             "name": "tricab/docgen",
