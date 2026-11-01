@@ -7,7 +7,7 @@ namespace TriCab\Api\Finance\Ap2\Ai;
 use Closure;
 use JsonException;
 use TriCab\Api\Assistant\Infrastructure\Prompt\VersionedPrompt;
-use TriCab\Core\Finance\Ap\Service\ApTime;
+use TriCab\Core\Finance\Ap2\Service\Ap2Time;
 use TriCab\Core\Finance\Ap2\Ai\Ap2AiUsage;
 use TriCab\Core\Finance\Ap2\Ai\Ap2CopilotProposal;
 use TriCab\Core\Finance\Ap2\Ai\Ap2CopilotReply;
@@ -54,7 +54,7 @@ final class FoundryAp2Copilot implements Ap2Copilot
         private readonly Ap2Foundry $foundry,
         private readonly Ap2CopilotTools $tools,
         private readonly Ap2MailStore $mail,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
         private readonly VersionedPrompt $prompt,
         ?callable $nonce = null,
     ) {

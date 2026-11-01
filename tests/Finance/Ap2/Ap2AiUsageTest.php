@@ -20,7 +20,7 @@ use TriCab\Api\Identity\Persistence\InMemoryApiUserRepository;
 use TriCab\Api\Tests\Doubles\FakeSqlConnection;
 use TriCab\Api\Tests\Doubles\FixedClock;
 use TriCab\Api\Tests\TestAppFactory;
-use TriCab\Core\Finance\Ap\Service\ApTime;
+use TriCab\Core\Finance\Ap2\Service\Ap2Time;
 use TriCab\Core\Finance\Ap2\Ai\Ap2AiUsage;
 use TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageReport;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invalid;
@@ -68,7 +68,7 @@ final class Ap2AiUsageTest extends TestCase
     {
         $clock = new FixedClock(new DateTimeImmutable('2026-10-27T03:00:00+00:00'));
 
-        return new Ap2AiUsageService($log, new InMemoryAp2InvoiceStore(new InMemoryAp2PaymentStore()), new ApTime($clock, 'Australia/Sydney'));
+        return new Ap2AiUsageService($log, new InMemoryAp2InvoiceStore(new InMemoryAp2PaymentStore()), new Ap2Time($clock, 'Australia/Sydney'));
     }
 
     public function testTheServiceDefaultsToTheLast30DaysAndPricesPerInvoice(): void

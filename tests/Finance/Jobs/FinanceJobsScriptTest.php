@@ -45,7 +45,6 @@ final class FinanceJobsScriptTest extends TestCase
             'FINANCE_AR_ENABLED' => 'false',
             'FINANCE_AR_SENDING_ENABLED' => 'false',
             // Tri-AP keeps files too (Phase 6): its switch registers the same unattached-upload sweep, so it is off here as well.
-            'FINANCE_AP_ENABLED' => 'false',
             'FINANCE_MAILBOX_READ_ENABLED' => 'false',
             'FINANCE_AI_ENABLED' => 'false',
             'FINANCE_MAIL_ENABLED' => 'false',

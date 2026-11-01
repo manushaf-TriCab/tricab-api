@@ -25,7 +25,7 @@ use TriCab\Core\Finance\Shared\Odoo\OdooSyncService;
  * are the portal's (`odoo_id`, `active`, `deleted`, `write_date`, `synced_at` and the
  * payload's own), so the apps port without a rename.
  *
- * Gated on `FINANCE.AP.ACCESS`: Tri-AP is the one app that reads these lists today
+ * Gated on `FINANCE.AP2.ACCESS` (Tri-AP): the one app that may read these lists today
  * (Phase 1 table). Vendors carry email, VAT and phone, so this is not open to every
  * finance user; another app that needs a list gets its own permission or route.
  */

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Ap2\Odoo;
 
 /**
- * The Odoo 19 models and fields Tri-AP2 reads, in one place so a field Odoo renames is fixed here once.
+ * The Odoo 19 models and fields Tri-AP reads, in one place so a field Odoo renames is fixed here once.
  *
  * Checked against the Odoo 19 documentation and source, NOT yet against Tricab's staging Odoo (no staging key on the
  * build machine). The ones most worth confirming on staging: `account.move.matched_payment_ids` (Odoo 17+),

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Ap2\Service;
 
 use Throwable;
-use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Contract\Ap2DeferredOutbox;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Domain\Ap2HistoryEntry;
@@ -36,7 +35,7 @@ final class Ap2MailOutbox implements Ap2DeferredOutbox
     public function __construct(
         private readonly FinanceMailSender $sender,
         private readonly Ap2HistoryStore $history,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
         private readonly string $mailbox,
     ) {
     }

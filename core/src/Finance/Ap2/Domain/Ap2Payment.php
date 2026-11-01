@@ -7,7 +7,7 @@ namespace TriCab\Core\Finance\Ap2\Domain;
 use DateTimeImmutable;
 
 /**
- * One row of `finance.ap2_payments`: a payment PROPOSAL. Tri-AP2 prepares and controls; Odoo pays. The states after
+ * One row of `finance.ap2_payments`: a payment PROPOSAL. Tri-AP prepares and controls; Odoo pays. The states after
  * approval (Sent to Odoo, Paid) are set only by the Odoo stream ({@see Service\Ap2PaymentService::recordOdooState()}).
  */
 final readonly class Ap2Payment

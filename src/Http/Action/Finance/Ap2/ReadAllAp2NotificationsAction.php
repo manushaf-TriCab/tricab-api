@@ -6,15 +6,14 @@ namespace TriCab\Api\Http\Action\Finance\Ap2;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TriCab\Api\Http\Action\Finance\Ap\ApActionSupport;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\Finance\Ap\Domain\ApFailure;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Service\Ap2NotificationService;
 
 /** POST /notifications/read-all. `FINANCE.AP2.ACCESS`. */
 final class ReadAllAp2NotificationsAction
 {
-    use ApActionSupport;
+    use Ap2ActionSupport;
 
     public function __construct(
         private readonly Ap2NotificationService $service,
@@ -35,7 +34,7 @@ final class ReadAllAp2NotificationsAction
         }
         try {
             return $this->ok($this->responder, $this->service->readAll($actor), 200);
-        } catch (ApFailure $failure) {
+        } catch (Ap2Failure $failure) {
             return $this->failure($this->responder, $failure);
         }
     }

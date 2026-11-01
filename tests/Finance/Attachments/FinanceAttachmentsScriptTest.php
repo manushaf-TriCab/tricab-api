@@ -44,7 +44,11 @@ final class FinanceAttachmentsScriptTest extends TestCase
         self::assertArrayHasKey(1, $match);
         preg_match_all("/N'([A-Z0-9]+)'/", $match[1] ?? '', $keys);
 
-        self::assertSame(array_keys(Module::APPS), $keys[1]);
+        $allowed = $keys[1];
+        sort($allowed);
+        $expected = [...array_keys(Module::APPS), ...Module::RETIRED_APP_KEYS];
+        sort($expected);
+        self::assertSame($expected, $allowed, 'every app, and the retired key its archived rows keep');
     }
 
     public function test_the_container_setting_defaults_to_a_private_finance_container_and_can_be_named(): void

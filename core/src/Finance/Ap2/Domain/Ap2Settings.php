@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Ap2\Domain;
 
 /**
- * Tri-AP2's settings (`finance.ap2_settings`). The defaults are the prototype's, except the approval expiry, which
+ * Tri-AP's settings (`finance.ap2_settings`). The defaults are the prototype's, except the approval expiry, which
  * is a placeholder until Finance decides (plan question 7).
  */
 final readonly class Ap2Settings

@@ -17,7 +17,7 @@ use TriCab\Api\Infrastructure\Http\StreamJsonHttpClient;
 use TriCab\Core\Finance\Ap2\Ai\Ap2AiPricing;
 use TriCab\Api\Finance\Ap2\InMemoryAp2MailStore;
 use TriCab\Api\Tests\Doubles\FixedClock;
-use TriCab\Core\Finance\Ap\Service\ApTime;
+use TriCab\Core\Finance\Ap2\Service\Ap2Time;
 use TriCab\Core\Finance\Ap2\Ai\Ap2MailContext;
 use TriCab\Core\Finance\Ap2\Ai\Ap2SupplierRef;
 use TriCab\Core\Finance\Ap2\Contract\Ap2CopilotTools;
@@ -139,7 +139,7 @@ final class Ap2FoundryLiveSmokeTest extends TestCase
                 return ['found' => true, 'suppliers' => [['id' => 'sup1', 'name' => 'Cable Materials Pty Ltd']]];
             }
         };
-        $copilot = new FoundryAp2Copilot($this->foundry, $tools, new InMemoryAp2MailStore(), new ApTime(FixedClock::utc('2026-10-26 01:00:00'), 'Australia/Melbourne'), Ap2AiWorld::prompt('tri-ap2-copilot'));
+        $copilot = new FoundryAp2Copilot($this->foundry, $tools, new InMemoryAp2MailStore(), new Ap2Time(FixedClock::utc('2026-10-26 01:00:00'), 'Australia/Melbourne'), Ap2AiWorld::prompt('tri-ap2-copilot'));
 
         $reply = $copilot->respond(['supplierId' => 'sup1'], 'Explain the exceptions, then record a call: supplier will send the receipt', []);
 

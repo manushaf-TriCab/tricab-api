@@ -6,15 +6,14 @@ namespace TriCab\Api\Http\Action\Finance\Ap2;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TriCab\Api\Http\Action\Finance\Ap\ApActionSupport;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\Finance\Ap\Domain\ApFailure;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Service\Ap2UserService;
 
 /** GET /users?permission=INVOICES.WRITE: people holding an AP2 permission. Gated on `FINANCE.AP2.ACCESS`. */
 final class ListAp2UsersAction
 {
-    use ApActionSupport;
+    use Ap2ActionSupport;
 
     public function __construct(
         private readonly Ap2UserService $service,
@@ -34,7 +33,7 @@ final class ListAp2UsersAction
         }
         try {
             return $this->ok($this->responder, $this->service->holding(is_string($this->queryOf($request)['permission'] ?? null) ? $this->queryOf($request)['permission'] : ''), 200);
-        } catch (ApFailure $failure) {
+        } catch (Ap2Failure $failure) {
             return $this->failure($this->responder, $failure);
         }
     }

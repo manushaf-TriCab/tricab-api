@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Finance\Ap2\Domain;
 
-/** A message Tri-AP2 wants sent: an approval request, a decision notice or a shared history. */
+/** A message Tri-AP wants sent: an approval request, a decision notice or a shared history. */
 final readonly class Ap2OutboxMessage
 {
     public const APPROVAL_REQUEST = 'Approval request';

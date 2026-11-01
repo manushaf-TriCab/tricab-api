@@ -48,7 +48,7 @@ final class OdooSyncService
         private readonly ApplicationTransaction $transaction,
         private readonly Clock $clock,
         private readonly OdooSyncConfig $config,
-        /** Also copy `account.tax` (Tri-AP2 only: the live Tri-AP's Odoo user may lack accounting read rights). */
+        /** Also copy `account.tax` (Tri-AP only: the live Tri-AP's Odoo user may lack accounting read rights). */
         private readonly bool $includeTaxes = false,
     ) {
     }

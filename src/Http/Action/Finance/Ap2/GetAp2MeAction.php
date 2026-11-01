@@ -6,15 +6,14 @@ namespace TriCab\Api\Http\Action\Finance\Ap2;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TriCab\Api\Http\Action\Finance\Ap\ApActionSupport;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\Finance\Ap\Domain\ApFailure;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Service\Ap2MeService;
 
-/** GET /me: the person, their Tri-AP2 permission codes, the settings and the flags. Gated on `FINANCE.AP2.ACCESS`. */
+/** GET /me: the person, their Tri-AP permission codes, the settings and the flags. Gated on `FINANCE.AP2.ACCESS`. */
 final class GetAp2MeAction
 {
-    use ApActionSupport;
+    use Ap2ActionSupport;
 
     public function __construct(
         private readonly Ap2MeService $service,
@@ -35,7 +34,7 @@ final class GetAp2MeAction
         }
         try {
             return $this->ok($this->responder, $this->service->me($actor), 200);
-        } catch (ApFailure $failure) {
+        } catch (Ap2Failure $failure) {
             return $this->failure($this->responder, $failure);
         }
     }

@@ -8,7 +8,7 @@ use DateTimeImmutable;
 
 /**
  * One row of `finance.ap2_mail`: a message in the AP mailbox, copied in by the sync. The mailbox itself is never
- * touched (no move, flag or mark-read); `read`, `status` and the rest are Tri-AP2's own.
+ * touched (no move, flag or mark-read); `read`, `status` and the rest are Tri-AP's own.
  */
 final readonly class Ap2Mail
 {

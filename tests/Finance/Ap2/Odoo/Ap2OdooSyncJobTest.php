@@ -106,7 +106,7 @@ final class Ap2OdooSyncJobTest extends TestCase
             $this->job()->run(new DateTimeImmutable('2026-10-26 01:00:00 UTC'));
             self::fail('expected the job to fail');
         } catch (RuntimeException $e) {
-            self::assertStringStartsWith('The Tri-AP2 Odoo sync could not read bill states: Odoo billStates returned HTTP 403', $e->getMessage());
+            self::assertStringStartsWith('The Tri-AP Odoo sync could not read bill states: Odoo billStates returned HTTP 403', $e->getMessage());
         }
         self::assertSame([], $this->target->applied);
         self::assertCount(2, $this->target->matched, 'PO matching still ran');

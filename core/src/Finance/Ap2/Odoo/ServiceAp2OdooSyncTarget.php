@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Finance\Ap2\Odoo;
 
-use TriCab\Core\Finance\Ap\Service\ApTime;
+use TriCab\Core\Finance\Ap2\Service\Ap2Time;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2OdooSyncTarget;
@@ -44,7 +44,7 @@ final class ServiceAp2OdooSyncTarget implements Ap2OdooSyncTarget
         private readonly Ap2Assessor $assessor,
         private readonly Ap2PaymentService $paymentService,
         private readonly Ap2Transactions $transactions,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
     ) {
     }
 

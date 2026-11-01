@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Finance\Ap2\Service;
 
-use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore;
@@ -20,7 +19,7 @@ final class Ap2DashboardService
         private readonly Ap2InvoiceStore $invoices,
         private readonly Ap2SettingsStore $settings,
         private readonly Ap2Assessor $assessor,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
     ) {
     }
 

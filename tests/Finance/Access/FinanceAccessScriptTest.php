@@ -55,7 +55,11 @@ final class FinanceAccessScriptTest extends TestCase
         preg_match("/CK_finance_access_scopes_application_key\\]\\s+CHECK \\(\\[application_key\\] IN \\(([^)]*)\\)\\)/", $sql, $match);
         preg_match_all("/N'([A-Z0-9]+)'/", $match[1] ?? '', $keys);
 
-        self::assertSame(array_keys(Module::APPS), $keys[1]);
+        $allowed = $keys[1];
+        sort($allowed);
+        $expected = [...array_keys(Module::APPS), ...Module::RETIRED_APP_KEYS];
+        sort($expected);
+        self::assertSame($expected, $allowed, 'every app, and the retired key its archived rows keep');
     }
 
     public function test_the_container_serves_empty_in_memory_twins_without_a_database(): void

@@ -149,7 +149,7 @@ Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-calendar-invites.sql')
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-task-time-spent.sql')  # Tri-Task Estimated Time free text, column time_spent (26 Oct 2026); after alter-finance-task-order.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-attachments-schema.sql')  # finance file store rows; after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-ar-schema.sql')           # Tri-AR's eight tables (Phase 5); after create-finance-schema.sql and create-finance-attachments-schema.sql
-Invoke-SqlFile (Join-Path $DevScripts 'create-finance-invoice-schema.sql')      # Tri-AP's fourteen tables (Phase 6); after create-finance-schema.sql and create-finance-attachments-schema.sql
+Invoke-SqlFile (Join-Path $DevScripts 'create-finance-invoice-schema.sql')      # the first Tri-AP's fourteen tables, kept as an archive (retired 2 Nov 2026); after create-finance-schema.sql and create-finance-attachments-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-ap2-schema.sql')         # Tri-AP2's sixteen ap2_ tables; after create-finance-schema.sql and create-finance-attachments-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'create-finance-odoo-schema.sql')         # Odoo reference lists and their sync runs (F1.12); after create-finance-schema.sql
 Invoke-SqlFile (Join-Path $DevScripts 'alter-finance-mail-status-suppressed.sql') # a mail ledger made before `suppressed` existed; no-op otherwise
@@ -180,9 +180,7 @@ foreach ($s in @(
     'seed-finance-task-roles.sql',       # FINANCE_TASK_USER, _MANAGER, _ADMIN, assigned to nobody; after the Tri-Task permissions
     'seed-finance-ar-permissions.sql',   # Tri-AR's four permissions (Phase 5); after seed-finance-permissions.sql
     'seed-finance-ar-roles.sql',         # FINANCE_AR_REVIEWER, _OPERATOR, _ADMIN, assigned to nobody; after the Tri-AR permissions
-    'seed-finance-ap-permissions.sql',   # Tri-AP's eight permissions (Phase 6); after seed-finance-permissions.sql
-    'seed-finance-ap-roles.sql',         # FINANCE_AP_OPERATOR, _PREPARER, _APPROVER, _ADMIN, assigned to nobody; after the Tri-AP permissions
-    'seed-finance-ap2-permissions.sql',  # Tri-AP2's eleven permissions; after seed-finance-permissions.sql
+    'seed-finance-ap2-permissions.sql',  # Tri-AP's eleven permissions (app key AP2); after seed-finance-permissions.sql
     'seed-finance-ap2-roles.sql',        # FINANCE_AP2_OPERATOR, _APPROVER, _BANK_VERIFIER, _ADMIN, assigned to nobody
     'seed-finance-mailboxes-local.sql',  # local development mailbox registry rows; never for a shared database
     'seed-product-catalogue-sample.sql',

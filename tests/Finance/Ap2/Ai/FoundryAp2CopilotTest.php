@@ -17,7 +17,7 @@ use TriCab\Api\Finance\Ap2\InMemoryAp2SettingsStore;
 use TriCab\Api\Finance\Ap2\InMemoryAp2SupplierStore;
 use TriCab\Api\Tests\Doubles\FixedClock;
 use TriCab\Api\Tests\Finance\Ap2\Ap2Fixtures;
-use TriCab\Core\Finance\Ap\Service\ApTime;
+use TriCab\Core\Finance\Ap2\Service\Ap2Time;
 use TriCab\Core\Finance\Ap2\Ai\Ap2AiUnavailable;
 use TriCab\Core\Finance\Ap2\Ai\Ap2AiUsage;
 use TriCab\Core\Finance\Ap2\Ai\Ap2CopilotProposal;
@@ -42,7 +42,7 @@ final class FoundryAp2CopilotTest extends TestCase
 
     private InMemoryAp2HistoryStore $history;
 
-    private ApTime $time;
+    private Ap2Time $time;
 
     private Ap2Supplier $supplier;
 
@@ -55,7 +55,7 @@ final class FoundryAp2CopilotTest extends TestCase
         $invoices = new InMemoryAp2InvoiceStore(new InMemoryAp2PaymentStore());
         $this->history = new InMemoryAp2HistoryStore();
         $this->mail = new InMemoryAp2MailStore();
-        $this->time = new ApTime(FixedClock::utc('2026-10-26 01:00:00'), 'Australia/Melbourne');
+        $this->time = new Ap2Time(FixedClock::utc('2026-10-26 01:00:00'), 'Australia/Melbourne');
 
         $this->supplier = Ap2Fixtures::supplier()->with(email: 'accounts@cable.example');
         $suppliers->insert($this->supplier);

@@ -69,7 +69,7 @@ final class Ap2OdooSyncJob implements FinanceJob
         }
 
         if ($failed !== []) {
-            throw new RuntimeException('The Tri-AP2 Odoo sync could not read ' . implode('; ', $failed));
+            throw new RuntimeException('The Tri-AP Odoo sync could not read ' . implode('; ', $failed));
         }
 
         return $facts;

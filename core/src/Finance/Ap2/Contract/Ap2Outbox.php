@@ -7,7 +7,7 @@ namespace TriCab\Core\Finance\Ap2\Contract;
 use TriCab\Core\Finance\Ap2\Domain\Ap2OutboxMessage;
 
 /**
- * Where Tri-AP2 hands a message it wants emailed: the approval request, the decision notice, a shared history.
+ * Where Tri-AP hands a message it wants emailed: the approval request, the decision notice, a shared history.
  * It is called inside the use case's transaction, so a message is queued if and only if the write happened.
  *
  * Two implementations: {@see \TriCab\Api\Finance\Ap2\HistoryOnlyAp2Outbox} (nothing is sent; it is written into the

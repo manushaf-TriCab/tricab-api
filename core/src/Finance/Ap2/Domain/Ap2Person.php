@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Finance\Ap2\Domain;
 
-/** A platform user as Tri-AP2 shows them: `identity.Users.UserId` with the name and address held at the time. */
+/** A platform user as Tri-AP shows them: `identity.Users.UserId` with the name and address held at the time. */
 final readonly class Ap2Person
 {
     public function __construct(

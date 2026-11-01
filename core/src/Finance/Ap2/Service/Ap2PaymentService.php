@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Ap2\Service;
 
 use DateTimeImmutable;
-use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Contract\Ap2ApprovalStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
@@ -26,7 +25,7 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2Payment;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Person;
 
 /**
- * Payment PROPOSALS. Tri-AP2 prepares and controls; Odoo pays (decision 4), so there is no bank step here.
+ * Payment PROPOSALS. Tri-AP prepares and controls; Odoo pays (decision 4), so there is no bank step here.
  *
  *  - A proposal is allowed only when the invoice has no payment issue, the amount is within the open balance and the
  *    per-batch cash limit, the active proposals together stay within the limit (above it: CFO review required), the date
@@ -49,7 +48,7 @@ final class Ap2PaymentService
         private readonly Ap2Assessor $assessor,
         private readonly Ap2Snapshots $snapshots,
         private readonly Ap2Transactions $transactions,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
     ) {
     }
 

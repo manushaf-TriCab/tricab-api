@@ -7,7 +7,6 @@ namespace TriCab\Core\Finance\Ap2\Service;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
-use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageReport;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
@@ -25,7 +24,7 @@ final class Ap2AiUsageService
     public function __construct(
         private readonly Ap2AiUsageReport $report,
         private readonly Ap2InvoiceStore $invoices,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
     ) {
     }
 

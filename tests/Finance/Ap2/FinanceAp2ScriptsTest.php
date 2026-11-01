@@ -7,7 +7,7 @@ namespace TriCab\Api\Tests\Finance\Ap2;
 use PHPUnit\Framework\TestCase;
 use TriCab\Core\Finance\Module;
 
-/** The Tri-AP2 SQL scripts say what `Module` says and are safe to read as text (nothing here runs SQL). */
+/** The Tri-AP SQL scripts say what `Module` says and are safe to read as text (nothing here runs SQL). */
 final class FinanceAp2ScriptsTest extends TestCase
 {
     private const CODE = 'FINANCE\\.[A-Z0-9_.]+';
@@ -39,7 +39,6 @@ final class FinanceAp2ScriptsTest extends TestCase
         foreach ($expected as $code) {
             self::assertStringStartsWith('FINANCE.AP2.', $code);
             self::assertNotContains($code, Module::PERSON_PERMISSIONS);
-            self::assertNotContains($code, Module::AP_PERMISSIONS);
         }
         self::assertContains(Module::PERMISSION_AP2_ACCESS, Module::PERSON_PERMISSIONS);
     }
@@ -206,25 +205,6 @@ final class FinanceAp2ScriptsTest extends TestCase
         }
         self::assertSame(10, preg_match_all("/^\\s*\\((\\d+), (\\d), N'[A-Z]{2}-\\d+'/m", $sql));
         self::assertStringContainsString('WHERE NOT EXISTS', $sql);
-    }
-
-    public function test_the_migration_is_not_applied_dry_by_default_guarded_and_never_writes_to_tri_ap(): void
-    {
-        $sql = self::script('migrate-finance-ap-to-ap2.sql');
-
-        self::assertStringContainsString('NOT APPLIED', $sql);
-        self::assertMatchesRegularExpression("/DECLARE @Apply\\s+NVARCHAR\\(3\\) = N'NO';/", $sql, 'a dry run unless someone says YES');
-        self::assertMatchesRegularExpression('/DECLARE @OnlyOpenItems\\s+BIT\\s+= 0;/', $sql, 'everything by default');
-        self::assertMatchesRegularExpression('/DECLARE @AllowSharedDatabase\\s+BIT\\s+= 0;/', $sql);
-        self::assertStringContainsString("@@SERVERNAME LIKE N'%database.windows.net%'", $sql);
-        self::assertStringContainsString('ap2_migration_map', $sql);
-        self::assertStringContainsString("N'Migrated from Tri-AP'", $sql);
-        self::assertStringContainsString('ROLLBACK TRANSACTION', $sql);
-        // Tri-AP's tables and the shared file rows are read, never written.
-        self::assertDoesNotMatchRegularExpression('/\\b(INSERT\\s+INTO|UPDATE|DELETE(\\s+\\w+)?\\s+FROM|MERGE|TRUNCATE\\s+TABLE|DROP)\\s+\\[finance\\]\\.\\[(invoice_|attachments|mail_deliveries)/i', $sql);
-        self::assertDoesNotMatchRegularExpression('/\\bUPDATE\\s+\\w*\\s*SET\\s+\\w+\\.\\[(file_id|blob_path)\\]/i', $sql);
-        // Blobs are never copied: no blob_path is written anywhere.
-        self::assertStringNotContainsString('blob_path', $sql);
     }
 
     public function test_the_sync_cutoff_alter_is_idempotent_standalone_and_says_it_is_not_applied(): void

@@ -67,7 +67,7 @@ use TriCab\Core\Shared\Mailbox\MailboxReader;
 use TriCab\Core\Shared\Mailbox\MailboxRecipient;
 
 /**
- * Tri-AP2 Phases 3 and 4: the mail sync, the inbox routes, drafts, sending, create-invoice and the AI interfaces, over the
+ * Tri-AP Phases 3 and 4: the mail sync, the inbox routes, drafts, sending, create-invoice and the AI interfaces, over the
  * in-memory stores with a fake reader and fake transports. Nothing here reaches Graph, a database or a real mailbox.
  */
 final class Ap2MailTest extends TestCase

@@ -6,15 +6,14 @@ namespace TriCab\Api\Http\Action\Finance\Ap2;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TriCab\Api\Http\Action\Finance\Ap\ApActionSupport;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\Finance\Ap\Domain\ApFailure;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Service\Ap2SupplierService;
 
 /** POST /suppliers/{id}/history/share. `FINANCE.AP2.MAIL.SEND`. */
 final class ShareAp2HistoryAction
 {
-    use ApActionSupport;
+    use Ap2ActionSupport;
 
     public function __construct(
         private readonly Ap2SupplierService $service,
@@ -35,7 +34,7 @@ final class ShareAp2HistoryAction
         }
         try {
             return $this->ok($this->responder, $this->service->shareHistory($actor, (string) ($args['id'] ?? ''), $this->bodyOf($request)), 200);
-        } catch (ApFailure $failure) {
+        } catch (Ap2Failure $failure) {
             return $this->failure($this->responder, $failure);
         }
     }

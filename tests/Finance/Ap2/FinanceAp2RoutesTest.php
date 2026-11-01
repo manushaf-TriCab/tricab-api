@@ -28,7 +28,7 @@ use TriCab\Core\Finance\Shared\Odoo\OdooLists;
 use TriCab\Core\Finance\Shared\Odoo\OdooRecordRow;
 use TriCab\Core\Identity\Contract\UserRepository;
 
-/** The Tri-AP2 routes through the real app on the in-memory stores. The person is platform user 1. */
+/** The Tri-AP routes through the real app on the in-memory stores. The person is platform user 1. */
 final class FinanceAp2RoutesTest extends TestCase
 {
     private const BASE = '/api/v1/finance/ap2';
@@ -140,7 +140,7 @@ final class FinanceAp2RoutesTest extends TestCase
         $apps = Ap2Json::arr(TestAppFactory::json($response), 'data.apps');
         $ap2 = array_values(array_filter($apps, static fn (mixed $a): bool => Ap2Json::get($a, 'key') === 'AP2'));
 
-        self::assertSame([['key' => 'AP2', 'name' => 'Tri-AP2', 'path' => 'ap2', 'enabled' => true, 'canAccess' => true]], $ap2);
+        self::assertSame([['key' => 'AP2', 'name' => 'Tri-AP', 'path' => 'ap', 'enabled' => true, 'canAccess' => true]], $ap2);
     }
 
     public function test_supplier_create_get_patch_and_history(): void
@@ -195,7 +195,7 @@ final class FinanceAp2RoutesTest extends TestCase
         self::assertCount(3, Ap2Json::arr($json, 'error.details.issues'));
 
         [$status] = $this->call('POST', '/suppliers', ['name' => 'X', 'ownerUserId' => 99]);
-        self::assertSame(422, $status, 'an owner must be a Tri-AP2 user');
+        self::assertSame(422, $status, 'an owner must be a Tri-AP user');
 
         [$status, $json] = $this->call('GET', '/suppliers/' . str_repeat('a', 32));
         self::assertSame([404, 'FINANCE_AP2_NOT_FOUND'], [$status, Ap2Json::get($json, 'error.code')]);

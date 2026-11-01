@@ -58,10 +58,10 @@ final class Module
     /** Reach Tri-AR. No record. */
     public const PERMISSION_AR_ACCESS = 'FINANCE.AR.ACCESS';
 
-    /** Reach Tri-AP. No record. */
-    public const PERMISSION_AP_ACCESS = 'FINANCE.AP.ACCESS';
-
-    /** Reach Tri-AP2 (the test app that may replace Tri-AP). No record. */
+    /**
+     * Reach Tri-AP. No record. The code (and the app key `AP2`, the `ap2_` tables) kept its test-app name when it
+     * replaced the first Tri-AP on 2 Nov 2026; people see it as Tri-AP at /finance/ap.
+     */
     public const PERMISSION_AP2_ACCESS = 'FINANCE.AP2.ACCESS';
 
     /**
@@ -74,8 +74,14 @@ final class Module
     public const APP_CREDIT = 'CREDIT';
     public const APP_COLLECT = 'COLLECT';
     public const APP_AR = 'AR';
-    public const APP_AP = 'AP';
     public const APP_AP2 = 'AP2';
+
+    /**
+     * The first Tri-AP's key, retired on 2 Nov 2026. Its rows stay in the database as an archive (`finance.invoice_*`,
+     * and `AP` rows in the attachments, mailbox-grant, delivery, scope and audit tables), so the schema still allows
+     * the key; no code reads or writes it.
+     */
+    public const RETIRED_APP_KEYS = ['AP'];
 
     /**
      * Each app's key, its business name, its environment switch and its address
@@ -89,8 +95,7 @@ final class Module
         self::APP_CREDIT => ['name' => 'Tri-Credit Notes', 'switch' => 'FINANCE_CREDIT_ENABLED', 'path' => 'credit'],
         self::APP_COLLECT => ['name' => 'Tri-Collection', 'switch' => 'FINANCE_COLLECT_ENABLED', 'path' => 'collect'],
         self::APP_AR => ['name' => 'Tri-AR', 'switch' => 'FINANCE_AR_ENABLED', 'path' => 'ar'],
-        self::APP_AP => ['name' => 'Tri-AP', 'switch' => 'FINANCE_AP_ENABLED', 'path' => 'ap'],
-        self::APP_AP2 => ['name' => 'Tri-AP2', 'switch' => 'FINANCE_AP2_ENABLED', 'path' => 'ap2'],
+        self::APP_AP2 => ['name' => 'Tri-AP', 'switch' => 'FINANCE_AP2_ENABLED', 'path' => 'ap'],
     ];
 
     /** Every permission a person's role may carry. Seeded by `seed-finance-permissions.sql`. */
@@ -100,7 +105,6 @@ final class Module
         self::PERMISSION_CREDIT_ACCESS,
         self::PERMISSION_COLLECT_ACCESS,
         self::PERMISSION_AR_ACCESS,
-        self::PERMISSION_AP_ACCESS,
         self::PERMISSION_AP2_ACCESS,
         self::PERMISSION_ADMIN,
     ];
@@ -318,104 +322,8 @@ final class Module
         self::PERMISSION_AR_ADMIN => 'ar.admin',
     ];
 
-    // Tri-AP (Phase 6, decision D69). The portal's eight `invoice.*` strings a
-    // role carried (`invoice.users.manage` is not carried: roles are the
-    // platform's). The portal checked three of them; here every route checks
-    // one (question Q1).
     // ------------------------------------------------------------------
-    public const PERMISSION_AP_INVOICES_READ = 'FINANCE.AP.INVOICES.READ';
-    public const PERMISSION_AP_INVOICES_WRITE = 'FINANCE.AP.INVOICES.WRITE';
-    public const PERMISSION_AP_INVOICES_DELETE = 'FINANCE.AP.INVOICES.DELETE';
-    public const PERMISSION_AP_MAIL_READ = 'FINANCE.AP.MAIL.READ';
-    public const PERMISSION_AP_MAIL_SEND = 'FINANCE.AP.MAIL.SEND';
-    public const PERMISSION_AP_APPROVALS_PREPARE = 'FINANCE.AP.APPROVALS.PREPARE';
-    public const PERMISSION_AP_APPROVALS_DECIDE = 'FINANCE.AP.APPROVALS.DECIDE';
-    public const PERMISSION_AP_SETTINGS_MANAGE = 'FINANCE.AP.SETTINGS.MANAGE';
-
-    /**
-     * The eight Tri-AP permissions a role may carry (besides `FINANCE.AP.ACCESS`,
-     * which Phase 1 seeded). Seeded by `seed-finance-ap-permissions.sql`.
-     */
-    public const AP_PERMISSIONS = [
-        self::PERMISSION_AP_INVOICES_READ,
-        self::PERMISSION_AP_INVOICES_WRITE,
-        self::PERMISSION_AP_INVOICES_DELETE,
-        self::PERMISSION_AP_MAIL_READ,
-        self::PERMISSION_AP_MAIL_SEND,
-        self::PERMISSION_AP_APPROVALS_PREPARE,
-        self::PERMISSION_AP_APPROVALS_DECIDE,
-        self::PERMISSION_AP_SETTINGS_MANAGE,
-    ];
-
-    public const ROLE_AP_OPERATOR = 'FINANCE_AP_OPERATOR';
-    public const ROLE_AP_PREPARER = 'FINANCE_AP_PREPARER';
-    public const ROLE_AP_APPROVER = 'FINANCE_AP_APPROVER';
-    public const ROLE_AP_ADMIN = 'FINANCE_AP_ADMIN';
-
-    /**
-     * Tri-AP's roles, as the portal had them, each also holding `FINANCE.ACCESS`
-     * and `FINANCE.AP.ACCESS` (permissions.md section 2). They are not a ladder:
-     * only the administrator holds everything, and a person who both works the
-     * register and prepares approvals is given two roles. Seeded by
-     * `seed-finance-ap-roles.sql`, assigned to nobody.
-     *
-     * @var array<string, list<string>>
-     */
-    public const AP_ROLE_PERMISSIONS = [
-        self::ROLE_AP_OPERATOR => [
-            self::PERMISSION_ACCESS,
-            self::PERMISSION_AP_ACCESS,
-            self::PERMISSION_AP_INVOICES_READ,
-            self::PERMISSION_AP_INVOICES_WRITE,
-            self::PERMISSION_AP_MAIL_READ,
-            self::PERMISSION_AP_MAIL_SEND,
-        ],
-        self::ROLE_AP_PREPARER => [
-            self::PERMISSION_ACCESS,
-            self::PERMISSION_AP_ACCESS,
-            self::PERMISSION_AP_INVOICES_READ,
-            self::PERMISSION_AP_APPROVALS_PREPARE,
-        ],
-        self::ROLE_AP_APPROVER => [
-            self::PERMISSION_ACCESS,
-            self::PERMISSION_AP_ACCESS,
-            self::PERMISSION_AP_INVOICES_READ,
-            self::PERMISSION_AP_APPROVALS_DECIDE,
-        ],
-        self::ROLE_AP_ADMIN => [
-            self::PERMISSION_ACCESS,
-            self::PERMISSION_AP_ACCESS,
-            self::PERMISSION_AP_INVOICES_READ,
-            self::PERMISSION_AP_INVOICES_WRITE,
-            self::PERMISSION_AP_INVOICES_DELETE,
-            self::PERMISSION_AP_MAIL_READ,
-            self::PERMISSION_AP_MAIL_SEND,
-            self::PERMISSION_AP_APPROVALS_PREPARE,
-            self::PERMISSION_AP_APPROVALS_DECIDE,
-            self::PERMISSION_AP_SETTINGS_MANAGE,
-        ],
-    ];
-
-    /**
-     * The strings the ported pages read (decision D78): `GET
-     * /api/v1/finance/ap/me` answers these, not the platform codes. The portal
-     * calls the app `invoice`, so the prefix is not the app key.
-     *
-     * @var array<string, string>
-     */
-    public const AP_PORTAL_PERMISSIONS = [
-        self::PERMISSION_AP_INVOICES_READ => 'invoice.invoices.read',
-        self::PERMISSION_AP_INVOICES_WRITE => 'invoice.invoices.write',
-        self::PERMISSION_AP_INVOICES_DELETE => 'invoice.invoices.delete',
-        self::PERMISSION_AP_MAIL_READ => 'invoice.mail.read',
-        self::PERMISSION_AP_MAIL_SEND => 'invoice.mail.send',
-        self::PERMISSION_AP_APPROVALS_PREPARE => 'invoice.approvals.prepare',
-        self::PERMISSION_AP_APPROVALS_DECIDE => 'invoice.approvals.decide',
-        self::PERMISSION_AP_SETTINGS_MANAGE => 'invoice.settings.manage',
-    ];
-
-    // ------------------------------------------------------------------
-    // Tri-AP2 (the test app that may replace Tri-AP; docs in
+    // Tri-AP (the app key AP2, which replaced the first Tri-AP on 2 Nov 2026; docs in
     // platform/tri-ap-new/TRI-AP2-API-CONTRACT.md). Twelve permissions under
     // `FINANCE.AP2.`: the access permission (in PERSON_PERMISSIONS, like every
     // app's) and eleven of its own. Every route checks exactly one of them.
@@ -433,7 +341,7 @@ final class Module
     public const PERMISSION_AP2_EXPORT = 'FINANCE.AP2.EXPORT';
     public const PERMISSION_AP2_SETTINGS_MANAGE = 'FINANCE.AP2.SETTINGS.MANAGE';
 
-    /** The eleven Tri-AP2 permissions beyond `FINANCE.AP2.ACCESS`. */
+    /** The eleven Tri-AP permissions beyond `FINANCE.AP2.ACCESS`. */
     public const AP2_PERMISSIONS = [
         self::PERMISSION_AP2_INVOICES_READ,
         self::PERMISSION_AP2_INVOICES_WRITE,

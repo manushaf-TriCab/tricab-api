@@ -47,7 +47,7 @@ final class AzureSqlAp2AiUsageLog extends AzureSqlAp2Support implements Ap2AiUsa
                 ],
             );
         } catch (Throwable $failure) {
-            error_log('Tri-AP2 AI usage was not saved: ' . $failure::class . ': ' . $failure->getMessage());
+            error_log('Tri-AP AI usage was not saved: ' . $failure::class . ': ' . $failure->getMessage());
         }
     }
 

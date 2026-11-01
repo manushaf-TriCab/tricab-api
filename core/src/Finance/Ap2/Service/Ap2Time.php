@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace TriCab\Core\Finance\Ap\Service;
+namespace TriCab\Core\Finance\Ap2\Service;
 
 use DateInterval;
 use DateTimeImmutable;
@@ -14,7 +14,7 @@ use TriCab\Core\Shared\Time\Clock;
  * `Australia/Melbourne` unless `FINANCE_AP_TIMEZONE` says otherwise (question Q3), never against
  * the browser's clock or UTC. Overdue is derived, never stored (question Q4).
  */
-final class ApTime
+final class Ap2Time
 {
     private readonly DateTimeZone $zone;
 

@@ -54,7 +54,7 @@ final class HttpAp2OdooRecordWriterTest extends TestCase
     public function testOnlyBillsAndTheirExternalIdsMayBeCreated(): void
     {
         $this->expectException(OdooError::class);
-        $this->expectExceptionMessage('Tri-AP2 does not create res.partner.bank records in Odoo.');
+        $this->expectExceptionMessage('Tri-AP does not create res.partner.bank records in Odoo.');
         $this->writer()->create('res.partner.bank', ['acc_number' => '1']);
     }
 

@@ -171,7 +171,7 @@ final class FinanceOdooWiringTest extends TestCase
         self::assertSame(403, $this->call($app, 'POST', '/api/v1/finance/reference/sync', ['mode' => 'full'])[0]);
         self::assertSame(403, $this->call($app, 'GET', '/api/v1/finance/reference/status')[0]);
 
-        $this->grant($app, [Module::PERMISSION_AP_ACCESS]);
+        $this->grant($app, [Module::PERMISSION_AP2_ACCESS]);
         self::assertSame(200, $this->call($app, 'GET', '/api/v1/finance/reference/vendors')[0]);
         self::assertSame(403, $this->call($app, 'POST', '/api/v1/finance/reference/sync', ['mode' => 'full'])[0], 'reading a list is not running a sync');
         self::assertSame(403, $this->call($app, 'GET', '/api/v1/finance/reference/status')[0]);
@@ -184,7 +184,7 @@ final class FinanceOdooWiringTest extends TestCase
     public function test_with_the_module_off_there_are_no_reference_routes(): void
     {
         $app = TestAppFactory::create(self::ODOO);
-        $this->grant($app, [Module::PERMISSION_ADMIN, Module::PERMISSION_AP_ACCESS]);
+        $this->grant($app, [Module::PERMISSION_ADMIN, Module::PERMISSION_AP2_ACCESS]);
 
         self::assertSame(404, $this->call($app, 'GET', '/api/v1/finance/reference/vendors')[0]);
         self::assertSame(404, $this->call($app, 'POST', '/api/v1/finance/reference/sync', ['mode' => 'full'])[0]);
@@ -193,7 +193,7 @@ final class FinanceOdooWiringTest extends TestCase
     public function test_an_unknown_list_is_404_and_a_bad_updated_since_is_422(): void
     {
         $app = $this->app(self::ODOO);
-        $this->grant($app, [Module::PERMISSION_AP_ACCESS]);
+        $this->grant($app, [Module::PERMISSION_AP2_ACCESS]);
 
         [$status, $json] = $this->call($app, 'GET', '/api/v1/finance/reference/customers');
         self::assertSame(404, $status);
@@ -208,7 +208,7 @@ final class FinanceOdooWiringTest extends TestCase
     {
         $app = $this->app(self::ODOO);
         $this->seedOdoo();
-        $this->grant($app, [Module::PERMISSION_ADMIN, Module::PERMISSION_AP_ACCESS]);
+        $this->grant($app, [Module::PERMISSION_ADMIN, Module::PERMISSION_AP2_ACCESS]);
 
         [$status, $json] = $this->call($app, 'POST', '/api/v1/finance/reference/sync', ['mode' => 'full']);
         self::assertSame(200, $status);
@@ -238,7 +238,7 @@ final class FinanceOdooWiringTest extends TestCase
     {
         $app = $this->app(self::ODOO);
         $this->seedOdoo();
-        $this->grant($app, [Module::PERMISSION_ADMIN, Module::PERMISSION_AP_ACCESS]);
+        $this->grant($app, [Module::PERMISSION_ADMIN, Module::PERMISSION_AP2_ACCESS]);
         self::assertSame(200, $this->call($app, 'POST', '/api/v1/finance/reference/sync', ['mode' => 'full'])[0]);
 
         $this->odoo->remove('res.partner', 11);
@@ -283,7 +283,7 @@ final class FinanceOdooWiringTest extends TestCase
         $app = $this->app(self::ODOO);
         $this->seedOdoo();
         $this->odoo->failures['account.account'] = new \TriCab\Core\Finance\Shared\Odoo\OdooError('Odoo answered 401 for account.account.');
-        $this->grant($app, [Module::PERMISSION_ADMIN, Module::PERMISSION_AP_ACCESS]);
+        $this->grant($app, [Module::PERMISSION_ADMIN, Module::PERMISSION_AP2_ACCESS]);
 
         [$status, $json] = $this->call($app, 'POST', '/api/v1/finance/reference/sync', ['mode' => 'full']);
         self::assertSame(502, $status);

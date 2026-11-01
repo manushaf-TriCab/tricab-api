@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Finance\Ap2;
 
-use TriCab\Core\Finance\Ap\Service\ApTime;
+use TriCab\Core\Finance\Ap2\Service\Ap2Time;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2Outbox;
 use TriCab\Core\Finance\Ap2\Domain\Ap2HistoryEntry;
@@ -20,7 +20,7 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2OutboxMessage;
  */
 final class HistoryOnlyAp2Outbox implements Ap2Outbox
 {
-    public function __construct(private readonly Ap2HistoryStore $history, private readonly ApTime $time)
+    public function __construct(private readonly Ap2HistoryStore $history, private readonly Ap2Time $time)
     {
     }
 

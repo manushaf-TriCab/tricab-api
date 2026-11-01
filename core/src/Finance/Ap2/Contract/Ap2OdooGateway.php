@@ -14,7 +14,7 @@ use TriCab\Core\Finance\Ap2\Odoo\Ap2OdooRates;
 use TriCab\Core\Finance\Shared\Odoo\OdooError;
 
 /**
- * Tri-AP2's view of Odoo 19 (Phases 6 and 9): reads for PO / receipt matching, bill state read-back, exchange rates and
+ * Tri-AP's view of Odoo 19 (Phases 6 and 9): reads for PO / receipt matching, bill state read-back, exchange rates and
  * the bank-change check, and ONE write, a draft vendor bill, which works only while FINANCE_AP2_ODOO_POSTING_ENABLED is
  * on. Every read throws {@see OdooError} when Odoo cannot be read (including refused Accounting rights); none answers
  * "nothing" for "could not read".

@@ -6,15 +6,14 @@ namespace TriCab\Api\Http\Action\Finance\Ap2;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TriCab\Api\Http\Action\Finance\Ap\ApActionSupport;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\Finance\Ap\Domain\ApFailure;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Service\Ap2InvoiceService;
 
 /** GET /invoices/{id}/file: the source document, 404 when there is none. `FINANCE.AP2.INVOICES.READ`. */
 final class GetAp2InvoiceFileAction
 {
-    use ApActionSupport;
+    use Ap2ActionSupport;
     use Ap2FileResponse;
 
     public function __construct(
@@ -35,7 +34,7 @@ final class GetAp2InvoiceFileAction
         }
         try {
             $file = $this->service->file((string) ($args['id'] ?? ''), $actor->userId);
-        } catch (ApFailure $failure) {
+        } catch (Ap2Failure $failure) {
             return $this->failure($this->responder, $failure);
         }
 

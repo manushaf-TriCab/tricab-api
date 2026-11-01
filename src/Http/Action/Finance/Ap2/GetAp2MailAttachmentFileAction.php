@@ -6,15 +6,14 @@ namespace TriCab\Api\Http\Action\Finance\Ap2;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TriCab\Api\Http\Action\Finance\Ap\ApActionSupport;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\Finance\Ap\Domain\ApFailure;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Service\Ap2MailService;
 
 /** GET /mail/{id}/attachments/{aid}/file. `FINANCE.AP2.MAIL.READ`. */
 final class GetAp2MailAttachmentFileAction
 {
-    use ApActionSupport;
+    use Ap2ActionSupport;
     use Ap2FileResponse;
 
     public function __construct(
@@ -35,7 +34,7 @@ final class GetAp2MailAttachmentFileAction
         }
         try {
             $file = $this->service->attachmentFile((string) ($args['id'] ?? ''), (string) ($args['aid'] ?? ''), $actor->userId);
-        } catch (ApFailure $failure) {
+        } catch (Ap2Failure $failure) {
             return $this->failure($this->responder, $failure);
         }
 

@@ -6,15 +6,14 @@ namespace TriCab\Api\Http\Action\Finance\Ap2;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TriCab\Api\Http\Action\Finance\Ap\ApActionSupport;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\Finance\Ap\Domain\ApFailure;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Service\Ap2SettingsService;
 
 /** GET /settings. `FINANCE.AP2.SETTINGS.MANAGE`. */
 final class GetAp2SettingsAction
 {
-    use ApActionSupport;
+    use Ap2ActionSupport;
 
     public function __construct(
         private readonly Ap2SettingsService $service,
@@ -34,7 +33,7 @@ final class GetAp2SettingsAction
         }
         try {
             return $this->ok($this->responder, $this->service->get(), 200);
-        } catch (ApFailure $failure) {
+        } catch (Ap2Failure $failure) {
             return $this->failure($this->responder, $failure);
         }
     }

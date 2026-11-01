@@ -158,7 +158,7 @@ final class Ap2CopilotService
 
             return $turns;
         } catch (Throwable $e) {
-            error_log('Tri-AP2 Copilot history could not be read: ' . $e->getMessage());
+            error_log('Tri-AP Copilot history could not be read: ' . $e->getMessage());
 
             return [];
         }
@@ -179,7 +179,7 @@ final class Ap2CopilotService
             $this->conversations->append($actor->userId, $mailId, $supplierId, 'assistant', $reply, $proposals);
             $this->conversations->prune($actor->userId, $mailId, $supplierId, self::MAX_STORED);
         } catch (Throwable $e) {
-            error_log('Tri-AP2 Copilot history could not be stored: ' . $e->getMessage());
+            error_log('Tri-AP Copilot history could not be stored: ' . $e->getMessage());
         }
     }
 }

@@ -57,10 +57,8 @@ BEGIN TRY
          N'Reach Argo Collect. Grants no record.'),
         (N'FINANCE.AR.ACCESS',       N'Access Tri-AR',
          N'Reach Tri-AR. Grants no record.'),
-        (N'FINANCE.AP.ACCESS',       N'Access Tri-AP',
+        (N'FINANCE.AP2.ACCESS',      N'Access Tri-AP',
          N'Reach Tri-AP. Grants no record.'),
-        (N'FINANCE.AP2.ACCESS',      N'Access Tri-AP2',
-         N'Reach Tri-AP2, the test accounts-payable app. Grants no record.'),
         (N'FINANCE.ADMIN',           N'Administer Finance',
          N'Administer the finance module: the mailbox registry, and later the grants and reference lists. Opens no app and reads no record.');
 

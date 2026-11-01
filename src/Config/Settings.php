@@ -6,7 +6,6 @@ namespace TriCab\Api\Config;
 
 use InvalidArgumentException;
 use TriCab\Api\Infrastructure\Cache\ApcuApplicationCache;
-use TriCab\Core\Finance\Ap\ApAiService;
 
 final readonly class Settings
 {
@@ -126,7 +125,6 @@ final readonly class Settings
     /**
      * @param list<string> $corsAllowedOrigins
      * @param list<string> $passkeyAllowedOrigins
-     * @param list<string> $financeApInternalEmailDomains
      */
     public function __construct(
         public string $appEnv,
@@ -276,14 +274,13 @@ final readonly class Settings
         public bool $financeCreditEnabled = false,
         public bool $financeCollectEnabled = false,
         public bool $financeArEnabled = false,
-        public bool $financeApEnabled = false,
         public bool $financeAp2Enabled = false,
         public bool $financeAp2SendingEnabled = false,
         public bool $financeAp2OdooPostingEnabled = false,
-        // The Odoo company id of Tricab Australia, whose exchange rates Tri-AP2 reads (ODOO_COMPANY_IDS is 2,4). Null: rates off.
+        // The Odoo company id of Tricab Australia, whose exchange rates Tri-AP reads (ODOO_COMPANY_IDS is 2,4). Null: rates off.
         public ?int $financeAp2OdooAudCompanyId = null,
         public bool $financeAp2MailSyncEnabled = false,
-        // Tri-AP2 AI on Foundry (L1): off unless FINANCE_AP2_AI_ENABLED and the Foundry connection; one deployment per purpose.
+        // Tri-AP AI on Foundry (L1): off unless FINANCE_AP2_AI_ENABLED and the Foundry connection; one deployment per purpose.
         public bool $financeAp2AiEnabled = false,
         public string $financeAp2AiClassifyModel = 'claude-haiku-5-5',
         public string $financeAp2AiExtractModel = 'claude-haiku-5-5',
@@ -316,14 +313,6 @@ final readonly class Settings
         public bool $financeArSampleFiles = false,
         public string $financeApTimezone = 'Australia/Melbourne',
         public string $financeApMailbox = 'ap@tricab.com',
-        public string $financeApPublicOrigin = '',
-        public bool $financeApSendingEnabled = false,
-        public bool $financeApSuggestReplies = true,
-        public float $financeApConfidenceThreshold = 0.80,
-        public array $financeApInternalEmailDomains = [],
-        public int $financeApMinAttachmentBytes = 25600,
-        public int $financeApMaxScanMessages = 0,
-        public bool $financeApSampleFiles = false,
         // Foundry `output_config.effort`; '' sends none, so the model's own default applies.
         public string $foundryEffort = '',
         public bool $mailModuleEnabled = false,
@@ -531,7 +520,7 @@ final readonly class Settings
     }
 
     /**
-     * Tri-AP2's AI (classify, extract, drafts, Copilot) calls Foundry: its own switch `FINANCE_AP2_AI_ENABLED` and the
+     * Tri-AP's AI (classify, extract, drafts, Copilot) calls Foundry: its own switch `FINANCE_AP2_AI_ENABLED` and the
      * platform's Foundry connection (switched on, an endpoint, a key in api-key mode). Off, the Null implementations answer.
      */
     public function isFinanceAp2AiConfigured(): bool
@@ -564,7 +553,6 @@ final readonly class Settings
             'CREDIT' => $this->financeCreditEnabled,
             'COLLECT' => $this->financeCollectEnabled,
             'AR' => $this->financeArEnabled,
-            'AP' => $this->financeApEnabled,
             'AP2' => $this->financeAp2Enabled,
             default => false,
         };
@@ -1298,29 +1286,10 @@ final readonly class Settings
         if (!in_array($financeApTimezone, \DateTimeZone::listIdentifiers(), true)) {
             throw new InvalidArgumentException('FINANCE_AP_TIMEZONE must be a time zone name such as Australia/Melbourne.');
         }
-        $financeApThresholdText = trim(self::string($env, 'FINANCE_AP_CONFIDENCE_THRESHOLD', '0.80'));
-        if (!is_numeric($financeApThresholdText) || (float) $financeApThresholdText < 0.0 || (float) $financeApThresholdText > 1.0) {
-            throw new InvalidArgumentException('FINANCE_AP_CONFIDENCE_THRESHOLD must be a number from 0 to 1, such as 0.80.');
-        }
-        // Tri-AP's own mailbox: the default the vendor email, replies and approval mail are sent from (the source's AP_MAILBOX).
+        // Tri-AP's mailbox (ap@): the one it reads and sends from.
         $financeApMailbox = strtolower(trim(self::string($env, 'FINANCE_AP_MAILBOX', 'ap@tricab.com')));
         if ($financeApMailbox === '') {
             $financeApMailbox = 'ap@tricab.com';
-        }
-        // The origin the link in Tri-AP's approval mail is built from. Empty falls back to the site's public address
-        // (PASSKEY_PUBLIC_APP_BASE_URL). An origin only, as FINANCE_AR_PUBLIC_ORIGIN.
-        $financeApPublicOrigin = rtrim(trim(self::string($env, 'FINANCE_AP_PUBLIC_ORIGIN', '')), '/');
-        if ($financeApPublicOrigin !== '') {
-            $apOriginParts = parse_url($financeApPublicOrigin);
-            $apOriginScheme = is_array($apOriginParts) ? strtolower((string) ($apOriginParts['scheme'] ?? '')) : '';
-            $apOriginHost = is_array($apOriginParts) ? strtolower((string) ($apOriginParts['host'] ?? '')) : '';
-            $apOriginLocal = in_array($apOriginHost, ['localhost', '127.0.0.1'], true);
-            if (
-                !is_array($apOriginParts) || $apOriginHost === '' || ($apOriginScheme !== 'https' && !($apOriginScheme === 'http' && $apOriginLocal))
-                || isset($apOriginParts['path']) || isset($apOriginParts['query']) || isset($apOriginParts['fragment']) || isset($apOriginParts['user']) || isset($apOriginParts['pass'])
-            ) {
-                throw new InvalidArgumentException('FINANCE_AP_PUBLIC_ORIGIN must be an origin such as https://tricab.ai (https, no path).');
-            }
         }
         $financeArMailbox = strtolower(trim(self::string($env, 'FINANCE_AR_MAILBOX', 'ar@tricab.com')));
         if ($financeArMailbox === '') {
@@ -1368,18 +1337,6 @@ final readonly class Settings
                 || !in_array($sampleBlobMode, [self::BLOB_AUTH_MODE_MEMORY, self::BLOB_AUTH_MODE_DISABLED], true)
             ) {
                 throw new InvalidArgumentException('FINANCE_AR_SAMPLE_FILES is for local development with the in-memory blob store only (APP_ENV not production, BLOB_AUTH_MODE memory or disabled).');
-            }
-        }
-
-        // Tri-AP's invented sample documents (T6.12), put into the in-memory blob store the same way and refused in the same places.
-        $financeApSampleFiles = self::bool($env, 'FINANCE_AP_SAMPLE_FILES', false);
-        if ($financeApSampleFiles) {
-            $sampleBlobMode = strtolower(self::string($env, 'BLOB_AUTH_MODE', self::BLOB_AUTH_MODE_DISABLED));
-            if (
-                strtolower(self::string($env, 'APP_ENV', 'development')) === 'production'
-                || !in_array($sampleBlobMode, [self::BLOB_AUTH_MODE_MEMORY, self::BLOB_AUTH_MODE_DISABLED], true)
-            ) {
-                throw new InvalidArgumentException('FINANCE_AP_SAMPLE_FILES is for local development with the in-memory blob store only (APP_ENV not production, BLOB_AUTH_MODE memory or disabled).');
             }
         }
 
@@ -1609,7 +1566,6 @@ final readonly class Settings
             financeCreditEnabled: self::bool($env, 'FINANCE_CREDIT_ENABLED', false),
             financeCollectEnabled: self::bool($env, 'FINANCE_COLLECT_ENABLED', false),
             financeArEnabled: self::bool($env, 'FINANCE_AR_ENABLED', false),
-            financeApEnabled: self::bool($env, 'FINANCE_AP_ENABLED', false),
             financeAp2Enabled: self::bool($env, 'FINANCE_AP2_ENABLED', false),
             financeAp2SendingEnabled: self::bool($env, 'FINANCE_AP2_SENDING_ENABLED', false),
             financeAp2OdooPostingEnabled: self::bool($env, 'FINANCE_AP2_ODOO_POSTING_ENABLED', false),
@@ -1647,17 +1603,6 @@ final readonly class Settings
             financeArSampleFiles: $financeArSampleFiles,
             financeApTimezone: $financeApTimezone,
             financeApMailbox: $financeApMailbox,
-            financeApPublicOrigin: $financeApPublicOrigin,
-            financeApSendingEnabled: self::bool($env, 'FINANCE_AP_SENDING_ENABLED', false),
-            financeApSuggestReplies: ApAiService::suggestRepliesEnabled($env['FINANCE_AP_SUGGEST_REPLIES'] ?? null),
-            financeApConfidenceThreshold: (float) $financeApThresholdText,
-            financeApInternalEmailDomains: array_map(
-                static fn (string $domain): string => ltrim(strtolower($domain), '@'),
-                self::csvList($env, 'FINANCE_AP_INTERNAL_EMAIL_DOMAINS', ''),
-            ),
-            financeApMinAttachmentBytes: self::boundedInt($env, 'FINANCE_AP_MIN_ATTACHMENT_BYTES', 25600, 0, 33554432),
-            financeApMaxScanMessages: self::boundedInt($env, 'FINANCE_AP_MAX_SCAN_MESSAGES', 0, 0, 100000),
-            financeApSampleFiles: $financeApSampleFiles,
             foundryEffort: $foundryEffort,
             mailModuleEnabled: self::bool($env, 'MAIL_MODULE_ENABLED', false),
             rfqMailGraphTenantId: $rfqMailGraph[0],

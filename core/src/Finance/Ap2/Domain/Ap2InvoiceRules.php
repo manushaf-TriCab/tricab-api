@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 
 /**
- * Tri-AP2's invoice rules, ported from the prototype (`Tri-AP-AWS/site/app.js`: `validation`, `matching`,
+ * Tri-AP's invoice rules, ported from the prototype (`Tri-AP-AWS/site/app.js`: `validation`, `matching`,
  * `duplicates`, `fingerprint`, `invoiceApproved`, `invoiceQueue`, `csvEligible`, `paymentIssues`) with its messages
  * kept word for word. Pure functions: no store, no clock (callers pass today's date).
  *

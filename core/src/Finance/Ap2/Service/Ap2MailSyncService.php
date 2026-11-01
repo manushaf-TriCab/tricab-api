@@ -7,7 +7,6 @@ namespace TriCab\Core\Finance\Ap2\Service;
 use DateInterval;
 use DateTimeImmutable;
 use Throwable;
-use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Ai\Ap2AiUnavailable;
 use TriCab\Core\Finance\Ap2\Ai\Ap2MailClassification;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
@@ -105,7 +104,7 @@ final class Ap2MailSyncService
         private readonly Ap2MailClassifier $classifier,
         private readonly Ap2InvoiceExtractor $extractor,
         private readonly Ap2Transactions $transactions,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
         private readonly string $mailbox,
         private readonly int $batchSeconds = self::BATCH_SECONDS,
         private readonly int $batchMax = self::BATCH_MAX,
@@ -498,7 +497,7 @@ final class Ap2MailSyncService
             return $list();
         } catch (Throwable $failure) {
             throw match (true) {
-                $failure instanceof FinanceMailRefused => new Ap2Conflict('Tri-AP2 may not read ' . $this->mailbox, Ap2Failure::details([$failure->getMessage()]), $failure),
+                $failure instanceof FinanceMailRefused => new Ap2Conflict('Tri-AP may not read ' . $this->mailbox, Ap2Failure::details([$failure->getMessage()]), $failure),
                 $failure instanceof FinanceMailInvalid => new Ap2Invalid($failure->getMessage(), Ap2Failure::details([$failure->getMessage()]), $failure),
                 $failure instanceof MailboxReadFailed => new Ap2Upstream('The mailbox could not be read', Ap2Failure::details([$failure->getMessage()]), $failure),
                 default => $failure,
@@ -587,11 +586,11 @@ final class Ap2MailSyncService
                     $this->process($message->summary, $suppliers, $userId, $message);
                 }
             } catch (FinanceMailRefused $refused) {
-                throw new Ap2Conflict('Tri-AP2 may not read ' . $this->mailbox, Ap2Failure::details([$refused->getMessage()]), $refused);
+                throw new Ap2Conflict('Tri-AP may not read ' . $this->mailbox, Ap2Failure::details([$refused->getMessage()]), $refused);
             } catch (Throwable $failure) {
                 $outcome = 'failed';
                 $errors[] = mb_substr($failure::class . ': ' . $failure->getMessage(), 0, 300);
-                error_log('Tri-AP2 mail sync: message failed: ' . $failure::class);
+                error_log('Tri-AP mail sync: message failed: ' . $failure::class);
             }
             match ($outcome) {
                 'created' => ++$created,
@@ -678,7 +677,7 @@ final class Ap2MailSyncService
                     $supplierId,
                     'Email received',
                     $mail->subject . ' · ' . $mail->from . ' · ' . $mail->category,
-                    new Ap2Person(0, 'Tri-AP2 mail sync', ''),
+                    new Ap2Person(0, 'Tri-AP mail sync', ''),
                     $now,
                     null,
                     $mail->id,
@@ -720,7 +719,7 @@ final class Ap2MailSyncService
             } catch (Ap2AiUnavailable) {
                 return null;
             } catch (Throwable $e) {
-                error_log('Tri-AP2 mail sync extraction failed: ' . $e::class);
+                error_log('Tri-AP mail sync extraction failed: ' . $e::class);
 
                 return null;
             }

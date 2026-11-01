@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Finance\Ap2\Ai;
 
-use TriCab\Core\Finance\Ap\Service\ApTime;
+use TriCab\Core\Finance\Ap2\Service\Ap2Time;
 use TriCab\Core\Finance\Ap2\Contract\Ap2CopilotTools;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
@@ -42,7 +42,7 @@ final class StoreAp2CopilotTools implements Ap2CopilotTools
         private readonly Ap2HistoryStore $history,
         private readonly Ap2SettingsStore $settings,
         private readonly Ap2Assessor $assessor,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
     ) {
     }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Finance\Ap2\Domain;
 
-/** The signed-in person, as the Tri-AP2 use cases need them: who they are and which permissions they hold. */
+/** The signed-in person, as the Tri-AP use cases need them: who they are and which permissions they hold. */
 final readonly class Ap2Actor
 {
     /**

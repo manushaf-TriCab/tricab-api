@@ -2,35 +2,18 @@
 
 declare(strict_types=1);
 
-namespace TriCab\Api\Http\Action\Finance\Ap;
+namespace TriCab\Api\Http\Action\Finance\Ap2;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use TriCab\Api\Http\Response\JsonResponder;
-use TriCab\Core\Finance\Ap\Domain\ApFailure;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 
 /**
- * What every Tri-AP action shares: the JSON body and query, the envelope, and how a typed failure
- * reads at the endpoint (as `ArActionSupport` does for Tri-AR). The signed-in person comes from
- * {@see ApActorResolver}, which an action takes in its constructor:
- *
- *     $actor = $this->actors->actorOf($request);
- *     if ($actor === null) { return $this->unauthenticated($this->responder); }
- *
- * | Failure         | Status | Code                         |
- * |-----------------|--------|------------------------------|
- * | `ApInvalid`     | 422    | `FINANCE_AP_INPUT_INVALID`   |
- * | `ApNotFound`    | 404    | `FINANCE_AP_NOT_FOUND`       |
- * | `ApConflict`    | 409    | `FINANCE_AP_CONFLICT`        |
- * | `ApForbidden`   | 403    | `FINANCE_AP_FORBIDDEN`       |
- * | `ApUpstream`    | 502    | `FINANCE_AP_UPSTREAM_FAILED` |
- * | `ApUnavailable` | 503    | `FINANCE_AP_UNAVAILABLE`     |
- *
- * The body is the platform's envelope, `{success:false, error:{code, message, ...extra}}`; the ported
- * pages read it through `components/finance/ap/api.js`. Later tasks add their own failures (gone,
- * rate limited, already scanned) beside these, deriving from `ApFailure`.
+ * What every Tri-AP action shares: the JSON body and query, the `{success, data}` / `{success:false, error}` envelope,
+ * and how an {@see Ap2Failure} reads at the endpoint (its own status, code and extra fields).
  */
-trait ApActionSupport
+trait Ap2ActionSupport
 {
     private function unauthenticated(JsonResponder $responder): ResponseInterface
     {
@@ -89,7 +72,7 @@ trait ApActionSupport
         return $value === '1' || $value === 'true';
     }
 
-    private function failure(JsonResponder $responder, ApFailure $failure): ResponseInterface
+    private function failure(JsonResponder $responder, Ap2Failure $failure): ResponseInterface
     {
         return $responder->payload([
             'success' => false,

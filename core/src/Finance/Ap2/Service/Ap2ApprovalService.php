@@ -6,7 +6,6 @@ namespace TriCab\Core\Finance\Ap2\Service;
 
 use DateInterval;
 use DateTimeImmutable;
-use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Contract\Ap2ApprovalStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
@@ -68,7 +67,7 @@ final class Ap2ApprovalService
         private readonly Ap2Assessor $assessor,
         private readonly Ap2Snapshots $snapshots,
         private readonly Ap2Transactions $transactions,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
     ) {
     }
 
@@ -460,7 +459,7 @@ final class Ap2ApprovalService
 
     private function link(string $approvalId): string
     {
-        return '/finance/ap2/approvals/' . $approvalId;
+        return '/finance/ap/approvals/' . $approvalId;
     }
 
     private function cash(float $amount, string $currency): string

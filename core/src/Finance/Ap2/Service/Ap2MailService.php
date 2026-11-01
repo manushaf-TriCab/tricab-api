@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Ap2\Service;
 
 use DateTimeImmutable;
-use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Ai\Ap2AiUnavailable;
 use TriCab\Core\Finance\Ap2\Ai\Ap2ExtractedInvoice;
 use TriCab\Core\Finance\Ap2\Ai\Ap2MailContext;
@@ -72,7 +71,7 @@ final class Ap2MailService
         private readonly Ap2InvoiceExtractor $extractor,
         private readonly FinanceMailSender $sender,
         private readonly Ap2Transactions $transactions,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
         private readonly string $mailbox,
         private readonly bool $sendingEnabled,
     ) {
@@ -112,7 +111,7 @@ final class Ap2MailService
     }
 
     /**
-     * `GET /mail/{id}`: the whole message with its body. Opening it marks it read (Tri-AP2's own flag, not the mailbox's).
+     * `GET /mail/{id}`: the whole message with its body. Opening it marks it read (Tri-AP's own flag, not the mailbox's).
      *
      * @return array<string, mixed>
      */
@@ -190,7 +189,7 @@ final class Ap2MailService
             if ($userId !== null) {
                 $owner = is_int($userId) ? $this->people->find($userId) : null;
                 if ($owner === null) {
-                    throw new Ap2Invalid('The owner is not a Tri-AP2 user', Ap2Failure::details(['ownerUserId is not an active Tri-AP2 user']));
+                    throw new Ap2Invalid('The owner is not a Tri-AP user', Ap2Failure::details(['ownerUserId is not an active Tri-AP user']));
                 }
             }
         }
@@ -557,7 +556,7 @@ final class Ap2MailService
                 return $this->sender->send($message($key . ':retry-' . bin2hex(random_bytes(4))));
             }
         } catch (FinanceMailRefused $refused) {
-            throw new Ap2Conflict('Tri-AP2 may not send from ' . $this->mailbox, Ap2Failure::details([$refused->getMessage()]), $refused);
+            throw new Ap2Conflict('Tri-AP may not send from ' . $this->mailbox, Ap2Failure::details([$refused->getMessage()]), $refused);
         } catch (FinanceMailInvalid $invalid) {
             throw new Ap2Invalid($invalid->getMessage(), Ap2Failure::details([$invalid->getMessage()]), $invalid);
         } catch (FinanceMailTransportFailed $failed) {

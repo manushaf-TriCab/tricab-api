@@ -31,21 +31,13 @@ final class Ap2FileServiceTest extends TestCase
         self::assertSame('%PDF-1 a', $this->files->read($file->id, 5)->bytes);
     }
 
-    public function test_a_tri_ap_invoice_file_that_the_migration_reused_is_read(): void
-    {
-        $file = $this->attachments->upload(Module::APP_AP, 'inv.pdf', 'application/pdf', '%PDF-1 old', 1);
-        $this->attachments->attach(Module::APP_AP, $file->id, 'invoice', 'inv1', 1);
-
-        self::assertSame('%PDF-1 old', $this->files->read($file->id, 5)->bytes);
-    }
-
-    public function test_other_apps_files_and_unattached_tri_ap_files_are_not_found(): void
+    public function test_other_apps_files_and_ap2_files_not_on_a_mail_are_not_found(): void
     {
         $ar = $this->attachments->upload(Module::APP_AR, 'x.pdf', 'application/pdf', '%PDF-1 ar', 1);
         $this->attachments->attach(Module::APP_AR, $ar->id, 'email_record', 'e1', 1);
-        $loose = $this->attachments->upload(Module::APP_AP, 'y.pdf', 'application/pdf', '%PDF-1 loose', 1);
-        $other = $this->attachments->upload(Module::APP_AP, 'z.pdf', 'application/pdf', '%PDF-1 z', 1);
-        $this->attachments->attach(Module::APP_AP, $other->id, 'email', 'e2', 1);
+        $loose = $this->attachments->upload(Module::APP_AP2, 'y.pdf', 'application/pdf', '%PDF-1 loose', 1);
+        $other = $this->attachments->upload(Module::APP_AP2, 'z.pdf', 'application/pdf', '%PDF-1 z', 1);
+        $this->attachments->attach(Module::APP_AP2, $other->id, 'invoice', 'e2', 1);
 
         foreach ([$ar->id, $loose->id, $other->id, 'nope'] as $id) {
             try {

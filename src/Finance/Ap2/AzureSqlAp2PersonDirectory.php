@@ -7,7 +7,7 @@ namespace TriCab\Api\Finance\Ap2;
 use TriCab\Api\Identity\Persistence\AzureSqlValueMapper;
 use TriCab\Api\Infrastructure\Database\DatabaseUnavailable;
 use TriCab\Api\Infrastructure\Database\SqlConnection;
-use TriCab\Core\Finance\Ap\Domain\ApUpstream;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Upstream;
 use TriCab\Core\Finance\Ap2\Contract\Ap2PersonDirectory;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Person;
 use TriCab\Core\Finance\Module;
@@ -59,7 +59,7 @@ final class AzureSqlAp2PersonDirectory implements Ap2PersonDirectory
                 'needed' => $permission === Module::PERMISSION_AP2_ACCESS ? 1 : 2,
             ]);
         } catch (DatabaseUnavailable $failure) {
-            throw new ApUpstream('People could not be read from TriCab Finance', 'directory', $failure);
+            throw new Ap2Upstream('People could not be read from TriCab Finance', ['reason' => 'directory'], $failure);
         }
 
         return array_map(static fn (array $row): Ap2Person => new Ap2Person(

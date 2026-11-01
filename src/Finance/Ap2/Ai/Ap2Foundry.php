@@ -14,7 +14,7 @@ use TriCab\Core\Finance\Ap2\Ai\Ap2AiUsage;
 use TriCab\Core\Finance\Ap2\Contract\Ap2AiUsageLog;
 
 /**
- * Tri-AP2's connection to Claude on Foundry, over `/anthropic/v1/messages` with the platform's Foundry connection
+ * Tri-AP's connection to Claude on Foundry, over `/anthropic/v1/messages` with the platform's Foundry connection
  * (managed identity, or an API key locally), as {@see \TriCab\Api\Finance\Task\FoundryTaskDrafter} does. One instance
  * per purpose, each with its own deployment (FINANCE_AP2_AI_*_MODEL).
  *

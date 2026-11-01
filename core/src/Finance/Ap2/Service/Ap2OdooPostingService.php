@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Ap2\Service;
 
 use InvalidArgumentException;
-use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2OdooGateway;
@@ -54,7 +53,7 @@ final class Ap2OdooPostingService
         private readonly Ap2HistoryStore $history,
         private readonly Ap2Assessor $assessor,
         private readonly Ap2Transactions $transactions,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
         private readonly bool $postingEnabled,
         private readonly ?Ap2SettingsStore $settings = null,
     ) {

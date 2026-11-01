@@ -8,7 +8,7 @@ use TriCab\Core\Finance\Ap2\Contract\Ap2MailStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Actor;
 
-/** `GET /me`: the person, the Tri-AP2 permission codes they hold (full codes), the settings and what is switched on (`ai` is true only when a real AI implementation is bound, not the Null ones). */
+/** `GET /me`: the person, the Tri-AP permission codes they hold (full codes), the settings and what is switched on (`ai` is true only when a real AI implementation is bound, not the Null ones). */
 final class Ap2MeService
 {
     public function __construct(

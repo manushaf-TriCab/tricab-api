@@ -341,7 +341,7 @@ final class Ap2OdooWiringTest extends TestCase
         $pay->recordOdooState($two, 'Paid', '');
         self::assertSame(500.0, $this->invoice($b->id)->paid, 'sum of the Paid proposals, each counted once');
 
-        // Odoo also knows 100 paid outside Tri-AP2: its absolute figure wins, and the proposals do not push it over.
+        // Odoo also knows 100 paid outside Tri-AP: its absolute figure wins, and the proposals do not push it over.
         $store = $this->get(InMemoryAp2InvoiceStore::class);
         $store->update($this->invoice($b->id)->with(paid: 600.0));
         $three = $this->approvedPayment($b, 100.0);

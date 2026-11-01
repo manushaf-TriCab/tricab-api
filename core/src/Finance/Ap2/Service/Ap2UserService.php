@@ -22,7 +22,7 @@ final class Ap2UserService
         $short = strtoupper(trim($short));
         $code = 'FINANCE.AP2.' . $short;
         if ($short === '' || !in_array($code, [Module::PERMISSION_AP2_ACCESS, ...Module::AP2_PERMISSIONS], true)) {
-            throw new Ap2Invalid('Unknown permission', Ap2Failure::details(['permission must be a Tri-AP2 permission such as INVOICES.WRITE']));
+            throw new Ap2Invalid('Unknown permission', Ap2Failure::details(['permission must be a Tri-AP permission such as INVOICES.WRITE']));
         }
 
         return array_map(static fn ($p): array => $p->toArray(), $this->people->holding($code));

@@ -65,10 +65,10 @@ final class FinanceMailboxReadServiceTest extends TestCase
     private function serviceOver(MailboxReader $reader, ?FinanceAuditLog $audit = null): FinanceMailboxReadService
     {
         $registry = new InMemoryFinanceMailboxRegistry([
-            new FinanceMailbox('0000000000000000000000000000000a', 'ap@example.test', 'Accounts Payable', 'AP', true, ['AP' => ['read' => true, 'send' => true], 'TASK' => ['read' => false, 'send' => true]]),
+            new FinanceMailbox('0000000000000000000000000000000a', 'ap@example.test', 'Accounts Payable', 'AP2', true, ['AP2' => ['read' => true, 'send' => true], 'TASK' => ['read' => false, 'send' => true]]),
             new FinanceMailbox('0000000000000000000000000000000b', 'ar@example.test', 'Accounts Receivable', 'AR', true, ['AR' => ['read' => true, 'send' => true]]),
-            new FinanceMailbox('0000000000000000000000000000000c', 'send-only@example.test', 'Send only', '', true, ['AP' => ['read' => false, 'send' => true]]),
-            new FinanceMailbox('0000000000000000000000000000000d', 'old@example.test', 'Retired', '', false, ['AP' => ['read' => true, 'send' => true]]),
+            new FinanceMailbox('0000000000000000000000000000000c', 'send-only@example.test', 'Send only', '', true, ['AP2' => ['read' => false, 'send' => true]]),
+            new FinanceMailbox('0000000000000000000000000000000d', 'old@example.test', 'Retired', '', false, ['AP2' => ['read' => true, 'send' => true]]),
         ]);
 
         return new FinanceMailboxReadService($registry, $reader, $this->scopes, $audit ?? $this->audit, FixedClock::utc('2026-10-07T00:00:00Z'));
@@ -104,7 +104,7 @@ final class FinanceMailboxReadServiceTest extends TestCase
 
     public function test_an_app_with_a_read_grant_reads_the_window_newest_first(): void
     {
-        $messages = $this->service->listMessages('AP', 'AP@example.test', self::at('2026-10-01T00:00:00Z'), self::at('2026-10-07T00:00:00Z'));
+        $messages = $this->service->listMessages('AP2', 'AP@example.test', self::at('2026-10-01T00:00:00Z'), self::at('2026-10-07T00:00:00Z'));
 
         self::assertSame(['m2', 'm1'], $this->ids($messages));
     }
@@ -112,13 +112,13 @@ final class FinanceMailboxReadServiceTest extends TestCase
     public function test_a_send_grant_is_not_a_read_grant(): void
     {
         $this->expectException(FinanceMailRefused::class);
-        $this->expectExceptionMessage('AP is not allowed to read the mailbox send-only@example.test');
-        $this->service->listMessages('AP', 'send-only@example.test', self::at('2026-10-01T00:00:00Z'), self::at('2026-10-02T00:00:00Z'));
+        $this->expectExceptionMessage('AP2 is not allowed to read the mailbox send-only@example.test');
+        $this->service->listMessages('AP2', 'send-only@example.test', self::at('2026-10-01T00:00:00Z'), self::at('2026-10-02T00:00:00Z'));
     }
 
     public function test_an_app_with_no_grant_an_inactive_mailbox_and_an_unknown_one_are_refused_alike(): void
     {
-        foreach ([['TASK', 'ap@example.test'], ['AP', 'ar@example.test'], ['AP', 'old@example.test'], ['AP', 'nobody@example.test'], ['AP', '  ']] as [$app, $mailbox]) {
+        foreach ([['TASK', 'ap@example.test'], ['AP2', 'ar@example.test'], ['AP2', 'old@example.test'], ['AP2', 'nobody@example.test'], ['AP2', '  ']] as [$app, $mailbox]) {
             try {
                 $this->service->listMessages($app, $mailbox, self::at('2026-10-01T00:00:00Z'), self::at('2026-10-02T00:00:00Z'));
                 self::fail("$app reading $mailbox must be refused");
@@ -138,7 +138,7 @@ final class FinanceMailboxReadServiceTest extends TestCase
 
     public function test_a_window_may_not_exceed_31_days_and_may_not_run_backwards(): void
     {
-        $exactly = $this->service->listMessages('AP', 'ap@example.test', self::at('2026-09-06T00:00:00Z'), self::at('2026-10-07T00:00:00Z'));
+        $exactly = $this->service->listMessages('AP2', 'ap@example.test', self::at('2026-09-06T00:00:00Z'), self::at('2026-10-07T00:00:00Z'));
         self::assertCount(2, $exactly, '31 days exactly is allowed');
 
         foreach ([
@@ -146,7 +146,7 @@ final class FinanceMailboxReadServiceTest extends TestCase
             [self::at('2026-10-07T00:00:00Z'), self::at('2026-10-06T00:00:00Z'), 'must not be after'],
         ] as [$from, $to, $needle]) {
             try {
-                $this->service->listMessages('AP', 'ap@example.test', $from, $to);
+                $this->service->listMessages('AP2', 'ap@example.test', $from, $to);
                 self::fail('The window must be refused.');
             } catch (FinanceMailInvalid $invalid) {
                 self::assertStringContainsString($needle, $invalid->getMessage());
@@ -187,7 +187,7 @@ final class FinanceMailboxReadServiceTest extends TestCase
         $to = self::at('2026-10-02T00:00:00Z');
 
         foreach ([null, 0, 5000, 500, 250, -3, 1] as $asked) {
-            $service->listMessages('AP', 'ap@example.test', $from, $to, $asked);
+            $service->listMessages('AP2', 'ap@example.test', $from, $to, $asked);
         }
 
         self::assertSame([500, 500, 500, 500, 250, 1, 1], $reader->limits);
@@ -195,57 +195,57 @@ final class FinanceMailboxReadServiceTest extends TestCase
 
     public function test_one_message_its_attachments_and_one_attachment_are_read_through_the_grant(): void
     {
-        self::assertSame('<p>private body</p>', $this->service->getMessage('AP', 'ap@example.test', 'm1')->body);
-        self::assertSame(['invoice.pdf'], array_map(static fn (MailboxAttachmentSummary $a): string => $a->name, $this->service->listAttachments('AP', 'ap@example.test', 'm1')));
-        self::assertSame('bytes', $this->service->getAttachment('AP', 'ap@example.test', 'm1', 'a1')->content);
+        self::assertSame('<p>private body</p>', $this->service->getMessage('AP2', 'ap@example.test', 'm1')->body);
+        self::assertSame(['invoice.pdf'], array_map(static fn (MailboxAttachmentSummary $a): string => $a->name, $this->service->listAttachments('AP2', 'ap@example.test', 'm1')));
+        self::assertSame('bytes', $this->service->getAttachment('AP2', 'ap@example.test', 'm1', 'a1')->content);
     }
 
     public function test_message_ids_are_required_and_at_most_1000_characters(): void
     {
         foreach (['', '   ', str_repeat('x', 1001)] as $id) {
             try {
-                $this->service->getMessage('AP', 'ap@example.test', $id);
+                $this->service->getMessage('AP2', 'ap@example.test', $id);
                 self::fail('A bad id must be refused.');
             } catch (FinanceMailInvalid) {
                 self::addToAssertionCount(1);
             }
         }
         $this->expectException(FinanceMailInvalid::class);
-        $this->service->getAttachment('AP', 'ap@example.test', 'm1', '');
+        $this->service->getAttachment('AP2', 'ap@example.test', 'm1', '');
     }
 
     public function test_a_missing_message_is_the_readers_not_found(): void
     {
         $this->expectException(MailboxItemNotFound::class);
-        $this->service->getMessage('AP', 'ap@example.test', 'does-not-exist');
+        $this->service->getMessage('AP2', 'ap@example.test', 'does-not-exist');
     }
 
     public function test_a_person_whose_mailbox_scope_leaves_it_out_is_refused_and_an_unscoped_person_is_not(): void
     {
-        $this->scopes->grant(7, 'AP', FinanceAccessScope::TYPE_MAILBOX, 'other@example.test');
+        $this->scopes->grant(7, 'AP2', FinanceAccessScope::TYPE_MAILBOX, 'other@example.test');
         $from = self::at('2026-10-01T00:00:00Z');
         $to = self::at('2026-10-07T00:00:00Z');
 
-        self::assertNotEmpty($this->service->listMessages('AP', 'ap@example.test', $from, $to, null, 8), 'no scope rows: unrestricted, as in the portal');
-        self::assertNotEmpty($this->service->listMessages('AP', 'ap@example.test', $from, $to, null, null), 'a job has no person and no scope');
+        self::assertNotEmpty($this->service->listMessages('AP2', 'ap@example.test', $from, $to, null, 8), 'no scope rows: unrestricted, as in the portal');
+        self::assertNotEmpty($this->service->listMessages('AP2', 'ap@example.test', $from, $to, null, null), 'a job has no person and no scope');
 
         $this->expectException(FinanceMailRefused::class);
-        $this->service->listMessages('AP', 'ap@example.test', $from, $to, null, 7);
+        $this->service->listMessages('AP2', 'ap@example.test', $from, $to, null, 7);
     }
 
     public function test_a_scope_that_names_the_mailbox_allows_it_in_any_case(): void
     {
-        $this->scopes->grant(7, 'AP', FinanceAccessScope::TYPE_MAILBOX, 'AP@Example.test');
+        $this->scopes->grant(7, 'AP2', FinanceAccessScope::TYPE_MAILBOX, 'AP@Example.test');
 
-        self::assertCount(1, $this->service->listAttachments('AP', 'ap@example.test', 'm1', 7));
+        self::assertCount(1, $this->service->listAttachments('AP2', 'ap@example.test', 'm1', 7));
     }
 
     public function test_every_read_leaves_an_audit_row_with_facts_and_no_content(): void
     {
-        $this->service->listMessages('AP', 'ap@example.test', self::at('2026-10-01T00:00:00Z'), self::at('2026-10-07T00:00:00Z'), null, 7);
-        $this->service->getMessage('AP', 'ap@example.test', 'm1', 7);
-        $this->service->listAttachments('AP', 'ap@example.test', 'm1', 7);
-        $this->service->getAttachment('AP', 'ap@example.test', 'm1', 'a1');
+        $this->service->listMessages('AP2', 'ap@example.test', self::at('2026-10-01T00:00:00Z'), self::at('2026-10-07T00:00:00Z'), null, 7);
+        $this->service->getMessage('AP2', 'ap@example.test', 'm1', 7);
+        $this->service->listAttachments('AP2', 'ap@example.test', 'm1', 7);
+        $this->service->getAttachment('AP2', 'ap@example.test', 'm1', 'a1');
 
         $events = $this->audit->events;
         self::assertSame(
@@ -267,7 +267,7 @@ final class FinanceMailboxReadServiceTest extends TestCase
         foreach ($events as $event) {
             self::assertSame('mailbox', $event->entityType);
             self::assertSame('0000000000000000000000000000000a', $event->entityId);
-            self::assertSame('AP', $event->application);
+            self::assertSame('AP2', $event->application);
             self::assertSame('2026-10-07T00:00:00+00:00', $event->at->format('c'));
             $text = json_encode($event->details, JSON_THROW_ON_ERROR);
             self::assertStringNotContainsString(self::SECRET_SUBJECT, $text);
@@ -289,13 +289,13 @@ final class FinanceMailboxReadServiceTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('audit table unavailable');
-        $service->getMessage('AP', 'ap@example.test', 'm1');
+        $service->getMessage('AP2', 'ap@example.test', 'm1');
     }
 
     public function test_a_failed_read_leaves_no_audit_row(): void
     {
         try {
-            $this->service->getMessage('AP', 'ap@example.test', 'does-not-exist');
+            $this->service->getMessage('AP2', 'ap@example.test', 'does-not-exist');
         } catch (MailboxItemNotFound) {
             // expected
         }
@@ -309,7 +309,7 @@ final class FinanceMailboxReadServiceTest extends TestCase
 
         $this->expectException(MailboxReadUnavailable::class);
         try {
-            $service->listMessages('AP', 'ap@example.test', self::at('2026-10-01T00:00:00Z'), self::at('2026-10-02T00:00:00Z'));
+            $service->listMessages('AP2', 'ap@example.test', self::at('2026-10-01T00:00:00Z'), self::at('2026-10-02T00:00:00Z'));
         } finally {
             self::assertSame([], $this->audit->events);
         }

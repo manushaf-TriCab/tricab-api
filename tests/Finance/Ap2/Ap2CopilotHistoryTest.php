@@ -37,7 +37,7 @@ use TriCab\Core\Shared\Mailbox\MailboxMessageSummary;
 use TriCab\Core\Shared\Mailbox\MailboxReader;
 use TriCab\Core\Shared\Mailbox\MailboxRecipient;
 
-/** Tri-AP2 Copilot conversations: stored per person and email (or supplier), read back, capped at 30 messages. */
+/** Tri-AP Copilot conversations: stored per person and email (or supplier), read back, capped at 30 messages. */
 final class Ap2CopilotHistoryTest extends TestCase
 {
     private const BASE = '/api/v1/finance/ap2';

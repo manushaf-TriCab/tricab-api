@@ -42,7 +42,7 @@ final class HttpAp2OdooRecordWriter implements Ap2OdooRecordWriter
             throw new Ap2OdooPostingDisabled();
         }
         if (!in_array($model, self::MODELS, true)) {
-            throw new OdooError(sprintf('Tri-AP2 does not create %s records in Odoo.', $model));
+            throw new OdooError(sprintf('Tri-AP does not create %s records in Odoo.', $model));
         }
         if ($this->baseUrl === '' || trim($this->apiKey) === '') {
             throw new OdooError('Odoo is not configured (ODOO_URL, ODOO_API_KEY).');

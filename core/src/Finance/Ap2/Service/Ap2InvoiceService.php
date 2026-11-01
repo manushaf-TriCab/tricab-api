@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TriCab\Core\Finance\Ap2\Service;
 
-use TriCab\Core\Finance\Ap\Service\ApTime;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2PersonDirectory;
@@ -46,7 +45,7 @@ final class Ap2InvoiceService
         private readonly Ap2PersonDirectory $people,
         private readonly Ap2Assessor $assessor,
         private readonly Ap2Transactions $transactions,
-        private readonly ApTime $time,
+        private readonly Ap2Time $time,
         private readonly Ap2FileService $files,
     ) {
     }
@@ -391,7 +390,7 @@ final class Ap2InvoiceService
         }
         $person = is_int($userId) ? $this->people->find($userId) : null;
         if ($person === null) {
-            throw new Ap2Invalid('The owner is not a Tri-AP2 user', Ap2Failure::details(['ownerUserId is not an active Tri-AP2 user']));
+            throw new Ap2Invalid('The owner is not a Tri-AP user', Ap2Failure::details(['ownerUserId is not an active Tri-AP user']));
         }
 
         return $person;

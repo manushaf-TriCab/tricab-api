@@ -6,7 +6,6 @@ namespace TriCab\Api\Http\Action\Finance\Ap2;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TriCab\Api\Http\Action\Finance\Ap\ApActionSupport;
 use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Shared\Odoo\OdooLists;
 use TriCab\Core\Finance\Shared\Odoo\OdooRecordStore;
@@ -17,7 +16,7 @@ use TriCab\Core\Finance\Shared\Odoo\OdooRecordStore;
  */
 final class ListAp2OdooTaxesAction
 {
-    use ApActionSupport;
+    use Ap2ActionSupport;
 
     public function __construct(
         private readonly OdooRecordStore $records,

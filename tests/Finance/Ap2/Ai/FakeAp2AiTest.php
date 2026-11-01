@@ -70,6 +70,6 @@ final class FakeAp2AiTest extends TestCase
         }
         $written = (string) file_get_contents($file);
         @unlink($file);
-        self::assertStringContainsString('Tri-AP2 AI usage {"purpose":"ap2_invoice_extract"', $written);
+        self::assertStringContainsString('Tri-AP AI usage {"purpose":"ap2_invoice_extract"', $written);
     }
 }

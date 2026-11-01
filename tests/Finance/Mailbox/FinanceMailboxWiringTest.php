@@ -71,7 +71,7 @@ final class FinanceMailboxWiringTest extends TestCase
 
     public function test_the_finance_reader_is_the_service_and_is_registered_with_no_route(): void
     {
-        $container = TestAppFactory::create(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_AP_ENABLED' => 'true'])->getContainer();
+        $container = TestAppFactory::create(['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_AP2_ENABLED' => 'true'])->getContainer();
 
         self::assertInstanceOf(FinanceMailboxReadService::class, $container->get(FinanceMailboxReader::class));
     }

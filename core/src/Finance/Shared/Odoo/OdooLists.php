@@ -20,7 +20,7 @@ final class OdooLists
 
     public const ACCOUNTS = 'accounts';
 
-    /** Not in KEYS or all(): synced only for Tri-AP2 (see OdooSyncService), read by Ap2OdooPostingService. */
+    /** Not in KEYS or all(): synced only for Tri-AP (see OdooSyncService), read by Ap2OdooPostingService. */
     public const TAXES = 'taxes';
 
     /** Odoo 19 `account.tax` fields the taxes list asks for. */

@@ -38,7 +38,7 @@ final class FinanceModuleSwitchTest extends TestCase
                 'FINANCE_CREDIT_ENABLED' => 'true',
                 'FINANCE_COLLECT_ENABLED' => 'true',
                 'FINANCE_AR_ENABLED' => 'true',
-                'FINANCE_AP_ENABLED' => 'true',
+                'FINANCE_AP2_ENABLED' => 'true',
             ],
             ['account.login', Module::PERMISSION_ACCESS],
         );
@@ -65,7 +65,7 @@ final class FinanceModuleSwitchTest extends TestCase
     {
         $app = $this->app(
             ['FINANCE_MODULE_ENABLED' => 'true', 'FINANCE_TASK_ENABLED' => 'true'],
-            ['account.login', Module::PERMISSION_ACCESS, Module::appAccessPermission(Module::APP_TASK), Module::appAccessPermission(Module::APP_AP)],
+            ['account.login', Module::PERMISSION_ACCESS, Module::appAccessPermission(Module::APP_TASK), Module::appAccessPermission(Module::APP_AP2)],
         );
 
         $response = $app->handle(TestAppFactory::request('GET', '/api/v1/finance/me'));
@@ -87,9 +87,12 @@ final class FinanceModuleSwitchTest extends TestCase
         ]);
         // Permitted but switched off: the launcher must not show it.
         self::assertSame(['enabled' => false, 'canAccess' => true], [
-            'enabled' => $byKey['AP']['enabled'],
-            'canAccess' => $byKey['AP']['canAccess'],
+            'enabled' => $byKey['AP2']['enabled'],
+            'canAccess' => $byKey['AP2']['canAccess'],
         ]);
+        // One Tri-AP: the first one's key is gone, and the AP2 app carries its name and path.
+        self::assertArrayNotHasKey('AP', $byKey);
+        self::assertSame(['Tri-AP', 'ap'], [Module::APPS[Module::APP_AP2]['name'], Module::APPS[Module::APP_AP2]['path']]);
         // Switched on elsewhere but not permitted: also not shown.
         self::assertFalse($byKey['AR']['canAccess']);
     }
@@ -109,7 +112,8 @@ final class FinanceModuleSwitchTest extends TestCase
         ] + self::minimalEnv());
 
         self::assertTrue($on->financeAppEnabled('TASK'));
-        self::assertFalse($on->financeAppEnabled('AP'));
+        self::assertFalse($on->financeAppEnabled('AP2'));
+        self::assertFalse($on->financeAppEnabled('AP'), 'the first Tri-AP has no switch any more');
         self::assertFalse($on->financeAppEnabled('UNKNOWN'));
     }
 
