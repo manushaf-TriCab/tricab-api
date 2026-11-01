@@ -321,7 +321,7 @@ final class FinanceApInvoiceRoutesTest extends TestCase
 
         $response = $this->call('POST', '/invoices', [
             'upload_id' => $upload['upload_id'], 'attachment' => 'Smith Invoice 77.pdf', 'invoice_no' => 'A-77', 'vendor' => 'Smith', 'company' => 'TriCab (Australia) Pty Ltd',
-            'invoice_date' => '2026-10-01', 'due_date' => '30/10/2026', 'currency' => 'AUD', 'net_amount' => 100, 'tax_amount' => 10, 'total_amount' => 110,
+            'invoice_date' => '2026-10-01', 'due_date' => '30/10/2099', 'currency' => 'AUD', 'net_amount' => 100, 'tax_amount' => 10, 'total_amount' => 110,
             'is_revised' => false, 'extraction_confidence' => 0.97, 'notes' => null,
         ]);
 
@@ -330,7 +330,7 @@ final class FinanceApInvoiceRoutesTest extends TestCase
         self::assertSame('In Progress', $row['status']);
         self::assertNull($row['review_reason']);
         self::assertSame(0.97, $row['extraction_confidence']);
-        self::assertSame('2026-10-30', $row['due_date']);
+        self::assertSame('2099-10-30', $row['due_date']);
         self::assertSame($upload['upload_id'], $row['file_id']);
         self::assertTrue($row['has_file']);
         self::assertSame(hash('sha256', '%PDF-1.4 invented'), $row['content_hash']);
