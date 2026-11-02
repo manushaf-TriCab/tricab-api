@@ -14,6 +14,7 @@ use TriCab\Api\Finance\Ap2\InMemoryAp2PaymentStore;
 use TriCab\Api\Finance\Ap2\InMemoryAp2PersonDirectory;
 use TriCab\Api\Finance\Ap2\InMemoryAp2SettingsStore;
 use TriCab\Api\Finance\Ap2\InMemoryAp2SupplierStore;
+use TriCab\Api\Finance\Ap2\Odoo\InMemoryAp2OdooLedgerSource;
 use TriCab\Api\Tests\TestAppFactory;
 use TriCab\Core\Finance\Ap2\Contract\Ap2NotificationStore;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Actor;
@@ -28,7 +29,6 @@ use TriCab\Core\Finance\Ap2\Service\Ap2ExportService;
 use TriCab\Core\Finance\Ap2\Service\Ap2InvoiceService;
 use TriCab\Core\Finance\Ap2\Service\Ap2NotificationService;
 use TriCab\Core\Finance\Ap2\Service\Ap2PaymentService;
-use TriCab\Core\Finance\Ap2\Service\Ap2ReportService;
 use TriCab\Core\Finance\Ap2\Service\Ap2SettingsService;
 use TriCab\Core\Finance\Ap2\Service\Ap2StatementService;
 use TriCab\Core\Finance\Ap2\Service\Ap2SupplierService;
@@ -638,15 +638,22 @@ final class Ap2ApprovalsPaymentsExportsTest extends TestCase
         self::assertContains('Email recorded (not sent)', $types);
     }
 
-    public function test_statements_compare_with_posted_ap_and_never_change_it(): void
+    public function test_statements_compare_with_the_odoo_balance_on_the_statement_date(): void
     {
-        $s = $this->supplier();
-        $b = $this->invoice($s, 'B050', 'ST-1', importState: 'Posted');
+        $s = Ap2Fixtures::supplier()->with(odooPartnerId: 501);
+        $this->get(InMemoryAp2SupplierStore::class)->insert($s);
+        $odoo = $this->c->get(InMemoryAp2OdooLedgerSource::class);
+        self::assertInstanceOf(InMemoryAp2OdooLedgerSource::class, $odoo);
+        $odoo->lines = [
+            Ap2Fixtures::payable(1, 501, 1100.0, '2026-10-01', '2026-10-31', reconciled: true),
+            Ap2Fixtures::payable(2, 501, -1100.0, '2026-10-25', type: 'entry', reconciled: true),
+            Ap2Fixtures::payable(3, 501, 500.0, '2026-10-02', currency: 'USD'),
+        ];
         $st = $this->get(Ap2StatementService::class);
         $a = $st->create($this->requester, ['supplierId' => $s->id, 'date' => '2026-10-20', 'amount' => 1500, 'reference' => 'Oct statement']);
 
         self::assertSame('Unreviewed', $a['status']);
-        self::assertSame(1100.0, $a['postedAp']);
+        self::assertSame(1100.0, $a['postedAp'], 'the bill was open on 20 Oct; the 25 Oct payment and the USD line are left out');
         self::assertSame(400.0, $a['difference']);
         $id = $this->str($a['id']);
         $this->refused(fn () => $st->review($this->requester, $id, ['status' => 'Matched', 'evidence' => 'e', 'notes' => 'n']), 409);
@@ -654,15 +661,35 @@ final class Ap2ApprovalsPaymentsExportsTest extends TestCase
         $r = $st->review($this->requester, $id, ['evidence' => 'Supplier PDF p2', 'notes' => 'Missing credit note']);
         self::assertSame('Discrepancy', $r['status']);
         self::assertSame('Alex Chen', Ap2Json::get($r, 'reviewedBy.name'));
-        self::assertSame(1100.0, $this->invoiceView($b->id)['balance'], 'the ledger is untouched');
 
         $m = $st->create($this->requester, ['supplierId' => $s->id, 'date' => '2026-10-21', 'amount' => 1100, 'reference' => 'Second']);
         self::assertSame('Matched', $st->review($this->requester, $this->str($m['id']), ['status' => 'Matched', 'evidence' => 'e', 'notes' => 'n'])['status']);
-        self::assertCount(2, $st->list());
+        $late = $st->create($this->requester, ['supplierId' => $s->id, 'date' => '2026-10-31', 'amount' => 0, 'reference' => 'After the payment']);
+        self::assertSame(0.0, $late['postedAp']);
+        self::assertCount(3, $st->list());
         $this->refused(fn () => $st->create($this->requester, ['supplierId' => md5('nobody'), 'date' => '2026-10-21', 'amount' => 1]), 422);
         $this->refused(fn () => $st->create($this->requester, ['supplierId' => $s->id, 'amount' => 1]), 422);
         $this->refused(fn () => $st->create($this->requester, ['supplierId' => $s->id, 'date' => '2026-10-21', 'amount' => 1, 'mailId' => md5('none')]), 422);
         $this->refused(fn () => $st->review($this->requester, md5('none'), ['evidence' => 'e', 'notes' => 'n']), 404);
+    }
+
+    public function test_a_statement_without_an_odoo_balance_shows_none_and_cannot_be_reviewed(): void
+    {
+        $local = $this->supplier();
+        $st = $this->get(Ap2StatementService::class);
+        $a = $st->create($this->requester, ['supplierId' => $local->id, 'date' => '2026-10-20', 'amount' => 10]);
+        self::assertNull($a['postedAp'], 'not linked to Odoo');
+        self::assertNull($a['difference']);
+        $this->refused(fn () => $st->review($this->requester, $this->str($a['id']), ['evidence' => 'e', 'notes' => 'n']), 502);
+
+        $linked = Ap2Fixtures::supplier('S003', 'Linked Co')->with(odooPartnerId: 502);
+        $this->get(InMemoryAp2SupplierStore::class)->insert($linked);
+        $b = $st->create($this->requester, ['supplierId' => $linked->id, 'date' => '2026-10-20', 'amount' => 10]);
+        $odoo = $this->c->get(InMemoryAp2OdooLedgerSource::class);
+        self::assertInstanceOf(InMemoryAp2OdooLedgerSource::class, $odoo);
+        $odoo->refuse = true;
+        self::assertNull($st->list()[1]['postedAp'], 'Odoo did not answer');
+        $this->refused(fn () => $st->review($this->requester, $this->str($b['id']), ['evidence' => 'e', 'notes' => 'n']), 502);
     }
 
     public function test_settings_are_editable_except_the_read_only_fields(): void
@@ -681,38 +708,5 @@ final class Ap2ApprovalsPaymentsExportsTest extends TestCase
         $this->refused(fn () => $settings->update($this->requester, ['mailbox' => 'x@y.com']), 422);
         $this->refused(fn () => $settings->update($this->requester, ['batchCashLimit' => 0]), 422);
         $this->refused(fn () => $settings->update($this->requester, ['approvalExpiryDays' => 0]), 422);
-    }
-
-    public function test_the_aged_report_flags_a_supplier_on_hold_or_with_an_unverified_bank(): void
-    {
-        $verified = $this->supplier();
-        $this->invoice($verified, 'B070', 'H-1', importState: 'Posted', issued: '2000-01-01', due: '2000-02-01', paymentHold: true);
-        $other = Ap2Fixtures::supplier('S002', 'Unverified Co', false);
-        $this->get(InMemoryAp2SupplierStore::class)->insert($other);
-        $this->invoice($other, 'B071', 'H-2', importState: 'Posted', issued: '2000-01-01', due: '2099-01-01');
-
-        $rows = [];
-        foreach ($this->get(Ap2ReportService::class)->aged() as $row) {
-            $rows[Ap2Json::str($row, 'supplierName')] = $row;
-        }
-        self::assertTrue($rows['Cable Materials Pty Ltd']['onHold'], 'an invoice payment hold');
-        self::assertSame(1100.0, $rows['Cable Materials Pty Ltd']['overdue']);
-        self::assertTrue($rows['Unverified Co']['onHold'], 'bank not verified');
-        self::assertSame(0.0, $rows['Unverified Co']['overdue']);
-    }
-
-    public function test_the_aged_report_buckets_posted_open_invoices_in_aud_per_supplier(): void
-    {
-        $s = $this->supplier();
-        $day = static fn (int $o): string => (new \DateTimeImmutable('now', new \DateTimeZone('Australia/Melbourne')))->modify(($o >= 0 ? '+' : '') . $o . ' days')->format('Y-m-d');
-        $this->invoice($s, 'B060', 'A-1', importState: 'Posted', issued: '2000-01-01', due: $day(5));
-        $this->invoice($s, 'B061', 'A-2', importState: 'Posted', issued: '2000-01-01', due: $day(-10));
-        $this->invoice($s, 'B062', 'A-3', importState: 'Posted', issued: '2000-01-01', due: $day(-45));
-        $this->invoice($s, 'B063', 'A-4', importState: 'Posted', issued: '2000-01-01', due: $day(-120));
-        $this->invoice($s, 'B064', 'A-5', issued: '2000-01-01', due: $day(-120));
-
-        $rows = $this->get(Ap2ReportService::class)->aged();
-        self::assertCount(1, $rows);
-        self::assertEquals(['supplierId' => $s->id, 'supplierName' => 'Cable Materials Pty Ltd', 'current' => 1100, 'd1_30' => 1100, 'd31_60' => 1100, 'd61_90' => 0, 'd90p' => 1100, 'total' => 4400, 'overdue' => 3300, 'onHold' => false], $rows[0]);
     }
 }

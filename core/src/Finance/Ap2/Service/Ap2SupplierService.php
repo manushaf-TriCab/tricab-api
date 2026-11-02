@@ -6,10 +6,8 @@ namespace TriCab\Core\Finance\Ap2\Service;
 
 use DateTimeImmutable;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
-use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2Outbox;
 use TriCab\Core\Finance\Ap2\Contract\Ap2PersonDirectory;
-use TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2Transactions;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Actor;
@@ -24,7 +22,8 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2Supplier;
 
 /**
  * Suppliers and their activity ledger. `bankVerified` and `bankChange` are not editable here: only the bank
- * verification route changes them, because an invoice approval is bound to them.
+ * verification route changes them, because an invoice approval is bound to them. Suppliers and balances come from
+ * Odoo ({@see Ap2OdooLedgerService}); on a supplier linked to Odoo the fields Odoo owns are read-only.
  */
 final class Ap2SupplierService
 {
@@ -33,9 +32,8 @@ final class Ap2SupplierService
 
     public function __construct(
         private readonly Ap2SupplierStore $suppliers,
-        private readonly Ap2InvoiceStore $invoices,
+        private readonly Ap2OdooLedgerService $ledger,
         private readonly Ap2HistoryStore $history,
-        private readonly Ap2SettingsStore $settings,
         private readonly Ap2PersonDirectory $people,
         private readonly Ap2Transactions $transactions,
         private readonly Ap2Outbox $outbox,
@@ -43,14 +41,18 @@ final class Ap2SupplierService
     ) {
     }
 
-    /** @return list<array<string, mixed>> */
-    public function list(): array
+    /**
+     * `GET /suppliers[?refresh=1]`. Balances are null when Odoo cannot be read; the list still answers.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function list(bool $fresh = false): array
     {
-        $positions = Ap2Positions::bySupplier($this->invoices->all(), $this->fx(), $this->time->today());
+        ['suppliers' => $suppliers, 'positions' => $positions, 'readAt' => $readAt] = $this->ledger->suppliersWithPositions($fresh);
 
         return array_map(
-            static fn (Ap2Supplier $s): array => Ap2Presenter::supplier($s, $positions[$s->id] ?? ['balance' => 0.0, 'overdue' => 0.0, 'openInvoices' => 0]),
-            $this->suppliers->all(),
+            static fn (Ap2Supplier $s): array => Ap2Presenter::supplier($s, $positions === null ? null : ($positions[$s->id] ?? Ap2OdooLedgerService::NO_POSITION), $readAt),
+            $suppliers,
         );
     }
 
@@ -101,6 +103,15 @@ final class Ap2SupplierService
         $values = $input->values();
         if ($input->issues() !== []) {
             throw new Ap2Invalid('The supplier has invalid fields', Ap2Failure::details($input->issues()));
+        }
+        if ($before->odooPartnerId !== null) {
+            $fromOdoo = array_values(array_filter(
+                [...Ap2OdooLedgerService::ODOO_FIELDS, 'odooPartnerId'],
+                static fn (string $k): bool => array_key_exists($k, $values) && $values[$k] !== $before->{$k},
+            ));
+            if ($fromOdoo !== []) {
+                throw new Ap2Invalid('These details come from Odoo: change them there', Ap2Failure::details(array_map(static fn (string $k): string => $k . ' comes from Odoo', $fromOdoo)));
+            }
         }
         $owner = array_key_exists('ownerUserId', $values) ? $this->owner($values) : $before->owner;
         unset($values['ownerUserId']);
@@ -363,13 +374,8 @@ final class Ap2SupplierService
     /** @return array<string, mixed> */
     private function present(Ap2Supplier $supplier): array
     {
-        $positions = Ap2Positions::bySupplier($this->invoices->forSupplier($supplier->id), $this->fx(), $this->time->today());
+        $odoo = $this->ledger->positionOf($supplier);
 
-        return Ap2Presenter::supplier($supplier, $positions[$supplier->id] ?? ['balance' => 0.0, 'overdue' => 0.0, 'openInvoices' => 0]);
-    }
-
-    private function fx(): Ap2Fx
-    {
-        return new Ap2Fx($this->settings->get()->fxRates);
+        return Ap2Presenter::supplier($supplier, $odoo['position'] ?? null, $odoo['readAt'] ?? null);
     }
 }

@@ -37,10 +37,11 @@ final class Ap2Presenter
     }
 
     /**
-     * @param array{balance: float, overdue: float, openInvoices: int} $position AUD
+     * @param array{balance: float, overdue: float, openInvoices: int, unallocated?: float}|null $position AUD, from Odoo;
+     *        null when Odoo could not be read
      * @return array<string, mixed>
      */
-    public static function supplier(Ap2Supplier $s, array $position): array
+    public static function supplier(Ap2Supplier $s, ?array $position, ?DateTimeImmutable $odooReadAt = null): array
     {
         return [
             'id' => $s->id,
@@ -58,9 +59,12 @@ final class Ap2Presenter
             'hold' => $s->hold,
             'notes' => $s->notes,
             'odooPartnerId' => $s->odooPartnerId,
-            'balance' => round($position['balance'], 2),
-            'overdue' => round($position['overdue'], 2),
-            'openInvoices' => $position['openInvoices'],
+            'fromOdoo' => $s->odooPartnerId !== null,
+            'balance' => $position === null ? null : round($position['balance'], 2),
+            'overdue' => $position === null ? null : round($position['overdue'], 2),
+            'openInvoices' => $position === null ? null : $position['openInvoices'],
+            'unallocated' => $position === null ? null : round($position['unallocated'] ?? 0.0, 2),
+            'odooReadAt' => $odooReadAt === null ? null : self::time($odooReadAt),
             'createdAt' => self::time($s->createdAt),
             'updatedAt' => self::time($s->updatedAt),
         ];
@@ -222,7 +226,7 @@ final class Ap2Presenter
      * @param float $postedAp what the ledger says is open for this supplier in the statement's currency
      * @return array<string, mixed>
      */
-    public static function statement(Ap2Statement $s, float $postedAp): array
+    public static function statement(Ap2Statement $s, ?float $postedAp): array
     {
         return [
             'id' => $s->id,
@@ -237,8 +241,8 @@ final class Ap2Presenter
             'reviewedBy' => self::person($s->reviewedBy),
             'reviewedAt' => $s->reviewedAt === null ? null : self::time($s->reviewedAt),
             'mailId' => $s->mailId,
-            'postedAp' => round($postedAp, 2),
-            'difference' => round($s->amount - $postedAp, 2),
+            'postedAp' => $postedAp === null ? null : round($postedAp, 2),
+            'difference' => $postedAp === null ? null : round($s->amount - $postedAp, 2),
             'createdAt' => self::time($s->createdAt),
             'updatedAt' => self::time($s->updatedAt),
         ];

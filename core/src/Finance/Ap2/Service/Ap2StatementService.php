@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TriCab\Core\Finance\Ap2\Service;
 
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
-use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2MailDrafts;
 use TriCab\Core\Finance\Ap2\Contract\Ap2StatementStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore;
@@ -18,10 +17,12 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2Invalid;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invoice;
 use TriCab\Core\Finance\Ap2\Domain\Ap2NotFound;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Statement;
+use TriCab\Core\Finance\Ap2\Domain\Ap2Upstream;
 
 /**
- * Supplier statements and their reconciliation. `postedAp` is what the ledger says is open for the supplier in the
- * statement's own currency (posted, live invoices; no conversion), and `difference` is statement less ledger. A
+ * Supplier statements and their reconciliation. `postedAp` is Odoo's balance for the supplier as at the statement date,
+ * in the statement's own currency (lines in other currencies left out; no conversion), and `difference` is statement
+ * less Odoo. Both are null when Odoo cannot be read or the supplier is not linked to Odoo. A
  * review records Matched or Discrepancy with evidence and notes; it never changes an invoice or a balance.
  * The server works out which one it is; a status the client sends that disagrees is a 409.
  */
@@ -32,7 +33,7 @@ final class Ap2StatementService
     public function __construct(
         private readonly Ap2StatementStore $statements,
         private readonly Ap2SupplierStore $suppliers,
-        private readonly Ap2InvoiceStore $invoices,
+        private readonly Ap2OdooLedgerService $ledger,
         private readonly Ap2HistoryStore $history,
         private readonly Ap2MailDrafts $mail,
         private readonly Ap2Transactions $transactions,
@@ -43,14 +44,10 @@ final class Ap2StatementService
     /** @return list<array<string, mixed>> */
     public function list(): array
     {
-        $bySupplier = [];
-        foreach ($this->invoices->all() as $b) {
-            if (Ap2Positions::isOpen($b)) {
-                $bySupplier[$b->supplierId][] = $b;
-            }
-        }
+        $statements = $this->statements->all();
+        $balances = $this->balances($statements);
 
-        return array_map(fn (Ap2Statement $s): array => Ap2Presenter::statement($s, $this->postedAp($s, $bySupplier[$s->supplierId] ?? [])), $this->statements->all());
+        return array_map(static fn (Ap2Statement $s): array => Ap2Presenter::statement($s, $balances[$s->id] ?? null), $statements);
     }
 
     /**
@@ -146,7 +143,13 @@ final class Ap2StatementService
         $values = $input->values();
 
         $view = $this->present($statement);
-        $difference = is_float($view['difference'] ?? null) ? $view['difference'] : 0.0;
+        $difference = $view['difference'] ?? null;
+        if (!is_float($difference) && !is_int($difference)) {
+            throw new Ap2Upstream('The Odoo balance for this statement could not be read', Ap2Failure::details([
+                'Odoo did not answer, or the supplier is not linked to Odoo; nothing was reviewed',
+            ]));
+        }
+        $difference = (float) $difference;
         $computed = abs($difference) < self::TOLERANCE ? 'Matched' : 'Discrepancy';
         if (isset($values['status']) && $values['status'] !== $computed) {
             throw new Ap2Conflict('The statement ' . ($computed === 'Matched' ? 'matches the ledger' : 'differs from the ledger'), Ap2Failure::details([
@@ -184,19 +187,19 @@ final class Ap2StatementService
     /** @return array<string, mixed> */
     private function present(Ap2Statement $s): array
     {
-        return Ap2Presenter::statement($s, $this->postedAp($s, array_filter($this->invoices->forSupplier($s->supplierId), Ap2Positions::isOpen(...))));
+        return Ap2Presenter::statement($s, $this->balances([$s])[$s->id] ?? null);
     }
 
-    /** @param iterable<Ap2Invoice> $open */
-    private function postedAp(Ap2Statement $s, iterable $open): float
+    /**
+     * @param list<Ap2Statement> $statements
+     * @return array<string, float|null>
+     */
+    private function balances(array $statements): array
     {
-        $total = 0.0;
-        foreach ($open as $b) {
-            if ($b->currency === $s->currency) {
-                $total += $b->balance();
-            }
+        try {
+            return $this->ledger->statementBalances($statements);
+        } catch (Ap2Upstream) {
+            return [];
         }
-
-        return round($total, 2);
     }
 }

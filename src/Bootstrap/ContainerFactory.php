@@ -1682,6 +1682,20 @@ final class ContainerFactory
                         $settings->financeAp2OdooPostingEnabled,
                     )
                     : new \TriCab\Api\Finance\Ap2\Odoo\FakeAp2OdooGateway(false),
+            // Suppliers, Aged payables and Supplier statements read Odoo's payables live (2 Nov 2026), kept five minutes.
+            // Without a configured Odoo the in-memory source answers an empty ledger.
+            \TriCab\Api\Finance\Ap2\Odoo\InMemoryAp2OdooLedgerSource::class => \DI\autowire(\TriCab\Api\Finance\Ap2\Odoo\InMemoryAp2OdooLedgerSource::class),
+            \TriCab\Core\Finance\Ap2\Contract\Ap2OdooLedgerSource::class
+                => static fn (Container $container): \TriCab\Core\Finance\Ap2\Contract\Ap2OdooLedgerSource => $settings->isOdooConfigured()
+                    ? new \TriCab\Api\Finance\Ap2\Odoo\CachedAp2OdooLedgerSource(
+                        new \TriCab\Api\Finance\Ap2\Odoo\HttpAp2OdooLedgerSource(
+                            self::get($container, \TriCab\Core\Finance\Shared\Odoo\OdooClient::class),
+                            self::get($container, \TriCab\Core\Finance\Ap2\Service\Ap2Time::class),
+                        ),
+                        self::get($container, ApplicationCache::class),
+                    )
+                    : self::get($container, \TriCab\Api\Finance\Ap2\Odoo\InMemoryAp2OdooLedgerSource::class),
+            \TriCab\Core\Finance\Ap2\Service\Ap2OdooLedgerService::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Service\Ap2OdooLedgerService::class),
             \TriCab\Core\Finance\Ap2\Contract\Ap2OdooSyncTarget::class
                 => \DI\autowire(\TriCab\Core\Finance\Ap2\Odoo\ServiceAp2OdooSyncTarget::class),
             \TriCab\Core\Finance\Ap2\Odoo\Ap2OdooSyncJob::class => \DI\autowire(\TriCab\Core\Finance\Ap2\Odoo\Ap2OdooSyncJob::class),

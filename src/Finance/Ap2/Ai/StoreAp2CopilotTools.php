@@ -8,13 +8,11 @@ use TriCab\Core\Finance\Ap2\Service\Ap2Time;
 use TriCab\Core\Finance\Ap2\Contract\Ap2CopilotTools;
 use TriCab\Core\Finance\Ap2\Contract\Ap2HistoryStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2InvoiceStore;
-use TriCab\Core\Finance\Ap2\Contract\Ap2SettingsStore;
 use TriCab\Core\Finance\Ap2\Contract\Ap2SupplierStore;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invoice;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Supplier;
 use TriCab\Core\Finance\Ap2\Service\Ap2Assessor;
-use TriCab\Core\Finance\Ap2\Service\Ap2Fx;
-use TriCab\Core\Finance\Ap2\Service\Ap2Positions;
+use TriCab\Core\Finance\Ap2\Service\Ap2OdooLedgerService;
 use TriCab\Core\Finance\Ap2\Service\Ap2Presenter;
 
 /**
@@ -40,7 +38,7 @@ final class StoreAp2CopilotTools implements Ap2CopilotTools
         private readonly Ap2SupplierStore $suppliers,
         private readonly Ap2InvoiceStore $invoices,
         private readonly Ap2HistoryStore $history,
-        private readonly Ap2SettingsStore $settings,
+        private readonly Ap2OdooLedgerService $ledger,
         private readonly Ap2Assessor $assessor,
         private readonly Ap2Time $time,
     ) {
@@ -114,9 +112,9 @@ final class StoreAp2CopilotTools implements Ap2CopilotTools
             return self::notFound('supplier', $supplierId);
         }
         $all = $this->invoices->forSupplier($supplierId);
-        $position = Ap2Positions::bySupplier($all, new Ap2Fx($this->settings->get()->fxRates), $this->time->today())[$supplierId]
-            ?? ['balance' => 0.0, 'overdue' => 0.0, 'openInvoices' => 0];
-        $s = Ap2Presenter::supplier($supplier, $position);
+        // Balances are Odoo's open payables (null when Odoo cannot be read), as the Suppliers page shows them.
+        $odoo = $this->ledger->positionOf($supplier);
+        $s = Ap2Presenter::supplier($supplier, $odoo['position'] ?? null, $odoo['readAt'] ?? null);
 
         return [
             'found' => true,
@@ -125,6 +123,8 @@ final class StoreAp2CopilotTools implements Ap2CopilotTools
             'postedOpenApAud' => $s['balance'],
             'overduePostedApAud' => $s['overdue'],
             'openPostedInvoices' => $s['openInvoices'],
+            'unallocatedPaymentsAud' => $s['unallocated'],
+            'odooReadAt' => $s['odooReadAt'],
             'paymentHold' => $supplier->hold || !$supplier->bankVerified ? 'Yes / verification required' : 'No supplier hold',
         ];
     }

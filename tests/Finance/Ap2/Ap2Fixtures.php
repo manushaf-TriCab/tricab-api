@@ -10,6 +10,7 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2ApprovalRef;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Invoice;
 use TriCab\Core\Finance\Ap2\Domain\Ap2InvoiceRules;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Supplier;
+use TriCab\Core\Finance\Ap2\Odoo\Ap2OdooPayableLine;
 use TriCab\Core\Finance\Module;
 
 /** The prototype's seed scenarios (`Tri-AP-AWS/site/data.js`), as domain objects. Today is 2026-10-26. */
@@ -25,6 +26,17 @@ final class Ap2Fixtures
     public static function supplier(string $id = 'S001', string $name = 'Cable Materials Pty Ltd', bool $verified = true, bool $change = false, bool $hold = false): Ap2Supplier
     {
         return new Ap2Supplier(md5($id), $name, self::at(), self::at(), entity: 'Tricab Australia', bankVerified: $verified, bankChange: $change, hold: $hold);
+    }
+
+    /**
+     * An Odoo payable line. `$owed` is what it adds to the supplier's balance (a bill positive, a payment negative), in
+     * the company's currency; Odoo stores the opposite sign.
+     */
+    public static function payable(int $id, ?int $partnerId, float $owed, string $date, ?string $due = null, string $type = 'in_invoice', int $companyId = 2, string $currency = 'AUD', bool $reconciled = false): Ap2OdooPayableLine
+    {
+        $companyCurrency = [1 => 'SGD', 2 => 'AUD', 4 => 'NZD'][$companyId] ?? 'AUD';
+
+        return new Ap2OdooPayableLine($id, $id, 'BILL/' . $id, 'REF' . $id, $type, 'Purchases', $partnerId, $partnerId === null ? '' : 'Partner ' . $partnerId, $companyId, $companyCurrency, $currency, $date, $due, -$owed, $reconciled ? 0.0 : -$owed, -$owed, $reconciled ? 0.0 : -$owed, $reconciled);
     }
 
     /** S007 CleanWorks: bank details changed, on hold, not verified. */

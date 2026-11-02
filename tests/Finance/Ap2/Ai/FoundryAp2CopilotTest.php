@@ -15,6 +15,8 @@ use TriCab\Api\Finance\Ap2\InMemoryAp2MailStore;
 use TriCab\Api\Finance\Ap2\InMemoryAp2PaymentStore;
 use TriCab\Api\Finance\Ap2\InMemoryAp2SettingsStore;
 use TriCab\Api\Finance\Ap2\InMemoryAp2SupplierStore;
+use TriCab\Api\Finance\Ap2\InMemoryAp2Transactions;
+use TriCab\Api\Finance\Ap2\Odoo\InMemoryAp2OdooLedgerSource;
 use TriCab\Api\Tests\Doubles\FixedClock;
 use TriCab\Api\Tests\Finance\Ap2\Ap2Fixtures;
 use TriCab\Core\Finance\Ap2\Service\Ap2Time;
@@ -27,6 +29,7 @@ use TriCab\Core\Finance\Ap2\Domain\Ap2Mail;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Person;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Supplier;
 use TriCab\Core\Finance\Ap2\Service\Ap2Assessor;
+use TriCab\Core\Finance\Ap2\Service\Ap2OdooLedgerService;
 
 /**
  * The Copilot's tool loop against a fake Foundry and the AP2 stores in memory (the prototype's CM-2200 supplier):
@@ -70,7 +73,7 @@ final class FoundryAp2CopilotTest extends TestCase
             category: 'Supplier invoice', from: 'accounts@cable.example',
         ), []);
 
-        $this->tools = new StoreAp2CopilotTools($suppliers, $invoices, $this->history, new InMemoryAp2SettingsStore(), new Ap2Assessor(new InMemoryAp2ApprovalStore(), $invoices), $this->time);
+        $this->tools = new StoreAp2CopilotTools($suppliers, $invoices, $this->history, new Ap2OdooLedgerService(new InMemoryAp2OdooLedgerSource(), $suppliers, new InMemoryAp2SettingsStore(), new InMemoryAp2Transactions(), $this->time), new Ap2Assessor(new InMemoryAp2ApprovalStore(), $invoices), $this->time);
     }
 
     private function copilot(): FoundryAp2Copilot

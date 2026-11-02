@@ -10,7 +10,7 @@ use TriCab\Api\Http\Response\JsonResponder;
 use TriCab\Core\Finance\Ap2\Domain\Ap2Failure;
 use TriCab\Core\Finance\Ap2\Service\Ap2ReportService;
 
-/** GET /reports/aged. `FINANCE.AP2.INVOICES.READ`. */
+/** GET /reports/aged[?refresh=1]. `FINANCE.AP2.INVOICES.READ`. `refresh` reads Odoo again instead of the kept copy. */
 final class GetAp2AgedReportAction
 {
     use Ap2ActionSupport;
@@ -32,7 +32,7 @@ final class GetAp2AgedReportAction
             return $this->unauthenticated($this->responder);
         }
         try {
-            return $this->ok($this->responder, $this->service->aged(), 200);
+            return $this->ok($this->responder, $this->service->aged(($request->getQueryParams()['refresh'] ?? '') === '1'), 200);
         } catch (Ap2Failure $failure) {
             return $this->failure($this->responder, $failure);
         }
