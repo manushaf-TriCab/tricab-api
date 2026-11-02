@@ -135,6 +135,22 @@ final class DrawCableServiceTest extends TestCase
         self::assertStringContainsString('Cores drawn at', implode(' ', $drawing->warnings));
     }
 
+    public function testSdiEarthHasWhiteInsulationUnderAGreenYellowSheath(): void
+    {
+        $svg = self::service()->draw('KL-PAXA/1C95EA')->svg;
+        self::assertStringContainsString('fill="#E8C22A"', $svg);
+        self::assertStringContainsString('fill="#5BAE3C"', $svg);
+        self::assertStringContainsString('fill="#E9E5E1"', $svg);
+        self::assertStringNotContainsString('fill="#2B2B2C"', $svg);
+    }
+
+    public function testSdiInsulationIsWhiteUnderABlackSheath(): void
+    {
+        $svg = self::service()->draw('KL-PAXN/1C95BK')->svg;
+        self::assertStringContainsString('fill="#E9E5E1"', $svg);
+        self::assertSame(1, substr_count($svg, 'fill="#2B2B2C"'));
+    }
+
     private static function sheathRadius(string $svg): float
     {
         // The sheath is the first circle after the background, outside <defs>.

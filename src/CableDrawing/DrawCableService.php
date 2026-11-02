@@ -91,10 +91,16 @@ final class DrawCableService
     {
         $colour = $code->colour;
         $known = $colour !== null && Colour::parseList($colour) !== [];
+        $bareWire = in_array($code->style, ['LS', 'LP', 'UP'], true);
 
+        // A bare wire's colour is its insulation; a sheathed single core (SDI) has white insulation under a coloured sheath.
         return new StyleOptions(
-            coreColours: $known && ($colour === Colour::EARTH || in_array($code->style, ['LS', 'LP', 'UP'], true)) ? [$colour] : [],
-            sheathColour: $known && $colour !== Colour::EARTH ? $colour : 'BK',
+            coreColours: match (true) {
+                $bareWire => $known ? [$colour] : [],
+                (int) $row['nc'] === 1 && (int) $row['ne'] === 0 => ['WH'],
+                default => [],
+            },
+            sheathColour: $known ? $colour : 'BK',
             conductorMaterial: $code->isAluminium() ? Colour::ALUMINIUM : Colour::COPPER,
             warnings: array_merge($warnings, ($row['ct'] === 'a') !== $code->isAluminium()
                 ? ['Dimensions come from a different conductor material; matching material dimensions are unavailable.']
