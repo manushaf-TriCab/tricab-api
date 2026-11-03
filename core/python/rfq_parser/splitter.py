@@ -16,7 +16,7 @@ CORE_RE = re.compile(r"\b\d+\s*C\b", re.I)
 LEADING_QTY_RE = re.compile(r"^\s*\d+\s*x\s+(?=\d+\s*C\b|\d+(?:\.\d+)?\s*" + _SQ_MM + r")", re.I)
 EARTH_RE = re.compile(r"\b(?:earth|ecc|g/y|gn\s*/\s*ye|green\s*/?\s*yellow)\b", re.I)
 MATERIAL_RE = re.compile(r"\b(?:cu|copper|al|alu|aluminium|aluminum)\b", re.I)
-CABLE_HINT_RE = re.compile(r"\b(?:fire|rated|xlpe|pvc|flex|vsd|vfd|swa|awa|screen|sdi|x-?hf|x-?90|lszh)\b", re.I)
+CABLE_HINT_RE = re.compile(r"\b(?:fire|rated|xlpe|pvc|flex|vsd|vfd|swa|awa|screen|sdi|x-?hf|x-?90|lszh|lzsh|ls[0o]h)\b", re.I)
 # An earth quoted as its own line item: it carries its own conductor size, or is spelled
 # "Earth" with a quantity/size. A bare "E"/"3E" attached to a core count (4C+E, 3C+3E) is
 # the cable's own earth and is deliberately NOT matched here.

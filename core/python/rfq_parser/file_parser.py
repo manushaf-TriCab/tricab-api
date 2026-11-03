@@ -2519,7 +2519,7 @@ _HEADING_GREETING_RE = re.compile(
 _HEADING_KEYWORD_RE = re.compile(
     r"\b(?:cable|cables|control|controls|power|instrument\w*|comms?|communication|"
     r"data|vsd|vfd|solar|fire|earth|earthing|flex\w*|armour\w*|armor\w*|screen\w*|"
-    r"lszh|copper|aluminium|aluminum|welding|marine|mining|trailing|reeling|feeder)\b",
+    r"lszh|lzsh|ls[0o]h|copper|aluminium|aluminum|welding|marine|mining|trailing|reeling|feeder)\b",
     re.I,
 )
 

@@ -506,7 +506,7 @@ _FEW_SHOT_GROUPS: list[dict[str, Any]] = [
                     description="Signal cable 4C 1.0mm2",
                     core_count=4, core_type="C", cross_section_mm2=1.0,
                 )],
-                "expect": [("matched", "WG-CAXD/4C1BK")],
+                "expect": [("matched", "WG-CAXN/4C1BK")],
                 "cite": "test_resolver.ControlSignalFamilyTests.test_plain_core_signal_routes_to_wg",
             },
             {
@@ -561,15 +561,15 @@ _FEW_SHOT_GROUPS: list[dict[str, Any]] = [
                 "cite": "test_resolver.SolarSelectionTests.test_explicit_solar_cable_can_select_solar_series",
             },
             {
-                "text": "3C 35mm2 SWA 11kV copper",
+                "text": "3C 35mm2 11kV copper",
                 "entries": [_full_entry(
-                    reasoning="3C 35mm2 Cu, SWA -> armoured; 11kV is a voltage class the engine gates on.",
-                    description="3C 35mm2 SWA 11kV Cu cable",
+                    reasoning="3C 35mm2 Cu; 11kV is a voltage class the engine gates on.",
+                    description="3C 35mm2 11kV Cu cable",
                     core_count=3, core_type="C", cross_section_mm2=35, conductor="Cu",
-                    armoured_requested=True, confidence=0.85,
+                    confidence=0.85,
                 )],
-                "expect": [("matched", "S4-PASN/3C35OR")],
-                "cite": "test_resolver.ConstructionGateTests.test_s4_selected_when_11kv_is_stated",
+                "expect": [("matched", "V4-P8NN/3C35BK")],
+                "cite": "test_resolver.ConstructionGateTests.test_v4_selected_when_11kv_is_stated",
             },
             {
                 "text": "XLPE/PVC HF110 LSZH FLEXIBLE CLASS 5 TERMITE NYLON 1C 185mm",

@@ -1245,6 +1245,12 @@ class LszhSpellingTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertTrue(extract_entities(text, set())["fields"].get("lszh"))
 
+    def test_lsoh_and_lzsh_customer_spellings_are_recognised(self):
+        """Melb airport (2026-10-29) wrote "All in LZSH 110"; LSOH is the letter-O form."""
+        for text in ("4C+E 50mm LZSH 110", "65m 50mm EARTH cable LZSH", "1C 4mm2 LSOH", "1C 4mm2 lsoh"):
+            with self.subTest(text=text):
+                self.assertTrue(extract_entities(text, set())["fields"].get("lszh"))
+
 
 class DecimalCommaSizeTests(unittest.TestCase):
     """"2,5mm" is 2.5mm2, not 5 (plan §1.3 row 3)."""

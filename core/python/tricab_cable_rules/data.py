@@ -17,7 +17,10 @@ from typing import Any
 # Under the PHP bridge that import was being paid on every request.
 
 
-MV_STYLE_RE = re.compile(r"^(?:E[346]|N[2-7]|S[2-7]|V[1-7])$")
+# The E/N series, S7 and V7 were retired on 2026-11-02 (not on the AU website). S2/S3/S4/S6
+# stay: they are the SWA twins of V2/V3/V4/V6, sold though unpublished. P3/P4 (Temporary
+# Power) and T3/T4 (Ship Loaders & Cranes) are the MV ranges added at the same time.
+MV_STYLE_RE = re.compile(r"^(?:V[1-46]|S[2346]|P[34]|T[34])$")
 
 
 def _split_style_sheath(product_code: str, style: str, sheath: str) -> tuple[str, str]:
@@ -614,9 +617,15 @@ def infer_cable_type(style: Style) -> str:
         return "Solar"
     if "welding" in text:
         return "Welding"
-    if any(token in text for token in ["submersible", "subaquatic", "pump"]):
+    # Title/application only: the E-RUBBER jacket prose on the heavy-duty ranges (WT, SC,
+    # AR, ...) says "Submersible in fresh or sea water", which is a sheath property.
+    if any(token in title_application for token in ["submersible", "subaquatic", "pump"]):
         return "Submersible"
-    if any(token in text for token in ["vsd", "vfd", "variable speed", "variable frequency", "emc"]):
+    if any(token in text for token in ["vsd", "vfd", "variable speed", "variable frequency"]):
+        return "VSD/VFD"
+    # "EMC" alone is not a drive signal: KE/KH say "instrumentation cable ... where
+    # mechanical or EMC protection is required" and are instrumentation (TSD, 2026-11-02).
+    if "emc" in text and "instrumentation" not in title_application:
         return "VSD/VFD"
     if any(token in text for token in ["fire resistant", "fire rated", "ws52w", "circuit integrity", "ewis"]):
         return "Fire Resistant"
@@ -632,7 +641,10 @@ def infer_cable_type(style: Style) -> str:
 
 
 def build_keywords(style: Style) -> set[str]:
-    text = style.haystack
+    # Ratings written "125°C" live in the title/application prose and are marketing
+    # (CA/CC/CF/CN/EH say 125°C but the Temperature column says 110; TSD, 2026-11-02).
+    # The Temperature column is written "110 deg C" and keeps its tokens.
+    text = re.sub(r"\d+\s*°\s*c", " ", style.haystack)
     keywords: set[str] = {style.code.lower()}
     for token in re.findall(r"[a-z0-9][a-z0-9+\-/]{1,}", text):
         if len(token) > 2 and token not in {"and", "for", "the", "with", "wire", "cable"}:

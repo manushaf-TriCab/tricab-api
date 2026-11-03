@@ -294,7 +294,7 @@ TEST_PATCHES: tuple[tuple[str, str, str, str], ...] = (
         "test_resolver",
         "mail_ingest is not brought across (see above)",
         "        self.assertEqual(\n"
-        "            mail_ingest._flag_reason(tps), \"left off the quote: TriCab does not sell TPS cable\"\n"
+        "            mail_ingest._flag_reason(tps), \"left off the quote: TriCab does not sell TPS flat cable\"\n"
         "        )\n",
         "",
     ),

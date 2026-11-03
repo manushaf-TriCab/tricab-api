@@ -72,7 +72,7 @@ _CABLE_EVIDENCE_RE = re.compile(
     # boundary after the C. X-HF-110 is insulation wording and counts as evidence too.
     r"\b\d+\s*C(?:\s*\+\s*\d*\s*E)?\b|\b\d+\s*C\s*(?=x\s*\d)"
     r"|\b\d+\s*(?:core|cores|pair|pairs|triad|triads)\b"
-    r"|\b(?:x-hf|xlpe|pvc|swa|awa|lszh|hffr|flex|sdi|tps|screened|armoured|armored|sheath)\b",
+    r"|\b(?:x-hf|xlpe|pvc|swa|awa|lszh|lzsh|lsoh|ls0h|hffr|flex|sdi|tps|screened|armoured|armored|sheath)\b",
     re.I,
 )
 # A cable that arrives already terminated: "Set 1 3 phase 4C+E cable: Active 4mm2 ...
@@ -137,8 +137,10 @@ COMMS_RE = re.compile(
 # Cable families TriCab does not sell. Left unflagged, "2.5mm TPS flat" resolves
 # confidently to an FD flat product that Sales then deletes by hand on every quote, so
 # the line is excluded from the quote instead. The label is what the rep reads.
+# Only flat TPS: circular/multicore TPS ("4C+E Circ TPS") is quoted through the normal
+# style tree like any other multicore.
 NOT_SOLD_PATTERNS = (
-    ("TPS", re.compile(r"\bT\.?P\.?S\b", re.I)),
+    ("TPS flat", re.compile(r"^(?=.*\bT\.?P\.?S\b)(?=.*\bflat\b)", re.I | re.S)),
 )
 PRODUCT_CODE_RE = re.compile(r"\b[A-Z0-9]{1,3}[A-Z]?-[A-Z0-9]+/\d+(?:\.\d+)?[A-Z][0-9A-Z.]*[A-Z]{1,3}\b")
 # Sales sometimes appends a spool/reel length directly onto a product code with no
@@ -414,12 +416,10 @@ MARINE_RE = re.compile(
     r"|\bOFFSHORE\b|\bFPSO\b|\bTOPSIDE\b|\bNEK|\bTS\s*606\b|\bSHF\s*MUD\b",
     re.I,
 )
-# NEK TS606 (Norwegian offshore) -- the N-series. Its cable types are written "P1/P8",
-# "P5/P12", "RU P18", "BU P17"; those compound forms are safe, bare "P1" is not.
-NEK_RE = re.compile(
-    r"\bNEK|\bTS\s*606\b|\bP1\s*/\s*P8\b|\bP5\s*/\s*P12\b|\bRU\s*P18\b|\bBU\s*P17\b|\bP1[278]\b",
-    re.I,
-)
+# NEK TS606 (Norwegian offshore) -- the N-series. Only the standard's own name routes
+# here. The NEK cable-type codes ("P1/P8", "P5/P12", "RU P18", "BU P17", S1-S8) are never
+# matched (agreed 2026-11-02): they collide with line numbers and config codes.
+NEK_RE = re.compile(r"\bNEK|\bTS\s*606\b", re.I)
 # Offshore (braid armour over a bedding) as opposed to shipboard.
 MARINE_OFFSHORE_RE = re.compile(r"\bOFFSHORE\b|\bFPSO\b|\bTOPSIDE\b|\bMUD\b|\bDRILL", re.I)
 
@@ -755,8 +755,10 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
     # LS0Z and LSHF are the spellings used in the style sheet's own Bedding column
     # ("HFS-110-TP or LSZH or HFFR or LS0Z or LSHF or Low Smoke Halogen Free"); only
     # LS0H was listed here, so those two missed.
+    # LSOH (letter O) and the LZSH transposition are customer spellings: "All in LZSH 110"
+    # (Melb airport, 2026-10-29) lost its LSZH sheath because neither was listed.
     if re.search(
-        r"\bLSZH\b|\bHFFR\b|\bLOW SMOKE\b|\bHALOGEN FREE\b|\bLS0H\b|\bLS0Z\b|\bLSHF\b"
+        r"\bLSZH\b|\bLZSH\b|\bHFFR\b|\bLOW SMOKE\b|\bHALOGEN FREE\b|\bLS[0O]H\b|\bLS0Z\b|\bLSHF\b"
         r"|\bR-?HF-?110\b|\bHF-?110-?R\b",
         upper,
     ):
@@ -788,7 +790,7 @@ def extract_entities(raw_text: str, known_codes: set[str]) -> dict[str, Any]:
         fields["termite"] = True
     if (
         re.search(r"\b(?:TERMITE|NYLON)\b", upper)
-        and re.search(r"\b(?:LSZH|HFFR|LOW SMOKE|HALOGEN FREE|LS0H|HF-?110)\b", upper)
+        and re.search(r"\b(?:LSZH|LZSH|HFFR|LOW SMOKE|HALOGEN FREE|LS[0O]H|HF-?110)\b", upper)
         and re.search(r"\b(?:FLEX(?:IBLE)?|CLASS\s*5)\b", upper)
     ):
         fields["style_hint"] = "CD"

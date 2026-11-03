@@ -13,14 +13,14 @@ final class CableStyleResolver
         'fr' => "('FR','FH')",
         'xlpe_epr_dc_110' => "('DL')",
         'xlpe_epr_dc_90' => "('FP')",
-        'lszh_epr_dc' => "('SF')",
+        'lszh_epr_dc' => "('SJ')", // SF retired 2026-11-02; SJ is the same SDI range
         'lszh' => "('CC')",
         'unbraided' => "('KK')",
         'braided' => "('OD')",
         'vfd' => ["('XU')", "('KU')"],
         'switchboard' => ["('LP')", "('LS')"],
         'dc_multi' => "('KB')",
-        'lszh_dc_mult' => "('SD')",
+        'lszh_dc_mult' => "('SY')", // SD retired 2026-11-02; SY is the same figure-8 range
         'shipboard' => "('BV')",
         'shipboard(braided)' => "('DV')",
         'offshore' => "('PJ')",

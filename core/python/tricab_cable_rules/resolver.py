@@ -80,6 +80,26 @@ SPECIAL_APPLICATION_STYLES = {
     # resolving to KL). Justify EH only by the explicit long-form phrase.
     "EH": ("single double", "double insulat"),
 }
+# Application ranges added 2026-11-02 from the AU website. Each is a heavy-duty variant
+# for one industry: gated like the styles above, and boosted in rank_styles when its
+# industry is named, since naming the industry is as good as naming the style.
+APPLICATION_RANGE_STYLES = {
+    "AR": ("ship loader", "shiploader", "crane", "kevlar", "anti-twist"),
+    "SC": ("ship loader", "shiploader", "crane"),
+    "E1": ("ship loader", "shiploader", "crane"),
+    "T3": ("ship loader", "shiploader", "crane"),
+    "T4": ("ship loader", "shiploader", "crane"),
+    "F1": ("food", "beverage"),
+    "FB": ("food", "beverage"),
+    "FV": ("food", "beverage"),
+    "OT": ("water treatment", "pilot"),
+    "WT": ("water treatment",),
+    "H7": ("temporary power", "hi-flex", "hi flex"),
+    "P3": ("temporary power",),
+    "P4": ("temporary power",),
+    "SH": ("shore power", "shorepower"),
+}
+SPECIAL_APPLICATION_STYLES.update(APPLICATION_RANGE_STYLES)
 
 # The nylon / termite-resistant family. XN/KN/CN are the standard extruded-nylon
 # styles -- nylon is part of the style itself, so their codes carry no "T" suffix
@@ -465,6 +485,9 @@ STYLE_DEFAULT_CONFIG = {
     "CC": "PA",
     "CA": "PA",
 }
+# The heavy-duty application ranges stock 1C as PA and 3-5C as PD (and >5C as CA, via
+# CONTROL_CORE_MIN), whatever config their design example happens to show.
+HEAVY_DUTY_PD_STYLES = {"AR", "FB", "H7", "SC", "SH", "WT"}
 
 # Core-count control boundary (confirmed by Manusha 2026-08-26). The catalog has a hard
 # discontinuity at 6 cores: 5C *is* 4C+E, the largest power construction, and above that
@@ -519,6 +542,17 @@ def _modal(values: list[str], fallback: str) -> str:
     return max(counts, key=counts.get) if counts else fallback
 
 
+def _modal_sheath(products: list[Product]) -> str:
+    """Most common sheath code, counting the blank (standard) sheath as a value. Through
+    ``_modal`` the blanks were skipped, so the one XLT product among 45 XL CA rows made
+    every unstocked XL control size XLT (termite) -- "16C+E 2.5 Control" -> XLT-CAXD/17C2.5BK."""
+    counts: dict[str, int] = {}
+    for p in products:
+        v = (p.sheath or "").upper()
+        counts[v] = counts.get(v, 0) + 1
+    return max(counts, key=counts.get) if counts else ""
+
+
 def _collapse_to_standard_form(
     selected: Product, catalog: ProductCatalog, want_config: str, want_colour: str, want_style: str | None = None
 ) -> tuple[Product, bool]:
@@ -563,7 +597,7 @@ def _collapse_to_standard_form(
         ref = [p for p in pool if (p.config_core or "").upper() == want_config] or pool
         armour = _modal([p.armour for p in ref], selected.armour or "X")
         conductor = _modal([p.conductor_type for p in ref], selected.conductor_type or "N")
-        sheath = _modal([p.sheath for p in ref], selected.sheath or "")
+        sheath = _modal_sheath(ref) if ref else (selected.sheath or "")
     new_code = (
         f"{want_style}{sheath}-{want_config}{armour}{conductor}"
         f"/{selected.no_core}{selected.core}{csa}{want_colour}"
@@ -585,7 +619,7 @@ def _standard_product_from_fields(
         return None
     pool = catalog.products_by_style.get(want_style, [])
     ref = [p for p in pool if (p.config_core or "").upper() == want_config] or pool
-    sheath = _modal([p.sheath for p in ref], "")
+    sheath = _modal_sheath(ref)
     armour = _modal([p.armour for p in ref], "X")
     conductor = str(fields.get("conductor") or _modal([p.conductor_type for p in ref], "N")).upper()
     core_type = str(fields.get("core_type") or "C").upper()
@@ -1969,6 +2003,22 @@ def looks_like_cable(fields: dict[str, Any]) -> bool:
 _UNINFORMATIVE_COLOURS = frozenset({"BK"})
 
 
+def _industry_range_bonus(style: Style, requested_type: str | None, haystack: str) -> float:
+    """Named industry -> that industry's range, but only its member of the requested
+    type: food + instrumentation -> F1, plain food -> FB, never F1/FV unasked. Power and
+    Control count as one type here -- the heavy-duty ranges serve both (SC, FB)."""
+    tokens = APPLICATION_RANGE_STYLES.get(style.code)
+    matches = sum(token in haystack for token in tokens) if tokens else 0
+    if not matches:
+        return 0.0
+    general = {"Power", "Control"}
+    if requested_type:
+        fits = style.cable_type == requested_type or {style.cable_type, requested_type} <= general
+    else:
+        fits = style.cable_type not in {"Instrumentation", "VSD/VFD"}
+    return 0.6 + 0.1 * (matches - 1) if fits else 0.0
+
+
 def rank_styles(
     normalized_text: str,
     fields: dict[str, Any],
@@ -2141,10 +2191,26 @@ def rank_styles(
         # 600/1000 V) outranking CC on a plain LSZH control line.
         if style.marine and not marine_requested:
             continue
+        # The industry ranges are opt-in the same way: AR's textile braid otherwise
+        # reads as a screen and wins a plain "4C+E VSD LSZH screened" line.
+        industry = APPLICATION_RANGE_STYLES.get(style.code)
+        if (
+            industry
+            and style_hint != style.code
+            and style.code.lower() not in haystack.split()
+            and not any(token in haystack for token in industry)
+        ):
+            continue
+        # V1 and V2 share 1.9/3.3 kV: V2 (plain) is the default, V1 only when tinned is
+        # stated (Manusha, 2026-11-02).
+        if style.code == "V1" and fields.get("conductor") != "D" and style_hint != "V1":
+            continue
         if style_violates_construction(style, fields):
             continue
 
         score = 0.0
+        if style.code == "V1":
+            score += 0.1
         if style_hint:
             if style.code == style_hint:
                 score += 0.65
@@ -2260,6 +2326,9 @@ def rank_styles(
         if style.code.lower() in haystack.split():
             score += 0.25
 
+        industry_bonus = _industry_range_bonus(style, requested_type, haystack)
+        score += industry_bonus
+
         if score > 0:
             capped = min(score, 0.55)
             # Never prefer armour the customer didn't ask for: de-prefer armoured
@@ -2268,6 +2337,9 @@ def rank_styles(
             if not fields.get("armoured") and style.has_armour:
                 capped -= 0.05
             capped += house_default_delta(style, fields, haystack)
+            # Added again past the cap so two members of one industry range still
+            # separate on how many of their own words were named (kevlar crane -> AR).
+            capped += industry_bonus / 2
             scores.append((style, capped))
 
     scores.sort(key=lambda item: item[1], reverse=True)
@@ -2322,6 +2394,8 @@ def _stated_default_config(fields: dict[str, Any], style: Style) -> str:
         return "PA"
     if style.code in STYLE_DEFAULT_CONFIG:
         return STYLE_DEFAULT_CONFIG[style.code]
+    if style.code in HEAVY_DUTY_PD_STYLES:
+        return "PA" if canonical_number(fields.get("count")) == "1" else "PD"
     if style.default_config:
         return style.default_config
     return derive_colour_config(style.cable_type, fields)
@@ -2370,11 +2444,16 @@ def derive_armour_code(style: Style, fields: dict[str, Any]) -> str:
     if "SWA" in armour or "AWA" in armour:
         return "S"
     if style.cable_type == "MV Power":
-        return "N"
+        # V1 is the one MV style built as X (V1-PAXD). P4's example says G, but its stock
+        # is all N, so only X is taken from the example.
+        return "X" if style.default_armour_code == "X" else "N"
     if "copper laminate" in braiding:
         return "Z"
     if "galvanized steel wire braid" in braiding or "galvanised steel wire braid" in braiding:
         return "G"
+    if "textile braid" in braiding:
+        # AR's anti-twisting Kevlar braid: every AR product is coded O.
+        return "O"
     if "tinned copper wire braid" in braiding:
         return "T"
     # A stated screen is NOT an armour code. The R-series carries its screen in the style

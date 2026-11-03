@@ -44,6 +44,11 @@ class HouseDefaultStyleTests(unittest.TestCase):
     def test_lszh_defaults_to_cc(self):
         self.assertEqual(self._style("4C+E 120mm Cu LSZH"), "CC")
 
+    def test_lszh_misspellings_default_to_cc(self):
+        for text in ("4C+E 120mm Cu LZSH", "4C+E 120mm Cu LSOH"):
+            with self.subTest(text=text):
+                self.assertEqual(self._style(text), "CC")
+
     def test_fire_defaults_to_fr(self):
         self.assertEqual(self._style("4C+E 120mm Cu fire rated"), "FR")
 
@@ -230,14 +235,14 @@ class CommsAndArmourTests(unittest.TestCase):
 
     def test_tps_flat_is_excluded_rather_than_matched_to_fd(self):
         # "TPS flat" used to resolve confidently to an FD flat code that Sales deleted by
-        # hand on every quote. TriCab does not sell TPS.
-        for text in ("2.5mm TPS flat 100m", "2C+E 2.5mm2 tps flat 200m", "2.5mm T.P.S. 100m"):
+        # hand on every quote. TriCab does not sell flat TPS.
+        for text in ("2.5mm TPS flat 100m", "2C+E 2.5mm2 tps flat 200m", "2.5mm flat T.P.S. 100m"):
             result = match_line(text, catalog)
             self.assertEqual(result["status"], "not_available", text)
             self.assertEqual(result["item_type"], "not_sold", text)
             self.assertEqual(result["selected_product_code"], "", text)
             self.assertEqual(result["disposition"], "excluded", text)
-            self.assertEqual(result["exclusion_reason"], "TriCab does not sell TPS cable", text)
+            self.assertEqual(result["exclusion_reason"], "TriCab does not sell TPS flat cable", text)
 
     def test_tps_rule_leaves_other_lines_alone(self):
         # A real TriCab code on the line is still quoted as written; "flat" without TPS
@@ -250,6 +255,29 @@ class CommsAndArmourTests(unittest.TestCase):
             match_line("2.5mm flat 2C+E 100m", catalog)["selected_product_code"].startswith("FD-")
         )
         self.assertNotIn("disposition", match_line("Steps 4C 16mm XLPE 100m", catalog))
+
+    def test_circular_tps_goes_through_the_style_tree(self):
+        # Only flat TPS is excluded. Circular/multicore TPS is quoted like any other
+        # multicore: "TINNED CIRC TPS CONTROL+TINNED CIRC TPS POWER PVC/PVC" RFQ.
+        heading = "TINNED CIRC TPS CONTROL+TINNED CIRC TPS POWER PVC/PVC"
+        for text in (
+            f"{heading} CU V-90 PVC Control 0.6/1kV 10C+E 1.5mm 80m",
+            f"{heading} CU V-90 PVC/PVC 0.6/1kV 2C+E 2.5mm 1175m",
+            "4mm 4C+E Circular TPS 100m",
+            "2.5mm 2C+E TPS 100m",
+        ):
+            result = match_line(text, catalog)
+            self.assertEqual(result["status"], "matched", text)
+            self.assertNotIn("disposition", result, text)
+            self.assertTrue(result["selected_product_code"].startswith("XL"), text)
+
+    def test_unstocked_control_size_takes_the_standard_sheath(self):
+        # 44 of the 45 XL CA products carry the standard (blank) sheath and one is XLT.
+        # The made-to-order code used to skip the blanks when voting, so every unstocked
+        # XL control size came out XLT (termite).
+        for text in ("16C+E 2.5mm PVC Control 0.6/1kV 140m", "25C+E 2.5mm PVC Control 0.6/1kV 115m"):
+            code = match_line(text, catalog)["selected_product_code"]
+            self.assertTrue(code.startswith("XL-CA"), (text, code))
 
     def test_tps_row_is_excluded_from_the_quote_and_held_from_auto_push(self):
         from rfq_parser.quote_readiness import quote_readiness
@@ -541,12 +569,32 @@ class ConstructionGateTests(unittest.TestCase):
         self.assertFalse(result["selected_product_code"].startswith(("E", "N", "S", "V")))
         self.assertTrue(all(s.cable_type != "MV Power" for s in self._styles_of(result)))
 
-    def test_s4_selected_when_11kv_is_stated(self):
-        result = match_line("3C 35mm2 SWA 11kV copper", catalog)
+    def test_v4_selected_when_11kv_is_stated(self):
+        result = match_line("3C 35mm2 11kV copper", catalog)
 
         self.assertEqual(result["fields"]["voltage_u"], 11000)
+        self.assertEqual(result["fields"]["style"], "V4")
+        self.assertEqual(result["selected_product_code"], "V4-P8NN/3C35BK")
+
+    def test_s4_selected_when_swa_11kv_is_stated(self):
+        # S4 is V4 with SWA: sold, though on no website or catalogue page (2026-11-02).
+        result = match_line("3C 35mm2 SWA 11kV copper", catalog)
+
         self.assertEqual(result["fields"]["style"], "S4")
         self.assertEqual(result["selected_product_code"], "S4-PASN/3C35OR")
+
+    def test_v2_is_the_plain_3_3kv_default_and_v1_needs_tinned(self):
+        self.assertEqual(match_line("1C 120mm2 3.3kV", catalog)["selected_product_code"], "V2-P8NN/1C120BK")
+        self.assertEqual(
+            match_line("1C 120mm2 3.3kV tinned copper", catalog)["selected_product_code"], "V1-PAXD/1C120BK"
+        )
+
+    def test_retired_mv_styles_are_never_selected(self):
+        # E/N series, S7 and V7 retired 2026-11-02.
+        for line in ("1C 150mm2 6.6kV LSZH", "1C 120mm2 33kV", "3C 35mm2 SWA 33kV"):
+            with self.subTest(line=line):
+                code = match_line(line, catalog).get("selected_product_code") or ""
+                self.assertFalse(code.startswith(("E3", "E4", "E6", "N", "S7", "V7")), code)
 
     def test_lszh_gate_excludes_pvc_only_styles(self):
         result = match_line("4C 70mm2 0.6/1kV LSZH copper", catalog)
