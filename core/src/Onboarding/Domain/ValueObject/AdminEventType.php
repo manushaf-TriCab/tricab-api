@@ -56,6 +56,11 @@ final class AdminEventType
     public const FORM_CONTRIBUTION_REFUSED = 'form.contribution_refused';
     public const FORM_PHOTO_UPLOADED = 'form.photo_uploaded';
 
+    /** HR Employees phase 5: HR confirmed, dismissed or removed the link to a payroll employee. */
+    public const PERSON_EMPLOYEE_LINKED = 'person.employee_linked';
+    public const PERSON_EMPLOYEE_UNLINKED = 'person.employee_unlinked';
+    public const PERSON_EMPLOYEE_LINK_DISMISSED = 'person.employee_link_dismissed';
+
     /** Phase 6: a page of the completion feed was read. No subject: it spans people. */
     public const COMPLETIONS_READ = 'completions.read';
 
@@ -83,6 +88,9 @@ final class AdminEventType
         self::FORM_CONTRIBUTION_REFUSED,
         self::COMPLETIONS_READ,
         self::FORM_PHOTO_UPLOADED,
+        self::PERSON_EMPLOYEE_LINKED,
+        self::PERSON_EMPLOYEE_UNLINKED,
+        self::PERSON_EMPLOYEE_LINK_DISMISSED,
     ];
 
     public static function assertKnown(string $value): string

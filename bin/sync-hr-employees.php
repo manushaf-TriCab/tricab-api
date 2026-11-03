@@ -15,6 +15,10 @@ declare(strict_types=1);
  * instead of the repo's .env; --if-enabled does nothing (exit 3) unless
  * HR_EMPLOYEE_SYNC_ENABLED=true, for the `hr-employee-sync` WebJob.
  *
+ * After an applied run it also proposes matches between onboarding starters and
+ * employees (HR Employees plan 5.2; needs alter-onboarding-employee-link.sql, else
+ * skipped). It proposes only: HR confirms in the Onboarding person page.
+ *
  * The target is the API's own database connection (managed identity on App
  * Service, the Azure CLI locally); the source is LEGACY_TC_*, SELECT only.
  *
@@ -36,6 +40,10 @@ use TriCab\Api\Hr\Employees\HrEmployeeSyncRefused;
 use TriCab\Api\Hr\Employees\MysqlHrEmployeeSource;
 use TriCab\Api\Hr\Employees\SqlServerHrEmployeeStore;
 use TriCab\Api\Hr\Employees\StaffMappingUserLoginLinker;
+use TriCab\Api\Hr\OnboardingLink\AzureSqlOnboardingLinkRepository;
+use TriCab\Api\Hr\OnboardingLink\OnboardingLinkProposer;
+use TriCab\Api\Infrastructure\Database\PdoSqlConnection;
+use TriCab\Api\Infrastructure\Observability\RequestPerformanceMetrics;
 use TriCab\Api\Infrastructure\Database\AzureSqlPdoFactory;
 use TriCab\Api\Infrastructure\Database\DatabaseTemporarilyUnavailable;
 use TriCab\Core\Product\Migration\Live\LiveLegacySourceConfig;
@@ -87,7 +95,9 @@ try {
     }
 
     $source = MysqlHrEmployeeSource::open($legacy);
-    $sync = new HrEmployeeSync(new SqlServerHrEmployeeStore($pdo), new StaffMappingUserLoginLinker($pdo));
+    // After a committed apply: propose onboarding matches for starters with no employee code (never links).
+    $proposer = new OnboardingLinkProposer(new AzureSqlOnboardingLinkRepository(new PdoSqlConnection($pdo, new RequestPerformanceMetrics())));
+    $sync = new HrEmployeeSync(new SqlServerHrEmployeeStore($pdo), new StaffMappingUserLoginLinker($pdo), $proposer);
     $say($sync->refresh($source, $apply));
     exit(0);
 } catch (HrEmployeeSyncRefused $e) {

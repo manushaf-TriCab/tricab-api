@@ -890,6 +890,8 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Api\Hr\Employees\Directory\InMemoryEmployeeDirectory::class),
             \TriCab\Api\Hr\Employees\Directory\RestrictedReadAudit::class
                 => \DI\autowire(\TriCab\Api\Hr\Employees\Directory\InMemoryRestrictedReadAudit::class),
+            \TriCab\Api\Hr\OnboardingLink\OnboardingLinkRepository::class
+                => \DI\autowire(\TriCab\Api\Hr\OnboardingLink\InMemoryOnboardingLinkRepository::class),
             // N2.4 email: the sink writes outbox rows inside the repository's transaction; the
             // dispatcher sends after commit (mode off sends nothing); the sweep retries.
             \TriCab\Core\Npr\Mail\NprMailOutbox::class
@@ -3759,6 +3761,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Hr\Employees\Directory\AzureSqlEmployeeDirectory::class);
             $definitions[\TriCab\Api\Hr\Employees\Directory\RestrictedReadAudit::class]
                 = \DI\autowire(\TriCab\Api\Hr\Employees\Directory\AzureSqlRestrictedReadAudit::class);
+            $definitions[\TriCab\Api\Hr\OnboardingLink\OnboardingLinkRepository::class]
+                = \DI\autowire(\TriCab\Api\Hr\OnboardingLink\AzureSqlOnboardingLinkRepository::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqCustomerDirectory::class);
             // Parity plan E5.5: correction memory and Save Review's log.

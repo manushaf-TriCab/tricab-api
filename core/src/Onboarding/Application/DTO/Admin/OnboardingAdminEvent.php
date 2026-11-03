@@ -82,6 +82,9 @@ final readonly class OnboardingAdminEvent
         'documents',
         // 5.4 — who filled part of a form: `hr` or `manager`, never a value.
         'role',
+        // HR Employees phase 5: a payroll code (an identifier, not payroll data) and how the match was found.
+        'employeeCode',
+        'matchReason',
     ];
 
     /**

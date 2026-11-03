@@ -7,6 +7,7 @@ namespace TriCab\Api\Hr\Employees;
 use DateTimeImmutable;
 use DateTimeZone;
 use Throwable;
+use TriCab\Api\Hr\OnboardingLink\OnboardingLinkProposer;
 
 /**
  * Copies payroll's `tc.employee` (and `dept_manager`) into `[hr]`. Read-only
@@ -22,6 +23,9 @@ use Throwable;
  * - A row that has left the source is flagged (MissingFromSourceAt, once) and
  *   no longer current; it stays.
  * - UserId comes from the {@see UserLoginLinker}, by login only.
+ * - After a committed apply, onboarding starters with no employee code get match
+ *   proposals ({@see OnboardingLinkProposer}). Proposals only; HR confirms. A
+ *   failure there is reported in the result and never undoes the sync.
  *
  * A dry run reads both sides and writes nothing. An apply is one transaction
  * under an application lock, and records a [hr].[SyncRuns] row. The result
@@ -37,6 +41,7 @@ final class HrEmployeeSync
     public function __construct(
         private readonly HrEmployeeStore $store,
         private readonly UserLoginLinker $linker,
+        private readonly ?OnboardingLinkProposer $proposer = null,
     ) {
     }
 
@@ -66,7 +71,10 @@ final class HrEmployeeSync
                 return $this->run($records, $departments, $skipped, false, $startedAt);
             }
 
-            return $this->store->transaction(fn (): array => $this->run($records, $departments, $skipped, true, $startedAt));
+            $result = $this->store->transaction(fn (): array => $this->run($records, $departments, $skipped, true, $startedAt));
+            $result['onboardingLinks'] = $this->proposeOnboardingLinks();
+
+            return $result;
         } catch (HrEmployeeSyncBusy $e) {
             throw $e;
         } catch (Throwable $e) {
@@ -74,6 +82,23 @@ final class HrEmployeeSync
                 $this->store->recordFailure($e->getMessage());
             }
             throw $e;
+        }
+    }
+
+    /**
+     * Counts only. Runs after the sync has committed, so it sees the new employees and cannot undo them.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function proposeOnboardingLinks(): ?array
+    {
+        if ($this->proposer === null) {
+            return null;
+        }
+        try {
+            return $this->proposer->propose();
+        } catch (Throwable $e) {
+            return ['failed' => get_class($e) . ': ' . $e->getMessage()];
         }
     }
 

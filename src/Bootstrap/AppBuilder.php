@@ -485,6 +485,18 @@ final class AppBuilder
             ->add(($require)(\TriCab\Api\Hr\Employees\Directory\HrPermissions::EMPLOYEES_SYNC));
         $app->get('/api/v1/hr/employees/{code}', \TriCab\Api\Http\Action\Hr\GetHrEmployeeAction::class)
             ->add(($require)(\TriCab\Api\Hr\Employees\Directory\HrPermissions::EMPLOYEES_READ));
+
+        // Phase 5: link an onboarding person to their payroll employee. HR confirms the sync's
+        // proposals; the routes need the directory permission AND the onboarding one, because they
+        // join the two (the employee fields shown are base fields, never the restricted block).
+        $both = static fn (\Slim\Interfaces\RouteInterface $route): \Slim\Interfaces\RouteInterface => $route
+            ->add(($require)(\TriCab\Api\Hr\Employees\Directory\HrPermissions::EMPLOYEES_READ))
+            ->add(($require)(\TriCab\Api\Hr\OnboardingLink\OnboardingLinkService::PERMISSION));
+        $people = '/api/v1/hr/onboarding-links/people/{personPublicId}';
+        $both($app->get($people, \TriCab\Api\Http\Action\Hr\GetHrOnboardingLinkAction::class));
+        $both($app->post($people . '/proposals/{proposalPublicId}/confirm', \TriCab\Api\Http\Action\Hr\ConfirmHrOnboardingLinkAction::class));
+        $both($app->post($people . '/proposals/{proposalPublicId}/dismiss', \TriCab\Api\Http\Action\Hr\DismissHrOnboardingLinkAction::class));
+        $both($app->delete($people, \TriCab\Api\Http\Action\Hr\DeleteHrOnboardingLinkAction::class));
     }
 
     /**

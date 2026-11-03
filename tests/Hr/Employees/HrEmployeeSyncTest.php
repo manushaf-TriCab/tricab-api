@@ -279,4 +279,39 @@ final class HrEmployeeSyncTest extends TestCase
             self::assertSame(0, $this->store->failures, 'a busy lock is not a failed run');
         }
     }
+
+    public function testOnboardingMatchesAreProposedAfterAnApplyAndNeverOnADryRun(): void
+    {
+        $links = (new \TriCab\Api\Hr\OnboardingLink\InMemoryOnboardingLinkRepository())
+            ->withPerson('aaaaaaaa-0000-4000-8000-000000000001', 1, 101, 'Ann Lee', '2026-11-02')
+            ->withEmployee('A', 101, 'Ann Lee', 'Ann', 'Lee', null);
+        $sync = new HrEmployeeSync($this->store, new NullUserLoginLinker(), new \TriCab\Api\Hr\OnboardingLink\OnboardingLinkProposer($links));
+        $source = new InMemoryHrEmployeeSource([self::row('A', 'a')], []);
+
+        $dry = $sync->refresh($source, false);
+        self::assertArrayNotHasKey('onboardingLinks', $dry);
+        self::assertSame([], $links->proposals());
+
+        $applied = $sync->refresh($source, true);
+        self::assertSame(['starters' => 1, 'proposed' => 1], $applied['onboardingLinks']);
+        self::assertNull($links->personPublicIdForEmployee('A'), 'a proposal is not a link');
+    }
+
+    public function testAFailingProposalStepIsReportedAndDoesNotUndoTheSync(): void
+    {
+        $connection = new \TriCab\Api\Tests\Doubles\FakeSqlConnection();
+        $connection->failNextFetch = new \RuntimeException('boom');
+        $links = new \TriCab\Api\Hr\OnboardingLink\AzureSqlOnboardingLinkRepository($connection);
+        $sync = new HrEmployeeSync($this->store, new NullUserLoginLinker(), new \TriCab\Api\Hr\OnboardingLink\OnboardingLinkProposer($links));
+
+        $result = $sync->refresh(new InMemoryHrEmployeeSource([self::row('A', 'a')], []), true);
+
+        self::assertSame(1, $result['rowsInserted']);
+        $links = $result['onboardingLinks'];
+        self::assertIsArray($links);
+        $failed = $links['failed'] ?? '';
+        self::assertIsString($failed);
+        self::assertStringContainsString('boom', $failed);
+        self::assertSame(0, $this->store->failures);
+    }
 }

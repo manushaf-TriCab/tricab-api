@@ -38,6 +38,14 @@ final class HrEmployeesEndpointsTest extends TestCase
         'GET /api/v1/hr/employees/{code}' => self::READ,
     ];
 
+    /** Phase 5 routes (see HrOnboardingLinkEndpointsTest): they write the onboarding link, never an employee. */
+    private const LINK_ROUTES = [
+        'DELETE /api/v1/hr/onboarding-links/people/{personPublicId}',
+        'GET /api/v1/hr/onboarding-links/people/{personPublicId}',
+        'POST /api/v1/hr/onboarding-links/people/{personPublicId}/proposals/{proposalPublicId}/confirm',
+        'POST /api/v1/hr/onboarding-links/people/{personPublicId}/proposals/{proposalPublicId}/dismiss',
+    ];
+
     public function test_every_hr_route_is_in_the_table(): void
     {
         $registered = [];
@@ -49,11 +57,11 @@ final class HrEmployeesEndpointsTest extends TestCase
                 $registered[] = $method . ' ' . $route->getPattern();
             }
         }
-        $expected = array_keys(self::ROUTES);
+        $expected = [...array_keys(self::ROUTES), ...self::LINK_ROUTES];
         sort($registered);
         sort($expected);
 
-        self::assertSame($expected, $registered, 'A new HR route must be listed here with its permission, and no employee write route may exist.');
+        self::assertSame($expected, $registered, 'A new HR route must be listed here with its permission, and no employee write route may exist (the link routes write onboarding, not payroll data).');
     }
 
     public function test_each_route_opens_to_its_permission_alone(): void
