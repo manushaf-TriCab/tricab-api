@@ -52,8 +52,12 @@ Current prompts:
   and keeps internal names (TSD, Cost API, tool names) out of customer replies. Stock status is
   live from the Cost API, so availability is "in stock" or "made to order" and never "not a
   catalogue line".
-- `product-assistant-response-v10.md` is current. It keeps every v9 rule and changes only the
+- `product-assistant-response-v10.md` keeps every v9 rule and changes only the
   voice: the agent speaks as TriCab's sales team ("we don't currently carry…", "our range", "our
   technical team") instead of an assistant reporting a search ("I couldn't find…"), ends on a real
   next step, and uses stock words ("in stock", "not in stock", "made to order") only when a tool
   result carries a stock status — an empty match is "we don't carry that", never "out of stock".
+- `product-assistant-response-v11.md` is current. It keeps every v10 rule and adds two: `find_product`
+  gets the customer's own core wording in `text` ("4C+E" is never turned into `coreCount: 4`, which the
+  finder would read as 4 cores rather than 4 plus earth), and replies no longer narrate tool internals
+  (`isCurrent`, "the finder's earlier default").

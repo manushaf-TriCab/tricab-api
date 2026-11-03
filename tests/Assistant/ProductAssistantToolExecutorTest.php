@@ -37,6 +37,25 @@ use TriCab\Core\ProductFinder\Contract\ProductFinderClient;
 
 final class ProductAssistantToolExecutorTest extends TestCase
 {
+    public function test_find_product_tells_the_agent_to_pass_core_wording_in_text_not_as_a_count(): void
+    {
+        $properties = [];
+        foreach ($this->executor(new NullProductFinderClient())->definitions() as $tool) {
+            if (($tool['name'] ?? null) === 'find_product') {
+                $schema = $tool['input_schema'] ?? [];
+                $properties = is_array($schema) && is_array($schema['properties'] ?? null) ? $schema['properties'] : [];
+            }
+        }
+        $text = self::description($properties, 'text');
+        $count = self::description($properties, 'coreCount');
+
+        // "4C+E" is 5 cores to the finder; a bare coreCount of 4 would ask for the wrong code.
+        self::assertStringContainsString('4C+E', $text);
+        self::assertStringContainsString('unchanged', $text);
+        self::assertStringContainsString('earth included', $count);
+        self::assertStringContainsString('Leave it out', $count);
+    }
+
     public function test_a_stated_construction_carries_no_sizing_caveat(): void
     {
         // "KL 1C 95mm in orange" states the construction outright, so the
@@ -582,6 +601,15 @@ final class ProductAssistantToolExecutorTest extends TestCase
                 return [];
             }
         };
+    }
+
+    /** @param array<mixed> $properties */
+    private static function description(array $properties, string $field): string
+    {
+        $property = $properties[$field] ?? null;
+        $description = is_array($property) ? ($property['description'] ?? '') : '';
+
+        return is_string($description) ? $description : '';
     }
 
     private function executor(

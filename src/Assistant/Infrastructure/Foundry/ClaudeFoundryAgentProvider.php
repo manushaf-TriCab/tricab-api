@@ -402,6 +402,10 @@ final readonly class ClaudeFoundryAgentProvider implements AssistantResponseProv
                     }
                 },
             );
+        } catch (FoundryCallTimedOut $exception) {
+            // One model call is bounded on its own, inside the turn deadline.
+            $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'timeout');
+            throw new FoundryProviderUnavailable('Foundry Messages stream timed out: ' . $exception->getMessage(), previous: $exception);
         } catch (Throwable $exception) {
             $this->trace->recordModelCall(AssistantTurnTrace::msSince($startedAt), $toolsEnabled, 'transport_error');
             throw new FoundryProviderUnavailable('Foundry Messages stream failed.', previous: $exception);

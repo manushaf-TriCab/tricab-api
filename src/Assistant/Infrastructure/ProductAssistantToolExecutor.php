@@ -110,11 +110,11 @@ final readonly class ProductAssistantToolExecutor implements AssistantToolExecut
             $this->tool('find_product', 'Turn a cable requirement into a TriCab product-code recommendation using the corrected product finder. Use it for a stated construction (style, cores, size, colour) as well as for a sizing question — it resolves the construction whether or not an electrical duty is given, and it is the only tool that understands colour words and style synonyms. It may ask for clarification. Any sizing and stock fields it returns are advisory because their source datasets are still under Technical review. Every call needs `text`, `cableType` or `style`; one with only numbers (load, length, phase) is rejected, so always pass the requirement in `text` as well.', [
                 'text' => [
                     'type' => 'string',
-                    'description' => 'The requirement in the customer\'s words, e.g. "3 phase 100 A submain, 80 m, armoured". Pass it on every call.',
+                    'description' => 'The requirement in the customer\'s words, e.g. "3 phase 100 A submain, 80 m, armoured" or "4C+E 16mm". Pass it on every call, and pass the core wording ("4C+E", "4 core and earth") here unchanged: the finder reads the earth out of it.',
                 ],
                 'cableType' => ['type' => 'integer'],
                 'style' => ['type' => 'string'],
-                'coreCount' => ['type' => 'integer', 'minimum' => 1],
+                'coreCount' => ['type' => 'integer', 'minimum' => 1, 'description' => 'Total cores in the code, earth included ("4C+E" is 5). Leave it out when the customer wrote an earth ("4C+E", "and earth"): put that wording in `text` instead. Set it only for a plain count such as "5 core".'],
                 'crossSectionMm2' => ['type' => 'number', 'exclusiveMinimum' => 0],
                 'colour' => [
                     'type' => 'string',

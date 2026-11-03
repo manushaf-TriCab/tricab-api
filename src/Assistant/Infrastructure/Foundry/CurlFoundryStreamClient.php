@@ -95,6 +95,9 @@ final readonly class CurlFoundryStreamClient implements FoundryStreamClient
         if ($failure !== null) {
             throw $failure;
         }
+        if ($ok === false && $errno === CURLE_OPERATION_TIMEDOUT) {
+            throw new FoundryCallTimedOut($this->timeoutSeconds);
+        }
         if ($ok === false) {
             throw new RuntimeException(sprintf('Foundry stream failed (curl %d: %s).', $errno, $error));
         }

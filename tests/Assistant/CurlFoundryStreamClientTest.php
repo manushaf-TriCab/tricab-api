@@ -6,6 +6,7 @@ namespace TriCab\Api\Tests\Assistant;
 
 use PHPUnit\Framework\TestCase;
 use TriCab\Api\Assistant\Infrastructure\Foundry\CurlFoundryStreamClient;
+use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryCallTimedOut;
 
 final class CurlFoundryStreamClientTest extends TestCase
 {
@@ -101,6 +102,20 @@ final class CurlFoundryStreamClientTest extends TestCase
             ['stream' => true],
             static function (): void {
                 throw new \LogicException('stop');
+            },
+        );
+    }
+
+    public function test_a_call_that_outlasts_its_limit_fails_as_a_timeout(): void
+    {
+        $this->expectException(FoundryCallTimedOut::class);
+        $this->expectExceptionMessage('0.5 second limit');
+        (new CurlFoundryStreamClient(0.5))->stream(
+            'http://127.0.0.1:' . self::$port . '/anthropic/v1/messages',
+            ['X-Scenario' => 'hang'],
+            ['stream' => true],
+            static function (): void {
+                self::fail('A stalled call has no events.');
             },
         );
     }

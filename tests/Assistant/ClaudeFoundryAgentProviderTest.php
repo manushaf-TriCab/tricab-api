@@ -15,6 +15,7 @@ use TriCab\Api\Assistant\Application\AssistantTurnEvents;
 use TriCab\Api\Assistant\Application\AssistantTurnTrace;
 use TriCab\Api\Assistant\Infrastructure\Foundry\ClaudeFoundryAgentProvider;
 use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryAccessTokenProvider;
+use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryCallTimedOut;
 use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryProviderUnavailable;
 use TriCab\Api\Assistant\Infrastructure\Foundry\FoundryStreamClient;
 use TriCab\Api\Assistant\Infrastructure\Prompt\VersionedPrompt;
@@ -370,6 +371,32 @@ final class ClaudeFoundryAgentProviderTest extends TestCase
         self::assertSame(['input_tokens' => 2_700, 'output_tokens' => 30], $summary['modelCalls'][1]['usage']);
         self::assertSame([['name' => 'search_product_codes', 'ms' => $summary['toolCalls'][0]['ms'], 'ok' => true]], $summary['toolCalls']);
         self::assertArrayHasKey('foundry_token', $summary['phasesMs']);
+    }
+
+    public function test_a_model_call_that_times_out_is_unavailable_and_traced_as_a_timeout(): void
+    {
+        $stream = new class implements FoundryStreamClient {
+            public function stream(string $url, array $headers, array $payload, callable $onEvent): array
+            {
+                throw new FoundryCallTimedOut(30.0);
+            }
+        };
+        $events = new AssistantTurnEvents();
+        $events->listen(static function (): void {
+        });
+        $trace = new AssistantTurnTrace();
+        $trace->begin();
+
+        try {
+            $this->provider(new FakeJsonHttpClient(), $this->toolExecutor(), 5, $trace, stream: $stream, events: $events)
+                ->generate(new AssistantGrounding(userMessage: 'KL', searchQuery: 'KL', regionCode: 'AU', products: []));
+            self::fail('A timed-out call must make the provider unavailable.');
+        } catch (FoundryProviderUnavailable $exception) {
+            self::assertStringContainsString('timed out', $exception->getMessage());
+            self::assertStringContainsString('30 second limit', $exception->getMessage());
+        }
+
+        self::assertSame('timeout', $trace->summary()['modelCalls'][0]['outcome']);
     }
 
     public function test_traces_a_rejected_round_trip_before_failing(): void

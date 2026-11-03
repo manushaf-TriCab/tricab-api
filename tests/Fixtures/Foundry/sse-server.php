@@ -13,6 +13,13 @@ if (($_SERVER['HTTP_X_SCENARIO'] ?? '') === 'reject') {
     return;
 }
 
+if (($_SERVER['HTTP_X_SCENARIO'] ?? '') === 'hang') {
+    // Accepts the request and then says nothing, as a stalled model call does.
+    sleep(2);
+
+    return;
+}
+
 header('Content-Type: text/event-stream');
 $body = json_decode((string) file_get_contents('php://input'), true);
 $echo = is_array($body) && ($body['stream'] ?? false) === true ? 'stream-true' : 'stream-missing';
