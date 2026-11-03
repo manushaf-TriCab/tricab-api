@@ -218,8 +218,9 @@ final readonly class Settings
         public int $passkeyAuthChallengeTtlSeconds,
         public bool $passkeyFakeCeremony,
         public bool $legacyCostApiEnabled = false,
-        public string $legacyCostApiUrl = 'https://www.tricab.com/cost-api/',
+        public string $legacyCostApiUrl = 'https://tricab.com/cost-api/',
         public int $legacyCostApiTimeoutSeconds = 8,
+        public string $legacyCostApiKey = '',
         public string $pricingCostSource = self::PRICING_COST_SOURCE_LEGACY_FALLBACK,
         public string $pricingDefaultTmmktmMargin = '0',
         public bool $productFinderEnabled = false,
@@ -1197,7 +1198,9 @@ final readonly class Settings
             );
         }
 
-        $legacyCostApiUrl = self::string($env, 'LEGACY_COST_API_URL', 'https://www.tricab.com/cost-api/');
+        $legacyCostApiUrl = self::string($env, 'LEGACY_COST_API_URL', 'https://tricab.com/cost-api/');
+        // The Cost API answers only calls carrying its key (X-Cost-Api-Key); the RFQ parser reads the same setting.
+        $legacyCostApiKey = trim(self::string($env, 'TRICAB_COST_API_KEY', ''));
         $legacyCostApiTimeoutSeconds = self::boundedInt($env, 'LEGACY_COST_API_TIMEOUT_SECONDS', 8, 1, 30);
         $legacyCostApiEnabled = self::bool($env, 'LEGACY_COST_API_ENABLED', false);
         $pricingCostSource = strtolower(trim(self::string($env, 'PRICING_COST_SOURCE', '')));
@@ -1533,6 +1536,7 @@ final readonly class Settings
             legacyCostApiEnabled: $legacyCostApiEnabled,
             legacyCostApiUrl: $legacyCostApiUrl,
             legacyCostApiTimeoutSeconds: $legacyCostApiTimeoutSeconds,
+            legacyCostApiKey: $legacyCostApiKey,
             pricingCostSource: $pricingCostSource,
             pricingDefaultTmmktmMargin: $pricingDefaultTmmktmMargin,
             productFinderEnabled: $productFinderEnabled,

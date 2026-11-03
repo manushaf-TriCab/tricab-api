@@ -3514,6 +3514,7 @@ final class ContainerFactory
                 return new \TriCab\Api\Product\Pricing\HttpLegacyCostCalculationGateway(
                     $http,
                     $settings->legacyCostApiUrl,
+                    $settings->legacyCostApiKey,
                 );
             },
             \TriCab\Core\Product\Application\Pricing\ResolvePricingDbcoService::class => \DI\autowire(\TriCab\Core\Product\Application\Pricing\ResolvePricingDbcoService::class),

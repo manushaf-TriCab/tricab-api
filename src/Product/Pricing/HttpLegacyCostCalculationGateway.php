@@ -24,6 +24,7 @@ final class HttpLegacyCostCalculationGateway implements LegacyCostCalculationGat
     public function __construct(
         private readonly JsonHttpClient $http,
         private readonly string $baseUrl,
+        #[\SensitiveParameter] private readonly string $apiKey = '',
     ) {
     }
 
@@ -92,7 +93,7 @@ final class HttpLegacyCostCalculationGateway implements LegacyCostCalculationGat
     private function performRequest(string $productCode, string $dbco, string $requestedLength): array
     {
         $url = $this->buildUrl($productCode, $dbco, $requestedLength);
-        $response = $this->http->getJson($url);
+        $response = $this->http->getJson($url, $this->apiKey === '' ? [] : ['X-Cost-Api-Key' => $this->apiKey]);
         $statusCode = JsonValue::int($response, 'status');
         $body = JsonValue::string($response, 'body');
 
