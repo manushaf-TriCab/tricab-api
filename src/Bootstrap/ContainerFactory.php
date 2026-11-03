@@ -895,6 +895,25 @@ final class ContainerFactory
                 => \DI\get(\TriCab\Api\Hr\Employees\Directory\EmployeeDirectory::class),
             \TriCab\Api\Hr\OnboardingLink\OnboardingLinkRepository::class
                 => \DI\autowire(\TriCab\Api\Hr\OnboardingLink\InMemoryOnboardingLinkRepository::class),
+            // Platform groups (Tri-Task company plan, Phase 1): in memory, with a fake Entra.
+            \TriCab\Api\Identity\Groups\GroupUserDirectory::class
+                => static fn (Container $container): \TriCab\Api\Identity\Groups\GroupUserDirectory
+                    => self::get($container, \TriCab\Api\Identity\Groups\InMemoryGroupUserDirectory::class),
+            \TriCab\Api\Identity\Groups\GroupStore::class
+                => \DI\autowire(\TriCab\Api\Identity\Groups\InMemoryGroupStore::class),
+            \TriCab\Api\Identity\Groups\InMemoryGroupUserDirectory::class
+                => \DI\autowire(\TriCab\Api\Identity\Groups\InMemoryGroupUserDirectory::class),
+            \TriCab\Api\Identity\Groups\InMemoryEntraGroupDirectory::class
+                => \DI\autowire(\TriCab\Api\Identity\Groups\InMemoryEntraGroupDirectory::class),
+            \TriCab\Api\Identity\Groups\GroupSync::class
+                => \DI\autowire(\TriCab\Api\Identity\Groups\GroupSync::class),
+            \TriCab\Api\Identity\Groups\GroupService::class
+                => \DI\autowire(\TriCab\Api\Identity\Groups\GroupService::class),
+            \TriCab\Api\Http\Action\Admin\GroupsController::class
+                => \DI\autowire(\TriCab\Api\Http\Action\Admin\GroupsController::class),
+            \TriCab\Api\Identity\Groups\EntraGroupDirectory::class
+                => static fn (Container $container): \TriCab\Api\Identity\Groups\EntraGroupDirectory
+                    => self::get($container, \TriCab\Api\Identity\Groups\InMemoryEntraGroupDirectory::class),
             // N2.4 email: the sink writes outbox rows inside the repository's transaction; the
             // dispatcher sends after commit (mode off sends nothing); the sweep retries.
             \TriCab\Core\Npr\Mail\NprMailOutbox::class
@@ -3809,6 +3828,19 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Hr\Employees\Directory\AzureSqlDepartmentMapStore::class);
             $definitions[\TriCab\Api\Hr\OnboardingLink\OnboardingLinkRepository::class]
                 = \DI\autowire(\TriCab\Api\Hr\OnboardingLink\AzureSqlOnboardingLinkRepository::class);
+            // Platform groups: Azure SQL, and Microsoft Graph for Entra (inert until GroupMember.Read.All is consented).
+            $definitions[\TriCab\Api\Identity\Groups\GroupStore::class]
+                = \DI\autowire(\TriCab\Api\Identity\Groups\AzureSqlGroupStore::class);
+            $definitions[\TriCab\Api\Identity\Groups\GroupUserDirectory::class]
+                = \DI\autowire(\TriCab\Api\Identity\Groups\AzureSqlGroupUserDirectory::class);
+            $definitions[\TriCab\Api\Identity\Groups\EntraGroupDirectory::class]
+                = static fn (Container $container): \TriCab\Api\Identity\Groups\EntraGroupDirectory
+                    => new \TriCab\Api\Identity\Groups\MicrosoftGraphEntraGroupDirectory(
+                        self::get($container, JsonHttpClient::class),
+                        $settings->graphTenantId,
+                        $settings->graphClientId,
+                        $settings->graphClientSecret,
+                    );
             $definitions[\TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class]
                 = \DI\autowire(\TriCab\Api\Rfq\Persistence\AzureSqlRfqCustomerDirectory::class);
             // Parity plan E5.5: correction memory and Save Review's log.

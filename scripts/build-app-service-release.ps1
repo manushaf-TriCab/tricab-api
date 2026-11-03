@@ -310,6 +310,12 @@ New-Item -ItemType Directory -Path $hrSyncJobRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\sync-hr-employees.php') -Destination (Join-Path $appRoot 'bin\sync-hr-employees.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\hr-employee-sync\run.sh') -Destination (Join-Path $hrSyncJobRoot 'run.sh') -Force
 
+# The platform group sync (Tri-Task company plan, Phase 1) and its continuous WebJob, the same way.
+$groupSyncJobRoot = Join-Path $releaseRoot 'App_Data\jobs\continuous\platform-group-sync'
+New-Item -ItemType Directory -Path $groupSyncJobRoot -Force | Out-Null
+Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\sync-platform-groups.php') -Destination (Join-Path $appRoot 'bin\sync-platform-groups.php') -Force
+Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\platform-group-sync\run.sh') -Destination (Join-Path $groupSyncJobRoot 'run.sh') -Force
+
 # Continuous WebJobs run on every instance by default; each job ships a settings.job with is_singleton.
 foreach ($jobDir in Get-ChildItem -LiteralPath (Join-Path $releaseRoot 'App_Data\jobs\continuous') -Directory) {
     $jobSettings = Join-Path $apiRoot ('deploy\app-service\webjobs\' + $jobDir.Name + '\settings.job')

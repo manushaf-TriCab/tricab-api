@@ -1421,6 +1421,22 @@ final class AppBuilder
                 ->add(($require)(\TriCab\Core\Analytics\Module::PERMISSION_READ));
         }
 
+        // Platform groups (Tri-Task company plan, Phase 1). Static segments win over {publicId}.
+        $manageGroups = \TriCab\Api\Http\Action\Admin\GroupsController::PERMISSION;
+        $groupsController = \TriCab\Api\Http\Action\Admin\GroupsController::class;
+        $app->get('/api/v1/admin/groups', $groupsController . ':list')->add(($require)($manageGroups));
+        $app->get('/api/v1/admin/groups/lookup', $groupsController . ':lookup')->add(($require)($manageGroups));
+        $app->get('/api/v1/admin/groups/entra-search', $groupsController . ':searchEntra')->add(($require)($manageGroups));
+        $app->post('/api/v1/admin/groups', $groupsController . ':create')->add(($require)($manageGroups));
+        $app->post('/api/v1/admin/groups/link', $groupsController . ':link')->add(($require)($manageGroups));
+        $app->get('/api/v1/admin/groups/{publicId}', $groupsController . ':get')->add(($require)($manageGroups));
+        $app->patch('/api/v1/admin/groups/{publicId}', $groupsController . ':update')->add(($require)($manageGroups));
+        $app->delete('/api/v1/admin/groups/{publicId}', $groupsController . ':delete')->add(($require)($manageGroups));
+        $app->post('/api/v1/admin/groups/{publicId}/members', $groupsController . ':addMember')->add(($require)($manageGroups));
+        $app->delete('/api/v1/admin/groups/{publicId}/members/{userPublicId}', $groupsController . ':removeMember')->add(($require)($manageGroups));
+        $app->post('/api/v1/admin/groups/{publicId}/unlink', $groupsController . ':unlink')->add(($require)($manageGroups));
+        $app->post('/api/v1/admin/groups/{publicId}/sync', $groupsController . ':sync')->add(($require)($manageGroups));
+
         $app->get('/api/v1/admin/users', ListUsersAction::class)->add(($require)('USER.READ'));
         $app->get('/api/v1/admin/users/{publicId}', GetUserAction::class)->add(($require)('USER.READ'));
         $app->post('/api/v1/admin/users', CreateUserAction::class)->add(($require)('USER.CREATE'));
