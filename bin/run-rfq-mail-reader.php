@@ -50,6 +50,7 @@ use TriCab\Core\Mail\Application\Service\MailDraftAutomation;
 use TriCab\Core\Mail\Application\Service\MailIntakeRecorder;
 use TriCab\Core\Mail\Contract\MailStore;
 use TriCab\Core\Mail\Contract\RfqDraftCreator;
+use TriCab\Core\Mail\Contract\RfqFollowupProposer;
 use TriCab\Core\Mail\Intake\MailReaderOptions;
 use TriCab\Core\Mail\Intake\MailReaderPass;
 use TriCab\Core\Shared\Time\Clock;
@@ -165,7 +166,7 @@ if ($settings->isRfqMailDraftsOn() && $settings->rfqMailNotifyEnabled) {
     );
 }
 $drafts = $settings->isRfqMailDraftsOn()
-    ? new MailDraftAutomation($store, $container->get(RfqDraftCreator::class), $settings->rfqMailMailbox, $container->get(Clock::class), $notifier)
+    ? new MailDraftAutomation($store, $container->get(RfqDraftCreator::class), $settings->rfqMailMailbox, $container->get(Clock::class), $notifier, $container->get(RfqFollowupProposer::class))
     : null;
 
 $pass = new MailReaderPass(

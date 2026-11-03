@@ -22,6 +22,9 @@ use TriCab\Core\Rfq\Storage\StoreProjection;
  * `note` is written for the rep ("could not read this file: …"), never a stack
  * trace. `reader` names the engine and version that produced the rows, which
  * is recorded with results (plan 3.6).
+ *
+ * `email` is set when the read is an email follow-up's proposal (RFQ mail M6.2): who sent it, when it arrived and
+ * where the message is in the inbox, so the editor can say where the lines came from. Null for a file read.
  */
 final class ReaderResult
 {
@@ -35,6 +38,9 @@ final class ReaderResult
         public readonly int $proposedLineCount,
         public readonly ?string $note,
         public readonly DateTimeImmutable $updatedAtUtc,
+        /** @var array{senderName: string, senderAddress: string, receivedAt: string, subject: string, threadId: string, messageId: string}|null */
+        public readonly ?array $email = null,
+        public readonly string $fileName = '',
     ) {
     }
 
@@ -42,6 +48,13 @@ final class ReaderResult
     {
         $rows = is_array($job->proposal['rows'] ?? null) ? $job->proposal['rows'] : [];
         $reader = is_string($job->proposal['reader'] ?? null) ? $job->proposal['reader'] : null;
+
+        $mail = is_array($job->proposal['email'] ?? null) ? $job->proposal['email'] : null;
+        if ($mail === null && $job->emailMessageId !== null) {
+            // A dismissed or accepted follow-up no longer holds its proposal: the row still says what it was.
+            $mail = [];
+        }
+        $text = static fn (mixed $v): string => is_string($v) ? $v : '';
 
         return new self(
             StoreProjection::publicId($job->id),
@@ -53,6 +66,15 @@ final class ReaderResult
             count($rows),
             $job->note,
             StoreFormat::parseTime($job->updatedAt) ?? new DateTimeImmutable('@0'),
+            $mail === null ? null : [
+                'senderName' => $text($mail['sender_name'] ?? null),
+                'senderAddress' => $text($mail['sender_address'] ?? null),
+                'receivedAt' => $text($mail['received_at'] ?? null),
+                'subject' => $text($mail['subject'] ?? null),
+                'threadId' => $text($mail['mail_thread_id'] ?? null),
+                'messageId' => $text($mail['mail_message_id'] ?? $job->emailMessageId),
+            ],
+            $job->fileName,
         );
     }
 
@@ -71,6 +93,7 @@ final class ReaderResult
             'proposedLineCount' => $this->proposedLineCount,
             'note' => $this->note,
             'updatedAt' => $this->updatedAtUtc->format(DateTimeInterface::ATOM),
+            'email' => $this->email,
         ];
     }
 }

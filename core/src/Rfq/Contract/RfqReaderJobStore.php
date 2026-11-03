@@ -30,6 +30,19 @@ interface RfqReaderJobStore
     public function enqueue(string $draftId, string $documentId, string $fileName, ?string $contentType, string $uploaderEmail, int $baseRevision): string;
 
     /**
+     * Records one email follow-up as a finished read (RFQ mail M6.2): a `rfq_reader_jobs` row that never queues
+     * (its `spool_path` is `mail-followup:<messageKey>`, which the worker's `rfq-document:` filter ignores) and
+     * whose `proposal` holds the follow-up's parsed rows, so the editor's existing Accept / Dismiss applies.
+     * With no `proposal` the row is a `superseded` marker (the email held no lines), so the message is still
+     * recorded once. **Idempotent per `$jobId`**: a second call changes nothing and answers false.
+     *
+     * @param array<string, mixed>|null $proposal
+     *
+     * @return bool true when newly recorded
+     */
+    public function recordEmailProposal(string $draftId, string $jobId, string $fileName, string $messageKey, string $uploaderEmail, int $baseRevision, ?string $note, ?array $proposal): bool;
+
+    /**
      * Abandoned `running` jobs claimed before `$beforeIso` go back to `queued`,
      * or to `failed` once they have had `$maxAttempts`.
      *

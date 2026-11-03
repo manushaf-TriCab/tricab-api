@@ -348,6 +348,39 @@ final class RfqReaderJobsTest extends TestCase
         self::assertFalse($this->record($publicId)->extractionState->is(ExtractionState::ATTENTION));
     }
 
+    public function test_an_email_followup_is_one_proposal_that_accepting_appends_beside_the_rows(): void
+    {
+        $publicId = $this->upload();
+        $draftId = (string) StoreProjection::draftId($publicId);
+        $jobId = str_repeat('c', 32);
+        $line = self::line('2C 1.5mm 50m', 'email-body.txt');
+        $line['source'] = ['file_name' => 'Email follow-up from Jo, 3 Nov 2026 09:00 [cccc]'];
+        $line['line_uid'] = str_repeat('d', 32);
+
+        $made = $this->store->recordEmailProposal($draftId, $jobId, 'Email follow-up from Jo, 3 Nov 2026 09:00 [cccc]', 'mail-message-1', 'melbourne@tricab.com', 1, 'Parsed from an email follow-up.', [
+            'reader' => 'email follow-up',
+            'rows' => [$line],
+            'email' => ['sender_name' => 'Jo', 'sender_address' => 'jo@customer.example', 'received_at' => '2026-11-03T09:00:00+00:00', 'subject' => 'Re: quote', 'mail_message_id' => 'mail-message-1', 'mail_thread_id' => 'mail-thread-1', 'internet_message_id' => '<x@y>'],
+        ]);
+        $again = $this->store->recordEmailProposal($draftId, $jobId, 'x', 'mail-message-1', 'melbourne@tricab.com', 1, null, null);
+
+        self::assertTrue($made);
+        self::assertFalse($again, 'one message, one proposal');
+        $row = $this->query("SELECT [spool_path], [status] FROM [rfq].[rfq_reader_jobs] WHERE [id] = '{$jobId}'")[0];
+        self::assertSame(['mail-followup:mail-message-1', 'done'], [$row['spool_path'], $row['status']]);
+        self::assertNull($this->store->claim($draftId)[0]->emailMessageId ?? null, 'the worker claims the upload reads, never the email one');
+        self::assertCount(3, $this->rawTexts($draftId), 'nothing was applied');
+        $reads = array_values(array_filter($this->reader->reads(self::sales(), $publicId) ?? [], static fn ($r): bool => $r->email !== null));
+        self::assertCount(1, $reads);
+        self::assertSame(ReaderJobStatus::PROPOSED, $reads[0]->status->toString());
+        self::assertSame('jo@customer.example', $reads[0]->email['senderAddress'] ?? null);
+
+        $revision = $this->reader->resolve(self::sales(), 'rep@tricab.com', $publicId, $reads[0]->publicId, 'accept', 1, CorrelationId::generate());
+
+        self::assertSame(2, $revision);
+        self::assertCount(4, $this->rawTexts($draftId), 'the follow-up rows were appended; the other rows are untouched');
+    }
+
     public function test_accepting_against_a_stale_revision_is_refused(): void
     {
         $publicId = $this->upload();

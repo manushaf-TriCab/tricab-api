@@ -19,6 +19,9 @@ final class StoredReaderJob
 {
     public const DOCUMENT_PREFIX = 'rfq-document:';
 
+    /** A job that records an email follow-up's proposal (RFQ mail M6.2); its `spool_path` names the message. */
+    public const EMAIL_PREFIX = 'mail-followup:';
+
     /**
      * @param array<string, mixed>|null $proposal
      */
@@ -34,6 +37,8 @@ final class StoredReaderJob
         public readonly ?array $proposal,
         public readonly ?string $documentId,
         public readonly string $updatedAt,
+        /** The mail message id of an email follow-up's read; null for a file's. */
+        public readonly ?string $emailMessageId = null,
     ) {
     }
 
@@ -50,6 +55,11 @@ final class StoredReaderJob
         $id = substr($spoolPath, strlen(self::DOCUMENT_PREFIX));
 
         return StoreFormat::isId($id) ? $id : null;
+    }
+
+    public static function emailMessageIdFrom(?string $spoolPath): ?string
+    {
+        return $spoolPath !== null && str_starts_with($spoolPath, self::EMAIL_PREFIX) ? substr($spoolPath, strlen(self::EMAIL_PREFIX)) : null;
     }
 
     public function readerStatus(): ReaderJobStatus

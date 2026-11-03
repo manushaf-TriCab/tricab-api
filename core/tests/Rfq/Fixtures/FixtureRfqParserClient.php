@@ -98,6 +98,9 @@ final class FixtureRfqParserClient implements RfqParserClient
         )->lines;
     }
 
+    /** @var array<string, mixed>|null merged over every parse answer (for example `['lines' => []]`) */
+    public ?array $answerOverride = null;
+
     public function parse(ParseRequest $request): ParseResponse
     {
         $this->parses[] = $request;
@@ -114,6 +117,9 @@ final class FixtureRfqParserClient implements RfqParserClient
         $answer = self::payload();
         if ($request->documents !== []) {
             $answer = array_merge($answer, $this->documentsAnswer);
+        }
+        if ($this->answerOverride !== null) {
+            $answer = array_merge($answer, $this->answerOverride);
         }
 
         return ParseResponse::fromPayload(

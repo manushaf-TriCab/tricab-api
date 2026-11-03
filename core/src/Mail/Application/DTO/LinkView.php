@@ -21,6 +21,11 @@ final readonly class LinkView
         public string $kind = 'rfq_draft',
         /** The message a follow-up link is for; null for the draft itself. */
         public ?string $messageId = null,
+        /**
+         * A follow-up's proposal on the draft (RFQ M6.2): `pending` (waiting for a rep), `accepted`, `dismissed`, or
+         * `none` (the email held no lines). Null for the draft itself and for a follow-up with no proposal.
+         */
+        public ?string $proposal = null,
     ) {
     }
 
@@ -35,6 +40,7 @@ final readonly class LinkView
             'title' => $this->title,
             'href' => self::RFQ_HREF . rawurlencode($this->publicId),
             'createdAt' => MailTime::iso($this->createdAt),
+            'proposal' => $this->proposal,
         ];
     }
 }

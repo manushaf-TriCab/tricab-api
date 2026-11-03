@@ -818,6 +818,35 @@ final class AzureSqlRfqDraftStore implements RfqDraftStore, RfqReaderJobStore, R
 
     // ------------------------------------------------------------------ reader jobs
 
+    public function recordEmailProposal(string $draftId, string $jobId, string $fileName, string $messageKey, string $uploaderEmail, int $baseRevision, ?string $note, ?array $proposal): bool
+    {
+        $now = $this->nowIso();
+        // One statement, so two passes racing on the same message cannot both insert (the id is the message's).
+        $inserted = $this->connection->fetchAll(
+            'INSERT INTO [rfq].[rfq_reader_jobs]
+                ([id], [created_at], [updated_at], [draft_id], [uploader_email], [file_name], [content_type], [spool_path], [status], [attempts], [base_revision], [note], [proposal])
+             OUTPUT inserted.[id]
+             SELECT :id, :created_at, :updated_at, :draft_id, :uploader_email, :file_name, N\'message/rfc822\', :spool_path, :status, 1, :base_revision, :note, :proposal
+             WHERE NOT EXISTS (SELECT 1 FROM [rfq].[rfq_reader_jobs] WHERE [id] = :exists_id)',
+            [
+                'id' => $jobId,
+                'exists_id' => $jobId,
+                'created_at' => $now,
+                'updated_at' => $now,
+                'draft_id' => $draftId,
+                'uploader_email' => $uploaderEmail,
+                'file_name' => mb_substr($fileName, 0, 512),
+                'spool_path' => mb_substr(StoredReaderJob::EMAIL_PREFIX . $messageKey, 0, 1024),
+                'status' => $proposal === null ? 'superseded' : 'done',
+                'base_revision' => $baseRevision,
+                'note' => $note !== null && $note !== '' ? $note : null,
+                'proposal' => $proposal !== null ? PythonJson::encode($proposal) : null,
+            ],
+        );
+
+        return $inserted !== [];
+    }
+
     public function enqueue(string $draftId, string $documentId, string $fileName, ?string $contentType, string $uploaderEmail, int $baseRevision): string
     {
         $ids = $this->ids;
@@ -1128,6 +1157,7 @@ final class AzureSqlRfqDraftStore implements RfqDraftStore, RfqReaderJobStore, R
             proposal: $decoded === [] ? null : $decoded,
             documentId: StoredReaderJob::documentIdFrom(self::text($row['spool_path'] ?? null)),
             updatedAt: (string) self::text($row['updated_at'] ?? ''),
+            emailMessageId: StoredReaderJob::emailMessageIdFrom(self::text($row['spool_path'] ?? null)),
         );
     }
 

@@ -20,6 +20,11 @@ final class UnconfiguredRfqReaderJobStore implements RfqReaderJobStore
         throw new RfqStoreUnavailable();
     }
 
+    public function recordEmailProposal(string $draftId, string $jobId, string $fileName, string $messageKey, string $uploaderEmail, int $baseRevision, ?string $note, ?array $proposal): bool
+    {
+        throw new RfqStoreUnavailable();
+    }
+
     public function requeueStale(string $beforeIso, int $maxAttempts): int
     {
         return 0;

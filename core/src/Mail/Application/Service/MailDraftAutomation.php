@@ -9,6 +9,7 @@ use TriCab\Core\Mail\Application\DTO\NewLink;
 use TriCab\Core\Mail\Contract\MailStore;
 use TriCab\Core\Mail\Contract\RfqDraftCreator;
 use TriCab\Core\Mail\Contract\RfqDraftNotifier;
+use TriCab\Core\Mail\Contract\RfqFollowupProposer;
 use TriCab\Core\Mail\Domain\Exception\MailActionBlocked;
 use TriCab\Core\Mail\Domain\Exception\MailUnavailable;
 use TriCab\Core\Mail\Domain\MailActor;
@@ -23,8 +24,10 @@ use Throwable;
  * - `rfq` makes a draft through {@see RfqDraftCreator} (the upload's intake) and links it, unless the thread was
  *   already actioned: a thread that already has a draft (a second RFQ-labelled message in the same
  *   conversation) joins that draft as a follow-up instead, and an ignored thread is left alone.
- * - `rfq_followup` joins the message to the draft its conversation already has, as a link only: nothing is
- *   applied over a rep's edits. With no draft there is nothing to join, and the thread stays open for a person.
+ * - `rfq_followup` joins the message to the draft its conversation already has, and (with a
+ *   {@see RfqFollowupProposer}) the message's rows become a proposal on that draft: nothing is applied over a rep's
+ *   edits, no second draft is made, and no bell notice is sent. With no draft there is nothing to join, and the
+ *   thread stays open for a person.
  * - `uncertain` and `not_rfq` do nothing here: uncertain waits in the review list for "Create draft" or
  *   "Ignore", not_rfq is recorded only.
  * - A message the classifier flagged for text aimed at an assistant (`injection`) never gets an automatic
@@ -46,6 +49,7 @@ final class MailDraftAutomation
         private readonly string $mailbox,
         private readonly Clock $clock,
         private readonly ?RfqDraftNotifier $notifier = null,
+        private readonly ?RfqFollowupProposer $proposer = null,
     ) {
     }
 
@@ -79,6 +83,9 @@ final class MailDraftAutomation
             }
             // The conversation has its draft: this message belongs to it, whatever the label says.
             $linked = $this->store->recordFollowup($threadId, $messageId, new NewLink($draft->publicId, $draft->reference, $draft->title, null, $this->clock->now()), $by);
+            // Whether or not this pass linked it: a retry after a failed proposal finds the link already there, and
+            // the proposer is idempotent per message (it looks before it fetches).
+            $this->proposer?->propose($threadId, $messageId, $draft->publicId);
 
             return $linked ? self::FOLLOWUP : self::NOTHING;
         }

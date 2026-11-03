@@ -754,6 +754,30 @@ final class AzureSqlMailStore implements MailStore
     /** @return list<LinkView> */
     private function links(string $threadId): array
     {
+        // A follow-up's proposal lives in `[rfq].[rfq_reader_jobs]` (RFQ M6.2), found by the message it came from.
+        // The RFQ tables are in the same database, but a link must show without them, so a failed join falls back.
+        $base = 'SELECT l.[rfq_public_id], l.[reference], l.[title], l.[created_at], l.[kind], l.[message_id]';
+        // A follow-up link carries its draft's created_at, so the draft goes first and its follow-ups follow in the order
+        // their messages arrived; ordering on the random id alone shuffled them.
+        $from = " FROM [mail].[message_links] l LEFT JOIN [mail].[messages] m ON m.[id] = l.[message_id]
+            WHERE l.[thread_id] = :thread
+            ORDER BY l.[created_at], CASE WHEN l.[kind] = N'rfq_draft' THEN 0 ELSE 1 END, m.[received_at], l.[id]";
+        try {
+            $rows = $this->connection->fetchAll(
+                $base . ",
+                    (SELECT TOP 1 CASE
+                        WHEN j.[status] = N'dismissed' THEN N'dismissed'
+                        WHEN j.[status] = N'superseded' THEN N'none'
+                        WHEN NULLIF(LTRIM(RTRIM(j.[proposal])), N'') IS NULL OR j.[proposal] IN (N'{}', N'null') THEN N'accepted'
+                        ELSE N'pending' END
+                     FROM [rfq].[rfq_reader_jobs] j
+                     WHERE l.[kind] = N'rfq_followup' AND j.[spool_path] = N'mail-followup:' + l.[message_id]) AS [proposal]" . $from,
+                ['thread' => $threadId],
+            );
+        } catch (\Throwable) {
+            $rows = $this->connection->fetchAll($base . $from, ['thread' => $threadId]);
+        }
+
         return array_map(static fn (array $r): LinkView => new LinkView(
             AzureSqlValueMapper::stringValue($r['rfq_public_id']),
             self::text($r['reference']),
@@ -761,10 +785,8 @@ final class AzureSqlMailStore implements MailStore
             AzureSqlValueMapper::requireDateTime($r['created_at'], 'created_at'),
             AzureSqlValueMapper::stringValue($r['kind']),
             AzureSqlValueMapper::nullableString($r['message_id'] ?? null),
-        ), $this->connection->fetchAll(
-            'SELECT [rfq_public_id], [reference], [title], [created_at], [kind], [message_id] FROM [mail].[message_links] WHERE [thread_id] = :thread ORDER BY [created_at], [id]',
-            ['thread' => $threadId],
-        ));
+            AzureSqlValueMapper::nullableString($r['proposal'] ?? null),
+        ), $rows);
     }
 
     /** @param array<string, mixed> $r */

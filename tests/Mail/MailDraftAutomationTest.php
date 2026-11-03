@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use TriCab\Api\Mail\Persistence\InMemoryMailStore;
 use TriCab\Api\Tests\Mail\Intake\Mails;
 use TriCab\Api\Tests\Mail\Intake\RecordingDraftCreator;
+use TriCab\Api\Tests\Mail\Intake\RecordingFollowupProposer;
 use TriCab\Core\Mail\Application\DTO\MailParty;
 use TriCab\Core\Mail\Application\DTO\NewAssessment;
 use TriCab\Core\Mail\Application\DTO\ThreadRecord;
@@ -25,6 +26,8 @@ final class MailDraftAutomationTest extends TestCase
     private RecordingDraftCreator $creator;
 
     private MailDraftAutomation $automation;
+
+    private RecordingFollowupProposer $proposer;
 
     private DateTimeImmutable $now;
 
@@ -44,7 +47,8 @@ final class MailDraftAutomationTest extends TestCase
                 return $this->now;
             }
         };
-        $this->automation = new MailDraftAutomation($this->store, $this->creator, Mails::MAILBOX, $clock);
+        $this->proposer = new RecordingFollowupProposer();
+        $this->automation = new MailDraftAutomation($this->store, $this->creator, Mails::MAILBOX, $clock, null, $this->proposer);
     }
 
     /** @return array{threadId: string, messageId: string} */
@@ -112,6 +116,47 @@ final class MailDraftAutomationTest extends TestCase
         self::assertSame('drafted', $thread->summary->reviewState);
         self::assertCount(1, $this->creator->made, 'no second draft');
         self::assertContains('followup_linked', array_map(static fn ($e): string => $e->kind, $thread->activity));
+    }
+
+    public function test_a_followup_is_proposed_on_the_existing_draft_and_the_draft_message_is_not(): void
+    {
+        $first = $this->receive('a', 'rfq', 'conv-1');
+        $this->automation->apply($first['threadId'], $first['messageId'], 'rfq', false);
+        self::assertSame([], $this->proposer->calls, 'the message that made the draft is not a follow-up');
+        $second = $this->receive('b', 'rfq_followup', 'conv-1');
+
+        $this->automation->apply($second['threadId'], $second['messageId'], 'rfq_followup', false);
+
+        $draft = $this->thread($first['threadId'])->links[0]->publicId;
+        self::assertSame([['threadId' => $second['threadId'], 'messageId' => $second['messageId'], 'draft' => $draft]], $this->proposer->calls);
+    }
+
+    public function test_a_failed_proposal_is_retried_after_the_link_was_made(): void
+    {
+        $first = $this->receive('a', 'rfq', 'conv-1');
+        $this->automation->apply($first['threadId'], $first['messageId'], 'rfq', false);
+        $second = $this->receive('b', 'rfq_followup', 'conv-1');
+        $this->proposer->failures = 1;
+
+        try {
+            $this->automation->apply($second['threadId'], $second['messageId'], 'rfq_followup', false);
+            self::fail('expected MailUnavailable');
+        } catch (MailUnavailable) {
+        }
+        self::assertCount(2, $this->thread($first['threadId'])->links, 'the link was made before the proposal failed');
+
+        $this->automation->apply($second['threadId'], $second['messageId'], 'rfq_followup', false);
+
+        self::assertCount(2, $this->proposer->calls, 'the retry proposes again even though the link exists');
+        self::assertCount(2, $this->thread($first['threadId'])->links, 'and links nothing twice');
+    }
+
+    public function test_a_followup_with_no_draft_proposes_nothing(): void
+    {
+        $m = $this->receive('a', 'rfq_followup');
+        $this->automation->apply($m['threadId'], $m['messageId'], 'rfq_followup', false);
+
+        self::assertSame([], $this->proposer->calls);
     }
 
     public function test_a_second_rfq_labelled_message_in_a_drafted_conversation_is_a_followup_not_a_second_draft(): void

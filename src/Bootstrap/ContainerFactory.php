@@ -871,6 +871,21 @@ final class ContainerFactory
                     );
                 },
 
+            // RFQ M6.2: a follow-up email becomes a proposal on the draft its conversation already has (same switch).
+            \TriCab\Core\Mail\Contract\RfqFollowupProposer::class
+                => static function (Container $container) use ($settings): \TriCab\Core\Mail\Contract\RfqFollowupProposer {
+                    if (!$settings->isRfqMailDraftsOn()) {
+                        return new \TriCab\Core\Mail\Infrastructure\UnavailableRfqFollowupProposer();
+                    }
+
+                    return new \TriCab\Api\Mail\Drafts\RfqEmailFollowupProposer(
+                        self::get($container, \TriCab\Core\Mail\Contract\MailStore::class),
+                        new \TriCab\Api\Mail\Drafts\EmailEnvelopeGatherer(self::get($container, \TriCab\Core\Mail\Contract\MailBodyFetcher::class)),
+                        self::get($container, \TriCab\Core\Rfq\Application\Service\RfqReaderService::class),
+                        $settings->rfqMailMailbox,
+                    );
+                },
+
             // NPR (plan NPR-TSD-MIGRATION-PLAN N1). In-memory by default; the azure-sql
             // branch below stores in `[npr]`. The field dictionary and the sales roster
             // (branch by email; identity holds no branch) are files in resources/npr.

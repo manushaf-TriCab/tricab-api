@@ -34,6 +34,7 @@ use TriCab\Core\Rfq\Parser\ParseRequest;
 use TriCab\Core\Rfq\Parser\ReadRequest;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
 use TriCab\Core\Rfq\Storage\DraftActor;
+use TriCab\Core\Rfq\Storage\DraftChangeLog;
 use TriCab\Core\Rfq\Storage\NewDraft;
 use TriCab\Core\Rfq\Storage\SalesRepAttribution;
 use TriCab\Core\Rfq\Storage\StoredReaderJob;
@@ -183,6 +184,88 @@ final class RfqReaderService
         }
 
         return ['publicId' => StoreProjection::publicId($draftId), 'created' => false, 'lineCount' => count($existing->rows)];
+    }
+
+    /** Whether this follow-up already has its proposal (or empty marker) on the draft, so nothing need be fetched. */
+    public function hasEmailProposal(string $draftId, string $jobId): bool
+    {
+        return StoreFormat::isId($draftId) && StoreFormat::isId($jobId) && $this->jobs->find($draftId, $jobId) !== null;
+    }
+
+    /**
+     * An email follow-up on an open draft becomes a proposal (RFQ mail M6.2): the envelope is parsed the way the
+     * first email was, and the rows are recorded as a finished read holding a `proposal`, which the editor offers
+     * with Accept / Dismiss like any re-read that arrives after the rep has edited. Nothing is applied, whatever
+     * the draft's state, and there is no second draft.
+     *
+     * Every row's `source.file_name` becomes this proposal's own name, so accepting appends the rows beside the
+     * rest and can never splice over the rows of another file (the email body, say). The file the parser read is
+     * kept as `source.email_file`.
+     *
+     * **Idempotent per `$jobId`** (the caller derives it from the message): a second call parses nothing and records
+     * nothing. A draft that is gone or archived is left alone.
+     *
+     * @param array<string, mixed> $envelope the `rfq-mail-envelope.v1`
+     * @param array{sender_name: string, sender_address: string, received_at: string, subject: string, mail_message_id: string, mail_thread_id: string, internet_message_id: string} $email what the editor shows about the message
+     *
+     * @return 'proposed'|'empty'|'exists'|'no_draft'
+     *
+     * @throws RfqParserFailure when the parser cannot answer (nothing was recorded; the caller may retry)
+     */
+    public function proposeFromEmail(string $draftId, string $jobId, string $uploaderEmail, array $envelope, array $email, CorrelationId $id): string
+    {
+        if (!StoreFormat::isId($draftId) || !StoreFormat::isId($jobId)) {
+            throw new InvalidRfqValue('The draft and proposal ids must be 32 lower-case hex characters.');
+        }
+        $draft = $this->drafts->load($draftId);
+        if ($draft === null || DraftChangeLog::truthy($draft->columns['archived_at'] ?? null)) {
+            return 'no_draft';
+        }
+        if ($this->jobs->find($draftId, $jobId) !== null) {
+            return 'exists';
+        }
+
+        $parsed = $this->parser->parse(ParseRequest::forEmail($id, $envelope, $this->allowModel)->withCorrections($this->corrections()));
+        $when = StoreFormat::parseTime($email['received_at']);
+        $who = trim($email['sender_name']) !== '' ? trim($email['sender_name']) : trim($email['sender_address']);
+        $fileName = sprintf('Email follow-up from %s, %s [%s]', $who !== '' ? $who : 'unknown sender', ($when ?? $this->clock->now())->format('j M Y H:i'), substr($jobId, 0, 4));
+        $rows = [];
+        foreach ($parsed->lines as $line) {
+            $source = is_array($line['source'] ?? null) ? $line['source'] : [];
+            if (is_string($source['file_name'] ?? null) && $source['file_name'] !== '') {
+                $source['email_file'] = $source['file_name'];
+            }
+            $source['file_name'] = $fileName;
+            $line['source'] = $source;
+            $line['line_uid'] = StoreFormat::newId();
+            $rows[] = $line;
+        }
+        $messageKey = $email['mail_message_id'];
+        if ($rows === []) {
+            $this->jobs->recordEmailProposal($draftId, $jobId, $fileName, $messageKey, $uploaderEmail, $draft->revision, 'The follow-up email held no lines to propose.', null);
+            $this->jobs->recordEvent($draftId, 'email_followup_no_lines', "{$who} sent a follow-up email with no lines in it", ['mail_message_id' => $messageKey]);
+
+            return 'empty';
+        }
+        $recorded = $this->jobs->recordEmailProposal($draftId, $jobId, $fileName, $messageKey, $uploaderEmail, $draft->revision, 'Parsed from an email follow-up.', [
+            'reader' => 'email follow-up',
+            'file_name' => $fileName,
+            'rows' => $rows,
+            'notes' => $parsed->notes,
+            'base_revision' => $draft->revision,
+            'email' => $email,
+        ]);
+        if (!$recorded) {
+            return 'exists';
+        }
+        $this->jobs->recordEvent($draftId, 'email_followup_proposal', sprintf('%s sent a follow-up email; its %d line(s) are a proposal', $who, count($rows)), [
+            'mail_message_id' => $messageKey,
+            'mail_thread_id' => $email['mail_thread_id'],
+            'lines' => count($rows),
+        ]);
+        $this->jobs->refreshStatus($draftId, false);
+
+        return 'proposed';
     }
 
     /**

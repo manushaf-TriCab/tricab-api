@@ -28,7 +28,7 @@ final class MailContractShapeTest extends MailAppTestCase
         'MailMessage' => ['id', 'internetMessageId', 'from', 'to', 'cc', 'receivedAt', 'preview', 'attachments'],
         'MailBlocker' => ['kind', 'message'],
         'MailActivityEvent' => ['id', 'at', 'actor', 'kind', 'description'],
-        'MailLink' => ['kind', 'messageId', 'publicId', 'reference', 'title', 'href', 'createdAt'],
+        'MailLink' => ['kind', 'messageId', 'publicId', 'reference', 'title', 'href', 'createdAt', 'proposal'],
         'MailThreadDetail' => ['summary', 'messages', 'assessment', 'decision', 'activity', 'links', 'allowedActions', 'blockers'],
         'MailMessageBody' => ['messageId', 'html', 'remoteImagesBlocked', 'quotedHtml'],
         'MailThreadPage' => ['items', 'nextCursor', 'total'],
