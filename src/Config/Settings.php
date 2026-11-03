@@ -371,6 +371,17 @@ final readonly class Settings
         public array $platformAiModels = [],
         // Web/mobile activity signals for the admin analytics panels. Off by default: nothing is written until approved.
         public bool $userActivityCollectionEnabled = false,
+        // Quotegen AI workspace (Phase 1): an RFQ-bound assistant chat over saved drafts. Off unless exactly `true`; every route then answers 404.
+        public bool $quotegenAiEnabled = false,
+        // Spend ceiling per RFQ draft, in millionths of the budget currency (USD pending the owner's confirmation).
+        public int $quotegenAiBudgetUsdMicros = 5_000_000,
+        // USD per million tokens. Placeholder prices: verify in Phase 0.
+        public float $quotegenAiInputUsdPerMtok = 3.0,
+        public float $quotegenAiOutputUsdPerMtok = 15.0,
+        // '' reads as FOUNDRY_MODEL_DEPLOYMENT.
+        public string $quotegenAiModelDeployment = '',
+        public int $quotegenAiMaxRounds = 8,
+        public int $quotegenAiTurnDeadlineSeconds = 90,
     ) {
     }
 
@@ -1649,6 +1660,13 @@ final readonly class Settings
             triTaskAiModel: trim(self::string($env, 'TRI_TASK_AI_MODEL', '')) ?: $foundryModelDeployment,
             triTaskAiTimeoutSeconds: self::boundedInt($env, 'TRI_TASK_AI_TIMEOUT_SECONDS', 45, 5, 120),
             userActivityCollectionEnabled: self::bool($env, 'USER_ACTIVITY_COLLECTION_ENABLED', false),
+            quotegenAiEnabled: ($env['QUOTEGEN_AI_ENABLED'] ?? '') === 'true',
+            quotegenAiBudgetUsdMicros: max(0, self::int($env, 'QUOTEGEN_AI_BUDGET_USD_MICROS', 5_000_000)),
+            quotegenAiInputUsdPerMtok: max(0.0, self::float($env, 'QUOTEGEN_AI_INPUT_USD_PER_MTOK', 3.0)),
+            quotegenAiOutputUsdPerMtok: max(0.0, self::float($env, 'QUOTEGEN_AI_OUTPUT_USD_PER_MTOK', 15.0)),
+            quotegenAiModelDeployment: trim(self::string($env, 'QUOTEGEN_AI_MODEL_DEPLOYMENT', '')) ?: $foundryModelDeployment,
+            quotegenAiMaxRounds: self::boundedInt($env, 'QUOTEGEN_AI_MAX_ROUNDS', 8, 1, 20),
+            quotegenAiTurnDeadlineSeconds: self::boundedInt($env, 'QUOTEGEN_AI_TURN_DEADLINE_SECONDS', 90, 10, 300),
         );
     }
 
@@ -1903,6 +1921,16 @@ final readonly class Settings
         }
 
         return (int) $value;
+    }
+
+    /**
+     * @param array<string, string|null> $env
+     */
+    private static function float(array $env, string $key, float $default): float
+    {
+        $value = $env[$key] ?? null;
+
+        return $value === null || $value === '' || !is_numeric($value) ? $default : (float) $value;
     }
 
     /**

@@ -69,6 +69,8 @@ final class RfqRouteTableTest extends TestCase
         'POST /api/v1/rfqs/{publicId}/archive' => Module::PERMISSION_DRAFT_ARCHIVE,
         'POST /api/v1/rfqs/{publicId}/restore' => Module::PERMISSION_DRAFT_RESTORE,
         'POST /api/v1/rfqs/{publicId}/comments' => Module::PERMISSION_DRAFT_COMMENT,
+        'GET /api/v1/rfqs/{publicId}/assistant' => Module::PERMISSION_ACCESS,
+        'POST /api/v1/rfqs/{publicId}/assistant/messages/stream' => Module::PERMISSION_ACCESS,
     ];
 
     /** Platform permissions that must never stand in for an RFQ one. */

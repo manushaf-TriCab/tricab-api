@@ -2316,6 +2316,47 @@ final class ContainerFactory
                     self::get($container, AssistantTurnTrace::class),
                 );
             },
+            // Quotegen AI workspace (Phase 1). Built only when a Quotegen route is hit, and the routes answer 404
+            // while QUOTEGEN_AI_ENABLED is off. In memory by default; the azure-sql branch below persists.
+            \TriCab\Api\Quotegen\Application\QuotegenConversationRepository::class
+                => \DI\create(\TriCab\Api\Quotegen\Infrastructure\Persistence\InMemoryQuotegenConversationRepository::class),
+            \TriCab\Api\Quotegen\Application\QuotegenBudgetLedger::class
+                => \DI\create(\TriCab\Api\Quotegen\Infrastructure\Persistence\InMemoryQuotegenBudgetLedger::class),
+            \TriCab\Api\Quotegen\Application\QuotegenQuoteGateway::class
+                => \DI\autowire(\TriCab\Api\Quotegen\Infrastructure\CoreQuotegenQuoteGateway::class),
+            \TriCab\Api\Quotegen\Application\QuotegenToolExecutor::class
+                => \DI\autowire(\TriCab\Api\Quotegen\Application\QuotegenTools::class),
+            \TriCab\Api\Quotegen\Application\QuotegenAgent::class => static function (Container $container) use ($settings, $prompts): \TriCab\Api\Quotegen\Application\QuotegenAgent {
+                $deployment = $settings->quotegenAiModelDeployment;
+                if (
+                    !$settings->foundryEnabled
+                    || $settings->foundryEndpoint === ''
+                    || $deployment === ''
+                    || ($settings->foundryAuthMode === Settings::FOUNDRY_AUTH_MODE_API_KEY && $settings->foundryApiKey === '')
+                ) {
+                    return new \TriCab\Api\Quotegen\Infrastructure\Foundry\UnavailableQuotegenAgent();
+                }
+
+                return new \TriCab\Api\Quotegen\Infrastructure\Foundry\QuotegenAgentLoop(
+                    stream: new \TriCab\Api\Assistant\Infrastructure\Foundry\CurlFoundryStreamClient((float) $settings->foundryTimeoutSeconds),
+                    accessTokens: new ManagedIdentityFoundryAccessTokenProvider(new StreamJsonHttpClient((float) $settings->foundryTimeoutSeconds)),
+                    tools: self::get($container, \TriCab\Api\Quotegen\Application\QuotegenToolExecutor::class),
+                    ledger: self::get($container, \TriCab\Api\Quotegen\Application\QuotegenBudgetLedger::class),
+                    endpoint: $settings->foundryEndpoint,
+                    deployment: $deployment,
+                    authMode: $settings->foundryAuthMode,
+                    apiKey: $settings->foundryApiKey,
+                    systemPrompt: $prompts->get('quotegen-assistant', 'v1')->content,
+                    maxRounds: $settings->quotegenAiMaxRounds,
+                    turnDeadlineSeconds: $settings->quotegenAiTurnDeadlineSeconds,
+                    inputUsdPerMtok: $settings->quotegenAiInputUsdPerMtok,
+                    outputUsdPerMtok: $settings->quotegenAiOutputUsdPerMtok,
+                    budgetLimitMicros: $settings->quotegenAiBudgetUsdMicros,
+                    effort: $settings->foundryEffort,
+                );
+            },
+            \TriCab\Api\Quotegen\Application\QuotegenChatService::class => \DI\autowire()
+                ->constructorParameter('budgetLimitMicros', $settings->quotegenAiBudgetUsdMicros),
             // One per request: the service and both providers write into the same turn.
             AssistantTurnTrace::class => \DI\create(AssistantTurnTrace::class),
             // One per request, like the trace: the streaming action listens, the provider emits.
@@ -3917,6 +3958,10 @@ final class ContainerFactory
             $definitions[ProductSearchRepository::class] = \DI\autowire(AzureSqlProductSearchRepository::class);
             $definitions[ProductCodeSearchRepository::class] = \DI\autowire(AzureSqlProductCodeSearchRepository::class);
             $definitions[AssistantConversationRepository::class] = \DI\autowire(AzureSqlAssistantConversationRepository::class);
+            $definitions[\TriCab\Api\Quotegen\Application\QuotegenConversationRepository::class]
+                = \DI\autowire(\TriCab\Api\Quotegen\Infrastructure\Persistence\AzureSqlQuotegenConversationRepository::class);
+            $definitions[\TriCab\Api\Quotegen\Application\QuotegenBudgetLedger::class]
+                = \DI\autowire(\TriCab\Api\Quotegen\Infrastructure\Persistence\AzureSqlQuotegenBudgetLedger::class);
             $definitions[AssistantStyleOptionsProvider::class] = \DI\autowire(AzureSqlAssistantStyleOptionsProvider::class);
             $definitions[AssistantCodeProductLookup::class] = \DI\autowire(AzureSqlAssistantCodeProductLookup::class);
             $definitions[AssistantStyleSizes::class] = \DI\autowire(AzureSqlAssistantStyleSizes::class);

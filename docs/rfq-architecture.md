@@ -301,3 +301,16 @@ Phase 1 started before the Phase 0 exit, on the owner's instruction (28 Sep 2026
 | Q10 | Unattributed RFQs: manager triage or admin queue | **answered 28 Sept: moot, everyone sees every RFQ**; `branch=none` filters them |
 | — | Scan-read lines syncing from the editor without approval (§5.3) | `LineApprovalPolicy::syncBlockReason()` |
 | — | Navigation fit of `/admin/rfqs` (plan 1.5) | web routes only |
+
+## Quotegen AI workspace (Phase 1)
+
+An assistant chat bound to one RFQ draft, behind `QUOTEGEN_AI_ENABLED` (404 on both routes unless exactly `true`):
+`GET /api/v1/rfqs/{publicId}/assistant` and `POST /api/v1/rfqs/{publicId}/assistant/messages/stream` (SSE:
+`ack`, `progress`, `tool`, `quote_changed`, `delta`, then `done` or `error`). Code is under `src/Quotegen`; the
+tools reach the quote only through `QuotegenQuoteGateway` (the same services as the editor's endpoints:
+`RfqReviewService::save` for edits, so revision-checked), which has no sync method. `propose_sync` records a
+proposal for the saved revision; the web then calls the existing sync endpoint. Pricing is withheld from tool
+results, stored messages and the GET for actors without `RFQ.PRICING.VIEW`. Each model call is reserved against a
+per-RFQ budget (`QUOTEGEN_AI_BUDGET_USD_MICROS`) and reconciled with the reported usage. Storage script
+`database/scripts/development/create-quotegen-ai.sql` is written and **not applied**; until it is, the container uses
+the in-memory stores only when the Azure SQL branch is off.

@@ -1051,6 +1051,11 @@ final class AppBuilder
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_ASSIGN));
         // Parity plan E6: the workflow panel. Every write carries `expectedRevision`
         // and answers the fresh summary; none bumps the revision.
+        // Quotegen AI workspace (Phase 1): off (404) unless QUOTEGEN_AI_ENABLED=true. The actions resolve the actor on the server.
+        $app->get('/api/v1/rfqs/{publicId}/assistant', \TriCab\Api\Http\Action\Quotegen\GetQuotegenAssistantAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_ACCESS));
+        $app->post('/api/v1/rfqs/{publicId}/assistant/messages/stream', \TriCab\Api\Http\Action\Quotegen\StreamQuotegenAssistantMessageAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_ACCESS));
         $app->get('/api/v1/rfqs/{publicId}/activity', \TriCab\Api\Http\Action\Rfq\ListRfqActivityAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
         $app->post('/api/v1/rfqs/{publicId}/claim', \TriCab\Api\Http\Action\Rfq\ClaimRfqAction::class)

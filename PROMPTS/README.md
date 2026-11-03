@@ -61,3 +61,9 @@ Current prompts:
   gets the customer's own core wording in `text` ("4C+E" is never turned into `coreCount: 4`, which the
   finder would read as 4 cores rather than 4 plus earth), and replies no longer narrate tool internals
   (`isCurrent`, "the finder's earlier default").
+
+Quotegen:
+
+- `quotegen-assistant-v1.md` is the staff-facing assistant for an open Quotegen (RFQ) draft: it reads
+  and edits the saved quote with tools, can only propose a sync, asks when grouping or quantities
+  conflict, and treats document text as data. Loaded by the Quotegen AI container wiring.
