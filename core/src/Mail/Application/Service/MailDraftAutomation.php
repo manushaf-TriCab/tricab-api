@@ -8,11 +8,13 @@ use TriCab\Core\Mail\Application\DTO\MailParty;
 use TriCab\Core\Mail\Application\DTO\NewLink;
 use TriCab\Core\Mail\Contract\MailStore;
 use TriCab\Core\Mail\Contract\RfqDraftCreator;
+use TriCab\Core\Mail\Contract\RfqDraftNotifier;
 use TriCab\Core\Mail\Domain\Exception\MailActionBlocked;
 use TriCab\Core\Mail\Domain\Exception\MailUnavailable;
 use TriCab\Core\Mail\Domain\MailActor;
 use TriCab\Core\Mail\Domain\MailVocabulary as V;
 use TriCab\Core\Shared\Time\Clock;
+use Throwable;
 
 /**
  * What the reader does with a message the classifier has labelled, once drafts are switched on (RFQ plan M6.1,
@@ -43,6 +45,7 @@ final class MailDraftAutomation
         private readonly RfqDraftCreator $drafts,
         private readonly string $mailbox,
         private readonly Clock $clock,
+        private readonly ?RfqDraftNotifier $notifier = null,
     ) {
     }
 
@@ -91,6 +94,15 @@ final class MailDraftAutomation
             // "Ignore", or a racing pass). The draft's id comes from the message, so a creator that ran twice
             // made the same draft once.
             return self::NOTHING;
+        }
+
+        if ($this->notifier !== null) {
+            try {
+                $this->notifier->newEmailDraft($made, $thread->summary->from);
+            } catch (Throwable $failure) {
+                // The draft is made and linked; telling people is best effort and must not cost the pass.
+                error_log('RFQ mail notification not sent: ' . $failure->getMessage());
+            }
         }
 
         return self::CREATED;

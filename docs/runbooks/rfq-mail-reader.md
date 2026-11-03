@@ -41,6 +41,7 @@ include the mailboxes used by its other features as well as melbourne@.
 | `RFQ_MAIL_READ_ENABLED` | `false` | The pause switch. Must be `true` to read anything. |
 | `RFQ_MAIL_MODE` | `off` | `off` does nothing at all; `shadow` classifies and records; `live` is `shadow` plus a log warning unless `RFQ_MAIL_DRAFTS_ENABLED` is also `true` (see Drafts below). |
 | `RFQ_MAIL_DRAFTS_ENABLED` | `false` | M6 "drafts on". Takes effect only with `RFQ_MAIL_MODE=live`. Do not set it until the accuracy gate (RFQ plan M5) has passed. |
+| `RFQ_MAIL_NOTIFY_ENABLED` | `false` | New-email-RFQ bell notices (see Notifications below). Needs drafts on too. |
 | `RFQ_MAIL_DRAFT_BRANCH` | `VIC` | The branch stamped on drafts made from mail. Draft branches are state codes (`VIC`, `NSW`, `QLD`, `SA`, `TAS`, `NZNTH` on tricab-mel, 3 Nov 2026); melbourne@ is `VIC`. |
 | `RFQ_MAIL_GRAPH_TENANT_ID` / `_CLIENT_ID` / `_CLIENT_SECRET` | empty | A Graph registration of the reader's own. Empty (all three), it uses the platform's `GRAPH_*`, the RFQ Graph app `ai-rfq-parser-mail`, which already holds `Mail.Read` (19 Oct 2026). Set all three to override. |
 | `FOUNDRY_ENABLED`, `FOUNDRY_ENDPOINT`, `FOUNDRY_AUTH_MODE` | platform's | The classifier uses the platform's Foundry connection (managed identity). |
@@ -80,6 +81,22 @@ the log says `Gave up making a draft` and the conversation stays in the inbox. A
 
 **Switch off:** set `RFQ_MAIL_DRAFTS_ENABLED=false` (the reader returns to the shadow pass at once; drafts already
 made stay). "Create draft" then answers 503 again.
+
+## Notifications: new email RFQs
+
+Drafts land unassigned in the Quotegen queue, so with `RFQ_MAIL_NOTIFY_ENABLED=true` the reader also tells people. When
+(and only when) the reader makes a **new** draft from an `rfq` message, one row per active user holding
+`RFQ.DRAFT.CREATE` (the Quotegen Sales and Administrator roles; the mailbox's own user is skipped) is written to
+`[mail].[rfq_notifications]`. The platform's bell (top bar) shows them as "New email RFQ: <subject>", with the unread
+count added to the badge, linking to `/admin/quotegen/<draft>`. Opening the bell marks them read.
+
+- Never sent for follow-ups, for the inbox's "Create draft" button, or in shadow mode (no automation exists then).
+- At most one notice per person per draft (unique index), so a retry or overlapping pass cannot double up.
+- Best effort: a failure is logged (`RFQ mail notification not sent` / `not stored`) and never undoes the draft.
+- Needs drafts on (`RFQ_MAIL_MODE=live` + `RFQ_MAIL_DRAFTS_ENABLED=true`). Run
+  `database/scripts/development/create-mail-rfq-notifications.sql` first (idempotent). With the flag off the API answers
+  an empty list and touches no table.
+- Switch off: `RFQ_MAIL_NOTIFY_ENABLED=false`; existing rows stay and are hidden.
 
 ## Pause
 

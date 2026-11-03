@@ -847,6 +847,11 @@ final class ContainerFactory
                             : new \TriCab\Core\Mail\Infrastructure\UnconfiguredMailboxReader(),
                     );
                 },
+            // New-email-RFQ notices (bell). In-memory by default; the azure-sql branch below uses `[mail].[rfq_notifications]`.
+            \TriCab\Api\Mail\Notify\RfqMailNotificationStore::class
+                => \DI\autowire(\TriCab\Api\Mail\Notify\InMemoryRfqMailNotificationStore::class),
+            \TriCab\Api\Mail\Notify\RfqMailRecipients::class
+                => \DI\autowire(\TriCab\Api\Mail\Notify\StaticRfqMailRecipients::class),
             // Drafts are off unless RFQ_MAIL_MODE=live AND RFQ_MAIL_DRAFTS_ENABLED=true (RFQ M6): until then "Create
             // draft" refuses, as it always has. When on, the reader's own `rfq` mail and the inbox button share one
             // creator, which goes through the upload's intake (RfqReaderService).
@@ -3767,6 +3772,8 @@ final class ContainerFactory
                 );
             };
             $definitions[\TriCab\Core\Mail\Contract\MailStore::class] = \DI\autowire(\TriCab\Api\Mail\Persistence\AzureSqlMailStore::class);
+            $definitions[\TriCab\Api\Mail\Notify\RfqMailNotificationStore::class] = \DI\autowire(\TriCab\Api\Mail\Notify\AzureSqlRfqMailNotificationStore::class);
+            $definitions[\TriCab\Api\Mail\Notify\RfqMailRecipients::class] = \DI\autowire(\TriCab\Api\Mail\Notify\AzureSqlRfqMailRecipients::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseReceiptRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseReceiptRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseProfileRepository::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseProfileRepository::class);
             $definitions[\TriCab\Core\Expense\Contract\ExpenseProfileAdminQuery::class] = \DI\autowire(\TriCab\Api\Expense\Persistence\AzureSqlExpenseProfileAdminQuery::class);

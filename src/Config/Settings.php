@@ -331,6 +331,8 @@ final readonly class Settings
         // M6 "drafts on": a second switch beside RFQ_MAIL_MODE, off until the accuracy gate (M5) passes.
         public bool $rfqMailDraftsEnabled = false,
         public string $rfqMailDraftBranch = 'VIC',
+        /** New-email-RFQ notices in the platform bell; needs drafts on too (the notice is made when the reader makes a draft). */
+        public bool $rfqMailNotifyEnabled = false,
         /** @var list<string> */
         public array $rfqMailOwnAddresses = [],
         // HMAC key for stable product image addresses; '' derives one from the blob account key.
@@ -1644,6 +1646,7 @@ final readonly class Settings
             rfqMailClassifierModel: $rfqMailClassifierModel,
             rfqMailClassifierTimeoutSeconds: self::boundedInt($env, 'RFQ_MAIL_CLASSIFIER_TIMEOUT_SECONDS', 30, 5, 120),
             rfqMailDraftsEnabled: self::bool($env, 'RFQ_MAIL_DRAFTS_ENABLED', false),
+            rfqMailNotifyEnabled: self::bool($env, 'RFQ_MAIL_NOTIFY_ENABLED', false),
             rfqMailDraftBranch: strtoupper(trim(self::string($env, 'RFQ_MAIL_DRAFT_BRANCH', 'VIC'))),
             rfqMailOwnAddresses: array_values(array_filter(array_map(
                 static fn (string $a): string => strtolower(trim($a)),

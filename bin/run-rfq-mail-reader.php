@@ -39,8 +39,13 @@ use TriCab\Api\Mail\Intake\FileMailReaderState;
 use TriCab\Api\Mail\Intake\FoundryMailClassifier;
 use TriCab\Api\Mail\Intake\GraphMailDeltaSource;
 use TriCab\Api\Mail\Intake\MailReaderJob;
+use TriCab\Api\Mail\Notify\RfqMailNotificationStore;
+use TriCab\Api\Mail\Notify\RfqMailNotifier;
+use TriCab\Api\Mail\Notify\RfqMailRecipients;
 use TriCab\Api\Mail\Persistence\InMemoryMailStore;
 use TriCab\Api\Shared\Mailbox\GraphMailboxReader;
+use TriCab\Core\Identity\Contract\UserRepository;
+use TriCab\Core\Identity\Domain\ValueObject\EmailAddress;
 use TriCab\Core\Mail\Application\Service\MailDraftAutomation;
 use TriCab\Core\Mail\Application\Service\MailIntakeRecorder;
 use TriCab\Core\Mail\Contract\MailStore;
@@ -148,8 +153,19 @@ $classifier = new FoundryMailClassifier(
 
 // Drafts (RFQ M6) exist only with RFQ_MAIL_MODE=live AND RFQ_MAIL_DRAFTS_ENABLED=true. Otherwise no automation
 // is built and the pass is the shadow pass, whatever else is set.
+// New-email-RFQ notices (RFQ_MAIL_NOTIFY_ENABLED) ride on the same automation, so they exist only when drafts do.
+$notifier = null;
+if ($settings->isRfqMailDraftsOn() && $settings->rfqMailNotifyEnabled) {
+    $mailboxUser = $container->get(UserRepository::class)->findByEmail(EmailAddress::fromString($settings->rfqMailMailbox));
+    $notifier = new RfqMailNotifier(
+        $container->get(RfqMailRecipients::class),
+        $container->get(RfqMailNotificationStore::class),
+        $container->get(Clock::class),
+        $mailboxUser === null ? 0 : $mailboxUser->id()->toInt(),
+    );
+}
 $drafts = $settings->isRfqMailDraftsOn()
-    ? new MailDraftAutomation($store, $container->get(RfqDraftCreator::class), $settings->rfqMailMailbox, $container->get(Clock::class))
+    ? new MailDraftAutomation($store, $container->get(RfqDraftCreator::class), $settings->rfqMailMailbox, $container->get(Clock::class), $notifier)
     : null;
 
 $pass = new MailReaderPass(

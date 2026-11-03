@@ -986,6 +986,11 @@ final class AppBuilder
         // never reads "analytics" as a public id.
         $app->get('/api/v1/rfqs/analytics', \TriCab\Api\Http\Action\Rfq\GetRfqAnalyticsAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_ANALYTICS_READ));
+        // New-email-RFQ notices for the bell (RFQ mail plan). Static routes, so "mail-notifications" is never an id.
+        $app->get('/api/v1/rfqs/mail-notifications', \TriCab\Api\Http\Action\Rfq\ListRfqMailNotificationsAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
+        $app->post('/api/v1/rfqs/mail-notifications/read', \TriCab\Api\Http\Action\Rfq\ReadRfqMailNotificationsAction::class)
+            ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_CREATE));
         $app->get('/api/v1/rfqs/{publicId}', GetRfqAction::class)
             ->add(($require)(\TriCab\Core\Rfq\Module::PERMISSION_DRAFT_READ));
         // Plan 3.7 and parity plan E2: Match Text (stores nothing), Save as Draft,

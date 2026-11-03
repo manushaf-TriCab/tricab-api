@@ -34,6 +34,8 @@ final class RfqRouteTableTest extends TestCase
     private const ROUTES = [
         'GET /api/v1/rfqs/me' => Module::PERMISSION_ACCESS,
         'GET /api/v1/rfqs' => Module::PERMISSION_DRAFT_READ,
+        'GET /api/v1/rfqs/mail-notifications' => Module::PERMISSION_DRAFT_CREATE,
+        'POST /api/v1/rfqs/mail-notifications/read' => Module::PERMISSION_DRAFT_CREATE,
         'GET /api/v1/rfqs/analytics' => Module::PERMISSION_ANALYTICS_READ,
         'GET /api/v1/rfqs/{publicId}' => Module::PERMISSION_DRAFT_READ,
         'POST /api/v1/rfqs/parse' => Module::PERMISSION_DRAFT_CREATE,
