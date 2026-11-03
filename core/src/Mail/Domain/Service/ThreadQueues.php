@@ -17,6 +17,7 @@ final class ThreadQueues
         return match ($queue) {
             'all' => true,
             'marked' => $thread->decided,
+            'unmarked' => !$thread->decided,
             'skipped' => $thread->skipped,
             // A skipped thread is in Skipped (and Marked, once decided) and in no label queue.
             default => !$thread->skipped && $thread->effectiveLabel === $queue,

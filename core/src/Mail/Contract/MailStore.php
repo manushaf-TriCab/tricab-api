@@ -24,7 +24,7 @@ use TriCab\Core\Mail\Application\DTO\ThreadRecord;
  * The `[mail]` tables. Every method that changes anything is atomic: the rows, the activity line
  * and the thread's projection (see `ThreadProjector`) are written together or not at all.
  *
- * Queues. `all` is every classified thread; `marked` the threads with a label decision;
+ * Queues. `all` is every classified thread; `marked` the threads with a label decision and `unmarked` those without;
  * `skipped` the threads the pre-filter skipped; each label queue the threads whose
  * *effective* label (the decision's, else the classifier's) it names, skipped ones left out.
  * A thread nobody has classified yet is in no queue, nor is a deleted one.

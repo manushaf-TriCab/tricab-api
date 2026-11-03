@@ -27,6 +27,8 @@ final readonly class ExportRow
         public ?string $decisionKind,
         public ?DateTimeImmutable $decidedAt,
         public ?string $decidedBy,
+        /** The decision was made on an earlier assessment than the thread's current one (a later message was classified since). */
+        public bool $decisionStale = false,
     ) {
     }
 

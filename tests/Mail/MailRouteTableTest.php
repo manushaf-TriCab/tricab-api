@@ -25,6 +25,8 @@ final class MailRouteTableTest extends MailAppTestCase
         'GET /api/v1/mail/me' => Module::PERMISSION_ACCESS,
         // The labelled set: every reviewer may build it. The service also needs MAIL.ACCESS, like every route here.
         'GET /api/v1/mail/export' => Module::PERMISSION_REVIEW,
+        // The M5 gate numbers: the labelled set's summary, so the same reviewers as the export.
+        'GET /api/v1/mail/accuracy' => Module::PERMISSION_REVIEW,
         'GET /api/v1/mail/queues' => Module::PERMISSION_ACCESS,
         'GET /api/v1/mail/threads' => Module::PERMISSION_ACCESS,
         'GET /api/v1/mail/threads/{id}' => Module::PERMISSION_ACCESS,

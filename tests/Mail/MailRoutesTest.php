@@ -77,9 +77,10 @@ final class MailRoutesTest extends MailAppTestCase
         MailFixtures::classified($this->recorder, 'r2', 'rfq', 0.9, at: '2026-10-18 11:00:00');
 
         $queues = $this->data('/api/v1/mail/queues');
-        self::assertSame(['all', 'uncertain', 'rfq', 'rfq_followup', 'not_rfq', 'skipped', 'marked'], array_keys($queues));
+        self::assertSame(['all', 'uncertain', 'rfq', 'rfq_followup', 'not_rfq', 'skipped', 'marked', 'unmarked'], array_keys($queues));
         self::assertSame(['total' => 3, 'unread' => 3], $queues['all']);
         self::assertSame(['total' => 2, 'unread' => 2], $queues['rfq']);
+        self::assertSame(['total' => 3, 'unread' => 3], $queues['unmarked']);
 
         $page = $this->data('/api/v1/mail/threads?queue=rfq&pageSize=1&sort=oldest');
         self::assertSame(2, $page['total']);

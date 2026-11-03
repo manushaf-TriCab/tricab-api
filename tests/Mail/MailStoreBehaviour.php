@@ -145,7 +145,7 @@ abstract class MailStoreBehaviour extends TestCase
         $this->seed();
         $counts = $this->store->queueCounts();
 
-        self::assertSame(['all', 'uncertain', 'rfq', 'rfq_followup', 'not_rfq', 'skipped', 'marked'], array_keys($counts));
+        self::assertSame(['all', 'uncertain', 'rfq', 'rfq_followup', 'not_rfq', 'skipped', 'marked', 'unmarked'], array_keys($counts));
         self::assertSame(['total' => 6, 'unread' => 4], $counts['all']);
         // d1 was corrected to rfq, so it leaves Uncertain and joins RFQ; s1 is skipped and in no label queue.
         self::assertSame(['total' => 1, 'unread' => 1], $counts['uncertain']);
@@ -154,6 +154,7 @@ abstract class MailStoreBehaviour extends TestCase
         self::assertSame(['total' => 1, 'unread' => 0], $counts['not_rfq']);
         self::assertSame(['total' => 1, 'unread' => 1], $counts['skipped']);
         self::assertSame(['total' => 1, 'unread' => 1], $counts['marked']);
+        self::assertSame(['total' => 5, 'unread' => 3], $counts['unmarked']);
     }
 
     public function test_each_queue_lists_its_threads_newest_first(): void
@@ -166,6 +167,7 @@ abstract class MailStoreBehaviour extends TestCase
         self::assertSame(['RFQ 100m SDI', 'Maybe a quote'], $subjects('rfq'));
         self::assertSame(['Automatic reply: out of office'], $subjects('skipped'));
         self::assertSame(['Maybe a quote'], $subjects('marked'));
+        self::assertSame(['Cable?', 'RFQ 100m SDI', 'Re: price', 'Invoice 4411', 'Automatic reply: out of office'], $subjects('unmarked'));
     }
 
     public function test_a_decision_changes_the_effective_label_and_not_the_assessment(): void

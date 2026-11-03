@@ -18,8 +18,13 @@ final class MailVocabulary
     /** @var list<string> */
     public const LABELS = [self::LABEL_RFQ, self::LABEL_RFQ_FOLLOWUP, self::LABEL_NOT_RFQ, self::LABEL_UNCERTAIN];
 
-    /** @var list<string> `all` and `marked` are not labels; `skipped` is the pre-filter. */
-    public const QUEUES = ['all', 'uncertain', 'rfq', 'rfq_followup', 'not_rfq', 'skipped', 'marked'];
+    /**
+     * `all`, `unmarked` and `marked` are not labels; `skipped` is the pre-filter. `unmarked` is the labelling
+     * queue: threads nobody has confirmed or corrected yet, skipped ones included (they only lack a human label).
+     *
+     * @var list<string>
+     */
+    public const QUEUES = ['all', 'uncertain', 'rfq', 'rfq_followup', 'not_rfq', 'skipped', 'marked', 'unmarked'];
 
     public const STATE_OPEN = 'open';
     public const STATE_DRAFTED = 'drafted';

@@ -144,6 +144,7 @@ final class InMemoryMailStore implements MailStore
                 $decision?->kind,
                 $decision?->decidedAt,
                 $decision?->decidedBy->name,
+                $decision !== null && $decision->assessmentId !== $assessment->id,
             );
         }
         usort($rows, static fn (ExportRow $a, ExportRow $b): int => [$a->receivedAt, $a->threadId] <=> [$b->receivedAt, $b->threadId]);

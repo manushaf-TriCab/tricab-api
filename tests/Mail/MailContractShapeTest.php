@@ -32,6 +32,8 @@ final class MailContractShapeTest extends MailAppTestCase
         'MailThreadDetail' => ['summary', 'messages', 'assessment', 'decision', 'activity', 'links', 'allowedActions', 'blockers'],
         'MailMessageBody' => ['messageId', 'html', 'remoteImagesBlocked', 'quotedHtml'],
         'MailThreadPage' => ['items', 'nextCursor', 'total'],
+        'MailAccuracy' => ['range', 'total', 'labelled', 'unlabelled', 'skippedLabelled', 'humanUncertain', 'matrix', 'rfqRecall', 'rfqPrecision', 'missedRfqRate', 'uncertainShare', 'uncertainShareAll'],
+        'MailAccuracyMetric' => ['count', 'of', 'rate', 'target', 'met'],
     ];
 
     /** @return array<string, array<string, mixed>> a thread with everything on it, and the responses for it */
@@ -59,6 +61,7 @@ final class MailContractShapeTest extends MailAppTestCase
             'detail' => $detail,
             'body' => $this->data('/api/v1/mail/messages/' . $recorded->messageId . '/body'),
             'queues' => $this->data('/api/v1/mail/queues'),
+            'accuracy' => $this->data('/api/v1/mail/accuracy'),
         ];
     }
 
@@ -108,6 +111,10 @@ final class MailContractShapeTest extends MailAppTestCase
         self::assertShape(self::at($r, 'detail', 'activity', 2, 'actor'), self::SHAPES['MailParty'], 'a person as actor');
 
         self::assertShape($r['body'], self::SHAPES['MailMessageBody'], 'MailMessageBody');
+        self::assertShape($r['accuracy'], self::SHAPES['MailAccuracy'], 'MailAccuracy');
+        self::assertShape(self::at($r, 'accuracy', 'rfqRecall'), self::SHAPES['MailAccuracyMetric'], 'MailAccuracyMetric');
+        self::assertSame(['from', 'to'], array_keys((array) self::at($r, 'accuracy', 'range')));
+        self::assertSame(MailVocabulary::LABELS, array_keys((array) self::at($r, 'accuracy', 'matrix')));
         self::assertSame(MailVocabulary::QUEUES, array_keys($r['queues']));
         self::assertShape(self::at($r, 'queues', 'all'), ['total', 'unread'], 'queue count');
     }

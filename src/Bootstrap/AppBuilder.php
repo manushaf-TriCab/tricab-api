@@ -563,6 +563,8 @@ final class AppBuilder
             ->add(($require)($access));
         $app->get('/api/v1/mail/export', \TriCab\Api\Http\Action\Mail\ExportMailLabelsAction::class)
             ->add(($require)(\TriCab\Core\Mail\Module::PERMISSION_REVIEW));
+        $app->get('/api/v1/mail/accuracy', \TriCab\Api\Http\Action\Mail\GetMailAccuracyAction::class)
+            ->add(($require)(\TriCab\Core\Mail\Module::PERMISSION_REVIEW));
         $app->get('/api/v1/mail/queues', \TriCab\Api\Http\Action\Mail\ListMailQueuesAction::class)
             ->add(($require)($access));
         $app->get('/api/v1/mail/threads', \TriCab\Api\Http\Action\Mail\ListMailThreadsAction::class)

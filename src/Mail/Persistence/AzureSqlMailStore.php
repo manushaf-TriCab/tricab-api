@@ -56,6 +56,7 @@ final class AzureSqlMailStore implements MailStore
     private const QUEUE_SQL = [
         'all' => '1 = 1',
         'marked' => '[decision_id] IS NOT NULL',
+        'unmarked' => '[decision_id] IS NULL',
         'skipped' => '[skipped] = 1',
         'uncertain' => "[skipped] = 0 AND [effective_label] = N'uncertain'",
         'rfq' => "[skipped] = 0 AND [effective_label] = N'rfq'",
@@ -167,7 +168,8 @@ final class AzureSqlMailStore implements MailStore
         $rows = $this->connection->fetchAll(
             'SELECT t.[id], m.[internet_message_id], m.[received_at], m.[from_address],
                     a.[label], a.[confidence], a.[model], a.[version], a.[skipped], a.[injection_suspected],
-                    d.[label] AS [decided_label], d.[kind] AS [decision_kind], d.[decided_at], d.[decided_by_name]
+                    d.[label] AS [decided_label], d.[kind] AS [decision_kind], d.[decided_at], d.[decided_by_name],
+                    CASE WHEN d.[id] IS NOT NULL AND d.[assessment_id] <> t.[assessment_id] THEN 1 ELSE 0 END AS [decision_stale]
              FROM [mail].[threads] t
              JOIN [mail].[assessments] a ON a.[id] = t.[assessment_id]
              JOIN [mail].[messages] m ON m.[id] = a.[message_id]
@@ -192,6 +194,7 @@ final class AzureSqlMailStore implements MailStore
             AzureSqlValueMapper::nullableString($r['decision_kind']),
             AzureSqlValueMapper::nullableDateTime($r['decided_at']),
             AzureSqlValueMapper::nullableString($r['decided_by_name']),
+            AzureSqlValueMapper::boolValue($r['decision_stale']),
         ), $rows);
     }
 
