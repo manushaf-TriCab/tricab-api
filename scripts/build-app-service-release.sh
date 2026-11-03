@@ -100,6 +100,7 @@ for required in \
     "$api_root/bin/sync-rfq-legacy-store.php" \
     "$api_root/deploy/app-service/webjobs/hr-employee-sync/run.sh" \
     "$api_root/bin/sync-hr-employees.php" \
+    "$api_root/deploy/app-service/webjobs/cable-routes-refresh/run.sh" \
     "$api_root/deploy/app-service/api/index.php" \
     "$api_root/core/python/requirements.txt" \
     "$api_root/core/python/wsgi.py" \
@@ -476,6 +477,12 @@ mkdir -p "$release_root/App_Data/jobs/continuous/hr-employee-sync"
 cp "$api_root/bin/sync-hr-employees.php" "$app_root/bin/sync-hr-employees.php"
 cp "$api_root/deploy/app-service/webjobs/hr-employee-sync/run.sh" "$release_root/App_Data/jobs/continuous/hr-employee-sync/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/hr-employee-sync/run.sh"
+
+# The cable routes data refresh (Production module plan 3.2) and its continuous WebJob. It runs the engine already
+# staged at app/python (stdlib only), so nothing else is copied. Inert while CABLE_ROUTES_REFRESH_ENABLED is not true.
+mkdir -p "$release_root/App_Data/jobs/continuous/cable-routes-refresh"
+cp "$api_root/deploy/app-service/webjobs/cable-routes-refresh/run.sh" "$release_root/App_Data/jobs/continuous/cable-routes-refresh/run.sh"
+chmod +x "$release_root/App_Data/jobs/continuous/cable-routes-refresh/run.sh"
 
 # Continuous WebJobs run on every instance by default; on a scaled-out plan that means every mail
 # or sync pass runs once per instance. Each job ships a settings.job with is_singleton.

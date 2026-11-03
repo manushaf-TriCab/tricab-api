@@ -1,12 +1,14 @@
-"""Command line: build and status. Exit codes: 0 ok, 1 other, 2 usage or configuration, 3 required file or column missing."""
+"""Command line: build and status. Exit codes: 0 ok, 1 other, 2 usage or configuration, 3 required file or column missing (refresh: see refresh.py)."""
 
 from __future__ import annotations
 
 import argparse
 import sqlite3
 import sys
+from pathlib import Path
 
 from . import config
+from . import refresh as refresh_mod
 from .build import COLS, run_build
 from .loader import SourceError, load
 
@@ -18,6 +20,11 @@ def _parser():
     b.add_argument("--source", help=f"extract folder (else {config.ENV_SOURCE})")
     b.add_argument("--db", help=f"store path (else {config.ENV_DB}, else {config.DEFAULT_DB})")
     b.add_argument("--quiet", action="store_true")
+    r = sub.add_parser("refresh", help="extract from Dynamics, rebuild, validate and swap the store in")
+    r.add_argument("--source", help="build from this extract folder instead of reading Dynamics (tests, dry runs)")
+    r.add_argument("--db")
+    r.add_argument("--if-enabled", action="store_true", help=f"exit 3 unless {refresh_mod.ENV_ENABLED}=true")
+    r.add_argument("--allow-shrink", action="store_true", help="skip the row-count collapse guard (people only)")
     s = sub.add_parser("status", help="print the run record of the store")
     s.add_argument("--db")
     return ap
@@ -32,6 +39,11 @@ def main(argv=None) -> int:
         db = config.resolve_db(args.db)
         if args.cmd == "status":
             return _status(db)
+        if args.cmd == "refresh":
+            src = Path(args.source).expanduser().resolve() if args.source else None
+            if src is not None and not src.is_dir():
+                raise config.ConfigError(f"source folder does not exist: {src.name!r}")
+            return refresh_mod.run(db, src, args.if_enabled, args.allow_shrink)
         source = config.resolve_source(args.source)
         log = (lambda m: None) if args.quiet else (lambda m: print(m, flush=True))
         log(f"reading {source.name}")

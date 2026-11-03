@@ -402,9 +402,35 @@ temp or journal files). Verified on 2026-10-27 that nothing ignores it today (`g
 The PHP side never reads `CABLE_ROUTES_SOURCE_DIR`. PHP tests do not run Python: they create a fixture store in a temp
 file by running `core/python/cable_routes/schema.sql` and inserting rows (section 8.2), so schema drift fails a PHP test.
 
-Production note (plan D1/D4, a follow-up): the store is not part of the release zip (`var/` is not staged), so on the App
-Service every endpoint answers 503 `CABLE_ROUTES_STORE_UNAVAILABLE` until a store is built or copied onto the host and
-`CABLE_ROUTES_DB_PATH` points at it. Wiring that is out of scope for v1; the dev flow is `build` on a laptop.
+Production note (plan D1/D4): the store is not part of the release zip (`var/` is not staged), so on the App
+Service every endpoint answers 503 `CABLE_ROUTES_STORE_UNAVAILABLE` until a store exists at `CABLE_ROUTES_DB_PATH`.
+v1 had it hand-uploaded; plan item 3.2 replaces that with the refresh below. The dev flow is still `build` on a laptop.
+
+### 4.1 Unattended refresh (plan 3.2, decision D1)
+
+`python -m cable_routes refresh [--source DIR] [--db PATH] [--if-enabled] [--allow-shrink]`, run daily by the
+`cable-routes-refresh` continuous WebJob (`deploy/app-service/webjobs/cable-routes-refresh/run.sh`). It pulls the five
+entities the engine reads from Dynamics OData (`ProductionOrderHeaders`, `ProductionOrderBillOfMaterialLines`,
+`ProductionOrderRouteOperations`, `ReleasedProductsV2`, `PurchaseOrderLinesV2`; `dataAreaId eq 'AU1O'`, only the columns
+in section 4.3), derives `manufactured-items.csv` from the order headers (pool of the item's most recent order that has
+one, else `?`), writes the six CSVs to a work folder next to the store, and runs the normal build into
+`<db>.new-<pid>`. Before the swap it checks that the schema tables exist, that `cr_run` has one row, that
+`cr_finished`, `cr_item` and `cr_operation` are not empty, and that `cr_finished`, `cr_item`, `cr_operation`, `cr_input`
+and `cr_need` each hold at least `CABLE_ROUTES_REFRESH_MIN_RATIO` (0.8) of the live store's rows. The live file is then
+copied to `<db>.prev` and the new one renamed over it (`os.replace`), so a reader sees the old file or the new one. A
+lock file (`<db>.lock`) stops two passes at once. Every failure leaves the live store as it was.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `CABLE_ROUTES_REFRESH_ENABLED` | off | `true` switches the WebJob on; `--if-enabled` exits 3 otherwise |
+| `CABLE_ROUTES_REFRESH_HOUR` | `3` | Melbourne hour the daily window opens; it lasts three hours |
+| `CABLE_ROUTES_REFRESH_MIN_RATIO` | `0.8` | Collapse guard; a value outside (0, 1] falls back to 0.8 |
+| `D365_URL`, `D365_LEGAL_ENTITY` | prod URL, `AU1O` | Dynamics environment and company |
+| `D365_TOKEN`, or `D365_TENANT_ID` + `D365_CLIENT_ID` + `D365_CLIENT_SECRET`, or the slot's managed identity | managed identity | Same token order as `cbsync` |
+
+Exit codes: 0 swapped, 1 failure, 2 refused (guard), 3 switched off, 4 Dynamics unreachable or refused, 5 lock held.
+The managed identity must be allowed by a D365 administrator to read the five entities; until then the pass exits 4
+with "the identity needs read access to <entity>". Not yet verified against live Dynamics.
 
 ### 4.3 Inputs
 

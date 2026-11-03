@@ -9,17 +9,15 @@ from pathlib import Path
 SCHEMA = Path(__file__).resolve().parent / "schema.sql"
 
 
-def write_atomic(db_path: Path, tables: dict) -> None:
-    """tables: name -> (columns tuple, rows). Builds <db>.tmp-<pid>, checks it, then os.replace.
+def write_store(path: Path, tables: dict) -> None:
+    """tables: name -> (columns tuple, rows). Writes and checks a new store file at path (no swap).
 
-    On any failure the temp file is removed and the old store is left alone.
+    The caller owns the file: it is removed on failure, and nothing else is touched.
     """
-    db_path = Path(db_path)
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = db_path.with_name(f"{db_path.name}.tmp-{os.getpid()}")
-    tmp.unlink(missing_ok=True)
+    path = Path(path)
+    path.unlink(missing_ok=True)
     try:
-        con = sqlite3.connect(tmp)
+        con = sqlite3.connect(path)
         try:
             con.execute("PRAGMA journal_mode = DELETE")
             con.executescript(SCHEMA.read_text(encoding="utf-8"))
@@ -35,6 +33,21 @@ def write_atomic(db_path: Path, tables: dict) -> None:
                 raise RuntimeError(f"foreign_key_check failed: {bad[:3]}")
         finally:
             con.close()
+    except BaseException:
+        path.unlink(missing_ok=True)
+        raise
+
+
+def write_atomic(db_path: Path, tables: dict) -> None:
+    """Builds <db>.tmp-<pid>, checks it, then os.replace.
+
+    On any failure the temp file is removed and the old store is left alone.
+    """
+    db_path = Path(db_path)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = db_path.with_name(f"{db_path.name}.tmp-{os.getpid()}")
+    try:
+        write_store(tmp, tables)
         os.replace(tmp, db_path)
     except BaseException:
         tmp.unlink(missing_ok=True)
