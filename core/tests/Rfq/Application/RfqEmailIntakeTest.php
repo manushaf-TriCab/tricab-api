@@ -197,6 +197,25 @@ final class RfqEmailIntakeTest extends TestCase
         self::assertSame(['email-body.txt', 'schedule.xlsx'], array_column($this->parser->parses[0]->documents, 'fileName'));
     }
 
+    public function test_with_an_envelope_the_parser_reads_the_whole_email_and_the_draft_keeps_the_same_files(): void
+    {
+        $envelope = [
+            'internetMessageId' => '<a@customer.example>',
+            'sender' => ['name' => 'Jo', 'address' => 'jo@customer.example'],
+            'body' => ['contentType' => 'html', 'content' => '<p>Please quote 100m 3C 2.5mm</p>'],
+            'documents' => [['documentPublicId' => 'email-2', 'fileName' => 'schedule.xlsx', 'contentType' => 'application/octet-stream', 'bytes' => 'xlsx bytes']],
+        ];
+
+        $made = $this->service->createFromEmail(self::mailbox(), 'melbourne@tricab.com', self::DRAFT_ID, 'Email - Quote', self::files(), self::meta(), CorrelationId::generate(), $envelope);
+
+        self::assertTrue($made['created']);
+        self::assertCount(1, $this->parser->parses);
+        $sent = $this->parser->parses[0];
+        self::assertSame($envelope['internetMessageId'], $sent->email['internetMessageId'] ?? null);
+        self::assertSame([], $sent->documents, 'one email input, not loose files');
+        self::assertSame([self::DRAFT_ID . ':email-body.txt', self::DRAFT_ID . ':schedule.xlsx'], $this->stored, 'the draft keeps the body and the attachment as before');
+    }
+
     public function test_the_same_message_again_returns_the_same_draft_and_parses_nothing(): void
     {
         $this->service->createFromEmail(self::mailbox(), 'melbourne@tricab.com', self::DRAFT_ID, 'Email - Quote', self::files(), self::meta(), CorrelationId::generate());

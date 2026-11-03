@@ -1,0 +1,25 @@
+{
+ "contract": "rfq-mail-envelope.v1",
+ "internetMessageId": "<forwarded_chain.0001@mail.example.com>",
+ "messageId": "AAMkAD-forwarded_chain",
+ "conversationId": "AAQkAD-forwarded_chain",
+ "receivedAt": "2026-10-14T01:02:03Z",
+ "mailbox": "melbourne@tricab.com",
+ "subject": "FW: Cable quote",
+ "sender": {
+  "name": "Sam Rep",
+  "address": "sam.rep@tricab.com"
+ },
+ "toRecipients": [
+  {
+   "name": "Melbourne Sales",
+   "address": "melbourne@tricab.com"
+  }
+ ],
+ "ccRecipients": [],
+ "body": {
+  "contentType": "html",
+  "content": "<p>Can you quote this one please?</p><p>Thanks<br>Sam</p><hr><p>From: Jane Doe &lt;jane.doe@customer-example.com&gt;<br>Sent: Monday, 12 October 2026 9:15 AM<br>To: Sam Rep &lt;sam.rep@tricab.com&gt;<br>Subject: Cable quote</p><p>Hello Sam,</p><p>4C 16mm2 XLPE/PVC 120m</p><p>3C 2.5mm2 XLPE/PVC 4 x 55m</p><p>Regards, Jane</p>"
+ },
+ "documents": []
+}

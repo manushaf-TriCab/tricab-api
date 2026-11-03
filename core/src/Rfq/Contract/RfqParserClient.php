@@ -40,6 +40,20 @@ interface RfqParserClient
     public function parse(ParseRequest $request): ParseResponse;
 
     /**
+     * One email in one pass (RFQ mail intake plan M2): its body and every attachment, parsed
+     * and merged without duplicate lines. `$envelope` is an `rfq-mail-envelope.v1` as
+     * {@see ParseRequest::forEmail()} describes. The answer is a {@see ParseResponse} whose
+     * `email` holds what was learned about the message (the original sender, the dedupe key,
+     * what was skipped). A message that is the parser's own mail is refused as
+     * `invalid_request`.
+     *
+     * @param array<string, mixed> $envelope
+     *
+     * @throws RfqParserFailure
+     */
+    public function parseEmail(CorrelationId $correlationId, array $envelope, bool $allowModel): ParseResponse;
+
+    /**
      * One document through the model reader, for a reader job (plan 3.5).
      * A read that produced nothing is a failure, never an empty response.
      *

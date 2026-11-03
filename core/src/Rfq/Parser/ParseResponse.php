@@ -36,6 +36,9 @@ final class ParseResponse
      * @param array{mode: string, modelCalls: int, model: ?string} $provider
      * @param list<string> $notes
      * @param list<array{documentPublicId: string, fileName: string, readerRoute: bool, lineCount: int, quoteImport?: array<string, mixed>}> $documents
+     * @param array<string, mixed> $email what the parser learned about an email (`dedupeKey`, `originalSender`,
+     *                                    `forwardedParts`, `body`, `ignoredInline`, `skippedAttachments`,
+     *                                    `unreadableAttachments`, `duplicatesDropped`); empty for text and documents
      */
     private function __construct(
         public readonly string $correlationId,
@@ -46,6 +49,7 @@ final class ParseResponse
         public readonly bool $degraded,
         public readonly array $notes,
         public readonly array $documents = [],
+        public readonly array $email = [],
     ) {
     }
 
@@ -136,7 +140,26 @@ final class ParseResponse
             $degraded,
             $typedNotes,
             self::documents($payload['documents'] ?? [], $sent),
+            self::email($payload['email'] ?? [], $sent),
         );
+    }
+
+    /**
+     * @return array<string, mixed>
+     *
+     * @throws RfqParserFailure
+     */
+    private static function email(mixed $email, CorrelationId $sent): array
+    {
+        if (!is_array($email) || ($email !== [] && array_is_list($email))) {
+            throw self::malformed($sent, 'email');
+        }
+        if ($email !== [] && !is_string($email['dedupeKey'] ?? null)) {
+            throw self::malformed($sent, 'email.dedupeKey');
+        }
+
+        /** @var array<string, mixed> $email */
+        return $email;
     }
 
     /**

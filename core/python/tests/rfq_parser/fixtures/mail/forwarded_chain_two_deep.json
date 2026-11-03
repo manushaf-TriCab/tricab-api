@@ -1,0 +1,25 @@
+{
+ "contract": "rfq-mail-envelope.v1",
+ "internetMessageId": "<forwarded_chain_two_deep.0001@mail.example.com>",
+ "messageId": "AAMkAD-forwarded_chain_two_deep",
+ "conversationId": "AAQkAD-forwarded_chain_two_deep",
+ "receivedAt": "2026-10-14T01:02:03Z",
+ "mailbox": "melbourne@tricab.com",
+ "subject": "Fwd: Fwd: Cable quote",
+ "sender": {
+  "name": "Sam Rep",
+  "address": "sam.rep@tricab.com"
+ },
+ "toRecipients": [
+  {
+   "name": "Melbourne Sales",
+   "address": "melbourne@tricab.com"
+  }
+ ],
+ "ccRecipients": [],
+ "body": {
+  "contentType": "text",
+  "content": "FYI, for Melbourne.\n\n---------- Forwarded message ---------\nFrom: Pat Lee <pat.lee@tricab.com>\nDate: Tue, 13 Oct 2026 at 08:00\nSubject: Fwd: Cable quote\nTo: Sam Rep <sam.rep@tricab.com>\n\nPlease action.\n\n-----Original Message-----\nFrom: Jane Doe <jane.doe@customer-example.com>\nSent: Monday, 12 October 2026 9:15 AM\nTo: Pat Lee <pat.lee@tricab.com>\nSubject: Cable quote\n\n4C 16mm2 XLPE/PVC 120m\n1C 120mm2 XLPE/PVC 300m\n"
+ },
+ "documents": []
+}

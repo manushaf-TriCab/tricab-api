@@ -23,7 +23,7 @@ import sync_rfq_parser  # noqa: E402
 # Third-party packages the parser may import, each in requirements.txt (or, for
 # werkzeug, installed by Flask, which is).
 ALLOWED_THIRD_PARTY = {"openpyxl", "pdfplumber", "pypdfium2", "docx", "xlrd", "flask", "werkzeug"}  # werkzeug ships with Flask, pypdfium2 with pdfplumber
-PLATFORM_OWNED = {"__init__", "accounting", "corrections", "intake", "_unported", "app", "contract", "model_settings", "reading", "quote_pricing", "quote_export", "quote_sync", "aliflex"}
+PLATFORM_OWNED = {"__init__", "accounting", "corrections", "intake", "_unported", "app", "contract", "model_settings", "reading", "quote_pricing", "quote_export", "quote_sync", "aliflex", "mail_envelope", "mail_parse"}
 
 
 def _imports(path: Path) -> set[str]:
@@ -56,7 +56,7 @@ def test_every_generated_module_says_it_is_generated():
     for path in sorted((ROOT / "rfq_parser").glob("*.py")):
         if path.stem in PLATFORM_OWNED:
             continue
-        assert path.stem in sync_rfq_parser.PARSER_MODULES or path.stem in ("pipeline", "reader_intake", "_source"), (
+        assert path.stem in sync_rfq_parser.PARSER_MODULES or path.stem in ("pipeline", "reader_intake", "mail_ingest", "_source"), (
             f"{path.name} is neither generated nor declared platform-owned"
         )
         assert path.read_text(encoding="utf-8").startswith("# Generated from the RFQ parser's"), path.name

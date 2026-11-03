@@ -1,0 +1,25 @@
+{
+ "contract": "rfq-mail-envelope.v1",
+ "internetMessageId": "<reply_to_earlier_rfq.0001@mail.example.com>",
+ "messageId": "AAMkAD-reply_to_earlier_rfq",
+ "conversationId": "AAQkAD-cable-quote-thread",
+ "receivedAt": "2026-10-14T01:02:03Z",
+ "mailbox": "melbourne@tricab.com",
+ "subject": "RE: Cable quote",
+ "sender": {
+  "name": "Jane Doe",
+  "address": "jane.doe@customer-example.com"
+ },
+ "toRecipients": [
+  {
+   "name": "Melbourne Sales",
+   "address": "melbourne@tricab.com"
+  }
+ ],
+ "ccRecipients": [],
+ "body": {
+  "contentType": "html",
+  "content": "<p>Hi Sam,</p><p>Please add 200m of 1C 70mm2 XLPE/PVC to the quote.</p><p>Thanks<br>Jane</p><hr><p>From: Sam Rep &lt;sam.rep@tricab.com&gt;<br>Sent: Monday, 12 October 2026 3:00 PM<br>To: Jane Doe &lt;jane.doe@customer-example.com&gt;<br>Subject: Cable quote</p><p>Quote attached for 4C 16mm2 XLPE/PVC 120m.</p>"
+ },
+ "documents": []
+}

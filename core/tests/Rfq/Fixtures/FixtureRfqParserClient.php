@@ -122,6 +122,24 @@ final class FixtureRfqParserClient implements RfqParserClient
         );
     }
 
+    /**
+     * The recorded paste answer for an email, with the `email` block a real parse adds.
+     * The request is kept in `$parses` like any other.
+     */
+    public function parseEmail(CorrelationId $correlationId, array $envelope, bool $allowModel): ParseResponse
+    {
+        $request = ParseRequest::forEmail($correlationId, $envelope, $allowModel);
+        $this->parses[] = $request;
+        if ($this->parseFailure !== null) {
+            throw $this->parseFailure;
+        }
+
+        return ParseResponse::fromPayload(
+            ['correlationId' => $correlationId->toString(), 'email' => ['dedupeKey' => strtolower(trim((string) $envelope['internetMessageId'], '<>'))]] + self::payload(),
+            $correlationId,
+        );
+    }
+
     public function read(ReadRequest $request): ReadResponse
     {
         $this->reads[] = $request;

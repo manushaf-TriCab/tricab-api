@@ -24,11 +24,25 @@ final class ParseRequest
     /** `contract.MAX_CORRECTIONS`. */
     public const MAX_CORRECTIONS = 50_000;
 
+    /** The envelope contract {@see self::forEmail()} sends (`rfq_parser.mail_envelope.CONTRACT`). */
+    public const EMAIL_ENVELOPE_CONTRACT = 'rfq-mail-envelope.v1';
+
+    /** `mail_envelope.MAX_DOCUMENTS`: what an envelope may carry. The parser reads at most 10 of them. */
+    public const MAX_EMAIL_DOCUMENTS = 40;
+
+    /**
+     * Everything an email's attachments may add up to, before base64. The parser's HTTP body is
+     * capped at 25 MB (`app.MAX_UPLOAD_BYTES`) and base64 adds a third, so this leaves room for
+     * the body and the headers. A mail reader drops what does not fit and says so.
+     */
+    public const MAX_EMAIL_ATTACHMENT_BYTES = 17 * 1024 * 1024;
+
     /** @var array<string, array{product_code: string, confirmations: int}> */
     private array $corrections = [];
 
     /**
      * @param list<array{documentPublicId: string, fileName: string, contentType: string, bytes: string}> $documents
+     * @param array<string, mixed>|null $email the envelope, attachments in `documents[]` with raw `bytes`
      */
     private function __construct(
         public readonly CorrelationId $correlationId,
@@ -37,6 +51,7 @@ final class ParseRequest
         public readonly array $documents,
         public readonly bool $allowModel,
         public readonly int $maxModelCalls,
+        public readonly ?array $email = null,
     ) {
     }
 
@@ -87,6 +102,67 @@ final class ParseRequest
     }
 
     /**
+     * One email: an `rfq-mail-envelope.v1` (`docs/rfq-mail-envelope.md`), the third input
+     * beside text and documents. The body and every attachment are parsed in one pass.
+     *
+     * The envelope is the raw Graph message under the contract's field names: `body` is
+     * `{contentType: html|text, content}` exactly as Graph gives it, and attachments are
+     * `documents[]` entries like {@see self::forDocuments()}'s, with raw `bytes` (encoded
+     * here), plus optional `isInline` and `contentId`. The `contract` field is added here.
+     * Only what is structurally unusable is refused in PHP; the parser is the authority on
+     * the rest and names the field it dislikes.
+     *
+     * Limits are those of a document request, per attachment, and a total (`MAX_EMAIL_ATTACHMENT_BYTES`)
+     * that keeps the whole request inside what the parser accepts. A caller whose message does not
+     * fit leaves attachments out itself and records that it did: an attachment dropped here without a
+     * trace would be a file nobody read.
+     *
+     * @param array<string, mixed> $envelope
+     */
+    public static function forEmail(
+        CorrelationId $correlationId,
+        array $envelope,
+        bool $allowModel,
+        int $deadlineMs = RfqServiceLimits::INTERACTIVE_PARSE_DEADLINE_MS,
+    ): self {
+        $id = $envelope['internetMessageId'] ?? null;
+        if (!is_string($id) || trim($id) === '') {
+            throw InvalidRfqValue::required('internetMessageId', 'an email needs its internet message id.');
+        }
+        $body = $envelope['body'] ?? null;
+        if (!is_array($body) || !in_array($body['contentType'] ?? null, ['html', 'text'], true) || !is_string($body['content'] ?? null)) {
+            throw InvalidRfqValue::required('email body', 'send body.contentType (html or text) and body.content.');
+        }
+        $documents = $envelope['documents'] ?? [];
+        if (!is_array($documents) || !array_is_list($documents)) {
+            throw InvalidRfqValue::required('documents', 'attachments are a list.');
+        }
+        $count = count($documents);
+        if ($count > self::MAX_EMAIL_DOCUMENTS) {
+            throw InvalidRfqValue::outOfRange('attachment count', $count, 0, self::MAX_EMAIL_DOCUMENTS);
+        }
+        $total = 0;
+        foreach ($documents as $document) {
+            if (!is_array($document) || !is_string($document['bytes'] ?? null)) {
+                throw InvalidRfqValue::required('attachment bytes', 'each attachment needs documentPublicId, fileName, contentType and bytes.');
+            }
+            $size = strlen($document['bytes']);
+            $cap = str_starts_with(strtolower(is_string($document['contentType'] ?? null) ? $document['contentType'] : ''), 'image/')
+                ? RfqServiceLimits::MAX_IMAGE_BYTES
+                : RfqServiceLimits::MAX_DOCUMENT_BYTES;
+            if ($size === 0 || $size > $cap) {
+                throw InvalidRfqValue::outOfRange('attachment size in bytes', $size, 1, $cap);
+            }
+            $total += $size;
+        }
+        if ($total > self::MAX_EMAIL_ATTACHMENT_BYTES) {
+            throw InvalidRfqValue::outOfRange('attachment bytes in one email', $total, 0, self::MAX_EMAIL_ATTACHMENT_BYTES);
+        }
+
+        return new self($correlationId, self::deadline($deadlineMs), null, [], $allowModel, RfqServiceLimits::MAX_MODEL_CALLS_PER_PARSE, $envelope);
+    }
+
+    /**
      * The same request carrying correction memory: `{key => {product_code,
      * confirmations}}`, keys as `/v1/corrections/keys` makes them, ties
      * already left out ({@see \TriCab\Core\Rfq\Contract\RfqCorrectionMemory}).
@@ -130,12 +206,54 @@ final class ParseRequest
                 'maxModelCalls' => $this->maxModelCalls,
             ],
         ];
+        if ($this->email !== null) {
+            $payload['email'] = $this->emailPayload($this->email);
+        }
         if ($this->corrections !== []) {
             // An object even when every key looks like an index.
             $payload['corrections'] = (object) $this->corrections;
         }
 
         return $payload;
+    }
+
+    /**
+     * The envelope as the parser reads it: the contract named, attachments in the `documents[]`
+     * shape with base64 content, and fields the contract does not have left out so a producer's
+     * extra keys never fail an otherwise good message.
+     *
+     * @param array<string, mixed> $envelope
+     *
+     * @return array<string, mixed>
+     */
+    private function emailPayload(array $envelope): array
+    {
+        $out = ['contract' => self::EMAIL_ENVELOPE_CONTRACT];
+        foreach (['internetMessageId', 'messageId', 'conversationId', 'receivedAt', 'mailbox', 'subject', 'sender', 'toRecipients', 'ccRecipients', 'body'] as $key) {
+            if (array_key_exists($key, $envelope)) {
+                $out[$key] = $envelope[$key];
+            }
+        }
+        $out['documents'] = [];
+        $documents = $envelope['documents'] ?? [];
+        foreach (is_array($documents) ? $documents : [] as $d) {
+            if (!is_array($d) || !is_string($d['bytes'] ?? null)) {
+                continue;
+            }
+            $document = [
+                'documentPublicId' => $d['documentPublicId'] ?? null,
+                'fileName' => $d['fileName'] ?? null,
+                'contentType' => $d['contentType'] ?? null,
+                'contentBase64' => base64_encode($d['bytes']),
+                'isInline' => (bool) ($d['isInline'] ?? false),
+            ];
+            if (isset($d['contentId']) && is_string($d['contentId'])) {
+                $document['contentId'] = $d['contentId'];
+            }
+            $out['documents'][] = $document;
+        }
+
+        return $out;
     }
 
     private static function deadline(int $deadlineMs): int

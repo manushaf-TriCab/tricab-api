@@ -34,6 +34,14 @@ final class MailboxBodyFetcher implements MailBodyFetcher
         return ['type' => $message->bodyType, 'content' => $message->body];
     }
 
+    public function envelopeSource(string $mailboxAddress, string $graphMessageId): array
+    {
+        $message = $this->guarded(fn (MailboxReader $reader): MailboxMessage => $reader->getMessage($mailboxAddress, $graphMessageId));
+        $attachments = $this->guarded(fn (MailboxReader $reader): array => $reader->listAttachments($mailboxAddress, $graphMessageId));
+
+        return ['type' => $message->bodyType, 'content' => $message->body, 'to' => $message->to, 'cc' => $message->cc, 'attachments' => $attachments];
+    }
+
     public function attachment(string $mailboxAddress, string $graphMessageId, string $graphAttachmentId): AttachmentDownload
     {
         $file = $this->guarded(fn (MailboxReader $reader) => $reader->getAttachment($mailboxAddress, $graphMessageId, $graphAttachmentId));

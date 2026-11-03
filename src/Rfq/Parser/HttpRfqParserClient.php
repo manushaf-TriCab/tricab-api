@@ -70,6 +70,11 @@ final class HttpRfqParserClient implements RfqParserClient
         return ParseResponse::fromPayload($body, $request->correlationId);
     }
 
+    public function parseEmail(CorrelationId $correlationId, array $envelope, bool $allowModel): ParseResponse
+    {
+        return $this->parse(ParseRequest::forEmail($correlationId, $envelope, $allowModel));
+    }
+
     public function read(ReadRequest $request): ReadResponse
     {
         $body = $this->post(ParserContract::PATH_READ, $request->toPayload(), $request->correlationId, $request->deadlineMs);

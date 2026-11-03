@@ -85,6 +85,60 @@ final class HttpRfqParserClientTest extends TestCase
         self::assertSame(['RFQ_READER_MODEL' => 'vendor/new-reader'], $http->calls[0]['payload']['models']);
     }
 
+    public function test_an_email_is_posted_to_the_parse_route_and_its_email_block_is_read(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $answer = json_decode(self::fixture('corr-client-000001'), true);
+        self::assertIsArray($answer);
+        $answer['email'] = ['dedupeKey' => 'abc@mail.example.com', 'originalSender' => ['name' => 'Jane', 'address' => 'jane@customer.example.com'], 'forwardedParts' => 1];
+        $http->body = json_encode($answer, JSON_THROW_ON_ERROR);
+
+        $response = $this->client($http)->parseEmail($this->id, [
+            'internetMessageId' => '<abc@mail.example.com>',
+            'subject' => 'FW: RFQ',
+            'sender' => ['name' => 'Sam', 'address' => 'sam@example.com'],
+            'body' => ['contentType' => 'html', 'content' => '<p>4C 16mm2 120m</p>'],
+            'documents' => [['documentPublicId' => 'a1', 'fileName' => 'schedule.csv', 'contentType' => 'text/csv', 'bytes' => "a,b\n1,2\n"]],
+        ], false);
+
+        $call = $http->calls[0];
+        self::assertSame('http://127.0.0.1:8002/v1/parse', $call['url']);
+        $payload = $call['payload'];
+        self::assertSame('rfq-parser.v1', $payload['contract'] ?? null);
+        self::assertArrayHasKey('text', $payload);
+        self::assertNull($payload['text']);
+        self::assertSame([], $payload['documents'] ?? null);
+        $email = $payload['email'] ?? null;
+        self::assertIsArray($email);
+        self::assertSame('rfq-mail-envelope.v1', $email['contract']);
+        $documents = $email['documents'] ?? null;
+        self::assertIsArray($documents);
+        $first = $documents[0] ?? null;
+        self::assertIsArray($first);
+        self::assertSame(base64_encode("a,b\n1,2\n"), $first['contentBase64'] ?? null);
+
+        self::assertSame('abc@mail.example.com', $response->email['dedupeKey']);
+        self::assertCount(3, $response->lines);
+    }
+
+    public function test_an_email_the_parser_refuses_is_a_typed_failure(): void
+    {
+        $http = new FakeJsonHttpClient();
+        $http->status = 422;
+        $http->body = json_encode(['contract' => 'rfq-parser.v1', 'correlationId' => 'corr-client-000001', 'error' => ['code' => 'invalid_request', 'message' => "This message is the parser's own mail (rfq_reply); it is not parsed."]], JSON_THROW_ON_ERROR);
+
+        try {
+            $this->client($http)->parseEmail($this->id, [
+                'internetMessageId' => '<own@mail.example.com>',
+                'sender' => ['name' => '', 'address' => 'melbourne@tricab.com'],
+                'body' => ['contentType' => 'text', 'content' => 'x'],
+            ], false);
+            self::fail('Expected a failure.');
+        } catch (RfqParserFailure $failure) {
+            self::assertSame(RfqParserFailure::INVALID_REQUEST, $failure->failureCode);
+        }
+    }
+
     public function test_an_answer_to_another_request_is_refused(): void
     {
         $http = new FakeJsonHttpClient();

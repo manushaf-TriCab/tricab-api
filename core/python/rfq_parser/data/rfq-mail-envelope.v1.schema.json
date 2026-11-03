@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tricab.ai/schemas/rfq-mail-envelope.v1.schema.json",
+  "title": "rfq-mail-envelope.v1",
+  "description": "One email as the RFQ parser reads it. A producer sends the raw fields; the parser adds body.text, body.tables, forwardedChain and dedupeKey. Mirrors rfq_parser/mail_envelope.py, which is the validator; docs/rfq-mail-envelope.md is the prose.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "internetMessageId", "sender", "body"],
+  "properties": {
+    "contract": {"const": "rfq-mail-envelope.v1"},
+    "internetMessageId": {"type": "string", "minLength": 1, "maxLength": 998, "description": "The RFC 5322 Message-ID header, angle brackets optional. The dedupe key (angle brackets removed, lower-cased)."},
+    "messageId": {"type": ["string", "null"], "maxLength": 998, "description": "Graph message id (immutable id)."},
+    "conversationId": {"type": ["string", "null"], "maxLength": 998, "description": "Graph conversationId: the thread."},
+    "receivedAt": {"type": ["string", "null"], "maxLength": 40, "description": "Graph receivedDateTime: ISO 8601 with a zone."},
+    "mailbox": {"type": ["string", "null"], "maxLength": 320, "description": "The mailbox being read, so mail it sent itself is recognised (the self_sent loop guard)."},
+    "subject": {"type": "string", "maxLength": 998, "default": ""},
+    "sender": {"$ref": "#/$defs/address"},
+    "toRecipients": {"type": "array", "maxItems": 500, "items": {"$ref": "#/$defs/address"}, "default": []},
+    "ccRecipients": {"type": "array", "maxItems": 500, "items": {"$ref": "#/$defs/address"}, "default": []},
+    "body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contentType", "content"],
+      "properties": {
+        "contentType": {"enum": ["html", "text"]},
+        "content": {"type": "string", "maxLength": 2000000, "description": "The body exactly as Graph gives it."},
+        "text": {"type": "string", "description": "Derived. Clean text; each HTML table's rows in place, cells joined by ' | '."},
+        "tables": {"type": "array", "description": "Derived. Every table in the HTML body: rows of cells, spans expanded.", "items": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}}}
+      }
+    },
+    "documents": {
+      "type": "array",
+      "maxItems": 40,
+      "default": [],
+      "description": "Attachments and inline images, in the /v1/parse documents[] shape. File attachments only.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["documentPublicId", "fileName", "contentBase64"],
+        "properties": {
+          "documentPublicId": {"type": "string", "minLength": 1, "maxLength": 200, "description": "Unique within the envelope."},
+          "fileName": {"type": "string", "minLength": 1, "maxLength": 1000},
+          "contentType": {"type": "string", "maxLength": 200, "default": ""},
+          "contentBase64": {"type": "string", "contentEncoding": "base64"},
+          "isInline": {"type": "boolean", "default": false},
+          "contentId": {"type": "string", "maxLength": 500}
+        }
+      }
+    },
+    "forwardedChain": {
+      "type": "object",
+      "description": "Derived. The body split into the message and each message it forwards or quotes.",
+      "additionalProperties": false,
+      "required": ["originalSender", "parts"],
+      "properties": {
+        "originalSender": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/address"}]},
+        "parts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["index", "kind", "from", "sentAt", "to", "subject", "text"],
+            "properties": {
+              "index": {"type": "integer", "minimum": 0},
+              "kind": {"enum": ["top", "forwarded"]},
+              "from": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/address"}]},
+              "sentAt": {"type": ["string", "null"], "description": "The header's own string; not parsed."},
+              "to": {"type": ["string", "null"]},
+              "subject": {"type": ["string", "null"]},
+              "text": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "dedupeKey": {"type": "string", "description": "Derived. internetMessageId without angle brackets, lower-cased (messageId when there is none)."}
+  },
+  "$defs": {
+    "address": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["address"],
+      "properties": {"name": {"type": "string", "maxLength": 500}, "address": {"type": "string", "maxLength": 320}}
+    }
+  }
+}

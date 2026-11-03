@@ -65,6 +65,11 @@ package docstring for what is and is not here. It runs as its own private
 service (`rfq_wsgi.py`, `127.0.0.1:8002`) beside the finder, started by
 `startup.sh` only when `RFQ_PARSER_ENABLED=true`.
 
+Email: `rfq_parser/mail_envelope.py` is the `rfq-mail-envelope.v1` contract and `POST /v1/parse` takes it as `email`
+([`docs/rfq-mail-envelope.md`](../../docs/rfq-mail-envelope.md)). The mail reading itself is generated into
+`rfq_parser/mail_ingest.py` from the source's `matcher/mail_ingest.py`; what of that file is not brought across is
+listed in `rfq_parser/_unported.py`.
+
 `tools/compare_rfq_parser.py` runs a folder of real RFQs through the source and
 this package with the same deterministic cost API and diffs every field. On
 28 Sep 2026 the 119 inputs of `rfq/sample rfq` (108 files plus the text files as

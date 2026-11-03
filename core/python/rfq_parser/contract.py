@@ -63,7 +63,7 @@ from flask import Blueprint, jsonify, request
 from tricab_cable_rules import ENGINE_VERSION
 from tricab_cable_rules.extractor import pair_circuit_label_lines
 
-from . import accounting, aliflex, corrections, intake, pipeline, quote_export, quote_import, quote_pricing, quote_sync, reading, vision_ocr
+from . import accounting, aliflex, corrections, intake, mail_envelope, mail_ingest, mail_parse, pipeline, quote_export, quote_import, quote_pricing, quote_sync, reading, vision_ocr
 from . import model_settings
 from .product_search import search_products
 from ._source import SOURCE_COMMIT
@@ -279,14 +279,14 @@ def _work_items(parsed: list[dict[str, Any]], file_name: str) -> list[dict[str, 
 _NO_PDF_TEXT = "No extractable PDF text found. This file may need OCR."
 
 
-def _parse_documents(documents: list[intake.Document], payload: dict[str, Any], started: float, deadline_ms: int, correlation_id: str):
+def _parse_documents(documents: list[intake.Document], payload: dict[str, Any], started: float, deadline_ms: int, correlation_id: str, budget: dict[str, Any] | None = None):
     from .app import MAX_LINES
 
     lines: list[dict[str, Any]] = []
     total = accounting.Coverage()
     summaries: list[dict[str, Any]] = []
     notes: list[str] = []
-    budget = _budget(payload, 0)
+    budget = budget if budget is not None else _budget(payload, 0)
     for document in documents:
         route = reading.reader_route(document)
         summary: dict[str, Any] = {"documentPublicId": document.public_id, "fileName": document.file_name, "readerRoute": route}
@@ -338,6 +338,138 @@ def _parse_documents(documents: list[intake.Document], payload: dict[str, Any], 
     return lines, total, summaries, notes, budget
 
 
+def _env_flag(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in {"0", "false", "no", "off", ""}
+
+
+def _min_inline_bytes() -> int:
+    try:
+        return max(0, int(os.environ.get("RFQ_MIN_INLINE_IMAGE_BYTES") or 25600))
+    except ValueError:
+        return 25600
+
+
+def _email_envelope(raw: Any) -> dict[str, Any]:
+    try:
+        return mail_envelope.normalise(raw)
+    except mail_envelope.EnvelopeError as exc:
+        # The path and the reason, never the value: an envelope is somebody's mail.
+        raise ContractError("invalid_request", f"email.{exc.path}: {exc.reason}"[:300], 400) from None
+
+
+def _parse_email(raw: Any, payload: dict[str, Any], started: float, deadline_ms: int, correlation_id: str):
+    """One email in one pass (plan M2.3). Returns what `parse` answers with, plus the `email` block.
+
+    The body is read by `mail_parse.read_body` and the attachments by the same
+    `_parse_documents` a plain `documents[]` request uses; their lines are then merged
+    without duplicates, attachments first. A message that is the parser's own mail (a draft
+    reply or notification we sent, or sent by the mailbox itself) is refused, so a reply
+    loop cannot start here whatever the caller forgot to check.
+
+    An attachment this cannot read does not discard the rest of the message: an unsupported
+    type (a signature, a calendar part) is noted and left out, and a supported one that
+    cannot be read (too large, corrupt, over time) is counted as an unaccounted input, so
+    the RFQ reads `partial`, never complete. More than `MAX_DOCUMENTS` attachments *worth
+    reading* (decorative inline images do not count) is refused, as for `documents[]`.
+    """
+    from .app import MAX_LINES
+
+    envelope = _email_envelope(raw)
+    own = mail_ingest.is_own_mail(
+        {"subject": envelope["subject"], "from": {"emailAddress": {"address": envelope["sender"]["address"]}}},
+        mailbox=envelope.get("mailbox") or "",
+    )
+    if own:
+        raise ContractError("invalid_request", f"This message is the parser's own mail ({own}); it is not parsed.", 422)
+
+    notes: list[str] = []
+    ignored_inline: list[str] = []
+    skipped_attachments: list[dict[str, str]] = []
+    candidates: list[dict[str, Any]] = []
+    process_inline = _env_flag("RFQ_PROCESS_INLINE_IMAGES", True)
+    min_inline = _min_inline_bytes()
+    for entry in envelope["documents"]:
+        name = intake.display_name(entry["fileName"])
+        suffix = PurePath(name).suffix.lower()
+        data = base64.b64decode(entry["contentBase64"])
+        content_type = str(entry["contentType"] or "").split(";", 1)[0].strip().lower()
+        if entry["isInline"] and (suffix in intake.IMAGE_SUFFIXES or content_type.startswith("image/")):
+            attachment = {"contentType": content_type, "size": len(data), "name": name}
+            if not process_inline or not mail_ingest.is_processable_inline_image(attachment, min_inline):
+                ignored_inline.append(name)
+                continue
+        if suffix not in intake.DOCUMENT_SUFFIXES and suffix not in intake.IMAGE_SUFFIXES:
+            skipped_attachments.append({"fileName": name, "reason": f"{suffix or 'a file with no extension'} is not a supported RFQ format"})
+            continue
+        candidates.append(entry)
+    if len(candidates) > MAX_DOCUMENTS:
+        raise ContractError("input_too_large", f"At most {MAX_DOCUMENTS} attachments to read per email.", 413)
+
+    body = mail_parse.read_body(envelope)
+    budget = _budget(payload, len(body.items))
+    total = accounting.Coverage()
+    summaries: list[dict[str, Any]] = []
+    lines: list[dict[str, Any]] = []
+    unreadable = 0
+    for entry in candidates:
+        try:
+            documents = _documents([entry])
+            doc_lines, coverage, doc_summaries, doc_notes, _ = _parse_documents(documents, payload, started, deadline_ms, correlation_id, budget)
+        except ContractError as exc:
+            unreadable += 1
+            name = intake.display_name(entry["fileName"])
+            total.input_rows += 1
+            if len(total.unaccounted_rows) < accounting.MAX_LISTED_ROWS:
+                total.unaccounted_rows.append({"fileName": name, "sheet": None, "row": None, "reason": f"attachment not read: {exc.message}"[:300]})
+            notes.append(f"{name} could not be read and was left out: {exc.message}")
+            continue
+        total.add(coverage)
+        lines.extend(doc_lines)
+        for summary in doc_summaries:
+            if entry["isInline"]:
+                summary["inline"] = True
+        summaries.extend(doc_summaries)
+        notes.extend(doc_notes)
+
+    with corrections.using(_learned(payload)):
+        body_results = pipeline.match_items(body.items, budget=budget)
+    total.add(accounting.balance(body.rows(), body_results, items=body.items, default_file=mail_parse.BODY_FILE))
+    notes.extend(body.notes)
+
+    lines.extend(body_results)
+    lines, duplicates = mail_parse.merge_lines(lines, total)
+    if len(lines) > MAX_LINES:
+        raise ContractError("input_too_large", f"The email has more than {MAX_LINES} rows to read.", 413)
+    if duplicates:
+        notes.append(f"{duplicates} line(s) repeated one already read from another part of the email and were left out.")
+    if ignored_inline:
+        notes.append(f"{len(ignored_inline)} inline image(s) looked like decoration (a logo or signature) and were not read.")
+    for skipped in skipped_attachments:
+        notes.append(f"{skipped['fileName']} was not read: {skipped['reason']}.")
+
+    chain = envelope["forwardedChain"]
+    info = {
+        "dedupeKey": envelope["dedupeKey"],
+        "originalSender": chain["originalSender"],
+        "forwardedParts": max(0, len(chain["parts"]) - 1),
+        "customerLabels": {k: v for k, v in body.labels.items() if v},
+        "body": {
+            "tableCount": body.table_count,
+            "lineCount": len(body.items),
+            "residueCount": len(body.residue),
+            "residue": body.residue[: mail_parse.MAX_RESIDUE_LISTED],
+        },
+        "ignoredInline": ignored_inline,
+        "skippedAttachments": skipped_attachments,
+        "unreadableAttachments": unreadable,
+        "duplicatesDropped": duplicates,
+    }
+    return lines, total, summaries, notes, budget, info
+
+
 @v1.post("/v1/parse")
 def parse():
     started = time.monotonic()
@@ -347,7 +479,14 @@ def parse():
         deadline_ms = _deadline(payload)
         text = payload.get("text")
         raw_documents = payload.get("documents")
-        if raw_documents:
+        raw_email = payload.get("email")
+        email_info = None
+        if raw_email is not None:
+            if text not in (None, "") or raw_documents:
+                raise ContractError("invalid_request", "Send text, documents or email, only one of them.", 400)
+            results, cov, summaries, notes, budget, email_info = _parse_email(raw_email, payload, started, deadline_ms, correlation_id)
+            input_rows = cov.input_rows
+        elif raw_documents:
             if text not in (None, ""):
                 raise ContractError("invalid_request", "Send text or documents, not both.", 400)
             documents = _documents(raw_documents)
@@ -397,6 +536,8 @@ def parse():
     }
     if summaries:
         body["documents"] = summaries
+    if email_info is not None:
+        body["email"] = email_info
     return _answer(correlation_id, body)
 
 

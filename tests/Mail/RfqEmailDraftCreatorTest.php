@@ -32,6 +32,8 @@ use TriCab\Core\Rfq\Module;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
 use TriCab\Core\Rfq\Storage\NewDraft;
 use TriCab\Core\Rfq\Storage\StoredDraft;
+use TriCab\Core\Shared\Mailbox\MailboxAttachmentSummary;
+use TriCab\Core\Shared\Mailbox\MailboxRecipient;
 use TriCab\Core\Tests\Identity\Doubles\FixedClock;
 use TriCab\Core\Tests\Rfq\Fixtures\FixtureRfqParserClient;
 
@@ -60,6 +62,9 @@ final class RfqEmailDraftCreatorTest extends TestCase
     private array $files = [];
 
     private string $html = '<p>Please quote 100m of 3C 2.5mm</p>';
+
+    /** @var list<MailboxAttachmentSummary> what Graph lists on the message */
+    private array $listed = [];
 
     private ?MailUnavailable $bodyFailure = null;
 
@@ -179,6 +184,11 @@ final class RfqEmailDraftCreatorTest extends TestCase
                 return $this->test->body();
             }
 
+            public function envelopeSource(string $mailboxAddress, string $graphMessageId): array
+            {
+                return $this->test->source();
+            }
+
             public function attachment(string $mailboxAddress, string $graphMessageId, string $graphAttachmentId): AttachmentDownload
             {
                 return $this->test->attachment($graphAttachmentId);
@@ -198,6 +208,16 @@ final class RfqEmailDraftCreatorTest extends TestCase
         }
 
         return ['type' => 'html', 'content' => $this->html];
+    }
+
+    /**
+     * @internal
+     *
+     * @return array{type: string, content: string, to: list<MailboxRecipient>, cc: list<MailboxRecipient>, attachments: list<MailboxAttachmentSummary>}
+     */
+    public function source(): array
+    {
+        return $this->body() + ['to' => [new MailboxRecipient('melbourne@tricab.com', 'TriCab Melbourne')], 'cc' => [], 'attachments' => $this->listed];
     }
 
     /** @internal */
@@ -220,8 +240,22 @@ final class RfqEmailDraftCreatorTest extends TestCase
     private function receive(string $key, array $attachments = [], string $label = 'rfq'): array
     {
         $recorded = MailFixtures::classified(new MailIntakeRecorder($this->store), $key, $label, attachments: $attachments);
+        $this->listed = array_map(static fn (NewAttachment $a): MailboxAttachmentSummary => new MailboxAttachmentSummary($a->graphAttachmentId, $a->fileName, $a->mimeType, $a->sizeBytes, $a->isInline), $attachments);
 
         return ['threadId' => $recorded->threadId, 'messageId' => $recorded->messageId];
+    }
+
+    /**
+     * The attachments of the nth parse's envelope.
+     *
+     * @return list<array<mixed, mixed>>
+     */
+    private function sentDocuments(int $parse): array
+    {
+        $documents = $this->parser->parses[$parse]->email['documents'] ?? [];
+        self::assertIsArray($documents);
+
+        return array_values(array_filter($documents, 'is_array'));
     }
 
     private function actor(): MailActor
@@ -253,8 +287,15 @@ final class RfqEmailDraftCreatorTest extends TestCase
         self::assertSame('sam@tricab.com', $draft->emailMeta['draft_requested_by'] ?? null);
         self::assertSame($m['threadId'], $draft->emailMeta['mail_thread_id'] ?? null);
         self::assertSame(['logo.gif: not a format the parser reads', 'plans.zip: not a format the parser reads'], $draft->emailMeta['attachments_not_read'] ?? null);
-        self::assertSame(['email-body.txt', 'Schedule.xlsx'], array_column($this->parser->parses[0]->documents, 'fileName'));
-        self::assertStringContainsString('Please quote 100m of 3C 2.5mm', $this->parser->parses[0]->documents[0]['bytes']);
+        $envelope = $this->parser->parses[0]->email;
+        self::assertIsArray($envelope);
+        self::assertSame([], $this->parser->parses[0]->documents, 'the email is parsed as an envelope, not as loose files');
+        self::assertSame('<a@customer.example>', $envelope['internetMessageId'] ?? null);
+        self::assertSame(['contentType' => 'html', 'content' => '<p>Please quote 100m of 3C 2.5mm</p>'], $envelope['body'] ?? null, 'the body goes untouched; the parser flattens it');
+        self::assertSame('melbourne@tricab.com', $envelope['mailbox'] ?? null);
+        self::assertSame([['name' => 'TriCab Melbourne', 'address' => 'melbourne@tricab.com']], $envelope['toRecipients'] ?? null);
+        self::assertSame(['Schedule.xlsx'], array_column($this->sentDocuments(0), 'fileName'));
+        self::assertSame(['email-2'], array_column($this->sentDocuments(0), 'documentPublicId'));
         self::assertSame(['email-body.txt', 'Schedule.xlsx'], $this->documentNames);
         self::assertSame(\TriCab\Core\Rfq\Storage\StoreProjection::publicId($id), $made->publicId);
         self::assertSame('RFQ-' . strtoupper(substr($id, 0, 8)), $made->reference);
@@ -297,6 +338,42 @@ final class RfqEmailDraftCreatorTest extends TestCase
         self::assertSame(RfqEmailDraftCreator::draftIdFor(MailFixtures::MAILBOX, '<a@customer.example>'), array_key_first($this->drafts));
     }
 
+    public function test_inline_pictures_are_sent_in_the_envelope_and_decoration_is_not_downloaded(): void
+    {
+        $m = $this->receive('a', [
+            new NewAttachment('g-logo', 'logo.png', 'image/png', 4_000, true),
+            new NewAttachment('g-paste', 'image001.png', 'image/png', 90_000, true),
+            new NewAttachment('g-gif', 'sig.gif', 'image/gif', 90_000, true),
+            new NewAttachment('g-xlsx', 'Schedule.xlsx', 'application/octet-stream', 100, false),
+        ]);
+        $this->files['g-paste'] = new AttachmentDownload('image001.png', 'image/png', 'png bytes');
+        $this->files['g-xlsx'] = new AttachmentDownload('Schedule.xlsx', 'application/octet-stream', 'xlsx bytes');
+
+        $this->creator->createFromThread($this->actor(), $m['threadId'], 's', $m['messageId']);
+
+        $documents = $this->sentDocuments(0);
+        self::assertSame(['Schedule.xlsx', 'image001.png'], array_column($documents, 'fileName'), 'files first, then inline pictures');
+        self::assertSame([false, true], array_column($documents, 'isInline'));
+        self::assertSame(['email-2', 'email-3'], array_column($documents, 'documentPublicId'));
+        self::assertSame(['g-xlsx', 'g-paste'], $this->fetched);
+        self::assertSame(['email-body.txt', 'Schedule.xlsx', 'image001.png'], $this->documentNames);
+    }
+
+    public function test_only_ten_attachments_go_to_one_parse_and_the_rest_are_noted(): void
+    {
+        $attachments = [];
+        for ($i = 1; $i <= 11; $i++) {
+            $attachments[] = new NewAttachment('g-' . $i, 'part' . $i . '.csv', 'text/csv', 10, false);
+            $this->files['g-' . $i] = new AttachmentDownload('part' . $i . '.csv', 'text/csv', 'a,b');
+        }
+        $m = $this->receive('a', $attachments);
+
+        $this->creator->createFromThread($this->actor(), $m['threadId'], 's', $m['messageId']);
+
+        self::assertCount(10, $this->sentDocuments(0));
+        self::assertSame(['part11.csv: too many files on one email'], array_values($this->drafts)[0]->emailMeta['attachments_not_read'] ?? null);
+    }
+
     public function test_an_attachment_that_left_the_message_is_noted_not_fatal(): void
     {
         $m = $this->receive('a', [new NewAttachment('g-pdf', 'Quote request.pdf', 'application/pdf', 100, false)]);
@@ -326,8 +403,8 @@ final class RfqEmailDraftCreatorTest extends TestCase
         $this->creator->createFromThread($this->actor(), $m['threadId'], 's', $m['messageId']);
 
         self::assertCount(2, $this->parser->parses);
-        self::assertSame(['email-body.txt', 'Scan.pdf'], array_column($this->parser->parses[0]->documents, 'fileName'));
-        self::assertSame(['email-body.txt'], array_column($this->parser->parses[1]->documents, 'fileName'), 'the second try is the body alone');
+        self::assertSame(['Scan.pdf'], array_column($this->sentDocuments(0), 'fileName'));
+        self::assertSame([], $this->sentDocuments(1), 'the second try is the body alone');
         $draft = array_values($this->drafts)[0];
         $notRead = $draft->emailMeta['attachments_not_read'] ?? null;
         self::assertIsArray($notRead);

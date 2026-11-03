@@ -1,0 +1,25 @@
+{
+ "contract": "rfq-mail-envelope.v1",
+ "internetMessageId": "<forwarded_template_labels.0001@mail.example.com>",
+ "messageId": "AAMkAD-forwarded_template_labels",
+ "conversationId": "AAQkAD-forwarded_template_labels",
+ "receivedAt": "2026-10-14T01:02:03Z",
+ "mailbox": "melbourne@tricab.com",
+ "subject": "CREATE QUOTE",
+ "sender": {
+  "name": "Sam Rep",
+  "address": "sam.rep@tricab.com"
+ },
+ "toRecipients": [
+  {
+   "name": "Melbourne Sales",
+   "address": "melbourne@tricab.com"
+  }
+ ],
+ "ccRecipients": [],
+ "body": {
+  "contentType": "text",
+  "content": "CREATE QUOTE\nCustomer: Example Electrical Pty Ltd\nContact: Jane Doe\nEmail: jane.doe@customer-example.com\nCustomer Ref: PO-1234\nDelivery Address: 1 Example St\nSpringfield 3000\n\n4C 16mm2 XLPE/PVC 120m\n3C 2.5mm2 XLPE/PVC 4 x 55m\n"
+ },
+ "documents": []
+}

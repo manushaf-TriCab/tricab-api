@@ -1,0 +1,25 @@
+{
+ "contract": "rfq-mail-envelope.v1",
+ "internetMessageId": "<table_in_body.0001@mail.example.com>",
+ "messageId": "AAMkAD-table_in_body",
+ "conversationId": "AAQkAD-table_in_body",
+ "receivedAt": "2026-10-14T01:02:03Z",
+ "mailbox": "melbourne@tricab.com",
+ "subject": "Quote request - site cabling",
+ "sender": {
+  "name": "Jane Doe",
+  "address": "jane.doe@customer-example.com"
+ },
+ "toRecipients": [
+  {
+   "name": "Melbourne Sales",
+   "address": "melbourne@tricab.com"
+  }
+ ],
+ "ccRecipients": [],
+ "body": {
+  "contentType": "html",
+  "content": "<p>Hi team,</p><p>Please quote the following.</p><table border=\"1\"><tr><th>Item</th><th>Description</th><th>Length</th></tr>\n<tr><td>1</td><td>4C 16mm2 XLPE/PVC</td><td>120m</td></tr>\n<tr><td>2</td><td>3C 2.5mm2 XLPE/PVC</td><td>4 x 55m</td></tr>\n<tr><td>3</td><td>1C 120mm2 XLPE/PVC</td><td>300m</td></tr></table><p>Kind regards<br>Jane</p>"
+ },
+ "documents": []
+}

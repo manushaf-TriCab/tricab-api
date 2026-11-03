@@ -1,0 +1,25 @@
+{
+ "contract": "rfq-mail-envelope.v1",
+ "internetMessageId": "<not_an_rfq.0001@mail.example.com>",
+ "messageId": "AAMkAD-not_an_rfq",
+ "conversationId": "AAQkAD-not_an_rfq",
+ "receivedAt": "2026-10-14T01:02:03Z",
+ "mailbox": "melbourne@tricab.com",
+ "subject": "Team meeting moved to 3pm",
+ "sender": {
+  "name": "Pat Lee",
+  "address": "pat.lee@tricab.com"
+ },
+ "toRecipients": [
+  {
+   "name": "Melbourne Sales",
+   "address": "melbourne@tricab.com"
+  }
+ ],
+ "ccRecipients": [],
+ "body": {
+  "contentType": "html",
+  "content": "<p>Hi all,</p><p>The weekly sales meeting has moved to 3pm on Thursday in the Melbourne boardroom.</p><p>Please bring your pipeline updates.</p><p>Thanks<br>Pat</p>"
+ },
+ "documents": []
+}

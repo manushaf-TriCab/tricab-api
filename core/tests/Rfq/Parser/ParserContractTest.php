@@ -306,4 +306,119 @@ final class ParserContractTest extends TestCase
             self::assertSame(503, $failure->httpStatus());
         }
     }
+
+    // ------------------------------------------------------------------- email
+
+    /** @return array<string, mixed> */
+    private function envelope(): array
+    {
+        return [
+            'internetMessageId' => '<abc@mail.example.com>',
+            'messageId' => 'AAMk-immutable',
+            'subject' => 'RFQ',
+            'sender' => ['name' => 'Sam', 'address' => 'sam@example.com'],
+            'body' => ['contentType' => 'html', 'content' => '<p>4C 16mm2 120m</p>'],
+            'notAField' => 'dropped',
+            'documents' => [
+                ['documentPublicId' => 'a1', 'fileName' => 'schedule.xlsx', 'contentType' => 'application/octet-stream', 'bytes' => 'PK..', 'isInline' => false, 'extra' => 'x'],
+                ['documentPublicId' => 'a2', 'fileName' => 'paste.png', 'contentType' => 'image/png', 'bytes' => 'PNG', 'isInline' => true, 'contentId' => 'cid1'],
+            ],
+        ];
+    }
+
+    public function test_an_email_request_names_the_envelope_contract_and_encodes_attachments(): void
+    {
+        $payload = ParseRequest::forEmail($this->id, $this->envelope(), allowModel: false)->toPayload();
+
+        self::assertNull($payload['text']);
+        self::assertSame([], $payload['documents']);
+        $email = $payload['email'] ?? null;
+        self::assertIsArray($email);
+        self::assertSame('rfq-mail-envelope.v1', $email['contract']);
+        self::assertSame('<abc@mail.example.com>', $email['internetMessageId']);
+        self::assertArrayNotHasKey('notAField', $email);
+        self::assertSame([
+            ['documentPublicId' => 'a1', 'fileName' => 'schedule.xlsx', 'contentType' => 'application/octet-stream', 'contentBase64' => base64_encode('PK..'), 'isInline' => false],
+            ['documentPublicId' => 'a2', 'fileName' => 'paste.png', 'contentType' => 'image/png', 'contentBase64' => base64_encode('PNG'), 'isInline' => true, 'contentId' => 'cid1'],
+        ], $email['documents']);
+        self::assertSame(['allowModel' => false, 'maxModelCalls' => RfqServiceLimits::MAX_MODEL_CALLS_PER_PARSE], $payload['options']);
+    }
+
+    public function test_an_email_without_attachments_sends_an_empty_list(): void
+    {
+        $envelope = $this->envelope();
+        unset($envelope['documents']);
+
+        $email = ParseRequest::forEmail($this->id, $envelope, allowModel: false)->toPayload()['email'] ?? null;
+        self::assertIsArray($email);
+        self::assertSame([], $email['documents']);
+    }
+
+    public function test_an_email_needs_its_message_id_and_a_body(): void
+    {
+        foreach ([['internetMessageId' => ' '], ['body' => ['contentType' => 'rtf', 'content' => 'x']], ['body' => null]] as $change) {
+            try {
+                ParseRequest::forEmail($this->id, $change + $this->envelope(), allowModel: false);
+                self::fail('An unusable envelope was accepted.');
+            } catch (InvalidRfqValue) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
+
+    public function test_an_email_keeps_the_document_limits(): void
+    {
+        $tooBig = $this->envelope();
+        $tooBig['documents'] = [['documentPublicId' => 'a', 'fileName' => 'x.png', 'contentType' => 'image/png', 'bytes' => str_repeat('x', RfqServiceLimits::MAX_IMAGE_BYTES + 1)]];
+        $tooMany = $this->envelope();
+        $tooMany['documents'] = array_fill(0, ParseRequest::MAX_EMAIL_DOCUMENTS + 1, ['documentPublicId' => 'a', 'fileName' => 'x.csv', 'contentType' => 'text/csv', 'bytes' => 'a,b']);
+        $overall = $this->envelope();
+        $overall['documents'] = [
+            ['documentPublicId' => 'a', 'fileName' => 'a.pdf', 'contentType' => 'application/pdf', 'bytes' => str_repeat('x', RfqServiceLimits::MAX_DOCUMENT_BYTES)],
+        ];
+
+        foreach ([$tooBig, $tooMany, $overall] as $envelope) {
+            try {
+                ParseRequest::forEmail($this->id, $envelope, allowModel: false);
+                self::fail('An email over a limit was accepted.');
+            } catch (InvalidRfqValue) {
+                $this->addToAssertionCount(1);
+            }
+        }
+    }
+
+    public function test_the_email_block_of_an_answer_is_read(): void
+    {
+        $payload = $this->validResponse();
+        $payload['email'] = ['dedupeKey' => 'abc@mail.example.com', 'originalSender' => ['name' => '', 'address' => 'jane@customer.example.com'], 'duplicatesDropped' => 0];
+
+        $response = ParseResponse::fromPayload($payload, $this->id);
+
+        self::assertSame('abc@mail.example.com', $response->email['dedupeKey']);
+        self::assertSame([], ParseResponse::fromPayload($this->validResponse(), $this->id)->email);
+    }
+
+    public function test_a_malformed_email_block_is_refused(): void
+    {
+        foreach ([['dedupeKey' => 7], ['x', 'y'], 'text'] as $email) {
+            $payload = $this->validResponse();
+            $payload['email'] = $email;
+            try {
+                ParseResponse::fromPayload($payload, $this->id);
+                self::fail('A malformed email block was accepted.');
+            } catch (RfqParserFailure $failure) {
+                self::assertSame(RfqParserFailure::INTERNAL_ERROR, $failure->failureCode);
+            }
+        }
+    }
+
+    public function test_an_undeployed_parser_refuses_an_email_as_unavailable(): void
+    {
+        try {
+            (new UndeployedRfqParserClient())->parseEmail($this->id, $this->envelope(), false);
+            self::fail('Expected a failure.');
+        } catch (RfqParserFailure $failure) {
+            self::assertSame(RfqParserFailure::UNAVAILABLE, $failure->failureCode);
+        }
+    }
 }

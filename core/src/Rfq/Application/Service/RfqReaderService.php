@@ -122,8 +122,14 @@ final class RfqReaderService
      * An email the parser reads nothing from still becomes a draft with no lines, with the email's files
      * kept, so that a person sees it; an upload with nothing readable is refused instead.
      *
+     * With `$envelope` (`rfq-mail-envelope.v1`, as {@see ParseRequest::forEmail()} takes it) the parser reads the
+     * whole email in one pass: body, forwarded chain and attachments, merged. `$files` is then what is kept on the
+     * draft: the body first, then the envelope's `documents` in order, so that `email-N` (N = position + 1) names
+     * the same file in both. Without it every file is parsed as an upload.
+     *
      * @param list<array{fileName: string, contentType: string, bytes: string}> $files
      * @param array<string, mixed> $emailMeta
+     * @param array<string, mixed>|null $envelope
      *
      * @return array{publicId: string, created: bool, lineCount: int}
      *
@@ -131,7 +137,7 @@ final class RfqReaderService
      * @throws RfqActionForbidden without `RFQ.DRAFT.CREATE`
      * @throws RfqParserFailure   when the parser refuses the files or cannot answer (nothing was created)
      */
-    public function createFromEmail(RfqActor $actor, string $email, string $draftId, string $label, array $files, array $emailMeta, CorrelationId $id): array
+    public function createFromEmail(RfqActor $actor, string $email, string $draftId, string $label, array $files, array $emailMeta, CorrelationId $id, ?array $envelope = null): array
     {
         if (!$actor->can(Module::PERMISSION_DRAFT_CREATE)) {
             throw new RfqActionForbidden('create RFQs');
@@ -152,7 +158,7 @@ final class RfqReaderService
         $existing = $this->drafts->load($draftId);
         if ($existing === null) {
             try {
-                $made = $this->intake($actor, $email, $documents, $id, 'email', $emailMeta, $label, $draftId, true);
+                $made = $this->intake($actor, $email, $documents, $id, 'email', $emailMeta, $label, $draftId, true, $envelope);
 
                 return ['publicId' => $made->publicId, 'created' => true, 'lineCount' => $made->lineCount];
             } catch (Throwable $failure) {
@@ -185,12 +191,16 @@ final class RfqReaderService
      *
      * @param list<array{documentPublicId: string, fileName: string, contentType: string, bytes: string}> $documents
      * @param array<string, mixed> $extraMeta recorded with the draft
+     * @param array<string, mixed>|null $envelope
      *
      * @throws InvalidRfqValue when nothing was readable (unless `$allowEmpty`)
      */
-    private function intake(RfqActor $actor, string $email, array $documents, CorrelationId $id, string $source, array $extraMeta, ?string $labelOverride, ?string $draftId, bool $allowEmpty): UploadedRfq
+    private function intake(RfqActor $actor, string $email, array $documents, CorrelationId $id, string $source, array $extraMeta, ?string $labelOverride, ?string $draftId, bool $allowEmpty, ?array $envelope = null): UploadedRfq
     {
-        $parsed = $this->parser->parse(ParseRequest::forDocuments($id, $documents, $this->allowModel)->withCorrections($this->corrections()));
+        $request = $envelope !== null
+            ? ParseRequest::forEmail($id, $envelope, $this->allowModel)
+            : ParseRequest::forDocuments($id, $documents, $this->allowModel);
+        $parsed = $this->parser->parse($request->withCorrections($this->corrections()));
         $routes = [];
         foreach ($parsed->documents as $summary) {
             $routes[$summary['documentPublicId']] = $summary['readerRoute'];
@@ -229,6 +239,11 @@ final class RfqReaderService
                 'documents' => $parsed->documents,
             ],
         ];
+        if ($parsed->email !== []) {
+            // What the parser learned about the message (original sender, forwarded parts, template labels,
+            // attachments left out), kept beside the accounting.
+            $meta['parse']['email'] = $parsed->email;
+        }
         $login = SalesRepAttribution::login($email);
         if ($login !== '') {
             $meta['owner_login'] = $login;

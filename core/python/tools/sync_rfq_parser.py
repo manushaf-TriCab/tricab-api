@@ -19,7 +19,9 @@ must have no uncommitted changes under `matcher/` or `tests/`); the parser
 modules in `PARSER_MODULES`, byte-for-byte after the import rewrite and any
 `MODULE_PATCHES`; `pipeline.py`, cut at the 4js push (Phase 5) and
 patched by `PIPELINE_PATCHES`; `reader_intake.py`, the spans of `mail_ingest.py`
-in `READER_INTAKE_SPANS`; the `DATA_FILES`; and the source tests in `TESTS`,
+in `READER_INTAKE_SPANS`; `mail_ingest.py`, the mail-reading half of the same source
+file (`MAIL_INGEST_SPANS`: body to text, HTML tables, the forwarded chain's original
+sender, the inline-image filter, the loop guards); the `DATA_FILES`; and the source tests in `TESTS`,
 patched by `TEST_PATCHES`. **What is not.** `__init__.py`, `corrections.py`, `_unported.py`,
 `app.py`, `contract.py` and `wsgi` wiring are the platform's own and are never overwritten.
 
@@ -169,6 +171,79 @@ READER_INTAKE_PRELUDE = (
     "\n"
 )
 
+# `mail_ingest` (the platform's module of the same name) is the other half of the source's
+# `matcher/mail_ingest.py`: everything that turns one email's content into text, tables,
+# quote lines and a sender, and the loop guards, with none of Graph, replies, drafts, audit
+# or the 4js push. Same span rules as `READER_INTAKE_SPANS`.
+MAIL_INGEST_SPANS: tuple[tuple[str, str | None], ...] = (
+    ('INTERNAL_DOMAIN = os.environ.get("RFQ_INTERNAL_DOMAIN", "tricab.com")\n', "\n\ndef shared_mailbox_authors"),
+    ('_IMAGE_CONTENT_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/webp"}\n', "QUOTE_LINES_CSV_COLUMNS = [\n"),
+    ('_TAG_RE = re.compile(r"<[^>]+>")\n', "def _customer_tag("),
+    ("def _attachment_bytes(attachment: dict) -> bytes:\n", "def vision_rows_to_items("),
+    ("def match_items(items: list[dict], *, message_context: dict | None = None,\n", "def build_quote_details("),
+    ("#: Stamped into the subject of every reply the worker sends a rep.", "def _default_vision_ocr():\n"),
+)
+# The notification tag lives in `matcher/notifications.py`, which drags in the draft review
+# URL builder and the Graph sender. The loop guard needs only the tag, so it is read from the
+# source's own assignment (never typed here) and the function-level import is dropped.
+MAIL_INGEST_TAG_IMPORT = "    from matcher.notifications import NOTIFICATION_SUBJECT_TAG\n\n"
+MAIL_INGEST_PRELUDE = (
+    '"""Mail reading: one email into text, tables, quote lines, a sender and loop guards.\n'
+    "\n"
+    "The source's `mail_ingest` helpers that read an email, cut out whole. The platform's own\n"
+    "`mail_envelope` and `mail_parse` call them; Graph, replies, drafts, the audit store and\n"
+    "the 4js push stay in the source (see `_unported`). See `tools/sync_rfq_parser.py`.\n"
+    '"""\n'
+    "\n"
+    "from __future__ import annotations\n"
+    "\n"
+    "import base64\n"
+    "import binascii\n"
+    "import html\n"
+    "import os\n"
+    "import re\n"
+    "from dataclasses import dataclass\n"
+    "from html.parser import HTMLParser\n"
+    "from pathlib import Path\n"
+    "from typing import Any\n"
+    "\n"
+    "from matcher.extractor import (\n"
+    "    BARE_QUANTITY_LINE_RE,\n"
+    "    CABLE_SIGNAL_RE,\n"
+    "    CIRCUIT_LABEL_LINE_RE,\n"
+    "    DRUM_RE,\n"
+    "    LENGTH_RE,\n"
+    "    PACK_QUANTITY_RE,\n"
+    "    RUNS_RE,\n"
+    "    TRAILING_CUTS_RE,\n"
+    "    find_accessory_code,\n"
+    "    find_exact_product_code,\n"
+    "    looks_like_circuit_label_line,\n"
+    ")\n"
+    "from matcher.file_parser import BODY_CONTEXT_DEPTH, looks_like_section_heading\n"
+    "from matcher import pipeline\n"
+    "\n"
+    "{tag}\n"
+    "\n"
+)
+
+# Parts of the source's `tests/test_mail_ingest.py`, brought across as one generated module:
+# the classes that test the pure reading helpers. The rest of that file runs `process_message`
+# against fake Graph clients and draft stores, which are not here. Each (start, end) is cut
+# like `READER_INTAKE_SPANS`; `MAIL_TEST_PRELUDE` carries the file's own imports.
+MAIL_TEST_SPANS: tuple[tuple[str, str], ...] = (
+    ("class HtmlToTextTests(unittest.TestCase):", "    def test_inline_images_are_skipped_by_default_before_ocr(self):"),
+    ("class CandidateLinesTests(unittest.TestCase):", "class VisionRowsTests(unittest.TestCase):"),
+)
+MAIL_TEST_PRELUDE = (
+    "import base64\n"
+    "import unittest\n"
+    "\n"
+    "from rfq_parser import mail_ingest as mi\n"
+    "\n"
+    "\n"
+)
+
 HEADER = (
     "# Generated from the RFQ parser's matcher/{name}.py by tools/sync_rfq_parser.py.\n"
     "# Change the source or the tool's declared patches, never this file.\n"
@@ -245,6 +320,7 @@ TESTS = (
     "test_extractor",
     "test_field_provenance",
     "test_file_parser",
+    "test_mail_loop_guard",
     "test_marine",
     "test_material_column",
     "test_resolver",
@@ -283,6 +359,24 @@ _BROWSER = (
 # Every one is about where a file sits or what no longer exists here, never about what
 # the parser does.
 TEST_PATCHES: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "test_mail_loop_guard",
+        "the notification tag is read from the source into rfq_parser.mail_ingest; the sender is not here",
+        "from rfq_parser import notifications\n",
+        "",
+    ),
+    (
+        "test_mail_loop_guard",
+        "the notification tag is read from the source into rfq_parser.mail_ingest",
+        "notifications.NOTIFICATION_SUBJECT_TAG",
+        "NOTIFICATION_SUBJECT_TAG",
+    ),
+    (
+        "test_mail_loop_guard",
+        "the notification tag is read from the source into rfq_parser.mail_ingest",
+        "    REPLY_SUBJECT_TAG,\n",
+        "    NOTIFICATION_SUBJECT_TAG,\n    REPLY_SUBJECT_TAG,\n",
+    ),
     (
         "test_resolver",
         "mail_ingest (the mail path's flag reasons, plans 5/6) is not brought across; the"
@@ -473,6 +567,35 @@ def build_reader_intake(source: str) -> str:
     return _rewrite_imports("".join(parts).rstrip("\n") + "\n")
 
 
+def build_mail_ingest(source: str, notifications: str) -> str:
+    tag = re.search(r"^NOTIFICATION_SUBJECT_TAG = .+$", notifications, flags=re.M)
+    if tag is None:
+        raise SystemExit("mail_ingest: matcher/notifications.py no longer assigns NOTIFICATION_SUBJECT_TAG; update the tool.")
+    parts = [MAIL_INGEST_PRELUDE.format(tag=tag.group(0))]
+    for start, end in MAIL_INGEST_SPANS:
+        for marker in (start, end):
+            if marker is not None and source.count(marker) != 1:
+                raise SystemExit(f"mail_ingest: marker occurs {source.count(marker)} times, expected once:\n  {marker!r}")
+        tail = source.split(start, 1)[1]
+        body = start + (tail.split(end, 1)[0] if end is not None else tail)
+        parts.append(body.rstrip("\n") + "\n\n\n")
+    text = "".join(parts)
+    if text.count(MAIL_INGEST_TAG_IMPORT) != 1:
+        raise SystemExit("mail_ingest: the notifications import in is_own_mail moved; update MAIL_INGEST_TAG_IMPORT.")
+    text = text.replace(MAIL_INGEST_TAG_IMPORT, "")
+    return _rewrite_imports(text.rstrip("\n") + "\n")
+
+
+def build_mail_tests(source: str) -> str:
+    parts = [MAIL_TEST_PRELUDE]
+    for start, end in MAIL_TEST_SPANS:
+        for marker in (start, end):
+            if source.count(marker) != 1:
+                raise SystemExit(f"mail tests: marker occurs {source.count(marker)} times, expected once:\n  {marker!r}")
+        parts.append((start + source.split(start, 1)[1].split(end, 1)[0]).rstrip("\n") + "\n\n\n")
+    return _rewrite_imports("".join(parts).rstrip("\n") + "\n")
+
+
 def build_test(name: str, source: str) -> str:
     text = _rewrite_imports(source).replace("from app import catalog", "from rfq_parser.pipeline import catalog")
     for module, why, old, new in TEST_PATCHES:
@@ -522,6 +645,12 @@ def expected_files(matcher_root: Path) -> dict[Path, str | bytes]:
     out[PACKAGE_DIR / "pipeline.py"] = HEADER.format(name="pipeline") + build_pipeline(pipeline)
     mail_ingest = (matcher_root / "matcher" / "mail_ingest.py").read_text(encoding="utf-8")
     out[PACKAGE_DIR / "reader_intake.py"] = HEADER.format(name="mail_ingest") + build_reader_intake(mail_ingest)
+    notifications = (matcher_root / "matcher" / "notifications.py").read_text(encoding="utf-8")
+    out[PACKAGE_DIR / "mail_ingest.py"] = HEADER.format(name="mail_ingest") + build_mail_ingest(mail_ingest, notifications)
+    mail_tests = (matcher_root / "tests" / "test_mail_ingest.py").read_text(encoding="utf-8")
+    out[TESTS_DIR / "test_mail_reading.py"] = (
+        HEADER.replace("matcher/{name}.py", "tests/test_mail_ingest.py").format(name="") + build_mail_tests(mail_tests)
+    )
     for source_path, target in DATA_FILES:
         out[PACKAGE_DIR / target] = (matcher_root / source_path).read_bytes()
     for relative in FIXTURES:

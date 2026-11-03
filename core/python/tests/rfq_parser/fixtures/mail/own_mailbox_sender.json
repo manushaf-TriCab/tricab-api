@@ -1,0 +1,25 @@
+{
+ "contract": "rfq-mail-envelope.v1",
+ "internetMessageId": "<own_mailbox_sender.0001@mail.example.com>",
+ "messageId": "AAMkAD-own_mailbox_sender",
+ "conversationId": "AAQkAD-own_mailbox_sender",
+ "receivedAt": "2026-10-14T01:02:03Z",
+ "mailbox": "melbourne@tricab.com",
+ "subject": "Cable quote",
+ "sender": {
+  "name": "Melbourne Sales",
+  "address": "melbourne@tricab.com"
+ },
+ "toRecipients": [
+  {
+   "name": "Melbourne Sales",
+   "address": "melbourne@tricab.com"
+  }
+ ],
+ "ccRecipients": [],
+ "body": {
+  "contentType": "text",
+  "content": "4C 16mm2 XLPE/PVC 120m\n"
+ },
+ "documents": []
+}

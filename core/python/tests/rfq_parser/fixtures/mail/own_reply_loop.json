@@ -1,0 +1,25 @@
+{
+ "contract": "rfq-mail-envelope.v1",
+ "internetMessageId": "<own_reply_loop.0001@mail.example.com>",
+ "messageId": "AAMkAD-own_reply_loop",
+ "conversationId": "AAQkAD-own_reply_loop",
+ "receivedAt": "2026-10-14T01:02:03Z",
+ "mailbox": "melbourne@tricab.com",
+ "subject": "RE: [RFQ-Reply] Cable quote",
+ "sender": {
+  "name": "Melbourne Sales",
+  "address": "someone@example.com"
+ },
+ "toRecipients": [
+  {
+   "name": "Melbourne Sales",
+   "address": "melbourne@tricab.com"
+  }
+ ],
+ "ccRecipients": [],
+ "body": {
+  "contentType": "text",
+  "content": "Your draft is ready: https://example.com/rfq/1\n"
+ },
+ "documents": []
+}

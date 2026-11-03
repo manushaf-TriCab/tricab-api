@@ -38,6 +38,15 @@ final class UndeployedRfqParserClient implements RfqParserClient
         );
     }
 
+    public function parseEmail(CorrelationId $correlationId, array $envelope, bool $allowModel): ParseResponse
+    {
+        throw RfqParserFailure::of(
+            RfqParserFailure::UNAVAILABLE,
+            'The RFQ parser is not deployed on this platform yet.',
+            $correlationId,
+        );
+    }
+
     public function read(ReadRequest $request): ReadResponse
     {
         throw RfqParserFailure::of(
