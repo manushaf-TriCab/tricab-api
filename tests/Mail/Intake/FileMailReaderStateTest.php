@@ -35,6 +35,27 @@ final class FileMailReaderStateTest extends TestCase
         self::assertFalse($state->isPending('abc123'));
     }
 
+    public function test_a_cursor_is_only_used_for_the_mailbox_it_was_saved_for(): void
+    {
+        (new FileMailReaderState($this->dir, 'it.sales@tricab.com'))->saveCursor('https://graph/users/it.sales/delta?x', true);
+
+        self::assertSame('https://graph/users/it.sales/delta?x', (new FileMailReaderState($this->dir, 'IT.Sales@tricab.com '))->cursor(), 'same mailbox, any case');
+        self::assertNull((new FileMailReaderState($this->dir, 'nzprojects@tricab.com'))->cursor(), 'a new mailbox starts afresh');
+
+        $next = new FileMailReaderState($this->dir, 'nzprojects@tricab.com');
+        $next->saveCursor('https://graph/users/nzprojects/delta?y', false);
+        self::assertSame('https://graph/users/nzprojects/delta?y', $next->cursor());
+        self::assertNull((new FileMailReaderState($this->dir, 'it.sales@tricab.com'))->cursor(), 'switching back starts afresh too');
+    }
+
+    public function test_a_cursor_saved_without_a_mailbox_is_not_trusted_once_a_mailbox_is_known(): void
+    {
+        (new FileMailReaderState($this->dir))->saveCursor('https://graph/users/old/delta', true);
+
+        self::assertNull((new FileMailReaderState($this->dir, 'nzprojects@tricab.com'))->cursor());
+        self::assertSame('https://graph/users/old/delta', (new FileMailReaderState($this->dir))->cursor(), 'no mailbox given: unchanged behaviour');
+    }
+
     public function test_the_cursor_and_connection_survive_a_new_instance_and_are_private(): void
     {
         $state = new FileMailReaderState($this->dir);

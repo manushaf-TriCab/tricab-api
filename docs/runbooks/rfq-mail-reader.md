@@ -44,7 +44,7 @@ include the mailboxes used by its other features as well as melbourne@.
 | `FOUNDRY_ENABLED`, `FOUNDRY_ENDPOINT`, `FOUNDRY_AUTH_MODE` | platform's | The classifier uses the platform's Foundry connection (managed identity). |
 | `RFQ_MAIL_CLASSIFIER_MODEL` | `claude-haiku-5-5` | Foundry deployment name. |
 | `RFQ_MAIL_CLASSIFIER_TIMEOUT_SECONDS` | `30` | Per model call; a timeout is recorded as `uncertain`. |
-| `RFQ_MAIL_MAILBOX` | `melbourne@tricab.com` | The mailbox read. |
+| `RFQ_MAIL_MAILBOX` | `melbourne@tricab.com` | The mailbox read. Changing it is safe without clearing state: the saved delta cursor belongs to the mailbox it was issued for, so the new mailbox starts from `RFQ_MAIL_FIRST_RUN_DAYS` ago. Reading is `GET` only: nothing in the mailbox is marked read, moved, flagged or changed. |
 | `RFQ_MAIL_FIRST_RUN_DAYS` | `2` | Window for a pass with no cursor. |
 | `RFQ_MAIL_PASS_SECONDS` | `100` | A pass stops fetching further pages after this long and resumes next minute. |
 | `RFQ_MAIL_HEARTBEAT_MINUTES` | `360` | Longest gap between "last sync" refreshes while idle. |

@@ -17,12 +17,17 @@ use TriCab\Core\Mail\Intake\MailReaderState;
  * replaced atomically (write a temp file, then rename), so a pass that dies mid-write leaves the old one.
  * `pending/<key>` marks a message recorded and not yet assessed. A deploy empties the directory: the next
  * pass then starts from `RFQ_MAIL_FIRST_RUN_DAYS` ago, which is safe because recording is idempotent.
+ *
+ * **The cursor belongs to one mailbox.** A Graph delta link is a full URL naming the mailbox it was issued
+ * for, so after `RFQ_MAIL_MAILBOX` changes the old link would keep reading the old mailbox. The cursor is
+ * saved with its mailbox and ignored for any other one (or when it was saved without one): the new
+ * mailbox starts from `RFQ_MAIL_FIRST_RUN_DAYS` ago, like a first run.
  */
 final class FileMailReaderState implements MailReaderState
 {
     private const STATE = 'state.json';
 
-    public function __construct(private readonly string $directory)
+    public function __construct(private readonly string $directory, private readonly ?string $mailbox = null)
     {
     }
 
@@ -33,7 +38,7 @@ final class FileMailReaderState implements MailReaderState
             $path = dirname(__DIR__, 3) . '/' . ltrim($path, '/\\');
         }
 
-        return new self(rtrim($path, '/\\'));
+        return new self(rtrim($path, '/\\'), $settings->rfqMailMailbox);
     }
 
     public function directory(): string
@@ -43,7 +48,11 @@ final class FileMailReaderState implements MailReaderState
 
     public function cursor(): ?string
     {
-        $cursor = $this->read()['cursor'] ?? null;
+        $state = $this->read();
+        $cursor = $state['cursor'] ?? null;
+        if ($this->mailbox !== null && ($state['cursorMailbox'] ?? null) !== self::normalise($this->mailbox)) {
+            return null;
+        }
 
         return is_string($cursor) && $cursor !== '' ? $cursor : null;
     }
@@ -52,6 +61,9 @@ final class FileMailReaderState implements MailReaderState
     {
         $state = $this->read();
         $state['cursor'] = $link;
+        if ($this->mailbox !== null) {
+            $state['cursorMailbox'] = self::normalise($this->mailbox);
+        }
         $state['cursorComplete'] = $complete;
         $state['cursorSavedAt'] = gmdate('c');
         $this->write($state);
@@ -60,7 +72,7 @@ final class FileMailReaderState implements MailReaderState
     public function clearCursor(): void
     {
         $state = $this->read();
-        unset($state['cursor'], $state['cursorComplete'], $state['cursorSavedAt']);
+        unset($state['cursor'], $state['cursorMailbox'], $state['cursorComplete'], $state['cursorSavedAt']);
         $this->write($state);
     }
 
@@ -104,6 +116,11 @@ final class FileMailReaderState implements MailReaderState
         if (is_file($path)) {
             unlink($path);
         }
+    }
+
+    private static function normalise(string $mailbox): string
+    {
+        return strtolower(trim($mailbox));
     }
 
     private function pendingPath(string $key): string

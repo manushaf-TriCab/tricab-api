@@ -137,9 +137,11 @@ final class RfqMailReaderScriptTest extends TestCase
         self::assertSame('off', $report['mode']);
 
         mkdir($this->state, 0775, true);
-        file_put_contents($this->state . '/state.json', '{"cursor":"https://graph.microsoft.com/v1.0/x","cursorComplete":true}');
+        file_put_contents($this->state . '/state.json', '{"cursor":"https://graph.microsoft.com/v1.0/x","cursorMailbox":"melbourne@tricab.com","cursorComplete":true}');
         [, $out] = $this->runScript([], '--status');
         self::assertTrue(self::report($out)['hasCursor']);
+        [, $out] = $this->runScript(['RFQ_MAIL_MAILBOX' => 'nzprojects@tricab.com'], '--status');
+        self::assertFalse(self::report($out)['hasCursor'], 'another mailbox does not inherit the cursor');
 
         [$status, $out] = $this->runScript([], '--reset-cursor');
         self::assertSame(0, $status);
