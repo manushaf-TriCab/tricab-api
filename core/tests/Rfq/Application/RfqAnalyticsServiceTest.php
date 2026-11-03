@@ -33,8 +33,9 @@ final class RfqAnalyticsServiceTest extends TestCase
     {
         $result = $this->analytics(RfqAnalyticsPeriod::lastDays(7, self::at(self::NOW)));
 
-        self::assertSame(['from' => '2026-10-14', 'to' => '2026-10-20', 'timezone' => 'Australia/Melbourne', 'days' => 7], $result['period']);
-        self::assertSame(['from' => '2026-10-07', 'to' => '2026-10-13', 'timezone' => 'Australia/Melbourne', 'days' => 7], $result['previousPeriod']);
+        self::assertSame(['from' => '2026-10-14', 'to' => '2026-10-20', 'timezone' => 'Australia/Melbourne', 'days' => 7, 'allTime' => false], $result['period']);
+        self::assertSame(['from' => '2026-10-07', 'to' => '2026-10-13', 'timezone' => 'Australia/Melbourne', 'days' => 7, 'allTime' => false], $result['previousPeriod']);
+        self::assertSame('day', $result['trendInterval']);
 
         // C ready and overdue, D new, F failed and overdue; E is archived, A/B/G sent.
         self::assertSame(
@@ -100,6 +101,40 @@ final class RfqAnalyticsServiceTest extends TestCase
         self::assertSame(1, $quality['legacyUnlinkedSessions'], 'all dates, excluded from the rest');
     }
 
+    public function test_all_time_counts_everything_by_month_with_no_previous_window(): void
+    {
+        $result = $this->analytics(RfqAnalyticsPeriod::fromQueryParams(['period' => 'all'], self::at(self::NOW)));
+
+        // F, the oldest RFQ, was created on 10 Oct (Melbourne); G's send on the 21st is after today.
+        self::assertSame(['from' => '2026-10-10', 'to' => '2026-10-20', 'timezone' => 'Australia/Melbourne', 'days' => 11, 'allTime' => true], $result['period']);
+        self::assertNull($result['previousPeriod']);
+        self::assertSame(['count' => 7, 'previous' => null], $result['received']);
+        self::assertSame(['count' => 2, 'previous' => null], $result['sent']);
+        self::assertSame('month', $result['trendInterval']);
+        self::assertSame([['date' => '2026-10', 'received' => 7, 'sent' => 2]], $result['trend']);
+        self::assertSame(7, array_sum(array_column($result['stages'], 'count')), 'stages add up to received');
+        // B's success on 12 Oct is before the oldest RFQ: all time still counts it.
+        self::assertSame(['succeeded' => 2, 'failed' => 1, 'total' => 3, 'successRate' => 0.6667], $result['sendAttempts']);
+        self::assertSame(19, $result['quality']['entries'], 'R3 on 1 Oct is in, R4 is still legacy');
+    }
+
+    public function test_all_time_months_run_from_the_oldest_rfq_to_this_month(): void
+    {
+        $now = self::at(self::NOW);
+        $period = RfqAnalyticsPeriod::allTime($now)->beginningOn(self::at('2025-11-30T14:00:00Z'));
+
+        self::assertSame('2025-12-01', $period->toArray()['from'], 'Melbourne day, AEDT');
+        self::assertSame(['2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'], $period->bucketKeys());
+        self::assertSame($period->start, $period->beginningOn(self::at('2026-10-15T00:00:00Z'))->start, 'a later RFQ never moves the start forward');
+        self::assertTrue($period->contains(self::at('2001-01-01T00:00:00Z')), 'no lower bound');
+        self::assertFalse($period->contains(self::at('2026-10-20T13:00:00Z')), 'tomorrow in Melbourne is out');
+
+        $empty = (new RfqAnalyticsService(new InMemoryRfqAnalyticsSource(), FixedClock::utc(self::NOW)))
+            ->analytics(self::admin(), RfqAnalyticsPeriod::allTime($now));
+        self::assertNotNull($empty);
+        self::assertSame([['date' => '2026-10', 'received' => 0, 'sent' => 0]], $empty['trend'], 'an empty store is this month alone');
+    }
+
     public function test_only_analytics_readers_get_anything(): void
     {
         $service = new RfqAnalyticsService(new InMemoryRfqAnalyticsSource(), FixedClock::utc(self::NOW));
@@ -131,9 +166,11 @@ final class RfqAnalyticsServiceTest extends TestCase
         self::assertSame(365, $custom->days());
         self::assertSame('2025-12-31T13:00:00+00:00', $custom->start->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM), 'Melbourne midnight, AEDT');
         self::assertSame(2, RfqAnalyticsPeriod::fromQueryParams(['from' => '2026-10-04', 'to' => '2026-10-05'], $now)->days(), 'a 23-hour daylight-saving day is still one day');
+        self::assertTrue(RfqAnalyticsPeriod::fromQueryParams(['period' => 'all'], $now)->allTime);
 
         foreach ([['days' => '14'], ['days' => '30x'], ['from' => '2026-10-01'], ['from' => '2026-02-30', 'to' => '2026-03-01'],
-            ['from' => '2026-10-02', 'to' => '2026-10-01'], ['from' => '2025-01-01', 'to' => '2026-10-01'], ['days' => '7', 'from' => '2026-10-01', 'to' => '2026-10-02']] as $bad) {
+            ['from' => '2026-10-02', 'to' => '2026-10-01'], ['from' => '2025-01-01', 'to' => '2026-10-01'], ['days' => '7', 'from' => '2026-10-01', 'to' => '2026-10-02'],
+            ['period' => 'year'], ['period' => 'all', 'days' => '30'], ['period' => 'all', 'from' => '2026-10-01', 'to' => '2026-10-02']] as $bad) {
             try {
                 RfqAnalyticsPeriod::fromQueryParams($bad, $now);
                 self::fail('Accepted ' . json_encode($bad));

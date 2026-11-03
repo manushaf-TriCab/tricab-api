@@ -16,8 +16,8 @@ use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
 
 /**
  * GET /api/v1/rfqs/analytics — contract `rfq.analytics.v1`: the Analytics
- * tab's statistics for one window of Melbourne days (`days` = 7/30/90, or
- * `from` + `to`). People are named; no email appears.
+ * tab's statistics for one window of Melbourne days (`days` = 7/30/90,
+ * `from` + `to`, or `period=all`). People are named; no email appears.
  */
 final class GetRfqAnalyticsAction
 {

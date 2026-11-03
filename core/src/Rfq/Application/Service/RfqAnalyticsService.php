@@ -78,6 +78,7 @@ final class RfqAnalyticsService
         $now = $this->clock->now();
         $drafts = $this->source->drafts();
         $events = $this->source->events();
+        $period = $period->beginningOn(self::firstCreated($drafts));
 
         $open = array_values(array_filter($drafts, static fn (AnalyticsDraft $d): bool => self::isOpen($d)));
         $received = self::receivedIn($drafts, $period);
@@ -88,12 +89,13 @@ final class RfqAnalyticsService
             'period' => $period->toArray(),
             'generatedAt' => $now->format(DATE_ATOM),
             'current' => $this->current($open, $now),
-            'received' => ['count' => count($received), 'previous' => count(self::receivedIn($drafts, $previous))],
-            'sent' => ['count' => count($sent), 'previous' => count(self::sentIn($drafts, $previous))],
-            'previousPeriod' => $previous->toArray(),
+            'received' => ['count' => count($received), 'previous' => $previous === null ? null : count(self::receivedIn($drafts, $previous))],
+            'sent' => ['count' => count($sent), 'previous' => $previous === null ? null : count(self::sentIn($drafts, $previous))],
+            'previousPeriod' => $previous?->toArray(),
             'sendAttempts' => self::sendAttempts($events, $period),
             'firstWork' => self::summary(self::firstWorkHours($received, $events)),
             'turnaround' => self::summary(array_values(array_filter(array_map(self::turnaroundHours(...), $sent), 'is_float'))),
+            'trendInterval' => $period->trendInterval(),
             'trend' => self::trend($received, $sent, $period),
             'stages' => self::stages($received),
             'sources' => self::sources($received),
@@ -151,6 +153,19 @@ final class RfqAnalyticsService
             'overdue' => count(array_filter($open, static fn (AnalyticsDraft $d): bool => self::isOverdue($d, $now))),
             'overdueRuleHours' => self::OVERDUE_RULE_HOURS,
         ];
+    }
+
+    /** @param list<AnalyticsDraft> $drafts */
+    private static function firstCreated(array $drafts): ?DateTimeImmutable
+    {
+        $first = null;
+        foreach ($drafts as $draft) {
+            if ($draft->createdAt !== null && ($first === null || $draft->createdAt < $first)) {
+                $first = $draft->createdAt;
+            }
+        }
+
+        return $first;
     }
 
     /**
@@ -258,8 +273,8 @@ final class RfqAnalyticsService
     }
 
     /**
-     * Every day in the window, empty ones included, so a quiet fortnight is
-     * not drawn as one step.
+     * Every day in the window (every month for all time), empty ones included,
+     * so a quiet fortnight is not drawn as one step.
      *
      * @param list<AnalyticsDraft> $received
      * @param list<AnalyticsDraft> $sent
@@ -268,17 +283,17 @@ final class RfqAnalyticsService
      */
     private static function trend(array $received, array $sent, RfqAnalyticsPeriod $period): array
     {
-        $receivedOn = array_fill_keys($period->dayKeys(), 0);
+        $receivedOn = array_fill_keys($period->bucketKeys(), 0);
         $sentOn = $receivedOn;
         foreach ($received as $draft) {
             if ($draft->createdAt !== null) {
-                $day = RfqAnalyticsPeriod::day($draft->createdAt);
+                $day = $period->bucket($draft->createdAt);
                 $receivedOn[$day] = ($receivedOn[$day] ?? 0) + 1;
             }
         }
         foreach ($sent as $draft) {
             if ($draft->syncedAt !== null) {
-                $day = RfqAnalyticsPeriod::day($draft->syncedAt);
+                $day = $period->bucket($draft->syncedAt);
                 $sentOn[$day] = ($sentOn[$day] ?? 0) + 1;
             }
         }

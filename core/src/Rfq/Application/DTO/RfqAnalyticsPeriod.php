@@ -12,10 +12,14 @@ use TriCab\Core\Rfq\Domain\Exception\InvalidRfqValue;
  * The reporting window for `GET /api/v1/rfqs/analytics`: whole Melbourne
  * calendar days, `from` to `to` inclusive.
  *
- * Either `days` (7, 30 or 90, ending today, as tc-web's buttons) or
- * `from` + `to` as `YYYY-MM-DD`. tc-web built custom windows from
- * browser-local midnight but bucketed by UTC date; here the window and the
- * daily buckets are the same Melbourne days.
+ * Either `days` (7, 30 or 90, ending today, as tc-web's buttons),
+ * `from` + `to` as `YYYY-MM-DD`, or `period=all`. tc-web built custom windows
+ * from browser-local midnight but bucketed by UTC date; here the window and
+ * the daily buckets are the same Melbourne days.
+ *
+ * All time has no lower bound: `contains()` takes anything before tomorrow,
+ * and `start` only says where the trend begins (`beginningOn()`, from the
+ * oldest RFQ). It has no previous window and its trend is monthly.
  */
 final class RfqAnalyticsPeriod
 {
@@ -29,6 +33,7 @@ final class RfqAnalyticsPeriod
         public readonly DateTimeImmutable $start,
         /** Midnight after the last day, Melbourne time (exclusive). */
         public readonly DateTimeImmutable $end,
+        public readonly bool $allTime = false,
     ) {
     }
 
@@ -43,6 +48,18 @@ final class RfqAnalyticsPeriod
         $from = self::param($params, 'from');
         $to = self::param($params, 'to');
         $days = self::param($params, 'days');
+        $all = self::param($params, 'period');
+
+        if ($all !== '') {
+            if ($all !== 'all') {
+                throw InvalidRfqValue::forOneOf('analytics period', $all, ['all']);
+            }
+            if ($from !== '' || $to !== '' || $days !== '') {
+                throw InvalidRfqValue::forOneOf('analytics period', 'period=all with days or from/to', ['period=all', 'days', 'from and to']);
+            }
+
+            return self::allTime($now);
+        }
 
         if ($from !== '' || $to !== '') {
             if ($days !== '') {
@@ -77,15 +94,38 @@ final class RfqAnalyticsPeriod
         return new self($today->modify('-' . ($days - 1) . ' days'), $today->modify('+1 day'));
     }
 
-    /** The window of the same number of days immediately before this one. */
-    public function previous(): self
+    /** Everything up to today; the trend starts today until `beginningOn()` moves it back. */
+    public static function allTime(DateTimeImmutable $now): self
     {
+        $today = self::lastDays(1, $now);
+
+        return new self($today->start, $today->end, true);
+    }
+
+    /** All time, its trend starting on the Melbourne day of `$first` (never after today). */
+    public function beginningOn(?DateTimeImmutable $first): self
+    {
+        if (!$this->allTime || $first === null) {
+            return $this;
+        }
+        $day = $first->setTimezone(new DateTimeZone(self::TIMEZONE))->setTime(0, 0);
+
+        return new self(min($day, $this->start), $this->end, true);
+    }
+
+    /** The window of the same number of days immediately before this one; all time has none. */
+    public function previous(): ?self
+    {
+        if ($this->allTime) {
+            return null;
+        }
+
         return new self($this->start->modify('-' . $this->days() . ' days'), $this->start);
     }
 
     public function contains(?DateTimeImmutable $at): bool
     {
-        return $at !== null && $at >= $this->start && $at < $this->end;
+        return $at !== null && ($this->allTime || $at >= $this->start) && $at < $this->end;
     }
 
     public function days(): int
@@ -99,6 +139,32 @@ final class RfqAnalyticsPeriod
         return $at->setTimezone(new DateTimeZone(self::TIMEZONE))->format('Y-m-d');
     }
 
+    /** `month` for all time, which can run for years; `day` otherwise. */
+    public function trendInterval(): string
+    {
+        return $this->allTime ? 'month' : 'day';
+    }
+
+    /** The trend bucket of an instant: its Melbourne day, or `YYYY-MM` for all time. */
+    public function bucket(DateTimeImmutable $at): string
+    {
+        return $at->setTimezone(new DateTimeZone(self::TIMEZONE))->format($this->allTime ? 'Y-m' : 'Y-m-d');
+    }
+
+    /** @return list<string> every trend bucket in the window, in order */
+    public function bucketKeys(): array
+    {
+        if (!$this->allTime) {
+            return $this->dayKeys();
+        }
+        $keys = [];
+        for ($month = $this->start->modify('first day of this month'); $month < $this->end; $month = $month->modify('first day of next month')) {
+            $keys[] = $month->format('Y-m');
+        }
+
+        return $keys;
+    }
+
     /** @return list<string> every day in the window, in order */
     public function dayKeys(): array
     {
@@ -110,7 +176,7 @@ final class RfqAnalyticsPeriod
         return $keys;
     }
 
-    /** @return array{from: string, to: string, timezone: string, days: int} */
+    /** @return array{from: string, to: string, timezone: string, days: int, allTime: bool} */
     public function toArray(): array
     {
         return [
@@ -118,6 +184,7 @@ final class RfqAnalyticsPeriod
             'to' => $this->end->modify('-1 day')->format('Y-m-d'),
             'timezone' => self::TIMEZONE,
             'days' => $this->days(),
+            'allTime' => $this->allTime,
         ];
     }
 
