@@ -15,13 +15,12 @@ WEB_ORIGIN='https://tc-web-core-e7b7gdbjgadjd3ff.australiasoutheast-01.azurewebs
 SKIP_NPM_CI=0
 
 # The finder's Python dependencies are cross-compiled for the App Service image,
-# not for this build machine. One release serves both App Service images, so
-# wheels are built for each interpreter and startup.sh picks the matching
-# `_vendor/cp3XX` directory from `python3 -V`:
-#   PHP|8.3 (Debian 12)   python3 3.11
-#   PHP|8.5 (Ubuntu 24.04) python3 3.12
+# not for this build machine. Every slot this release goes to (tc-web core, tricab-ai
+# staging) runs PHP|8.5 (Ubuntu 24.04, python3 3.12), so wheels are built for 3.12 only
+# and startup.sh picks `_vendor/cp312`. A PHP|8.3 slot (Debian 12, python3 3.11) would
+# need '3.11 3.12' here again: startup.sh finds no matching directory and says so.
 # `startup.log` records the one in use as "using /usr/bin/python3 (Python 3.x.y)".
-PY_VERSIONS='3.11 3.12'
+PY_VERSIONS='3.12'
 PY_PLATFORM='manylinux2014_x86_64'
 
 while [ $# -gt 0 ]; do

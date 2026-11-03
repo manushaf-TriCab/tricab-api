@@ -34,9 +34,9 @@ set -u
 WWWROOT=/home/site/wwwroot
 APP_PYTHON="$WWWROOT/app/python"
 # The dependencies ship in the release, already resolved for this image's
-# CPython on x86_64: `_vendor/cp311` for the PHP|8.3 image (Debian 12, python3
-# 3.11) and `_vendor/cp312` for PHP|8.5 (Ubuntu 24.04, python3 3.12), chosen
-# from `python3 -V` below. There is no virtualenv and no pip at runtime: this
+# CPython on x86_64: `_vendor/cp312` for the PHP|8.5 image (Ubuntu 24.04, python3
+# 3.12), chosen from `python3 -V` below. The release no longer ships cp311, so a
+# PHP|8.3 image (python3 3.11) finds no vendor directory. There is no virtualenv and no pip at runtime: this
 # image has python3 but not Debian's python3-venv, so `python3 -m venv` fails
 # with "ensurepip is not available" and no amount of retrying helps. The build
 # script vendors the wheels instead -- see docs/product-finder/DEPLOYMENT.md.

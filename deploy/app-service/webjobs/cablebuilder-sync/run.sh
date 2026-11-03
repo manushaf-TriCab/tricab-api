@@ -16,7 +16,7 @@
 # out of cbsync/_vendor at build time and found in python/_vendor, last on the path.
 set -u
 APP=/home/site/wwwroot/app/cbsync
-# Wheels are per CPython minor version (cp311 on PHP|8.3, cp312 on PHP|8.5).
+# Wheels are per CPython minor version (cp312 on PHP|8.5; the release no longer ships cp311).
 PYTAG="cp$(python3 -c 'import sys; print("%d%d" % sys.version_info[:2])')"
 export PYTHONPATH="$APP:$APP/_vendor/$PYTAG:/home/site/wwwroot/app/python/_vendor/$PYTAG"
 # Without this, Python block-buffers stdout into the WebJob log pipe, so a run's
