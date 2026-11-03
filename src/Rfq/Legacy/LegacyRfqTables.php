@@ -33,6 +33,14 @@ final class LegacyRfqTables
     ];
 
     /**
+     * Table => columns only the platform has. The refresh neither compares, reads, writes
+     * nor hashes them: the database fills them (`rfq_number` takes the sequence's next value).
+     */
+    public const PLATFORM_ONLY = [
+        'rfq_draft_quotes' => ['rfq_number'],
+    ];
+
+    /**
      * Child table => [column, parent table], for the foreign keys inside
      * `[rfq]`. `rfq_documents` is the platform's own (no source rows), but it
      * points at drafts, so a draft it references is never deleted.

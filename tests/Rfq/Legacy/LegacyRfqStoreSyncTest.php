@@ -36,7 +36,7 @@ final class LegacyRfqStoreSyncTest extends TestCase
 
         $columns = [];
         foreach (array_keys(LegacyRfqTables::TABLES) as $table) {
-            $columns[(string) $table] = $this->texts("SELECT [name] FROM sys.columns WHERE [object_id] = OBJECT_ID(N'[rfq].[{$table}]') ORDER BY [column_id]");
+            $columns[(string) $table] = array_values(array_diff($this->texts("SELECT [name] FROM sys.columns WHERE [object_id] = OBJECT_ID(N'[rfq].[{$table}]') ORDER BY [column_id]"), LegacyRfqTables::PLATFORM_ONLY[$table] ?? []));
         }
         $this->source = new InMemoryLegacyRfqSource($columns);
 
@@ -165,7 +165,10 @@ final class LegacyRfqStoreSyncTest extends TestCase
         foreach (LegacyRfqTables::TABLES as $table => $pk) {
             $names = $this->texts("SELECT c.[name] FROM sys.columns c WHERE c.[object_id] = OBJECT_ID(N'[rfq].[{$table}]') ORDER BY c.[column_id]");
             $types = $this->texts("SELECT t.[name] FROM sys.columns c JOIN sys.types t ON t.[user_type_id] = c.[user_type_id] WHERE c.[object_id] = OBJECT_ID(N'[rfq].[{$table}]') ORDER BY c.[column_id]");
-            $cols = LegacyRfqRowHash::kinds(array_map(static fn (string $n, string $t): array => ['name' => $n, 'type' => $t], $names, $types));
+            $cols = LegacyRfqRowHash::kinds(array_values(array_filter(
+                array_map(static fn (string $n, string $t): array => ['name' => $n, 'type' => $t], $names, $types),
+                static fn (array $c): bool => !in_array($c['name'], LegacyRfqTables::PLATFORM_ONLY[$table] ?? [], true),
+            )));
             $hashes = [];
             foreach ($this->source->rows[$table] ?? [] as $row) {
                 $hashes[LegacyRfqRowHash::key($row, $pk)] = LegacyRfqRowHash::row($row, $cols);

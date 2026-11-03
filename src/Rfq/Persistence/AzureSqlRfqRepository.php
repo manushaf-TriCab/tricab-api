@@ -433,7 +433,7 @@ final class AzureSqlRfqRepository implements RfqRepository
     {
         return '
             SELECT d.[id], d.[label], d.[source], d.[status], d.[priority], d.[due_at], d.[created_at], d.[updated_at],
-                   d.[refno], d.[revision], d.[branch], d.[archived_at],
+                   d.[refno], d.[revision], d.[branch], d.[archived_at], d.[rfq_number],
                    CASE WHEN ISJSON(d.[quote_details]) = 1 THEN JSON_VALUE(d.[quote_details], \'$.customer_code\') END AS [customer_code],
                    CASE WHEN ISJSON(d.[quote_details]) = 1 THEN JSON_VALUE(d.[quote_details], \'$.customer_name\') END AS [customer_name],
                    CASE WHEN ISJSON(d.[email_meta]) = 1 THEN JSON_QUERY(d.[email_meta], \'$.parse.coverage\') END AS [parse_coverage],
@@ -519,17 +519,28 @@ final class AzureSqlRfqRepository implements RfqRepository
             // then misses every placeholder after it.
             $params['search'] = '%' . strtr($query->search, ['!' => '!!', '%' => '!%', '_' => '!_', '[' => '![']) . '%';
             $haystack = [
+                // The number's reference, the old hex reference (RFQ-02742DBD) and the bare hex all find the draft.
+                "N'RFQ-' + CASE WHEN d.[rfq_number] IS NULL THEN UPPER(LEFT(d.[id], 8))
+                                WHEN d.[rfq_number] > 999999 THEN CAST(d.[rfq_number] AS NVARCHAR(20))
+                                ELSE RIGHT(N'000000' + CAST(d.[rfq_number] AS NVARCHAR(20)), 6) END",
                 "N'RFQ-' + UPPER(LEFT(d.[id], 8))",
+                'UPPER(LEFT(d.[id], 8))',
                 'd.[label]',
                 "CASE WHEN ISJSON(d.[quote_details]) = 1 THEN JSON_VALUE(d.[quote_details], '$.customer_code') END",
                 "CASE WHEN ISJSON(d.[quote_details]) = 1 THEN JSON_VALUE(d.[quote_details], '$.customer_name') END",
                 'd.[refno]',
             ];
-            $where[] = '(' . implode(' OR ', array_map(
+            $matches = array_map(
                 static fn (string $column, int $i): string => "{$column} LIKE :search{$i} ESCAPE '!'",
                 $haystack,
                 array_keys($haystack),
-            )) . ')';
+            );
+            // `RFQ-20`, `RFQ-000020`, `20` and `000020` are all number 20 (the LIKE above would miss `RFQ-20`).
+            if (preg_match('/^(?:RFQ-?)?(\d{1,9})$/i', trim($query->search), $number) === 1) {
+                $matches[] = 'd.[rfq_number] = :searchNumber';
+                $params['searchNumber'] = (int) $number[1];
+            }
+            $where[] = '(' . implode(' OR ', $matches) . ')';
             foreach (array_keys($haystack) as $i) {
                 $params["search{$i}"] = $params['search'];
             }
@@ -600,7 +611,7 @@ final class AzureSqlRfqRepository implements RfqRepository
             $created = StoreFormat::parseTime(AzureSqlValueMapper::nullableString($row['created_at'])) ?? new DateTimeImmutable('@0');
             $records[] = new RfqRecord(
                 publicId: StoreProjection::publicId($id),
-                reference: StoreProjection::reference($id),
+                reference: StoreProjection::reference($id, AzureSqlValueMapper::nullableInt($row['rfq_number'] ?? null)),
                 title: is_string($row['label']) ? $row['label'] : '',
                 customerCode: AzureSqlValueMapper::nullableString($row['customer_code']),
                 customerName: AzureSqlValueMapper::nullableString($row['customer_name']),

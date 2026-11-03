@@ -417,7 +417,11 @@ final class LegacyRfqStoreSync
             );
             $statement->execute(["[rfq].[{$table}]"]);
             $columns = [];
+            $skip = LegacyRfqTables::PLATFORM_ONLY[$table] ?? [];
             while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                if (in_array($row['name'] ?? '', $skip, true)) {
+                    continue;
+                }
                 $columns[] = ['name' => LegacyRfqRowHash::text($row['name'] ?? ''), 'type' => LegacyRfqRowHash::text($row['type'] ?? '')];
             }
             if ($columns === []) {

@@ -78,7 +78,7 @@ final class LocalRfqSqlServer
 
     private static function applySchema(PDO $pdo): void
     {
-        foreach (['create-identity-schema.sql', 'create-identity-user-email-addresses.sql', 'create-rfq-schema.sql', 'create-rfq-documents-schema.sql', 'create-rfq-accessory-tables.sql', 'create-rfq-legacy-import-ledger.sql'] as $file) {
+        foreach (['create-identity-schema.sql', 'create-identity-user-email-addresses.sql', 'create-rfq-schema.sql', 'create-rfq-documents-schema.sql', 'create-rfq-accessory-tables.sql', 'create-rfq-legacy-import-ledger.sql', 'alter-rfq-draft-number.sql'] as $file) {
             $script = file_get_contents(dirname(__DIR__, 3) . '/database/scripts/development/' . $file);
             if ($script === false) {
                 throw new RuntimeException("{$file} is missing.");

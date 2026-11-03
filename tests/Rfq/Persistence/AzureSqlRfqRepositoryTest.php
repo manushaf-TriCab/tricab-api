@@ -100,7 +100,8 @@ final class AzureSqlRfqRepositoryTest extends TestCase
         $record = $this->record('email');
         self::assertSame(StoreProjection::publicId($this->drafts['email']), $record->publicId);
         self::assertMatchesRegularExpression('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $record->publicId);
-        self::assertSame('RFQ-' . strtoupper(substr($this->drafts['email'], 0, 8)), $record->reference);
+        self::assertMatchesRegularExpression('/^RFQ-\d{6}$/', $record->reference, 'numbered, not the old hex reference');
+        self::assertNotSame(StoreProjection::hexReference($this->drafts['email']), $record->reference);
         self::assertSame('Metro tunnel', $record->title);
         self::assertSame('C100', $record->customerCode);
         self::assertSame('Metro Electrical 100% Pty', $record->customerName);
@@ -135,7 +136,16 @@ final class AzureSqlRfqRepositoryTest extends TestCase
         self::assertSame(['email'], $names($q('100%')), '% is literal, not a wildcard');
         self::assertSame([], $names($q('1_0')), '_ is literal');
         self::assertSame(['email'], $names($q('4j123')), 'the 4js quote number');
-        self::assertSame(['email'], $names($q(StoreProjection::reference($this->drafts['email']))), 'the reference');
+        $reference = $this->record('email')->reference;
+        self::assertMatchesRegularExpression('/^RFQ-\d{6}$/', $reference, 'a numbered reference, six digits');
+        $number = (int) substr($reference, 4);
+        self::assertSame(['email'], $names($q($reference)), 'the reference');
+        self::assertSame(['email'], $names($q(strtolower($reference))), 'the reference, any case');
+        self::assertSame(['email'], $names($q("RFQ-{$number}")), 'the reference without padding');
+        self::assertSame(['email'], $names($q((string) $number)), 'the bare number');
+        self::assertSame(['email'], $names($q(str_pad((string) $number, 6, '0', STR_PAD_LEFT))), 'the padded number');
+        self::assertSame(['email'], $names($q(StoreProjection::hexReference($this->drafts['email']))), 'the old hex reference');
+        self::assertSame(['email'], $names($q(strtolower(substr($this->drafts['email'], 0, 8)))), 'the bare old hex');
         self::assertSame(['email'], $names($q('', ['completed'])));
         $new = $names($q('', ['new']));
         self::assertContains('pending', $new, 'new includes the source alias pending');

@@ -132,7 +132,7 @@ final class RfqReaderService
      * @param array<string, mixed> $emailMeta
      * @param array<string, mixed>|null $envelope
      *
-     * @return array{publicId: string, created: bool, lineCount: int}
+     * @return array{publicId: string, reference: string, created: bool, lineCount: int}
      *
      * @throws InvalidRfqValue    for no files or an oversized one
      * @throws RfqActionForbidden without `RFQ.DRAFT.CREATE`
@@ -161,7 +161,7 @@ final class RfqReaderService
             try {
                 $made = $this->intake($actor, $email, $documents, $id, 'email', $emailMeta, $label, $draftId, true, $envelope);
 
-                return ['publicId' => $made->publicId, 'created' => true, 'lineCount' => $made->lineCount];
+                return ['publicId' => $made->publicId, 'reference' => $this->referenceOf($draftId), 'created' => true, 'lineCount' => $made->lineCount];
             } catch (Throwable $failure) {
                 // A refused parse created nothing, so there is no draft and the failure is rethrown. But a
                 // second run may have got in between the check and the insert (or this one died after the
@@ -183,7 +183,13 @@ final class RfqReaderService
             error_log(sprintf('RFQ email documents not stored for existing draft (correlation %s)', $id->toString()));
         }
 
-        return ['publicId' => StoreProjection::publicId($draftId), 'created' => false, 'lineCount' => count($existing->rows)];
+        return ['publicId' => StoreProjection::publicId($draftId), 'reference' => StoreProjection::reference($draftId, $existing->columns['rfq_number'] ?? null), 'created' => false, 'lineCount' => count($existing->rows)];
+    }
+
+    /** The draft's reference as stored (its number is filled by the database on insert). */
+    private function referenceOf(string $draftId): string
+    {
+        return StoreProjection::reference($draftId, $this->drafts->load($draftId)?->columns['rfq_number'] ?? null);
     }
 
     /** Whether this follow-up already has its proposal (or empty marker) on the draft, so nothing need be fetched. */

@@ -328,8 +328,15 @@ final class AzureSqlRfqDraftStoreTest extends TestCase
             return array_values(array_map(DraftStoreGolden::textRow(...), $statement->fetchAll(PDO::FETCH_ASSOC)));
         };
 
+        $draft = $q('SELECT * FROM [rfq].[rfq_draft_quotes] WHERE [id] = ?');
+        foreach ($draft as $i => $row) {
+            // The platform's own column: the sequence fills it, and the source's golden state has none.
+            self::assertMatchesRegularExpression('/^[1-9]\d*$/', (string) ($row['rfq_number'] ?? ''), 'a new draft is numbered');
+            unset($draft[$i]['rfq_number']);
+        }
+
         return [
-            'draft' => $q('SELECT * FROM [rfq].[rfq_draft_quotes] WHERE [id] = ?'),
+            'draft' => $draft,
             'rows' => $q('SELECT [id], [draft_id], [row_order], [row_data], [system_row_data], [system_snapshot_valid], [line_uid] FROM [rfq].[rfq_draft_rows] WHERE [draft_id] = ? ORDER BY [row_order]'),
             'edits' => $q('SELECT * FROM [rfq].[rfq_draft_row_edits] WHERE [draft_id] = ? ORDER BY [id]'),
             'activity' => $q('SELECT * FROM [rfq].[rfq_draft_activity] WHERE [draft_id] = ? ORDER BY [id]'),

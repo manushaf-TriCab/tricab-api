@@ -34,6 +34,7 @@
 */
 
 SET NOCOUNT ON;
+SET QUOTED_IDENTIFIER ON; -- the filtered unique index needs it (sqlcmd starts with it off)
 SET XACT_ABORT ON;
 GO
 
@@ -93,6 +94,11 @@ BEGIN TRY
         );
     END;
 
+    -- The human RFQ number (RFQ-000001, ...): platform-only, not in the MySQL source.
+    -- alter-rfq-draft-number.sql brings an existing database to the same shape.
+    IF NOT EXISTS (SELECT 1 FROM sys.sequences WHERE [object_id] = OBJECT_ID(N'[rfq].[rfq_draft_number_seq]'))
+        CREATE SEQUENCE [rfq].[rfq_draft_number_seq] AS INT START WITH 1 INCREMENT BY 1 NO CACHE;
+
     IF OBJECT_ID(N'[rfq].[rfq_draft_quotes]', N'U') IS NULL
     BEGIN
         CREATE TABLE [rfq].[rfq_draft_quotes] (
@@ -123,8 +129,11 @@ BEGIN TRY
                 CONSTRAINT [DF_rfq_draft_quotes_revision] DEFAULT (1),
             [sync_started_at]   NVARCHAR(40)   NULL,
             [sync_revision]     INT            NULL,
+            [rfq_number]        INT            NULL
+                CONSTRAINT [DF_rfq_draft_quotes_rfq_number] DEFAULT (NEXT VALUE FOR [rfq].[rfq_draft_number_seq]),
             CONSTRAINT [PK_rfq_draft_quotes] PRIMARY KEY CLUSTERED ([id])
         );
+        CREATE UNIQUE NONCLUSTERED INDEX [UX_rfq_draft_quotes_rfq_number] ON [rfq].[rfq_draft_quotes]([rfq_number]) WHERE [rfq_number] IS NOT NULL;
         CREATE NONCLUSTERED INDEX [rfq_draft_quotes_archived_at] ON [rfq].[rfq_draft_quotes]([archived_at]);
         CREATE NONCLUSTERED INDEX [rfq_draft_quotes_assignee] ON [rfq].[rfq_draft_quotes]([assignee_email]);
         CREATE NONCLUSTERED INDEX [rfq_draft_quotes_branch] ON [rfq].[rfq_draft_quotes]([branch]);

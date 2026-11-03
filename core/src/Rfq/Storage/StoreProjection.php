@@ -23,9 +23,11 @@ use TriCab\Core\Rfq\Domain\ValueObject\WorkflowStatus;
  *  - **Public id** is the draft id as a UUID: the source's ids are
  *    `uuid4().hex` (all 659 live ones are version 4), so the dashed form is
  *    the same random value, reversible, and an old draft link maps one-to-one.
- *  - **Reference** is `RFQ-` and the id's first eight hex digits, upper-cased:
- *    the source has no human reference of its own, and this one is stable
- *    and searchable without a column.
+ *  - **Reference** is `RFQ-` and the draft's sequential number, zero-padded
+ *    to six digits (`RFQ-000042`; a number past 999999 shows unpadded). The
+ *    number is `rfq_draft_quotes.rfq_number`. A draft without one (the column
+ *    not yet filled) falls back to the old reference, `RFQ-` and the id's
+ *    first eight hex digits, upper-cased, which stays searchable.
  *  - **Channel:** `email` is the mailbox; every other source value (`web`,
  *    and the staff tools' `alternative` and `quote_import`) is a person on the
  *    website, so `web`.
@@ -49,7 +51,21 @@ final class StoreProjection
         return StoreFormat::isId($hex) && self::publicId($hex) === strtolower(trim($publicId)) ? $hex : null;
     }
 
-    public static function reference(string $draftId): string
+    /** The reference for a draft: `RFQ-000042` from its number, or the old hex form while it has none. */
+    public static function reference(string $draftId, mixed $number = null): string
+    {
+        $n = is_int($number) ? $number : (is_string($number) && ctype_digit($number) ? (int) $number : 0);
+
+        return $n > 0 ? self::numberReference($n) : self::hexReference($draftId);
+    }
+
+    public static function numberReference(int $number): string
+    {
+        return 'RFQ-' . str_pad((string) $number, 6, '0', STR_PAD_LEFT);
+    }
+
+    /** The reference RFQs had before they were numbered; search still accepts it. */
+    public static function hexReference(string $draftId): string
     {
         return 'RFQ-' . strtoupper(substr($draftId, 0, 8));
     }

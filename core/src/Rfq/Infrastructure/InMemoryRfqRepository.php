@@ -144,8 +144,16 @@ final class InMemoryRfqRepository implements RfqRepository
             return false;
         }
         if ($q->search !== '') {
+            $hex = strtoupper(substr(str_replace('-', '', $r->publicId), 0, 8));
+            $number = preg_match('/^(?:RFQ-?)?(\d{1,9})$/i', trim($q->search), $m) === 1 && preg_match('/^RFQ-(\d+)$/', $r->reference, $own) === 1
+                && (int) $own[1] === (int) $m[1];
+            if ($number) {
+                return true;
+            }
             $haystack = mb_strtolower(implode(' ', array_filter([
                 $r->reference,
+                'RFQ-' . $hex,
+                $hex,
                 $r->title,
                 $r->customerCode,
                 $r->customerName,

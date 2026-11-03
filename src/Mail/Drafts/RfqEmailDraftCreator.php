@@ -24,7 +24,6 @@ use TriCab\Core\Rfq\Domain\Exception\RfqStoreUnavailable;
 use TriCab\Core\Rfq\Domain\ValueObject\RfqActor;
 use TriCab\Core\Rfq\Parser\CorrelationId;
 use TriCab\Core\Rfq\Parser\RfqParserFailure;
-use TriCab\Core\Rfq\Storage\StoreProjection;
 
 /**
  * The one way an email becomes a Quotegen draft (RFQ M6.1, inbox I4.1): the reader's own `rfq` mail and the
@@ -127,7 +126,7 @@ final class RfqEmailDraftCreator implements RfqDraftCreator
             }
         }
 
-        return new CreatedDraft($made, StoreProjection::reference($draftId), $title);
+        return new CreatedDraft($made['publicId'], $made['reference'], $title);
     }
 
     /**
@@ -137,11 +136,13 @@ final class RfqEmailDraftCreator implements RfqDraftCreator
      *
      * @throws RfqParserFailure
      * @throws MailUnavailable
+     *
+     * @return array{publicId: string, reference: string, created: bool, lineCount: int}
      */
-    private function make(RfqActor $actor, string $draftId, string $label, array $files, array $meta, array $envelope): string
+    private function make(RfqActor $actor, string $draftId, string $label, array $files, array $meta, array $envelope): array
     {
         try {
-            return $this->rfqs->createFromEmail($actor, $this->mailboxEmail, $draftId, $label, $files, $meta, CorrelationId::generate(), $envelope)['publicId'];
+            return $this->rfqs->createFromEmail($actor, $this->mailboxEmail, $draftId, $label, $files, $meta, CorrelationId::generate(), $envelope);
         } catch (RfqActionForbidden $failure) {
             throw new MailUnavailable($this->mailbox . ' may not create RFQs (it needs RFQ.DRAFT.CREATE).', MailUnavailable::DRAFTS, $failure);
         } catch (InvalidRfqValue|RfqStoreUnavailable $failure) {
