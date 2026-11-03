@@ -14,7 +14,7 @@ requires-python = ">=3.11"
 # package can be published.
 
 [tool.setuptools]
-packages = ["tricab_cable_rules", "product_finder", "rfq_parser", "cable_routes", "conductor_process", "conductor_schedule"]
+packages = ["tricab_cable_rules", "product_finder", "rfq_parser", "cable_routes", "conductor_process", "conductor_schedule", "quotegen_inspector"]
 
 [tool.setuptools.package-data]
 tricab_cable_rules = ["data/cable_rules/*.json", "data/catalog/*"]

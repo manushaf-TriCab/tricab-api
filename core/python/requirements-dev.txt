@@ -3,3 +3,4 @@
 pytest
 PyMySQL        # PRODUCT_FINDER_SIZING_SOURCE=mysql, for parity checks against
                # live tc.cable_specs / tc.rating and for tc.price.
+-r quotegen_inspector/requirements.txt   # tests/test_quotegen_inspector*.py

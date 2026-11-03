@@ -138,3 +138,45 @@ required file or column is missing (the message names it), 1 anything else.
 `schema.sql` is the one definition of the store; the PHP tests build their fixture from it. `seed/` holds copies of the
 poster CSVs from `planning/workflow/` plus `machine-limits.csv`. Tests: `tests/cable_routes/`; the real-data module
 runs only when `CABLE_ROUTES_SOURCE_DIR` points at an extract.
+
+## Quotegen file inspector (`quotegen_inspector/`)
+
+Lets an AI agent look at the *original* RFQ files (EML/MSG, XLSX/XLS, PDF, DOCX, images):
+structure, bounded reads, and page renders. Every result carries `truncated`, `next_cursor`
+and `unreadable`. It will later run as a custom container in Azure Container Apps Dynamic
+Sessions; today it runs locally. Plan: `platform/QUOTEGEN-AI-WORKSPACE-PLAN.md` §4, §6.
+
+Run the functions or the server directly (dev):
+
+```sh
+pip install -r quotegen_inspector/requirements.txt
+QG_TOKEN=dev python -m quotegen_inspector.server        # 0.0.0.0:8080 (PORT to change)
+```
+
+Routes (bearer token from `QG_TOKEN`; no token set means 503, `/health` is open):
+`POST /files`, `GET /files`, `GET /files/{id}`, `POST /inspect {fileId, tool, args}`,
+`POST /render {fileId, page|sheet+range, scale, region}` (PNG), `POST /execute {code, timeoutSeconds}`.
+
+Container (build from the repo root; `soffice` for DOCX/XLSX page rendering is only in the image):
+
+```sh
+docker build --platform linux/amd64 -f docker/quotegen-inspector/Dockerfile \
+  -t quotegen-inspector:0.1.0 core/python
+docker run -d --name qg-insp --network none --memory 1g --cpus 2 --read-only \
+  --tmpfs /session:uid=10001,size=512m --tmpfs /tmp:size=256m \
+  -e QG_TOKEN=dev quotegen-inspector:0.1.0
+docker exec qg-insp python -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8080/health').read())"
+```
+
+`--network none` gives the container no network at all, so a published port (`-p`) does not
+reach it, on Docker Desktop as well as Linux. Talk to it from inside with `docker exec`
+(pipe a client script to `docker exec -i qg-insp python -`). Checked 31 Oct 2026 on
+Docker Desktop 29.8 (amd64 under emulation on Apple silicon): cold start to healthy 3.4 s,
+DOCX and XLSX page renders through LibreOffice about 1.3 s, a 2 GB allocation in `/execute`
+refused, an endless loop killed at its timeout, outbound connections fail.
+
+Tests: `pytest tests/test_quotegen_inspector.py tests/test_quotegen_inspector_server.py`
+(fixtures are generated in `tests/quotegen_fixtures.py`, no customer files).
+Benchmark: `python tools/benchmark_quotegen_inspector.py "<dir>" [--url http://127.0.0.1:8090 --token dev]`.
+Limits are `QG_*` environment variables (see `quotegen_inspector/limits.py`).
+Macros are never run and external workbook links are never followed.
