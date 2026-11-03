@@ -75,7 +75,7 @@ API:
 - **Python**: `core/python/` holds `tricab_cable_rules`, `product_finder`, `rfq_parser`, `finance_ai`, tests in
   `core/python/tests/<package>/`, config in `core/python/pyproject.toml` (explicit `packages` list and `package-data`;
   pytest `pythonpath = ["."]`, `testpaths = ["tests"]`). CI runs `composer python-test` (`python3 -m pytest core/python`)
-  on Python 3.11, so the engine must be stdlib only and 3.11 compatible. `requirements.txt` does not change.
+  on Python 3.12, so the engine must be stdlib only and 3.12 compatible. `requirements.txt` does not change.
   `scripts/build-app-service-release.sh` stages `core/python` as `app/python` and rejects test caches, so run pytest with
   `-p no:cacheprovider` when staging.
 - **Permission seeds**: `database/scripts/development/seed-<module>-permissions.sql`, idempotent T-SQL; the closest

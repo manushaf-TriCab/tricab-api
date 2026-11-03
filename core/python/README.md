@@ -118,7 +118,7 @@ Deployment, App Service layout and the sizing-data caveat:
 
 The engine behind the Cable routes module (`docs/cable-routes/CONTRACT.md` is the contract). It reads the six D365
 extract CSVs, works out how each finished cable is made (machine steps, BOM tree, material per unit), and writes a
-SQLite store that the API serves read-only. Standard library only, Python 3.11+.
+SQLite store that the API serves read-only. Standard library only, Python 3.12.
 
 ```bash
 cd core/python

@@ -31,7 +31,7 @@ edits allowed are listed in section 6.4.
 
 | | API repo (`platform/tricab-api-conductor`, branch `feat/conductor-process`) |
 |---|---|
-| Engine | `core/python/conductor_process/` (stdlib only, Python 3.11; imports from `cable_routes`), CLI `python -m conductor_process build|status` |
+| Engine | `core/python/conductor_process/` (stdlib only, Python 3.12; imports from `cable_routes`), CLI `python -m conductor_process build|status` |
 | Schema | `core/python/conductor_process/schema.sql` (section 3; PHP tests run it) |
 | Seed | `core/python/conductor_process/seed/conductor-map.csv` (section 3.3) |
 | Engine tests | `core/python/tests/conductor_process/` |

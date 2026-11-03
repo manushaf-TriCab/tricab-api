@@ -20,7 +20,7 @@ core/python/
 | Path | What | Why there |
 |---|---|---|
 | `/home/site/wwwroot/app/python` | the code | Staged from `core/python` by the release script. `app/` is denied by nginx, so nothing here is servable. |
-| `/home/site/wwwroot/app/python/_vendor` | the dependencies | Wheels resolved at build time for the image's CPython 3.11 on x86_64 and shipped in the zip. `startup.sh` puts this on `PYTHONPATH`. There is no virtualenv — see below. |
+| `/home/site/wwwroot/app/python/_vendor` | the dependencies | Wheels resolved at build time for the image's CPython 3.12 on x86_64 and shipped in the zip. `startup.sh` puts this on `PYTHONPATH`. There is no virtualenv — see below. |
 | `/home/LogFiles/product-finder/` | startup, access and error logs | Reachable from Kudu without a redeploy. |
 
 ## Startup command
@@ -36,7 +36,7 @@ config first — that is unchanged and must keep happening — then launches
 gunicorn under a restart loop.
 
 **There is no install step, and there must not be one.** The Linux PHP image
-ships `python3` (3.11.2 at `/usr/bin/python3`) but *not* Debian's
+ships `python3` (3.12 at `/usr/bin/python3`) but *not* Debian's
 `python3-venv`, so `python3 -m venv` fails outright:
 
 ```
@@ -44,7 +44,7 @@ The virtual environment was not created successfully because ensurepip is not
 available.  On Debian/Ubuntu systems, you need to install the python3-venv
 package using the following command.
 
-    apt install python3.11-venv
+    apt install python3.12-venv
 ```
 
 An earlier revision of this document described building a venv on first
@@ -58,7 +58,7 @@ resolves them for the target interpreter, not the build machine:
 ```bash
 python3 -m pip install --target app/python/_vendor \
     -r core/python/requirements.txt \
-    --platform manylinux2014_x86_64 --python-version 3.11 \
+    --platform manylinux2014_x86_64 --python-version 3.12 \
     --implementation cp --only-binary=:all:
 ```
 
@@ -74,8 +74,8 @@ build machine's python — so `startup.sh` runs `python3 -m gunicorn` with
 at `app/python/_vendor/VENDORED.txt`, and `startup.sh` logs that line. The
 release zip is the only place those versions are fixed.
 
-**If the image's Python ever moves off 3.11**, the vendored extension stops
-importing. `startup.sh` compares the running interpreter against 3.11 and logs
+**If the image's Python ever moves off 3.12**, the vendored extension stops
+importing. `startup.sh` compares the running interpreter against 3.12 and logs
 a warning naming the version to rebuild with; change `PY_VERSION` at the top of
 the build script and re-release.
 
@@ -140,11 +140,11 @@ degraded path to reason about rather than three, and it is the same
 primary/fallback posture as `FallbackAssistantResponseProvider`.
 
 **The risk worth naming** was that the Linux PHP App Service image might not
-ship `python3` at all. It does — 3.11.2 — so that is settled. What it omits is
+ship `python3` at all. It does (3.12, Ubuntu 24.04) — so that is settled. What it omits is
 `python3-venv`, which is what actually broke the first deployment and is why
 the dependencies are now vendored rather than installed.
 
-The live risk is narrower: the vendored wheels are pinned to CPython 3.11 and
+The live risk is narrower: the vendored wheels are pinned to CPython 3.12 and
 x86_64, so a base-image upgrade that moves the interpreter breaks the import.
 `startup.sh` logs a warning naming the version it saw. Check
 `/home/LogFiles/product-finder/startup.log` after any deploy — a finder that is

@@ -34,7 +34,7 @@ Permission: reuse `CONDUCTOR.READ`. No new permission, no seed SQL.
 
 | | API repo (`platform/tricab-api-conductor`, branch `feat/conductor-schedule`) |
 |---|---|
-| Engine | `core/python/conductor_schedule/` (stdlib only, Python 3.11; imports `cable_routes`, `conductor_process`), CLI `python -m conductor_schedule build\|status` |
+| Engine | `core/python/conductor_schedule/` (stdlib only, Python 3.12; imports `cable_routes`, `conductor_process`), CLI `python -m conductor_schedule build\|status` |
 | Schema, seed | `core/python/conductor_schedule/schema.sql` (section 5), `seed/settings.json` (3.1) |
 | Engine tests | `core/python/tests/conductor_schedule/` |
 | Source copy tool | `core/python/tools/make_schedule_source.py` (2.3) |

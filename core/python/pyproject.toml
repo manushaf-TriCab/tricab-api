@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "tricab-cable-python"
 version = "0.1.0"
 description = "TriCab cable-selection rules, and the product finder and RFQ parser that read them"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 # Deliberately no `dependencies` here: the App Service installs from
 # requirements.txt into a venv outside wwwroot, and nothing pip-installs this
