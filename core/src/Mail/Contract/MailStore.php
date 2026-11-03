@@ -62,6 +62,16 @@ interface MailStore
     /** Links the draft, moves the thread from open to drafted and records `draft_created`. */
     public function recordDraft(string $threadId, NewLink $link, MailParty $actor): void;
 
+    /**
+     * Joins a follow-up message to the draft its thread already has (RFQ M6.2): a `rfq_followup` link for
+     * `$messageId` that names the draft in `$draft`, and a `followup_linked` activity line. The thread's
+     * review state does not change. **Idempotent per message**: a second call for the same message changes
+     * nothing and answers false.
+     *
+     * @return bool true when the message was newly linked
+     */
+    public function recordFollowup(string $threadId, string $messageId, NewLink $draft, MailParty $actor): bool;
+
     /** Moves the thread from open to ignored and records `ignored`. */
     public function recordIgnore(string $threadId, MailParty $actor, int $userId, ?string $note, DateTimeImmutable $at): void;
 

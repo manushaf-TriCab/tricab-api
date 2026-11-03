@@ -32,4 +32,18 @@ interface MailReaderState
     public function markPending(string $key): void;
 
     public function clearPending(string $key): void;
+
+    /**
+     * Drafts still to be made or linked for messages already classified `rfq` or `rfq_followup` (RFQ M6): written
+     * before the attempt and cleared when it succeeds, so a pass that dies or fails after assessing does not lose
+     * the message (Graph will not deliver it again). Empty unless drafts are on.
+     *
+     * @return array<string, array{threadId: string, messageId: string, label: string, injection: bool, attempts: int, nextAt: int}>
+     */
+    public function draftRetries(): array;
+
+    /** @param array{threadId: string, messageId: string, label: string, injection: bool, attempts: int, nextAt: int} $entry */
+    public function saveDraftRetry(string $key, array $entry): void;
+
+    public function clearDraftRetry(string $key): void;
 }

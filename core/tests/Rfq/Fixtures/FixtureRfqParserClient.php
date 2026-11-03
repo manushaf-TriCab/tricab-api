@@ -33,6 +33,9 @@ final class FixtureRfqParserClient implements RfqParserClient
 {
     public ?RfqParserFailure $parseFailure = null;
 
+    /** Refuses the next parse only, then answers normally. */
+    public ?RfqParserFailure $firstParseFailure = null;
+
     public bool $ready = false;
 
     public ?RfqParserFailure $readinessFailure = null;
@@ -98,6 +101,12 @@ final class FixtureRfqParserClient implements RfqParserClient
     public function parse(ParseRequest $request): ParseResponse
     {
         $this->parses[] = $request;
+        if ($this->firstParseFailure !== null) {
+            $failure = $this->firstParseFailure;
+            $this->firstParseFailure = null;
+
+            throw $failure;
+        }
         if ($this->parseFailure !== null) {
             throw $this->parseFailure;
         }

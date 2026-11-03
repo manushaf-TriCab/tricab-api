@@ -105,13 +105,98 @@ final class RfqReaderService
                 'bytes' => $file['bytes'],
             ];
         }
+
+        return $this->intake($actor, $email, $documents, $id, 'web', [], null, null, false);
+    }
+
+    /**
+     * RFQ mail intake (mail plan M6.1): the draft an email becomes, through the same intake as an upload
+     * (the same parse, ownership, document store and background reader), as source `email`. The email's
+     * body (as text) and its readable attachments are the documents; `$emailMeta` (the message ids, the
+     * original sender) is kept on the draft beside the owner and the parse accounting.
+     *
+     * **Idempotent on `$draftId`**, which the caller derives from the message's internetMessageId. If a draft
+     * with that id exists, it is returned and nothing is parsed or written (apart from keeping the files if
+     * the first run died before storing them). If two runs race past that check, the second insert collides
+     * on the primary key and that run returns the winner's draft: one message can never make two drafts.
+     * An email the parser reads nothing from still becomes a draft with no lines, with the email's files
+     * kept, so that a person sees it; an upload with nothing readable is refused instead.
+     *
+     * @param list<array{fileName: string, contentType: string, bytes: string}> $files
+     * @param array<string, mixed> $emailMeta
+     *
+     * @return array{publicId: string, created: bool, lineCount: int}
+     *
+     * @throws InvalidRfqValue    for no files or an oversized one
+     * @throws RfqActionForbidden without `RFQ.DRAFT.CREATE`
+     * @throws RfqParserFailure   when the parser refuses the files or cannot answer (nothing was created)
+     */
+    public function createFromEmail(RfqActor $actor, string $email, string $draftId, string $label, array $files, array $emailMeta, CorrelationId $id): array
+    {
+        if (!$actor->can(Module::PERMISSION_DRAFT_CREATE)) {
+            throw new RfqActionForbidden('create RFQs');
+        }
+        if (!StoreFormat::isId($draftId)) {
+            throw new InvalidRfqValue('The draft id must be 32 lower-case hex characters.');
+        }
+        $documents = [];
+        foreach ($files as $index => $file) {
+            $documents[] = [
+                'documentPublicId' => 'email-' . ($index + 1),
+                'fileName' => self::displayName($file['fileName']),
+                'contentType' => $file['contentType'],
+                'bytes' => $file['bytes'],
+            ];
+        }
+
+        $existing = $this->drafts->load($draftId);
+        if ($existing === null) {
+            try {
+                $made = $this->intake($actor, $email, $documents, $id, 'email', $emailMeta, $label, $draftId, true);
+
+                return ['publicId' => $made->publicId, 'created' => true, 'lineCount' => $made->lineCount];
+            } catch (Throwable $failure) {
+                // A refused parse created nothing, so there is no draft and the failure is rethrown. But a
+                // second run may have got in between the check and the insert (or this one died after the
+                // insert committed): if the draft is there now, it is the one.
+                $existing = $this->drafts->load($draftId);
+                if ($existing === null) {
+                    throw $failure;
+                }
+            }
+        }
+        // Someone else's draft for this very message: keep it, make sure its files were kept.
+        try {
+            if ($this->documents->forDraft($draftId) === []) {
+                foreach ($documents as $document) {
+                    $this->documents->store($draftId, $document['fileName'], $document['contentType'], $document['bytes'], $email);
+                }
+            }
+        } catch (Throwable) {
+            error_log(sprintf('RFQ email documents not stored for existing draft (correlation %s)', $id->toString()));
+        }
+
+        return ['publicId' => StoreProjection::publicId($draftId), 'created' => false, 'lineCount' => count($existing->rows)];
+    }
+
+    /**
+     * The shared intake: every document is read at once and the rows become a draft; each file a model
+     * reader will do better on is queued.
+     *
+     * @param list<array{documentPublicId: string, fileName: string, contentType: string, bytes: string}> $documents
+     * @param array<string, mixed> $extraMeta recorded with the draft
+     *
+     * @throws InvalidRfqValue when nothing was readable (unless `$allowEmpty`)
+     */
+    private function intake(RfqActor $actor, string $email, array $documents, CorrelationId $id, string $source, array $extraMeta, ?string $labelOverride, ?string $draftId, bool $allowEmpty): UploadedRfq
+    {
         $parsed = $this->parser->parse(ParseRequest::forDocuments($id, $documents, $this->allowModel)->withCorrections($this->corrections()));
         $routes = [];
         foreach ($parsed->documents as $summary) {
             $routes[$summary['documentPublicId']] = $summary['readerRoute'];
         }
         $queueable = array_filter($documents, static fn (array $d): bool => $routes[$d['documentPublicId']] ?? false);
-        if ($parsed->lines === [] && $queueable === []) {
+        if ($parsed->lines === [] && $queueable === [] && !$allowEmpty) {
             throw InvalidRfqValue::nothingRead('files', $parsed->notes);
         }
 
@@ -154,6 +239,7 @@ final class RfqReaderService
         if ($rep['authorSource'] !== null) {
             $meta['author_source'] = $rep['authorSource'];
         }
+        $meta += $extraMeta;
         if ($quotes !== []) {
             $meta['quote_imports'] = array_map(static fn (array $q): array => [
                 'template' => is_string($q['template'] ?? null) ? $q['template'] : '',
@@ -168,13 +254,14 @@ final class RfqReaderService
         }
         $label = $allQuotes ? self::quoteLabel($quotes) : '';
         $draftId = $this->drafts->create(new NewDraft(
-            source: 'web',
-            label: $label !== '' ? $label : self::label(array_column($documents, 'fileName'), $this->clock->now()),
+            source: $source,
+            label: $labelOverride ?? ($label !== '' ? $label : self::label(array_column($documents, 'fileName'), $this->clock->now())),
             quoteDetails: $quoteDetails,
             rows: $rows,
             emailMeta: $meta,
             creatorEmail: $email,
             branch: $worker->branch ?? '',
+            id: $draftId,
         ));
 
         $reads = [];

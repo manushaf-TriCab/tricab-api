@@ -170,7 +170,7 @@ final class MailRoutesTest extends MailAppTestCase
         self::assertSame(['injection'], array_column(Payload::objList(self::at($refused, 'error', 'blockers')), 'kind'));
     }
 
-    public function test_create_draft_refuses_with_503_and_changes_nothing_while_the_rfq_parser_cannot_read_email(): void
+    public function test_create_draft_refuses_with_503_and_changes_nothing_while_drafts_are_off(): void
     {
         $this->boot(self::reviewer());
         self::assertInstanceOf(UnavailableRfqDraftCreator::class, $this->container()->get(RfqDraftCreator::class));
@@ -185,13 +185,26 @@ final class MailRoutesTest extends MailAppTestCase
         self::assertSame([], $detail['links']);
     }
 
+    public function test_the_draft_creator_is_the_real_one_only_with_live_mode_and_the_drafts_flag(): void
+    {
+        foreach ([
+            [['RFQ_MAIL_MODE' => 'shadow', 'RFQ_MAIL_DRAFTS_ENABLED' => 'true'], false],
+            [['RFQ_MAIL_MODE' => 'live'], false],
+            [['RFQ_MAIL_MODE' => 'live', 'RFQ_MAIL_DRAFTS_ENABLED' => 'false'], false],
+            [['RFQ_MAIL_MODE' => 'live', 'RFQ_MAIL_DRAFTS_ENABLED' => 'true'], true],
+        ] as [$env, $on]) {
+            $this->boot(self::reviewer(), $env);
+            self::assertSame($on, $this->container()->get(RfqDraftCreator::class) instanceof \TriCab\Api\Mail\Drafts\RfqEmailDraftCreator, json_encode($env) ?: '');
+        }
+    }
+
     public function test_create_draft_links_the_rfq_draft_and_marks_the_thread_drafted(): void
     {
         $this->boot(self::reviewer());
         $creator = new class () implements RfqDraftCreator {
             public ?MailActor $actor = null;
 
-            public function createFromThread(MailActor $actor, string $threadId, string $subject): CreatedDraft
+            public function createFromThread(MailActor $actor, string $threadId, string $subject, ?string $messageId = null): CreatedDraft
             {
                 $this->actor = $actor;
 
@@ -204,7 +217,7 @@ final class MailRoutesTest extends MailAppTestCase
 
         $detail = $this->reviewed($thread, ['action' => 'create_draft']);
         self::assertSame('drafted', self::at($detail, 'summary', 'reviewState'));
-        self::assertSame(['kind', 'publicId', 'reference', 'title', 'href', 'createdAt'], array_keys(Payload::obj(self::at($detail, 'links', 0))));
+        self::assertSame(['kind', 'messageId', 'publicId', 'reference', 'title', 'href', 'createdAt'], array_keys(Payload::obj(self::at($detail, 'links', 0))));
         self::assertSame('/admin/quotegen/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', self::at($detail, 'links', 0, 'href'));
         self::assertSame('RFQ-D-3001', self::at($detail, 'links', 0, 'reference'));
         $last = Payload::objList($detail['activity']);

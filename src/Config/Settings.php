@@ -328,6 +328,9 @@ final readonly class Settings
         public int $rfqMailHeartbeatMinutes = 360,
         public string $rfqMailClassifierModel = 'claude-haiku-5-5',
         public int $rfqMailClassifierTimeoutSeconds = 30,
+        // M6 "drafts on": a second switch beside RFQ_MAIL_MODE, off until the accuracy gate (M5) passes.
+        public bool $rfqMailDraftsEnabled = false,
+        public string $rfqMailDraftBranch = 'VIC',
         /** @var list<string> */
         public array $rfqMailOwnAddresses = [],
         // HMAC key for stable product image addresses; '' derives one from the blob account key.
@@ -501,6 +504,18 @@ final readonly class Settings
     public function isRfqMailReaderRunning(): bool
     {
         return $this->rfqMailReadEnabled && $this->rfqMailMode !== self::RFQ_MAIL_MODE_OFF;
+    }
+
+    /**
+     * RFQ mail intake M6, "drafts on": a classified `rfq` makes a Quotegen draft, an `rfq_followup` is linked to
+     * the draft already open, and "Create draft" on an uncertain conversation works. It takes **both**
+     * `RFQ_MAIL_MODE=live` and `RFQ_MAIL_DRAFTS_ENABLED=true`: `live` alone keeps behaving as shadow (it has
+     * done since M4, so setting it must not change what the reader does), and the flag alone does nothing in
+     * `shadow`. Off by default; the accuracy gate (M5) has not passed.
+     */
+    public function isRfqMailDraftsOn(): bool
+    {
+        return $this->rfqMailDraftsEnabled && $this->rfqMailMode === self::RFQ_MAIL_MODE_LIVE;
     }
 
     /**
@@ -1628,6 +1643,8 @@ final readonly class Settings
             rfqMailHeartbeatMinutes: self::boundedInt($env, 'RFQ_MAIL_HEARTBEAT_MINUTES', 360, 5, 1440),
             rfqMailClassifierModel: $rfqMailClassifierModel,
             rfqMailClassifierTimeoutSeconds: self::boundedInt($env, 'RFQ_MAIL_CLASSIFIER_TIMEOUT_SECONDS', 30, 5, 120),
+            rfqMailDraftsEnabled: self::bool($env, 'RFQ_MAIL_DRAFTS_ENABLED', false),
+            rfqMailDraftBranch: strtoupper(trim(self::string($env, 'RFQ_MAIL_DRAFT_BRANCH', 'VIC'))),
             rfqMailOwnAddresses: array_values(array_filter(array_map(
                 static fn (string $a): string => strtolower(trim($a)),
                 self::csvList($env, 'RFQ_MAIL_OWN_ADDRESSES', ''),

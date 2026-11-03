@@ -232,10 +232,24 @@ final class InMemoryMailStore implements MailStore
     public function recordDraft(string $threadId, NewLink $link, MailParty $actor): void
     {
         $this->requireOpen($threadId);
-        $this->links[] = ['threadId' => $threadId, 'view' => new LinkView($link->publicId, $link->reference, $link->title, $link->createdAt)];
+        $this->links[] = ['threadId' => $threadId, 'view' => new LinkView($link->publicId, $link->reference, $link->title, $link->createdAt, V::LINK_RFQ_DRAFT, $link->messageId)];
         $this->threads[$threadId]['reviewState'] = V::STATE_DRAFTED;
         $this->note($threadId, V::ACTIVITY_DRAFT_CREATED, sprintf('Created RFQ draft %s.', $link->reference), $link->createdAt, $actor);
         $this->refresh($threadId);
+    }
+
+    public function recordFollowup(string $threadId, string $messageId, NewLink $draft, MailParty $actor): bool
+    {
+        foreach ($this->links as $existing) {
+            if ($existing['threadId'] === $threadId && $existing['view']->kind === V::LINK_RFQ_FOLLOWUP && $existing['view']->messageId === $messageId) {
+                return false;
+            }
+        }
+        $this->links[] = ['threadId' => $threadId, 'view' => new LinkView($draft->publicId, $draft->reference, $draft->title, $draft->createdAt, V::LINK_RFQ_FOLLOWUP, $messageId)];
+        $this->note($threadId, V::ACTIVITY_FOLLOWUP_LINKED, sprintf('Linked this message to RFQ draft %s.', $draft->reference), $draft->createdAt, $actor);
+        $this->refresh($threadId);
+
+        return true;
     }
 
     public function recordIgnore(string $threadId, MailParty $actor, int $userId, ?string $note, DateTimeImmutable $at): void

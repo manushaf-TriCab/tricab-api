@@ -10,7 +10,9 @@ use TriCab\Api\Mail\Persistence\InMemoryMailStore;
 use TriCab\Api\Shared\Mailbox\InMemoryMailboxReader;
 use TriCab\Core\Mail\Application\DTO\NewAttachment;
 use TriCab\Core\Mail\Application\DTO\ThreadQuery;
+use TriCab\Core\Mail\Application\Service\MailDraftAutomation;
 use TriCab\Core\Mail\Application\Service\MailIntakeRecorder;
+use TriCab\Core\Shared\Time\Clock;
 use TriCab\Core\Mail\Contract\MailStore;
 use TriCab\Core\Mail\Intake\ClassifierFailed;
 use TriCab\Core\Mail\Intake\MailChanges;
@@ -415,15 +417,198 @@ final class MailReaderPassTest extends TestCase
         self::assertSame(1, count($this->source->calls), 'no Graph call while paused');
     }
 
-    public function test_live_mode_behaves_as_shadow_with_a_warning(): void
+    public function test_live_mode_without_the_drafts_flag_behaves_as_shadow_with_a_warning(): void
     {
         $this->source->pages = [$this->page([Mails::mail('a')])];
         $result = $this->pass('live')->run();
 
         self::assertSame(1, $result->classified);
-        self::assertCount(1, array_filter($this->log, static fn (string $l): bool => str_contains($l, 'drafts are not built yet')));
+        self::assertCount(1, array_filter($this->log, static fn (string $l): bool => str_contains($l, 'RFQ_MAIL_DRAFTS_ENABLED is not true')));
         $record = $this->store->thread($this->store->listThreads(new ThreadQuery('rfq'))->items[0]->id);
         self::assertNotNull($record);
         self::assertSame([], $record->links, 'no draft is made');
+    }
+
+    private function draftsPass(RecordingDraftCreator $creator): MailReaderPass
+    {
+        $now = fn (): DateTimeImmutable => $this->now;
+        $clock = new class ($now) implements Clock {
+            /** @param \Closure(): DateTimeImmutable $now */
+            public function __construct(private readonly \Closure $now)
+            {
+            }
+
+            public function now(): DateTimeImmutable
+            {
+                return ($this->now)();
+            }
+        };
+
+        return new MailReaderPass(
+            new MailReaderOptions(Mails::MAILBOX, true, 'live', 2, 100, 360),
+            $this->source,
+            $this->graph,
+            new MailIntakeRecorder($this->store),
+            $this->store,
+            $this->classifier,
+            $this->state,
+            [],
+            function (string $line): void {
+                $this->log[] = $line;
+            },
+            $now,
+            new MailDraftAutomation($this->store, $creator, Mails::MAILBOX, $clock),
+        );
+    }
+
+    public function test_shadow_and_live_without_the_flag_make_no_draft_and_report_no_draft_counts(): void
+    {
+        foreach (['shadow', 'live'] as $mode) {
+            $this->source->pages = [$this->page([Mails::mail('a-' . $mode)])];
+            $result = $this->pass($mode)->run();
+
+            self::assertSame(1, $result->classified);
+            self::assertArrayNotHasKey('drafted', $result->toArray(), 'the output is what it was before drafts existed');
+            self::assertSame([], $this->state->retries);
+        }
+        foreach ($this->store->listThreads(new ThreadQuery('all'))->items as $item) {
+            $record = $this->store->thread($item->id);
+            self::assertNotNull($record);
+            self::assertSame([], $record->links);
+            self::assertSame('open', $record->summary->reviewState);
+        }
+    }
+
+    public function test_with_drafts_on_an_rfq_message_becomes_a_linked_draft(): void
+    {
+        $creator = new RecordingDraftCreator();
+        $this->source->pages = [$this->page([Mails::mail('a')])];
+
+        $result = $this->draftsPass($creator)->run();
+
+        self::assertSame(1, $result->drafted);
+        self::assertSame(1, $result->toArray()['drafted']);
+        self::assertCount(1, $creator->made);
+        $record = $this->store->thread($this->store->listThreads(new ThreadQuery('rfq'))->items[0]->id);
+        self::assertNotNull($record);
+        self::assertSame('drafted', $record->summary->reviewState);
+        self::assertCount(1, $record->links);
+        self::assertSame([], $this->state->retries, 'nothing is owed');
+        self::assertSame([], $this->state->pending);
+        self::assertSame([], array_filter($this->log, static fn (string $l): bool => str_contains($l, 'behaves as shadow')), 'no shadow warning when drafts are on');
+    }
+
+    public function test_graph_redelivering_or_a_second_page_with_the_same_message_makes_one_draft(): void
+    {
+        $creator = new RecordingDraftCreator();
+        $mail = Mails::mail('a');
+        $this->source->pages = [$this->page([$mail, $mail], 'next-1', false), $this->page([$mail])];
+
+        $this->draftsPass($creator)->run();
+        $this->draftsPass($creator)->run();
+
+        self::assertCount(1, $creator->made);
+        self::assertCount(1, $creator->calls, 'the duplicate was recognised before any draft work');
+    }
+
+    public function test_a_failed_draft_is_owed_and_retried_with_a_back_off_until_it_works(): void
+    {
+        $creator = new RecordingDraftCreator();
+        $creator->failures = 1;
+        $this->source->pages = [$this->page([Mails::mail('a')])];
+
+        $first = $this->draftsPass($creator)->run();
+
+        self::assertSame(PassResult::DONE, $first->status, 'a draft failure does not fail the pass or lose the cursor');
+        self::assertSame(1, $first->draftFailures);
+        self::assertSame(1, $first->recorded);
+        self::assertSame('delta-1', $this->state->cursor);
+        self::assertSame([], $this->state->pending, 'the message is assessed; only the draft is owed');
+        self::assertCount(1, $this->state->retries);
+        $retry = array_values($this->state->retries)[0];
+        self::assertSame(1, $retry['attempts']);
+        self::assertGreaterThan($this->now->getTimestamp(), $retry['nextAt']);
+
+        // Too soon: nothing is attempted (and the creator is not asked).
+        $this->now = $this->now->modify('+30 seconds');
+        $early = $this->draftsPass($creator)->run();
+        self::assertSame(0, $early->draftRetries);
+        self::assertCount(1, $creator->calls);
+
+        $this->now = $this->now->modify('+5 minutes');
+        $later = $this->draftsPass($creator)->run();
+        self::assertSame(1, $later->draftRetries);
+        self::assertSame(1, $later->drafted);
+        self::assertTrue($later->touchedDatabase);
+        self::assertSame([], $this->state->retries);
+        self::assertCount(1, $creator->made);
+    }
+
+    public function test_the_reader_gives_up_after_the_attempt_limit_and_leaves_the_thread_open(): void
+    {
+        $creator = new RecordingDraftCreator();
+        $creator->failures = 1000;
+        $this->source->pages = [$this->page([Mails::mail('a')])];
+        $this->draftsPass($creator)->run();
+
+        for ($i = 1; $i < MailReaderPass::DRAFT_ATTEMPTS; $i++) {
+            $this->now = $this->now->modify('+2 hours');
+            $this->draftsPass($creator)->run();
+        }
+
+        self::assertSame([], $this->state->retries);
+        self::assertCount(MailReaderPass::DRAFT_ATTEMPTS, $creator->calls);
+        self::assertNotEmpty(array_filter($this->log, static fn (string $l): bool => str_starts_with($l, 'Gave up making a draft')));
+        $record = $this->store->thread($this->store->listThreads(new ThreadQuery('rfq'))->items[0]->id);
+        self::assertSame('open', $record?->summary->reviewState);
+    }
+
+    public function test_a_pass_that_dies_after_assessing_leaves_the_draft_owed(): void
+    {
+        $creator = new RecordingDraftCreator();
+        $this->source->pages = [$this->page([Mails::mail('a')])];
+        // The creator dies (not a refusal): the retry entry was written first, so it survives.
+        $dying = new class () implements \TriCab\Core\Mail\Contract\RfqDraftCreator {
+            public function createFromThread(\TriCab\Core\Mail\Domain\MailActor $actor, string $threadId, string $subject, ?string $messageId = null): \TriCab\Core\Mail\Application\DTO\CreatedDraft
+            {
+                throw new \RuntimeException('process died');
+            }
+        };
+        $pass = new MailReaderPass(
+            new MailReaderOptions(Mails::MAILBOX, true, 'live', 2, 100, 360),
+            $this->source,
+            $this->graph,
+            new MailIntakeRecorder($this->store),
+            $this->store,
+            $this->classifier,
+            $this->state,
+            [],
+            null,
+            fn (): DateTimeImmutable => $this->now,
+            new MailDraftAutomation($this->store, $dying, Mails::MAILBOX, new class ($this->now) implements Clock {
+                public function __construct(private readonly DateTimeImmutable $now)
+                {
+                }
+
+                public function now(): DateTimeImmutable
+                {
+                    return $this->now;
+                }
+            }),
+        );
+        try {
+            $pass->run();
+            self::fail('expected the failure to propagate');
+        } catch (\RuntimeException) {
+        }
+        self::assertCount(1, $this->state->retries, 'owed, though the pass died');
+        self::assertNull($this->state->cursor, 'the page was not finished');
+
+        // The next pass redelivers the page (duplicate, still pending) and makes the draft once.
+        $this->source->pages = [$this->page([Mails::mail('a')])];
+        $result = $this->draftsPass($creator)->run();
+        self::assertSame(1, $result->drafted);
+        self::assertSame([], $this->state->retries);
+        self::assertCount(1, $creator->made);
     }
 }

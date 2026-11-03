@@ -831,8 +831,7 @@ final class ContainerFactory
 
             // Mail review (inbox plan I2). In-memory by default; the azure-sql branch below reads `[mail]`.
             // Bodies and attachments come from Exchange through the RFQ mail Graph registration (RFQ M0) and
-            // refuse, naming the missing settings, until it is configured. "Create draft" refuses until RFQ M2
-            // can parse an email: nothing in core/src/Rfq makes a draft from one.
+            // refuse, naming the missing settings, until it is configured.
             \TriCab\Core\Mail\Contract\MailStore::class
                 => \DI\autowire(\TriCab\Api\Mail\Persistence\InMemoryMailStore::class),
             \TriCab\Core\Mail\Contract\MailBodyFetcher::class
@@ -848,8 +847,24 @@ final class ContainerFactory
                             : new \TriCab\Core\Mail\Infrastructure\UnconfiguredMailboxReader(),
                     );
                 },
+            // Drafts are off unless RFQ_MAIL_MODE=live AND RFQ_MAIL_DRAFTS_ENABLED=true (RFQ M6): until then "Create
+            // draft" refuses, as it always has. When on, the reader's own `rfq` mail and the inbox button share one
+            // creator, which goes through the upload's intake (RfqReaderService).
             \TriCab\Core\Mail\Contract\RfqDraftCreator::class
-                => \DI\autowire(\TriCab\Core\Mail\Infrastructure\UnavailableRfqDraftCreator::class),
+                => static function (Container $container) use ($settings): \TriCab\Core\Mail\Contract\RfqDraftCreator {
+                    if (!$settings->isRfqMailDraftsOn()) {
+                        return new \TriCab\Core\Mail\Infrastructure\UnavailableRfqDraftCreator();
+                    }
+
+                    return new \TriCab\Api\Mail\Drafts\RfqEmailDraftCreator(
+                        self::get($container, \TriCab\Core\Mail\Contract\MailStore::class),
+                        self::get($container, \TriCab\Core\Mail\Contract\MailBodyFetcher::class),
+                        self::get($container, \TriCab\Core\Rfq\Application\Service\RfqReaderService::class),
+                        self::get($container, \TriCab\Core\Identity\Contract\UserRepository::class),
+                        $settings->rfqMailMailbox,
+                        $settings->rfqMailDraftBranch,
+                    );
+                },
 
             // NPR (plan NPR-TSD-MIGRATION-PLAN N1). In-memory by default; the azure-sql
             // branch below stores in `[npr]`. The field dictionary and the sales roster

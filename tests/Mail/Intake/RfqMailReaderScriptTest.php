@@ -191,6 +191,16 @@ final class RfqMailReaderScriptTest extends TestCase
         self::assertSame('claude-haiku-5-5', $settings->rfqMailClassifierModel);
         self::assertSame('var/rfq-mail', $settings->rfqMailStatePath);
 
+        // Drafts (RFQ M6) are off by default, and take both live mode and their own flag.
+        self::assertFalse($settings->rfqMailDraftsEnabled);
+        self::assertFalse($settings->isRfqMailDraftsOn());
+        self::assertSame('VIC', $settings->rfqMailDraftBranch);
+        foreach ([['off', 'true', false], ['shadow', 'true', false], ['live', 'false', false], ['live', 'true', true], ['LIVE', 'true', true]] as [$mode, $flag, $expected]) {
+            $drafts = Settings::fromEnvironment($base + ['RFQ_MAIL_MODE' => $mode, 'RFQ_MAIL_DRAFTS_ENABLED' => $flag]);
+            self::assertSame($expected, $drafts->isRfqMailDraftsOn(), "mode {$mode}, flag {$flag}");
+        }
+        self::assertSame('SYDNEY', Settings::fromEnvironment($base + ['RFQ_MAIL_DRAFT_BRANCH' => ' sydney '])->rfqMailDraftBranch);
+
         $on = Settings::fromEnvironment($base + ['RFQ_MAIL_READ_ENABLED' => 'true', 'RFQ_MAIL_MODE' => 'Shadow']);
         self::assertTrue($on->isRfqMailReaderRunning());
         self::assertFalse(Settings::fromEnvironment($base + ['RFQ_MAIL_READ_ENABLED' => 'true'])->isRfqMailReaderRunning(), 'mode off still stops it');

@@ -303,6 +303,31 @@ abstract class MailStoreBehaviour extends TestCase
         $this->store->recordIgnore($a->threadId, $actor, 7, null, MailFixtures::at('2026-10-18 13:00:00'));
     }
 
+    public function test_a_followup_joins_the_threads_draft_once_per_message_and_changes_no_state(): void
+    {
+        $first = MailFixtures::classified($this->recorder, 'fu1', 'rfq', 0.9, conversation: 'conv-fu');
+        $second = MailFixtures::classified($this->recorder, 'fu2', 'rfq_followup', 0.9, conversation: 'conv-fu', at: '2026-10-18 10:00:00');
+        $third = MailFixtures::classified($this->recorder, 'fu3', 'rfq_followup', 0.9, conversation: 'conv-fu', at: '2026-10-18 11:00:00');
+        self::assertSame($first->threadId, $second->threadId);
+        $actor = new MailParty('RFQ mail intake', MailFixtures::MAILBOX);
+        $draft = new NewLink('11111111-2222-3333-4444-555555555555', 'RFQ-11111111', 'Quote for cable', null, MailFixtures::at('2026-10-18 12:00:00'), $first->messageId);
+
+        $this->store->recordDraft($first->threadId, $draft, $actor);
+        self::assertTrue($this->store->recordFollowup($first->threadId, $second->messageId, $draft, $actor));
+        self::assertFalse($this->store->recordFollowup($first->threadId, $second->messageId, $draft, $actor), 'once per message');
+        self::assertTrue($this->store->recordFollowup($first->threadId, $third->messageId, $draft, $actor));
+
+        $record = $this->store->thread($first->threadId);
+        self::assertNotNull($record);
+        self::assertSame('drafted', $record->summary->reviewState);
+        self::assertSame(
+            [['rfq_draft', $first->messageId], ['rfq_followup', $second->messageId], ['rfq_followup', $third->messageId]],
+            array_map(static fn ($l): array => [$l->kind, $l->messageId], $record->links),
+        );
+        self::assertSame(['11111111-2222-3333-4444-555555555555'], array_values(array_unique(array_map(static fn ($l): string => $l->publicId, $record->links))));
+        self::assertSame(2, count(array_filter($record->activity, static fn ($a): bool => $a->kind === 'followup_linked')));
+    }
+
     public function test_a_deleted_thread_is_in_no_list_count_export_or_read(): void
     {
         $this->seed();

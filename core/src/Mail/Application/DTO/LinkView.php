@@ -6,7 +6,7 @@ namespace TriCab\Core\Mail\Application\DTO;
 
 use DateTimeImmutable;
 
-/** `MailLink`: the RFQ draft made from a thread. */
+/** `MailLink`: the RFQ draft made from a thread, or a follow-up message joined to it. */
 final readonly class LinkView
 {
     /** Where tricab-web shows an RFQ. */
@@ -17,6 +17,10 @@ final readonly class LinkView
         public string $reference,
         public string $title,
         public DateTimeImmutable $createdAt,
+        /** `rfq_draft`: the draft made from the thread. `rfq_followup`: a message joined to that draft. */
+        public string $kind = 'rfq_draft',
+        /** The message a follow-up link is for; null for the draft itself. */
+        public ?string $messageId = null,
     ) {
     }
 
@@ -24,7 +28,8 @@ final readonly class LinkView
     public function toArray(): array
     {
         return [
-            'kind' => 'rfq_draft',
+            'kind' => $this->kind,
+            'messageId' => $this->messageId,
             'publicId' => $this->publicId,
             'reference' => $this->reference,
             'title' => $this->title,

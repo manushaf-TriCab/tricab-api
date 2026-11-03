@@ -27,6 +27,8 @@ final class NewDraft
         public readonly string $creatorEmail = '',
         public readonly string $branch = '',
         public readonly ?string $assigneeEmail = null,
+        /** A 32-hex id chosen by the caller, so a retry of the same intake collides on the key instead of duplicating. Null: generated. */
+        public readonly ?string $id = null,
     ) {
     }
 

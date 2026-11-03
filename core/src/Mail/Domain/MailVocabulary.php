@@ -65,6 +65,13 @@ final class MailVocabulary
     public const ACTIVITY_LABEL_CORRECTED = 'label_corrected';
     public const ACTIVITY_DRAFT_CREATED = 'draft_created';
     public const ACTIVITY_IGNORED = 'ignored';
+    public const ACTIVITY_FOLLOWUP_LINKED = 'followup_linked';
+
+    public const LINK_RFQ_DRAFT = 'rfq_draft';
+    public const LINK_RFQ_FOLLOWUP = 'rfq_followup';
+
+    /** @var list<string> What a link on a thread can be: the draft made from it, or a follow-up joined to that draft. */
+    public const LINK_KINDS = [self::LINK_RFQ_DRAFT, self::LINK_RFQ_FOLLOWUP];
 
     /** @var list<string> */
     public const ACTIVITY_KINDS = [
@@ -75,6 +82,7 @@ final class MailVocabulary
         self::ACTIVITY_LABEL_CORRECTED,
         self::ACTIVITY_DRAFT_CREATED,
         self::ACTIVITY_IGNORED,
+        self::ACTIVITY_FOLLOWUP_LINKED,
     ];
 
     /** @var list<string> */

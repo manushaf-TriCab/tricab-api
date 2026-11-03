@@ -280,7 +280,7 @@ BEGIN TRY
             CONSTRAINT [FK_mail_activity_thread]
                 FOREIGN KEY ([thread_id]) REFERENCES [mail].[threads] ([id]),
             CONSTRAINT [CK_mail_activity_kind]
-                CHECK ([kind] IN (N'received', N'classified', N'skipped', N'label_confirmed', N'label_corrected', N'draft_created', N'ignored'))
+                CHECK ([kind] IN (N'received', N'classified', N'skipped', N'label_confirmed', N'label_corrected', N'draft_created', N'ignored', N'followup_linked'))
         );
 
         CREATE INDEX [IX_mail_activity_thread]
@@ -305,11 +305,18 @@ BEGIN TRY
             CONSTRAINT [PK_mail_message_links] PRIMARY KEY CLUSTERED ([id]),
             CONSTRAINT [FK_mail_message_links_thread]
                 FOREIGN KEY ([thread_id]) REFERENCES [mail].[threads] ([id]),
-            CONSTRAINT [CK_mail_message_links_kind] CHECK ([kind] IN (N'rfq_draft'))
+            CONSTRAINT [CK_mail_message_links_kind] CHECK ([kind] IN (N'rfq_draft', N'rfq_followup'))
         );
 
+        -- One link to a draft per thread; and one follow-up link per message (RFQ M6.2). A follow-up names
+        -- the thread's draft, so it shares the draft's public id and needs its own filtered index.
         CREATE UNIQUE INDEX [UX_mail_message_links_draft]
-            ON [mail].[message_links] ([thread_id], [rfq_public_id]);
+            ON [mail].[message_links] ([thread_id], [rfq_public_id])
+            WHERE [kind] = N'rfq_draft';
+
+        CREATE UNIQUE INDEX [UX_mail_message_links_followup]
+            ON [mail].[message_links] ([message_id])
+            WHERE [kind] = N'rfq_followup';
     END;
 
     COMMIT TRANSACTION;

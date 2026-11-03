@@ -78,7 +78,7 @@ final class MailReviewService
             case V::ACTION_CREATE_DRAFT:
                 // The draft is made first: if it cannot be, nothing was recorded and the thread stays open.
                 $draft = $this->drafts->createFromThread($actor, $threadId, $summary->subject);
-                $this->store->recordDraft($threadId, new NewLink($draft->publicId, $draft->reference, $draft->title, $actor->userId, $now), $by);
+                $this->store->recordDraft($threadId, new NewLink($draft->publicId, $draft->reference, $draft->title, $actor->userId, $now, $detail->record->assessment->messageId), $by);
                 break;
             case V::ACTION_IGNORE:
                 $this->store->recordIgnore($threadId, $by, $actor->userId, $request->note, $now);

@@ -110,4 +110,26 @@ final class FileMailReaderStateTest extends TestCase
         self::assertNotNull($second);
         $second->release();
     }
+
+    public function test_owed_drafts_survive_a_new_instance_and_clear_one_by_one(): void
+    {
+        $state = new FileMailReaderState($this->dir);
+        self::assertSame([], $state->draftRetries());
+        $a = ['threadId' => 't1', 'messageId' => 'm1', 'label' => 'rfq', 'injection' => false, 'attempts' => 0, 'nextAt' => 0];
+        $b = ['threadId' => 't2', 'messageId' => 'm2', 'label' => 'rfq_followup', 'injection' => true, 'attempts' => 3, 'nextAt' => 1_800_000_000];
+        $state->saveCursor('link', true);
+        $state->saveDraftRetry('aaa', $a);
+        $state->saveDraftRetry('bbb', $b);
+
+        $again = new FileMailReaderState($this->dir);
+        self::assertSame(['aaa' => $a, 'bbb' => $b], $again->draftRetries());
+        self::assertSame('link', $again->cursor(), 'the cursor is untouched by retries');
+
+        $again->clearDraftRetry('aaa');
+        self::assertSame(['bbb' => $b], (new FileMailReaderState($this->dir))->draftRetries());
+        $again->clearDraftRetry('bbb');
+        $again->clearDraftRetry('never-there');
+        self::assertSame([], (new FileMailReaderState($this->dir))->draftRetries());
+        self::assertSame('link', (new FileMailReaderState($this->dir))->cursor());
+    }
 }

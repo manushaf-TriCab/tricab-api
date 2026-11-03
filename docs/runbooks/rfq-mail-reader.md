@@ -39,7 +39,9 @@ include the mailboxes used by its other features as well as melbourne@.
 | Setting | Default | Meaning |
 |---|---|---|
 | `RFQ_MAIL_READ_ENABLED` | `false` | The pause switch. Must be `true` to read anything. |
-| `RFQ_MAIL_MODE` | `off` | `off` does nothing at all; `shadow` classifies and records; `live` is `shadow` plus a log warning (no drafts until M6). |
+| `RFQ_MAIL_MODE` | `off` | `off` does nothing at all; `shadow` classifies and records; `live` is `shadow` plus a log warning unless `RFQ_MAIL_DRAFTS_ENABLED` is also `true` (see Drafts below). |
+| `RFQ_MAIL_DRAFTS_ENABLED` | `false` | M6 "drafts on". Takes effect only with `RFQ_MAIL_MODE=live`. Do not set it until the accuracy gate (RFQ plan M5) has passed. |
+| `RFQ_MAIL_DRAFT_BRANCH` | `VIC` | The branch stamped on drafts made from mail. Draft branches are state codes (`VIC`, `NSW`, `QLD`, `SA`, `TAS`, `NZNTH` on tricab-mel, 3 Nov 2026); melbourne@ is `VIC`. |
 | `RFQ_MAIL_GRAPH_TENANT_ID` / `_CLIENT_ID` / `_CLIENT_SECRET` | empty | A Graph registration of the reader's own. Empty (all three), it uses the platform's `GRAPH_*`, the RFQ Graph app `ai-rfq-parser-mail`, which already holds `Mail.Read` (19 Oct 2026). Set all three to override. |
 | `FOUNDRY_ENABLED`, `FOUNDRY_ENDPOINT`, `FOUNDRY_AUTH_MODE` | platform's | The classifier uses the platform's Foundry connection (managed identity). |
 | `RFQ_MAIL_CLASSIFIER_MODEL` | `claude-haiku-5-5` | Foundry deployment name. |
@@ -50,6 +52,34 @@ include the mailboxes used by its other features as well as melbourne@.
 | `RFQ_MAIL_HEARTBEAT_MINUTES` | `360` | Longest gap between "last sync" refreshes while idle. |
 | `RFQ_MAIL_STATE_PATH` | `var/rfq-mail` | Cursor, lock, pending markers. |
 | `RFQ_MAIL_OWN_ADDRESSES` | empty | Extra addresses treated as our own mail (the mailbox itself always is). |
+
+## Drafts (RFQ M6): off by default
+
+Drafts need **both** `RFQ_MAIL_MODE=live` and `RFQ_MAIL_DRAFTS_ENABLED=true`. Either alone is the shadow pass (with
+`live` alone the reader logs why). Before switching on, run `database/scripts/development/alter-mail-followup-links.sql` on the `[mail]` database, make sure the mailbox user
+(`RFQ_MAIL_MAILBOX`) is a platform user holding `RFQ.DRAFT.CREATE` (the RFQ sales role), and that the RFQ parser
+(`RFQ_PARSER_*`) is configured for the WebJob too, because the reader calls it.
+
+With drafts on, after a message is classified:
+
+- `rfq`: a Quotegen draft (source `email`) is made through the upload's intake: the email body as `email-body.txt`
+  plus every attachment the parser reads, owned by and assigned to the mailbox user, branch `RFQ_MAIL_DRAFT_BRANCH`,
+  with the message ids and original sender in `email_meta`. The thread is marked `drafted` and links the draft.
+  A message flagged for injection never gets an automatic draft.
+- `rfq_followup` (or a second `rfq` message in a conversation that already has a draft): linked to that draft
+  (Related tab, Activity `followup_linked`). The draft's lines are not touched.
+- `uncertain`: waits in the inbox for "Create draft" (same intake) or "Ignore". `not_rfq`: recorded only.
+
+**One message is one draft.** The draft's id is a hash of the mailbox and the message's internetMessageId, so a retry,
+an overlapping pass, Graph redelivering or a reviewer's click all land on the same primary key; the second one adopts
+the first's draft. A draft that cannot be made now (parser or Graph down) is written to `state.json` (`draftRetries`)
+before the attempt and retried on later passes with a back-off (2, 4, 8 ... minutes, at most an hour) up to 8 times; then
+the log says `Gave up making a draft` and the conversation stays in the inbox. A pass that has drafts on prints
+`drafted`, `followups`, `draftRetries` and `draftFailures` in its count line. `--status` shows `draftsEnabled` and
+`draftsOn`.
+
+**Switch off:** set `RFQ_MAIL_DRAFTS_ENABLED=false` (the reader returns to the shadow pass at once; drafts already
+made stay). "Create draft" then answers 503 again.
 
 ## Pause
 

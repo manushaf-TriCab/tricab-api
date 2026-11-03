@@ -118,6 +118,49 @@ final class FileMailReaderState implements MailReaderState
         }
     }
 
+    public function draftRetries(): array
+    {
+        $out = [];
+        $stored = $this->read()['draftRetries'] ?? [];
+        foreach (is_array($stored) ? $stored : [] as $key => $e) {
+            if (!is_string($key) || !is_array($e)) {
+                continue;
+            }
+            $out[$key] = [
+                'threadId' => is_string($e['threadId'] ?? null) ? $e['threadId'] : '',
+                'messageId' => is_string($e['messageId'] ?? null) ? $e['messageId'] : '',
+                'label' => is_string($e['label'] ?? null) ? $e['label'] : '',
+                'injection' => ($e['injection'] ?? false) === true,
+                'attempts' => is_int($e['attempts'] ?? null) ? $e['attempts'] : 0,
+                'nextAt' => is_int($e['nextAt'] ?? null) ? $e['nextAt'] : 0,
+            ];
+        }
+
+        return $out;
+    }
+
+    public function saveDraftRetry(string $key, array $entry): void
+    {
+        $state = $this->read();
+        $retries = is_array($state['draftRetries'] ?? null) ? $state['draftRetries'] : [];
+        $retries[$key] = $entry;
+        $state['draftRetries'] = $retries;
+        $this->write($state);
+    }
+
+    public function clearDraftRetry(string $key): void
+    {
+        $state = $this->read();
+        if (!is_array($state['draftRetries'] ?? null) || !isset($state['draftRetries'][$key])) {
+            return;
+        }
+        unset($state['draftRetries'][$key]);
+        if ($state['draftRetries'] === []) {
+            unset($state['draftRetries']);
+        }
+        $this->write($state);
+    }
+
     private static function normalise(string $mailbox): string
     {
         return strtolower(trim($mailbox));

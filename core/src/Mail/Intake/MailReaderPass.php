@@ -11,8 +11,10 @@ use Throwable;
 use TriCab\Core\Mail\Application\DTO\NewAssessment;
 use TriCab\Core\Mail\Application\DTO\NewAttachment;
 use TriCab\Core\Mail\Application\DTO\NewMessage;
+use TriCab\Core\Mail\Application\Service\MailDraftAutomation;
 use TriCab\Core\Mail\Application\Service\MailIntakeRecorder;
 use TriCab\Core\Mail\Contract\MailStore;
+use TriCab\Core\Mail\Domain\Exception\MailUnavailable;
 use TriCab\Core\Mail\Domain\MailVocabulary;
 use TriCab\Core\Shared\Mailbox\MailboxAccessDenied;
 use TriCab\Core\Shared\Mailbox\MailboxAttachmentSummary;
@@ -36,12 +38,20 @@ use TriCab\Core\Shared\Mailbox\MailboxSyncExpired;
  * dedupes on internetMessageId, and only a message that was newly recorded, or one a dead pass recorded
  * without assessing (the `pending` marker), is assessed.
  *
- * **Shadow only.** `live` is shadow plus a warning: no drafts, no notifications (M6).
+ * **Shadow unless drafts are on.** Drafts (M6) take a {@see MailDraftAutomation}, which the caller passes only
+ * when `RFQ_MAIL_MODE=live` and `RFQ_MAIL_DRAFTS_ENABLED=true`. Without one this pass is exactly the shadow
+ * pass (`live` alone adds a log warning): no draft, no link, no extra database call, no notification.
+ * With one, a message labelled `rfq` or `rfq_followup` is written to the state's retry list *before* its draft
+ * or link is attempted and removed when that succeeds; a failure leaves it there and each later pass tries
+ * again with a back-off, up to {@see self::DRAFT_ATTEMPTS} times.
  */
 final class MailReaderPass
 {
     /** The fields asked of Graph: only what is recorded or needed by the pre-filter. */
     public const SELECT = 'id,internetMessageId,conversationId,subject,from,toRecipients,ccRecipients,receivedDateTime,bodyPreview,isRead,hasAttachments,internetMessageHeaders';
+
+    /** How many times a draft is tried for one message before the reader stops and leaves it to a person. */
+    public const DRAFT_ATTEMPTS = 8;
 
     /** @var Closure(string): void */
     private readonly Closure $log;
@@ -67,6 +77,7 @@ final class MailReaderPass
         array $ownAddresses = [],
         ?callable $log = null,
         ?callable $now = null,
+        private readonly ?MailDraftAutomation $drafts = null,
     ) {
         $this->log = $log === null ? static function (string $line): void {
         } : Closure::fromCallable($log);
@@ -92,12 +103,14 @@ final class MailReaderPass
 
             return new PassResult(PassResult::PAUSED);
         }
-        if ($this->options->mode === MailReaderOptions::MODE_LIVE) {
-            ($this->log)('RFQ_MAIL_MODE=live: drafts are not built yet (M6), so this behaves as shadow: classify and record only.');
+        if ($this->options->mode === MailReaderOptions::MODE_LIVE && $this->drafts === null) {
+            ($this->log)('RFQ_MAIL_MODE=live but RFQ_MAIL_DRAFTS_ENABLED is not true, so this behaves as shadow: classify and record only.');
         }
 
         $result = new PassResult(PassResult::DONE);
+        $result->draftsOn = $this->drafts !== null;
         try {
+            $this->retryDrafts($result, $now);
             $this->readPages($result, $now);
         } catch (Throwable $failure) {
             $this->noteFailure($failure, $now);
@@ -224,7 +237,65 @@ final class MailReaderPass
 
         $assessment = $this->classify($mail, $recorded->threadId, $result);
         $this->recorder->recordAssessment($this->options->mailbox, $mail->internetMessageId, $assessment);
+        if ($this->drafts !== null && !$assessment->skipped
+            && in_array($assessment->label, [MailVocabulary::LABEL_RFQ, MailVocabulary::LABEL_RFQ_FOLLOWUP], true)) {
+            // Written before the attempt: the message is assessed now, Graph will not bring it back, and
+            // `pending` is cleared below, so this entry is all that remembers the draft is owed.
+            $entry = ['threadId' => $recorded->threadId, 'messageId' => $recorded->messageId, 'label' => $assessment->label, 'injection' => $assessment->injectionSuspected, 'attempts' => 0, 'nextAt' => 0];
+            $this->state->saveDraftRetry($key, $entry);
+            $this->attemptDraft($key, $entry, $result);
+        }
         $this->state->clearPending($key);
+    }
+
+    /** Tries the drafts a failed attempt left owed (drafts on only; nothing is read unless the state lists some). */
+    private function retryDrafts(PassResult $result, DateTimeImmutable $now): void
+    {
+        if ($this->drafts === null) {
+            return;
+        }
+        foreach ($this->state->draftRetries() as $key => $entry) {
+            if ($entry['nextAt'] > $now->getTimestamp()) {
+                continue;
+            }
+            $result->touchedDatabase = true;
+            $result->draftRetries++;
+            $this->attemptDraft($key, $entry, $result);
+        }
+    }
+
+    /**
+     * @param array{threadId: string, messageId: string, label: string, injection: bool, attempts: int, nextAt: int} $entry
+     */
+    private function attemptDraft(string $key, array $entry, PassResult $result): void
+    {
+        if ($this->drafts === null) {
+            return;
+        }
+        try {
+            $outcome = $this->drafts->apply($entry['threadId'], $entry['messageId'], $entry['label'], $entry['injection']);
+        } catch (MailUnavailable $failure) {
+            $result->draftFailures++;
+            $attempts = $entry['attempts'] + 1;
+            if ($attempts >= self::DRAFT_ATTEMPTS) {
+                ($this->log)('Gave up making a draft after ' . $attempts . ' tries (' . $failure->getMessage() . '). The conversation stays in the inbox for a person.');
+                $this->state->clearDraftRetry($key);
+
+                return;
+            }
+            ($this->log)('Draft not made yet (try ' . $attempts . '): ' . $failure->getMessage());
+            $entry['attempts'] = $attempts;
+            $entry['nextAt'] = ($this->now)()->getTimestamp() + min(3600, 60 * (2 ** $attempts));
+            $this->state->saveDraftRetry($key, $entry);
+
+            return;
+        }
+        if ($outcome === MailDraftAutomation::CREATED) {
+            $result->drafted++;
+        } elseif ($outcome === MailDraftAutomation::FOLLOWUP) {
+            $result->followups++;
+        }
+        $this->state->clearDraftRetry($key);
     }
 
     private function classify(IncomingMail $mail, string $threadId, PassResult $result): NewAssessment

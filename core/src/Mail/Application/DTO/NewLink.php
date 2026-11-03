@@ -15,6 +15,8 @@ final readonly class NewLink
         public string $title,
         public ?int $createdByUserId,
         public DateTimeImmutable $createdAt,
+        /** The message the draft was made from, so that message arriving again is not joined to its own draft as a follow-up. */
+        public ?string $messageId = null,
     ) {
     }
 }

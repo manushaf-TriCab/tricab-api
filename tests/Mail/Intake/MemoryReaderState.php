@@ -62,4 +62,22 @@ final class MemoryReaderState implements MailReaderState
     {
         unset($this->pending[$key]);
     }
+
+    /** @var array<string, array{threadId: string, messageId: string, label: string, injection: bool, attempts: int, nextAt: int}> */
+    public array $retries = [];
+
+    public function draftRetries(): array
+    {
+        return $this->retries;
+    }
+
+    public function saveDraftRetry(string $key, array $entry): void
+    {
+        $this->retries[$key] = $entry;
+    }
+
+    public function clearDraftRetry(string $key): void
+    {
+        unset($this->retries[$key]);
+    }
 }

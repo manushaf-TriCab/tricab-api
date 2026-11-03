@@ -13,7 +13,8 @@ declare(strict_types=1);
  * the database only when Graph returns messages (and for an occasional heartbeat), so the serverless `tc`
  * can pause between mail. New messages are recorded in `[mail]` through MailIntakeRecorder, pre-filtered
  * without a model, classified by Claude on Foundry, and the result recorded. Shadow only: no drafts, no
- * notifications. Nothing runs unless RFQ_MAIL_READ_ENABLED=true and RFQ_MAIL_MODE is shadow or live.
+ * notifications; with RFQ_MAIL_MODE=live and RFQ_MAIL_DRAFTS_ENABLED=true (RFQ M6, off by default) rfq mail also becomes a
+ * Quotegen draft. Nothing runs unless RFQ_MAIL_READ_ENABLED=true and RFQ_MAIL_MODE is shadow or live.
  *
  * Exit codes (docs/runbooks/rfq-mail-reader.md):
  *    0  a pass ran, or had nothing to do
@@ -40,10 +41,13 @@ use TriCab\Api\Mail\Intake\GraphMailDeltaSource;
 use TriCab\Api\Mail\Intake\MailReaderJob;
 use TriCab\Api\Mail\Persistence\InMemoryMailStore;
 use TriCab\Api\Shared\Mailbox\GraphMailboxReader;
+use TriCab\Core\Mail\Application\Service\MailDraftAutomation;
 use TriCab\Core\Mail\Application\Service\MailIntakeRecorder;
 use TriCab\Core\Mail\Contract\MailStore;
+use TriCab\Core\Mail\Contract\RfqDraftCreator;
 use TriCab\Core\Mail\Intake\MailReaderOptions;
 use TriCab\Core\Mail\Intake\MailReaderPass;
+use TriCab\Core\Shared\Time\Clock;
 
 $options = getopt('', ['status', 'reset-cursor', 'allow-memory']);
 
@@ -64,6 +68,8 @@ if (isset($options['status'])) {
         'mailbox' => $settings->rfqMailMailbox,
         'graphConfigured' => $settings->isMailBodyReadingConfigured(),
         'classifierConfigured' => $settings->isRfqMailClassifierConfigured(),
+        'draftsEnabled' => $settings->rfqMailDraftsEnabled,
+        'draftsOn' => $settings->isRfqMailDraftsOn(),
     ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT) . "\n");
     exit(MailReaderJob::EXIT_OK);
 }
@@ -140,6 +146,12 @@ $classifier = new FoundryMailClassifier(
     (new MarkdownPromptRepository(dirname(__DIR__) . '/PROMPTS'))->get('rfq-mail-classify', 'v1'),
 );
 
+// Drafts (RFQ M6) exist only with RFQ_MAIL_MODE=live AND RFQ_MAIL_DRAFTS_ENABLED=true. Otherwise no automation
+// is built and the pass is the shadow pass, whatever else is set.
+$drafts = $settings->isRfqMailDraftsOn()
+    ? new MailDraftAutomation($store, $container->get(RfqDraftCreator::class), $settings->rfqMailMailbox, $container->get(Clock::class))
+    : null;
+
 $pass = new MailReaderPass(
     new MailReaderOptions(
         $settings->rfqMailMailbox,
@@ -159,6 +171,8 @@ $pass = new MailReaderPass(
     static function (string $line): void {
         fwrite(STDERR, '[' . gmdate('c') . '] ' . $line . "\n");
     },
+    null,
+    $drafts,
 );
 
 exit((new MailReaderJob($pass, $state->directory()))->run());

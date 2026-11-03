@@ -103,7 +103,7 @@ final class AzureSqlRfqDraftStore implements RfqDraftStore, RfqReaderJobStore, R
     public function create(NewDraft $draft): string
     {
         $ids = $this->ids;
-        $draftId = $ids();
+        $draftId = $draft->id !== null && StoreFormat::isId($draft->id) ? $draft->id : $ids();
         $now = $this->clock->now();
         $createdAt = StoreFormat::isoTime($now);
         $dueAt = StoreFormat::isoTime($now->modify('+' . StoreFormat::DEFAULT_DUE_HOURS . ' hours'));

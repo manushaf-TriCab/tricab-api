@@ -317,10 +317,11 @@ final class AzureSqlMailStore implements MailStore
             $this->requireOpen($threadId);
             $this->connection->execute(
                 'INSERT INTO [mail].[message_links] ([id], [thread_id], [message_id], [kind], [rfq_public_id], [reference], [title], [created_by_user_id], [created_at])
-                 VALUES (:id, :thread, NULL, N\'rfq_draft\', :public, :reference, :title, :user, :at)',
+                 VALUES (:id, :thread, :message, N\'rfq_draft\', :public, :reference, :title, :user, :at)',
                 [
                     'id' => MailIds::new(),
                     'thread' => $threadId,
+                    'message' => $link->messageId,
                     'public' => $link->publicId,
                     'reference' => mb_substr($link->reference, 0, 100),
                     'title' => mb_substr($link->title, 0, 500),
@@ -331,6 +332,39 @@ final class AzureSqlMailStore implements MailStore
             $this->connection->execute('UPDATE [mail].[threads] SET [review_state] = :state WHERE [id] = :id', ['state' => V::STATE_DRAFTED, 'id' => $threadId]);
             $this->activityRow($threadId, null, V::ACTIVITY_DRAFT_CREATED, sprintf('Created RFQ draft %s.', $link->reference), $link->createdAt, $link->createdByUserId, $actor);
             $this->refresh($threadId);
+        });
+    }
+
+    public function recordFollowup(string $threadId, string $messageId, NewLink $draft, MailParty $actor): bool
+    {
+        return $this->runInTransaction($this->connection, function () use ($threadId, $messageId, $draft, $actor): bool {
+            // The thread row is the lock: two passes linking the same message take turns, and the
+            // second finds the first's link. (UX_mail_message_links_followup backs this up.)
+            $this->connection->fetchAll('SELECT [id] FROM [mail].[threads] WITH (UPDLOCK, HOLDLOCK) WHERE [id] = :id', ['id' => $threadId]);
+            $found = $this->connection->fetchAll(
+                'SELECT 1 AS [one] FROM [mail].[message_links] WHERE [message_id] = :message AND [kind] = N\'rfq_followup\'',
+                ['message' => $messageId],
+            );
+            if ($found !== []) {
+                return false;
+            }
+            $this->connection->execute(
+                'INSERT INTO [mail].[message_links] ([id], [thread_id], [message_id], [kind], [rfq_public_id], [reference], [title], [created_by_user_id], [created_at])
+                 VALUES (:id, :thread, :message, N\'rfq_followup\', :public, :reference, :title, NULL, :at)',
+                [
+                    'id' => MailIds::new(),
+                    'thread' => $threadId,
+                    'message' => $messageId,
+                    'public' => $draft->publicId,
+                    'reference' => mb_substr($draft->reference, 0, 100),
+                    'title' => mb_substr($draft->title, 0, 500),
+                    'at' => AzureSqlValueMapper::formatDateTime($draft->createdAt),
+                ],
+            );
+            $this->activityRow($threadId, $messageId, V::ACTIVITY_FOLLOWUP_LINKED, sprintf('Linked this message to RFQ draft %s.', $draft->reference), $draft->createdAt, null, $actor);
+            $this->refresh($threadId);
+
+            return true;
         });
     }
 
@@ -722,8 +756,10 @@ final class AzureSqlMailStore implements MailStore
             self::text($r['reference']),
             self::text($r['title']),
             AzureSqlValueMapper::requireDateTime($r['created_at'], 'created_at'),
+            AzureSqlValueMapper::stringValue($r['kind']),
+            AzureSqlValueMapper::nullableString($r['message_id'] ?? null),
         ), $this->connection->fetchAll(
-            'SELECT [rfq_public_id], [reference], [title], [created_at] FROM [mail].[message_links] WHERE [thread_id] = :thread ORDER BY [created_at], [id]',
+            'SELECT [rfq_public_id], [reference], [title], [created_at], [kind], [message_id] FROM [mail].[message_links] WHERE [thread_id] = :thread ORDER BY [created_at], [id]',
             ['thread' => $threadId],
         ));
     }
