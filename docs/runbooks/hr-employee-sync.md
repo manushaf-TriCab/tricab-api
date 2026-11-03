@@ -51,3 +51,7 @@ php bin/sync-hr-employees.php --env=../local-db/env.live --apply    # sync
 - `status: guarded` with a warning: the newest refresh was short. Check with payroll (the export owner is not known yet), and the next full refresh clears it by itself.
 - `unmatchedLogins` counts current employees with no platform user; `unmatchedLoginsAll` counts everyone.
 - `rowsMissing` is the number of employees newly flagged as gone from `tc.employee` in this run.
+
+## Department map (phase 4)
+
+Raw department and factory values are mapped to clean names in `[hr].[DepartmentMap]` (script `create-hr-department-map.sql`, apply before the API that reads it). HR edits it on the Department map page; the sync never touches it. Reading needs `HR.EMPLOYEES.READ`, editing needs `HR.EMPLOYEES.SYNC`, and every change is a row in `[audit].[HrDepartmentMapEvents]`. An unmapped value shows as itself in the directory and filters.

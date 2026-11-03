@@ -21,7 +21,7 @@ final class AzureSqlEmployeeDirectory implements EmployeeDirectory
     private const SELECT = <<<'SQL'
         SELECT
             e.[EmployeeCode], e.[UserLogin], e.[FirstName], e.[LastName], e.[DisplayName],
-            e.[DepartmentRaw], e.[FactoryRaw], e.[WorkEmail], e.[ManagerLogin],
+            e.[DepartmentRaw], e.[FactoryRaw], dm.[CleanName] AS [DepartmentClean], fm.[CleanName] AS [FactoryClean], e.[WorkEmail], e.[ManagerLogin],
             COALESCE(NULLIF(LTRIM(RTRIM(m.[DisplayName])), N''), NULLIF(LTRIM(RTRIM(CONCAT(m.[FirstName], N' ', m.[LastName]))), N'')) AS [ManagerName],
             m.[EmployeeCode] AS [ManagerCode],
             CONVERT(VARCHAR(10), e.[DateHired], 23) AS [DateHired],
@@ -39,13 +39,28 @@ final class AzureSqlEmployeeDirectory implements EmployeeDirectory
             ORDER BY x.[IsCurrent] DESC, x.[EmployeeCode]
         ) m
         LEFT JOIN [identity].[Users] u ON u.[UserId] = e.[UserId]
+        LEFT JOIN [hr].[DepartmentMap] dm ON dm.[MapKind] = N'department' AND dm.[RawValue] = LTRIM(RTRIM(e.[DepartmentRaw]))
+        LEFT JOIN [hr].[DepartmentMap] fm ON fm.[MapKind] = N'factory' AND fm.[RawValue] = LTRIM(RTRIM(e.[FactoryRaw]))
         SQL;
+
+    /** The map joins alone, for queries that only filter and count. */
+    private const MAP_JOINS = <<<'SQL'
+        LEFT JOIN [hr].[DepartmentMap] dm ON dm.[MapKind] = N'department' AND dm.[RawValue] = LTRIM(RTRIM(e.[DepartmentRaw]))
+        LEFT JOIN [hr].[DepartmentMap] fm ON fm.[MapKind] = N'factory' AND fm.[RawValue] = LTRIM(RTRIM(e.[FactoryRaw]))
+        SQL;
+
+    /**
+     * The clean name when HR mapped the raw value, otherwise the trimmed raw value
+     * (NULL when blank): what the directory shows, filters and sorts on.
+     */
+    private const DEPARTMENT = "COALESCE(NULLIF(dm.[CleanName], N''), NULLIF(LTRIM(RTRIM(e.[DepartmentRaw])), N''))";
+    private const FACTORY = "COALESCE(NULLIF(fm.[CleanName], N''), NULLIF(LTRIM(RTRIM(e.[FactoryRaw])), N''))";
 
     private const ORDER = [
         EmployeeListCriteria::SORT_NAME => "COALESCE(NULLIF(LTRIM(RTRIM(e.[DisplayName])), N''), e.[EmployeeCode])",
         EmployeeListCriteria::SORT_CODE => 'e.[EmployeeCode]',
-        EmployeeListCriteria::SORT_DEPARTMENT => 'e.[DepartmentRaw]',
-        EmployeeListCriteria::SORT_FACTORY => 'e.[FactoryRaw]',
+        EmployeeListCriteria::SORT_DEPARTMENT => self::DEPARTMENT,
+        EmployeeListCriteria::SORT_FACTORY => self::FACTORY,
         EmployeeListCriteria::SORT_MANAGER => 'e.[ManagerLogin]',
         EmployeeListCriteria::SORT_DATE_HIRED => 'e.[DateHired]',
         EmployeeListCriteria::SORT_LAST_SEEN => 'e.[LegacyUpdateDate]',
@@ -74,7 +89,7 @@ final class AzureSqlEmployeeDirectory implements EmployeeDirectory
             [...$params, ':offset' => ($criteria->page - 1) * $criteria->pageSize, ':pageSize' => $criteria->pageSize],
         );
 
-        $total = $this->connection->fetchAll('SELECT COUNT(*) AS [Total] FROM [hr].[Employees] e ' . $where, $params);
+        $total = $this->connection->fetchAll('SELECT COUNT(*) AS [Total] FROM [hr].[Employees] e ' . self::MAP_JOINS . ' ' . $where, $params);
 
         return [
             'items' => array_map(self::item(...), $rows),
@@ -85,14 +100,14 @@ final class AzureSqlEmployeeDirectory implements EmployeeDirectory
     public function facets(string $status): array
     {
         $where = match ($status) {
-            EmployeeListCriteria::STATUS_CURRENT => 'WHERE [IsCurrent] = 1',
-            EmployeeListCriteria::STATUS_PAST => 'WHERE [IsCurrent] = 0',
+            EmployeeListCriteria::STATUS_CURRENT => 'WHERE e.[IsCurrent] = 1',
+            EmployeeListCriteria::STATUS_PAST => 'WHERE e.[IsCurrent] = 0',
             default => '',
         };
 
         return [
-            'departments' => $this->facet('DepartmentRaw', $where),
-            'factories' => $this->facet('FactoryRaw', $where),
+            'departments' => $this->facet(self::DEPARTMENT, $where),
+            'factories' => $this->facet(self::FACTORY, $where),
         ];
     }
 
@@ -222,11 +237,11 @@ final class AzureSqlEmployeeDirectory implements EmployeeDirectory
             $clauses[] = 'e.[IsCurrent] = 0';
         }
         if ($criteria->department !== null) {
-            $clauses[] = 'e.[DepartmentRaw] = :department';
+            $clauses[] = self::DEPARTMENT . ' = :department';
             $params[':department'] = $criteria->department;
         }
         if ($criteria->factory !== null) {
-            $clauses[] = 'e.[FactoryRaw] = :factory';
+            $clauses[] = self::FACTORY . ' = :factory';
             $params[':factory'] = $criteria->factory;
         }
         if ($criteria->manager !== null) {
@@ -249,14 +264,16 @@ final class AzureSqlEmployeeDirectory implements EmployeeDirectory
     }
 
     /**
+     * Distinct effective values (clean name, else raw) with counts.
+     *
      * @return list<array{value: string, count: int}>
      */
-    private function facet(string $column, string $where): array
+    private function facet(string $expression, string $where): array
     {
         $rows = $this->connection->fetchAll(
-            "SELECT LTRIM(RTRIM([{$column}])) AS [Value], COUNT(*) AS [Count] FROM [hr].[Employees] {$where}"
-            . ($where === '' ? ' WHERE' : ' AND') . " NULLIF(LTRIM(RTRIM([{$column}])), N'') IS NOT NULL"
-            . " GROUP BY LTRIM(RTRIM([{$column}])) ORDER BY LTRIM(RTRIM([{$column}]))",
+            "SELECT x.[V] AS [Value], COUNT(*) AS [Count] FROM [hr].[Employees] e " . self::MAP_JOINS
+            . " CROSS APPLY (SELECT {$expression} AS [V]) x {$where}"
+            . ($where === '' ? ' WHERE' : ' AND') . ' x.[V] IS NOT NULL GROUP BY x.[V] ORDER BY x.[V]',
         );
 
         return array_map(static fn (array $row): array => [
@@ -280,8 +297,12 @@ final class AzureSqlEmployeeDirectory implements EmployeeDirectory
             'firstName' => AzureSqlValueMapper::nullableString($row['FirstName'] ?? null),
             'lastName' => AzureSqlValueMapper::nullableString($row['LastName'] ?? null),
             'displayName' => AzureSqlValueMapper::nullableString($row['DisplayName'] ?? null),
-            'department' => AzureSqlValueMapper::nullableString($row['DepartmentRaw'] ?? null),
-            'factory' => AzureSqlValueMapper::nullableString($row['FactoryRaw'] ?? null),
+            'department' => AzureSqlValueMapper::nullableString($row['DepartmentClean'] ?? null)
+                ?? AzureSqlValueMapper::nullableString($row['DepartmentRaw'] ?? null),
+            'departmentRaw' => AzureSqlValueMapper::nullableString($row['DepartmentRaw'] ?? null),
+            'factory' => AzureSqlValueMapper::nullableString($row['FactoryClean'] ?? null)
+                ?? AzureSqlValueMapper::nullableString($row['FactoryRaw'] ?? null),
+            'factoryRaw' => AzureSqlValueMapper::nullableString($row['FactoryRaw'] ?? null),
             'workEmail' => AzureSqlValueMapper::nullableString($row['WorkEmail'] ?? null),
             'managerLogin' => AzureSqlValueMapper::nullableString($row['ManagerLogin'] ?? null),
             'managerName' => AzureSqlValueMapper::nullableString($row['ManagerName'] ?? null),

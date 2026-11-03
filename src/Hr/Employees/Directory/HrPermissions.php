@@ -16,6 +16,10 @@ final class HrPermissions
     /** The restricted block (birth date, home address, personal contact, leave balances). */
     public const EMPLOYEES_RESTRICTED_READ = 'HR.EMPLOYEES.RESTRICTED.READ';
 
-    /** Sync run status. */
+    /**
+     * Sync run status, and editing the department map (plan 4.1): both maintain how the
+     * mirror is presented rather than reveal personal data, and no new permission is needed
+     * (the HR role already holds it; reading the map needs only EMPLOYEES_READ).
+     */
     public const EMPLOYEES_SYNC = 'HR.EMPLOYEES.SYNC';
 }

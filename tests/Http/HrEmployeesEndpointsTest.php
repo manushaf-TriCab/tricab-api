@@ -36,6 +36,7 @@ final class HrEmployeesEndpointsTest extends TestCase
         'GET /api/v1/hr/employees' => self::READ,
         'GET /api/v1/hr/employees/sync-runs' => self::SYNC,
         'GET /api/v1/hr/employees/{code}' => self::READ,
+        'GET /api/v1/hr/department-map' => self::READ,
     ];
 
     /** Phase 5 routes (see HrOnboardingLinkEndpointsTest): they write the onboarding link, never an employee. */
@@ -45,6 +46,9 @@ final class HrEmployeesEndpointsTest extends TestCase
         'POST /api/v1/hr/onboarding-links/people/{personPublicId}/proposals/{proposalPublicId}/confirm',
         'POST /api/v1/hr/onboarding-links/people/{personPublicId}/proposals/{proposalPublicId}/dismiss',
     ];
+
+    /** Phase 4 write (see HrDepartmentMapEndpointsTest): it writes the platform's own map, never an employee. */
+    private const MAP_ROUTES = ['PUT /api/v1/hr/department-map'];
 
     public function test_every_hr_route_is_in_the_table(): void
     {
@@ -57,7 +61,7 @@ final class HrEmployeesEndpointsTest extends TestCase
                 $registered[] = $method . ' ' . $route->getPattern();
             }
         }
-        $expected = [...array_keys(self::ROUTES), ...self::LINK_ROUTES];
+        $expected = [...array_keys(self::ROUTES), ...self::LINK_ROUTES, ...self::MAP_ROUTES];
         sort($registered);
         sort($expected);
 
@@ -107,7 +111,7 @@ final class HrEmployeesEndpointsTest extends TestCase
         $items = self::rows($data['items'] ?? null);
         self::assertSame(['E001', 'E002', 'E003', 'E004', 'E005', 'E006', 'E007'], array_column($items, 'code'));
         self::assertSame([
-            'code', 'login', 'firstName', 'lastName', 'displayName', 'department', 'factory', 'workEmail', 'managerLogin',
+            'code', 'login', 'firstName', 'lastName', 'displayName', 'department', 'departmentRaw', 'factory', 'factoryRaw', 'workEmail', 'managerLogin',
             'managerName', 'dateHired', 'isCurrent', 'lastSeenInPayroll', 'missingFromSourceAt', 'linkedUser',
         ], array_keys($items[1]));
         self::assertSame('Chris Owen', $items[1]['managerName']);

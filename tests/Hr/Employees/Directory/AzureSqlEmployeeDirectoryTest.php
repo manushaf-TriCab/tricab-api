@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Hr\Employees\Directory;
 
 use PHPUnit\Framework\TestCase;
+use TriCab\Api\Hr\Employees\Directory\AzureSqlDepartmentMapStore;
 use TriCab\Api\Hr\Employees\Directory\AzureSqlEmployeeDirectory;
+use TriCab\Api\Hr\Employees\Directory\DepartmentMapRefused;
 use TriCab\Api\Hr\Employees\Directory\AzureSqlRestrictedReadAudit;
 use TriCab\Api\Hr\Employees\Directory\EmployeeListCriteria;
 use TriCab\Api\Tests\Doubles\FakeSqlConnection;
@@ -115,5 +117,72 @@ final class AzureSqlEmployeeDirectoryTest extends TestCase
             ':ipAddress' => '203.0.113.9',
             ':userAgent' => 'Brave',
         ], $connection->calls[0]['params']);
+    }
+
+    public function test_the_directory_filters_and_facets_on_the_clean_name_and_keeps_the_raw_value(): void
+    {
+        $connection = new FakeSqlConnection([self::ROW + ['DepartmentClean' => 'Extrusion', 'FactoryClean' => null]]);
+        $directory = new AzureSqlEmployeeDirectory($connection);
+
+        $result = $directory->search(new EmployeeListCriteria(department: 'Extrusion', factory: 'MELB'));
+        $directory->facets('current');
+
+        $item = $result['items'][0];
+        self::assertSame('Extrusion', $item['department']);
+        self::assertSame('OpsExtru', $item['departmentRaw']);
+        self::assertSame('MELB', $item['factory'], 'an unmapped factory shows its raw value');
+        self::assertSame('MELB', $item['factoryRaw']);
+        foreach ($connection->calls as $call) {
+            self::assertStringContainsString('[hr].[DepartmentMap]', $call['sql']);
+        }
+        self::assertStringContainsString("dm.[CleanName]", $connection->calls[0]['sql']);
+        self::assertStringNotContainsString('e.[DepartmentRaw] = :department', $connection->calls[0]['sql']);
+        self::assertSame('Extrusion', $connection->calls[0]['params'][':department']);
+    }
+
+    public function test_a_map_change_and_its_audit_row_share_one_transaction_and_bind_the_actor(): void
+    {
+        $connection = new FakeSqlConnection([]);
+        $connection->queueFetch([]);                  // no existing mapping
+        $connection->queueFetch([['Seen' => 1]]);     // the raw value is in the data
+        $actor = new ActorContext(userId: 7, publicId: 'p', emailAddress: 'hr@tricab.com', correlationId: 'req-9');
+
+        $result = (new AzureSqlDepartmentMapStore($connection))->save($actor, 'department', 'OpsExtru', 'Extrusion', 'CC-1');
+
+        self::assertTrue($result['changed']);
+        self::assertTrue($connection->beganTransaction);
+        self::assertTrue($connection->committed);
+        $writes = array_values(array_filter($connection->calls, static fn (array $call): bool => preg_match('/^\s*(INSERT|UPDATE|DELETE)/', $call['sql']) === 1));
+        self::assertCount(2, $writes);
+        self::assertStringContainsString('INSERT INTO [hr].[DepartmentMap]', $writes[0]['sql']);
+        self::assertStringContainsString('INSERT INTO [audit].[HrDepartmentMapEvents]', $writes[1]['sql']);
+        self::assertSame(7, $writes[1]['params'][':actorUserId']);
+        self::assertSame('created', $writes[1]['params'][':action']);
+        self::assertSame('HR.EMPLOYEES.SYNC', $writes[1]['params'][':permissionCode']);
+        self::assertSame('req-9', $writes[1]['params'][':correlationId']);
+    }
+
+    public function test_an_unseen_unmapped_value_is_refused_and_a_failed_audit_rolls_the_change_back(): void
+    {
+        $actor = new ActorContext(userId: 7, publicId: 'p', emailAddress: 'hr@tricab.com');
+
+        $unknown = new FakeSqlConnection([]);
+        try {
+            (new AzureSqlDepartmentMapStore($unknown))->save($actor, 'factory', 'Nowhere', 'X', null);
+            self::fail('Expected a refusal.');
+        } catch (DepartmentMapRefused $refused) {
+            self::assertSame(404, $refused->status);
+        }
+        self::assertTrue($unknown->rolledBack);
+
+        $failing = new FakeSqlConnection([]);
+        $failing->queueFetch([['CleanName' => 'Old', 'CostCentre' => null]]);
+        $failing->failNextWrite = new \RuntimeException('audit down');
+        $this->expectException(\RuntimeException::class);
+        try {
+            (new AzureSqlDepartmentMapStore($failing))->save($actor, 'department', 'OpsExtru', 'New', null);
+        } finally {
+            self::assertTrue($failing->rolledBack);
+        }
     }
 }

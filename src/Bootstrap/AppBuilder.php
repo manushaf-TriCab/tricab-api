@@ -486,6 +486,14 @@ final class AppBuilder
         $app->get('/api/v1/hr/employees/{code}', \TriCab\Api\Http\Action\Hr\GetHrEmployeeAction::class)
             ->add(($require)(\TriCab\Api\Hr\Employees\Directory\HrPermissions::EMPLOYEES_READ));
 
+        // Phase 4: HR's clean names for raw department and factory values. Anyone who can read the
+        // directory can see the map; changing it needs HR.EMPLOYEES.SYNC (the permission that
+        // maintains the mirror), and every change is audited.
+        $app->get('/api/v1/hr/department-map', \TriCab\Api\Http\Action\Hr\ListHrDepartmentMapAction::class)
+            ->add(($require)(\TriCab\Api\Hr\Employees\Directory\HrPermissions::EMPLOYEES_READ));
+        $app->put('/api/v1/hr/department-map', \TriCab\Api\Http\Action\Hr\SaveHrDepartmentMapAction::class)
+            ->add(($require)(\TriCab\Api\Hr\Employees\Directory\HrPermissions::EMPLOYEES_SYNC));
+
         // Phase 5: link an onboarding person to their payroll employee. HR confirms the sync's
         // proposals; the routes need the directory permission AND the onboarding one, because they
         // join the two (the employee fields shown are base fields, never the restricted block).

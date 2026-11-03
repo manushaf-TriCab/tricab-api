@@ -4,12 +4,22 @@ declare(strict_types=1);
 
 namespace TriCab\Api\Hr\Employees\Directory;
 
+use TriCab\Core\Identity\Application\DTO\UserManagement\ActorContext;
+
 /**
  * The directory in memory, for `USER_REPOSITORY=memory` and tests. Holds items
- * in the API shape; managerName is resolved at read time, as the SQL does.
+ * in the API shape (department and factory as the raw payroll values);
+ * managerName and the clean department/factory names are resolved at read time,
+ * as the SQL does. It is also the in-memory department map, because the map's
+ * entries are derived from the employees it holds.
  */
-final class InMemoryEmployeeDirectory implements EmployeeDirectory
+final class InMemoryEmployeeDirectory implements EmployeeDirectory, DepartmentMapStore
 {
+    /** @var array<string, array{raw: string, cleanName: string, costCentre: ?string}> keyed "kind|lowercased raw" */
+    private array $map = [];
+    /** @var list<array{actorUserId: int, kind: string, raw: string, action: string, oldCleanName: ?string, oldCostCentre: ?string, newCleanName: ?string, newCostCentre: ?string}> */
+    public array $mapEvents = [];
+
     /** @var array<string, array<string, mixed>> by code */
     private array $items = [];
     /** @var array<string, array<string, mixed>> by code */
@@ -45,10 +55,10 @@ final class InMemoryEmployeeDirectory implements EmployeeDirectory
     public function search(EmployeeListCriteria $criteria): array
     {
         $rows = array_values(array_filter($this->items, fn (array $item): bool => $this->matches($item, $criteria)));
-        $key = static fn (array $item): string => strtolower(match ($criteria->sortBy) {
+        $key = fn (array $item): string => strtolower(match ($criteria->sortBy) {
             EmployeeListCriteria::SORT_CODE => self::text($item, 'code'),
-            EmployeeListCriteria::SORT_DEPARTMENT => self::text($item, 'department'),
-            EmployeeListCriteria::SORT_FACTORY => self::text($item, 'factory'),
+            EmployeeListCriteria::SORT_DEPARTMENT => $this->effective($item, 'department'),
+            EmployeeListCriteria::SORT_FACTORY => $this->effective($item, 'factory'),
             EmployeeListCriteria::SORT_MANAGER => self::text($item, 'managerLogin'),
             EmployeeListCriteria::SORT_DATE_HIRED => self::text($item, 'dateHired'),
             EmployeeListCriteria::SORT_LAST_SEEN => self::text($item, 'lastSeenInPayroll'),
@@ -77,8 +87,8 @@ final class InMemoryEmployeeDirectory implements EmployeeDirectory
             if (!self::inStatus($item, $status)) {
                 continue;
             }
-            $department = self::text($item, 'department');
-            $factory = self::text($item, 'factory');
+            $department = $this->effective($item, 'department');
+            $factory = $this->effective($item, 'factory');
             if ($department !== '') {
                 $departments[$department] = ($departments[$department] ?? 0) + 1;
             }
@@ -144,6 +154,96 @@ final class InMemoryEmployeeDirectory implements EmployeeDirectory
         return ['latestPayrollDate' => $latest, 'currentCount' => $current];
     }
 
+    public function entries(): array
+    {
+        $seen = [];
+        foreach ($this->items as $item) {
+            foreach ([self::KIND_DEPARTMENT, self::KIND_FACTORY] as $kind) {
+                $raw = self::text($item, $kind);
+                if ($raw === '') {
+                    continue;
+                }
+                $key = self::mapKey($kind, $raw);
+                $seen[$key] ??= ['kind' => $kind, 'raw' => $raw, 'employees' => 0, 'currentEmployees' => 0];
+                $seen[$key]['employees']++;
+                $seen[$key]['currentEmployees'] += ($item['isCurrent'] ?? false) === true ? 1 : 0;
+            }
+        }
+        foreach ($this->map as $key => $mapped) {
+            $seen[$key] ??= ['kind' => explode('|', $key, 2)[0], 'raw' => $mapped['raw'], 'employees' => 0, 'currentEmployees' => 0];
+        }
+
+        $entries = [];
+        foreach ($seen as $key => $row) {
+            $mapped = $this->map[$key] ?? null;
+            $entries[] = [
+                ...$row,
+                'cleanName' => $mapped['cleanName'] ?? null,
+                'costCentre' => $mapped['costCentre'] ?? null,
+                'mapped' => $mapped !== null,
+                'updatedAt' => null,
+                'updatedBy' => null,
+            ];
+        }
+        usort($entries, static fn (array $a, array $b): int => [$a['kind'], strtolower($a['raw'])] <=> [$b['kind'], strtolower($b['raw'])]);
+
+        return $entries;
+    }
+
+    public function save(ActorContext $actor, string $kind, string $raw, ?string $cleanName, ?string $costCentre): array
+    {
+        $key = self::mapKey($kind, $raw);
+        $old = $this->map[$key] ?? null;
+        if ($old === null && !$this->seen($kind, $raw)) {
+            throw DepartmentMapRefused::unknownValue($kind, $raw);
+        }
+        $result = ['kind' => $kind, 'raw' => $raw, 'cleanName' => $cleanName, 'costCentre' => $costCentre, 'mapped' => $cleanName !== null];
+        if (($old === null && $cleanName === null)
+            || ($old !== null && $old['cleanName'] === $cleanName && $old['costCentre'] === $costCentre)) {
+            return [...$result, 'changed' => false];
+        }
+
+        if ($cleanName === null) {
+            unset($this->map[$key]);
+            $action = 'cleared';
+        } else {
+            $this->map[$key] = ['raw' => $raw, 'cleanName' => $cleanName, 'costCentre' => $costCentre];
+            $action = $old === null ? 'created' : 'updated';
+        }
+        $this->mapEvents[] = [
+            'actorUserId' => $actor->userId, 'kind' => $kind, 'raw' => $raw, 'action' => $action,
+            'oldCleanName' => $old['cleanName'] ?? null, 'oldCostCentre' => $old['costCentre'] ?? null,
+            'newCleanName' => $cleanName, 'newCostCentre' => $costCentre,
+        ];
+
+        return [...$result, 'changed' => true];
+    }
+
+    private function seen(string $kind, string $raw): bool
+    {
+        foreach ($this->items as $item) {
+            if (strtolower(self::text($item, $kind)) === strtolower($raw)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** The clean name when mapped, else the trimmed raw value ('' when blank). */
+    /** @param array<mixed> $item */
+    private function effective(array $item, string $kind): string
+    {
+        $raw = self::text($item, $kind);
+
+        return $raw === '' ? '' : ($this->map[self::mapKey($kind, $raw)]['cleanName'] ?? $raw);
+    }
+
+    private static function mapKey(string $kind, string $raw): string
+    {
+        return $kind . '|' . strtolower(trim($raw));
+    }
+
     /**
      * @param array<string, mixed> $item
      *
@@ -159,8 +259,10 @@ final class InMemoryEmployeeDirectory implements EmployeeDirectory
             'firstName' => $item['firstName'] ?? null,
             'lastName' => $item['lastName'] ?? null,
             'displayName' => $item['displayName'] ?? null,
-            'department' => $item['department'] ?? null,
-            'factory' => $item['factory'] ?? null,
+            'department' => $this->effective($item, 'department') ?: null,
+            'departmentRaw' => self::text($item, 'department') ?: null,
+            'factory' => $this->effective($item, 'factory') ?: null,
+            'factoryRaw' => self::text($item, 'factory') ?: null,
             'workEmail' => $item['workEmail'] ?? null,
             'managerLogin' => $item['managerLogin'] ?? null,
             'managerName' => $manager === null ? null : ($manager['displayName'] ?? null),
@@ -198,10 +300,10 @@ final class InMemoryEmployeeDirectory implements EmployeeDirectory
         if (!self::inStatus($item, $criteria->status)) {
             return false;
         }
-        if ($criteria->department !== null && self::text($item, 'department') !== $criteria->department) {
+        if ($criteria->department !== null && $this->effective($item, 'department') !== $criteria->department) {
             return false;
         }
-        if ($criteria->factory !== null && self::text($item, 'factory') !== $criteria->factory) {
+        if ($criteria->factory !== null && $this->effective($item, 'factory') !== $criteria->factory) {
             return false;
         }
         if ($criteria->manager !== null && strtolower(self::text($item, 'managerLogin')) !== strtolower($criteria->manager)) {

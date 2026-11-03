@@ -890,6 +890,9 @@ final class ContainerFactory
                 => \DI\autowire(\TriCab\Api\Hr\Employees\Directory\InMemoryEmployeeDirectory::class),
             \TriCab\Api\Hr\Employees\Directory\RestrictedReadAudit::class
                 => \DI\autowire(\TriCab\Api\Hr\Employees\Directory\InMemoryRestrictedReadAudit::class),
+            // The in-memory directory is also the in-memory department map (its entries come from its employees).
+            \TriCab\Api\Hr\Employees\Directory\DepartmentMapStore::class
+                => \DI\get(\TriCab\Api\Hr\Employees\Directory\EmployeeDirectory::class),
             \TriCab\Api\Hr\OnboardingLink\OnboardingLinkRepository::class
                 => \DI\autowire(\TriCab\Api\Hr\OnboardingLink\InMemoryOnboardingLinkRepository::class),
             // N2.4 email: the sink writes outbox rows inside the repository's transaction; the
@@ -3802,6 +3805,8 @@ final class ContainerFactory
                 = \DI\autowire(\TriCab\Api\Hr\Employees\Directory\AzureSqlEmployeeDirectory::class);
             $definitions[\TriCab\Api\Hr\Employees\Directory\RestrictedReadAudit::class]
                 = \DI\autowire(\TriCab\Api\Hr\Employees\Directory\AzureSqlRestrictedReadAudit::class);
+            $definitions[\TriCab\Api\Hr\Employees\Directory\DepartmentMapStore::class]
+                = \DI\autowire(\TriCab\Api\Hr\Employees\Directory\AzureSqlDepartmentMapStore::class);
             $definitions[\TriCab\Api\Hr\OnboardingLink\OnboardingLinkRepository::class]
                 = \DI\autowire(\TriCab\Api\Hr\OnboardingLink\AzureSqlOnboardingLinkRepository::class);
             $definitions[\TriCab\Core\Rfq\Contract\RfqCustomerDirectory::class]
