@@ -115,7 +115,7 @@ baseline. From then on:
 |---|---|
 | The notification addresses in the Notifications tab | No. The page and the captured baseline apply; editing the app setting has no effect. |
 | `FOUNDRY_MODEL_DEPLOYMENT`, `RFQ_MAIL_CLASSIFIER_MODEL`, `CABLEFIT_RESEARCH_MODEL` | No, as above. |
-| Python service models (`RFQ_READER_MODEL`, `RFQ_READER_NORMALIZER_MODEL`, `RFQ_NORMALIZER_MODEL`, `RFQ_TABLE_SHAPE_MODEL`, `OPENROUTER_MODEL`, `VISION_OCR_PRIMARY_MODEL`, `VISION_OCR_ESCALATION_MODEL`) | Yes, unless the task has a model chosen in the page. The services keep their own setting otherwise. |
+| Python service models (`RFQ_READER_MODEL`, `RFQ_READER_NORMALIZER_MODEL`, `RFQ_NORMALIZER_MODEL`, `RFQ_TABLE_SHAPE_MODEL`, `RFQ_LLM_MODEL`, `RFQ_VISION_MODEL`, `RFQ_VISION_ESCALATION_MODEL`; the last three are Foundry deployment names, and a value with a `/` in it, an OpenRouter id from before the move, is ignored by the parser) | Yes, unless the task has a model chosen in the page. The services keep their own setting otherwise. |
 | Finance AI models | Never were app settings: code defaults, or the page. |
 | Secrets, keys, endpoints, on/off switches and modes (`FOUNDRY_ENDPOINT`, `NPR_MAIL_MODE`, `RFQ_MAIL_READ_ENABLED`, ...) | Yes, always. They are deliberately not in the page. |
 | Addresses the page does not cover: `NPR_MAIL_SENDER`, `FINANCE_TASK_MAIL_FROM`, `POSTMARK_FROM_NAME` | Yes. Candidates to add to the page. |

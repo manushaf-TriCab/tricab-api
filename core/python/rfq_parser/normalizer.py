@@ -62,7 +62,7 @@ def normalizer_enabled() -> bool:
 
 
 def normalizer_model() -> str:
-    return model_settings.get("RFQ_NORMALIZER_MODEL") or model_settings.get("OPENROUTER_MODEL", DEFAULT_MODEL)
+    return model_settings.get("RFQ_NORMALIZER_MODEL") or model_settings.get("RFQ_LLM_MODEL", DEFAULT_MODEL)
 
 
 def normalizer_max_items() -> int:
@@ -994,11 +994,6 @@ def _build_payload(batch: list[tuple[int, dict]]) -> dict[str, Any]:
             "json_schema": {"name": "rfq_normalize", "strict": True, "schema": _request_schema()},
         },
     }
-    # Not setting "temperature": newer Claude models (e.g. claude-sonnet-5) don't list
-    # it in supported_parameters; with require_parameters below, sending it makes
-    # OpenRouter 404 "no endpoints found" on every call instead of just dropping it.
-    if os.environ.get("OPENROUTER_REQUIRE_PARAMETERS", "true").lower() in {"1", "true", "yes"}:
-        payload["provider"] = {"require_parameters": True}
     return payload
 
 

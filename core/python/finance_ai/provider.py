@@ -5,7 +5,7 @@ Microsoft Foundry (`tricab-ai2`) for a purpose that has been switched to it.
 (`provider_for`): `FINANCE_AI_PROVIDER_<PURPOSE>` (e.g. `FINANCE_AI_PROVIDER_AR_CLASSIFY=foundry`), then
 `FINANCE_AI_PROVIDER`, then OpenRouter. So switching one purpose is an app setting, not a deploy, and nothing
 switches until the accuracy check says so (plan O4/O5). The OpenRouter key is `FINANCE_OPENROUTER_API_KEY`,
-the finance apps' own key (plan Q4), never `OPENROUTER_API_KEY`, which the RFQ parser reads.
+the finance apps' own key (plan Q4). The RFQ parser used to read `OPENROUTER_API_KEY`; it now calls Claude on Foundry.
 
 The Foundry path uses the Anthropic SDK's `AnthropicFoundry` client against `{FOUNDRY_ENDPOINT}/anthropic/`, the
 endpoint and auth mode the assistant uses: the slot's managed identity (resource `https://ai.azure.com`) unless
@@ -368,16 +368,19 @@ class _TokenError(RuntimeError):
 
 _token_lock = threading.Lock()
 _token: dict[str, Any] = {"value": None, "expires_at": 0.0}
+# Tokens for any other resource (the RFQ reader's Azure OpenAI), one cache entry each.
+_other_tokens: dict[str, dict[str, Any]] = {}
 TOKEN_SKEW_SECONDS = 60
 
 
-def _managed_identity_token() -> str:
-    """The slot's managed-identity token for Foundry, cached until a minute before it expires: the same endpoints,
-    API versions and resource as PHP's `ManagedIdentityTokenClient` (App Service's `IDENTITY_ENDPOINT` first, then
-    IMDS)."""
+def _managed_identity_token(resource: str = FOUNDRY_TOKEN_RESOURCE) -> str:
+    """The slot's managed-identity token for Foundry (or, with `resource`, another Azure resource the same identity
+    may call), cached until a minute before it expires: the same endpoints, API versions and resource as PHP's
+    `ManagedIdentityTokenClient` (App Service's `IDENTITY_ENDPOINT` first, then IMDS)."""
     with _token_lock:
-        if _token["value"] and _token["expires_at"] > time.time() + TOKEN_SKEW_SECONDS:
-            return _token["value"]
+        cache = _token if resource == FOUNDRY_TOKEN_RESOURCE else _other_tokens.setdefault(resource, {"value": None, "expires_at": 0.0})
+        if cache["value"] and cache["expires_at"] > time.time() + TOKEN_SKEW_SECONDS:
+            return cache["value"]
         endpoint = os.environ.get("IDENTITY_ENDPOINT", "").strip()
         header = os.environ.get("IDENTITY_HEADER", "").strip()
         if endpoint or header:
@@ -390,7 +393,7 @@ def _managed_identity_token() -> str:
             url, headers, version = endpoint, {"X-IDENTITY-HEADER": header}, "2019-08-01"
         else:
             url, headers, version = "http://169.254.169.254/metadata/identity/oauth2/token", {"Metadata": "true"}, "2018-02-01"
-        query = urllib.parse.urlencode({"api-version": version, "resource": FOUNDRY_TOKEN_RESOURCE})
+        query = urllib.parse.urlencode({"api-version": version, "resource": resource})
         request = urllib.request.Request(f"{url}{'&' if '?' in url else '?'}{query}", headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=5) as response:  # noqa: S310 - a local identity endpoint
@@ -404,5 +407,5 @@ def _managed_identity_token() -> str:
             expires_at = float(decoded.get("expires_on"))
         except (TypeError, ValueError):
             expires_at = time.time() + 300
-        _token.update({"value": value, "expires_at": expires_at})
+        cache.update({"value": value, "expires_at": expires_at})
         return value

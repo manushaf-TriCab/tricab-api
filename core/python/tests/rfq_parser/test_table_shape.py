@@ -14,7 +14,7 @@ from rfq_parser.table_shape import (
     maybe_remap_sheets,
 )
 
-_ENABLED_ENV = {"RFQ_TABLE_SHAPE_LLM_ENABLED": "true", "OPENROUTER_API_KEY": "test-key"}
+_ENABLED_ENV = {"RFQ_TABLE_SHAPE_LLM_ENABLED": "true", "FOUNDRY_ENDPOINT": "test-key"}
 
 
 def _chat_response(mapping: dict):

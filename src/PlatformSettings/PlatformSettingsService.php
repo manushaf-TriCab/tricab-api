@@ -15,9 +15,9 @@ final class PlatformSettingsService
         'rfqReaderNormalizerModel' => 'RFQ_READER_NORMALIZER_MODEL',
         'rfqNormalizerModel' => 'RFQ_NORMALIZER_MODEL',
         'rfqTableShapeModel' => 'RFQ_TABLE_SHAPE_MODEL',
-        'openrouterModel' => 'OPENROUTER_MODEL',
-        'visionOcrPrimaryModel' => 'VISION_OCR_PRIMARY_MODEL',
-        'visionOcrEscalationModel' => 'VISION_OCR_ESCALATION_MODEL',
+        'openrouterModel' => 'RFQ_LLM_MODEL',
+        'visionOcrPrimaryModel' => 'RFQ_VISION_MODEL',
+        'visionOcrEscalationModel' => 'RFQ_VISION_ESCALATION_MODEL',
     ];
     private const FINANCE_PURPOSES = ['task_details', 'statement_areas', 'task_email', 'task_reminder', 'task_email_draft', 'ap_classify_extract', 'ap_extract', 'ap_vendor_email_draft', 'ap_reply_draft', 'ap_reply_suggest', 'ar_classify', 'ar_prose', 'ar_reply_draft', 'ar_remittance'];
     private const PHP_TASKS = ['foundryModelDeployment', 'rfqMailClassifierModel', 'cablefitResearchModel'];
@@ -39,9 +39,9 @@ final class PlatformSettingsService
     {
         return match ($key) {
             'rfqReaderModel', 'rfqReaderNormalizerModel' => '',
-            'visionOcrPrimaryModel' => 'qwen/qwen3-vl-30b-a3b-instruct',
-            'visionOcrEscalationModel' => 'qwen/qwen3-vl-235b-a22b-instruct',
-            default => 'openai/gpt-4o-mini',
+            // Foundry deployment names (plan M7 O1/O2); the task keys keep their old names so stored overrides still map.
+            'visionOcrEscalationModel' => 'claude-sonnet-5-5',
+            default => 'claude-haiku-5-5',
         };
     }
 

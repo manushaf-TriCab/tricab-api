@@ -32,6 +32,11 @@ the tests reach the catalogue through the old Flask app only because it re-expor
 
 **When the source moves.** Re-run with `--write`. If a declared patch no longer
 matches, the tool stops and names it; fix the patch, never the generated file.
+**Foundry transport (plan M7 O1-O3).** The source talks to OpenRouter and to Azure OpenAI with a key. Here the
+parser's model calls go to Claude on Foundry through `rfq_parser/foundry.py` (the platform's own module), and the
+reader authenticates with the managed identity. That is `FOUNDRY_MODULE_PATCHES`, `FOUNDRY_RENAMES` and
+`FOUNDRY_TEST_PATCHES` below, all declared, none hand-edited.
+
 At cutover the source stops being the authority, this tool is deleted, and the
 generated files become ordinary platform code.
 """
@@ -118,9 +123,9 @@ REQUEST_MODEL_MODULES = frozenset({
     "table_shape", "vision_ocr",
 })
 REQUEST_MODEL_NAMES = (
-    "OPENROUTER_MODEL", "RFQ_READER_MODEL", "RFQ_READER_NORMALIZER_MODEL",
-    "RFQ_NORMALIZER_MODEL", "RFQ_TABLE_SHAPE_MODEL", "VISION_OCR_PRIMARY_MODEL",
-    "VISION_OCR_ESCALATION_MODEL",
+    "RFQ_LLM_MODEL", "RFQ_READER_MODEL", "RFQ_READER_NORMALIZER_MODEL",
+    "RFQ_NORMALIZER_MODEL", "RFQ_TABLE_SHAPE_MODEL", "RFQ_VISION_MODEL",
+    "RFQ_VISION_ESCALATION_MODEL",
 )
 
 
@@ -133,6 +138,224 @@ def _request_local_models(source: str) -> str:
     if marker not in updated:
         raise SystemExit("request-local model patch needs future import")
     return updated.replace(marker, marker + "\nfrom . import model_settings\n", 1)
+
+# --- Foundry transport (plan M7 O1-O3) ------------------------------------------------
+
+# Quoted setting names the source spells for OpenRouter, renamed in every module and test that carries them. The model
+# selectors become deployment names on Foundry; the key becomes the Foundry endpoint, which is what now switches the
+# parser's model calls on (`rfq_parser/foundry.py: enabled`).
+FOUNDRY_RENAMES = (
+    ("OPENROUTER_MODEL", "RFQ_LLM_MODEL"),
+    ("VISION_OCR_PRIMARY_MODEL", "RFQ_VISION_MODEL"),
+    ("VISION_OCR_ESCALATION_MODEL", "RFQ_VISION_ESCALATION_MODEL"),
+)
+FOUNDRY_TEST_RENAMES = (("OPENROUTER_API_KEY", "FOUNDRY_ENDPOINT"),)
+
+_REQUIRE_PARAMETERS = (
+    '    if os.environ.get("OPENROUTER_REQUIRE_PARAMETERS", "true").lower() in {"1", "true", "yes"}:\n'
+    '        payload["provider"] = {"require_parameters": True}\n'
+)
+_NO_TEMPERATURE_NOTE = (
+    '    # Not setting "temperature": newer Claude models (e.g. claude-sonnet-5) don\'t list\n'
+    '    # it in supported_parameters; with require_parameters below, sending it makes\n'
+    '    # OpenRouter 404 "no endpoints found" on every call instead of just dropping it.\n'
+)
+
+# (module, why, old, new): like `MODULE_PATCHES`, each must match exactly once.
+FOUNDRY_MODULE_PATCHES: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "llm_fallback",
+        "O1: no OpenRouter endpoint; the transport is rfq_parser.foundry",
+        'OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"\nDEFAULT_MODEL = "openai/gpt-4o-mini"\n',
+        'DEFAULT_MODEL = "claude-haiku-5-5"  # a Foundry deployment name; RFQ_LLM_MODEL overrides it\n',
+    ),
+    (
+        "llm_fallback",
+        "O1: the model calls are on when a Foundry endpoint is configured, not when an OpenRouter key is",
+        '    if os.environ.get("OPENROUTER_ENABLED", "").strip().lower() in {"0", "false", "no", "off"}:\n'
+        "        return False\n"
+        '    return bool(os.environ.get("OPENROUTER_API_KEY"))\n',
+        "    from rfq_parser import foundry\n\n    return foundry.enabled()\n",
+    ),
+    (
+        "llm_fallback",
+        "O1: one chat call to Claude on Foundry through the managed identity, answered in the shape the callers read",
+        '    request = urllib.request.Request(\n'
+        '        OPENROUTER_URL,\n'
+        '        data=json.dumps(payload).encode("utf-8"),\n'
+        '        headers={\n'
+        '            "Authorization": f"Bearer {os.environ[\'OPENROUTER_API_KEY\']}",\n'
+        '            "Content-Type": "application/json",\n'
+        '            "HTTP-Referer": os.environ.get("OPENROUTER_SITE_URL", "http://127.0.0.1:5000"),\n'
+        '            "X-Title": os.environ.get("OPENROUTER_APP_NAME", "TriCab RFQ Parser"),\n'
+        '        },\n'
+        '        method="POST",\n'
+        '    )\n'
+        '    try:\n'
+        '        with urllib.request.urlopen(request, timeout=timeout) as response:\n'
+        '            return json.loads(response.read().decode("utf-8")), None\n'
+        '    except urllib.error.HTTPError as exc:\n'
+        '        body = exc.read().decode("utf-8", errors="replace")\n'
+        '        return None, f"OpenRouter HTTP {exc.code}: {body[:400]}"\n'
+        '    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:\n'
+        '        return None, f"OpenRouter request failed: {exc}"\n',
+        "    from rfq_parser import foundry\n\n    return foundry.chat(payload, timeout=timeout)\n",
+    ),
+    (
+        "llm_fallback",
+        "O1: OpenRouter's require_parameters routing flag does not exist on Foundry",
+        _NO_TEMPERATURE_NOTE + _REQUIRE_PARAMETERS + "\n",
+        "",
+    ),
+    ("normalizer", "O1: OpenRouter's require_parameters routing flag does not exist on Foundry", _NO_TEMPERATURE_NOTE + _REQUIRE_PARAMETERS, ""),
+    ("table_shape", "O1: OpenRouter's require_parameters routing flag does not exist on Foundry", _REQUIRE_PARAMETERS, ""),
+    (
+        "vision_ocr",
+        "O2: vision goes through the shared Foundry chat call, so the import names the helper, not the OpenRouter URL",
+        "from matcher.llm_fallback import OPENROUTER_URL, _float_env, _loads_json_object, openrouter_enabled\n",
+        "from matcher.llm_fallback import _float_env, _loads_json_object, _openrouter_chat, openrouter_enabled\n",
+    ),
+    (
+        "vision_ocr",
+        "O2: Claude vision on Foundry replaces Qwen VL: Haiku reads first, Sonnet is the escalation (deployment names)",
+        'DEFAULT_PRIMARY_MODEL = "qwen/qwen3-vl-30b-a3b-instruct"\nDEFAULT_ESCALATION_MODEL = "qwen/qwen3-vl-235b-a22b-instruct"\n',
+        'DEFAULT_PRIMARY_MODEL = "claude-haiku-5-5"\nDEFAULT_ESCALATION_MODEL = "claude-sonnet-5-5"\n',
+    ),
+    (
+        "vision_ocr",
+        "O2: no temperature (Claude 5.5 answers one with a 400) and no OpenRouter provider routing",
+        '        "temperature": 0,\n',
+        "",
+    ),
+    (
+        "vision_ocr",
+        "O2: no OpenRouter provider routing",
+        '        "provider": {"require_parameters": True},\n',
+        "",
+    ),
+    (
+        "vision_ocr",
+        "O2: the request goes through the shared Foundry chat call",
+        '    request = urllib.request.Request(\n'
+        '        OPENROUTER_URL,\n'
+        '        data=json.dumps(payload).encode("utf-8"),\n'
+        '        headers={\n'
+        '            "Authorization": f"Bearer {os.environ[\'OPENROUTER_API_KEY\']}",\n'
+        '            "Content-Type": "application/json",\n'
+        '            "HTTP-Referer": os.environ.get("OPENROUTER_SITE_URL", "http://127.0.0.1:5000"),\n'
+        '            "X-Title": os.environ.get("OPENROUTER_APP_NAME", "TriCab RFQ Parser"),\n'
+        '        },\n'
+        '        method="POST",\n'
+        '    )\n'
+        '\n'
+        '    try:\n'
+        '        with urllib.request.urlopen(request, timeout=_float_env("VISION_OCR_TIMEOUT_SECONDS", 45)) as response:\n'
+        '            data = json.loads(response.read().decode("utf-8"))\n'
+        '    except urllib.error.HTTPError as exc:\n'
+        '        body = exc.read().decode("utf-8", errors="replace")\n'
+        '        return VisionOcrResult(False, model, [], "", 0, error=f"OpenRouter HTTP {exc.code}: {body[:500]}")\n'
+        '    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:\n'
+        '        return VisionOcrResult(False, model, [], "", 0, error=f"OpenRouter vision request failed: {exc}")\n',
+        '    data, error = _openrouter_chat(payload, timeout=_float_env("VISION_OCR_TIMEOUT_SECONDS", 45))\n'
+        "    if error:\n"
+        "        return VisionOcrResult(False, model, [], \"\", 0, error=error)\n",
+    ),
+    # O3: the reader authenticates with the managed identity (the bearer token for the Azure OpenAI resource).
+    (
+        "attachment_reader",
+        "O3: the reader's credential is the managed identity, not RFQ_READER_API_KEY",
+        'def _api_key() -> str:\n    return os.environ.get("RFQ_READER_API_KEY", "").strip()\n',
+        "from rfq_parser import foundry\n"
+        "\n"
+        "\n"
+        "def _auth_headers() -> dict[str, str]:\n"
+        "    try:\n"
+        "        return foundry.reader_auth_headers()\n"
+        "    except foundry.AuthError as exc:\n"
+        '        raise ReaderError(f"Azure OpenAI request failed: {exc}") from exc\n',
+    ),
+    (
+        "attachment_reader",
+        "O3: able to run means a credential is available (the managed identity), not that a key is set",
+        "    return bool(_api_key() and reader_endpoint() and reader_model())\n",
+        "    return bool(foundry.reader_auth_ready() and reader_endpoint() and reader_model())\n",
+    ),
+    (
+        "attachment_reader",
+        "O3: the health view reports how the reader authenticates instead of whether a key is set",
+        '        "has_key": bool(_api_key()),\n',
+        '        "auth": foundry.reader_auth_mode(),\n',
+    ),
+    (
+        "attachment_reader",
+        "O3: bearer token on the Responses call",
+        '        headers={"api-key": _api_key(), "Content-Type": "application/json"},\n',
+        '        headers={**_auth_headers(), "Content-Type": "application/json"},\n',
+    ),
+    (
+        "attachment_reader",
+        "O3: bearer token on the file upload",
+        '            "api-key": _api_key(),\n',
+        "            **_auth_headers(),\n",
+    ),
+    (
+        "attachment_reader",
+        "O3: bearer token on the file delete; building the request stays inside the best-effort try",
+        '    request = urllib.request.Request(\n'
+        '        url, headers={"api-key": _api_key()}, method="DELETE"\n'
+        '    )\n'
+        '    try:\n'
+        '        urllib.request.urlopen(request, timeout=timeout).close()\n',
+        '    try:\n'
+        '        request = urllib.request.Request(url, headers=_auth_headers(), method="DELETE")\n'
+        '        urllib.request.urlopen(request, timeout=timeout).close()\n',
+    ),
+)
+
+# (test module, why, old, new): replace every occurrence; at least one must match.
+FOUNDRY_TEST_PATCHES: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "test_vision_ocr",
+        "O2: the vision request goes through the shared Foundry chat call, so a test fakes that call's (data, error)",
+        "class FakeResponse:\n"
+        "    def __init__(self, content, model, finish_reason=\"stop\"):\n"
+        "        self.body = json.dumps(\n"
+        "            {\n"
+        "                \"model\": model,\n"
+        "                \"choices\": [{\"message\": {\"content\": json.dumps(content)}, \"finish_reason\": finish_reason}],\n"
+        "            }\n"
+        "        ).encode(\"utf-8\")\n"
+        "\n"
+        "    def __enter__(self):\n"
+        "        return self\n"
+        "\n"
+        "    def __exit__(self, *_args):\n"
+        "        return False\n"
+        "\n"
+        "    def read(self):\n"
+        "        return self.body\n",
+        "def FakeResponse(content, model, finish_reason=\"stop\"):\n"
+        "    return (\n"
+        "        {\n"
+        "            \"model\": model,\n"
+        "            \"choices\": [{\"message\": {\"content\": json.dumps(content)}, \"finish_reason\": finish_reason}],\n"
+        "        },\n"
+        "        None,\n"
+        "    )\n",
+    ),
+    (
+        "test_vision_ocr",
+        "O2: patch the shared Foundry chat call, not urllib",
+        '@patch("rfq_parser.vision_ocr.urllib.request.urlopen")',
+        '@patch("rfq_parser.vision_ocr._openrouter_chat")',
+    ),
+    (
+        "test_vision_ocr",
+        "O2: the request is the payload itself now, not an HTTP request carrying it",
+        "json.loads(urlopen.call_args.args[0].data)",
+        "urlopen.call_args.args[0]",
+    ),
+)
 
 # Data files the parser reads, copied byte for byte (source <p> -> rfq_parser/<target>).
 DATA_FILES = (
@@ -544,13 +767,15 @@ def build_pipeline(source: str) -> str:
 
 
 def build_module(name: str, source: str) -> str:
-    for module, why, old, new in MODULE_PATCHES:
+    for module, why, old, new in MODULE_PATCHES + FOUNDRY_MODULE_PATCHES:
         if module != name:
             continue
         count = source.count(old)
         if count != 1:
             raise SystemExit(f"module patch '{why}' ({name}): text occurs {count} times, expected once:\n  {old!r}")
         source = source.replace(old, new)
+    for old_name, new_name in FOUNDRY_RENAMES:
+        source = source.replace(f'"{old_name}"', f'"{new_name}"')
     source = _rewrite_imports(source)
     return _request_local_models(source) if name in REQUEST_MODEL_MODULES else source
 
@@ -598,7 +823,9 @@ def build_mail_tests(source: str) -> str:
 
 def build_test(name: str, source: str) -> str:
     text = _rewrite_imports(source).replace("from app import catalog", "from rfq_parser.pipeline import catalog")
-    for module, why, old, new in TEST_PATCHES:
+    for old_name, new_name in FOUNDRY_RENAMES + FOUNDRY_TEST_RENAMES:
+        text = text.replace(f'"{old_name}"', f'"{new_name}"')
+    for module, why, old, new in TEST_PATCHES + FOUNDRY_TEST_PATCHES:
         if module != name:
             continue
         if old not in text:

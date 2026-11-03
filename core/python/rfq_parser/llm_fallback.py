@@ -16,8 +16,7 @@ from rfq_parser.cable_notation import CORE_COUNT_NOTATION
 from tricab_cable_rules.normalize import canonical_number, int_if_whole
 
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_MODEL = "openai/gpt-4o-mini"
+DEFAULT_MODEL = "claude-haiku-5-5"  # a Foundry deployment name; RFQ_LLM_MODEL overrides it
 
 # Shared field-semantics description for both the reactive per-line fallback below
 # and the up-front batch normalizer (matcher.normalizer) -- the two prompts differ
@@ -288,9 +287,9 @@ def entry_declares_non_cable(entry: LlmEntry) -> bool:
 
 
 def openrouter_enabled() -> bool:
-    if os.environ.get("OPENROUTER_ENABLED", "").strip().lower() in {"0", "false", "no", "off"}:
-        return False
-    return bool(os.environ.get("OPENROUTER_API_KEY"))
+    from rfq_parser import foundry
+
+    return foundry.enabled()
 
 
 def fallback_threshold() -> float:
@@ -441,25 +440,9 @@ def _openrouter_chat(payload: dict[str, Any], *, timeout: float) -> tuple[dict[s
     human-readable message. Shared by the reactive parse fallback and the up-front
     normalizer so the auth/headers/timeout/error handling lives in one place.
     """
-    request = urllib.request.Request(
-        OPENROUTER_URL,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY']}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": os.environ.get("OPENROUTER_SITE_URL", "http://127.0.0.1:5000"),
-            "X-Title": os.environ.get("OPENROUTER_APP_NAME", "TriCab RFQ Parser"),
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            return json.loads(response.read().decode("utf-8")), None
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        return None, f"OpenRouter HTTP {exc.code}: {body[:400]}"
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:
-        return None, f"OpenRouter request failed: {exc}"
+    from rfq_parser import foundry
+
+    return foundry.chat(payload, timeout=timeout)
 
 
 def parse_with_openrouter(
@@ -467,7 +450,7 @@ def parse_with_openrouter(
     context: list[str] | None = None,
     previous_fields: dict[str, Any] | None = None,
 ) -> LlmParseResult:
-    model = model_settings.get("OPENROUTER_MODEL", DEFAULT_MODEL)
+    model = model_settings.get("RFQ_LLM_MODEL", DEFAULT_MODEL)
     if not openrouter_enabled():
         return LlmParseResult(False, False, False, model, [], "OpenRouter is not configured.")
 
@@ -501,12 +484,6 @@ def parse_with_openrouter(
             },
         },
     }
-
-    # Not setting "temperature": newer Claude models (e.g. claude-sonnet-5) don't list
-    # it in supported_parameters; with require_parameters below, sending it makes
-    # OpenRouter 404 "no endpoints found" on every call instead of just dropping it.
-    if os.environ.get("OPENROUTER_REQUIRE_PARAMETERS", "true").lower() in {"1", "true", "yes"}:
-        payload["provider"] = {"require_parameters": True}
 
     timeout = _float_env("OPENROUTER_TIMEOUT_SECONDS", 20)
     data, error = _openrouter_chat(payload, timeout=timeout)

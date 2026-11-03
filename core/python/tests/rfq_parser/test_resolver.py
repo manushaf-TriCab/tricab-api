@@ -299,7 +299,7 @@ class CommsAndArmourTests(unittest.TestCase):
             {"text": "2.5mm TPS flat 100m and 4C 16mm XLPE 100m", "source": {"line_number": 2}},
             {"text": "2.5mm flat 2C+E 100m", "source": {"line_number": 3}},
         ]
-        with patch.dict("os.environ", {"RFQ_NORMALIZER_ENABLED": "false", "OPENROUTER_API_KEY": ""}):
+        with patch.dict("os.environ", {"RFQ_NORMALIZER_ENABLED": "false", "FOUNDRY_ENDPOINT": ""}):
             results = pipeline.match_items(items)
         codes = [row["selected_product_code"] for row in results]
         self.assertEqual(len(codes), 2)

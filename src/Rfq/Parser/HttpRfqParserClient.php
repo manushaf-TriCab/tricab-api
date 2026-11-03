@@ -243,13 +243,13 @@ final class HttpRfqParserClient implements RfqParserClient
         if ($this->models !== []) {
             $mapped = [];
             foreach ([
-                'openrouterModel' => 'OPENROUTER_MODEL',
+                'openrouterModel' => 'RFQ_LLM_MODEL',
                 'rfqReaderModel' => 'RFQ_READER_MODEL',
                 'rfqReaderNormalizerModel' => 'RFQ_READER_NORMALIZER_MODEL',
                 'rfqNormalizerModel' => 'RFQ_NORMALIZER_MODEL',
                 'rfqTableShapeModel' => 'RFQ_TABLE_SHAPE_MODEL',
-                'visionOcrPrimaryModel' => 'VISION_OCR_PRIMARY_MODEL',
-                'visionOcrEscalationModel' => 'VISION_OCR_ESCALATION_MODEL',
+                'visionOcrPrimaryModel' => 'RFQ_VISION_MODEL',
+                'visionOcrEscalationModel' => 'RFQ_VISION_ESCALATION_MODEL',
             ] as $key => $environmentName) {
                 if (isset($this->models[$key])) {
                     $mapped[$environmentName] = $this->models[$key];

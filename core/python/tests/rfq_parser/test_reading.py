@@ -132,7 +132,7 @@ def test_the_vision_fallback_note_is_cleaned_too():
 
 def test_an_image_route_includes_vision_ocr(monkeypatch):
     monkeypatch.setenv("RFQ_READER_ENABLED", "false")
-    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setenv("FOUNDRY_ENDPOINT", "https://foundry.invalid")
     monkeypatch.setenv("VISION_OCR_ENABLED", "true")
     png = contract.intake.check("d", "scan.png", "", b"\x89PNG\r\n\x1a\n" + b"\0" * 16)
     assert reading.reader_route(png) is True

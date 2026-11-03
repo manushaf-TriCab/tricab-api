@@ -131,6 +131,7 @@ def _run(mode: str, listing: Path, matcher: Path, store: Path) -> dict[str, dict
         "RFQ_AGENT_ENABLED": "false",
         "RFQ_NORMALIZER_ENABLED": "false",
         "OPENROUTER_API_KEY": "",
+        "FOUNDRY_ENDPOINT": "",
         "RFQ_CATALOG_CACHE": "0",
     }
     if mode == "source":

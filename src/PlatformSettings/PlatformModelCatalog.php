@@ -66,6 +66,13 @@ final class PlatformModelCatalog
         if (in_array($task, ['foundryModelDeployment', 'rfqMailClassifierModel', 'cablefitResearchModel'], true)) {
             return ['provider' => 'foundry', 'capabilities' => ['text']];
         }
+        // The RFQ parser's own model calls moved from OpenRouter to Claude on Foundry (plan M7 O1/O2).
+        if (in_array($task, ['openrouterModel', 'rfqNormalizerModel', 'rfqTableShapeModel'], true)) {
+            return ['provider' => 'foundry', 'capabilities' => ['text', 'structured']];
+        }
+        if (in_array($task, ['visionOcrPrimaryModel', 'visionOcrEscalationModel'], true)) {
+            return ['provider' => 'foundry', 'capabilities' => ['text', 'vision', 'structured']];
+        }
         if ($task === 'ar_classify') {
             return ['provider' => 'openrouter', 'capabilities' => ['decisions']];
         }

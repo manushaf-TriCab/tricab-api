@@ -13,12 +13,12 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any
 
-from rfq_parser.llm_fallback import OPENROUTER_URL, _float_env, _loads_json_object, openrouter_enabled
+from rfq_parser.llm_fallback import _float_env, _loads_json_object, _openrouter_chat, openrouter_enabled
 from tricab_cable_rules.normalize import int_if_whole
 
 
-DEFAULT_PRIMARY_MODEL = "qwen/qwen3-vl-30b-a3b-instruct"
-DEFAULT_ESCALATION_MODEL = "qwen/qwen3-vl-235b-a22b-instruct"
+DEFAULT_PRIMARY_MODEL = "claude-haiku-5-5"
+DEFAULT_ESCALATION_MODEL = "claude-sonnet-5-5"
 ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp"}
 IMAGE_TYPE_ALIASES = {
     "image/jpg": "image/jpeg",
@@ -47,8 +47,8 @@ def vision_ocr_enabled() -> bool:
 
 def extract_table_with_qwen(image_bytes: bytes, mime_type: str) -> VisionOcrResult:
     mime_type = normalize_image_type(image_bytes, mime_type)
-    primary = model_settings.get("VISION_OCR_PRIMARY_MODEL", DEFAULT_PRIMARY_MODEL)
-    escalation = model_settings.get("VISION_OCR_ESCALATION_MODEL", DEFAULT_ESCALATION_MODEL)
+    primary = model_settings.get("RFQ_VISION_MODEL", DEFAULT_PRIMARY_MODEL)
+    escalation = model_settings.get("RFQ_VISION_ESCALATION_MODEL", DEFAULT_ESCALATION_MODEL)
     threshold = _float_env("VISION_OCR_ESCALATION_THRESHOLD", 0.82)
 
     if mime_type not in ALLOWED_IMAGE_TYPES:
@@ -145,7 +145,6 @@ def _request_vision_ocr(image_url: str, model: str) -> VisionOcrResult:
                 ],
             },
         ],
-        "temperature": 0,
         "max_tokens": int(_float_env("VISION_OCR_MAX_TOKENS", 9000)),
         "response_format": {
             "type": "json_schema",
@@ -155,28 +154,10 @@ def _request_vision_ocr(image_url: str, model: str) -> VisionOcrResult:
                 "schema": _vision_schema(),
             },
         },
-        "provider": {"require_parameters": True},
     }
-    request = urllib.request.Request(
-        OPENROUTER_URL,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Authorization": f"Bearer {os.environ['OPENROUTER_API_KEY']}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": os.environ.get("OPENROUTER_SITE_URL", "http://127.0.0.1:5000"),
-            "X-Title": os.environ.get("OPENROUTER_APP_NAME", "TriCab RFQ Parser"),
-        },
-        method="POST",
-    )
-
-    try:
-        with urllib.request.urlopen(request, timeout=_float_env("VISION_OCR_TIMEOUT_SECONDS", 45)) as response:
-            data = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
-        return VisionOcrResult(False, model, [], "", 0, error=f"OpenRouter HTTP {exc.code}: {body[:500]}")
-    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:
-        return VisionOcrResult(False, model, [], "", 0, error=f"OpenRouter vision request failed: {exc}")
+    data, error = _openrouter_chat(payload, timeout=_float_env("VISION_OCR_TIMEOUT_SECONDS", 45))
+    if error:
+        return VisionOcrResult(False, model, [], "", 0, error=error)
 
     try:
         choice = data["choices"][0]
@@ -234,8 +215,8 @@ def public_result(result: VisionOcrResult) -> dict[str, Any]:
 def health() -> dict[str, Any]:
     return {
         "enabled": vision_ocr_enabled(),
-        "primary_model": model_settings.get("VISION_OCR_PRIMARY_MODEL", DEFAULT_PRIMARY_MODEL),
-        "escalation_model": model_settings.get("VISION_OCR_ESCALATION_MODEL", DEFAULT_ESCALATION_MODEL),
+        "primary_model": model_settings.get("RFQ_VISION_MODEL", DEFAULT_PRIMARY_MODEL),
+        "escalation_model": model_settings.get("RFQ_VISION_ESCALATION_MODEL", DEFAULT_ESCALATION_MODEL),
         "escalation_threshold": _float_env("VISION_OCR_ESCALATION_THRESHOLD", 0.82),
         "max_tokens": int(_float_env("VISION_OCR_MAX_TOKENS", 9000)),
         "max_image_mb": _float_env("VISION_OCR_MAX_IMAGE_MB", 8),

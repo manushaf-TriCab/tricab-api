@@ -13,11 +13,23 @@ final class PlatformModelCatalogTest extends TestCase
     public function test_existing_model_capabilities_are_combined_from_current_tasks(): void
     {
         $metadata = PlatformModelCatalog::metadata(['ai' => ['tasks' => [
-            'productFinderModel' => 'provider/model', 'visionOcrPrimaryModel' => 'provider/model',
+            'productFinderModel' => 'provider/model', 'ap_extract' => 'provider/model',
         ]]]);
         self::assertCount(1, $metadata['models']);
-        PlatformModelCatalog::validateSelection('visionOcrPrimaryModel', 'provider/model', $metadata);
+        PlatformModelCatalog::validateSelection('ap_extract', 'provider/model', $metadata);
         self::assertContains('vision', $metadata['models'][0]['capabilities']);
+    }
+
+    public function test_the_rfq_parsers_model_tasks_take_foundry_deployments_not_openrouter_ids(): void
+    {
+        $metadata = PlatformModelCatalog::metadata(['ai' => ['tasks' => [
+            'openrouterModel' => 'claude-haiku-5-5', 'visionOcrPrimaryModel' => 'claude-haiku-5-5',
+            'visionOcrEscalationModel' => 'claude-sonnet-5-5', 'productFinderModel' => 'provider/chat',
+        ]]]);
+        PlatformModelCatalog::validateSelection('visionOcrEscalationModel', 'claude-sonnet-5-5', $metadata);
+        PlatformModelCatalog::validateSelection('openrouterModel', 'claude-haiku-5-5', $metadata);
+        $this->expectException(InvalidArgumentException::class);
+        PlatformModelCatalog::validateSelection('visionOcrPrimaryModel', 'provider/chat', $metadata);
     }
 
     public function test_chat_model_cannot_replace_decisions_model(): void

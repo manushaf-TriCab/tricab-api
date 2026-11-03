@@ -232,8 +232,14 @@ def reader_api_version() -> str:
     return os.environ.get("RFQ_READER_API_VERSION", "").strip() or _DEFAULT_API_VERSION
 
 
-def _api_key() -> str:
-    return os.environ.get("RFQ_READER_API_KEY", "").strip()
+from rfq_parser import foundry
+
+
+def _auth_headers() -> dict[str, str]:
+    try:
+        return foundry.reader_auth_headers()
+    except foundry.AuthError as exc:
+        raise ReaderError(f"Azure OpenAI request failed: {exc}") from exc
 
 
 def reader_enabled() -> bool:
@@ -246,7 +252,7 @@ def reader_enabled() -> bool:
     """
     if not _flag("RFQ_READER_ENABLED"):
         return False
-    return bool(_api_key() and reader_endpoint() and reader_model())
+    return bool(foundry.reader_auth_ready() and reader_endpoint() and reader_model())
 
 
 def reader_config() -> dict[str, Any]:
@@ -255,7 +261,7 @@ def reader_config() -> dict[str, Any]:
         "enabled": reader_enabled(),
         "configured": _flag("RFQ_READER_ENABLED"),
         "endpoint": reader_endpoint() or None,
-        "has_key": bool(_api_key()),
+        "auth": foundry.reader_auth_mode(),
         "model": reader_model() or None,
         "api_version": reader_api_version(),
         "max_total_tokens": _int_env("RFQ_READER_MAX_TOKENS", _DEFAULT_MAX_TOKENS),
@@ -713,7 +719,7 @@ def _post(path: str, payload: dict[str, Any], timeout: float) -> dict[str, Any]:
     request = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"api-key": _api_key(), "Content-Type": "application/json"},
+        headers={**_auth_headers(), "Content-Type": "application/json"},
         method="POST",
     )
     try:
@@ -838,7 +844,7 @@ def _upload(data: bytes, filename: str, content_type: str, timeout: float) -> st
         url,
         data=body,
         headers={
-            "api-key": _api_key(),
+            **_auth_headers(),
             "Content-Type": f"multipart/form-data; boundary={boundary}",
             "Content-Length": str(len(body)),
         },
@@ -862,10 +868,8 @@ def _upload(data: bytes, filename: str, content_type: str, timeout: float) -> st
 def _delete_file(file_id: str, timeout: float) -> None:
     """Best effort. A customer's workbook should not outlive the run that read it."""
     url = f"{reader_endpoint()}/openai/v1/files/{file_id}?api-version={reader_api_version()}"
-    request = urllib.request.Request(
-        url, headers={"api-key": _api_key()}, method="DELETE"
-    )
     try:
+        request = urllib.request.Request(url, headers=_auth_headers(), method="DELETE")
         urllib.request.urlopen(request, timeout=timeout).close()
     except Exception:  # noqa: BLE001 - cleanup must never fail the read
         pass

@@ -23,7 +23,7 @@ import sync_rfq_parser  # noqa: E402
 # Third-party packages the parser may import, each in requirements.txt (or, for
 # werkzeug, installed by Flask, which is).
 ALLOWED_THIRD_PARTY = {"openpyxl", "pdfplumber", "pypdfium2", "docx", "xlrd", "flask", "werkzeug"}  # werkzeug ships with Flask, pypdfium2 with pdfplumber
-PLATFORM_OWNED = {"__init__", "accounting", "corrections", "intake", "_unported", "app", "contract", "model_settings", "reading", "quote_pricing", "quote_export", "quote_sync", "aliflex", "mail_envelope", "mail_parse"}
+PLATFORM_OWNED = {"__init__", "accounting", "corrections", "intake", "_unported", "app", "contract", "model_settings", "foundry", "reading", "quote_pricing", "quote_export", "quote_sync", "aliflex", "mail_envelope", "mail_parse"}
 
 
 def _imports(path: Path) -> set[str]:
@@ -43,11 +43,14 @@ def test_the_parser_imports_only_itself_the_rules_and_declared_dependencies():
     handoff. A `matcher` import would mean a generated file escaped its rewrite; a
     new third-party import is a dependency the App Service does not install.
     """
+    # `finance_ai`: rfq_parser/foundry.py reuses its AnthropicFoundry client and managed-identity token (plan M7);
+    # it is the only module that may, and plan O4 lifts that client into a shared module.
     allowed = set(sys.stdlib_module_names) | {"rfq_parser", "tricab_cable_rules", "__future__"} | ALLOWED_THIRD_PARTY
+    allowed_finance = {"foundry.py"}
     failures = [
         f"{path.name} imports {name}"
         for path in sorted((ROOT / "rfq_parser").glob("*.py"))
-        for name in sorted(_imports(path) - allowed)
+        for name in sorted(_imports(path) - allowed - ({"finance_ai"} if path.name in allowed_finance else set()))
     ]
     assert failures == [], "\n".join(failures)
 

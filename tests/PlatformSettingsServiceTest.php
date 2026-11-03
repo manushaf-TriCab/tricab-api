@@ -21,15 +21,15 @@ final class PlatformSettingsServiceTest extends TestCase
                 'RFQ_READER_NORMALIZER_MODEL' => '',
                 'RFQ_NORMALIZER_MODEL' => '',
                 'RFQ_TABLE_SHAPE_MODEL' => '',
-                'OPENROUTER_MODEL' => 'provider/configured',
+                'RFQ_LLM_MODEL' => 'provider-configured',
             ]);
             $service = new PlatformSettingsService(new InMemoryPlatformSettingsRepository(), $this->settings('', 'claude-haiku-5-5'));
             /** @var array{ai: array{tasks: array<string, string>}} $defaults */
             $defaults = $service->defaults();
             $tasks = $defaults['ai']['tasks'];
             self::assertSame('azure-reader', $tasks['rfqReaderNormalizerModel']);
-            self::assertSame('provider/configured', $tasks['rfqNormalizerModel']);
-            self::assertSame('provider/configured', $tasks['rfqTableShapeModel']);
+            self::assertSame('provider-configured', $tasks['rfqNormalizerModel']);
+            self::assertSame('provider-configured', $tasks['rfqTableShapeModel']);
         } finally {
             $_ENV = $previous;
         }

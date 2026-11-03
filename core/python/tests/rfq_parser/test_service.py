@@ -38,7 +38,7 @@ PASTE = "Cable schedule\r\n\r\n  4C 16mm2 XLPE/PVC 120m  \n2x 1C 240mm AL flex 8
 
 
 def test_health_reports_flags_and_limits_but_no_setting_values(client, monkeypatch):
-    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-secret-value")
+    monkeypatch.setenv("FOUNDRY_ENDPOINT", "https://sk-secret-value.invalid")
     data = _data(client.get("/api/health"))
     assert data["status"] == "ok"
     assert set(data["ai"]) == {"line_fallback", "normalizer", "table_shape", "reader", "translator", "vision_ocr"}
@@ -56,13 +56,13 @@ def test_every_answer_names_what_produced_it(client, monkeypatch):
     assert len(versions["catalogue"]) == 16
     assert versions["models"] == {}  # every AI path is off under test
 
-    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
-    monkeypatch.setenv("OPENROUTER_MODEL", "some/model")
-    monkeypatch.setenv("VISION_OCR_PRIMARY_MODEL", "some/vision")
-    # As in the source, an OpenRouter key switches vision OCR on unless VISION_OCR_ENABLED says no.
-    assert service.versions()["models"] == {"line_fallback": "some/model", "vision_ocr": "some/vision"}
+    monkeypatch.setenv("FOUNDRY_ENDPOINT", "https://foundry.invalid")
+    monkeypatch.setenv("RFQ_LLM_MODEL", "some-model")
+    monkeypatch.setenv("RFQ_VISION_MODEL", "some-vision")
+    # As in the source, the model provider being configured switches vision OCR on unless VISION_OCR_ENABLED says no.
+    assert service.versions()["models"] == {"line_fallback": "some-model", "vision_ocr": "some-vision"}
     monkeypatch.setenv("VISION_OCR_ENABLED", "false")
-    assert service.versions()["models"] == {"line_fallback": "some/model"}
+    assert service.versions()["models"] == {"line_fallback": "some-model"}
 
 
 def test_text_is_split_as_the_source_browser_splits_it(client):

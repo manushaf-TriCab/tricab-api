@@ -8,23 +8,14 @@ from unittest.mock import patch
 from rfq_parser.vision_ocr import VisionOcrResult, extract_table_with_qwen, normalize_image_type
 
 
-class FakeResponse:
-    def __init__(self, content, model, finish_reason="stop"):
-        self.body = json.dumps(
-            {
-                "model": model,
-                "choices": [{"message": {"content": json.dumps(content)}, "finish_reason": finish_reason}],
-            }
-        ).encode("utf-8")
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *_args):
-        return False
-
-    def read(self):
-        return self.body
+def FakeResponse(content, model, finish_reason="stop"):
+    return (
+        {
+            "model": model,
+            "choices": [{"message": {"content": json.dumps(content)}, "finish_reason": finish_reason}],
+        },
+        None,
+    )
 
 
 class VisionOcrTests(unittest.TestCase):
@@ -34,8 +25,8 @@ class VisionOcrTests(unittest.TestCase):
     def test_browser_image_type_alias_is_normalized(self):
         self.assertEqual(normalize_image_type(b"image", "image/x-png"), "image/png")
 
-    @patch.dict("os.environ", {"OPENROUTER_API_KEY": "test-key", "VISION_OCR_ENABLED": "true"})
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch.dict("os.environ", {"FOUNDRY_ENDPOINT": "test-key", "VISION_OCR_ENABLED": "true"})
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_primary_model_returns_normalized_rows(self, urlopen):
         urlopen.return_value = FakeResponse(
             {
@@ -60,12 +51,12 @@ class VisionOcrTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertFalse(result.escalated)
         self.assertEqual(result.text, "260 meters 0.75mm2 Cu 4C+E PVC control cable Control cables")
-        request_payload = json.loads(urlopen.call_args.args[0].data)
+        request_payload = urlopen.call_args.args[0]
         image_url = request_payload["messages"][1]["content"][1]["image_url"]["url"]
         self.assertTrue(image_url.startswith("data:image/png;base64,"))
 
-    @patch.dict("os.environ", {"OPENROUTER_API_KEY": "test-key", "VISION_OCR_ENABLED": "true"})
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch.dict("os.environ", {"FOUNDRY_ENDPOINT": "test-key", "VISION_OCR_ENABLED": "true"})
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_fire_rated_flag_is_applied_per_row(self, urlopen):
         urlopen.return_value = FakeResponse(
             {
@@ -102,19 +93,19 @@ class VisionOcrTests(unittest.TestCase):
         self.assertIn("Fire Rated", lines[0])
         self.assertNotIn("Fire Rated", lines[1])
         # The schema must request fire_rated so the model commits to it per row.
-        payload = json.loads(urlopen.call_args.args[0].data)
+        payload = urlopen.call_args.args[0]
         row_props = payload["response_format"]["json_schema"]["schema"]["properties"]["rows"]["items"]["properties"]
         self.assertIn("fire_rated", row_props)
 
     @patch.dict(
         "os.environ",
         {
-            "OPENROUTER_API_KEY": "test-key",
+            "FOUNDRY_ENDPOINT": "test-key",
             "VISION_OCR_ENABLED": "true",
             "VISION_OCR_ESCALATION_THRESHOLD": "0.82",
         },
     )
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_uncertain_primary_result_escalates(self, urlopen):
         primary = {
             "overall_confidence": 0.75,
@@ -159,12 +150,12 @@ class VisionOcrTests(unittest.TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OPENROUTER_API_KEY": "test-key",
+            "FOUNDRY_ENDPOINT": "test-key",
             "VISION_OCR_ENABLED": "true",
             "VISION_OCR_ESCALATION_THRESHOLD": "0.82",
         },
     )
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_cable_row_missing_length_escalates_even_with_high_confidence(self, urlopen):
         missing_length = {
             "overall_confidence": 0.97,
@@ -209,11 +200,11 @@ class VisionOcrTests(unittest.TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OPENROUTER_API_KEY": "test-key",
+            "FOUNDRY_ENDPOINT": "test-key",
             "VISION_OCR_ENABLED": "true",
         },
     )
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_truncated_primary_response_escalates(self, urlopen):
         corrected = {
             "overall_confidence": 0.98,
@@ -239,8 +230,8 @@ class VisionOcrTests(unittest.TestCase):
         self.assertTrue(result.escalated)
         self.assertEqual(result.rows[0]["length"], 10)
 
-    @patch.dict("os.environ", {"OPENROUTER_API_KEY": "test-key", "VISION_OCR_ENABLED": "true"})
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch.dict("os.environ", {"FOUNDRY_ENDPOINT": "test-key", "VISION_OCR_ENABLED": "true"})
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_schema_is_column_anchored_and_forbids_invented_columns(self, urlopen):
         # Guards the 2026-07-29 fix. The prompt used to carry a worked example of a
         # decomposed schedule ("Active 2x300mm2 Cu, Neutral ..., Configuration 3x1
@@ -257,7 +248,7 @@ class VisionOcrTests(unittest.TestCase):
 
         extract_table_with_qwen(b"image", "image/png")
 
-        payload = json.loads(urlopen.call_args.args[0].data)
+        payload = urlopen.call_args.args[0]
         schema = payload["response_format"]["json_schema"]["schema"]
         self.assertIn("columns", schema["properties"])
         self.assertIn("columns", schema["required"])
@@ -272,15 +263,15 @@ class VisionOcrTests(unittest.TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OPENROUTER_API_KEY": "test-key",
+            "FOUNDRY_ENDPOINT": "test-key",
             "VISION_OCR_ENABLED": "true",
             # Pin escalation to the primary so this stays a single-call test; a lug row
             # with a null length otherwise looks like a cable row missing its length.
-            "VISION_OCR_PRIMARY_MODEL": "qwen/qwen3-vl-8b-instruct",
-            "VISION_OCR_ESCALATION_MODEL": "qwen/qwen3-vl-8b-instruct",
+            "RFQ_VISION_MODEL": "qwen/qwen3-vl-8b-instruct",
+            "RFQ_VISION_ESCALATION_MODEL": "qwen/qwen3-vl-8b-instruct",
         },
     )
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_product_code_kept_and_bare_quantity_not_read_as_length(self, urlopen):
         urlopen.return_value = FakeResponse(
             {
@@ -310,14 +301,14 @@ class VisionOcrTests(unittest.TestCase):
         self.assertTrue(result.text.startswith("XL-PAXN/1C25OR"))
         self.assertNotIn("None", result.text)
 
-    @patch.dict("os.environ", {"OPENROUTER_API_KEY": "test-key", "VISION_OCR_ENABLED": "true"})
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch.dict("os.environ", {"FOUNDRY_ENDPOINT": "test-key", "VISION_OCR_ENABLED": "true"})
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_schema_requests_code_and_prompt_guards_bare_quantities(self, urlopen):
         urlopen.return_value = FakeResponse({"overall_confidence": 0.9, "rows": []}, "qwen/qwen3-vl-8b-instruct")
 
         extract_table_with_qwen(b"image", "image/png")
 
-        payload = json.loads(urlopen.call_args.args[0].data)
+        payload = urlopen.call_args.args[0]
         row_props = payload["response_format"]["json_schema"]["schema"]["properties"]["rows"]["items"]["properties"]
         self.assertIn("code", row_props)
         system_prompt = payload["messages"][0]["content"]
@@ -331,13 +322,13 @@ class VisionOcrTests(unittest.TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OPENROUTER_API_KEY": "test-key",
+            "FOUNDRY_ENDPOINT": "test-key",
             "VISION_OCR_ENABLED": "true",
-            "VISION_OCR_PRIMARY_MODEL": "qwen/qwen3-vl-30b-a3b-instruct",
-            "VISION_OCR_ESCALATION_MODEL": "qwen/qwen3-vl-30b-a3b-instruct",
+            "RFQ_VISION_MODEL": "qwen/qwen3-vl-30b-a3b-instruct",
+            "RFQ_VISION_ESCALATION_MODEL": "qwen/qwen3-vl-30b-a3b-instruct",
         },
     )
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_single_line_diagram_columns_are_labelled_not_invented(self, urlopen):
         # The MAIN SWITCHBOARD SINGLE LINE DIAGRAM shape: route columns plus an
         # "Active (mm2)" cross-section, and no length column anywhere. Every part of
@@ -407,13 +398,13 @@ class VisionOcrTests(unittest.TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OPENROUTER_API_KEY": "test-key",
+            "FOUNDRY_ENDPOINT": "test-key",
             "VISION_OCR_ENABLED": "true",
-            "VISION_OCR_PRIMARY_MODEL": "qwen/qwen3-vl-30b-a3b-instruct",
-            "VISION_OCR_ESCALATION_MODEL": "qwen/qwen3-vl-30b-a3b-instruct",
+            "RFQ_VISION_MODEL": "qwen/qwen3-vl-30b-a3b-instruct",
+            "RFQ_VISION_ESCALATION_MODEL": "qwen/qwen3-vl-30b-a3b-instruct",
         },
     )
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_real_length_column_is_kept(self, urlopen):
         urlopen.return_value = FakeResponse(
             {
@@ -445,12 +436,12 @@ class VisionOcrTests(unittest.TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OPENROUTER_API_KEY": "test-key",
+            "FOUNDRY_ENDPOINT": "test-key",
             "VISION_OCR_ENABLED": "true",
             "VISION_OCR_ESCALATION_THRESHOLD": "0.82",
         },
     )
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_cells_misaligned_with_columns_escalate(self, urlopen):
         # A short cells list means values have shifted left/right against their
         # headers -- the row-slippage that mislabelled C4/C6/C8's destinations.
@@ -496,12 +487,12 @@ class VisionOcrTests(unittest.TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OPENROUTER_API_KEY": "test-key",
+            "FOUNDRY_ENDPOINT": "test-key",
             "VISION_OCR_ENABLED": "true",
             "VISION_OCR_ESCALATION_THRESHOLD": "0.82",
         },
     )
-    @patch("rfq_parser.vision_ocr.urllib.request.urlopen")
+    @patch("rfq_parser.vision_ocr._openrouter_chat")
     def test_table_with_no_length_column_does_not_escalate(self, urlopen):
         # A route/size schedule prints no lengths at all, so "missing length" is the
         # correct reading and must not burn a second, larger model call.

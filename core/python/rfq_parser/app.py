@@ -140,7 +140,7 @@ def versions() -> dict[str, Any]:
     AI path that is switched on. An AI path that is off is absent, not null."""
     models: dict[str, str] = {}
     if llm_fallback.openrouter_enabled():
-        models["line_fallback"] = model_settings.get("OPENROUTER_MODEL", llm_fallback.DEFAULT_MODEL)
+        models["line_fallback"] = model_settings.get("RFQ_LLM_MODEL", llm_fallback.DEFAULT_MODEL)
     if normalizer.normalizer_enabled():
         models["normalizer"] = normalizer.normalizer_model()
     if table_shape.table_shape_enabled():
@@ -150,7 +150,7 @@ def versions() -> dict[str, Any]:
     if reader_normalizer.translator_enabled():
         models["translator"] = reader_normalizer.translator_model()
     if vision_ocr.vision_ocr_enabled():
-        models["vision_ocr"] = model_settings.get("VISION_OCR_PRIMARY_MODEL", vision_ocr.DEFAULT_PRIMARY_MODEL)
+        models["vision_ocr"] = model_settings.get("RFQ_VISION_MODEL", vision_ocr.DEFAULT_PRIMARY_MODEL)
     return {
         "engine": ENGINE_VERSION,
         "parser_source": SOURCE_COMMIT,

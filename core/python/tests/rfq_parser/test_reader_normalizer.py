@@ -37,7 +37,7 @@ def configured(monkeypatch):
     monkeypatch.setenv("RFQ_READER_ENDPOINT", "https://example.openai.azure.com")
     monkeypatch.setenv("RFQ_READER_API_KEY", "test-key")
     monkeypatch.setenv("RFQ_READER_MODEL", "gpt-test")
-    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.delenv("FOUNDRY_ENDPOINT", raising=False)
     monkeypatch.delenv("RFQ_NORMALIZER_ENABLED", raising=False)
     monkeypatch.delenv("RFQ_AGENT_ENABLED", raising=False)
     rn.reset_run()

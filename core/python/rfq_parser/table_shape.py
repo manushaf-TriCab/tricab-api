@@ -92,7 +92,7 @@ def table_shape_model() -> str:
     return (
         model_settings.get("RFQ_TABLE_SHAPE_MODEL")
         or model_settings.get("RFQ_NORMALIZER_MODEL")
-        or model_settings.get("OPENROUTER_MODEL", DEFAULT_MODEL)
+        or model_settings.get("RFQ_LLM_MODEL", DEFAULT_MODEL)
     )
 
 
@@ -312,8 +312,6 @@ def _call_llm(file_name: str, sheet_title: str, grid: list[dict[str, Any]]) -> d
         ],
         "max_tokens": 1000,
     }
-    if os.environ.get("OPENROUTER_REQUIRE_PARAMETERS", "true").lower() in {"1", "true", "yes"}:
-        payload["provider"] = {"require_parameters": True}
     data, error = _openrouter_chat(
         payload, timeout=_float_env("RFQ_TABLE_SHAPE_TIMEOUT_SECONDS", 30)
     )
