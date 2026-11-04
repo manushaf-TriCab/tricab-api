@@ -9,6 +9,7 @@ use DateTimeZone;
 use JsonException;
 use RuntimeException;
 use TriCab\Api\Config\Settings;
+use TriCab\Core\Mail\Intake\MailFolder;
 use TriCab\Core\Mail\Intake\MailReaderState;
 
 /**
@@ -17,6 +18,10 @@ use TriCab\Core\Mail\Intake\MailReaderState;
  * replaced atomically (write a temp file, then rename), so a pass that dies mid-write leaves the old one.
  * `pending/<key>` marks a message recorded and not yet assessed. A deploy empties the directory: the next
  * pass then starts from `RFQ_MAIL_FIRST_RUN_DAYS` ago, which is safe because recording is idempotent.
+ *
+ * **One cursor per folder.** The reader reads the Inbox and the folders under it, each with its own delta cursor
+ * in `cursors` (keyed by folder id; the Inbox is `inbox`). A state file from before folders has one top-level
+ * `cursor`/`cursorMailbox`: that is read as the Inbox's cursor, and the Inbox's is still written there too.
  *
  * **The cursor belongs to one mailbox.** A Graph delta link is a full URL naming the mailbox it was issued
  * for, so after `RFQ_MAIL_MAILBOX` changes the old link would keep reading the old mailbox. The cursor is
@@ -46,34 +51,147 @@ final class FileMailReaderState implements MailReaderState
         return $this->directory;
     }
 
-    public function cursor(): ?string
+    public function cursor(string $folder = MailFolder::INBOX): ?string
     {
         $state = $this->read();
-        $cursor = $state['cursor'] ?? null;
-        if ($this->mailbox !== null && ($state['cursorMailbox'] ?? null) !== self::normalise($this->mailbox)) {
+        $entry = $this->cursorEntry($state, $folder);
+        if ($entry === null) {
+            return null;
+        }
+        // A cursor belongs to the mailbox it was issued for (and one saved without a mailbox is not trusted once a mailbox is known).
+        if ($this->mailbox !== null && $entry['mailbox'] !== self::normalise($this->mailbox)) {
             return null;
         }
 
-        return is_string($cursor) && $cursor !== '' ? $cursor : null;
+        return $entry['link'];
     }
 
-    public function saveCursor(string $link, bool $complete): void
+    public function saveCursor(string $link, bool $complete, string $folder = MailFolder::INBOX): void
     {
         $state = $this->read();
-        $state['cursor'] = $link;
-        if ($this->mailbox !== null) {
-            $state['cursorMailbox'] = self::normalise($this->mailbox);
+        $cursors = is_array($state['cursors'] ?? null) ? $state['cursors'] : [];
+        $saved = [
+            'link' => $link,
+            'mailbox' => $this->mailbox !== null ? self::normalise($this->mailbox) : null,
+            'complete' => $complete,
+            'savedAt' => gmdate('c'),
+        ];
+        $cursors[$folder] = $saved;
+        $state['cursors'] = $cursors;
+        if ($folder === MailFolder::INBOX) {
+            // The Inbox cursor is also kept under the pre-folders keys, so a file written now still loads if this
+            // release is rolled back to one that reads a single cursor.
+            $state['cursor'] = $link;
+            if ($this->mailbox !== null) {
+                $state['cursorMailbox'] = self::normalise($this->mailbox);
+            } else {
+                unset($state['cursorMailbox']);
+            }
+            $state['cursorComplete'] = $complete;
+            $state['cursorSavedAt'] = $saved['savedAt'];
         }
-        $state['cursorComplete'] = $complete;
-        $state['cursorSavedAt'] = gmdate('c');
         $this->write($state);
     }
 
-    public function clearCursor(): void
+    public function clearCursor(string $folder = MailFolder::INBOX): void
     {
         $state = $this->read();
-        unset($state['cursor'], $state['cursorMailbox'], $state['cursorComplete'], $state['cursorSavedAt']);
+        if (is_array($state['cursors'] ?? null)) {
+            unset($state['cursors'][$folder]);
+            if ($state['cursors'] === []) {
+                unset($state['cursors']);
+            }
+        }
+        if ($folder === MailFolder::INBOX) {
+            unset($state['cursor'], $state['cursorMailbox'], $state['cursorComplete'], $state['cursorSavedAt']);
+        }
         $this->write($state);
+    }
+
+    /** Forget every folder's cursor and the folder list (`--reset-cursor`): the next pass starts each folder from the window. */
+    public function clearAllCursors(): void
+    {
+        $state = $this->read();
+        unset($state['cursors'], $state['folders'], $state['cursor'], $state['cursorMailbox'], $state['cursorComplete'], $state['cursorSavedAt']);
+        $this->write($state);
+    }
+
+    /** How many folders have a saved cursor for this mailbox (the Inbox counts, old single cursor included). */
+    public function cursorCount(): int
+    {
+        $state = $this->read();
+        $keys = array_keys(is_array($state['cursors'] ?? null) ? $state['cursors'] : []);
+        $keys[] = MailFolder::INBOX;
+        $count = 0;
+        foreach (array_unique($keys) as $key) {
+            $count += $this->cursor((string) $key) !== null ? 1 : 0;
+        }
+
+        return $count;
+    }
+
+    public function folders(): ?array
+    {
+        $stored = $this->read()['folders'] ?? null;
+        $at = is_array($stored) ? ($stored['at'] ?? null) : null;
+        $mailbox = is_array($stored) ? ($stored['mailbox'] ?? null) : null;
+        if (!is_array($stored) || !is_string($at) || !is_array($stored['list'] ?? null)) {
+            return null;
+        }
+        if ($this->mailbox !== null && $mailbox !== self::normalise($this->mailbox)) {
+            return null;
+        }
+        $folders = [];
+        foreach ($stored['list'] as $f) {
+            if (is_array($f) && is_string($f['id'] ?? null) && $f['id'] !== '') {
+                $folders[] = new MailFolder($f['id'], is_string($f['name'] ?? null) ? $f['name'] : '', is_string($f['path'] ?? null) ? $f['path'] : '');
+            }
+        }
+        try {
+            return ['folders' => $folders, 'at' => new DateTimeImmutable($at, new DateTimeZone('UTC'))];
+        } catch (\Exception) {
+            return null;
+        }
+    }
+
+    public function saveFolders(array $folders, DateTimeImmutable $at): void
+    {
+        $state = $this->read();
+        $state['folders'] = [
+            'at' => $at->setTimezone(new DateTimeZone('UTC'))->format('c'),
+            'mailbox' => $this->mailbox !== null ? self::normalise($this->mailbox) : null,
+            'list' => array_map(static fn (MailFolder $f): array => ['id' => $f->id, 'name' => $f->name, 'path' => $f->path], $folders),
+        ];
+        $this->write($state);
+    }
+
+    public function clearFolders(): void
+    {
+        $state = $this->read();
+        if (isset($state['folders'])) {
+            unset($state['folders']);
+            $this->write($state);
+        }
+    }
+
+    /**
+     * The saved cursor for a folder: the `cursors` map first; for the Inbox, the single cursor older releases
+     * wrote (`cursor` + `cursorMailbox`) when the map has no entry yet.
+     *
+     * @param array<string, mixed> $state
+     * @return array{link: string, mailbox: ?string}|null
+     */
+    private function cursorEntry(array $state, string $folder): ?array
+    {
+        $entry = is_array($state['cursors'] ?? null) ? ($state['cursors'][$folder] ?? null) : null;
+        if (is_array($entry) && is_string($entry['link'] ?? null) && $entry['link'] !== '') {
+            return ['link' => $entry['link'], 'mailbox' => is_string($entry['mailbox'] ?? null) ? $entry['mailbox'] : null];
+        }
+        if ($folder === MailFolder::INBOX && is_string($state['cursor'] ?? null) && $state['cursor'] !== '') {
+            return ['link' => $state['cursor'], 'mailbox' => is_string($state['cursorMailbox'] ?? null) ? $state['cursorMailbox'] : null];
+        }
+
+        return null;
     }
 
     public function connection(): ?array

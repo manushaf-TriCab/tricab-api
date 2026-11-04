@@ -127,10 +127,65 @@ final class GraphMailboxReader implements FolderMailboxReader
      */
     public function deltaStartUrl(string $mailbox, string $folder, DateTimeImmutable $since, string $select): string
     {
-        return $this->mailboxUrl($mailbox, '/mailFolders/' . MailboxFolders::normalise($folder) . '/messages/delta', [
+        return $this->mailboxUrl($mailbox, '/mailFolders/' . self::folderSegment($folder) . '/messages/delta', [
             '$select' => $select,
             '$filter' => 'receivedDateTime ge ' . $since->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z'),
         ]);
+    }
+
+    /**
+     * The first URL of a plain (non-delta) listing of one folder: messages received since `$since`, newest first.
+     * Pass it, then each `nextLink`, to {@see deltaPage()} (which reads any Graph page). Used by the backfill, which
+     * must not touch delta state.
+     */
+    public function folderMessagesStartUrl(string $mailbox, string $folder, DateTimeImmutable $since, string $select): string
+    {
+        return $this->mailboxUrl($mailbox, '/mailFolders/' . self::folderSegment($folder) . '/messages', [
+            '$select' => $select,
+            '$filter' => 'receivedDateTime ge ' . $since->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z'),
+            '$orderby' => 'receivedDateTime desc',
+        ]);
+    }
+
+    /**
+     * The folders directly under one folder (a well-known name such as `inbox`, or a folder id).
+     *
+     * @return list<array{id: string, name: string, childCount: int}>
+     */
+    public function childFolders(string $mailbox, string $folder): array
+    {
+        $url = $this->mailboxUrl($mailbox, '/mailFolders/' . self::folderSegment($folder) . '/childFolders', [
+            '$top' => '100',
+            '$select' => 'id,displayName,childFolderCount',
+        ]);
+        $folders = [];
+        while ($url !== null) {
+            $page = $this->get($url);
+            foreach (self::rows($page['value'] ?? null) as $row) {
+                $id = $row['id'] ?? null;
+                if (is_string($id) && $id !== '') {
+                    $count = $row['childFolderCount'] ?? 0;
+                    $folders[] = ['id' => $id, 'name' => self::text($row['displayName'] ?? null), 'childCount' => is_int($count) ? $count : 0];
+                }
+            }
+            $url = self::continuation($page['@odata.nextLink'] ?? null);
+        }
+
+        return $folders;
+    }
+
+    /** A well-known folder name (any case) or a folder id, made safe for a URL path. */
+    private static function folderSegment(string $folder): string
+    {
+        $name = strtolower(trim($folder));
+        if (in_array($name, FolderMailboxReader::WELL_KNOWN, true)) {
+            return $name;
+        }
+        if (trim($folder) === '') {
+            throw new MailboxReadFailed('A folder is required.');
+        }
+
+        return rawurlencode(trim($folder));
     }
 
     /**

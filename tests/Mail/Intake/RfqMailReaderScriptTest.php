@@ -145,7 +145,7 @@ final class RfqMailReaderScriptTest extends TestCase
 
         [$status, $out] = $this->runScript([], '--reset-cursor');
         self::assertSame(0, $status);
-        self::assertStringContainsString('cursor cleared', $out);
+        self::assertStringContainsString('cursors cleared', $out);
         [, $out] = $this->runScript([], '--status');
         self::assertFalse(self::report($out)['hasCursor']);
     }
@@ -169,6 +169,11 @@ final class RfqMailReaderScriptTest extends TestCase
         self::assertSame(2, substr_count($build, '"$api_root/bin/run-rfq-mail-reader.php"'));
         self::assertStringContainsString('chmod +x "$release_root/App_Data/jobs/continuous/rfq-mail/run.sh"', $build);
         self::assertStringContainsString('jobs\\continuous\\rfq-mail', $buildPs);
+        // The one-off backfill ships in the same release (run by SSH, not a WebJob), in both build scripts.
+        self::assertFileExists($root . '/bin/backfill-rfq-mail.php');
+        self::assertStringContainsString('cp "$api_root/bin/backfill-rfq-mail.php" "$app_root/bin/backfill-rfq-mail.php"', $build);
+        self::assertSame(2, substr_count($build, '"$api_root/bin/backfill-rfq-mail.php"'), 'a required release input and copied');
+        self::assertStringContainsString("'bin\\backfill-rfq-mail.php'", $buildPs);
         // The prompt the classifier names ships in the release (PROMPTS is copied whole).
         self::assertFileExists($root . '/PROMPTS/rfq-mail-classify-v1.md');
         self::assertStringContainsString('for directory in src resources PROMPTS core', $build);

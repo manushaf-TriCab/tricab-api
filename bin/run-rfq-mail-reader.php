@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * RFQ mail reader (RFQ plan M3, M4): one pass over melbourne@'s Inbox, shadow mode.
+ * RFQ mail reader (RFQ plan M3, M4): one pass over the mailbox's Inbox and the folders under it, shadow mode.
  *
  *   php bin/run-rfq-mail-reader.php                 # one pass, then exit
  *   php bin/run-rfq-mail-reader.php --status        # what the reader remembers (no Graph, no database)
@@ -67,6 +67,8 @@ if (isset($options['status'])) {
     fwrite(STDOUT, json_encode([
         'stateDirectory' => $state->directory(),
         'hasCursor' => $state->cursor() !== null,
+        'folderCursors' => $state->cursorCount(),
+        'folders' => array_map(static fn ($f): string => $f->path, $state->folders()['folders'] ?? []),
         'connection' => $connection['connection'] ?? null,
         'connectionAt' => isset($connection['at']) ? $connection['at']->format('c') : null,
         'readEnabled' => $settings->rfqMailReadEnabled,
@@ -86,9 +88,9 @@ if (isset($options['reset-cursor'])) {
         fwrite(STDERR, "RFQ mail reader: a pass is running; try again in a minute.\n");
         exit(MailReaderJob::EXIT_LOCKED);
     }
-    $state->clearCursor();
+    $state->clearAllCursors();
     $lock->release();
-    fwrite(STDOUT, "RFQ mail reader: delta cursor cleared. The next pass reads the last {$settings->rfqMailFirstRunDays} day(s); messages already recorded are not recorded twice.\n");
+    fwrite(STDOUT, "RFQ mail reader: delta cursors cleared (Inbox and every folder). The next pass reads the last {$settings->rfqMailFirstRunDays} day(s); messages already recorded are not recorded twice.\n");
     exit(MailReaderJob::EXIT_OK);
 }
 
@@ -177,6 +179,8 @@ $pass = new MailReaderPass(
         $settings->rfqMailFirstRunDays,
         $settings->rfqMailPassSeconds,
         $settings->rfqMailHeartbeatMinutes,
+        folderRefreshMinutes: $settings->rfqMailFolderRefreshMinutes,
+        excludeFolders: $settings->rfqMailExcludeFolders,
     ),
     new GraphMailDeltaSource($graph),
     $graph,

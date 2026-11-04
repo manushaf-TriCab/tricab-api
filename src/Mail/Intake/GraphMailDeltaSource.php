@@ -10,8 +10,10 @@ use Throwable;
 use TriCab\Api\Shared\Mailbox\GraphMailboxReader;
 use TriCab\Core\Mail\Application\DTO\MailParty;
 use TriCab\Core\Mail\Intake\IncomingMail;
+use TriCab\Core\Mail\Intake\MailBackfillSource;
 use TriCab\Core\Mail\Intake\MailChanges;
 use TriCab\Core\Mail\Intake\MailDeltaSource;
+use TriCab\Core\Mail\Intake\MailFolder;
 use TriCab\Core\Mail\Intake\MailReaderPass;
 use TriCab\Core\Shared\Mailbox\MailboxReadFailed;
 
@@ -19,18 +21,76 @@ use TriCab\Core\Shared\Mailbox\MailboxReadFailed;
  * {@see MailDeltaSource} over the platform's Graph reader, so auth, retries, immutable ids and the
  * "only follow Graph's own links" rule are the reader's and not copied here.
  */
-final class GraphMailDeltaSource implements MailDeltaSource
+final class GraphMailDeltaSource implements MailDeltaSource, MailBackfillSource
 {
+    private const MAX_FOLDERS = 200;
+
+    private const MAX_DEPTH = 8;
+
     public function __construct(
         private readonly GraphMailboxReader $graph,
         private readonly int $pageSize = 25,
-        private readonly string $folder = 'inbox',
     ) {
     }
 
-    public function changes(string $mailbox, ?string $link, DateTimeImmutable $since): MailChanges
+    public function folders(string $mailbox): array
     {
-        $url = $link ?? $this->graph->deltaStartUrl($mailbox, $this->folder, $since, MailReaderPass::SELECT);
+        return $this->subtree($mailbox);
+    }
+
+    public function backfillFolders(string $mailbox, bool $includeDeleted): array
+    {
+        $folders = $this->subtree($mailbox);
+        if ($includeDeleted) {
+            $folders[] = new MailFolder('deleteditems', 'Deleted Items', 'Deleted Items');
+        }
+
+        return $folders;
+    }
+
+    public function listPage(string $mailbox, MailFolder $folder, ?string $link, DateTimeImmutable $since): MailChanges
+    {
+        $url = $link ?? $this->graph->folderMessagesStartUrl($mailbox, $folder->id, $since, MailReaderPass::SELECT);
+        $page = $this->graph->deltaPage($url, $this->pageSize);
+        $messages = [];
+        foreach ($page['rows'] as $row) {
+            $messages[] = self::message($row);
+        }
+        $next = $page['nextLink'];
+
+        return new MailChanges($messages, [], $next ?? '', $next === null);
+    }
+
+    /**
+     * The Inbox and every folder below it, breadth first. Bounded (depth and count) so a pathological tree cannot
+     * run away; only the Inbox's own subtree is ever walked.
+     *
+     * @return list<MailFolder>
+     */
+    private function subtree(string $mailbox): array
+    {
+        $folders = [MailFolder::inbox()];
+        $queue = [[MailFolder::INBOX, 'Inbox', 1]];
+        while ($queue !== [] && count($folders) < self::MAX_FOLDERS) {
+            [$parentId, $parentPath, $depth] = array_shift($queue);
+            foreach ($this->graph->childFolders($mailbox, $parentId) as $child) {
+                $path = $parentPath . '/' . $child['name'];
+                $folders[] = new MailFolder($child['id'], $child['name'], $path);
+                if ($child['childCount'] > 0 && $depth < self::MAX_DEPTH) {
+                    $queue[] = [$child['id'], $path, $depth + 1];
+                }
+                if (count($folders) >= self::MAX_FOLDERS) {
+                    break;
+                }
+            }
+        }
+
+        return $folders;
+    }
+
+    public function changes(string $mailbox, ?string $link, DateTimeImmutable $since, string $folderId = MailFolder::INBOX): MailChanges
+    {
+        $url = $link ?? $this->graph->deltaStartUrl($mailbox, $folderId, $since, MailReaderPass::SELECT);
         $page = $this->graph->deltaPage($url, $this->pageSize);
 
         $messages = [];

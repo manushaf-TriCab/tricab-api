@@ -277,6 +277,7 @@ Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\rfq-reade
 $mailJobRoot = Join-Path $releaseRoot 'App_Data\jobs\continuous\rfq-mail'
 New-Item -ItemType Directory -Path $mailJobRoot -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\run-rfq-mail-reader.php') -Destination (Join-Path $appRoot 'bin\run-rfq-mail-reader.php') -Force
+Copy-Item -LiteralPath (Join-Path $apiRoot 'bin\backfill-rfq-mail.php') -Destination (Join-Path $appRoot 'bin\backfill-rfq-mail.php') -Force
 Copy-Item -LiteralPath (Join-Path $apiRoot 'deploy\app-service\webjobs\rfq-mail\run.sh') -Destination (Join-Path $mailJobRoot 'run.sh') -Force
 
 # The NPR workflow email retry sweep (N2.4): idle passes never touch the database.

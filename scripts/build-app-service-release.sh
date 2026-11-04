@@ -90,6 +90,7 @@ for required in \
     "$api_root/bin/run-rfq-reader-jobs.php" \
     "$api_root/deploy/app-service/webjobs/rfq-mail/run.sh" \
     "$api_root/bin/run-rfq-mail-reader.php" \
+    "$api_root/bin/backfill-rfq-mail.php" \
     "$api_root/deploy/app-service/webjobs/npr-mail/run.sh" \
     "$api_root/bin/run-npr-mail-sweep.php" \
     "$api_root/deploy/app-service/webjobs/finance-jobs/run.sh" \
@@ -380,6 +381,8 @@ chmod +x "$release_root/App_Data/jobs/continuous/rfq-reader/run.sh"
 # is not true or RFQ_MAIL_MODE is off: each pass exits 3 at once.
 mkdir -p "$release_root/App_Data/jobs/continuous/rfq-mail"
 cp "$api_root/bin/run-rfq-mail-reader.php" "$app_root/bin/run-rfq-mail-reader.php"
+# One-off backfill, run by hand over SSH (docs/runbooks/rfq-mail-reader.md); not a WebJob.
+cp "$api_root/bin/backfill-rfq-mail.php" "$app_root/bin/backfill-rfq-mail.php"
 cp "$api_root/deploy/app-service/webjobs/rfq-mail/run.sh" "$release_root/App_Data/jobs/continuous/rfq-mail/run.sh"
 chmod +x "$release_root/App_Data/jobs/continuous/rfq-mail/run.sh"
 

@@ -11,6 +11,8 @@ final class PassResult
     public const PAUSED = 'paused';
     public const DONE = 'done';
 
+    public int $folders = 0;
+
     public int $pages = 0;
     public int $received = 0;
     public int $recorded = 0;
@@ -19,6 +21,9 @@ final class PassResult
     public int $classified = 0;
     public int $uncertainFailures = 0;
     public int $removed = 0;
+
+    /** Backfill only: classification still throttled after retries, so the message was left unrecorded. */
+    public int $deferred = 0;
     public int $gone = 0;
     public bool $resynced = false;
     public bool $touchedDatabase = false;
@@ -39,6 +44,7 @@ final class PassResult
     {
         $counts = [
             'status' => $this->status,
+            'folders' => $this->folders,
             'pages' => $this->pages,
             'received' => $this->received,
             'recorded' => $this->recorded,

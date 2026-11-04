@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace TriCab\Api\Tests\Mail\Intake;
 
 use DateTimeImmutable;
+use TriCab\Core\Mail\Intake\MailFolder;
 use TriCab\Core\Mail\Intake\MailReaderState;
 
 final class MemoryReaderState implements MailReaderState
@@ -12,6 +13,12 @@ final class MemoryReaderState implements MailReaderState
     public ?string $cursor = null;
 
     public bool $complete = false;
+
+    /** @var array<string, string> folder id => link, for every folder but the Inbox */
+    public array $folderCursors = [];
+
+    /** @var array{folders: list<MailFolder>, at: DateTimeImmutable}|null */
+    public ?array $folderList = null;
 
     /** @var array{connection: string, at: DateTimeImmutable}|null */
     public ?array $connection = null;
@@ -21,21 +28,44 @@ final class MemoryReaderState implements MailReaderState
 
     public int $cursorWrites = 0;
 
-    public function cursor(): ?string
+    public function cursor(string $folder = MailFolder::INBOX): ?string
     {
-        return $this->cursor;
+        return $folder === MailFolder::INBOX ? $this->cursor : ($this->folderCursors[$folder] ?? null);
     }
 
-    public function saveCursor(string $link, bool $complete): void
+    public function saveCursor(string $link, bool $complete, string $folder = MailFolder::INBOX): void
     {
-        $this->cursor = $link;
-        $this->complete = $complete;
+        if ($folder === MailFolder::INBOX) {
+            $this->cursor = $link;
+            $this->complete = $complete;
+        } else {
+            $this->folderCursors[$folder] = $link;
+        }
         ++$this->cursorWrites;
     }
 
-    public function clearCursor(): void
+    public function clearCursor(string $folder = MailFolder::INBOX): void
     {
-        $this->cursor = null;
+        if ($folder === MailFolder::INBOX) {
+            $this->cursor = null;
+        } else {
+            unset($this->folderCursors[$folder]);
+        }
+    }
+
+    public function folders(): ?array
+    {
+        return $this->folderList;
+    }
+
+    public function saveFolders(array $folders, DateTimeImmutable $at): void
+    {
+        $this->folderList = ['folders' => $folders, 'at' => $at];
+    }
+
+    public function clearFolders(): void
+    {
+        $this->folderList = null;
     }
 
     public function connection(): ?array

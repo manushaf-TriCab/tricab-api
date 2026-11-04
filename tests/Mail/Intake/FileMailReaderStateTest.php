@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use TriCab\Api\Mail\Intake\FileMailReaderLock;
 use TriCab\Api\Mail\Intake\FileMailReaderState;
+use TriCab\Core\Mail\Intake\MailFolder;
 
 final class FileMailReaderStateTest extends TestCase
 {
@@ -131,5 +132,90 @@ final class FileMailReaderStateTest extends TestCase
         $again->clearDraftRetry('never-there');
         self::assertSame([], (new FileMailReaderState($this->dir))->draftRetries());
         self::assertSame('link', (new FileMailReaderState($this->dir))->cursor());
+    }
+
+    public function test_an_old_single_cursor_file_loads_as_the_inbox_cursor_for_that_mailbox_only(): void
+    {
+        mkdir($this->dir);
+        file_put_contents($this->dir . '/state.json', json_encode(['cursor' => 'https://graph.microsoft.com/v1.0/old', 'cursorMailbox' => 'nzprojects@tricab.com', 'cursorComplete' => true, 'connection' => 'connected', 'connectionAt' => '2026-11-04T01:00:00+00:00']));
+
+        $state = new FileMailReaderState($this->dir, 'NZProjects@tricab.com');
+        self::assertSame('https://graph.microsoft.com/v1.0/old', $state->cursor());
+        self::assertNull($state->cursor('f-guy'), 'a folder with no cursor starts from the window');
+        self::assertNull((new FileMailReaderState($this->dir, 'it.sales@tricab.com'))->cursor(), '#181 rule: a cursor belongs to its mailbox');
+        self::assertSame(1, $state->cursorCount());
+
+        // Saving a folder cursor leaves the migrated Inbox one in place.
+        $state->saveCursor('https://graph.microsoft.com/v1.0/guy', true, 'f-guy');
+        self::assertSame('https://graph.microsoft.com/v1.0/old', $state->cursor());
+        self::assertSame('https://graph.microsoft.com/v1.0/guy', $state->cursor('f-guy'));
+        self::assertSame('connected', $state->connection()['connection'] ?? null);
+    }
+
+    public function test_each_folder_has_its_own_cursor_and_belongs_to_its_mailbox(): void
+    {
+        $state = new FileMailReaderState($this->dir, 'nzprojects@tricab.com');
+        $state->saveCursor('inbox-link', true);
+        $state->saveCursor('guy-link', false, 'AAMk/guy=');
+        $state->saveCursor('bob-link', true, 'f-bob');
+
+        $again = new FileMailReaderState($this->dir, 'nzprojects@tricab.com');
+        self::assertSame('inbox-link', $again->cursor());
+        self::assertSame('guy-link', $again->cursor('AAMk/guy='));
+        self::assertSame('bob-link', $again->cursor('f-bob'));
+        self::assertSame(3, $again->cursorCount());
+
+        $other = new FileMailReaderState($this->dir, 'it.sales@tricab.com');
+        self::assertNull($other->cursor());
+        self::assertNull($other->cursor('f-bob'));
+
+        $again->clearCursor('f-bob');
+        self::assertNull($again->cursor('f-bob'));
+        self::assertSame('guy-link', $again->cursor('AAMk/guy='));
+        $again->clearCursor();
+        self::assertNull($again->cursor());
+        self::assertSame('guy-link', $again->cursor('AAMk/guy='));
+    }
+
+    public function test_the_inbox_cursor_is_still_written_under_the_old_keys_so_a_rollback_keeps_it(): void
+    {
+        (new FileMailReaderState($this->dir, 'nzprojects@tricab.com'))->saveCursor('inbox-link', true);
+
+        $raw = json_decode((string) file_get_contents($this->dir . '/state.json'), true, 8, JSON_THROW_ON_ERROR);
+        self::assertIsArray($raw);
+        self::assertSame('inbox-link', $raw['cursor']);
+        self::assertSame('nzprojects@tricab.com', $raw['cursorMailbox']);
+    }
+
+    public function test_clear_all_cursors_forgets_every_folder_and_the_folder_list(): void
+    {
+        $state = new FileMailReaderState($this->dir, 'nzprojects@tricab.com');
+        $state->saveCursor('i', true);
+        $state->saveCursor('g', true, 'f-guy');
+        $state->saveFolders([new MailFolder('f-guy', 'Guy', 'Inbox/Guy')], new DateTimeImmutable('2026-11-04 01:00:00 UTC'));
+        $state->saveConnection('connected', new DateTimeImmutable('2026-11-04 01:00:00 UTC'));
+
+        $state->clearAllCursors();
+
+        self::assertSame(0, $state->cursorCount());
+        self::assertNull($state->folders());
+        self::assertSame('connected', $state->connection()['connection'] ?? null);
+    }
+
+    public function test_the_folder_list_survives_and_belongs_to_its_mailbox(): void
+    {
+        $state = new FileMailReaderState($this->dir, 'nzprojects@tricab.com');
+        self::assertNull($state->folders());
+        $state->saveFolders([new MailFolder('inbox', 'Inbox', 'Inbox'), new MailFolder('f-guy', 'NZ PROJECTS - GUY', 'Inbox/NZ PROJECTS - GUY')], new DateTimeImmutable('2026-11-04 01:00:00 UTC'));
+
+        $found = (new FileMailReaderState($this->dir, 'NZPROJECTS@tricab.com'))->folders();
+        self::assertNotNull($found);
+        self::assertSame('2026-11-04T01:00:00+00:00', $found['at']->format('c'));
+        self::assertSame(['inbox', 'f-guy'], array_map(static fn (MailFolder $f): string => $f->id, $found['folders']));
+        self::assertSame('Inbox/NZ PROJECTS - GUY', $found['folders'][1]->path);
+        self::assertNull((new FileMailReaderState($this->dir, 'it.sales@tricab.com'))->folders());
+
+        $state->clearFolders();
+        self::assertNull($state->folders());
     }
 }

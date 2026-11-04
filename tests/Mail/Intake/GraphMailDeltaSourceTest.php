@@ -170,4 +170,55 @@ final class GraphMailDeltaSourceTest extends TestCase
         self::assertStringContainsString('select=id%2CinternetMessageHeaders', $this->http->calls[1]['url']);
         self::assertSame('IdType="ImmutableId"', $this->http->calls[1]['headers']['Prefer']);
     }
+
+    public function test_the_inbox_subtree_is_walked_breadth_first_through_child_folders_only(): void
+    {
+        $this->http->queue[] = self::page([
+            ['id' => 'AAA=', 'displayName' => 'NZ PROJECTS - GUY', 'childFolderCount' => 0],
+            ['id' => 'BBB=', 'displayName' => 'Archive 2025', 'childFolderCount' => 1],
+        ]);
+        $this->http->queue[] = self::page([['id' => 'CCC=', 'displayName' => 'Old', 'childFolderCount' => 0]]);
+
+        $folders = $this->source->folders('nzprojects@tricab.com');
+
+        self::assertSame(['inbox', 'AAA=', 'BBB=', 'CCC='], array_map(static fn ($f): string => $f->id, $folders));
+        self::assertSame('Inbox/Archive 2025/Old', $folders[3]->path);
+        self::assertStringStartsWith(self::GRAPH . '/users/nzprojects%40tricab.com/mailFolders/inbox/childFolders?', $this->http->calls[1]['url']);
+        self::assertStringStartsWith(self::GRAPH . '/users/nzprojects%40tricab.com/mailFolders/BBB%3D/childFolders?', $this->http->calls[2]['url']);
+        self::assertCount(3, $this->http->calls, 'token + two listings; nothing outside the Inbox is listed');
+        foreach (array_slice($this->http->calls, 1) as $call) {
+            self::assertSame('get', $call['kind'], 'Graph GET only (the first call is the token request)');
+        }
+    }
+
+    public function test_a_folder_id_goes_into_the_delta_url_encoded(): void
+    {
+        $this->http->queue[] = self::page([], ['@odata.deltaLink' => self::GRAPH . '/delta?token=1']);
+
+        $this->source->changes('nzprojects@tricab.com', null, new DateTimeImmutable('2026-10-16 10:00:00 UTC'), 'AAMk/x+y=');
+
+        self::assertStringStartsWith(self::GRAPH . '/users/nzprojects%40tricab.com/mailFolders/AAMk%2Fx%2By%3D/messages/delta?', $this->http->calls[1]['url']);
+    }
+
+    public function test_the_backfill_lists_with_a_filter_not_delta_and_adds_deleted_items_only_when_asked(): void
+    {
+        $this->http->queue[] = self::page([]);
+        self::assertSame(['inbox'], array_map(static fn ($f): string => $f->id, $this->source->backfillFolders('m@tricab.com', false)));
+        $this->http->queue[] = self::page([]);
+        self::assertSame(['inbox', 'deleteditems'], array_map(static fn ($f): string => $f->id, $this->source->backfillFolders('m@tricab.com', true)));
+
+        $this->http->queue[] = self::page([self::row('m1')], ['@odata.nextLink' => self::GRAPH . '/next?skip=1']);
+        $page = $this->source->listPage('m@tricab.com', new \TriCab\Core\Mail\Intake\MailFolder('deleteditems', 'Deleted Items', 'Deleted Items'), null, new DateTimeImmutable('2026-10-16 10:00:00 UTC'));
+
+        $last = $this->http->calls[count($this->http->calls) - 1] ?? self::fail('no call was made');
+        $url = $last['url'];
+        self::assertStringContainsString('/mailFolders/deleteditems/messages?', $url);
+        self::assertStringNotContainsString('/delta', $url);
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        self::assertSame('receivedDateTime ge 2026-10-16T10:00:00Z', $query['$filter']);
+        self::assertSame('receivedDateTime desc', $query['$orderby']);
+        self::assertFalse($page->complete);
+        self::assertSame(self::GRAPH . '/next?skip=1', $page->link);
+        self::assertCount(1, $page->messages);
+    }
 }

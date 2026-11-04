@@ -336,6 +336,9 @@ final readonly class Settings
         public bool $rfqMailNotifyEnabled = false,
         /** @var list<string> */
         public array $rfqMailOwnAddresses = [],
+        public int $rfqMailFolderRefreshMinutes = 30,
+        /** @var list<string> lower-case folder names the reader leaves out, with everything below them */
+        public array $rfqMailExcludeFolders = [],
         // HMAC key for stable product image addresses; '' derives one from the blob account key.
         public string $mediaUrlSigningSecret = '',
         public string $publicApiOrigin = '',
@@ -1652,6 +1655,11 @@ final readonly class Settings
             rfqMailDraftsEnabled: self::bool($env, 'RFQ_MAIL_DRAFTS_ENABLED', false),
             rfqMailNotifyEnabled: self::bool($env, 'RFQ_MAIL_NOTIFY_ENABLED', false),
             rfqMailDraftBranch: strtoupper(trim(self::string($env, 'RFQ_MAIL_DRAFT_BRANCH', 'VIC'))),
+            rfqMailFolderRefreshMinutes: self::boundedInt($env, 'RFQ_MAIL_FOLDER_REFRESH_MINUTES', 30, 1, 1440),
+            rfqMailExcludeFolders: array_values(array_filter(array_map(
+                static fn (string $a): string => strtolower(trim($a)),
+                self::csvList($env, 'RFQ_MAIL_EXCLUDE_FOLDERS', ''),
+            ), static fn (string $a): bool => $a !== '')),
             rfqMailOwnAddresses: array_values(array_filter(array_map(
                 static fn (string $a): string => strtolower(trim($a)),
                 self::csvList($env, 'RFQ_MAIL_OWN_ADDRESSES', ''),

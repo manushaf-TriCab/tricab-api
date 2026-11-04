@@ -26,8 +26,8 @@ use TriCab\Core\Shared\Mailbox\MailboxReadUnavailable;
 use TriCab\Core\Shared\Mailbox\MailboxSyncExpired;
 
 /**
- * One pass of the RFQ mail reader (RFQ plan M3 + M4, shadow mode): ask Graph what changed in the Inbox,
- * record what is new in `[mail]`, give every new message an assessment, and move the cursor on.
+ * One pass of the RFQ mail reader (RFQ plan M3 + M4, shadow mode): ask Graph what changed in the Inbox and the
+ * folders under it (staff file mail into those by hand), record what is new in `[mail]`, give every new message an assessment, and move the cursor on.
  *
  * **The database is touched only when Graph returns messages** (plus a heartbeat and state changes), so
  * the serverless `tc` can pause between mail. Graph failures propagate as the `Mailbox*` exceptions and a
@@ -133,35 +133,100 @@ final class MailReaderPass
     private function readPages(PassResult $result, DateTimeImmutable $now): void
     {
         $since = $now->sub(new DateInterval('P' . max(1, $this->options->firstRunDays) . 'D'));
-        $link = $this->state->cursor();
         $deadline = $now->getTimestamp() + max(1, $this->options->passSeconds);
+        $pagesLeft = max(1, $this->options->maxPages);
+
+        $folders = $this->folders($now);
+        foreach ($folders as $index => $folder) {
+            // The time and page budget is shared. The Inbox always gets its turn; a later folder waits for the
+            // next pass when the budget is spent (its own cursor is unchanged, so nothing is lost).
+            if ($index > 0 && ($pagesLeft <= 0 || ($this->now)()->getTimestamp() >= $deadline)) {
+                return;
+            }
+            $result->folders++;
+            $this->readFolder($folder, $since, $deadline, $pagesLeft, $result);
+        }
+    }
+
+    /**
+     * The Inbox and the folders below it, from the state's copy while it is fresh. A listing that fails does not
+     * stop the Inbox being read: the last known list (or the Inbox alone) is used and the listing is retried next pass.
+     *
+     * @return list<MailFolder>
+     */
+    private function folders(DateTimeImmutable $now): array
+    {
+        $known = $this->state->folders();
+        $fresh = $known !== null && ($now->getTimestamp() - $known['at']->getTimestamp()) < max(1, $this->options->folderRefreshMinutes) * 60;
+        if ($fresh) {
+            $folders = $known['folders'];
+        } else {
+            try {
+                $folders = $this->source->folders($this->options->mailbox);
+                $this->state->saveFolders($folders, $now);
+            } catch (MailboxReadFailed | MailboxReadUnavailable | MailboxAccessDenied | MailboxItemNotFound $failure) {
+                ($this->log)('Could not list the Inbox folders (' . $failure->getMessage() . '); using the last known list.');
+                $folders = $known['folders'] ?? [];
+            }
+        }
+
+        $wanted = [MailFolder::inbox()];
+        $seen = [MailFolder::INBOX => true];
+        $excluded = array_map('strtolower', $this->options->excludeFolders);
+        foreach ($folders as $folder) {
+            if ($folder->isInbox() || isset($seen[$folder->id]) || $folder->isExcluded($excluded)) {
+                continue;
+            }
+            $seen[$folder->id] = true;
+            $wanted[] = $folder;
+        }
+
+        return $wanted;
+    }
+
+    private function readFolder(MailFolder $folder, DateTimeImmutable $since, int $deadline, int &$pagesLeft, PassResult $result): void
+    {
+        $link = $this->state->cursor($folder->id);
         $resynced = false;
 
-        for ($page = 0; $page < max(1, $this->options->maxPages); $page++) {
+        while ($pagesLeft > 0) {
             try {
-                $changes = $this->source->changes($this->options->mailbox, $link, $since);
+                $changes = $this->source->changes($this->options->mailbox, $link, $since, $folder->id);
             } catch (MailboxSyncExpired $expired) {
                 if ($resynced || $link === null) {
                     throw $expired;
                 }
                 // The token is dead (410). Start again from the time window; recording is idempotent.
-                ($this->log)('Graph says the delta token expired (410); resyncing from the last ' . $this->options->firstRunDays . ' day(s).');
-                $this->state->clearCursor();
+                ($this->log)('Graph says the delta token for "' . $folder->path . '" expired (410); resyncing from the last ' . $this->options->firstRunDays . ' day(s).');
+                $this->state->clearCursor($folder->id);
                 $link = null;
                 $resynced = true;
                 $result->resynced = true;
-                $page--;
                 continue;
+            } catch (MailboxItemNotFound $gone) {
+                if ($folder->isInbox()) {
+                    throw $gone;
+                }
+                // The folder was deleted or moved since it was listed: drop its cursor and list the folders again next pass.
+                ($this->log)('The folder "' . $folder->path . '" is gone; its cursor is dropped and the folders are listed again.');
+                $this->state->clearCursor($folder->id);
+                $this->state->clearFolders();
+
+                return;
             }
 
+            $pagesLeft--;
             $result->pages++;
+            // A removal is Graph saying the message left THIS folder (filed into another one, or deleted). Nothing
+            // recorded is touched: the message was recorded when it arrived, and a moved one reappears in its new
+            // folder's delta, where its internetMessageId finds the record already there.
             $result->removed += count($changes->removedIds);
             foreach ($changes->messages as $mail) {
                 $result->received++;
-                $this->handle($mail, $result);
+                $this->ingest($mail, $result);
             }
             // The page is done: only now does the cursor move, so a failure above redelivers it.
-            $this->state->saveCursor($changes->link, $changes->complete);
+            $this->state->saveCursor($changes->link, $changes->complete, $folder->id);
             $link = $changes->link;
             if ($changes->complete || ($this->now)()->getTimestamp() >= $deadline) {
                 return;
@@ -169,13 +234,49 @@ final class MailReaderPass
         }
     }
 
-    private function handle(IncomingMail $mail, PassResult $result): void
+    /** Whether this message (by mailbox and internetMessageId, never by Graph id) is already in `[mail]`. */
+    public function isRecorded(IncomingMail $mail): bool
+    {
+        if (trim($mail->internetMessageId) === '') {
+            return false;
+        }
+        $mailbox = strtolower(trim($this->options->mailbox));
+
+        return $this->store->findMessageId($this->store->ensureMailbox($mailbox, $mailbox), $mail->internetMessageId) !== null;
+    }
+
+    /**
+     * Records one message and gives it an assessment. Public so the backfill runs exactly the live path.
+     * Idempotent: a message already recorded (the same internetMessageId in this mailbox, whichever folder it
+     * is now in) is counted as a duplicate and nothing more happens, unless a dead pass left it unassessed.
+     * With `$deferThrottled` (backfill) a message whose classification is still throttled after retries is not recorded.
+     */
+    public function ingest(IncomingMail $mail, PassResult $result, bool $deferThrottled = false): void
+    {
+        $this->handle($mail, $result, $deferThrottled);
+    }
+
+    private function handle(IncomingMail $mail, PassResult $result, bool $deferThrottled = false): void
     {
         if (trim($mail->internetMessageId) === '') {
             ($this->log)('A message came without an internetMessageId and was not recorded.');
             $result->gone++;
 
             return;
+        }
+
+        $key = sha1($this->options->mailbox . '|' . $mail->internetMessageId);
+        $wasPending = $this->state->isPending($key);
+        if (!$wasPending) {
+            // Already recorded (redelivered, or filed into another folder, which Graph reports as a new row there):
+            // nothing to fetch or classify. A message a dead pass left unassessed is still marked pending, so it
+            // does not stop here.
+            $result->touchedDatabase = true;
+            if ($this->isRecorded($mail)) {
+                $result->duplicates++;
+
+                return;
+            }
         }
 
         // Everything that needs only Graph comes first, so a Graph failure leaves nothing half-done.
@@ -197,8 +298,20 @@ final class MailReaderPass
         }
         $skip = $this->prefilter->check($mail);
 
-        $key = sha1($this->options->mailbox . '|' . $mail->internetMessageId);
-        $wasPending = $this->state->isPending($key);
+        // Backfill: classify BEFORE anything is recorded, so a message the model is still throttling on is left
+        // completely alone (no record, no pending marker) and a later run picks it up as new. The conversation-has-draft
+        // hint is false here (no thread exists yet; the backfill makes no drafts).
+        $assessment = null;
+        if ($deferThrottled && $skip === null) {
+            try {
+                $assessment = $this->classify($mail, '', $result);
+            } catch (ClassifierThrottled) {
+                $result->deferred++;
+
+                return;
+            }
+        }
+
         $this->state->markPending($key);
         $result->touchedDatabase = true;
         $recorded = $this->recorder->recordMessage(new NewMessage(
@@ -235,7 +348,7 @@ final class MailReaderPass
             return;
         }
 
-        $assessment = $this->classify($mail, $recorded->threadId, $result);
+        $assessment ??= $this->classify($mail, $recorded->threadId, $result);
         $this->recorder->recordAssessment($this->options->mailbox, $mail->internetMessageId, $assessment);
         if ($this->drafts !== null && !$assessment->skipped
             && in_array($assessment->label, [MailVocabulary::LABEL_RFQ, MailVocabulary::LABEL_RFQ_FOLLOWUP], true)) {
